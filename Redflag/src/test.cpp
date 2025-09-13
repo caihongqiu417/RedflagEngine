@@ -1,6 +1,10 @@
-#include <iostream>
+#include "Test.h"
+#include "stdio.h"
 
-int main()
+namespace Redflag
 {
-	std::cout << "welcome to Redflag "<< std::endl;
+	void Print()
+	{
+		printf("Welcome to Redflag!!!\n");
+	}
 }
