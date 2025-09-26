@@ -15,13 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Test.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Test.h">
+    <ClInclude Include="src\Redflag\Core.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Application.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\EntryPoint.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Redflag\Application.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
