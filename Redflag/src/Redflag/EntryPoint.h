@@ -6,6 +6,10 @@ extern Redflag::Application* Redflag::CreateApplication();  //ÔÚ»ùÀàApplicationÖ
 
 int main()
 {
+	Redflag::Log::Init();
+	RF_CORE_WARN("Intialized Log System!");
+	RF_CLIENT_INFO("Hello!!!");
+
 	auto app = Redflag::CreateApplication();
 	app->Run();
 	delete app;

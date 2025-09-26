@@ -1,0 +1,3 @@
+[submodule "Redflag/vendor/spdlog"]
+	path = Redflag/vendor/spdlog
+	url = https://github.com/gabime/spdlog
