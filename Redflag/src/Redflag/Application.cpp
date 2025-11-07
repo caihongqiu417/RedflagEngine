@@ -1,3 +1,4 @@
+#include "hzpch.h"
 #include "Application.h"
 #include "Redflag/Log.h"
 

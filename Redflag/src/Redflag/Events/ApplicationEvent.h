@@ -1,7 +1,6 @@
 #pragma once
 
 #include"Event.h"
-#include<sstream>
 
 namespace Redflag {
 	class REDFLAG_API WindowResizeEvent :public Event

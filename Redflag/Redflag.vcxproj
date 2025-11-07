@@ -76,7 +76,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>hzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DEBUG;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -100,7 +101,8 @@ IF EXIST ..\bin\Debug-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I ..\
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>hzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_RELEASE;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -128,7 +130,8 @@ IF EXIST ..\bin\Release-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I .
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>hzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -164,25 +167,17 @@ IF EXIST ..\bin\Dist-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I ..\b
     <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
     <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\Log.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\args.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\base.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\chrono.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\color.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\compile.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\core.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\format-inl.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\format.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\os.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\ostream.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\printf.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\ranges.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\std.h" />
-    <ClInclude Include="vendor\fmt\include\fmt\xchar.h" />
+    <ClInclude Include="src\hzpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Redflag\Application.cpp" />
     <ClCompile Include="src\Redflag\Log.cpp" />
-    <ClCompile Include="vendor\fmt\src\format.cc" />
+    <ClCompile Include="src\hzpch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\fmt\src\format.cc">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

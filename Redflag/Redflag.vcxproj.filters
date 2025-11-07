@@ -16,12 +16,6 @@
     <Filter Include="vendor\fmt">
       <UniqueIdentifier>{699BC5A8-5553-07F6-BE5A-E051AA31A2E6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="vendor\fmt\include">
-      <UniqueIdentifier>{DC1BC8B7-C8FF-880D-3160-83601D63738F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vendor\fmt\include\fmt">
-      <UniqueIdentifier>{12300654-FE29-2FA6-E796-C5B6D32F9512}</UniqueIdentifier>
-    </Filter>
     <Filter Include="vendor\fmt\src">
       <UniqueIdentifier>{00E6A27F-ECB3-9685-D547-07ACC1B472EA}</UniqueIdentifier>
     </Filter>
@@ -54,47 +48,8 @@
     <ClInclude Include="src\Redflag\Log.h">
       <Filter>src\Redflag</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\args.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\base.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\chrono.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\color.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\compile.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\core.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\format-inl.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\format.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\os.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\ostream.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\printf.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\ranges.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\std.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\fmt\include\fmt\xchar.h">
-      <Filter>vendor\fmt\include\fmt</Filter>
+    <ClInclude Include="src\hzpch.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +58,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Log.cpp">
       <Filter>src\Redflag</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hzpch.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="vendor\fmt\src\format.cc">
       <Filter>vendor\fmt\src</Filter>

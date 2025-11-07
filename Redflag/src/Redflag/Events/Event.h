@@ -1,9 +1,5 @@
 #pragma once
 
-// Standard library headers first
-#include <string>
-#include <functional>
-#include <iostream>
 
 // Project headers
 #include "Redflag/Core.h"
