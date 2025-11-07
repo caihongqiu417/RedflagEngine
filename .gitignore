@@ -399,4 +399,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-"Redflag/vendor/fmt/" 
+“Redflag/Redflag/vendor/fmt/” 
