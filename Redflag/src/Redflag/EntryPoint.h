@@ -2,8 +2,7 @@
 
 #ifdef RF_PLATFORM_WINDOWS
 
-extern Redflag::Application* Redflag::CreateApplication();  //在基类Application中被声明，派生类Sandbox中被实现
-
+extern Redflag::Application* Redflag::CreateApplication();  
 int main()
 {
 	Redflag::Log::Init();

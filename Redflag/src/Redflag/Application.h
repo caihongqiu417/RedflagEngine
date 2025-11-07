@@ -1,6 +1,8 @@
-//应用基类和最小运行骨架
 #pragma once
 #include "Core.h"
+
+//test for event
+#include"Events/Event.h"
 
 namespace Redflag
 {

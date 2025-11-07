@@ -3,9 +3,17 @@ workspace "Redflag"
 	startproject "Sandbox"
 	configurations { "Debug", "Release", "Dist" }
 
--- 组成输出目录: Debug-windows-x86_64
+-- 输出目录格式: 配置-系统-架构
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- 全局定义 - 启用外部fmt
+defines {
+	"FMT_HEADER_ONLY",           -- 使用header-only模式的fmt
+	"SPDLOG_FMT_EXTERNAL",       -- 告诉spdlog使用外部fmt
+	"_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
+}
+
+-- Redflag引擎核心库项目
 project "Redflag"
 	location "Redflag"
 	kind "SharedLib"
@@ -14,48 +22,60 @@ project "Redflag"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+	-- 源文件包含 - 添加fmt源文件
 	files {
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.hpp",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.hpp", 
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/fmt/src/format.cc",  -- 包含fmt的源文件
+		"%{prj.name}/vendor/fmt/include/**.h"    -- 包含fmt的头文件
 	}
 
+	-- 头文件包含路径 - 添加fmt包含目录
 	includedirs {
 		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{prj.name}/vendor/fmt/include"         -- 添加fmt头文件路径
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		cppdialect "C++17"
 		characterset "Unicode"
-		staticruntime "On"                  -- /MT、/MTd
-		buildoptions { "/utf-8" }           -- 关键：启用 UTF-8 源码
-		disablewarnings { "4251", "4828" }  -- 4251: DLL 接口；4828: BOM/无效字符告警
+		staticruntime "On"
+		buildoptions { "/utf-8" }
+		disablewarnings { 
+			"4251", "4828", "4996", "5030"
+		}
 
 		defines {
 			"RF_PLATFORM_WINDOWS",
-			"RF_BUILD_DLL"
+			"RF_BUILD_DLL",
+			"NOMINMAX",
+			"WIN32_LEAN_AND_MEAN"
 		}
 
-		-- 构建后复制 Redflag.dll 到 Sandbox 输出目录（先确保目标目录存在）
 		postbuildcommands {
 			("{MKDIR} ../bin/" .. outputdir .. "/Sandbox"),
 			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
 		}
 
 	filter "configurations:Debug"
-		defines { "RF_DEBUG" }
+		defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
 		symbols "On"
+		runtime "Debug"
 
 	filter "configurations:Release"
-		defines { "RF_RELEASE" }
+		defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
 		optimize "On"
+		runtime "Release"
 
 	filter "configurations:Dist"
 		defines { "RF_DIST" }
 		optimize "On"
+		runtime "Release"
 
+-- Sandbox测试应用项目
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
@@ -70,9 +90,11 @@ project "Sandbox"
 		"%{prj.name}/src/**.cpp"
 	}
 
+	-- 头文件包含路径 - 同样添加fmt路径
 	includedirs {
 		"Redflag/src",
-		"Redflag/vendor/spdlog/include"
+		"Redflag/vendor/spdlog/include",
+		"Redflag/vendor/fmt/include"  -- 添加fmt头文件路径
 	}
 
 	links { "Redflag" }
@@ -83,18 +105,27 @@ project "Sandbox"
 		characterset "Unicode"
 		staticruntime "On"
 		buildoptions { "/utf-8" }
-		disablewarnings { "4251", "4828" }
+		disablewarnings { 
+			"4251", "4828", "4996", "5030"
+		}
 
-		defines { "RF_PLATFORM_WINDOWS" }
+		defines {
+			"RF_PLATFORM_WINDOWS",
+			"NOMINMAX",
+			"WIN32_LEAN_AND_MEAN"
+		}
 
 	filter "configurations:Debug"
-		defines { "RF_DEBUG" }
+		defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
 		symbols "On"
+		runtime "Debug"
 
 	filter "configurations:Release"
-		defines { "RF_RELEASE" }
+		defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
 		optimize "On"
+		runtime "Release"
 
 	filter "configurations:Dist"
 		defines { "RF_DIST" }
 		optimize "On"
+		runtime "Release"

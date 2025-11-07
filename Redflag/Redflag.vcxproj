@@ -78,9 +78,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DisableSpecificWarnings>4251;4828;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DEBUG;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -102,9 +102,9 @@ IF EXIST ..\bin\Debug-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I ..\
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DisableSpecificWarnings>4251;4828;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_RELEASE;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -130,9 +130,9 @@ IF EXIST ..\bin\Release-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I .
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DisableSpecificWarnings>4251;4828;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;RF_BUILD_DLL;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -159,11 +159,30 @@ IF EXIST ..\bin\Dist-windows-x86_64\Redflag\Redflag.dll\ (xcopy /Q /E /Y /I ..\b
     <ClInclude Include="src\Redflag\Application.h" />
     <ClInclude Include="src\Redflag\Core.h" />
     <ClInclude Include="src\Redflag\EntryPoint.h" />
+    <ClInclude Include="src\Redflag\Events\ApplicationEvent.h" />
+    <ClInclude Include="src\Redflag\Events\Event.h" />
+    <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
+    <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\Log.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\args.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\base.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\chrono.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\color.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\compile.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\core.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\format-inl.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\format.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\os.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\ostream.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\printf.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\ranges.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\std.h" />
+    <ClInclude Include="vendor\fmt\include\fmt\xchar.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Redflag\Application.cpp" />
     <ClCompile Include="src\Redflag\Log.cpp" />
+    <ClCompile Include="vendor\fmt\src\format.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

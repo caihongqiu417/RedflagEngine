@@ -1,31 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Redflag">
-      <UniqueIdentifier>{1A74CB9E-8653-4A3A-8F6B-D510FBC9B09B}</UniqueIdentifier>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag">
+      <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Events">
+      <UniqueIdentifier>{F55EEAA8-E142-ABFE-4AA3-A55136A69580}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor">
+      <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\fmt">
+      <UniqueIdentifier>{699BC5A8-5553-07F6-BE5A-E051AA31A2E6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\fmt\include">
+      <UniqueIdentifier>{DC1BC8B7-C8FF-880D-3160-83601D63738F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\fmt\include\fmt">
+      <UniqueIdentifier>{12300654-FE29-2FA6-E796-C5B6D32F9512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\fmt\src">
+      <UniqueIdentifier>{00E6A27F-ECB3-9685-D547-07ACC1B472EA}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Redflag.h" />
+    <ClInclude Include="src\Redflag.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Application.h">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core.h">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\EntryPoint.h">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Events\ApplicationEvent.h">
+      <Filter>src\Redflag\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Events\Event.h">
+      <Filter>src\Redflag\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Events\KeyEvent.h">
+      <Filter>src\Redflag\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Events\MouseEvent.h">
+      <Filter>src\Redflag\Events</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Log.h">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\args.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\base.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\chrono.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\color.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\compile.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\core.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\format-inl.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\format.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\os.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\ostream.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\printf.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\ranges.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\std.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fmt\include\fmt\xchar.h">
+      <Filter>vendor\fmt\include\fmt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Redflag\Application.cpp">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Log.cpp">
-      <Filter>Redflag</Filter>
+      <Filter>src\Redflag</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\fmt\src\format.cc">
+      <Filter>vendor\fmt\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
