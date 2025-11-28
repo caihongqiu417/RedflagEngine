@@ -1,149 +1,170 @@
 workspace "Redflag"
-	architecture "x64"
-	startproject "Sandbox"
-	configurations { "Debug", "Release", "Dist" }
+    architecture "x64"
+    startproject "Sandbox"
+    configurations { "Debug", "Release", "Dist" }
 
 -- 输出目录格式: 配置-系统-架构
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
--- 全局定义 - 启用外部fmt
+-- ================================
+-- 第 1 步：设置第三方库头文件路径
+-- ================================
+IncludeDir = {}
+IncludeDir["GLFW"] = "Redflag/vendor/GLFW/include"
+
+-- ================================
+-- 第 2 步：加载 GLFW 子项目（必须）
+-- 让 Premake 构建 GLFW 生成 GLFW.lib
+-- ================================
+include "Redflag/vendor/GLFW"
+
+-- ================================
+-- 全局定义 - 对 fmt/spdlog 的设置
+-- ================================
 defines {
-	"FMT_HEADER_ONLY",           -- 使用header-only模式的fmt
-	"SPDLOG_FMT_EXTERNAL",       -- 告诉spdlog使用外部fmt
-	"_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
+    "FMT_HEADER_ONLY",                 -- fmt 使用 header-only 模式
+    "SPDLOG_FMT_EXTERNAL",             -- spdlog 使用外部 fmt
+    "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
 }
 
--- Redflag引擎核心库项目
+-- ===========================================
+--   Redflag 引擎核心库项目（DLL）
+-- ===========================================
 project "Redflag"
-	location "Redflag"
-	kind "SharedLib"
-	language "C++"
+    location "Redflag"
+    kind "SharedLib"
+    language "C++"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	-- 预编译头配置
-	pchheader "hzpch.h"
-	pchsource "Redflag/src/hzpch.cpp"
+    -- 预编译头
+    pchheader "hzpch.h"
+    pchsource "Redflag/src/hzpch.cpp"
 
-	-- 源文件包含
-	files {
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.hpp", 
-		"%{prj.name}/src/**.cpp",
-		"%{prj.name}/vendor/fmt/src/format.cc"  -- 包含fmt的源文件
-	}
+    -- 项目源文件
+    files {
+        "%{prj.name}/src/**.h",
+        "%{prj.name}/src/**.hpp",
+        "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/fmt/src/format.cc"     -- fmt 源码文件
+    }
 
-	-- 头文件包含路径
-	includedirs {
-		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include",
-		"%{prj.name}/vendor/fmt/include"         -- 添加fmt头文件路径
-	}
+    -- 头文件包含目录
+    includedirs {
+        "%{prj.name}/src",
+        "%{prj.name}/vendor/spdlog/include",
+        "%{IncludeDir.GLFW}",                      -- GLFW 头文件
+        "%{prj.name}/vendor/fmt/include"
+    }
 
-	-- 为 fmt 源文件禁用预编译头（关键修复）
-	filter "files:**/vendor/fmt/src/format.cc"
-		flags { "NoPCH" }
+    -- 链接到 GLFW + Windows OpenGL 系统库
+    links {
+        "GLFW",                                    -- GLFW 子项目生成的 lib
+        "opengl32.lib"                             -- Windows 系统库
+    }
 
-	-- Windows平台特定配置
-	filter "system:windows"
-		systemversion "latest"
-		cppdialect "C++17"
-		characterset "Unicode"
-		staticruntime "On"
-		buildoptions { "/utf-8" }
-		disablewarnings { 
-			"4251", "4828", "4996", "5030"
-		}
+    -- fmt 不使用预编译头
+    filter "files:**/vendor/fmt/src/format.cc"
+        flags { "NoPCH" }
 
-		defines {
-			"RF_PLATFORM_WINDOWS",
-			"RF_BUILD_DLL",
-			"NOMINMAX",
-			"WIN32_LEAN_AND_MEAN"
-		}
+    -- Windows 配置
+    filter "system:windows"
+        systemversion "latest"
+        cppdialect "C++17"
+        characterset "Unicode"
+        staticruntime "On"
+        buildoptions { "/utf-8" }
+        disablewarnings { "4251", "4828", "4996", "5030" }
 
-		-- 构建后复制 DLL 到 Sandbox
-		postbuildcommands {
-			("{MKDIR} ../bin/" .. outputdir .. "/Sandbox"),
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
-		}
+        defines {
+            "RF_PLATFORM_WINDOWS",
+            "RF_BUILD_DLL",                        -- 构建 DLL
+            "NOMINMAX",
+            "WIN32_LEAN_AND_MEAN"
+        }
 
-	-- 调试配置
-	filter "configurations:Debug"
-		defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
-		symbols "On"
-		runtime "Debug"
+        -- DLL 生成后复制到 Sandbox 目录
+        postbuildcommands {
+            ("{MKDIR} ../bin/" .. outputdir .. "/Sandbox"),
+            ("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+        }
 
-	-- 发布配置
-	filter "configurations:Release"
-		defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
-		optimize "On"
-		runtime "Release"
+    -- 调试配置
+    filter "configurations:Debug"
+        defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
+        symbols "On"
+        runtime "Debug"
 
-	-- 分发配置
-	filter "configurations:Dist"
-		defines { "RF_DIST" }
-		optimize "On"
-		runtime "Release"
+    -- 发布配置
+    filter "configurations:Release"
+        defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
+        optimize "On"
+        runtime "Release"
 
--- Sandbox测试应用项目
+    -- 分发行配置
+    filter "configurations:Dist"
+        defines { "RF_DIST" }
+        optimize "On"
+        runtime "Release"
+
+-- ===========================================
+--   Sandbox 测试项目（EXE）
+-- ===========================================
 project "Sandbox"
-	location "Sandbox"
-	kind "ConsoleApp"
-	language "C++"
+    location "Sandbox"
+    kind "ConsoleApp"
+    language "C++"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	-- 源文件包含
-	files {
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.hpp",
-		"%{prj.name}/src/**.cpp"
-	}
+    -- 源文件
+    files {
+        "%{prj.name}/src/**.h",
+        "%{prj.name}/src/**.hpp",
+        "%{prj.name}/src/**.cpp"
+    }
 
-	-- 头文件包含路径
-	includedirs {
-		"Redflag/src",
-		"Redflag/vendor/spdlog/include",
-		"Redflag/vendor/fmt/include"  -- 添加fmt头文件路径
-	}
+    -- 头文件搜索路径
+    includedirs {
+        "Redflag/src",
+        "Redflag/vendor/spdlog/include",
+        "Redflag/vendor/fmt/include"
+    }
 
-	-- 链接依赖
-	links { "Redflag" }
+    -- 链接 Redflag 引擎 DLL
+    links { "Redflag" }
 
-	-- Windows平台特定配置
-	filter "system:windows"
-		systemversion "latest"
-		cppdialect "C++17"
-		characterset "Unicode"
-		staticruntime "On"
-		buildoptions { "/utf-8" }
-		disablewarnings { 
-			"4251", "4828", "4996", "5030"
-		}
+    -- Windows 配置
+    filter "system:windows"
+        systemversion "latest"
+        cppdialect "C++17"
+        characterset "Unicode"
+        staticruntime "On"
+        buildoptions { "/utf-8" }
+        disablewarnings { "4251", "4828", "4996", "5030" }
 
-		defines {
-			"RF_PLATFORM_WINDOWS",
-			"NOMINMAX",
-			"WIN32_LEAN_AND_MEAN"
-		}
+        defines {
+            "RF_PLATFORM_WINDOWS",
+            "NOMINMAX",
+            "WIN32_LEAN_AND_MEAN"
+        }
 
-	-- 调试配置
-	filter "configurations:Debug"
-		defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
-		symbols "On"
-		runtime "Debug"
+    -- 调试配置
+    filter "configurations:Debug"
+        defines { "RF_DEBUG", "RF_ENABLE_LOGGING" }
+        symbols "On"
+        runtime "Debug"
 
-	-- 发布配置
-	filter "configurations:Release"
-		defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
-		optimize "On"
-		runtime "Release"
+    -- 发布配置
+    filter "configurations:Release"
+        defines { "RF_RELEASE", "RF_ENABLE_LOGGING" }
+        optimize "On"
+        runtime "Release"
 
-	-- 分发配置
-	filter "configurations:Dist"
-		defines { "RF_DIST" }
-		optimize "On"
-		runtime "Release"
+    -- 分发行
+    filter "configurations:Dist"
+        defines { "RF_DIST" }
+        optimize "On"
+        runtime "Release"

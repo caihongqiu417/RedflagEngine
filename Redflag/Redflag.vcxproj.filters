@@ -4,6 +4,12 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Platform">
+      <UniqueIdentifier>{21CA02E5-0D2D-9289-B6B2-CA3FA2F45D0C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Platform\Windows">
+      <UniqueIdentifier>{5B054582-4794-CE4B-F0B2-E246DC20DFF1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag">
       <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
     </Filter>
@@ -21,6 +27,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
+      <Filter>src\Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -48,11 +57,17 @@
     <ClInclude Include="src\Redflag\Log.h">
       <Filter>src\Redflag</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Window.h">
+      <Filter>src\Redflag</Filter>
+    </ClInclude>
     <ClInclude Include="src\hzpch.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
+      <Filter>src\Platform\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Application.cpp">
       <Filter>src\Redflag</Filter>
     </ClCompile>

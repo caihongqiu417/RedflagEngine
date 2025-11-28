@@ -37,6 +37,7 @@ namespace Redflag {
 		{
 			std::stringstream ss;
 			ss << "KeyPressedEvent:" << m_Keycode << "(" << m_RepeatCount << "repeats)";
+			return ss.str();
 		}
 	private:
 		int m_RepeatCount;

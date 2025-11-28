@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DEBUG;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DEBUG;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_RELEASE;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_RELEASE;RF_ENABLE_LOGGING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -121,7 +121,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>4251;4828;4996;5030;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>FMT_HEADER_ONLY;SPDLOG_FMT_EXTERNAL;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;NOMINMAX;WIN32_LEAN_AND_MEAN;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>

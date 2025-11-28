@@ -4,33 +4,32 @@
 
 //test for event
 #include "Events/ApplicationEvent.h"
+#include<GLFW/glfw3.h>
 
 
 namespace Redflag
 {
-	Application::Application()
-	{
+	Application::Application() {
+		m_Window = std::unique_ptr<Window>(Window::Create());
+	}
+	Application::~Application() {
+
+	}
+	void Application::Run() {
+		WindowResizeEvent e(1280, 720);
+		if (e.IsInCategory(EventCategoryApplication)) {
+			RF_CORE_TRACE("Window resize event triggered"); // 使用英文避免编码问题
+		}
+		if (e.IsInCategory(EventCategoryInput)) {
+			RF_CORE_ERROR("Event category check: Window resize should not be in input category");  // 使用英文
+		}
+
+		while (m_Running)
+		{
+			glClearColor(1, 0, 1, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
+			m_Window->OnUpdate();
+		}
 	}
 
-	Application::~Application()
-	{
-	}
-
-
-    //test event system
-    void Application::Run() {
-        WindowResizeEvent e(1280, 720);
-        if (e.IsInCategory(EventCategoryApplication)) {
-            // 直接传递完整的字符串，不使用格式化占位符
-            RF_CORE_TRACE("Application Event: " + e.ToString());
-        }
-        if (e.IsInCategory(EventCategoryInput)) {
-            RF_CORE_ERROR("Input Event: " + e.ToString());
-        }
-
-        while (true)
-        {
-
-        }
-	}
-}
+} // 添加这个结束命名空间的大括号

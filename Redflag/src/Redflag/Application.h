@@ -4,6 +4,8 @@
 //test for event
 #include"Events/Event.h"
 
+#include<Redflag/Window.h>
+
 namespace Redflag
 {
 	class REDFLAG_API Application
@@ -13,6 +15,11 @@ namespace Redflag
 		virtual ~Application();
 
 		void Run();
+
+	private:
+		std::unique_ptr<Window>  m_Window;
+		bool m_Running = true;
+
 	};
 
 	Application* CreateApplication();
