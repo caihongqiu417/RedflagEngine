@@ -9,19 +9,34 @@
 
 namespace Redflag
 {
+	#define BIND_EVENT_FN(x) std::bind(&Application::x,this,std::placeholders::_1)
+
 	Application::Application() {
 		m_Window = std::unique_ptr<Window>(Window::Create());
+
+		//把成员函数onEvent存储到m_window的m_data中
+		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+
 	}
 	Application::~Application() {
 
 	}
+
+	void Application::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+		RF_CORE_INFO("{0}", e.ToString());
+	}
+
+
 	void Application::Run() {
 		WindowResizeEvent e(1280, 720);
 		if (e.IsInCategory(EventCategoryApplication)) {
-			RF_CORE_TRACE("Window resize event triggered"); // 使用英文避免编码问题
+			RF_CORE_TRACE("Window resize event triggered"); 
 		}
 		if (e.IsInCategory(EventCategoryInput)) {
-			RF_CORE_ERROR("Event category check: Window resize should not be in input category");  // 使用英文
+			RF_CORE_ERROR("Event category check: Window resize should not be in input category"); 
 		}
 
 		while (m_Running)
@@ -32,4 +47,10 @@ namespace Redflag
 		}
 	}
 
-} // 添加这个结束命名空间的大括号
+	bool Application::OnWindowClose(WindowCloseEvent& e)
+	{
+		m_Running = false;
+		return true;
+	}
+
+} 

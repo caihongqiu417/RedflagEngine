@@ -23,12 +23,12 @@ namespace Redflag {
 		unsigned int m_Width, m_Height;
 	};
 
-	class REDFLAG_API WindowClosedEvent :public Event
+	class REDFLAG_API WindowCloseEvent :public Event
 	{
 	public:
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 		EVENT_CLASS_TYPE(WindowClose)
-		WindowClosedEvent() {}
+		WindowCloseEvent() {}
 	};
 
 

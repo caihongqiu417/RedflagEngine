@@ -43,12 +43,12 @@ namespace Redflag {
 		int m_RepeatCount;
 	};
 
-	class REDFLAG_API KeyRealeasedEvent :public KeyEvent
+	class REDFLAG_API KeyReleasedEvent :public KeyEvent
 	{
 	public:
 		EVENT_CLASS_TYPE(KeyReleased)
 
-		KeyRealeasedEvent(int keycode)
+		KeyReleasedEvent(int keycode)
 			:KeyEvent(keycode){}
 
 		std::string ToString() const override

@@ -6,6 +6,8 @@
 
 #include<Redflag/Window.h>
 
+#include "Redflag/Events/ApplicationEvent.h" 
+
 namespace Redflag
 {
 	class REDFLAG_API Application
@@ -16,6 +18,10 @@ namespace Redflag
 
 		void Run();
 
+		void OnEvent(Event& e);
+
+		bool OnWindowClose(WindowCloseEvent& e);
+	
 	private:
 		std::unique_ptr<Window>  m_Window;
 		bool m_Running = true;

@@ -8,6 +8,10 @@ namespace Redflag {
 		EVENT_CLASS_CATEGORY(EventCategoryMouse|EventCategoryMouse)
 		EVENT_CLASS_TYPE(MouseMoved)
 
+		MouseMovedEvent(float x,float y)
+			:m_MouseX(x),m_MouseY(y){}
+
+
 		inline float GetX()const { return m_MouseX; }
 		inline float GetY()const { return m_MouseY; }
 
