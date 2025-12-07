@@ -1,25 +1,29 @@
-//DLL Macros
-
 #pragma once
 
+// DLL 宏定义 - 修改为静态库版本
 #ifdef RF_PLATFORM_WINDOWS
-	#ifdef RF_BUILD_DLL
-		#define REDFLAG_API _declspec(dllexport)
-	#else
-		#define REDFLAG_API _declspec(dllimport)
-	#endif
+    // 如果是静态库，不需要导出/导入声明
+#ifdef RF_BUILD_DLL
+#define REDFLAG_API __declspec(dllexport)  // 构建DLL时导出
+#elif defined(RF_DYNAMIC_LINK)
+#define REDFLAG_API __declspec(dllimport)  // 动态链接时导入
 #else
-	#error Redflag only support Windows!
+#define REDFLAG_API  // 静态库：什么都不需要
+#endif
+#else
+#error Redflag only support Windows!
 #endif
 
+// 断言系统
 #ifdef RF_ENABLE_ASSERTS
-#define RF_CLIENT_ASSERT(x,...) {if(!(x)){RF_CLIENT_ERROR("断言错误：{0}",__VA_ARGS__);__debugbreak();}}
-#define RF_CORE_ASSERT(x,...) {if(!(x)){RF_CORE_ERROR("断言错误：{0}",__VA_ARGS__);__debugbreak();}}
+#define RF_CLIENT_ASSERT(x, ...) { if(!(x)) { RF_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define RF_CORE_ASSERT(x, ...) { if(!(x)) { RF_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 #else
-#define RF_CLIENT_ASSERT(x,...)
-#define RF_CORE_ASSERT(x,...)
-
+#define RF_CLIENT_ASSERT(x, ...)
+#define RF_CORE_ASSERT(x, ...)
 #endif
 
+#define BIT(x) (1 << (x))
 
-#define BIT(x)(1<<x)
+// 事件绑定宏
+#define RF_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
