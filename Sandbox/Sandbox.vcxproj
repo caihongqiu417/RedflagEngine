@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -121,7 +121,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\fmt\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -148,6 +148,9 @@
     </ProjectReference>
     <ProjectReference Include="..\Redflag\vendor\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Redflag\vendor\Glad\Glad.vcxproj">
+      <Project>{BDD6857C-A90D-870D-52FA-6C103E10030F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -40,9 +40,6 @@
     <ClInclude Include="src\Redflag\Events\MouseEvent.h">
       <Filter>Redflag\Events</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Layer.h">
-      <Filter>Redflag</Filter>
-    </ClInclude>
     <ClInclude Include="src\Redflag\Log.h">
       <Filter>Redflag</Filter>
     </ClInclude>

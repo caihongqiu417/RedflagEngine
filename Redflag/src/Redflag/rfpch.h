@@ -17,7 +17,6 @@
 #include <thread>
 #include <chrono>
 
-// Windows ºÍ OpenGL
+#ifdef RF_PLATFORM_WINDOWS
 #include <Windows.h>
-#include <gl/GL.h>
-#include <gl/GLU.h>
+#endif

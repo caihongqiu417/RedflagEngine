@@ -9,8 +9,10 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Redflag/vendor/GLFW/include"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"
 IncludeDir["fmt"] = "Redflag/vendor/fmt/include"
+IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
 
 include "Redflag/vendor/GLFW"
+include"Redflag/vendor/Glad"
 
 project "Redflag"
     location "Redflag"
@@ -37,12 +39,14 @@ project "Redflag"
         "%{prj.name}/src/Redflag",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.fmt}"
+        "%{IncludeDir.fmt}",
+        "%{IncludeDir.Glad}"
     }
     
     links {
         "GLFW",
-        "opengl32.lib"
+        "Glad",
+        "opengl32.lib",
     }
     
     filter "system:windows"
@@ -92,13 +96,15 @@ project "Sandbox"
         "Redflag/src/Redflag",  -- 包含Redflag的核心头文件
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.fmt}",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}"
     }
     
     links {
         "Redflag",  -- 链接到Redflag静态库
         "GLFW",
-        "opengl32.lib"
+        "Glad",
+        "opengl32.lib",
     }
     
     filter "system:windows"

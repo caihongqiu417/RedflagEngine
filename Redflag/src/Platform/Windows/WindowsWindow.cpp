@@ -4,6 +4,7 @@
 #include"Redflag/Events/KeyEvent.h"
 #include"Redflag/Events/MouseEvent.h"
 #include"Redflag/Events/ApplicationEvent.h"
+#include"glad/glad.h"
 
 namespace Redflag {
 
@@ -40,8 +41,15 @@ namespace Redflag {
 			s_GLFWInitialized = true;
 
 		}
+
+		//创建glfw窗口并指定上下文
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
+		//必须在创建glfw上下文后创建glad！！
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		RF_CORE_ASSERT(status, "Failed to initialize Glad!");
+
+		//给当前窗口存m_Data指针，用于之后回调时获取保存的信息和回调成员函数
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -156,6 +164,7 @@ namespace Redflag {
 
 
 	}
+	//----------------------------------------------------------设置opengl回调-----------------------------------------------//
 	void WindowsWindow::SetVSync(bool enable) {
 		if (enable)
 			glfwSwapInterval(1);
