@@ -13,6 +13,9 @@
     <Filter Include="Redflag\Events">
       <UniqueIdentifier>{BE3E064B-AA0C-FA50-93A0-6A777F0DD6B5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Redflag\ImGui">
+      <UniqueIdentifier>{C41405F3-30D5-8029-F90F-CAA6658FC505}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
@@ -40,6 +43,15 @@
     <ClInclude Include="src\Redflag\Events\MouseEvent.h">
       <Filter>Redflag\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
+      <Filter>Redflag\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Layer.h">
+      <Filter>Redflag</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\LayerStack.h">
+      <Filter>Redflag</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Log.h">
       <Filter>Redflag</Filter>
     </ClInclude>
@@ -55,6 +67,15 @@
       <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Application.cpp">
+      <Filter>Redflag</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp">
+      <Filter>Redflag\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Layer.cpp">
+      <Filter>Redflag</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\LayerStack.cpp">
       <Filter>Redflag</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Log.cpp">

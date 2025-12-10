@@ -47,6 +47,7 @@ namespace Redflag {
 		virtual const char* GetName() const = 0;
 		virtual std::string ToString() const { return GetName(); }
 
+		inline bool Handled() { return m_Handled; }
 
 	protected:
 		bool m_Handled = false;           //Control dispatching to lawyers

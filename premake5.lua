@@ -10,9 +10,11 @@ IncludeDir["GLFW"] = "Redflag/vendor/GLFW/include"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"
 IncludeDir["fmt"] = "Redflag/vendor/fmt/include"
 IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
+IncludeDir["Imgui"] = "Redflag/vendor/imgui"
 
 include "Redflag/vendor/GLFW"
 include"Redflag/vendor/Glad"
+include"Redflag/vendor/imgui"
 
 project "Redflag"
     location "Redflag"
@@ -40,12 +42,14 @@ project "Redflag"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.fmt}",
-        "%{IncludeDir.Glad}"
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.Imgui}"
     }
     
     links {
         "GLFW",
         "Glad",
+        "ImGui",
         "opengl32.lib",
     }
     

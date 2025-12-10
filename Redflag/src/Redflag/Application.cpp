@@ -6,6 +6,7 @@
 #include "Events/ApplicationEvent.h"
 #include"glad/glad.h"
 #include<GLFW/glfw3.h>
+#include "imgui.h"
 
 
 namespace Redflag
@@ -17,10 +18,20 @@ namespace Redflag
 
 		//把成员函数onEvent存储到m_window的m_data中
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+	}
+	Application::~Application() 
+	{
 
 	}
-	Application::~Application() {
 
+	void Application::PushLayer(Layer* layer)
+	{
+		m_LayerStack.PushLayer(layer);
+	}
+
+	void Application::PushOverlayer(Layer* layer)
+	{
+		m_LayerStack.PushOverlay(layer);
 	}
 
 	void Application::OnEvent(Event& e)
@@ -28,6 +39,14 @@ namespace Redflag
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		RF_CORE_INFO("{0}", e.ToString());
+
+		//从overlay从后往前传播事件
+		for (auto it = m_LayerStack.end();it != m_LayerStack.begin();)
+		{
+			(*--it)->OnEvent(e);
+			if (e.Handled())
+				break;
+		}
 	}
 
 
@@ -44,6 +63,10 @@ namespace Redflag
 		{
 			glClearColor(1, 0, 1, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
+			
+			for (Layer* layer : m_LayerStack)
+				layer->OnUpdate();
+			
 			m_Window->OnUpdate();
 		}
 	}

@@ -1,3 +1,6 @@
 [submodule "Redflag/vendor/spdlog"]
 	path = Redflag/vendor/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "Redflag/vendor/imgui"]
+	path = Redflag/vendor/imgui
+	url = http://github.com/TheCherno/imgui
