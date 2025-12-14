@@ -146,7 +146,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Redflag\Input.h" />
     <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
@@ -159,6 +158,7 @@
     <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
     <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Redflag\Input.h" />
     <ClInclude Include="src\Redflag\KeyCode.h" />
     <ClInclude Include="src\Redflag\Layer.h" />
     <ClInclude Include="src\Redflag\LayerStack.h" />

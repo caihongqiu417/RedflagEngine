@@ -24,6 +24,9 @@
     <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.h">
       <Filter>Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h">
+      <Filter>Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
       <Filter>Platform\Windows</Filter>
     </ClInclude>
@@ -52,6 +55,12 @@
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
       <Filter>Redflag\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Input.h">
+      <Filter>Redflag</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\KeyCode.h">
+      <Filter>Redflag</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Layer.h">
       <Filter>Redflag</Filter>
     </ClInclude>
@@ -61,20 +70,22 @@
     <ClInclude Include="src\Redflag\Log.h">
       <Filter>Redflag</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\MouseButtonCode.h">
+      <Filter>Redflag</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Window.h">
       <Filter>Redflag</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\rfpch.h">
       <Filter>Redflag</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Input.h" />
-    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
-    <ClInclude Include="src\Redflag\KeyCode.h" />
-    <ClInclude Include="src\Redflag\MouseButtonCode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
       <Filter>Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
+      <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>Platform\Windows</Filter>
@@ -97,6 +108,5 @@
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>Redflag</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
   </ItemGroup>
 </Project>
