@@ -15,21 +15,13 @@ namespace Redflag
 		ImGuiLayer();
 		~ImGuiLayer();
 
-		void OnAttach();
-		void OnDetach();
-		void OnUpdate();
-		void OnEvent(Event& event);
-	private:
 
-		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
-		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
-		bool OnMouseMovedEvent(MouseMovedEvent& e);
-		bool OnMouseScrolledEvent(MouseScrolledEvent& e);
-		bool OnKeyPressedEvent(KeyPressedEvent& e);
-		bool OnKeyReleasedEvent(KeyReleasedEvent& e);
-		bool OnKeyTypedEvent(KeyTypedEvent& e);
-		bool OnWindowResizedEvent(WindowResizeEvent& e);
+		virtual void OnAttach() override;      // 初始化ImGui上下文和配置
+		virtual void OnDetach() override;      // 清理ImGui资源
+		virtual void OnImGuiRender() override; // 渲染ImGui UI内容
 
+		void Begin();  // 开始一个新的ImGui帧（必须在渲染前调用）
+		void End();    // 结束当前ImGui帧（必须在渲染后调用）
 	private:
 		float m_Time = 0.0f;
 	};

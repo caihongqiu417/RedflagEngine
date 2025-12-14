@@ -14,7 +14,8 @@ namespace Redflag
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate() {}     // 每帧更新时调用（游戏逻辑）
+		virtual void OnImGuiRender() {} // 每帧渲染GUI时调用（UI逻辑）
 		virtual void OnEvent(Event& event) {}
 
 		inline const std::string& GetName() const { return m_DebugName; }

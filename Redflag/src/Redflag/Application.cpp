@@ -23,6 +23,9 @@ namespace Redflag
 
 		//把成员函数onEvent存储到m_window的m_data中
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+
+		m_ImGuiLayer = new ImGuiLayer();
+		PushOverlay(m_ImGuiLayer);
 	}
 	Application::~Application() 
 	{
@@ -68,14 +71,27 @@ namespace Redflag
 
 		while (m_Running)
 		{
-			glClearColor(1, 0, 1, 1);
-			glClear(GL_COLOR_BUFFER_BIT);
-			
-			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate();
-			
-			
+			// 清除颜色缓冲区
+			glClearColor(1, 0, 1, 1);  // 设置清除颜色为紫色
+			glClear(GL_COLOR_BUFFER_BIT);  // 清除颜色缓冲区
 
+			// 更新所有层
+			for (Layer* layer : m_LayerStack) {
+				layer->OnUpdate();  // 调用每层更新逻辑
+			}
+
+			// 开始ImGui帧
+			m_ImGuiLayer->Begin();
+
+			// 渲染实现了OnImGuiRender()的层的ImGui UI
+			for (Layer* layer : m_LayerStack) {
+				layer->OnImGuiRender();  // 实现了绘制GUI的层会调用IMGUI渲染
+			}
+
+			// 结束ImGui帧并渲染
+			m_ImGuiLayer->End();
+
+			// 更新窗口（交换缓冲区等）
 			m_Window->OnUpdate();
 		}
 	}

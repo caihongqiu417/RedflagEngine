@@ -2,7 +2,8 @@
 #include"ImGuiLayer.h"
 
 #include"imgui.h"
-#include"Platform/OpenGL/ImGuiOpenGLRenderer.h"
+#include"backends/imgui_impl_glfw.h"
+#include"backends/imgui_impl_opengl3.h"
 
 #include"Redflag/Application.h"
 
@@ -23,166 +24,81 @@ namespace Redflag {
 
     void ImGuiLayer::OnAttach()
     {
-        // 创建ImGui核心对象
-        ImGui::CreateContext();
+        // 当ImGui层被附加到层栈时调用，初始化ImGui
 
-        // 设置UI为深色主题（更美观）
+       // 检查ImGui版本
+        IMGUI_CHECKVERSION();
+        // 创建ImGui上下文
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        // 设置ImGui配置标志
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // 启用键盘导航
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // 启用窗口停靠功能
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // 启用多视口支持
+
+        // 设置ImGui样式为深色主题
         ImGui::StyleColorsDark();
 
-        // 获取ImGui的输入输出对象用于配置
-        ImGuiIO& io = ImGui::GetIO();
+        // 调整样式以适应多视口
+        ImGuiStyle& style = ImGui::GetStyle();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            style.WindowRounding = 0.0f;  // 窗口圆角为0
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // 窗口背景不透明度为1
+        }
 
-        // 启用鼠标光标控制功能
-        io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-        // 允许代码设置鼠标位置
-        io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+        // 获取应用和窗口实例
+        Application& app = Application::Get();
+        GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-        // 手动键盘映射：将ImGui虚拟键映射到GLFW物理键
-        //告诉ImGui："当用户按下GLFW_KEY_TAB时，ImGui认为是ImGuiKey_Tab键"
-        io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
-        io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
-        io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
-        io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
-        io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
-        io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
-        io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
-        io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
-        io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
-        io.KeyMap[ImGuiKey_Insert] = GLFW_KEY_INSERT;
-        io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
-        io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
-        io.KeyMap[ImGuiKey_Space] = GLFW_KEY_SPACE;
-        io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
-        io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
-        io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
-        io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
-        io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
-        io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
-        io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
-        io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
-
-        ImGui_ImplOpenGL3_Init("#version 410");
+        // 初始化ImGui后端
+        ImGui_ImplGlfw_InitForOpenGL(window, true);  // GLFW后端
+        ImGui_ImplOpenGL3_Init("#version 410");      // OpenGL 4.1后端
     }
 
 	void ImGuiLayer::OnDetach()
 	{
-
+        // 当ImGui层从层栈分离时调用，清理ImGui资源
+        ImGui_ImplOpenGL3_Shutdown();  // 关闭OpenGL后端
+        ImGui_ImplGlfw_Shutdown();     // 关闭GLFW后端
+        ImGui::DestroyContext();       // 销毁ImGui上下文
 	}
 
+    void ImGuiLayer::OnImGuiRender() {
+        // 每帧渲染ImGui UI
+        static bool show = true;
+        ImGui::ShowDemoWindow(&show);  // 显示ImGui演示窗口
+    }
 
-	void ImGuiLayer::OnUpdate()
-	{
+    void ImGuiLayer::Begin() {
+        // 开始一个新的ImGui帧
+        ImGui_ImplOpenGL3_NewFrame();  // OpenGL新帧
+        ImGui_ImplGlfw_NewFrame();     // GLFW新帧
+        ImGui::NewFrame();             // ImGui新帧
+    }
 
+    void ImGuiLayer::End() {
+        // 结束当前ImGui帧并渲染
         ImGuiIO& io = ImGui::GetIO();
         Application& app = Application::Get();
-        io.DisplaySize = ImVec2(app.GetWindow().GetWidth(),app.GetWindow().GetHeight());
 
-        float time = (float)glfwGetTime();
-        io.DeltaTime = m_Time > 0.0 ? (time - m_Time) : (1.0f / 60.0f);
-        m_Time = time;
+        // 设置显示尺寸
+        io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
+        // 渲染ImGui
+        ImGui::Render();  // 生成绘制数据
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());  // 使用OpenGL渲染
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui::NewFrame();
-
-        static bool show=true;
-        ImGui::ShowDemoWindow(&show);
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	}
-
-	void ImGuiLayer::OnEvent(Event& event)
-	{
-        EventDispatcher dispatcher(event);
-        dispatcher.Dispatch<MouseButtonPressedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressedEvent));
-        dispatcher.Dispatch<MouseButtonReleasedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonReleasedEvent));
-        dispatcher.Dispatch<MouseMovedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnMouseMovedEvent));
-        dispatcher.Dispatch<MouseScrolledEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnMouseScrolledEvent));
-        dispatcher.Dispatch<KeyPressedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnKeyPressedEvent));
-        dispatcher.Dispatch<KeyReleasedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnKeyReleasedEvent));
-        dispatcher.Dispatch<KeyTypedEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnKeyTypedEvent));
-        dispatcher.Dispatch<WindowResizeEvent>(RF_BIND_EVENT_FN(ImGuiLayer::OnWindowResizedEvent));
-	}
-
-    bool ImGuiLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MouseDown[e.GetMouseButton()] = true;  //表示按下GLFW_MOUSE_DOWN
-        return false;//返回false是因为希望其他层也处理这个事件(事件穿透)
-
-
+        // 如果启用了多视口，更新平台窗口
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();  // 备份当前上下文
+            ImGui::UpdatePlatformWindows();     // 更新平台窗口
+            ImGui::RenderPlatformWindowsDefault();  // 渲染平台窗口
+            glfwMakeContextCurrent(backup_current_context);  // 恢复上下文
+        }
     }
 
-    bool ImGuiLayer::OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MouseDown[e.GetMouseButton()] = false;
-        return false;
-    }
-
-    bool ImGuiLayer::OnMouseMovedEvent(MouseMovedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MousePos = ImVec2(e.GetX(), e.GetY());
-        return false;
-    }
-
-    bool ImGuiLayer::OnMouseScrolledEvent(MouseScrolledEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MouseWheel += e.GetYOffset();   // Y偏移对应垂直滚动
-        io.MouseWheelH += e.GetXOffset();  // X偏移对应水平滚动
-        return false;
-    }
-
-    bool ImGuiLayer::OnKeyPressedEvent(KeyPressedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.KeysDown[e.GetKeyCode()] = true;
-
-        //合并处理修饰键
-        io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
-        io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
-        io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
-        io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER]; 
-        
-        return false;
-    }
-
-    bool ImGuiLayer::OnKeyReleasedEvent(KeyReleasedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.KeysDown[e.GetKeyCode()] = false;
-        return false;
-
-    }
-
-    bool ImGuiLayer::OnKeyTypedEvent(KeyTypedEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-
-        // 传递字符给 ImGui
-        unsigned int c = (unsigned int)e.GetKeyCode();
-        if (c > 0 && c < 0x10000)
-            //将字符添加到 ImGui 的字符输入缓冲区
-            io.AddInputCharacter(c);
-
-        return false;
-    }
-
-    bool ImGuiLayer::OnWindowResizedEvent(WindowResizeEvent& e)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        // ImGui内部会基于新尺寸计算所有UI位置
-        io.DisplaySize = ImVec2(e.GetWidth(), e.GetHeight());
-
-        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-
-        // 确保OpenGL的渲染输出覆盖整个窗口
-        glViewport(0, 0, e.GetWidth(), e.GetHeight());
-        return false;
-    }
+	
 
  
 }

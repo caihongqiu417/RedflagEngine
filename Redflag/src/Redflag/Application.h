@@ -11,6 +11,8 @@
 #include"Redflag/Events/Event.h"
 #include "Redflag/Events/ApplicationEvent.h" 
 
+#include"Redflag/ImGui/ImGuiLayer.h"
+
 
 
 namespace Redflag
@@ -34,6 +36,7 @@ namespace Redflag
 	
 	private:
 		std::unique_ptr<Window>  m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 	private:
