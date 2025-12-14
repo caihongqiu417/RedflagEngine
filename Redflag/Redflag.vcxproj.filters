@@ -67,6 +67,8 @@
     <ClInclude Include="src\Redflag\rfpch.h">
       <Filter>Redflag</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Input.h" />
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
@@ -93,5 +95,6 @@
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>Redflag</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
   </ItemGroup>
 </Project>
