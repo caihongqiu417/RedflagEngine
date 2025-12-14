@@ -69,6 +69,8 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Input.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
+    <ClInclude Include="src\Redflag\KeyCode.h" />
+    <ClInclude Include="src\Redflag\MouseButtonCode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">

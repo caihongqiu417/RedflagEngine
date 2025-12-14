@@ -159,9 +159,11 @@
     <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
     <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Redflag\KeyCode.h" />
     <ClInclude Include="src\Redflag\Layer.h" />
     <ClInclude Include="src\Redflag\LayerStack.h" />
     <ClInclude Include="src\Redflag\Log.h" />
+    <ClInclude Include="src\Redflag\MouseButtonCode.h" />
     <ClInclude Include="src\Redflag\Window.h" />
     <ClInclude Include="src\Redflag\rfpch.h" />
   </ItemGroup>
