@@ -83,7 +83,10 @@ namespace Redflag {
         Application& app = Application::Get();
 
         // 设置显示尺寸
-        io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+        io.DisplaySize = ImVec2(
+            static_cast<float>(app.GetWindow().GetWidth()),
+            static_cast<float>(app.GetWindow().GetHeight())
+        );
 
         // 渲染ImGui
         ImGui::Render();  // 生成绘制数据
