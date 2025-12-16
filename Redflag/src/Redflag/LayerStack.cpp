@@ -19,7 +19,7 @@ namespace Redflag
 		m_LayerInsertIndex++;
 	}
 
-	// 推送覆盖层：直接添加到末尾，索引不变
+	// 推送覆盖层：直接添加到末尾，所以索引不变
 	void LayerStack::PushOverlay(Layer* overlay)
 	{
 		m_Layers.emplace_back(overlay);

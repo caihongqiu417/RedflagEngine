@@ -8,6 +8,9 @@
 
 #include"Input.h"
 
+
+
+
 namespace Redflag
 {
 	#define BIND_EVENT_FN(x) std::bind(&Application::x,this,std::placeholders::_1)
@@ -60,7 +63,8 @@ namespace Redflag
 	}
 
 
-	void Application::Run() {
+	void Application::Run()
+	{
 		WindowResizeEvent e(1280, 720);
 		if (e.IsInCategory(EventCategoryApplication)) {
 			RF_CORE_TRACE("Window resize event triggered"); 

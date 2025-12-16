@@ -11,6 +11,7 @@ IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"
 IncludeDir["fmt"] = "Redflag/vendor/fmt/include"
 IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
 IncludeDir["Imgui"] = "Redflag/vendor/imgui"
+IncludeDir["glm"]    = "Redflag/vendor/glm" 
 
 include "Redflag/vendor/GLFW"
 include"Redflag/vendor/Glad"
@@ -33,7 +34,9 @@ project "Redflag"
     
     files {
         "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/glm/glm/**.hpp",
+        "%{prj.name}/vendor/glm/glm/**.inl"
     }
     
     includedirs {
@@ -43,7 +46,8 @@ project "Redflag"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.fmt}",
         "%{IncludeDir.Glad}",
-        "%{IncludeDir.Imgui}"
+        "%{IncludeDir.Imgui}",
+        "%{IncludeDir.glm}"
     }
     
     links {
@@ -92,7 +96,9 @@ project "Sandbox"
     
     files {
         "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+         "%{prj.name}/vendor/glm/glm/**.hpp",
+        "%{prj.name}/vendor/glm/glm/**.inl"
     }
     
     includedirs {
@@ -101,7 +107,8 @@ project "Sandbox"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.fmt}",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.Glad}"
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.glm}"
     }
     
     links {

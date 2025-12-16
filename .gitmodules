@@ -4,3 +4,6 @@
 [submodule "Redflag/vendor/imgui"]
 	path = Redflag/vendor/imgui
 	url = http://github.com/TheCherno/imgui
+[submodule "Redflag/vendor/glm"]
+	path = Redflag/vendor/glm
+	url = https://github.com/g-truc/glm
