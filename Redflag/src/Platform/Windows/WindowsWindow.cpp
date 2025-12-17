@@ -1,10 +1,12 @@
 #include "rfpch.h"
+#include <GLFW/glfw3.h> 
 #include "WindowsWindow.h"
 
 #include"Redflag/Events/KeyEvent.h"
 #include"Redflag/Events/MouseEvent.h"
 #include"Redflag/Events/ApplicationEvent.h"
-#include"glad/glad.h"
+
+#include"Platform/OpenGL/OpenGLContext.h"
 
 namespace Redflag {
 
@@ -44,10 +46,12 @@ namespace Redflag {
 
 		//创建glfw窗口并指定上下文
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
+		
 		//必须在创建glfw上下文后创建glad！！
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		RF_CORE_ASSERT(status, "Failed to initialize Glad!");
+		// 使用新的渲染上下文
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+		
 
 		//给当前窗口存m_Data指针，用于之后回调时获取保存的信息和回调成员函数
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -168,7 +172,7 @@ namespace Redflag {
 		//轮询事件
 		glfwPollEvents();
 		//交换缓冲区
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 
 
 	}

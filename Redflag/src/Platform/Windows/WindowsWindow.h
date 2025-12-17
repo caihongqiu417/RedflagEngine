@@ -1,8 +1,9 @@
 #pragma once
-#pragma once
 #include "Redflag/Window.h"
-#include<GLFW/glfw3.h>
 #include"Redflag/Log.h"
+#include "Redflag/Renderer/GraphicsContext.h"
+struct GLFWwindow;
+
 namespace Redflag {
 	class WindowsWindow :public Window
 	{
@@ -24,6 +25,7 @@ namespace Redflag {
 		virtual void ShutDown();
 	private:
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 		struct WindowData {
 			std::string Title;
 			unsigned int Width, Height;
