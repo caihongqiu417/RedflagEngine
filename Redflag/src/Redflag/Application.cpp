@@ -17,7 +17,31 @@ namespace Redflag
 
 	Application* Application::s_Instance = nullptr;
 
+	static GLenum ShaderDataTypeToOpenGLBaseType(Redflag::ShaderDataType type)
+	{
+		switch (type)
+		{
+		case Redflag::ShaderDataType::Float:   return GL_FLOAT;
+		case Redflag::ShaderDataType::Float2:  return GL_FLOAT;
+		case Redflag::ShaderDataType::Float3:  return GL_FLOAT;
+		case Redflag::ShaderDataType::Float4:  return GL_FLOAT;
 
+		case Redflag::ShaderDataType::Mat3:    return GL_FLOAT;
+		case Redflag::ShaderDataType::Mat4:    return GL_FLOAT;
+
+		case Redflag::ShaderDataType::Int:     return GL_INT;
+		case Redflag::ShaderDataType::Int2:    return GL_INT;
+		case Redflag::ShaderDataType::Int3:    return GL_INT;
+		case Redflag::ShaderDataType::Int4:    return GL_INT;
+
+		case Redflag::ShaderDataType::Bool:    return GL_BOOL;
+
+		default:
+			// 错误处理：未知类型
+			RF_CORE_ASSERT(false, "Unknown ShaderDataType!");
+			return 0;
+		}
+	}
 
 
 
@@ -43,26 +67,41 @@ namespace Redflag
 		glBindVertexArray(m_VertexArray);  // 开始配置这个VAO
 
 		// 2. 创建顶点缓冲区(VBO)
-		// 定义三角形顶点：3个点 × (x,y,z)3个坐标
 		float vertices[] = {
-			-0.5f, -0.5f, 0.0f,  // 左下角顶点
-			 0.5f, -0.5f, 0.0f,  // 右下角顶点
-			 0.0f,  0.5f, 0.0f   // 顶部顶点
+			// 左下角：薄荷绿
+			-0.5f, -0.5f, 0.0f,  0.47f, 0.87f, 0.68f, 1.0f,
+			// 右下角：淡紫色
+			 0.5f, -0.5f, 0.0f,  0.81f, 0.67f, 0.87f, 1.0f,
+			// 顶部：浅橙色
+			 0.0f,  0.5f, 0.0f,  0.98f, 0.80f, 0.47f, 1.0f,
 		};
 		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 
 		// 3. 配置VAO的属性槽0
 		// 告诉VAO："槽0的数据来自当前VBO，格式是每12字节3个float"
-		glEnableVertexAttribArray(0);  // 启用VAO的0号属性槽
+		BufferLayout layout = {
+			{ShaderDataType::Float3,"a_Position"},
+			{ShaderDataType::Float4,"a_Color"},
+		};
 
-		glVertexAttribPointer(
-			0,                    // VAO的属性槽编号（对应shader的layout(location=0)）
-			3,                    // 每个顶点的分量数：vec3 (x,y,z)
-			GL_FLOAT,             // 数据类型：浮点数
-			GL_FALSE,             // 不归一化
-			3 * sizeof(float),    // 顶点间距：一个顶点占12字节
-			nullptr               // 数据在VBO中的起始位置（从开头开始）
-		);
+		m_VertexBuffer->SetLayout(layout);
+
+		// 设置顶点属性
+		uint32_t index = 0;
+		for (const auto& element : m_VertexBuffer->GetLayout())
+		{
+			glEnableVertexAttribArray(index);
+			glVertexAttribPointer(
+				index,
+				element.GetComponentCount(),
+				ShaderDataTypeToOpenGLBaseType(element.Type),
+				element.Normalized ? GL_TRUE : GL_FALSE,
+				layout.GetStride(),
+				(const void*)element.Offset
+			);
+			index++;
+		}
+
 
 		// 4. 创建索引缓冲区(IBO)
 		// 定义绘制顺序：顶点0→1→2组成三角形
@@ -73,11 +112,16 @@ namespace Redflag
 		// 顶点着色器：从VAO的槽0读取位置，传递给片段着色器
 		std::string vertexSrc = R"(
         #version 330 core
-        layout(location=0) in vec3 a_Position;  // 从VAO的槽0读取数据
+
+        layout(location=0) in vec3 a_Position; 
+		layout(location=1) in vec4 a_Color;	
+
         out vec3 v_Position;                    // 传递给片段着色器
+		out vec4 v_Color;	
         void main()
         {
             v_Position = a_Position;
+			v_Color=a_Color;
             gl_Position = vec4(a_Position, 1.0);
         }
     )";
@@ -87,10 +131,10 @@ namespace Redflag
         #version 330 core
         layout(location=0) out vec4 Fragcolor;
         in vec3 v_Position;                     // 接收来自顶点着色器的数据
+		in vec4 v_Color;	
         void main()
         {
-            // 将位置值映射为颜色：左下角深色，右上角亮色
-            Fragcolor = vec4(v_Position*0.5+0.5, 1.0);
+			Fragcolor=vec4(v_Color);
         }
     )";
 
