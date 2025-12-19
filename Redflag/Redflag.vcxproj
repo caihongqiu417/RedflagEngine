@@ -165,6 +165,7 @@
     <ClInclude Include="src\Redflag\Log.h" />
     <ClInclude Include="src\Redflag\MouseButtonCode.h" />
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Redflag\Renderer\Shader.h" />
     <ClInclude Include="src\Redflag\Window.h" />
     <ClInclude Include="src\Redflag\rfpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
@@ -597,6 +598,7 @@
     <ClCompile Include="src\Redflag\Layer.cpp" />
     <ClCompile Include="src\Redflag\LayerStack.cpp" />
     <ClCompile Include="src\Redflag\Log.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

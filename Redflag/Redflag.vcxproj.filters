@@ -105,6 +105,9 @@
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Shader.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Window.h">
       <Filter>src\Redflag</Filter>
     </ClInclude>
@@ -1396,6 +1399,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Log.cpp">
       <Filter>src\Redflag</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\Shader.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>
