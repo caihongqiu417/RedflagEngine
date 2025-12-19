@@ -15,6 +15,8 @@
 
 #include"Renderer/Shader.h"
 
+#include"Renderer/Buffer.h"
+
 
 
 namespace Redflag
@@ -45,8 +47,8 @@ namespace Redflag
 		static Application* s_Instance;
 		// ========== 三角形渲染相关成员变量 ==========
 		unsigned int m_VertexArray;   // 顶点数组对象 (VAO)
-		unsigned int m_VertexBuffer;  // 顶点缓冲区对象 (VBO)
-		unsigned int m_IndexBuffer;   // 索引缓冲区对象 (IBO/EBO)
+		std::unique_ptr<VertexBuffer> m_VertexBuffer;
+		std::unique_ptr <IndexBuffer> m_IndexBuffer;
 		// ============================================
 
 		//shader program

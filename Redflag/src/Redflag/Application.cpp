@@ -17,100 +17,88 @@ namespace Redflag
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application() 
+
+
+
+
+	Application::Application()
 	{
+		// 单例检查：确保只有一个Application实例
 		RF_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
+		// 创建窗口并设置事件回调
 		m_Window = std::unique_ptr<Window>(Window::Create());
-
-		//把成员函数onEvent存储到m_window的m_data中
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
+		// 创建ImGui调试界面层
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-		// ========== 设置三角形渲染数据 ==========
+		// ========== 渲染初始化 ==========
 
-		// 1. 生成并绑定分配说明书VAO
+		// 1. 创建并绑定顶点数组对象(VAO)
+		// VAO是容器，管理所有顶点状态
 		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);
+		glBindVertexArray(m_VertexArray);  // 开始配置这个VAO
 
-		// 2. 生成并绑定顶点缓冲区VBO
-		glGenBuffers(1, &m_VertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
-
-		// 3. 定义顶点数据，写入VBO
-		float vertices[3 * 3] = {
-			-0.5f, -0.5f, 0.0f,  
-			 0.5f, -0.5f, 0.0f,  
-			 0.0f,  0.5f, 0.0f   
+		// 2. 创建顶点缓冲区(VBO)
+		// 定义三角形顶点：3个点 × (x,y,z)3个坐标
+		float vertices[] = {
+			-0.5f, -0.5f, 0.0f,  // 左下角顶点
+			 0.5f, -0.5f, 0.0f,  // 右下角顶点
+			 0.0f,  0.5f, 0.0f   // 顶部顶点
 		};
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 
-		// 4. 设置VAO（告诉OpenGL如何解释顶点数据）
-			// ========== CPU 端：向 0 号槽"写入"数据 ==========
+		// 3. 配置VAO的属性槽0
+		// 告诉VAO："槽0的数据来自当前VBO，格式是每12字节3个float"
+		glEnableVertexAttribArray(0);  // 启用VAO的0号属性槽
 
-			glEnableVertexAttribArray(0);          // ← 打开0号数据线
+		glVertexAttribPointer(
+			0,                    // VAO的属性槽编号（对应shader的layout(location=0)）
+			3,                    // 每个顶点的分量数：vec3 (x,y,z)
+			GL_FLOAT,             // 数据类型：浮点数
+			GL_FALSE,             // 不归一化
+			3 * sizeof(float),    // 顶点间距：一个顶点占12字节
+			nullptr               // 数据在VBO中的起始位置（从开头开始）
+		);
 
-			// 告诉GPU："数据线0上的数据格式是这样的..."
-			glVertexAttribPointer(
-				0,                                  // ← 这是0号线
-				3,                                  // 每个顶点有3个float（x,y,z）
-				GL_FLOAT,                          // 数据类型是浮点数
-				GL_FALSE,                          // 不进行归一化
-				3 * sizeof(float),                 // 从当前顶点到下一个顶点的步长
-				nullptr                            // 数据从开头开始
-			);
-			// ========== CPU 端：向 0 号槽"写入"数据 ==========
+		// 4. 创建索引缓冲区(IBO)
+		// 定义绘制顺序：顶点0→1→2组成三角形
+		uint32_t indices[] = { 0, 1, 2 };
+		m_IndexBuffer.reset(IndexBuffer::Create(indices, 3));
 
-		// 5. 生成并绑定索引缓冲区IBO/EBO
-		glGenBuffers(1, &m_IndexBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
-
-		// 6. 定义索引数据：0→1→2，写入IBO
-		unsigned int indices[3] = { 0, 1, 2 };
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-		// ============================================
-
-
-
-		// ========== 写顶点和片段shader，编译链接成program==========
-		//从0号线读取数据，赋值给a_Position变量
+		// 5. 创建着色器程序
+		// 顶点着色器：从VAO的槽0读取位置，传递给片段着色器
 		std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location=0) in vec3 a_Position;
- 
-			out vec3 v_Position;
+        #version 330 core
+        layout(location=0) in vec3 a_Position;  // 从VAO的槽0读取数据
+        out vec3 v_Position;                    // 传递给片段着色器
+        void main()
+        {
+            v_Position = a_Position;
+            gl_Position = vec4(a_Position, 1.0);
+        }
+    )";
 
-			void main()
-			{
-				v_Position=a_Position;
-				gl_Position=vec4(a_Position,1.0);
-			}
-
-		)";
-
+		// 片段着色器：计算每个像素的颜色
 		std::string fragmentSrc = R"(
-			#version 330 core
-
-			layout(location=0) out vec4 Fragcolor;
-
-			in vec3 v_Position;
-
-			void main()
-			{
-				Fragcolor = vec4(v_Position*0.5+0.5,1.0);  
-			}
-
-		)";
+        #version 330 core
+        layout(location=0) out vec4 Fragcolor;
+        in vec3 v_Position;                     // 接收来自顶点着色器的数据
+        void main()
+        {
+            // 将位置值映射为颜色：左下角深色，右上角亮色
+            Fragcolor = vec4(v_Position*0.5+0.5, 1.0);
+        }
+    )";
 
 		m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
-
-		// ====================================================
-
 	}
+
+
+
 	Application::~Application() 
 	{
 
@@ -164,7 +152,7 @@ namespace Redflag
 			m_Shader->Bind();
 
 			glBindVertexArray(m_VertexArray);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+			glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 
 			// 更新所有层
