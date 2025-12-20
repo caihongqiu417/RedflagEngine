@@ -45,103 +45,163 @@ namespace Redflag
 
 
 
-	Application::Application()
-	{
-		// 单例检查：确保只有一个Application实例
-		RF_CORE_ASSERT(!s_Instance, "Application already exists!");
-		s_Instance = this;
+    Application::Application()
+    {
+        // 单例检查：确保只有一个Application实例
+        RF_CORE_ASSERT(!s_Instance, "Application already exists!");
+        s_Instance = this;
 
-		// 创建窗口并设置事件回调
-		m_Window = std::unique_ptr<Window>(Window::Create());
-		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+        // 创建窗口并设置事件回调
+        m_Window = std::unique_ptr<Window>(Window::Create());
+        m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
-		// 创建ImGui调试界面层
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverlay(m_ImGuiLayer);
-
-		// ========== 渲染初始化 ==========
-
-		// 1. 创建并绑定顶点数组对象(VAO)
-		// VAO是容器，管理所有顶点状态
-		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);  // 开始配置这个VAO
-
-		// 2. 创建顶点缓冲区(VBO)
-		float vertices[] = {
-			// 左下角：薄荷绿
-			-0.5f, -0.5f, 0.0f,  0.47f, 0.87f, 0.68f, 1.0f,
-			// 右下角：淡紫色
-			 0.5f, -0.5f, 0.0f,  0.81f, 0.67f, 0.87f, 1.0f,
-			// 顶部：浅橙色
-			 0.0f,  0.5f, 0.0f,  0.98f, 0.80f, 0.47f, 1.0f,
-		};
-		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-
-		// 3. 配置VAO的属性槽0
-		// 告诉VAO："槽0的数据来自当前VBO，格式是每12字节3个float"
-		BufferLayout layout = {
-			{ShaderDataType::Float3,"a_Position"},
-			{ShaderDataType::Float4,"a_Color"},
-		};
-
-		m_VertexBuffer->SetLayout(layout);
-
-		// 设置顶点属性
-		uint32_t index = 0;
-		for (const auto& element : m_VertexBuffer->GetLayout())
-		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(
-				index,
-				element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset
-			);
-			index++;
-		}
+        // 创建ImGui调试界面层
+        m_ImGuiLayer = new ImGuiLayer();
+        PushOverlay(m_ImGuiLayer);
 
 
-		// 4. 创建索引缓冲区(IBO)
-		// 定义绘制顺序：顶点0→1→2组成三角形
-		uint32_t indices[] = { 0, 1, 2 };
-		m_IndexBuffer.reset(IndexBuffer::Create(indices, 3));
+        // =============================渲染初始化三角形 ========================================
+        //1.创建顶点数组VAO
+        m_VertexArray.reset(VertexArray::Create());
 
-		// 5. 创建着色器程序
-		// 顶点着色器：从VAO的槽0读取位置，传递给片段着色器
-		std::string vertexSrc = R"(
+        // 2. 创建顶点缓冲区VBO
+        float vertices[] = {
+            // 左下角：薄荷绿
+            -0.5f, -0.5f, 0.0f,  0.47f, 0.87f, 0.68f, 1.0f,
+            // 右下角：淡紫色
+             0.5f, -0.5f, 0.0f,  0.81f, 0.67f, 0.87f, 1.0f,
+             // 顶部：浅橙色
+              0.0f,  0.5f, 0.0f,  0.98f, 0.80f, 0.47f, 1.0f,
+        };
+
+        std::shared_ptr<VertexBuffer> vertexBuffer;
+        vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
+
+        //3.1 VBO配置layout
+        BufferLayout layout = {
+            {ShaderDataType::Float3,"a_Position"},
+            {ShaderDataType::Float4,"a_Color"},
+        };
+        vertexBuffer->SetLayout(layout);
+        //3.2 当前VBO绑定到对应VAO
+        m_VertexArray->AddVertexBuffer(vertexBuffer);
+
+        // 4.1 创建索引缓冲区IBO
+        uint32_t indices[] = { 0, 1, 2 };
+
+        std::shared_ptr<IndexBuffer> indexBuffer;
+        indexBuffer.reset(IndexBuffer::Create(indices, 3));
+
+        //4.2 当前IBO绑定到对应VAO
+        m_VertexArray->SetIndexBuffer(indexBuffer);
+        // ======================================================================================
+
+        // =============================渲染初始化正方形 =========================================
+        //1.创建正方形的顶点数组VAO
+        m_SquareVA.reset(VertexArray::Create());
+
+        // 2. 创建正方形的顶点缓冲区VBO
+        float squareVertices[] = {
+            // 位置: (x, y, z)           // 颜色: (r, g, b, a)
+            // 左下角：深蓝色渐变到浅蓝色
+            -0.5f, -0.5f, 0.0f,          0.1f, 0.2f, 0.8f, 1.0f,   // 深蓝色
+            // 右下角：紫色渐变到蓝色
+             0.5f, -0.5f, 0.0f,          0.6f, 0.2f, 1.0f, 1.0f,   // 紫色
+             // 右上角：浅蓝色渐变到白色
+              0.5f,  0.5f, 0.0f,          0.3f, 0.6f, 1.0f, 1.0f,   // 浅蓝色
+              // 左上角：青色渐变到蓝色
+              -0.5f,  0.5f, 0.0f,          0.0f, 0.8f, 0.9f, 1.0f,   // 青色
+        };
+
+        std::shared_ptr<VertexBuffer> squareVB;
+        squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+
+        // 3.1 VBO配置layout（使用相同的布局）
+        BufferLayout squareLayout = {
+            {ShaderDataType::Float3,"a_Position"},
+            {ShaderDataType::Float4,"a_Color"},
+        };
+        squareVB->SetLayout(squareLayout);
+        // 3.2 VBO绑定到当前VAO
+        m_SquareVA->AddVertexBuffer(squareVB);
+
+        // 4.1 创建正方形的索引缓冲区IBO（两个三角形组成一个正方形）
+        uint32_t squareIndices[] = {
+            0, 1, 2,  // 第一个三角形：左下-右下-右上
+            2, 3, 0   // 第二个三角形：右上-左上-左下
+        };
+
+        std::shared_ptr<IndexBuffer> squareIB;
+        squareIB.reset(IndexBuffer::Create(squareIndices, 6));
+
+        // 4.2 IBO绑定到当前VAO
+        m_SquareVA->SetIndexBuffer(squareIB);
+        // ======================================================================================
+
+        // ========== 创建第一个着色器：用于三角形 ==========
+        std::string vertexSrc = R"(
         #version 330 core
 
         layout(location=0) in vec3 a_Position; 
-		layout(location=1) in vec4 a_Color;	
+        layout(location=1) in vec4 a_Color;	
 
         out vec3 v_Position;                    // 传递给片段着色器
-		out vec4 v_Color;	
+        out vec4 v_Color;	
         void main()
         {
             v_Position = a_Position;
-			v_Color=a_Color;
+            v_Color = a_Color;
             gl_Position = vec4(a_Position, 1.0);
         }
     )";
 
-		// 片段着色器：计算每个像素的颜色
-		std::string fragmentSrc = R"(
+        std::string fragmentSrc = R"(
         #version 330 core
         layout(location=0) out vec4 Fragcolor;
         in vec3 v_Position;                     // 接收来自顶点着色器的数据
-		in vec4 v_Color;	
+        in vec4 v_Color;	
         void main()
         {
-			Fragcolor=vec4(v_Color);
+            Fragcolor = vec4(v_Color);
         }
     )";
 
-		m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
-	}
+        m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
 
+        // ========== 创建第二个着色器：用于正方形 ==========
 
+        std::string vertexSrc2 = R"(
+             #version 330 core
+
+                layout(location=0) in vec3 a_Position;
+             layout(location=1) in vec4 a_Color;
+
+                out vec3 v_Position;
+                out vec4 v_Color;
+    
+              void main()
+              {
+                    v_Position = a_Position;
+                     v_Color = a_Color;
+                    gl_Position = vec4(a_Position, 1.0);
+             }
+        )";
+
+        std::string fragmentSrc2 = R"(
+             #version 330 core
+                 layout(location=0) out vec4 Fragcolor;
+                in vec3 v_Position;
+                in vec4 v_Color;
+    
+                void main()
+                {
+                     // 轻微调亮效果：乘以1.2
+                        Fragcolor = vec4(v_Color.rgb * 1.2, v_Color.a);
+                }
+        )";
+
+        m_BlueShader.reset(new Shader(vertexSrc2, fragmentSrc2));
+    }
 
 	Application::~Application() 
 	{
@@ -188,15 +248,21 @@ namespace Redflag
 
 		while (m_Running)
 		{
-			// 1. 设置清屏颜色为深灰色并清除颜色缓冲区
+
+			//设置清屏颜色为深灰色并清除颜色缓冲区
 			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			//2. drawcall
-			m_Shader->Bind();
+            // ========== 绘制正方形（使用第二个着色器） ==========
+            m_BlueShader->Bind();
+            m_SquareVA->Bind();
+            glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
-			glBindVertexArray(m_VertexArray);
-			glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+			// ========== 绘制三角形（使用第一个着色器） ==========
+			m_Shader->Bind();
+            m_VertexArray->Bind();
+			glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
 
 
 			// 更新所有层
