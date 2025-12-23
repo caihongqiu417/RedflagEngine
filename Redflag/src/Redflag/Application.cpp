@@ -7,7 +7,7 @@
 #include"glad/glad.h"
 
 #include"Input.h"
-
+#include "Redflag/Renderer/Renderer.h"
 
 
 
@@ -250,20 +250,22 @@ namespace Redflag
 		{
 
 			//设置清屏颜色为深灰色并清除颜色缓冲区
-			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
+            RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+            RenderCommand::Clear();
+
+            Renderer::BeginScene();
 
             // ========== 绘制正方形（使用第二个着色器） ==========
             m_BlueShader->Bind();
-            m_SquareVA->Bind();
+            Renderer::Submit(m_SquareVA);
             glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			// ========== 绘制三角形（使用第一个着色器） ==========
 			m_Shader->Bind();
-            m_VertexArray->Bind();
+            Renderer::Submit(m_VertexArray);
 			glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
-
+            Renderer::EndScene();
 
 			// 更新所有层
 			for (Layer* layer : m_LayerStack) {

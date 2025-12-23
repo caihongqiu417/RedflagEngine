@@ -58,7 +58,7 @@ namespace Redflag
 		//std::shared_ptr <IndexBuffer> m_SquareIB;
 		//=============================================
 
-			//=====Shader program:用于三角形 =============
+		//=====Shader program:用于三角形 =============
 		std::unique_ptr<Shader> m_Shader;
 		//=============================================
 

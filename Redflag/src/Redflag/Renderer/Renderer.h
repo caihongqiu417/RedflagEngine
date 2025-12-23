@@ -1,18 +1,19 @@
 #pragma once
 
-//==============Renderer API======================//
-namespace Redflag {
-	enum class RendererAPI
-	{
-		None=0,OpenGL=1
-	 };
+#include "RenderCommand.h"
 
+//Renderer：管理整个场景（决定画什么）
+namespace Redflag {
+	
 	class Renderer
 	{
 	public:
-		inline static RendererAPI GetAPI() { return s_RendererAPI; }
+		static void BeginScene();
+		static void EndScene();
 
-	private:
-		static RendererAPI s_RendererAPI;
+		//提交给rendercommand
+		static void Submit(const std::shared_ptr<VertexArray>& vertexArray);
+
+		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	};
 }
