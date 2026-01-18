@@ -1395,6 +1395,7 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1454,5 +1455,6 @@
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp" />
   </ItemGroup>
 </Project>

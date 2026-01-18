@@ -46,6 +46,7 @@ namespace Redflag
 
 
     Application::Application()
+        :m_Camera(-2.0f,2.0f,-2.0f,2.0f)
     {
         // 单例检查：确保只有一个Application实例
         RF_CORE_ASSERT(!s_Instance, "Application already exists!");
@@ -145,13 +146,15 @@ namespace Redflag
         layout(location=0) in vec3 a_Position; 
         layout(location=1) in vec4 a_Color;	
 
+        uniform mat4 u_ViewProjection;
+
         out vec3 v_Position;                    // 传递给片段着色器
         out vec4 v_Color;	
         void main()
         {
             v_Position = a_Position;
             v_Color = a_Color;
-            gl_Position = vec4(a_Position, 1.0);
+            gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
         }
     )";
 
@@ -174,7 +177,9 @@ namespace Redflag
              #version 330 core
 
                 layout(location=0) in vec3 a_Position;
-             layout(location=1) in vec4 a_Color;
+                layout(location=1) in vec4 a_Color;
+
+                uniform mat4 u_ViewProjection;
 
                 out vec3 v_Position;
                 out vec4 v_Color;
@@ -183,7 +188,7 @@ namespace Redflag
               {
                     v_Position = a_Position;
                      v_Color = a_Color;
-                    gl_Position = vec4(a_Position, 1.0);
+                    gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
              }
         )";
 
@@ -252,17 +257,18 @@ namespace Redflag
 			//设置清屏颜色为深灰色并清除颜色缓冲区
             RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
             RenderCommand::Clear();
+            
+            m_Camera.SetPosition({ 0.5f,0.5f,0.5f });
+            m_Camera.SetRotation(45.0f);
 
-            Renderer::BeginScene();
+            Renderer::BeginScene(m_Camera);
 
             // ========== 绘制正方形（使用第二个着色器） ==========
-            m_BlueShader->Bind();
-            Renderer::Submit(m_SquareVA);
+            Renderer::Submit(m_BlueShader,m_SquareVA);
             glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			// ========== 绘制三角形（使用第一个着色器） ==========
-			m_Shader->Bind();
-            Renderer::Submit(m_VertexArray);
+            Renderer::Submit(m_Shader,m_VertexArray);
 			glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
             Renderer::EndScene();

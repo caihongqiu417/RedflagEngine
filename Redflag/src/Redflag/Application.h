@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 
-//test for event
+
 #include"Events/Event.h"
 
 #include<Redflag/Window.h>
@@ -16,6 +16,9 @@
 
 #include"Renderer/Buffer.h"
 #include"Renderer/VertexArray.h"
+
+
+#include"Redflag/Renderer/OrthographicCamera.h"
 
 
 
@@ -59,12 +62,14 @@ namespace Redflag
 		//=============================================
 
 		//=====Shader program:用于三角形 =============
-		std::unique_ptr<Shader> m_Shader;
+		std::shared_ptr<Shader> m_Shader;
 		//=============================================
 
 		//=====Shader program:用于正方形（蓝色主题） =============
-		std::unique_ptr<Shader> m_BlueShader;
+		std::shared_ptr<Shader> m_BlueShader;
 		//=======================================================
+
+		OrthographicCamera m_Camera;
 
 	};
 
