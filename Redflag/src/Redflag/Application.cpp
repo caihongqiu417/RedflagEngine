@@ -46,7 +46,6 @@ namespace Redflag
 
 
     Application::Application()
-        :m_Camera(-2.0f,2.0f,-2.0f,2.0f)
     {
         // 单例检查：确保只有一个Application实例
         RF_CORE_ASSERT(!s_Instance, "Application already exists!");
@@ -61,151 +60,7 @@ namespace Redflag
         PushOverlay(m_ImGuiLayer);
 
 
-        // =============================渲染初始化三角形 ========================================
-        //1.创建顶点数组VAO
-        m_VertexArray.reset(VertexArray::Create());
-
-        // 2. 创建顶点缓冲区VBO
-        float vertices[] = {
-            // 左下角：薄荷绿
-            -0.5f, -0.5f, 0.0f,  0.47f, 0.87f, 0.68f, 1.0f,
-            // 右下角：淡紫色
-             0.5f, -0.5f, 0.0f,  0.81f, 0.67f, 0.87f, 1.0f,
-             // 顶部：浅橙色
-              0.0f,  0.5f, 0.0f,  0.98f, 0.80f, 0.47f, 1.0f,
-        };
-
-        std::shared_ptr<VertexBuffer> vertexBuffer;
-        vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-
-        //3.1 VBO配置layout
-        BufferLayout layout = {
-            {ShaderDataType::Float3,"a_Position"},
-            {ShaderDataType::Float4,"a_Color"},
-        };
-        vertexBuffer->SetLayout(layout);
-        //3.2 当前VBO绑定到对应VAO
-        m_VertexArray->AddVertexBuffer(vertexBuffer);
-
-        // 4.1 创建索引缓冲区IBO
-        uint32_t indices[] = { 0, 1, 2 };
-
-        std::shared_ptr<IndexBuffer> indexBuffer;
-        indexBuffer.reset(IndexBuffer::Create(indices, 3));
-
-        //4.2 当前IBO绑定到对应VAO
-        m_VertexArray->SetIndexBuffer(indexBuffer);
-        // ======================================================================================
-
-        // =============================渲染初始化正方形 =========================================
-        //1.创建正方形的顶点数组VAO
-        m_SquareVA.reset(VertexArray::Create());
-
-        // 2. 创建正方形的顶点缓冲区VBO
-        float squareVertices[] = {
-            // 位置: (x, y, z)           // 颜色: (r, g, b, a)
-            // 左下角：深蓝色渐变到浅蓝色
-            -0.5f, -0.5f, 0.0f,          0.1f, 0.2f, 0.8f, 1.0f,   // 深蓝色
-            // 右下角：紫色渐变到蓝色
-             0.5f, -0.5f, 0.0f,          0.6f, 0.2f, 1.0f, 1.0f,   // 紫色
-             // 右上角：浅蓝色渐变到白色
-              0.5f,  0.5f, 0.0f,          0.3f, 0.6f, 1.0f, 1.0f,   // 浅蓝色
-              // 左上角：青色渐变到蓝色
-              -0.5f,  0.5f, 0.0f,          0.0f, 0.8f, 0.9f, 1.0f,   // 青色
-        };
-
-        std::shared_ptr<VertexBuffer> squareVB;
-        squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-
-        // 3.1 VBO配置layout（使用相同的布局）
-        BufferLayout squareLayout = {
-            {ShaderDataType::Float3,"a_Position"},
-            {ShaderDataType::Float4,"a_Color"},
-        };
-        squareVB->SetLayout(squareLayout);
-        // 3.2 VBO绑定到当前VAO
-        m_SquareVA->AddVertexBuffer(squareVB);
-
-        // 4.1 创建正方形的索引缓冲区IBO（两个三角形组成一个正方形）
-        uint32_t squareIndices[] = {
-            0, 1, 2,  // 第一个三角形：左下-右下-右上
-            2, 3, 0   // 第二个三角形：右上-左上-左下
-        };
-
-        std::shared_ptr<IndexBuffer> squareIB;
-        squareIB.reset(IndexBuffer::Create(squareIndices, 6));
-
-        // 4.2 IBO绑定到当前VAO
-        m_SquareVA->SetIndexBuffer(squareIB);
-        // ======================================================================================
-
-        // ========== 创建第一个着色器：用于三角形 ==========
-        std::string vertexSrc = R"(
-        #version 330 core
-
-        layout(location=0) in vec3 a_Position; 
-        layout(location=1) in vec4 a_Color;	
-
-        uniform mat4 u_ViewProjection;
-
-        out vec3 v_Position;                    // 传递给片段着色器
-        out vec4 v_Color;	
-        void main()
-        {
-            v_Position = a_Position;
-            v_Color = a_Color;
-            gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
-        }
-    )";
-
-        std::string fragmentSrc = R"(
-        #version 330 core
-        layout(location=0) out vec4 Fragcolor;
-        in vec3 v_Position;                     // 接收来自顶点着色器的数据
-        in vec4 v_Color;	
-        void main()
-        {
-            Fragcolor = vec4(v_Color);
-        }
-    )";
-
-        m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
-
-        // ========== 创建第二个着色器：用于正方形 ==========
-
-        std::string vertexSrc2 = R"(
-             #version 330 core
-
-                layout(location=0) in vec3 a_Position;
-                layout(location=1) in vec4 a_Color;
-
-                uniform mat4 u_ViewProjection;
-
-                out vec3 v_Position;
-                out vec4 v_Color;
-    
-              void main()
-              {
-                    v_Position = a_Position;
-                     v_Color = a_Color;
-                    gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
-             }
-        )";
-
-        std::string fragmentSrc2 = R"(
-             #version 330 core
-                 layout(location=0) out vec4 Fragcolor;
-                in vec3 v_Position;
-                in vec4 v_Color;
-    
-                void main()
-                {
-                     // 轻微调亮效果：乘以1.2
-                        Fragcolor = vec4(v_Color.rgb * 1.2, v_Color.a);
-                }
-        )";
-
-        m_BlueShader.reset(new Shader(vertexSrc2, fragmentSrc2));
+        
     }
 
 	Application::~Application() 
@@ -253,25 +108,6 @@ namespace Redflag
 
 		while (m_Running)
 		{
-
-			//设置清屏颜色为深灰色并清除颜色缓冲区
-            RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-            RenderCommand::Clear();
-            
-            m_Camera.SetPosition({ 0.5f,0.5f,0.5f });
-            m_Camera.SetRotation(45.0f);
-
-            Renderer::BeginScene(m_Camera);
-
-            // ========== 绘制正方形（使用第二个着色器） ==========
-            Renderer::Submit(m_BlueShader,m_SquareVA);
-            glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-
-			// ========== 绘制三角形（使用第一个着色器） ==========
-            Renderer::Submit(m_Shader,m_VertexArray);
-			glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-
-            Renderer::EndScene();
 
 			// 更新所有层
 			for (Layer* layer : m_LayerStack) {
