@@ -1,6 +1,8 @@
 #include "rfpch.h"
 #include "Redflag.h"
 
+#include"glm/gtc/matrix_transform.hpp"
+
 class ExampleLayer : public Redflag::Layer
 {
 public:
@@ -92,6 +94,7 @@ public:
         layout(location=0) in vec3 a_Position; 
         layout(location=1) in vec4 a_Color;	
 
+        uniform mat4 u_Transform;
         uniform mat4 u_ViewProjection;
 
         out vec3 v_Position;                    // 传递给片段着色器
@@ -100,7 +103,7 @@ public:
         {
             v_Position = a_Position;
             v_Color = a_Color;
-            gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
+            gl_Position = u_ViewProjection*u_Transform*vec4(a_Position, 1.0);
         }
     )";
 
@@ -120,12 +123,14 @@ public:
         // ========== 创建第二个着色器：用于正方形 ==========
 
         std::string vertexSrc2 = R"(
-             #version 330 core
+                #version 330 core
 
                 layout(location=0) in vec3 a_Position;
                 layout(location=1) in vec4 a_Color;
 
+                uniform mat4 u_Transform;
                 uniform mat4 u_ViewProjection;
+
 
                 out vec3 v_Position;
                 out vec4 v_Color;
@@ -134,7 +139,7 @@ public:
               {
                     v_Position = a_Position;
                      v_Color = a_Color;
-                    gl_Position = u_ViewProjection*vec4(a_Position, 1.0);
+                    gl_Position = u_ViewProjection*u_Transform*vec4(a_Position, 1.0);
              }
         )";
 
@@ -174,6 +179,7 @@ public:
 
 
 
+
         //设置清屏颜色为深灰色并清除颜色缓冲区
         Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Redflag::RenderCommand::Clear();
@@ -183,8 +189,20 @@ public:
 
         Redflag::Renderer::BeginScene(m_Camera);
 
-        // ========== 绘制正方形（使用第二个着色器） ==========
-        Redflag::Renderer::Submit(m_BlueShader, m_SquareVA);
+        // ========== 绘制正方形网格（使用第二个着色器） ==========
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+
+        for (int y = 0; y < 20; y++)
+        {
+            for (int x = 0; x < 20; x++)
+            {
+                glm::vec3 pos(x * 0.1f, y * 0.1f, 0.0f);
+                glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+                Redflag::Renderer::Submit(m_BlueShader, m_SquareVA, transform);
+            }
+        }
+
+        
 
         // ========== 绘制三角形（使用第一个着色器） ==========
         Redflag::Renderer::Submit(m_Shader, m_VertexArray);
@@ -226,6 +244,7 @@ private:
     float m_CameraMoveSpeed = 3.0f;
     float m_CameraRotation = 0.0f;
     float m_CameraRotationSpeed = 50.0f;
+
 };
 
 class Sandbox : public Redflag::Application
