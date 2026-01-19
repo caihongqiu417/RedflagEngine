@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\cdev\Redflag\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe</FullPath>
+      <FullPath>D:\Cdev\Redflag\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
