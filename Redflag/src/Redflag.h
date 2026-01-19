@@ -6,6 +6,9 @@
 
 #include"Redflag/Layer.h"
 #include"Redflag/Log.h"
+
+#include"Redflag/Core/TimeStep.h"
+
 #include"Redflag/ImGui/ImGuiLayer.h"
 
 #include"Redflag/KeyCode.h"

@@ -2,6 +2,7 @@
 
 #include"Redflag/Core.h"
 #include"Redflag/Events/Event.h"
+#include"Core/Timestep.h"
 
 
 namespace Redflag
@@ -14,7 +15,7 @@ namespace Redflag
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}     // 每帧更新时调用（游戏逻辑）
+		virtual void OnUpdate(Timestep timestep) {}     // 每帧更新时调用（游戏逻辑）
 		virtual void OnImGuiRender() {} // 每帧渲染GUI时调用（UI逻辑）
 		virtual void OnEvent(Event& event) {}
 

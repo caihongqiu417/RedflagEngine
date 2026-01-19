@@ -5,7 +5,7 @@ class ExampleLayer : public Redflag::Layer
 {
 public:
     ExampleLayer()
-        : Layer("Example"),m_Camera(-2.0f, 2.0f, -2.0f, 2.0f)
+        : Layer("Example"),m_Camera(-2.0f, 2.0f, -2.0f, 2.0f),m_CameraPosition(0.0f)
     {
         // =============================渲染初始化三角形 ========================================
         //1.创建顶点数组VAO
@@ -154,14 +154,32 @@ public:
         m_BlueShader.reset(new Redflag::Shader(vertexSrc2, fragmentSrc2));
     }
 
-    void OnUpdate() override
+    void OnUpdate(Redflag::Timestep ts) override
     {
+        //根据输入实现相机移动和旋转
+        if (Redflag::Input::IsKeyPressed(RF_KEY_LEFT))
+            m_CameraPosition.x -= m_CameraMoveSpeed*ts;
+        if (Redflag::Input::IsKeyPressed(RF_KEY_RIGHT))
+            m_CameraPosition.x += m_CameraMoveSpeed * ts;
+        if (Redflag::Input::IsKeyPressed(RF_KEY_UP))
+            m_CameraPosition.y += m_CameraMoveSpeed * ts;
+        if (Redflag::Input::IsKeyPressed(RF_KEY_DOWN))
+            m_CameraPosition.y -= m_CameraMoveSpeed * ts;
+
+        if (Redflag::Input::IsKeyPressed(RF_KEY_A))
+            m_CameraRotation -= m_CameraRotationSpeed * ts;
+        if (Redflag::Input::IsKeyPressed(RF_KEY_D))
+            m_CameraRotation += m_CameraRotationSpeed * ts;
+
+
+
+
         //设置清屏颜色为深灰色并清除颜色缓冲区
         Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Redflag::RenderCommand::Clear();
 
-        m_Camera.SetPosition({ 0.5f,0.5f,0.5f });
-        m_Camera.SetRotation(45.0f);
+        m_Camera.SetPosition(m_CameraPosition);
+        m_Camera.SetRotation(m_CameraRotation);
 
         Redflag::Renderer::BeginScene(m_Camera);
 
@@ -179,8 +197,13 @@ public:
 
     void OnEvent(Redflag::Event& event) override
     {
-       
+
+
     }
+
+
+
+
 private:
     // ========== 三角形渲染相关成员变量 ==========
     std::shared_ptr<Redflag::VertexArray> m_VertexArray;
@@ -199,6 +222,10 @@ private:
     //=======================================================
 
     Redflag::OrthographicCamera m_Camera;
+    glm::vec3 m_CameraPosition;
+    float m_CameraMoveSpeed = 3.0f;
+    float m_CameraRotation = 0.0f;
+    float m_CameraRotationSpeed = 50.0f;
 };
 
 class Sandbox : public Redflag::Application

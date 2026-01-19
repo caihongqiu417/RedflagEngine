@@ -20,6 +20,8 @@
 
 #include"Redflag/Renderer/OrthographicCamera.h"
 
+#include"Redflag/Core/Timestep.h"
+
 
 
 namespace Redflag
@@ -46,6 +48,7 @@ namespace Redflag
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
+		float m_LastFrameTime = 0.0f;
 	private:
 		static Application* s_Instance;
 

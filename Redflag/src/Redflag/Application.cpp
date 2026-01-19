@@ -9,6 +9,9 @@
 #include"Input.h"
 #include "Redflag/Renderer/Renderer.h"
 
+#include"GLFW/glfw3.h"
+#include"Core/Timestep.h"
+
 
 
 namespace Redflag
@@ -108,10 +111,14 @@ namespace Redflag
 
 		while (m_Running)
 		{
+			//计算每帧时间步长
+			float time = (float)glfwGetTime();
+			Timestep timestep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
 
 			// 更新所有层
 			for (Layer* layer : m_LayerStack) {
-				layer->OnUpdate();  // 调用每层更新逻辑
+				layer->OnUpdate(timestep);  // 调用每层更新逻辑
 			}
 
 			// 开始ImGui帧
