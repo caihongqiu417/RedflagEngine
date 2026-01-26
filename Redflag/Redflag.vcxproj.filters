@@ -16,6 +16,9 @@
     <Filter Include="src\Redflag">
       <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Core">
+      <UniqueIdentifier>{29DF537F-15D8-72D1-3E0A-58562A6252DD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Events">
       <UniqueIdentifier>{F55EEAA8-E142-ABFE-4AA3-A55136A69580}</UniqueIdentifier>
     </Filter>
@@ -75,6 +78,9 @@
     <ClInclude Include="src\Redflag\Core.h">
       <Filter>src\Redflag</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Core\Timestep.h">
+      <Filter>src\Redflag\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\EntryPoint.h">
       <Filter>src\Redflag</Filter>
     </ClInclude>
@@ -115,6 +121,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\RenderCommand.h">
@@ -1395,8 +1404,6 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h" />
-    <ClInclude Include="src\Redflag\Core\Timestep.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1438,6 +1445,9 @@
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\RenderCommand.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
@@ -1456,6 +1466,5 @@
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp" />
   </ItemGroup>
 </Project>

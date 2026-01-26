@@ -1,6 +1,8 @@
 #include "rfpch.h"
 #include "Redflag.h"
 
+
+
 #include"glm/gtc/matrix_transform.hpp"
 
 class ExampleLayer : public Redflag::Layer
@@ -218,6 +220,13 @@ public:
 
 
     }
+
+    void OnImGuiRender() override
+    {
+	    ImGui::Begin("Settings");
+
+        ImGui::End();
+	}
 
 
 

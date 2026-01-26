@@ -153,7 +153,8 @@ project "Sandbox"
         "%{IncludeDir.fmt}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.Imgui}"
     }
     
     links {
