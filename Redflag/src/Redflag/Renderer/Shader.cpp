@@ -115,6 +115,12 @@ namespace Redflag {
 		glUseProgram(0);
 	}
 
+	void Shader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform4f(location, values.x, values.y, values.z, values.w);
+	}
+
 	//把matirx上传给对应着色器的对应name的uniform变量
 	void Shader::UploadUniformMat4(const std::string& name,const glm::mat4& matrix)
 	{

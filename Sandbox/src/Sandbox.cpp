@@ -147,18 +147,19 @@ public:
 
         std::string fragmentSrc2 = R"(
              #version 330 core
-                 layout(location=0) out vec4 Fragcolor;
+                layout(location=0) out vec4 Fragcolor;
                 in vec3 v_Position;
-                in vec4 v_Color;
-    
+
+                uniform vec4 u_color;
+               
                 void main()
                 {
                      // 轻微调亮效果：乘以1.2
-                        Fragcolor = vec4(v_Color.rgb * 1.2, v_Color.a);
+                        Fragcolor =u_color * 1.2;
                 }
         )";
 
-        m_BlueShader.reset(new Redflag::Shader(vertexSrc2, fragmentSrc2));
+        m_FlatShader.reset(new Redflag::Shader(vertexSrc2, fragmentSrc2));
     }
 
     void OnUpdate(Redflag::Timestep ts) override
@@ -194,13 +195,20 @@ public:
         // ========== 绘制正方形网格（使用第二个着色器） ==========
         glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
+        glm::vec4 redcolor(0.8f, 0.2f, 0.3f, 1.0f);
+		glm::vec4 bluecolor(0.2f, 0.3f, 0.8f, 1.0f);
+
         for (int y = 0; y < 20; y++)
         {
             for (int x = 0; x < 20; x++)
             {
                 glm::vec3 pos(x * 0.1f, y * 0.1f, 0.0f);
                 glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
-                Redflag::Renderer::Submit(m_BlueShader, m_SquareVA, transform);
+                if (x % 2 == 0)
+                    m_FlatShader->UploadUniformFloat4("u_color",redcolor);
+                else
+					m_FlatShader->UploadUniformFloat4("u_color",bluecolor);
+                Redflag::Renderer::Submit(m_FlatShader, m_SquareVA, transform);
             }
         }
 
@@ -245,7 +253,7 @@ private:
     //=============================================
 
     //=====Shader program:用于正方形（蓝色主题） =============
-    std::shared_ptr<Redflag::Shader> m_BlueShader;
+    std::shared_ptr<Redflag::Shader> m_FlatShader;
     //=======================================================
 
     Redflag::OrthographicCamera m_Camera;
