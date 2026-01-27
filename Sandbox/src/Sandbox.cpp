@@ -1,9 +1,12 @@
 #include "rfpch.h"
 #include "Redflag.h"
 
+#include"Platform/OpenGL/OpenGLShader.h"
 
+#include<glm/gtc/type_ptr.hpp>
 
 #include"glm/gtc/matrix_transform.hpp"
+
 
 class ExampleLayer : public Redflag::Layer
 {
@@ -120,7 +123,7 @@ public:
         }
     )";
 
-        m_Shader.reset(new Redflag::Shader(vertexSrc, fragmentSrc));
+        m_Shader.reset(Redflag::Shader::Create(vertexSrc, fragmentSrc));
 
         // ========== 创建第二个着色器：用于正方形 ==========
 
@@ -150,16 +153,15 @@ public:
                 layout(location=0) out vec4 Fragcolor;
                 in vec3 v_Position;
 
-                uniform vec4 u_color;
+                uniform vec3 u_color;
                
                 void main()
                 {
-                     // 轻微调亮效果：乘以1.2
-                        Fragcolor =u_color * 1.2;
+                   Fragcolor =vec4(u_color,1.0f);
                 }
         )";
 
-        m_FlatShader.reset(new Redflag::Shader(vertexSrc2, fragmentSrc2));
+        m_FlatShader.reset(Redflag::Shader::Create(vertexSrc2, fragmentSrc2));
     }
 
     void OnUpdate(Redflag::Timestep ts) override
@@ -179,10 +181,6 @@ public:
         if (Redflag::Input::IsKeyPressed(RF_KEY_D))
             m_CameraRotation += m_CameraRotationSpeed * ts;
 
-
-
-
-
         //设置清屏颜色为深灰色并清除颜色缓冲区
         Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Redflag::RenderCommand::Clear();
@@ -195,8 +193,8 @@ public:
         // ========== 绘制正方形网格（使用第二个着色器） ==========
         glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
-        glm::vec4 redcolor(0.8f, 0.2f, 0.3f, 1.0f);
-		glm::vec4 bluecolor(0.2f, 0.3f, 0.8f, 1.0f);
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_FlatShader)->Bind();
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_FlatShader)->UploadUniformFloat3("u_color", m_SquareColor);
 
         for (int y = 0; y < 20; y++)
         {
@@ -204,15 +202,10 @@ public:
             {
                 glm::vec3 pos(x * 0.1f, y * 0.1f, 0.0f);
                 glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
-                if (x % 2 == 0)
-                    m_FlatShader->UploadUniformFloat4("u_color",redcolor);
-                else
-					m_FlatShader->UploadUniformFloat4("u_color",bluecolor);
                 Redflag::Renderer::Submit(m_FlatShader, m_SquareVA, transform);
             }
         }
-
-        
+   
 
         // ========== 绘制三角形（使用第一个着色器） ==========
         Redflag::Renderer::Submit(m_Shader, m_VertexArray);
@@ -221,22 +214,18 @@ public:
         Redflag::Renderer::EndScene();
     }
 
-   
 
     void OnEvent(Redflag::Event& event) override
     {
-
 
     }
 
     void OnImGuiRender() override
     {
 	    ImGui::Begin("Settings");
-
+		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
         ImGui::End();
 	}
-
-
 
 
 private:
@@ -246,6 +235,7 @@ private:
 
     // ========== 正方形渲染相关成员变量 ==========
     std::shared_ptr<Redflag::VertexArray> m_SquareVA;
+    glm::vec3 m_SquareColor = { 0.4f, 0.8f, 0.6f };
     //=============================================
 
     //=====Shader program:用于三角形 =============
@@ -261,7 +251,6 @@ private:
     float m_CameraMoveSpeed = 3.0f;
     float m_CameraRotation = 0.0f;
     float m_CameraRotationSpeed = 50.0f;
-
 };
 
 class Sandbox : public Redflag::Application
