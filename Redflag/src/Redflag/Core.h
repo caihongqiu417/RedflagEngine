@@ -27,3 +27,13 @@
 
 // 事件绑定宏
 #define RF_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+//智能指针
+namespace Redflag {
+
+    template<typename T>
+    using Scope = std::unique_ptr<T>;
+
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
+}

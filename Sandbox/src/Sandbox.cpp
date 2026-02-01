@@ -28,7 +28,7 @@ public:
               0.0f,  0.5f, 0.0f,  0.98f, 0.80f, 0.47f, 1.0f,
         };
 
-        std::shared_ptr<Redflag::VertexBuffer> vertexBuffer;
+        Redflag::Ref<Redflag::VertexBuffer> vertexBuffer;
         vertexBuffer.reset(Redflag::VertexBuffer::Create(vertices, sizeof(vertices)));
 
         //3.1 VBO配置layout
@@ -43,7 +43,7 @@ public:
         // 4.1 创建索引缓冲区IBO
         uint32_t indices[] = { 0, 1, 2 };
 
-        std::shared_ptr<Redflag::IndexBuffer> indexBuffer;
+        Redflag::Ref<Redflag::IndexBuffer> indexBuffer;
         indexBuffer.reset(Redflag::IndexBuffer::Create(indices, 3));
 
         //4.2 当前IBO绑定到对应VAO
@@ -67,7 +67,7 @@ public:
               -0.5f,  0.5f, 0.0f,          0.0f, 0.8f, 0.9f, 1.0f,   // 青色
         };
 
-        std::shared_ptr<Redflag::VertexBuffer> squareVB;
+        Redflag::Ref<Redflag::VertexBuffer> squareVB;
         squareVB.reset(Redflag::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
         // 3.1 VBO配置layout（使用相同的布局）
@@ -85,7 +85,7 @@ public:
             2, 3, 0   // 第二个三角形：右上-左上-左下
         };
 
-        std::shared_ptr<Redflag::IndexBuffer> squareIB;
+        Redflag::Ref<Redflag::IndexBuffer> squareIB;
         squareIB.reset(Redflag::IndexBuffer::Create(squareIndices, 6));
 
         // 4.2 IBO绑定到当前VAO
@@ -230,20 +230,20 @@ public:
 
 private:
     // ========== 三角形渲染相关成员变量 ==========
-    std::shared_ptr<Redflag::VertexArray> m_VertexArray;
+    Redflag::Ref<Redflag::VertexArray> m_VertexArray;
     //=============================================
 
     // ========== 正方形渲染相关成员变量 ==========
-    std::shared_ptr<Redflag::VertexArray> m_SquareVA;
+    Redflag::Ref<Redflag::VertexArray> m_SquareVA;
     glm::vec3 m_SquareColor = { 0.4f, 0.8f, 0.6f };
     //=============================================
 
     //=====Shader program:用于三角形 =============
-    std::shared_ptr<Redflag::Shader> m_Shader;
+    Redflag::Ref<Redflag::Shader> m_Shader;
     //=============================================
 
     //=====Shader program:用于正方形（蓝色主题） =============
-    std::shared_ptr<Redflag::Shader> m_FlatShader;
+    Redflag::Ref<Redflag::Shader> m_FlatShader;
     //=======================================================
 
     Redflag::OrthographicCamera m_Camera;
