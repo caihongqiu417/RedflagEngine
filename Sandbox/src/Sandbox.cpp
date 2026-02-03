@@ -55,16 +55,12 @@ public:
         m_SquareVA.reset(Redflag::VertexArray::Create());
 
         // 2. 创建正方形的顶点缓冲区VBO
-        float squareVertices[] = {
-            // 位置: (x, y, z)           // 颜色: (r, g, b, a)
-            // 左下角：深蓝色渐变到浅蓝色
-            -0.5f, -0.5f, 0.0f,          0.1f, 0.2f, 0.8f, 1.0f,   // 深蓝色
-            // 右下角：紫色渐变到蓝色
-             0.5f, -0.5f, 0.0f,          0.6f, 0.2f, 1.0f, 1.0f,   // 紫色
-             // 右上角：浅蓝色渐变到白色
-              0.5f,  0.5f, 0.0f,          0.3f, 0.6f, 1.0f, 1.0f,   // 浅蓝色
-              // 左上角：青色渐变到蓝色
-              -0.5f,  0.5f, 0.0f,          0.0f, 0.8f, 0.9f, 1.0f,   // 青色
+        float squareVertices[5*4] = {
+            // 位置               //纹理                           
+            -0.5f, -0.5f, 0.0f,   0.0f,0.0f,        // 左下角
+             0.5f, -0.5f, 0.0f,   1.0f,0.0f,      // 右下角
+             0.5f,  0.5f, 0.0f,   1.0f,1.0f,      // 右上角
+            -0.5f,  0.5f, 0.0f,   0.0f,1.0f,      // 左上角
         };
 
         Redflag::Ref<Redflag::VertexBuffer> squareVB;
@@ -73,7 +69,7 @@ public:
         // 3.1 VBO配置layout（使用相同的布局）
         Redflag::BufferLayout squareLayout = {
             {Redflag::ShaderDataType::Float3,"a_Position"},
-            {Redflag::ShaderDataType::Float4,"a_Color"},
+			{Redflag::ShaderDataType::Float2,"a_TexCoord"},
         };
         squareVB->SetLayout(squareLayout);
         // 3.2 VBO绑定到当前VAO
@@ -81,8 +77,8 @@ public:
 
         // 4.1 创建正方形的索引缓冲区IBO（两个三角形组成一个正方形）
         uint32_t squareIndices[] = {
-            0, 1, 2,  // 第一个三角形：左下-右下-右上
-            2, 3, 0   // 第二个三角形：右上-左上-左下
+           0, 1, 2,  // 第一个三角形：左下-右下-右上
+           0, 2, 3   // 第二个三角形：左下-右上-左上
         };
 
         Redflag::Ref<Redflag::IndexBuffer> squareIB;
@@ -131,19 +127,16 @@ public:
                 #version 330 core
 
                 layout(location=0) in vec3 a_Position;
-                layout(location=1) in vec4 a_Color;
 
                 uniform mat4 u_Transform;
                 uniform mat4 u_ViewProjection;
 
 
                 out vec3 v_Position;
-                out vec4 v_Color;
     
               void main()
               {
                     v_Position = a_Position;
-                     v_Color = a_Color;
                     gl_Position = u_ViewProjection*u_Transform*vec4(a_Position, 1.0);
              }
         )";
@@ -153,16 +146,60 @@ public:
                 layout(location=0) out vec4 Fragcolor;
                 in vec3 v_Position;
 
-                uniform vec3 u_color;
+                uniform vec3 u_Color;
                
                 void main()
                 {
-                   Fragcolor =vec4(u_color,1.0f);
+                   Fragcolor =vec4(u_Color,1.0f);
                 }
         )";
 
         m_FlatShader.reset(Redflag::Shader::Create(vertexSrc2, fragmentSrc2));
+
+        // ========== 创建第三个着色器：用于正方形 ==========
+
+        std::string textureShaderVertexSrc = R"(
+              #version 330 core
+
+              layout(location=0) in vec3 a_Position;
+              layout(location=1) in vec2 a_TexCoord;
+
+              uniform mat4 u_Transform;
+              uniform mat4 u_ViewProjection;
+                
+              out vec2 v_TexCoord;
+    
+              void main()
+              {
+                 v_TexCoord = a_TexCoord;
+                 gl_Position = u_ViewProjection*u_Transform*vec4(a_Position, 1.0);
+              }
+        )";
+
+        std::string textureShaderFragmentSrc = R"(
+              #version 330 core
+              
+              layout(location=0) out vec4 Fragcolor;
+
+              in vec2 v_TexCoord;
+
+              uniform sampler2D u_Texture;
+               
+              void main()
+              {
+                 Fragcolor =texture(u_Texture, v_TexCoord);
+              }
+        )";
+
+        m_TextureShader.reset(Redflag::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
+
+		m_Texture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
+
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->Bind();
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+
     }
+
 
     void OnUpdate(Redflag::Timestep ts) override
     {
@@ -194,21 +231,26 @@ public:
         glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
 		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_FlatShader)->Bind();
-		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_FlatShader)->UploadUniformFloat3("u_color", m_SquareColor);
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_FlatShader)->UploadUniformFloat3("u_Color", m_SquareColor);
 
         for (int y = 0; y < 20; y++)
         {
             for (int x = 0; x < 20; x++)
             {
-                glm::vec3 pos(x * 0.1f, y * 0.1f, 0.0f);
+                glm::vec3 pos(x * 0.11f - 1.0f, y * 0.11f - 1.0f, 0.0f);
                 glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
                 Redflag::Renderer::Submit(m_FlatShader, m_SquareVA, transform);
             }
         }
-   
+        
+
+        // ========== 绘制正方形（使用第三个着色器） ==========
+        m_Texture->Bind();
+
+		Redflag::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
         // ========== 绘制三角形（使用第一个着色器） ==========
-        Redflag::Renderer::Submit(m_Shader, m_VertexArray);
+        //Redflag::Renderer::Submit(m_Shader, m_VertexArray);
   
 
         Redflag::Renderer::EndScene();
@@ -236,15 +278,16 @@ private:
     // ========== 正方形渲染相关成员变量 ==========
     Redflag::Ref<Redflag::VertexArray> m_SquareVA;
     glm::vec3 m_SquareColor = { 0.4f, 0.8f, 0.6f };
+	Redflag::Ref<Redflag::Texture2D> m_Texture;
     //=============================================
 
     //=====Shader program:用于三角形 =============
     Redflag::Ref<Redflag::Shader> m_Shader;
     //=============================================
 
-    //=====Shader program:用于正方形（蓝色主题） =============
-    Redflag::Ref<Redflag::Shader> m_FlatShader;
-    //=======================================================
+    //=====Shader program:用于正方形 =============
+    Redflag::Ref<Redflag::Shader> m_FlatShader,m_TextureShader;
+    //============================================
 
     Redflag::OrthographicCamera m_Camera;
     glm::vec3 m_CameraPosition;

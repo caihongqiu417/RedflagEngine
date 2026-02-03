@@ -12,6 +12,7 @@ IncludeDir["fmt"] = "Redflag/vendor/fmt/include"
 IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
 IncludeDir["Imgui"] = "Redflag/vendor/imgui"
 IncludeDir["glm"]    = "Redflag/vendor/glm" 
+IncludeDir["stb_image"]    = "Redflag/vendor/stb_image" 
 
 include "Redflag/vendor/GLFW"
 include"Redflag/vendor/Glad"
@@ -35,6 +36,8 @@ project "Redflag"
     files {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/stb_image/**.h",
+        "%{prj.name}/vendor/stb_image/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
     }
@@ -47,7 +50,8 @@ project "Redflag"
         "%{IncludeDir.fmt}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.Imgui}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.stb_image}",
     }
     
     links {

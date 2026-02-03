@@ -21,6 +21,7 @@
 
 #include"Redflag/Renderer/Shader.h"
 #include"Redflag/Renderer/Buffer.h"
+#include"Redflag/Renderer/Texture.h"
 #include"Redflag/Renderer/VertexArray.h"
 
 #include"Redflag/Renderer/OrthographicCamera.h"
