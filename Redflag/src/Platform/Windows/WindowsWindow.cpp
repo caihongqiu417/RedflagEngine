@@ -1,5 +1,6 @@
 #include "rfpch.h"
-#include <GLFW/glfw3.h> 
+#include <GLFW/glfw3.h>
+#include <glad/glad.h>
 #include "WindowsWindow.h"
 
 #include"Redflag/Events/KeyEvent.h"
@@ -31,100 +32,104 @@ namespace Redflag {
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
-		RF_CORE_INFO("´´½¨ÁË{0},{1},{2}", props.Title, props.Width, props.Height);
+		RF_CORE_INFO("{0},{1},{2}", props.Title, props.Width, props.Height);
 
-		//³õÊ¼»¯opengl´°¿Úm_window£¬ÉèÖÃÉÏÏÂÎÄÎª¸Õ³õÊ¼»¯µÄ´°¿Úm_window£¬²¢ÇÒ°Ñdata´æÈëm_window±ãÓÚÖ®ºóÈ¡³ö
+		//ï¿½ï¿½Ê¼ï¿½ï¿½openglï¿½ï¿½ï¿½ï¿½m_windowï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ³ï¿½Ê¼ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½m_windowï¿½ï¿½ï¿½ï¿½ï¿½Ò°ï¿½dataï¿½ï¿½ï¿½ï¿½m_windowï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½È¡ï¿½ï¿½
 		if (!s_GLFWInitialized) {
 			int success = glfwInit();
-			RF_CORE_ASSERT(success, "GLFW³õÊ¼»¯Ê§°Ü");
+			RF_CORE_ASSERT(success, "GLFWinit success");
 
-			//´íÎó»Øµ÷º¯Êý
+			//ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
 
 		}
 
-		//´´½¨glfw´°¿Ú²¢Ö¸¶¨ÉÏÏÂÎÄ
+		//ï¿½ï¿½ï¿½ï¿½glfwï¿½ï¿½ï¿½Ú²ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		
-		//±ØÐëÔÚ´´½¨glfwÉÏÏÂÎÄºó´´½¨glad£¡£¡
-		// Ê¹ÓÃÐÂµÄäÖÈ¾ÉÏÏÂÎÄ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½glfwï¿½ï¿½ï¿½ï¿½ï¿½Äºó´´½ï¿½gladï¿½ï¿½ï¿½ï¿½
+		// Ê¹ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 		
 
-		//¸øµ±Ç°´°¿Ú´æm_DataÖ¸Õë£¬ÓÃÓÚÖ®ºó»Øµ÷Ê±»ñÈ¡±£´æµÄÐÅÏ¢ºÍ»Øµ÷³ÉÔ±º¯Êý
+		//ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ú´ï¿½m_DataÖ¸ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½Øµï¿½Ê±ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Í»Øµï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
-		//----------------------------------------------------------ÉèÖÃopengl»Øµ÷-----------------------------------------------//
+		//----------------------------------------------------------ï¿½ï¿½ï¿½ï¿½openglï¿½Øµï¿½-----------------------------------------------//
 
-		// µ±ÓÃ»§ÍÏ×§µ÷Õû´°¿Ú´óÐ¡Ê±£¬GLFW»áµ÷ÓÃ´Ëº¯Êý
+		// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ð¡Ê±ï¿½ï¿½GLFWï¿½ï¿½ï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
-				// glfwGetWindowUserPointerµÃµ½data£¬·µ»Øvoid*£¬ÐèÒª×ª»»ÎªWindowData*ÀàÐÍ
+				// glfwGetWindowUserPointerï¿½Ãµï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½void*ï¿½ï¿½ï¿½ï¿½Òª×ªï¿½ï¿½ÎªWindowData*ï¿½ï¿½ï¿½ï¿½
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-				// ¸üÐÂ´°¿ÚÊý¾ÝÖÐµÄ¿í¶ÈºÍ¸ß¶ÈÐÅÏ¢
+				// ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ¿ï¿½ï¿½ÈºÍ¸ß¶ï¿½ï¿½ï¿½Ï¢
 				data.Width = width;
 				data.Height = height;
 
-				// ½«GLFWµÄÔ­Ê¼²ÎÊý·â×°³ÉÒýÇæµÄWindowResizeEventÊÂ¼þ
+				// åŒæ­¥æ›´æ–°OpenGLè§†å£
+				RF_CORE_INFO("Window Resized: {0}x{1}", width, height);
+				glViewport(0, 0, width, height);
+
+				// ï¿½ï¿½GLFWï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½WindowResizeEventï¿½Â¼ï¿½
 				WindowResizeEvent event(width, height);
 
-				// »á´¥·¢dataÖÐ´æ´¢µÄApplication::OnEventº¯Êý£¬´«µÝ´°¿Ú´óÐ¡¸Ä±äÊÂ¼þ
+				// ï¿½á´¥ï¿½ï¿½dataï¿½Ð´æ´¢ï¿½ï¿½Application::OnEventï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½Ú´ï¿½Ð¡ï¿½Ä±ï¿½ï¿½Â¼ï¿½
 				data.EventCallback(event);
 			});
 
-		// ´°¿Ú¹Ø±Õ»Øµ÷
+		// ï¿½ï¿½ï¿½Ú¹Ø±Õ»Øµï¿½
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 			{
-				// glfwGetWindowUserPointerµÃµ½data£¬·µ»Øvoid*£¬ÐèÒª×ª»»ÎªWindowData*ÀàÐÍ
+				// glfwGetWindowUserPointerï¿½Ãµï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½void*ï¿½ï¿½ï¿½ï¿½Òª×ªï¿½ï¿½ÎªWindowData*ï¿½ï¿½ï¿½ï¿½
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 				WindowCloseEvent event;
 
-				// »á´¥·¢dataÖÐ´æ´¢µÄApplication::OnEventº¯Êý£¬´«µÝ´°¿Ú¹Ø±ÕÊÂ¼þ
+				// ï¿½á´¥ï¿½ï¿½dataï¿½Ð´æ´¢ï¿½ï¿½Application::OnEventï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½Ú¹Ø±ï¿½ï¿½Â¼ï¿½
 				data.EventCallback(event);
 			});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int modes)
 			{
-				// glfwGetWindowUserPointerµÃµ½data£¬·µ»Øvoid*£¬ÐèÒª×ª»»ÎªWindowData*ÀàÐÍ
+				// glfwGetWindowUserPointerï¿½Ãµï¿½dataï¿½ï¿½ï¿½ï¿½ï¿½ï¿½void*ï¿½ï¿½ï¿½ï¿½Òª×ªï¿½ï¿½ÎªWindowData*ï¿½ï¿½ï¿½ï¿½
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 				switch (action)
 				{
 				case GLFW_PRESS:
 				{
-					//·â×°ÊÂ¼þ
+					//ï¿½ï¿½×°ï¿½Â¼ï¿½
 					KeyPressedEvent event(key, 0);
-					//application»Øµ÷£¬·Ö·¢ÊÂ¼þ
+					//applicationï¿½Øµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Â¼ï¿½
 					data.EventCallback(event);
 					break;
 				}
 
 				case GLFW_RELEASE:
 				{
-					//·â×°ÊÂ¼þ
+					//ï¿½ï¿½×°ï¿½Â¼ï¿½
 					KeyReleasedEvent event(key);
-					//application»Øµ÷£¬·Ö·¢ÊÂ¼þ
+					//applicationï¿½Øµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Â¼ï¿½
 					data.EventCallback(event);
 					break;
 				}
 
 				case GLFW_REPEAT:
 				{
-					//·â×°ÊÂ¼þ
+					//ï¿½ï¿½×°ï¿½Â¼ï¿½
 					KeyPressedEvent event(key, 1);
-					//application»Øµ÷£¬·Ö·¢ÊÂ¼þ
+					//applicationï¿½Øµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Â¼ï¿½
 					data.EventCallback(event);
 					break;
 				}
 				}
 			});
 
-		//×Ö·û»Øµ÷
+		//ï¿½Ö·ï¿½ï¿½Øµï¿½
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int codepoint) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			KeyTypedEvent event(codepoint);
@@ -169,14 +174,14 @@ namespace Redflag {
 	}
 	void WindowsWindow::OnUpdate()
 	{
-		//ÂÖÑ¯ÊÂ¼þ
+		//ï¿½ï¿½Ñ¯ï¿½Â¼ï¿½
 		glfwPollEvents();
-		//½»»»»º³åÇø
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		m_Context->SwapBuffers();
 
 
 	}
-	//----------------------------------------------------------ÉèÖÃopengl»Øµ÷-----------------------------------------------//
+	//----------------------------------------------------------ï¿½ï¿½ï¿½ï¿½openglï¿½Øµï¿½-----------------------------------------------//
 	void WindowsWindow::SetVSync(bool enable) {
 		if (enable)
 			glfwSwapInterval(1);

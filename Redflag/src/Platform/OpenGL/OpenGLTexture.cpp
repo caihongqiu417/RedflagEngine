@@ -10,27 +10,29 @@ namespace Redflag {
 		:m_Path(path)
 	{
 		int width, height, channels;
-		stbi_set_flip_vertically_on_load(1); // OpenGLµÄÎÆÀí×ø±êÏµÓëÍ¼Æ¬µÄ×ø±êÏµÊÇÏà·´µÄ£¬¼ÓÔØÍ¼Æ¬Ê±ĞèÒª·­×ªYÖá
+		stbi_set_flip_vertically_on_load(1); // OpenGLï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½à·´ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬Ê±ï¿½ï¿½Òªï¿½ï¿½×ªYï¿½ï¿½
 		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		RF_CORE_ASSERT(data, "Failed to load image!");
 		m_Width = width;
 		m_Height = height;
 
-		// µÚÒ»²½£º´´½¨ÎÆÀí¶ÔÏó£¨´ËÊ±ÎŞ´æ´¢¿Õ¼ä£©
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
-		// µÚ¶ş²½£º·ÖÅäGPU´æ´¢¿Õ¼ä²¢Ö¸¶¨¸ñÊ½
+	
 		glTextureStorage2D(m_RendererID, 1, GL_RGB8, m_Width, m_Height);
 
-		// ÉèÖÃÎÆÀí²ÉÑùÊ±µÄ¹ıÂË·½Ê½
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  
 
-		// ÉÏ´«Í¼Æ¬Êı¾İµ½GPUÎÆÀí
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		
+		// è®¾ç½®çº¹ç†wrapæ¨¡å¼ï¼Œé¿å…NPOTçº¹ç†çš„è¾¹ç¼˜é—®é¢˜
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,
 			GL_RGB, GL_UNSIGNED_BYTE, data);
 
-		// ÊÍ·ÅCPU¶ËÍ¼Æ¬Êı¾İ
+
 		stbi_image_free(data);
 	}
 
