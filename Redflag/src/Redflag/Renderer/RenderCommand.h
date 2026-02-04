@@ -1,13 +1,18 @@
 #pragma once
 
 //RenderCommand£ºµ÷¶ÈäÖÈ¾ÃüÁî
-#include "RendererAPI.h"
+#include "Redflag/Renderer/RendererAPI.h"
 
 
 namespace Redflag {
 	class RenderCommand
 	{
 	public:
+		inline static void Init()
+		{
+			s_RendererAPI->Init();
+		}
+
 		inline static void SetClearColor(const glm::vec4& color)
 		{
 			s_RendererAPI->SetClearColor(color);

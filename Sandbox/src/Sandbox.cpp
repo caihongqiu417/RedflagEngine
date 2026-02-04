@@ -194,6 +194,7 @@ public:
         m_TextureShader.reset(Redflag::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
 
 		m_Texture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
+		m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 
 		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->Bind();
 		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
@@ -249,6 +250,11 @@ public:
 
 		Redflag::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
+        m_RedCloudTexture->Bind();
+
+        Redflag::Renderer::Submit(m_TextureShader, m_SquareVA, 
+            glm::translate(glm::mat4(1.0f),glm::vec3(0.25f,-0.25f,0.0f))*glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
         // ========== 绘制三角形（使用第一个着色器） ==========
         //Redflag::Renderer::Submit(m_Shader, m_VertexArray);
   
@@ -278,7 +284,8 @@ private:
     // ========== 正方形渲染相关成员变量 ==========
     Redflag::Ref<Redflag::VertexArray> m_SquareVA;
     glm::vec3 m_SquareColor = { 0.4f, 0.8f, 0.6f };
-	Redflag::Ref<Redflag::Texture2D> m_Texture;
+    Redflag::Ref<Redflag::Texture2D> m_Texture;
+    Redflag::Ref<Redflag::Texture2D> m_RedCloudTexture;
     //=============================================
 
     //=====Shader program:用于三角形 =============

@@ -5,6 +5,12 @@
 
 namespace Redflag {
 
+	void OpenGLRendererAPI::Init()
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // 透明度混合:最终颜色 = 源颜色×Alpha + 背景颜色×(1-Alpha)
+	}
+
 	void Redflag::OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
 	{
 		glClearColor(color.r, color.g, color.b, color.a);
