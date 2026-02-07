@@ -1,113 +1,185 @@
-#include"OpenGLShader.h"
-
 #include "rfpch.h"
 #include "OpenGLShader.h"
 #include"Log.h"
-
+#include<fstream>
 #include<glad/glad.h>
 
 #include<glm/gtc/type_ptr.hpp>
 
 namespace Redflag {
+	static GLenum ShaderTypeFromString(const std::string& type)
+	{
+		if (type == "vertex")
+			return GL_VERTEX_SHADER;
+		if (type == "fragment")
+			return GL_FRAGMENT_SHADER;
+		RF_CORE_ASSERT(false, "Unknown shader type!");
+		return 0;
+	}
+
+	OpenGLShader::OpenGLShader(const std::string& filepath)
+	{
+		//1.读取文件内容到字符串
+		std::string shaderSource=ReadFile(filepath);
+		//2.预处理字符串，分离出vertexshader和fragmentshader代码
+		std::unordered_map<GLenum, std::string> shaderSources = PreProcess(shaderSource);
+		//3.编译shader
+		Compile(shaderSources);
+	}
+
 	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
-		//---------------编译vertexshader-------------------------------------//
-		//1.分配vertexshader内存
-		// 相较于glGen，glCreate不仅创建了唯一id，还在GPU上分配了内存
-		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-		//2.把shader代码传递给vertexshader
-		const GLchar* source = vertexSrc.c_str();
-		glShaderSource(vertexShader, 1, &source, 0);
-
-		//3.编译vertexshader,并检查是否失败
-		glCompileShader(vertexShader);
-		GLint isCompiled = 0;
-		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &isCompiled);
-		if (isCompiled == GL_FALSE)
-		{
-			//get日志系统，存储在infoLog
-			GLint maxlength = 0;
-			glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxlength);
-			std::vector<GLchar> infoLog(maxlength);
-			glGetShaderInfoLog(vertexShader, maxlength, &maxlength, &infoLog[0]);
-
-			glDeleteShader(vertexShader);
-			RF_CORE_ERROR("{0}", infoLog.data());
-			RF_CORE_ASSERT(false, "Vertex shader compilation failed!")
-
-				return;
-		}
-		//---------------编译vertexshader-------------------------------------//
-
-
-
-
-		//---------------编译fragementshader-------------------------------------//
-		// 片段着色器一样
-		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		// Send the fragment shader source code to GL
-		// Note that std::string's .c_str is NULL character terminated.
-		source = fragmentSrc.c_str();
-		glShaderSource(fragmentShader, 1, &source, 0);
-		glCompileShader(fragmentShader);
-		glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &isCompiled);
-		if (isCompiled == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
-			// The maxLength includes the NULL character
-			std::vector<GLchar> infoLog(maxLength);
-			glGetShaderInfoLog(fragmentShader, maxLength, &maxLength, &infoLog[0]);
-
-			// We don't need the shader anymore.
-			glDeleteShader(fragmentShader);
-			// Either of them. Don't leak shaders.
-			glDeleteShader(vertexShader);
-			RF_CORE_ERROR("{0}", infoLog.data());
-			RF_CORE_ASSERT(false, "Fragment shader compilation failed!");
-
-			return;
-		}
-		//---------------编译fragmentshader-------------------------------------//
-
-
-
-
-		//---------------link成program-------------------------------------//
-		m_RendererID = glCreateProgram();
-		GLuint program = m_RendererID;
-
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, fragmentShader);
-
-		//link our program
-		glLinkProgram(program);
-
-
-		// Note the different functions here: glGetProgram* instead of glGetShader*.
-		GLint isLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
-		if (isLinked == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-			// The maxLength includes the NULL character
-			std::vector<GLchar> infoLog(maxLength);
-			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
-			// We don't need the program anymore.
-			glDeleteProgram(program);
-			// Don't leak shaders either.
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
-			RF_CORE_ERROR("{0}", infoLog.data());
-			RF_CORE_ASSERT(false, "Shader link failed!");
-			return;
-		}
-		//---------------link成program-------------------------------------//
+		//1.把vertexshader和fragmentshader代码存储到unordered_map中
+		std::unordered_map<GLenum, std::string> shaderSources;
+		//2.编译shader
+		shaderSources[GL_VERTEX_SHADER] = vertexSrc;
+		shaderSources[GL_FRAGMENT_SHADER] = fragmentSrc;
+		Compile(shaderSources);
 	}
+
 	OpenGLShader::~OpenGLShader()
 	{
 		glDeleteProgram(m_RendererID);
 	}
+
+
+	std::string OpenGLShader::ReadFile(const std::string& filepath)
+	{
+		std::string result;
+		//以二进制方式打开文件，读取到末尾，获取文件大小，分配字符串内存，重新回到开头，读取内容到字符串
+		std::ifstream in(filepath, std::ios::in | std::ios::binary);
+		if (in)
+		{
+			in.seekg(0, std::ios::end);
+			result.resize(in.tellg());
+			in.seekg(0, std::ios::beg);
+			in.read(&result[0], result.size());
+			in.close();
+		}
+		else
+		{
+			RF_CORE_ERROR("Could not open file '{0}'", filepath);
+		}
+		return result;
+	}
+
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
+	{
+		std::unordered_map<GLenum, std::string> shaderSources;
+
+		//定义一个token，标识shader类型的开始位置
+		const char* typeToken = "#type";
+		size_t typeTokenLength = strlen(typeToken);
+		size_t pos = source.find(typeToken, 0);
+		//找到第一个#type后，循环处理剩下的shader代码，直到没有#type为止
+		while (pos != std::string::npos)
+		{
+			//1.找到#type后面第一个换行符的位置，获取shader类型字符串
+			size_t eol = source.find_first_of("\r\n", pos);
+			RF_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+			size_t begin = pos + typeTokenLength + 1;
+			std::string type = source.substr(begin, eol - begin);
+			RF_CORE_ASSERT(type == "vertex" || type == "fragment", "Invalid shader type specified");
+			//2.找到下一个#type的位置，获取shader代码字符串
+			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
+			pos = source.find(typeToken, nextLinePos);
+			//3.把shader类型和代码存储到unordered_map中，继续循环处理下一个#type
+			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+		}
+		return shaderSources;
+	}
+
+	// 编译并链接Shader程序
+	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	{
+		// 创建OpenGL着色器程序对象
+		GLuint program = glCreateProgram();
+
+		// 存储所有创建的着色器ID，便于后续管理
+		std::vector<GLenum> glShaderIDs;
+
+		// 1. 编译每个着色器并附加到程序
+		for (auto& kv : shaderSources)
+		{
+			GLenum type = kv.first;           // 着色器类型（如GL_VERTEX_SHADER）
+			const std::string& source = kv.second;  // 着色器源代码
+
+			// 创建着色器对象
+			GLuint shader = glCreateShader(type);
+
+			// 设置着色器源代码
+			const GLchar* sourceCStr = source.c_str();
+			glShaderSource(shader, 1, &sourceCStr, 0);
+
+			// 编译着色器
+			glCompileShader(shader);
+
+			// 检查编译状态
+			GLint isCompiled = 0;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+
+			if (isCompiled == GL_FALSE)
+			{
+				// 获取错误信息长度
+				GLint maxLength = 0;
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+				// 获取错误信息
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+
+				// 清理资源
+				glDeleteShader(shader);
+
+				// 输出错误信息
+				RF_CORE_ERROR("{0}", infoLog.data());
+				RF_CORE_ASSERT(false, "Shader compilation failed!");
+				return;
+			}
+
+			// 将成功编译的着色器附加到程序
+			glAttachShader(program, shader);
+			glShaderIDs.push_back(shader);
+		}
+
+		// 2. 链接程序并检查链接状态
+		glLinkProgram(program);
+
+		GLint isLinked = 0;
+		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+
+		if (isLinked == GL_FALSE)
+		{
+			// 获取链接错误信息长度
+			GLint maxLength = 0;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+			// 获取链接错误信息
+			std::vector<GLchar> infoLog(maxLength);
+			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+
+			// 清理所有资源
+			glDeleteProgram(program);
+			for (auto id : glShaderIDs)
+				glDeleteShader(id);
+
+			// 输出错误信息
+			RF_CORE_ERROR("{0}", infoLog.data());
+			RF_CORE_ASSERT(false, "Shader link failed!");
+			return;
+		}
+
+		// 3. 清理临时资源（分离并删除着色器对象）
+		for (auto id : glShaderIDs)
+		{
+			glDetachShader(program, id);  // 从程序中分离着色器
+			glDeleteShader(id);           // 删除着色器对象
+		}
+
+		// 保存最终的程序ID
+		m_RendererID = program;
+	}
+
 	void OpenGLShader::Bind() const
 	{
 		glUseProgram(m_RendererID);
