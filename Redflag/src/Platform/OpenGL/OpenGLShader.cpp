@@ -95,8 +95,10 @@ namespace Redflag {
 		// 创建OpenGL着色器程序对象
 		GLuint program = glCreateProgram();
 
+		RF_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now (vertex and fragment)");
 		// 存储所有创建的着色器ID，便于后续管理
-		std::vector<GLenum> glShaderIDs;
+		std::array<GLenum, 2> glShaderIDs;
+		int glShaderIDIndex = 0;
 
 		// 1. 编译每个着色器并附加到程序
 		for (auto& kv : shaderSources)
@@ -139,7 +141,7 @@ namespace Redflag {
 
 			// 将成功编译的着色器附加到程序
 			glAttachShader(program, shader);
-			glShaderIDs.push_back(shader);
+			glShaderIDs[glShaderIDIndex++] = shader;	
 		}
 
 		// 2. 链接程序并检查链接状态
