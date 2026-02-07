@@ -25,9 +25,21 @@ namespace Redflag {
 		std::unordered_map<GLenum, std::string> shaderSources = PreProcess(shaderSource);
 		//3.编译shader
 		Compile(shaderSources);
+
+
+		//4.从文件路径中提取文件名作为shader的名字
+		// 例: "assets/shader/Texture.glsl" → "Texture"
+		size_t lastSlash = filepath.find_last_of("/\\");
+		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+		size_t lastDot = filepath.rfind('.');
+		size_t count = lastDot == std::string::npos
+			? filepath.size() - lastSlash
+			: lastDot - lastSlash;
+		m_Name = filepath.substr(lastSlash, count);
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	OpenGLShader::OpenGLShader(const std::string& name,const std::string& vertexSrc, const std::string& fragmentSrc)
+		:m_Name(name)
 	{
 		//1.把vertexshader和fragmentshader代码存储到unordered_map中
 		std::unordered_map<GLenum, std::string> shaderSources;

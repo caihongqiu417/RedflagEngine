@@ -7,6 +7,8 @@
 
 #include"glm/gtc/matrix_transform.hpp"
 
+#include"Redflag/Renderer/Shader.h"
+
 
 class ExampleLayer : public Redflag::Layer
 {
@@ -119,11 +121,11 @@ public:
         }
     )";
 
-        m_Shader.reset(Redflag::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader = Redflag::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
         // ========== 创建第二个着色器：用于正方形 ==========
 
-        std::string vertexSrc2 = R"(
+        std::string flatColorShaderVertexSrc = R"(
                 #version 330 core
 
                 layout(location=0) in vec3 a_Position;
@@ -141,7 +143,7 @@ public:
              }
         )";
 
-        std::string fragmentSrc2 = R"(
+        std::string flatColorShaderFragmentSrc = R"(
              #version 330 core
                 layout(location=0) out vec4 Fragcolor;
                 in vec3 v_Position;
@@ -154,17 +156,17 @@ public:
                 }
         )";
 
-        m_FlatShader.reset(Redflag::Shader::Create(vertexSrc2, fragmentSrc2));
+        m_FlatShader=Redflag::Shader::Create("FlatColor",flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
         // ========== 创建第三个着色器：用于正方形 ==========
-		m_TextureShader.reset(Redflag::Shader::Create("assets/shaders/Texture.glsl"));
+		auto textureShader=m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
 		m_Texture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
 		m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 
-		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Redflag::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
 
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Redflag::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
     }
 
 
@@ -209,16 +211,16 @@ public:
                 Redflag::Renderer::Submit(m_FlatShader, m_SquareVA, transform);
             }
         }
+
+		auto textureShader = m_ShaderLibrary.Get("Texture");
         
 
         // ========== 绘制正方形（使用第三个着色器） ==========
         m_Texture->Bind();
-
-		Redflag::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Redflag::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
         m_RedCloudTexture->Bind();
-
-        Redflag::Renderer::Submit(m_TextureShader, m_SquareVA, 
+        Redflag::Renderer::Submit(textureShader, m_SquareVA, 
             glm::translate(glm::mat4(1.0f),glm::vec3(0.25f,-0.25f,0.0f))*glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
         // ========== 绘制三角形（使用第一个着色器） ==========
@@ -243,6 +245,8 @@ public:
 
 
 private:
+	Redflag::ShaderLibrary m_ShaderLibrary;
+
     // ========== 三角形渲染相关成员变量 ==========
     Redflag::Ref<Redflag::VertexArray> m_VertexArray;
     //=============================================
@@ -259,7 +263,7 @@ private:
     //=============================================
 
     //=====Shader program:用于正方形 =============
-    Redflag::Ref<Redflag::Shader> m_FlatShader,m_TextureShader;
+    Redflag::Ref<Redflag::Shader> m_FlatShader;
     //============================================
 
     Redflag::OrthographicCamera m_Camera;
