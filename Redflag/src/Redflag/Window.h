@@ -10,7 +10,7 @@ namespace Redflag {
 		std::string Title;
 		unsigned int Width;
 		unsigned int Height;
-		WindowProps(const std::string& title = "Redflag Engine", unsigned int width = 1280, unsigned int height = 1280)
+		WindowProps(const std::string& title = "Redflag Engine", unsigned int width = 1600, unsigned int height = 900)
 			:Title(title), Width(width), Height(height) {
 		}
 	};

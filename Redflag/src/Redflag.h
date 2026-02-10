@@ -15,6 +15,8 @@
 #include"Redflag/MouseButtonCode.h"
 #include"Redflag/Input.h"
 
+#include"Redflag/OrthographicCameraController.h"
+
 //-------------Renderer--------------------------------
 #include"Redflag/Renderer/Renderer.h"
 #include"Redflag/Renderer/RenderCommand.h"

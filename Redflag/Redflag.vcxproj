@@ -170,6 +170,7 @@
     <ClInclude Include="src\Redflag\LayerStack.h" />
     <ClInclude Include="src\Redflag\Log.h" />
     <ClInclude Include="src\Redflag\MouseButtonCode.h" />
+    <ClInclude Include="src\Redflag\OrthographicCameraController.h" />
     <ClInclude Include="src\Redflag\Renderer\Buffer.h" />
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h" />
@@ -617,6 +618,7 @@
     <ClCompile Include="src\Redflag\Layer.cpp" />
     <ClCompile Include="src\Redflag\LayerStack.cpp" />
     <ClCompile Include="src\Redflag\Log.cpp" />
+    <ClCompile Include="src\Redflag\OrthographicCameraController.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RenderCommand.cpp" />
