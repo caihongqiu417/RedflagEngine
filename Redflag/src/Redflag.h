@@ -2,20 +2,20 @@
 
 
 //For use by Sandbox
-#include "Redflag/Application.h"
+#include "Redflag/Core/Application.h"
 
-#include"Redflag/Layer.h"
-#include"Redflag/Log.h"
+#include"Redflag/Core/Layer.h"
+#include"Redflag/Core/Log.h"
 
 #include"Redflag/Core/TimeStep.h"
 
 #include"Redflag/ImGui/ImGuiLayer.h"
 
-#include"Redflag/KeyCode.h"
-#include"Redflag/MouseButtonCode.h"
-#include"Redflag/Input.h"
+#include"Redflag/Core/KeyCode.h"
+#include"Redflag/Core/MouseButtonCode.h"
+#include"Redflag/Core/Input.h"
 
-#include"Redflag/OrthographicCameraController.h"
+#include"Redflag/Renderer/OrthographicCameraController.h"
 
 //-------------Renderer--------------------------------
 #include"Redflag/Renderer/Renderer.h"
@@ -30,5 +30,5 @@
 //-------------Renderer--------------------------------
 
 //-------------------Entry Point-----------------------
-#include "Redflag/EntryPoint.h"
+#include "Redflag/Core/EntryPoint.h"
 //-------------------Entry Point-----------------------

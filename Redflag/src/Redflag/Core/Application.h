@@ -4,9 +4,9 @@
 
 #include"Events/Event.h"
 
-#include<Redflag/Window.h>
+#include<Redflag/Core/Window.h>
 
-#include"Redflag/LayerStack.h"
+#include"Redflag/Core/LayerStack.h"
 
 #include "Redflag/Events/ApplicationEvent.h" 
 

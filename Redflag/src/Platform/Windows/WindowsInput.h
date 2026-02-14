@@ -1,6 +1,6 @@
 #pragma once
 
-#include"Redflag/Input.h"
+#include"Redflag/Core/Input.h"
 
 namespace Redflag
 {

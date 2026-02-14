@@ -1,6 +1,6 @@
 #pragma once
-#include "Redflag/Window.h"
-#include"Redflag/Log.h"
+#include "Redflag/Core/Window.h"
+#include"Redflag/Core/Log.h"
 #include "Redflag/Renderer/GraphicsContext.h"
 struct GLFWwindow;
 

@@ -2,7 +2,7 @@
 #pragma once
 
 #include"rfpch.h"
-#include"Redflag/Core.h"
+#include"Redflag/Core/Core.h"
 #include"Redflag/Events/Event.h"
 
 namespace Redflag {

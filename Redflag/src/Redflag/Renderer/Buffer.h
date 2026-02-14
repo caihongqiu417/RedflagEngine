@@ -1,5 +1,5 @@
 #pragma once
-#include"Log.h"
+#include"Core/Log.h"
 //接口类，只含有纯虚函数
 //运行时RTTI，根据特定图形API生成特定VBO和IBO
 

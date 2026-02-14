@@ -1,8 +1,8 @@
 #include"rfpch.h"
 #include"OrthographicCameraController.h"
 
-#include"Redflag/Input.h"
-#include"Redflag/KeyCode.h"
+#include"Redflag/Core/Input.h"
+#include"Redflag/Core/KeyCode.h"
 
 namespace Redflag {
 
