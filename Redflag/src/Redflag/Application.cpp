@@ -89,6 +89,7 @@ namespace Redflag
 	{
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
 		RF_CORE_INFO("{0}", e.ToString());
 
 		//从overlay从后往前传播事件
@@ -119,21 +120,22 @@ namespace Redflag
 			m_LastFrameTime = time;
 
 			// 更新所有层
-			for (Layer* layer : m_LayerStack) {
-				layer->OnUpdate(timestep);  // 调用每层更新逻辑
+			if (!m_Minimized)
+			{
+				for (Layer* layer : m_LayerStack) {
+					layer->OnUpdate(timestep);  // 调用每层更新逻辑
+				}
 			}
 
 			// 开始ImGui帧
 			m_ImGuiLayer->Begin();
-
 			// 渲染实现了OnImGuiRender()的层的ImGui UI
 			for (Layer* layer : m_LayerStack) {
 				layer->OnImGuiRender();  // 实现了绘制GUI的层会调用IMGUI渲染
 			}
-
 			// 结束ImGui帧并渲染
 			m_ImGuiLayer->End();
-
+			
 			// 更新窗口（交换缓冲区等）
 			m_Window->OnUpdate();
 		}
@@ -143,6 +145,20 @@ namespace Redflag
 	{
 		m_Running = false;
 		return true;
+	}
+
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+		m_Minimized = false;
+
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
 	}
 
 } 

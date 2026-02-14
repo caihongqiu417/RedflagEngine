@@ -70,12 +70,11 @@ namespace Redflag {
 				data.Width = width;
 				data.Height = height;
 
-				// 同步更新OpenGL视口
-				RF_CORE_INFO("Window Resized: {0}x{1}", width, height);
-				glViewport(0, 0, width, height);
 
 				// ��GLFW��ԭʼ������װ�������WindowResizeEvent�¼�
 				WindowResizeEvent event(width, height);
+
+				RF_CORE_WARN("{0},{1}", width, height);
 
 				// �ᴥ��data�д洢��Application::OnEvent���������ݴ��ڴ�С�ı��¼�
 				data.EventCallback(event);
