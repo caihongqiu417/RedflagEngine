@@ -1,6 +1,10 @@
 #include "rfpch.h"
 #include "Redflag.h"
 
+//-------------------Entry Point-----------------------
+#include "Redflag/Core/EntryPoint.h"
+//-------------------Entry Point-----------------------
+
 #include"Platform/OpenGL/OpenGLShader.h"
 
 #include<glm/gtc/type_ptr.hpp>
@@ -8,6 +12,8 @@
 #include"glm/gtc/matrix_transform.hpp"
 
 #include"Redflag/Renderer/Shader.h"
+
+#include"Sandbox2D.h"
 
 
 class ExampleLayer : public Redflag::Layer
@@ -18,7 +24,7 @@ public:
     {
         // =============================渲染初始化三角形 ========================================
         //1.创建顶点数组VAO
-        m_VertexArray.reset(Redflag::VertexArray::Create());
+        m_VertexArray=Redflag::VertexArray::Create();
 
         // 2. 创建顶点缓冲区VBO
         float vertices[] = {
@@ -54,7 +60,7 @@ public:
 
         // =============================渲染初始化正方形 =========================================
         //1.创建正方形的顶点数组VAO
-        m_SquareVA.reset(Redflag::VertexArray::Create());
+        m_SquareVA=Redflag::VertexArray::Create();
 
         // 2. 创建正方形的顶点缓冲区VBO
         float squareVertices[5*4] = {
@@ -262,7 +268,9 @@ class Sandbox : public Redflag::Application
 public:
     Sandbox()
     {
-        PushLayer(new ExampleLayer());
+
+        //PushLayer(new ExampleLayer());
+        PushLayer(new Sandbox2D());
     }
 
     ~Sandbox()

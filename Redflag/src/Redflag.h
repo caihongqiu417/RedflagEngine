@@ -17,7 +17,7 @@
 
 #include"Redflag/Renderer/OrthographicCameraController.h"
 
-//-------------Renderer--------------------------------
+//-------------Renderer----------------
 #include"Redflag/Renderer/Renderer.h"
 #include"Redflag/Renderer/RenderCommand.h"
 
@@ -27,8 +27,5 @@
 #include"Redflag/Renderer/VertexArray.h"
 
 #include"Redflag/Renderer/OrthographicCamera.h"
-//-------------Renderer--------------------------------
+//-------------------------------------
 
-//-------------------Entry Point-----------------------
-#include "Redflag/Core/EntryPoint.h"
-//-------------------Entry Point-----------------------
