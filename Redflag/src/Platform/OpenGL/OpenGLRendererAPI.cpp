@@ -9,6 +9,8 @@ namespace Redflag {
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // 透明度混合:最终颜色 = 源颜色×Alpha + 背景颜色×(1-Alpha)
+
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	void OpenGLRendererAPI::SetViewport(uint32_t x,uint32_t y, uint32_t width, uint32_t height)
