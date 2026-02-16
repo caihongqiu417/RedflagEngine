@@ -19,6 +19,7 @@
 
 //-------------Renderer----------------
 #include"Redflag/Renderer/Renderer.h"
+#include"Redflag/Renderer/Renderer2D.h"
 #include"Redflag/Renderer/RenderCommand.h"
 
 #include"Redflag/Renderer/Shader.h"

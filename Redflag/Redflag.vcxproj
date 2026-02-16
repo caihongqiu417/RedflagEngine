@@ -177,6 +177,7 @@
     <ClInclude Include="src\Redflag\Renderer\OrthographicCameraController.h" />
     <ClInclude Include="src\Redflag\Renderer\RenderCommand.h" />
     <ClInclude Include="src\Redflag\Renderer\Renderer.h" />
+    <ClInclude Include="src\Redflag\Renderer\Renderer2D.h" />
     <ClInclude Include="src\Redflag\Renderer\RendererAPI.h" />
     <ClInclude Include="src\Redflag\Renderer\Shader.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
@@ -623,6 +624,7 @@
     <ClCompile Include="src\Redflag\Renderer\OrthographicCameraController.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RenderCommand.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\Renderer2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RendererAPI.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />
