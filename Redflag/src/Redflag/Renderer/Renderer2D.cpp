@@ -15,6 +15,8 @@ namespace Redflag
     {
         Ref<VertexArray> QuadVertexArray;
         Ref<Shader> FlatColorShader;
+
+		Ref<Shader> TextureShader;
 	};
 
 	static Renderer2DStorage* s_Data = nullptr;
@@ -31,10 +33,10 @@ namespace Redflag
         // 2. 创建正方形的顶点缓冲区VBO
         float squareVertices[5 * 4] = {
             // 位置                                       
-            -0.5f, -0.5f, 0.0f,
-             0.5f, -0.5f, 0.0f,
-             0.5f,  0.5f, 0.0f,
-            -0.5f,  0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f,0.0f,0.0f,
+             0.5f, -0.5f, 0.0f,1.0f,0.0f,
+             0.5f,  0.5f, 0.0f,1.0f,1.0f,
+            -0.5f,  0.5f, 0.0f,0.0f,1.0f,
         };
 
         Redflag::Ref<Redflag::VertexBuffer> squareVB;
@@ -43,6 +45,7 @@ namespace Redflag
         // 3.1 VBO配置layout
         Redflag::BufferLayout squareLayout = {
             {Redflag::ShaderDataType::Float3,"a_Position"},
+            {Redflag::ShaderDataType::Float2,"a_TexCoord"},
         };
         squareVB->SetLayout(squareLayout);
         // 3.2 VBO绑定到当前VAO
@@ -66,6 +69,12 @@ namespace Redflag
         // ===============================正方形着色器 ===========================================
         s_Data->FlatColorShader = Redflag::Shader::Create("assets/shaders/FlatColor.glsl");
         // ======================================================================================
+
+		//===============================纹理着色器 ===========================================
+		s_Data->TextureShader = Redflag::Shader::Create("assets/shaders/Texture.glsl");
+		s_Data->TextureShader->Bind();
+		s_Data->TextureShader->SetInt("u_Texture", 0); // 这里把纹理单元0传递给着色器中的采样器变量u_Texture
+		// ======================================================================================
 	}
 	void Renderer2D::Shutdown()
 	{
@@ -75,6 +84,9 @@ namespace Redflag
 	{
         s_Data->FlatColorShader->Bind();
         s_Data->FlatColorShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+
+		s_Data->TextureShader->Bind();
+		s_Data->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 	}
 	void Renderer2D::EndScene()
 	{
@@ -96,4 +108,23 @@ namespace Redflag
         s_Data->QuadVertexArray->Bind();
         RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
 	}
+
+    void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+    {
+		DrawQuad({ position.x, position.y, 0.0f }, size, texture);
+    }
+
+    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+    {
+        s_Data->TextureShader->Bind();
+
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+        s_Data->TextureShader->SetMat4("u_Transform", transform);
+
+        // ★★★ 关键 ★★★
+        texture->Bind();  // 这里把纹理上传/绑定到纹理单元0
+
+        s_Data->QuadVertexArray->Bind();
+        RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
+    Q
 }

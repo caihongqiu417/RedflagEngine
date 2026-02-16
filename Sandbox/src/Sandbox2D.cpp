@@ -18,7 +18,7 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
-    
+	m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 }
 
 void Sandbox2D::OnDetach()
@@ -37,7 +37,8 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 
 	Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 	Redflag::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, m_SquareColor);
-	Redflag::Renderer2D::DrawQuad({ 0.5f, -0.8f }, { 1.0f, 1.0f }, m_SquareColor);
+	Redflag::Renderer2D::DrawQuad({ 0.5f, -0.8f }, { 1.0f, 1.0f }, {0.8f,0.2f,0.3f,1.0f});
+	Redflag::Renderer2D::DrawQuad({ 0.2f, 0.8f }, { 1.0f, 0.8f }, m_RedCloudTexture);
 	Redflag::Renderer2D::EndScene();
 
 }

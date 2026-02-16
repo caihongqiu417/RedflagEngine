@@ -58,6 +58,7 @@ namespace Redflag
         m_Window = std::unique_ptr<Window>(Window::Create());
         m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
+		//目前实际调用Renderer2D::Init()
 		Renderer::Init();
 
         // 创建ImGui调试界面层

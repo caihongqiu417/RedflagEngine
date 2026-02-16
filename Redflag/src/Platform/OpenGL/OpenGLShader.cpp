@@ -203,6 +203,11 @@ namespace Redflag {
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::SetInt(const std::string& name, int value)
+	{
+		UploadUniformInt(name, value);
+	}
+
 	void OpenGLShader::SetMat4(const std::string& name,const glm::mat4& value)
 	{
 		UploadUniformMat4(name, value);
