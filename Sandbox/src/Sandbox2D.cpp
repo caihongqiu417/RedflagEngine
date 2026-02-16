@@ -44,7 +44,6 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 	Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.2f }, { 1.0f, 1.0f }, { 0.8f,0.2f,0.3f,1.0f });
 
 	Redflag::Renderer2D::EndScene();
-
 }
 
 void Sandbox2D::OnImGuiRender()
