@@ -37,6 +37,7 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 
 	Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 	Redflag::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, m_SquareColor);
+	Redflag::Renderer2D::DrawQuad({ 0.5f, -0.8f }, { 1.0f, 1.0f }, m_SquareColor);
 	Redflag::Renderer2D::EndScene();
 
 }
