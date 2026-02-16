@@ -77,7 +77,7 @@ namespace Redflag {
 				ShaderDataTypeToOpenGLBaseType(element.Type),  // 数据类型转换为OpenGL枚举
 				element.Normalized ? GL_TRUE : GL_FALSE,  // 是否归一化
 				layout.GetStride(),  // 顶点之间的字节跨度（步长）
-				(const void*)element.Offset  // 该属性在顶点数据中的起始偏移量
+				(const void*)(uintptr_t)element.Offset  // 该属性在顶点数据中的起始偏移量
 			);
 
 			index++;  // 递增索引，为下一个顶点属性做准备

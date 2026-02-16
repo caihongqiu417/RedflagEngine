@@ -1,3 +1,4 @@
+ 
 #pragma once
 #include"Core/Log.h"
 //接口类，只含有纯虚函数
@@ -28,6 +29,7 @@ namespace Redflag
 		}
 
 		RF_CORE_ASSERT(false, "Unknown ShaderType");
+		return 0;
 	}
 
 

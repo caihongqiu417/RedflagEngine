@@ -1,18 +1,13 @@
-
-// 1. 首先包含预编译头（如果有）
 #include "rfpch.h"
 
-// 2. 然后包含核心框架头文件
 #include "Redflag.h"
 
 
-// 4. 然后包含其他必要的头文件
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Redflag/Renderer/Shader.h"
 
-// 5. 最后包含你自己的类头文件
 #include "Sandbox2D.h"
 
 
