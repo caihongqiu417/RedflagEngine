@@ -29,5 +29,6 @@ namespace Redflag {
 	void OpenGLRendererAPI::DrawIndexed(const Redflag::Ref<VertexArray>& vertexArray)
 	{
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(),GL_UNSIGNED_INT,nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0); // 绘制完成后解绑纹理，避免影响后续绘制
 	}
 }

@@ -14,9 +14,10 @@ namespace Redflag
     struct Renderer2DStorage
     {
         Ref<VertexArray> QuadVertexArray;
-        Ref<Shader> FlatColorShader;
 
         Ref<Shader> TextureShader;
+
+		Ref<Texture2D> WhiteTexture; // 用于绘制纯色方块的白色纹理
     };
 
     static Renderer2DStorage* s_Data = nullptr;
@@ -64,11 +65,10 @@ namespace Redflag
         s_Data->QuadVertexArray->SetIndexBuffer(squareIB);
         // ======================================================================================
 
-
-
-        // ===============================正方形着色器 ===========================================
-        s_Data->FlatColorShader = Redflag::Shader::Create("assets/shaders/FlatColor.glsl");
-        // ======================================================================================
+		// 创建一个1x1的白色纹理，用于绘制纯色方块
+		s_Data->WhiteTexture = Redflag::Texture2D::Create(1, 1);
+		uint32_t whiteTextureData = 0xffffffff; // RGBA白色
+		s_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
 
         //===============================纹理着色器 ===========================================
         s_Data->TextureShader = Redflag::Shader::Create("assets/shaders/Texture.glsl");
@@ -80,14 +80,13 @@ namespace Redflag
     {
         delete s_Data;
     }
+
     void Renderer2D::BeginScene(const OrthographicCamera& camera)
     {
-        s_Data->FlatColorShader->Bind();
-        s_Data->FlatColorShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
         s_Data->TextureShader->Bind();
         s_Data->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
     }
+
     void Renderer2D::EndScene()
     {
 
@@ -98,12 +97,14 @@ namespace Redflag
     }
 
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-    {
-        s_Data->FlatColorShader->Bind();
-        s_Data->FlatColorShader->SetFloat4("u_Color", color);
+    {;
+        s_Data->TextureShader->SetFloat4("u_Color", color);
+
+        //Todo:Bind white texture
+		s_Data->WhiteTexture->Bind(); 
 
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-        s_Data->FlatColorShader->SetMat4("u_Transform", transform);
+        s_Data->TextureShader->SetMat4("u_Transform", transform);
 
         s_Data->QuadVertexArray->Bind();
         RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
@@ -116,8 +117,7 @@ namespace Redflag
 
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
     {
-        s_Data->TextureShader->Bind();
-       
+		s_Data->TextureShader->SetFloat4("u_Color", { 1.0f,1.0f,1.0f,1.0f });
         // ★★★ 关键 ★★★
         texture->Bind();  // 这里把纹理上传/绑定到纹理单元0
 
