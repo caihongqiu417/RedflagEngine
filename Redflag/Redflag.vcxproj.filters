@@ -19,6 +19,9 @@
     <Filter Include="src\Redflag\Core">
       <UniqueIdentifier>{29DF537F-15D8-72D1-3E0A-58562A6252DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Debug">
+      <UniqueIdentifier>{671FDC69-D335-DAFF-1CAD-65218802AB87}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Events">
       <UniqueIdentifier>{F55EEAA8-E142-ABFE-4AA3-A55136A69580}</UniqueIdentifier>
     </Filter>
@@ -114,6 +117,9 @@
     <ClInclude Include="src\Redflag\Core\Window.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Debug\Instrumentor.h">
+      <Filter>src\Redflag\Debug</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Events\ApplicationEvent.h">
       <Filter>src\Redflag\Events</Filter>
     </ClInclude>
@@ -145,6 +151,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Renderer.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Renderer2D.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\RendererAPI.h">
@@ -1422,8 +1431,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Renderer\Renderer2D.h" />
-    <ClInclude Include="src\Redflag\Debug\Instrumentor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1483,6 +1490,9 @@
     <ClCompile Include="src\Redflag\Renderer\Renderer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\Renderer2D.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\RendererAPI.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
@@ -1501,6 +1511,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Renderer\Renderer2D.cpp" />
   </ItemGroup>
 </Project>
