@@ -17,7 +17,7 @@ namespace Redflag
 
         Ref<Shader> TextureShader;
 
-		Ref<Texture2D> WhiteTexture; // 用于绘制纯色方块的白色纹理
+        Ref<Texture2D> WhiteTexture; // 用于绘制纯色方块的白色纹理
     };
 
     static Renderer2DStorage* s_Data = nullptr;
@@ -67,10 +67,10 @@ namespace Redflag
         s_Data->QuadVertexArray->SetIndexBuffer(squareIB);
         // ======================================================================================
 
-		// 创建一个1x1的白色纹理，用于绘制纯色方块
-		s_Data->WhiteTexture = Redflag::Texture2D::Create(1, 1);
-		uint32_t whiteTextureData = 0xffffffff; // RGBA白色
-		s_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
+        // 创建一个1x1的白色纹理，用于绘制纯色方块
+        s_Data->WhiteTexture = Redflag::Texture2D::Create(1, 1);
+        uint32_t whiteTextureData = 0xffffffff; // RGBA白色
+        s_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
 
         //===============================纹理着色器 ===========================================
         s_Data->TextureShader = Redflag::Shader::Create("assets/shaders/Texture.glsl");
@@ -97,6 +97,8 @@ namespace Redflag
     {
         RF_PROFILE_FUNCTION();
     }
+
+    //=====================================================================================
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
     {
         RF_PROFILE_FUNCTION();
@@ -109,9 +111,10 @@ namespace Redflag
         RF_PROFILE_FUNCTION();
 
         s_Data->TextureShader->SetFloat4("u_Color", color);
+        s_Data->TextureShader->SetFloat("u_TilingFactor", 1.0f);
 
         //Todo:Bind white texture
-		s_Data->WhiteTexture->Bind(); 
+        s_Data->WhiteTexture->Bind();
 
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
         s_Data->TextureShader->SetMat4("u_Transform", transform);
@@ -120,18 +123,19 @@ namespace Redflag
         RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
     }
 
-    void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+    void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor,const glm::vec4& tintColor)
     {
         RF_PROFILE_FUNCTION();
 
-        DrawQuad({ position.x, position.y, 0.0f }, size, texture);
+        DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor,tintColor);
     }
 
-    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor,const glm::vec4& tintColor)
     {
         RF_PROFILE_FUNCTION();
 
-		s_Data->TextureShader->SetFloat4("u_Color", { 1.0f,1.0f,1.0f,1.0f });
+        s_Data->TextureShader->SetFloat4("u_Color", tintColor);
+        s_Data->TextureShader->SetFloat("u_TilingFactor", tilingFactor);
         // ★★★ 关键 ★★★
         texture->Bind();  // 这里把纹理上传/绑定到纹理单元0
 
@@ -140,6 +144,55 @@ namespace Redflag
 
         s_Data->QuadVertexArray->Bind();
         RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
-
     }
+    //=====================================================================================
+
+//===================================================================================== 
+    void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+    {
+        RF_PROFILE_FUNCTION();
+        DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color);
+    }
+
+    void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+    {
+        RF_PROFILE_FUNCTION();
+
+        s_Data->TextureShader->SetFloat4("u_Color", color);
+        s_Data->TextureShader->SetFloat("u_TilingFactor", 1.0f);
+
+        s_Data->WhiteTexture->Bind();
+
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+            * glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+            * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+        s_Data->TextureShader->SetMat4("u_Transform", transform);
+        s_Data->QuadVertexArray->Bind();
+        RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
+    }
+
+    void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+    {
+        RF_PROFILE_FUNCTION();
+        DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor,tintColor);
+    }
+
+    void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor,const glm::vec4& tintColor)
+    {
+        RF_PROFILE_FUNCTION();
+
+        s_Data->TextureShader->SetFloat4("u_Color", tintColor);
+        s_Data->TextureShader->SetFloat("u_TilingFactor", tilingFactor);
+
+        texture->Bind();
+
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+            * glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+            * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+        s_Data->TextureShader->SetMat4("u_Transform", transform);
+        s_Data->QuadVertexArray->Bind();
+        RenderCommand::DrawIndexed(s_Data->QuadVertexArray);
+    }
+    //=====================================================================================
 }

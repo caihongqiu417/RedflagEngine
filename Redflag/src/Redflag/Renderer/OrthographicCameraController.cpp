@@ -16,15 +16,15 @@ namespace Redflag {
 	{
 		RF_PROFILE_FUNCTION();
 
-		//根据输入实现相机移动和旋转
+		// 根据输入实现相机移动和旋转
 		if (Input::IsKeyPressed(RF_KEY_A))
-			m_CameraPosition.x += m_CameraTranslationSpeed * ts;
+			m_CameraPosition.x -= m_CameraTranslationSpeed * ts;  // A: 向左移动
 		if (Input::IsKeyPressed(RF_KEY_D))
-			m_CameraPosition.x -= m_CameraTranslationSpeed * ts;
+			m_CameraPosition.x += m_CameraTranslationSpeed * ts;  // D: 向右移动
 		if (Input::IsKeyPressed(RF_KEY_W))
-			m_CameraPosition.y -= m_CameraTranslationSpeed * ts;
+			m_CameraPosition.y += m_CameraTranslationSpeed * ts;  // W: 向上移动
 		if (Input::IsKeyPressed(RF_KEY_S))
-			m_CameraPosition.y += m_CameraTranslationSpeed * ts;
+			m_CameraPosition.y -= m_CameraTranslationSpeed * ts;  // S: 向下移动
 
 		if (m_Rotation)
 		{

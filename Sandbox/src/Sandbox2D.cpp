@@ -49,10 +49,10 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 		Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		// 负的值越大，渲染的越早（越靠后）
-		Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.9f }, { 1.5f, 1.5f }, { 0.5f,0.8f,0.2f,1.0f });
-		Redflag::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.8f }, { 1.0f, 1.0f }, m_RedCloudTexture);
+		Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.9f }, { 1.5f, 1.5f }, { 0.5f,0.4f,0.2f,1.0f });
+		Redflag::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.8f }, { 3.0f, 3.0f }, m_RedCloudTexture,3.0f,glm::vec4(0.8f,1.0f,1.0f,1.0f));
 		Redflag::Renderer2D::DrawQuad({ 0.2f, 0.2f, -0.5f }, { 1.0f, 1.0f }, m_SquareColor);
-		Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.2f }, { 1.0f, 1.0f }, { 0.8f,0.2f,0.3f,1.0f });
+		Redflag::Renderer2D::DrawRotatedQuad({ 0.4f, 0.4f, -0.2f }, { 1.0f, 1.0f }, 45.f,{ 0.8f,0.2f,0.3f,1.0f });
 		Redflag::Renderer2D::EndScene();
 	}
 

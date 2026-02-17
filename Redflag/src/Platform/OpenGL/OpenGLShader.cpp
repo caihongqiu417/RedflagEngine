@@ -233,6 +233,13 @@ namespace Redflag {
 		UploadUniformMat4(name, value);
 	}
 
+	void OpenGLShader::SetFloat(const std::string& name, float value)
+	{
+		RF_PROFILE_FUNCTION();
+
+		UploadUniformFloat(name, value);
+	}
+
 	void OpenGLShader::SetFloat4(const std::string& name,const glm::vec4 value)
 	{
 		RF_PROFILE_FUNCTION();
