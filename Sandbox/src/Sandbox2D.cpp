@@ -19,33 +19,33 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
+	RF_PROFILE_FUNCTION();
+
 	m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 }
 
 void Sandbox2D::OnDetach()
 {
+	RF_PROFILE_FUNCTION();
 }
 
 void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 {
 	RF_PROFILE_FUNCTION();
     
-	{
-		//updata camera
-		RF_PROFILE_SCOPE("CameraController::OnUpdate");
-		m_CameraController.OnUpdate(ts);
-	}
+	//updata camera
+	m_CameraController.OnUpdate(ts);
 
 	{
 		//Render
-		RF_PROFILE_SCOPE("RendererCommand::Clear");
+		RF_PROFILE_SCOPE("Renderer Preparation");
 		Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Redflag::RenderCommand::Clear();
 	}
    
 	{
 		//Render scene
-		RF_PROFILE_SCOPE("Renderer2D::Draw");
+		RF_PROFILE_SCOPE("Renderer Draw");
 		Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		// 负的值越大，渲染的越早（越靠后）

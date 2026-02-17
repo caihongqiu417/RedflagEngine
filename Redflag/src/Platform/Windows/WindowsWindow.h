@@ -26,6 +26,7 @@ namespace Redflag {
 	private:
 		GLFWwindow* m_Window;
 		GraphicsContext* m_Context;
+		static int s_glfwWindowCount;
 		struct WindowData {
 			std::string Title;
 			unsigned int Width, Height;

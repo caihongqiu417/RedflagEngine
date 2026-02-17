@@ -19,6 +19,8 @@ namespace Redflag {
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
+		RF_PROFILE_FUNCTION();
+
 		//1.读取文件内容到字符串
 		std::string shaderSource=ReadFile(filepath);
 		//2.预处理字符串，分离出vertexshader和fragmentshader代码
@@ -41,6 +43,8 @@ namespace Redflag {
 	OpenGLShader::OpenGLShader(const std::string& name,const std::string& vertexSrc, const std::string& fragmentSrc)
 		:m_Name(name)
 	{
+		RF_PROFILE_FUNCTION();
+
 		//1.把vertexshader和fragmentshader代码存储到unordered_map中
 		std::unordered_map<GLenum, std::string> shaderSources;
 		//2.编译shader
@@ -51,12 +55,16 @@ namespace Redflag {
 
 	OpenGLShader::~OpenGLShader()
 	{
+		RF_PROFILE_FUNCTION();
+
 		glDeleteProgram(m_RendererID);
 	}
 
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
+		RF_PROFILE_FUNCTION();
+
 		std::string result;
 		//以二进制方式打开文件，读取到末尾，获取文件大小，分配字符串内存，重新回到开头，读取内容到字符串
 		std::ifstream in(filepath, std::ios::in | std::ios::binary);
@@ -77,6 +85,8 @@ namespace Redflag {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
+		RF_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSources;
 
 		//定义一个token，标识shader类型的开始位置
@@ -104,6 +114,8 @@ namespace Redflag {
 	// 编译并链接Shader程序
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
+		RF_PROFILE_FUNCTION();
+
 		// 创建OpenGL着色器程序对象
 		GLuint program = glCreateProgram();
 
@@ -196,30 +208,42 @@ namespace Redflag {
 
 	void OpenGLShader::Bind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glUseProgram(m_RendererID);
 	}
 	void OpenGLShader::Unbind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
+		RF_PROFILE_FUNCTION();
+
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name,const glm::mat4& value)
 	{
+		RF_PROFILE_FUNCTION();
+
 		UploadUniformMat4(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name,const glm::vec4 value)
 	{
+		RF_PROFILE_FUNCTION();
+
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name,const glm::vec3 value)
 	{
+		RF_PROFILE_FUNCTION();
+
 		UploadUniformFloat3(name, value);
 	}
 

@@ -11,6 +11,8 @@ namespace Redflag {
 
 	void Renderer::Init()
 	{
+		RF_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

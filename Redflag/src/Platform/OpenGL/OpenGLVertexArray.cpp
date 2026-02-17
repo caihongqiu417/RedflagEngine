@@ -32,6 +32,8 @@ namespace Redflag {
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
+		RF_PROFILE_FUNCTION();
+
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 

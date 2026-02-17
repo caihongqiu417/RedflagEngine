@@ -50,6 +50,8 @@ namespace Redflag
 
     Application::Application()
     {
+		RF_PROFILE_FUNCTION();
+
         // 单例检查：确保只有一个Application实例
         RF_CORE_ASSERT(!s_Instance, "Application already exists!");
         s_Instance = this;
@@ -76,18 +78,24 @@ namespace Redflag
 
 	void Application::PushLayer(Layer* layer)
 	{
+		RF_PROFILE_FUNCTION();
+
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
+		RF_PROFILE_FUNCTION();
+
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
 	}
 
 	void Application::OnEvent(Event& e)
 	{
+		RF_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
@@ -105,6 +113,8 @@ namespace Redflag
 
 	void Application::Run()
 	{
+		RF_PROFILE_FUNCTION();
+
 		WindowResizeEvent e(1280, 720);
 		if (e.IsInCategory(EventCategoryApplication)) {
 			RF_CORE_TRACE("Window resize event triggered"); 
@@ -115,6 +125,8 @@ namespace Redflag
 
 		while (m_Running)
 		{
+			RF_PROFILE_SCOPE("RunLoop");
+
 			//计算每帧时间步长
 			float time = (float)glfwGetTime();
 			Timestep timestep = time - m_LastFrameTime;
@@ -123,20 +135,29 @@ namespace Redflag
 			// 更新所有层
 			if (!m_Minimized)
 			{
-				for (Layer* layer : m_LayerStack) {
-					layer->OnUpdate(timestep);  // 调用每层更新逻辑
+				{
+					RF_PROFILE_SCOPE("LayerStack OnUpdate"); 
+					for (Layer* layer : m_LayerStack) {
+						layer->OnUpdate(timestep);  // 调用每层更新逻辑
+					}
 				}
-			}
 
-			// 开始ImGui帧
-			m_ImGuiLayer->Begin();
-			// 渲染实现了OnImGuiRender()的层的ImGui UI
-			for (Layer* layer : m_LayerStack) {
-				layer->OnImGuiRender();  // 实现了绘制GUI的层会调用IMGUI渲染
+				// 开始ImGui帧
+				m_ImGuiLayer->Begin();
+
+				{
+					RF_PROFILE_SCOPE("LayerStack OnImGuiRender");
+					// 渲染实现了OnImGuiRender()的层的ImGui UI
+					for (Layer* layer : m_LayerStack) {
+						layer->OnImGuiRender();  // 实现了绘制GUI的层会调用IMGUI渲染
+					}
+				}
+
+				// 结束ImGui帧并渲染
+				m_ImGuiLayer->End();
+				
 			}
-			// 结束ImGui帧并渲染
-			m_ImGuiLayer->End();
-			
+	
 			// 更新窗口（交换缓冲区等）
 			m_Window->OnUpdate();
 		}
@@ -150,6 +171,8 @@ namespace Redflag
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		RF_PROFILE_FUNCTION();
+
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_Minimized = true;

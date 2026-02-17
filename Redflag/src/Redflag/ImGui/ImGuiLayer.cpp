@@ -24,6 +24,8 @@ namespace Redflag {
 
     void ImGuiLayer::OnAttach()
     {
+        RF_PROFILE_FUNCTION();
+
         // 当ImGui层被附加到层栈时调用，初始化ImGui
 
        // 检查ImGui版本
@@ -58,6 +60,8 @@ namespace Redflag {
 
 	void ImGuiLayer::OnDetach()
 	{
+
+        RF_PROFILE_FUNCTION();
         // 当ImGui层从层栈分离时调用，清理ImGui资源
         ImGui_ImplOpenGL3_Shutdown();  // 关闭OpenGL后端
         ImGui_ImplGlfw_Shutdown();     // 关闭GLFW后端
@@ -70,13 +74,18 @@ namespace Redflag {
     }
 
     void ImGuiLayer::Begin() {
+
+        RF_PROFILE_FUNCTION();
         // 开始一个新的ImGui帧
         ImGui_ImplOpenGL3_NewFrame();  // OpenGL新帧
         ImGui_ImplGlfw_NewFrame();     // GLFW新帧
         ImGui::NewFrame();             // ImGui新帧
     }
 
-    void ImGuiLayer::End() {
+    void ImGuiLayer::End() 
+    {
+        RF_PROFILE_FUNCTION();
+
         // 结束当前ImGui帧并渲染
         ImGuiIO& io = ImGui::GetIO();
         Application& app = Application::Get();

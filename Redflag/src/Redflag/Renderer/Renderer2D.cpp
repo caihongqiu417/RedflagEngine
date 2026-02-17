@@ -25,6 +25,8 @@ namespace Redflag
 
     void Renderer2D::Init()
     {
+        RF_PROFILE_FUNCTION();
+
         s_Data = new Renderer2DStorage();
 
         // =============================渲染初始化正方形 =========================================
@@ -78,26 +80,34 @@ namespace Redflag
     }
     void Renderer2D::Shutdown()
     {
+        RF_PROFILE_FUNCTION();
+
         delete s_Data;
     }
 
     void Renderer2D::BeginScene(const OrthographicCamera& camera)
     {
+        RF_PROFILE_FUNCTION();
+
         s_Data->TextureShader->Bind();
         s_Data->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
     }
 
     void Renderer2D::EndScene()
     {
-
+        RF_PROFILE_FUNCTION();
     }
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
     {
+        RF_PROFILE_FUNCTION();
+
         DrawQuad({ position.x, position.y, 0.0f }, size, color);
     }
 
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-    {;
+    {
+        RF_PROFILE_FUNCTION();
+
         s_Data->TextureShader->SetFloat4("u_Color", color);
 
         //Todo:Bind white texture
@@ -112,11 +122,15 @@ namespace Redflag
 
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture)
     {
+        RF_PROFILE_FUNCTION();
+
         DrawQuad({ position.x, position.y, 0.0f }, size, texture);
     }
 
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
     {
+        RF_PROFILE_FUNCTION();
+
 		s_Data->TextureShader->SetFloat4("u_Color", { 1.0f,1.0f,1.0f,1.0f });
         // ★★★ 关键 ★★★
         texture->Bind();  // 这里把纹理上传/绑定到纹理单元0

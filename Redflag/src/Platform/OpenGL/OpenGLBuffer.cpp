@@ -7,6 +7,8 @@ namespace Redflag {
 	// =================================== VBO 实现 ===================================
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
+		RF_PROFILE_FUNCTION();
+
 		// 1. 创建缓冲区对象
 		glCreateBuffers(1, &m_RendererID);
 
@@ -22,16 +24,22 @@ namespace Redflag {
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
+		RF_PROFILE_FUNCTION();
+
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	void OpenGLVertexBuffer::Bind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 	}
 
 	void OpenGLVertexBuffer::Unbind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -39,6 +47,8 @@ namespace Redflag {
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
 		: m_Count(count)
 	{
+		RF_PROFILE_FUNCTION();
+
 		//1.创建缓冲区对象
 		glCreateBuffers(1, &m_RendererID);
 
@@ -51,16 +61,22 @@ namespace Redflag {
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
+		RF_PROFILE_FUNCTION();
+
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	void OpenGLIndexBuffer::Bind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 	}
 
 	void OpenGLIndexBuffer::Unbind() const
 	{
+		RF_PROFILE_FUNCTION();
+
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 }

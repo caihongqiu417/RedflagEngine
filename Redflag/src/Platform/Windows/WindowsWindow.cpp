@@ -12,49 +12,65 @@
 namespace Redflag {
 
 	static bool s_GLFWInitialized = false;
+	int WindowsWindow::s_glfwWindowCount = 0;
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
 		RF_CORE_ERROR("GLFW Error ({0}):{1}", error, description);
 	}
 
-	Window* Window::Create(const WindowProps& props) {
+	Window* Window::Create(const WindowProps& props)
+	{
 		return new WindowsWindow(props);
 	}
-	WindowsWindow::WindowsWindow(const WindowProps& props) {
+
+	WindowsWindow::WindowsWindow(const WindowProps& props) 
+	{
+		RF_PROFILE_FUNCTION();
+
 		Init(props);
 	}
-	WindowsWindow::~WindowsWindow() {
+	WindowsWindow::~WindowsWindow() 
+	{
+		RF_PROFILE_FUNCTION();
+
 		ShutDown();
 	}
 
-	void WindowsWindow::Init(const WindowProps& props) {
+	void WindowsWindow::Init(const WindowProps& props)
+	{
+		RF_PROFILE_FUNCTION();
+
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 		RF_CORE_INFO("{0},{1},{2}", props.Title, props.Width, props.Height);
 
-		//��ʼ��opengl����m_window������������Ϊ�ճ�ʼ���Ĵ���m_window�����Ұ�data����m_window����֮��ȡ��
-		if (!s_GLFWInitialized) {
-			int success = glfwInit();
-			RF_CORE_ASSERT(success, "GLFWinit success");
+		{
+			RF_PROFILE_SCOPE("glfwInit - WindowsWindow::Init(const WindowProps&)");
 
-			//����ص�����
-			glfwSetErrorCallback(GLFWErrorCallback);
-			s_GLFWInitialized = true;
+			if (!s_GLFWInitialized) {
+				int success = glfwInit();
+				RF_CORE_ASSERT(success, "GLFWinit success");
 
+				glfwSetErrorCallback(GLFWErrorCallback);
+				s_GLFWInitialized = true;
+			}
 		}
-
-		//����glfw���ڲ�ָ��������
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		
-		//�����ڴ���glfw�����ĺ󴴽�glad����
-		// ʹ���µ���Ⱦ������
+
+		{
+			RF_PROFILE_SCOPE("glfwCreateWindow - WindowsWindow::Init(const WindowProps&)");
+
+			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			++s_glfwWindowCount;
+		}
+		
+		
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 		
 
-		//����ǰ���ڴ�m_Dataָ�룬����֮��ص�ʱ��ȡ�������Ϣ�ͻص���Ա����
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -168,14 +184,17 @@ namespace Redflag {
 
 	}
 
-	void WindowsWindow::ShutDown() {
+	void WindowsWindow::ShutDown() 
+	{
+		RF_PROFILE_FUNCTION();
 		glfwDestroyWindow(m_Window);
 	}
 	void WindowsWindow::OnUpdate()
 	{
-		//��ѯ�¼�
+		RF_PROFILE_FUNCTION();
+
 		glfwPollEvents();
-		//����������
+
 		m_Context->SwapBuffers();
 
 

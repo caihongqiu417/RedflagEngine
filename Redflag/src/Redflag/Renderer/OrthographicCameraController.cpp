@@ -14,6 +14,8 @@ namespace Redflag {
 
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
+		RF_PROFILE_FUNCTION();
+
 		//根据输入实现相机移动和旋转
 		if (Input::IsKeyPressed(RF_KEY_A))
 			m_CameraPosition.x += m_CameraTranslationSpeed * ts;
@@ -39,6 +41,8 @@ namespace Redflag {
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		RF_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(std::bind(&OrthographicCameraController::OnMouseScrolled, this, std::placeholders::_1));
 		dispatcher.Dispatch<WindowResizeEvent>(std::bind(&OrthographicCameraController::OnWindowResized, this, std::placeholders::_1));
@@ -46,12 +50,16 @@ namespace Redflag {
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		RF_PROFILE_FUNCTION();
+
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;
 	}
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		RF_PROFILE_FUNCTION();
+
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;

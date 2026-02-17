@@ -2,7 +2,7 @@
 
 #ifdef RF_PLATFORM_WINDOWS
 
-extern Redflag::Application* Redflag::CreateApplication();  
+extern Redflag::Application* Redflag::CreateApplication();
 int main()
 {
 	Redflag::Log::Init();

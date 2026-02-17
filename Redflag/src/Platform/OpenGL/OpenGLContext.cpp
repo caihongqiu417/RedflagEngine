@@ -13,8 +13,10 @@ namespace Redflag {
         RF_CORE_ASSERT(windowHandle, "Window handle is null!");
     }
 
-    void OpenGLContext::Init() {
-        // ���õ�ǰ������
+    void OpenGLContext::Init()
+    {
+        RF_PROFILE_FUNCTION();
+
         glfwMakeContextCurrent(m_WindowHandle);
 
         // ��ʼ��GLAD
@@ -34,7 +36,10 @@ namespace Redflag {
         glViewport(0, 0, width, height);
     }
 
-    void OpenGLContext::SwapBuffers() {
+    void OpenGLContext::SwapBuffers()
+    {
+        RF_PROFILE_FUNCTION();
+
         glfwSwapBuffers(m_WindowHandle);
     }
 }
