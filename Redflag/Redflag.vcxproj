@@ -166,6 +166,7 @@
     <ClInclude Include="src\Redflag\Core\MouseButtonCode.h" />
     <ClInclude Include="src\Redflag\Core\Timestep.h" />
     <ClInclude Include="src\Redflag\Core\Window.h" />
+    <ClInclude Include="src\Redflag\Debug\Instrumentor.h" />
     <ClInclude Include="src\Redflag\Events\ApplicationEvent.h" />
     <ClInclude Include="src\Redflag\Events\Event.h" />
     <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
