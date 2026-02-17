@@ -24,4 +24,12 @@ private:
 
 	glm::vec4 m_SquareColor = { 0.95f, 0.5f, 0.5f, 1.0f }; // Ó£»¨·Û
 
+	struct ProfileResult
+	{
+		std::string Name;
+		float Time;
+	};
+
+	std::vector<ProfileResult> m_ProfileResults;
+
 };

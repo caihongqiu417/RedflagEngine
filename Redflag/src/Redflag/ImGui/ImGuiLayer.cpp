@@ -64,10 +64,9 @@ namespace Redflag {
         ImGui::DestroyContext();       // 销毁ImGui上下文
 	}
 
-    void ImGuiLayer::OnImGuiRender() {
-        // 每帧渲染ImGui UI
-        static bool show = true;
-        ImGui::ShowDemoWindow(&show);  // 显示ImGui演示窗口
+    void ImGuiLayer::OnImGuiRender()
+    {
+       
     }
 
     void ImGuiLayer::Begin() {
