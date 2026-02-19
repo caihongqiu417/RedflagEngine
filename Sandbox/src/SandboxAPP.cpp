@@ -51,8 +51,8 @@ public:
         // 4.1 创建索引缓冲区IBO
         uint32_t indices[] = { 0, 1, 2 };
 
-        Redflag::Ref<Redflag::IndexBuffer> indexBuffer;
-        indexBuffer.reset(Redflag::IndexBuffer::Create(indices, 3));
+        Redflag::Ref<Redflag::IndexBuffer> indexBuffer =
+            Redflag::IndexBuffer::Create(indices, 3);
 
         //4.2 当前IBO绑定到对应VAO
         m_VertexArray->SetIndexBuffer(indexBuffer);
@@ -89,8 +89,8 @@ public:
            0, 2, 3   // 第二个三角形：左下-右上-左上
         };
 
-        Redflag::Ref<Redflag::IndexBuffer> squareIB;
-        squareIB.reset(Redflag::IndexBuffer::Create(squareIndices, 6));
+        Redflag::Ref<Redflag::IndexBuffer> squareIB=
+			Redflag::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 
         // 4.2 IBO绑定到当前VAO
         m_SquareVA->SetIndexBuffer(squareIB);

@@ -3,6 +3,13 @@
 #include <glad/glad.h>
 
 namespace Redflag {
+	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
+	{
+		RF_PROFILE_FUNCTION();
+		glCreateBuffers(1, &m_RendererID);
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW); // 预留空间，数据稍后更新
+	}
 
 	// =================================== VBO 实现 ===================================
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
@@ -41,6 +48,14 @@ namespace Redflag {
 		RF_PROFILE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
+	{
+		RF_PROFILE_FUNCTION();
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); //用subdata，因为之前已经用glBufferData分配了足够的空间，这里只是更新数据，不需要重新分配
 	}
 
 	// =================================== IBO 实现 ===================================

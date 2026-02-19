@@ -7,11 +7,14 @@ namespace Redflag
 	class OpenGLVertexBuffer :public VertexBuffer
 	{
 	public:
+		OpenGLVertexBuffer(uint32_t size); // 预留一个创建空VBO的接口，后续可以用来动态更新顶点数据
 		OpenGLVertexBuffer(float* vertices, uint32_t size);
 		virtual ~OpenGLVertexBuffer();
 
 		virtual void Bind()const;
 		virtual void Unbind() const;
+
+		virtual void SetData(const void* data, uint32_t size) override; // 用于动态更新顶点数据
 
 		//bufferlayout
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }

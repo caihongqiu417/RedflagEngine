@@ -125,7 +125,10 @@ namespace Redflag
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 		virtual const BufferLayout& GetLayout() const = 0;
 
+		virtual void SetData(const void* data, uint32_t size) = 0; // 用于动态更新顶点数据
+
 		static VertexBuffer* Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(uint32_t size); // 预留一个创建空VBO的接口，后续可以用来动态更新顶点数据
 	};
 
 	// IBO - 索引缓冲区
@@ -139,6 +142,6 @@ namespace Redflag
 		virtual uint32_t GetCount() const = 0;  // 获取索引数量
 
 		// 注意：索引通常是uint32_t类型，不是float
-		static IndexBuffer* Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
 	};
 }
