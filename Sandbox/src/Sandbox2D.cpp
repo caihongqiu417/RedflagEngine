@@ -22,6 +22,7 @@ void Sandbox2D::OnAttach()
 	RF_PROFILE_FUNCTION();
 
 	m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
+	m_CheckerboardTexture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
 }
 
 void Sandbox2D::OnDetach()
@@ -44,16 +45,19 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 	}
    
 	{
+		static float rotation = 0;
+		rotation += 50 * ts;  // 每秒旋转50度
 		//Render scene
 		RF_PROFILE_SCOPE("Renderer Draw");
 		Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		// 负的值越大，渲染的越早（越靠后）
-		Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.9f }, { 1.5f, 1.5f }, { 0.5f,0.4f,0.2f,1.0f });
-		Redflag::Renderer2D::DrawQuad({ 0.2f, 0.2f, -0.7f }, { 1.5f, 1.5f }, { 0.2f,0.4f,0.8f,1.0f });
-		//Redflag::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.8f }, { 3.0f, 3.0f }, m_RedCloudTexture,3.0f,glm::vec4(0.8f,1.0f,1.0f,1.0f));
-		//Redflag::Renderer2D::DrawQuad({ 0.2f, 0.2f, -0.5f }, { 1.0f, 1.0f }, m_SquareColor);
-		//Redflag::Renderer2D::DrawRotatedQuad({ 0.4f, 0.4f, -0.2f }, { 1.0f, 1.0f }, 45.f,{ 0.8f,0.2f,0.3f,1.0f });
+		Redflag::Renderer2D::DrawQuad({ 0.4f, 0.4f, -0.7f }, { 1.5f, 1.5f }, { 0.8f,0.4f,0.2f,1.0f });
+		Redflag::Renderer2D::DrawRotatedQuad({ -0.4f, -0.4f, -0.6f }, { 1.5f, 1.5f }, -15.f, { 0.2f,0.3f,0.8f,1.0f });
+		Redflag::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.8f }, { 3.0f, 3.0f }, m_CheckerboardTexture, 3.0f);
+		Redflag::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.5f }, { 2.0f, 2.0f }, m_RedCloudTexture, 1.0f);
+		Redflag::Renderer2D::DrawRotatedQuad({ 0.4f, 0.4f, -0.2f }, { 1.0f, 1.0f }, rotation, m_CheckerboardTexture, 1.0f);
+
 		Redflag::Renderer2D::EndScene();
 	}
 

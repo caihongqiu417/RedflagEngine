@@ -21,6 +21,7 @@ private:
 	Redflag::Ref<Redflag::VertexArray> m_SquareVA;
 
 	Redflag::Ref<Redflag::Texture2D> m_RedCloudTexture;
+	Redflag::Ref<Redflag::Texture2D> m_CheckerboardTexture;
 
 	glm::vec4 m_SquareColor = { 0.95f, 0.5f, 0.5f, 1.0f }; // Ó£»¨·Û
 
