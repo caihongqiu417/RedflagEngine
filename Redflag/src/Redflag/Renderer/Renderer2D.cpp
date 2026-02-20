@@ -32,9 +32,9 @@ namespace Redflag
     struct Renderer2DData
     {
         //========== 容量限制 ==========
-        const uint32_t MaxQuads = 10000;                    // 单批次最大四边形数量
-        const uint32_t MaxVertices = MaxQuads * 4;          // 最大顶点数（4顶点/四边形）
-        const uint32_t MaxIndices = MaxQuads * 6;           // 最大索引数（6索引/四边形）
+        static const uint32_t MaxQuads =10000;                    // 单批次最大四边形数量
+        static const uint32_t MaxVertices = MaxQuads * 4;          // 最大顶点数（4顶点/四边形）
+        static const uint32_t MaxIndices = MaxQuads * 6;           // 最大索引数（6索引/四边形）
         static const uint32_t MaxTextureSlots = 32;         // 最大纹理槽数量（硬件限制）
 
         //========== GPU资源 ==========
@@ -54,7 +54,11 @@ namespace Redflag
 
         //========== 几何数据 ==========
         glm::vec4 QuadVertexPositions[4];                    // 四边形标准顶点位置（中心为原点，范围-0.5~0.5）
+
+        Renderer2D::Statistics Stas;
     };
+
+    
 
     // 全局静态渲染数据实例
     static Renderer2DData s_Data;
@@ -191,7 +195,22 @@ namespace Redflag
 
         // 一次绘制调用渲染所有累积的四边形
         RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+
+		s_Data.Stas.DrawCalls++;  // 更新统计数据：绘制调用次数增加
     }
+
+    void Renderer2D::FlushAndReset()
+    {
+		EndScene();  // 结束当前批次（上传数据并绘制）
+
+        s_Data.QuadIndexCount = 0;                           // 清空索引计数
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // 重置写入指针到缓冲区开头
+        s_Data.TextureSlotIndex = 1;                          // 重置纹理槽索引（0已用）
+	}
+
+
+
+
 
     //==========================================================================
     // 绘制纯色四边形（2D坐标版本）
@@ -208,6 +227,10 @@ namespace Redflag
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
     {
         RF_PROFILE_FUNCTION();
+
+        if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+			FlushAndReset();  // 如果当前批次已满，开始新批次
+            
 
         const float textureIndex = 0.0f;  // 使用白色纹理（索引0）
 
@@ -246,6 +269,8 @@ namespace Redflag
 
         // 更新索引计数（每个四边形6个索引）
         s_Data.QuadIndexCount += 6;
+
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
 
     //==========================================================================
@@ -267,6 +292,9 @@ namespace Redflag
         const glm::vec4& tintColor)
     {
         RF_PROFILE_FUNCTION();
+
+        if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
         // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -329,6 +357,8 @@ namespace Redflag
 
         // 更新索引计数
         s_Data.QuadIndexCount += 6;
+
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
 
     //==========================================================================
@@ -348,6 +378,9 @@ namespace Redflag
         float rotation, const glm::vec4& color)
     {
         RF_PROFILE_FUNCTION();
+
+        if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
         // 计算变换矩阵：平移 + 旋转
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -385,6 +418,8 @@ namespace Redflag
 
         // 更新索引计数
         s_Data.QuadIndexCount += 6;
+
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
 
     //==========================================================================
@@ -406,6 +441,9 @@ namespace Redflag
         float tilingFactor, const glm::vec4& tintColor)
     {
         RF_PROFILE_FUNCTION();
+
+        if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
         // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -468,5 +506,17 @@ namespace Redflag
 
         // 更新索引计数
         s_Data.QuadIndexCount += 6;
+
+		s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
+
+    void Renderer2D::ResetStats()
+    {
+		memset(&s_Data.Stas, 0, sizeof(Renderer2D::Statistics)); 
+    }
+
+    Renderer2D::Statistics Renderer2D::GetStats()
+    {
+        return s_Data.Stas;
+	}
 }
