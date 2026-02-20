@@ -20,7 +20,7 @@ struct ParticleProps
 class ParticleSystem
 {
 public:
-	ParticleSystem();
+	ParticleSystem(uint32_t maxParticles=100000);
 
 	// 每帧更新：移动粒子、减少生命值
 	void OnUpdate(Redflag::Timestep ts);
@@ -54,4 +54,5 @@ private:
 
 	std::vector<Particle> m_ParticlePool;  // 粒子池（固定大小，循环使用）
 	uint32_t m_PoolIndex = 0;            // 当前要用的粒子索引（循环索引）
+	uint32_t m_MaxParticles;             // 粒子池的最大容量
 };

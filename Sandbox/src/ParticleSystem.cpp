@@ -20,9 +20,10 @@ static float RandomFloat() {
 }
 //========================================================
 
-ParticleSystem::ParticleSystem()
+ParticleSystem::ParticleSystem(uint32_t maxParticles)
+	:m_MaxParticles(maxParticles-1)
 {
-	m_ParticlePool.resize(1000);
+	m_ParticlePool.resize(m_MaxParticles);
 	m_PoolIndex = 0;
 
 	// 确保所有粒子初始都是不活跃的
