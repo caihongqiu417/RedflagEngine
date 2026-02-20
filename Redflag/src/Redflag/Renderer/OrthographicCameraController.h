@@ -9,6 +9,15 @@
 
 namespace Redflag {
 
+	struct OrthographicCameraBounds
+	{
+		float Left, Right;
+		float Bottom, Top;
+
+		float GetWidth() const { return Right - Left; }
+		float GetHeight() const { return Top - Bottom; }
+	};
+
 	class OrthographicCameraController
 	{
 	public:
@@ -18,6 +27,11 @@ namespace Redflag {
 
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 		OrthographicCamera& GetCamera() { return m_Camera; }
+
+		float GetZoomLevel() const { return m_ZoomLevel; }
+		void SetZoomLevel(float level) { m_ZoomLevel = level; }
+
+		const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }	
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
@@ -25,6 +39,7 @@ namespace Redflag {
 		float m_AspectRatio;
 		float m_ZoomLevel = 1.0f;
 		OrthographicCamera m_Camera;
+		OrthographicCameraBounds m_Bounds;
 		
 		bool m_Rotation;
 

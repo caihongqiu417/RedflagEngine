@@ -83,7 +83,7 @@ namespace Redflag
             {Redflag::ShaderDataType::Float3, "a_Position"},  // 位置：3个float
             {Redflag::ShaderDataType::Float4, "a_Color"},     // 颜色：4个float
             {Redflag::ShaderDataType::Float2, "a_TexCoord"},  // 纹理坐标：2个float
-            {Redflag::ShaderDataType::Float, "a_textureIndex"}    // 纹理索引：1个float
+            {Redflag::ShaderDataType::Float, "a_TexIndex"}    // 纹理索引：1个float
         };
         s_Data.QuadVertexBuffer->SetLayout(squareLayout);
         s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -384,7 +384,8 @@ namespace Redflag
 
         // 计算变换矩阵：平移 + 旋转
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f });
+            * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+            * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
         //----- 写入4个顶点的数据到缓冲区 -----
         // 使用白色纹理（索引0）
@@ -471,7 +472,7 @@ namespace Redflag
 
         // 计算变换矩阵：平移 + 旋转 + 缩放
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+            * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
         //----- 写入4个顶点的数据到缓冲区 -----

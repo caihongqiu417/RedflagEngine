@@ -21,8 +21,22 @@ void Sandbox2D::OnAttach()
 {
 	RF_PROFILE_FUNCTION();
 
+	// 加载纹理资源
 	m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 	m_CheckerboardTexture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
+
+   // 粒子系统属性初始化
+    m_Particle.ColorBegin = { 0.4f, 0.7f, 1.0f, 1.0f };  // 淡蓝色开始
+    m_Particle.ColorEnd = { 1.0f, 0.5f, 0.8f, 0.0f };    // 粉红色渐隐
+
+    m_Particle.SizeBegin = 0.1f;      // 很小
+    m_Particle.SizeEnd = 0.02f;        // 更小
+    m_Particle.SizeVariation = 0.03f;  // 微小变化
+
+    m_Particle.Velocity = { 0.0f, 0.0f };           // 基础速度为0
+    m_Particle.VelocityVariation = { 2.0f, 2.0f };  // 大范围变化，向四面八方散开
+
+    m_Particle.LifeTime = 1.8f;  // 存活时间
 }
 
 void Sandbox2D::OnDetach()
@@ -48,7 +62,7 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     }
 
     //=========================================================================
-    // 第一批次：绘制背景网格
+    // 第一批次：绘制背景网格（简单渐变）
     //=========================================================================
     {
         RF_PROFILE_SCOPE("Renderer Draw - Background Grid");
@@ -63,8 +77,17 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
         {
             for (float x = -range; x <= range; x += step)
             {
-                // 简单的蓝绿色网格
-                glm::vec4 color = { 0.3f, 0.6f, 0.8f, 0.5f };  // 半透明蓝绿色
+                // 计算距离中心的距离（归一化到0-1）
+                float dist = sqrt(x * x + y * y) / range;
+
+                // 根据距离渐变：中心亮蓝，边缘暗蓝
+                glm::vec4 color = {
+                    0.2f,                    // R 固定低值
+                    0.3f + 0.5f * (1 - dist), // G 从中心0.8到边缘0.3
+                    0.8f * (1 - dist * 0.5f), // B 从中心0.8到边缘0.4
+                    0.6f                      // Alpha 固定
+                };
+
                 Redflag::Renderer2D::DrawQuad({ x, y, gridZ }, { gridSize, gridSize }, color);
             }
         }
@@ -90,10 +113,49 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
         Redflag::Renderer2D::DrawQuad({ -1.5f, 0.5f, -0.5f }, { 1.5f, 1.5f }, { 1.0f, 0.2f, 0.2f, 0.6f });  // 半透明红
         Redflag::Renderer2D::DrawQuad({ 1.5f, -0.5f, -0.5f }, { 1.5f, 1.5f }, { 0.2f, 1.0f, 0.2f, 0.6f });  // 半透明绿
         Redflag::Renderer2D::DrawQuad({ -1.0f, -1.8f, -0.4f }, { 1.5f, 1.5f }, { 0.2f, 0.4f, 1.0f, 0.7f }); // 半透明蓝
-        Redflag::Renderer2D::DrawRotatedQuad({ 1.0f, 1.8f, -0.3f }, { 1.5f, 1.5f }, rotation, { 1.0f, 0.8f, 0.2f, 0.5f }); // 半透明黄（旋转）
+        Redflag::Renderer2D::DrawRotatedQuad({ 1.0f, 1.8f, -0.3f }, { 1.5f, 1.5f }, glm::radians(rotation), {1.0f, 0.8f, 0.2f, 0.5f}); // 半透明黄（旋转）
 
         Redflag::Renderer2D::EndScene();
     }
+
+    //=========================================================================
+    // 粒子系统：鼠标点击生成粒子效果
+    //=========================================================================
+    if (Redflag::Input::IsMouseButtonPressed(RF_MOUSE_BUTTON_LEFT))
+    {
+        // 1. 获取鼠标在屏幕上的像素坐标
+        auto [mouseX, mouseY] = Redflag::Input::GetMousePosition();
+
+        // 2. 获取窗口大小（像素单位）
+        auto windowWidth = Redflag::Application::Get().GetWindow().GetWidth();
+        auto windowHeight = Redflag::Application::Get().GetWindow().GetHeight();
+
+        // 3. 获取相机信息（用于坐标转换）
+        auto cameraBounds = m_CameraController.GetBounds();  // 相机能看到的世界范围
+        auto cameraPos = m_CameraController.GetCamera().GetPosition();   // 相机在世界中的位置
+
+        // 4. 将鼠标从屏幕坐标转换为世界坐标
+        //    屏幕坐标(0~窗口大小) -> 世界坐标(相机范围内的实际位置)
+        float worldX = (mouseX / windowWidth) * cameraBounds.GetWidth() - cameraBounds.GetWidth() * 0.5f;
+        float worldY = cameraBounds.GetHeight() * 0.5f - (mouseY / windowHeight) * cameraBounds.GetHeight();
+
+        // 5. 设置粒子发射位置（加上相机偏移）
+        m_Particle.Position = { worldX + cameraPos.x, worldY + cameraPos.y };
+
+
+        // 先清空所有粒子再发射
+        //m_ParticleSystem.Clear();  // 添加这行！
+
+        // 6. 每次点击发射粒子，产生喷射效果
+        for (int i = 0; i < 5; i++)
+            m_ParticleSystem.Emit(m_Particle);
+    }
+
+    // 更新所有粒子的状态（位置、生命周期、透明度等）
+    m_ParticleSystem.OnUpdate(ts);
+
+    // 渲染所有粒子
+    m_ParticleSystem.OnRender(m_CameraController.GetCamera());
 }
 
 void Sandbox2D::OnImGuiRender()

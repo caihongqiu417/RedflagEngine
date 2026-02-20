@@ -2,6 +2,8 @@
 
 #include"Redflag.h"
 
+#include"ParticleSystem.h"
+
 class Sandbox2D :public Redflag::Layer
 {
 public:
@@ -25,5 +27,7 @@ private:
 
 	glm::vec4 m_SquareColor = { 0.95f, 0.5f, 0.5f, 1.0f }; // Ó£»¨·Û
 
+	ParticleSystem m_ParticleSystem;
+	ParticleProps m_Particle;
 
 };
