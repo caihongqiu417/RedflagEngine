@@ -18,7 +18,7 @@ namespace Redflag {
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //用于像素
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -42,7 +42,7 @@ namespace Redflag {
 		m_Width = width;
 		m_Height = height;
 
-		// internalFormat：图像本身是什么格式    dataFormat：告诉显存我们想要用什么格式去存储
+		// internalFormat：我们怎么存储这个图像    dataFormat：告诉显存提交给它的格式
 		GLenum internalFormat = 0, dataFormat = 0;
 		if(channels==4)
 		{

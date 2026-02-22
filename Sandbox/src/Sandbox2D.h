@@ -25,6 +25,15 @@ private:
 	Redflag::Ref<Redflag::Texture2D> m_RedCloudTexture;
 	Redflag::Ref<Redflag::Texture2D> m_CheckerboardTexture;
 
+	Redflag::Ref<Redflag::Texture2D> m_SpriteSheet;
+	Redflag::Ref<Redflag::SubTexture2D> m_TextureStairs;
+	Redflag::Ref<Redflag::SubTexture2D> m_TextureBarrel;
+	Redflag::Ref<Redflag::SubTexture2D> m_TextureTree;
+
+	Redflag::Ref<Redflag::Texture2D> m_rogueLikeCharSpriteSheet;
+	Redflag::Ref<Redflag::SubTexture2D> m_TextureRogueLikeCharFrame1;
+	Redflag::Ref<Redflag::SubTexture2D> m_TextureRogueLikeCharFrame2;
+
 	glm::vec4 m_SquareColor = { 0.95f, 0.5f, 0.5f, 1.0f }; // Ó£»¨·Û
 
 	ParticleSystem m_ParticleSystem;

@@ -181,6 +181,7 @@
     <ClInclude Include="src\Redflag\Renderer\Renderer2D.h" />
     <ClInclude Include="src\Redflag\Renderer\RendererAPI.h" />
     <ClInclude Include="src\Redflag\Renderer\Shader.h" />
+    <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h" />
     <ClInclude Include="src\Redflag\rfpch.h" />
@@ -628,6 +629,7 @@
     <ClCompile Include="src\Redflag\Renderer\Renderer2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RendererAPI.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Redflag\rfpch.cpp">

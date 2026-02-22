@@ -21,11 +21,21 @@ void Sandbox2D::OnAttach()
 {
 	RF_PROFILE_FUNCTION();
 
-	// 加载纹理资源
+	// ============== 加载纹理资源 =========================
 	m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
 	m_CheckerboardTexture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
+	m_SpriteSheet = Redflag::Texture2D::Create("assets/game/textures/RPGpack_sheet_2X.png");
+	m_rogueLikeCharSpriteSheet = Redflag::Texture2D::Create("assets/game/textures/roguelikeChar_transparent.png");
 
-   // 粒子系统属性初始化
+	// ============== 从精灵表中创建子纹理 =========================
+    m_TextureStairs = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7, 6 }, { 128, 128 }, { 1, 1 });
+    m_TextureBarrel = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8, 2 }, { 128, 128 }, { 1, 1 });
+    m_TextureTree = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2, 1 }, { 128, 128 }, { 1, 2 });
+
+    m_TextureRogueLikeCharFrame1 = Redflag::SubTexture2D::CreateFromCoords(m_rogueLikeCharSpriteSheet, { 0, 0 }, { 16, 16 }, { 1, 1 });
+    m_TextureRogueLikeCharFrame2 = Redflag::SubTexture2D::CreateFromCoords(m_rogueLikeCharSpriteSheet, { 1, 0 }, { 16, 16 }, { 1, 1 });
+
+	// =============== 配置粒子属性 =========================
     m_Particle.ColorBegin = { 0.4f, 0.7f, 1.0f, 1.0f };  // 淡蓝色开始
     m_Particle.ColorEnd = { 1.0f, 0.5f, 0.8f, 0.0f };    // 粉红色渐隐
 
@@ -62,15 +72,15 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     }
 
     //=========================================================================
-    // 第一批次：绘制背景网格（简单渐变）
+    // 第一批次：绘制背景网格（暗蓝黑渐变 + 丰富细节）
     //=========================================================================
     {
         RF_PROFILE_SCOPE("Renderer Draw - Background Grid");
         Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-        float range = 8.0f;       // 范围 ±8
+        float range = 12.0f;       // 范围 ±12
         float step = 0.8f;         // 步长
-        float gridSize = 0.3f;      // 格子大小
+        float gridSize = 0.4f;      // 格子大小
         float gridZ = -0.9f;        // 放在最背面
 
         for (float y = -range; y <= range; y += step)
@@ -80,12 +90,15 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
                 // 计算距离中心的距离（归一化到0-1）
                 float dist = sqrt(x * x + y * y) / range;
 
-                // 根据距离渐变：中心亮蓝，边缘暗蓝
+                // 计算角度，增加细节变化
+                float angle = atan2(y, x) / (2.0f * 3.14159f) + 0.5f;
+
+                // 暗蓝黑色调 + 丰富细节
                 glm::vec4 color = {
-                    0.2f,                    // R 固定低值
-                    0.3f + 0.5f * (1 - dist), // G 从中心0.8到边缘0.3
-                    0.8f * (1 - dist * 0.5f), // B 从中心0.8到边缘0.4
-                    0.6f                      // Alpha 固定
+                    0.15f + 0.1f * sin(x * 0.5f) + 0.05f * cos(angle * 8.0f),     // 暗红 (0.05-0.3)
+                    0.2f + 0.1f * cos(y * 0.4f) + 0.05f * sin(dist * 12.0f),      // 暗绿 (0.1-0.35)
+                    0.3f + 0.15f * sin((x + y) * 0.4f) + 0.05f * cos(angle * 6.0f), // 暗蓝 (0.15-0.5)
+                    0.5f                                                          // 半透明
                 };
 
                 Redflag::Renderer2D::DrawQuad({ x, y, gridZ }, { gridSize, gridSize }, color);
@@ -96,30 +109,128 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     }
 
     //=========================================================================
-    // 第二批次：绘制前景纹理和半透明正方形
-    //=========================================================================
+  // 第二批次：绘制前景纹理和半透明正方形（放在左侧）
+  //=========================================================================
     {
         static float rotation = 0;
-        rotation += 30.0f * ts;  // 慢速旋转
+        rotation += 30.0f * ts;
 
         RF_PROFILE_SCOPE("Renderer Draw - Textures and Transparent Squares");
         Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-        // 两个纹理方块（不透明或半透明）
-        Redflag::Renderer2D::DrawQuad({ -2.5f, 1.8f, -0.6f }, { 2.0f, 2.0f }, m_CheckerboardTexture, 2.0f, { 1.0f, 1.0f, 1.0f, 0.9f });
-        Redflag::Renderer2D::DrawQuad({ 2.5f, -1.8f, -0.6f }, { 2.0f, 2.0f }, m_RedCloudTexture, 1.5f, { 1.0f, 0.9f, 0.9f, 0.8f });
+        // 所有非子纹理绘制在左侧区域（x <= 0）
+        Redflag::Renderer2D::DrawQuad({ -2.5f, 1.8f, -0.6f }, { 4.0f, 4.0f }, m_CheckerboardTexture, 2.0f, { 1.0f, 1.0f, 1.0f, 0.9f });
+        Redflag::Renderer2D::DrawQuad({ 2.5f, -1.8f, -0.6f }, { 4.0f, 4.0f }, m_RedCloudTexture, 1.5f, { 1.0f, 0.9f, 0.9f, 1.0f });
+        Redflag::Renderer2D::DrawQuad({ -1.5f, 0.5f, -0.5f }, { 1.5f, 1.5f }, { 1.0f, 0.2f, 0.2f, 0.6f });
+        Redflag::Renderer2D::DrawQuad({ 1.5f, -0.5f, -0.5f }, { 1.5f, 1.5f }, { 0.2f, 1.0f, 0.2f, 0.6f });
+        Redflag::Renderer2D::DrawQuad({ -1.0f, -1.8f, -0.4f }, { 1.5f, 1.5f }, { 0.2f, 0.4f, 1.0f, 0.7f });
+        Redflag::Renderer2D::DrawRotatedQuad({ 1.0f, 1.8f, -0.3f }, { 1.5f, 1.5f }, glm::radians(rotation), { 1.0f, 0.8f, 0.2f, 0.5f });
 
-        // 几个半透明的纯色正方形，放在网格前面
-        Redflag::Renderer2D::DrawQuad({ -1.5f, 0.5f, -0.5f }, { 1.5f, 1.5f }, { 1.0f, 0.2f, 0.2f, 0.6f });  // 半透明红
-        Redflag::Renderer2D::DrawQuad({ 1.5f, -0.5f, -0.5f }, { 1.5f, 1.5f }, { 0.2f, 1.0f, 0.2f, 0.6f });  // 半透明绿
-        Redflag::Renderer2D::DrawQuad({ -1.0f, -1.8f, -0.4f }, { 1.5f, 1.5f }, { 0.2f, 0.4f, 1.0f, 0.7f }); // 半透明蓝
-        Redflag::Renderer2D::DrawRotatedQuad({ 1.0f, 1.8f, -0.3f }, { 1.5f, 1.5f }, glm::radians(rotation), {1.0f, 0.8f, 0.2f, 0.5f}); // 半透明黄（旋转）
 
         Redflag::Renderer2D::EndScene();
     }
 
     //=========================================================================
-    // 粒子系统：鼠标点击生成粒子效果
+    // 第三批次：绘制子纹理（放在右侧区域，x > 0）
+    //=========================================================================
+    {
+        RF_PROFILE_SCOPE("Renderer Draw - SubTextures");
+        Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
+
+        // 所有子纹理绘制在右侧区域（x > 0），Z轴设为0.1f确保在最前面
+        Redflag::Renderer2D::DrawQuad({ 4.0f, 2.5f, 0.1f }, { 1.5f, 1.5f }, m_TextureStairs, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+        Redflag::Renderer2D::DrawQuad({ 6.0f, 2.5f, 0.1f }, { 1.2f, 1.2f }, m_TextureBarrel, 1.0f, { 1.0f, 0.9f, 0.8f, 1.0f });
+        Redflag::Renderer2D::DrawQuad({ 8.0f, 2.5f, 0.1f }, { 1.5f, 3.0f }, m_TextureTree, 1.0f, { 0.9f, 1.0f, 0.9f, 1.0f });
+
+        // 第二行子纹理（带旋转）
+        Redflag::Renderer2D::DrawRotatedQuad({ 4.0f, -1.0f, 0.1f }, { 1.5f, 1.5f }, glm::radians(15.0f), m_TextureStairs, 1.0f, { 0.8f, 0.8f, 1.0f, 0.8f });
+        Redflag::Renderer2D::DrawRotatedQuad({ 6.0f, -1.0f, 0.1f }, { 1.2f, 1.2f }, glm::radians(30.0f), m_TextureBarrel, 1.0f, { 1.0f, 0.8f, 0.8f, 0.8f });
+        Redflag::Renderer2D::DrawRotatedQuad({ 8.0f, -1.0f, 0.1f }, { 1.5f, 3.0f }, glm::radians(45.0f), m_TextureTree, 1.0f, { 0.8f, 1.0f, 0.8f, 0.8f });
+
+        Redflag::Renderer2D::EndScene();
+    }
+
+    //=========================================================================
+    // 第四批次：两个角色不同移动轨迹和变换角度
+    //=========================================================================
+    {
+        RF_PROFILE_SCOPE("Renderer Draw - Two Moving Characters");
+        Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
+
+        // 帧计数器
+        static int frameCounter = 0;
+        static int animFrame1 = 0;
+        static int animFrame2 = 0;
+
+        // 角色1移动
+        static float moveOffset1 = 0.0f;
+        static float moveDirection1 = 1.0f;
+
+        // 角色2移动
+        static float moveOffset2 = 0.0f;
+        static float moveDirection2 = 1.0f;
+
+        frameCounter++;
+
+        // 角色1：水平移动
+        moveOffset1 += 0.02f * moveDirection1 * 60.0f * ts;
+        if (moveOffset1 > 5.0f) moveDirection1 = -1.0f;
+        if (moveOffset1 < -5.0f) moveDirection1 = 1.0f;
+
+        // 角色2：垂直移动
+        moveOffset2 += 0.03f * moveDirection2 * 60.0f * ts;
+        if (moveOffset2 > 3.0f) moveDirection2 = -1.0f;
+        if (moveOffset2 < -3.0f) moveDirection2 = 1.0f;
+
+        // 每120帧切换一次纹理（角色1）
+        if (frameCounter >= 120)
+        {
+            frameCounter = 0;
+            animFrame1 = (animFrame1 + 1) % 2;
+        }
+
+        // 每60帧切换一次纹理（角色2，不同步）
+        static int frameCounter2 = 0;
+        frameCounter2++;
+        if (frameCounter2 >= 60)
+        {
+            frameCounter2 = 0;
+            animFrame2 = (animFrame2 + 1) % 2;
+        }
+
+        // 角色1：水平移动，旋转15度
+        float posX1 = -3.0f + moveOffset1;
+        float posY1 = 1.0f;
+
+        // 角色2：垂直移动，旋转30度
+        float posX2 = 3.0f;
+        float posY2 = 0.0f + moveOffset2;
+
+        // 绘制角色1
+        if (animFrame1 == 0)
+        {
+            Redflag::Renderer2D::DrawRotatedQuad({ posX1, posY1, 0.1f }, { 1.5f, 1.5f }, glm::radians(15.0f), m_TextureRogueLikeCharFrame1, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+        }
+        else
+        {
+            Redflag::Renderer2D::DrawRotatedQuad({ posX1, posY1, 0.1f }, { 1.5f, 1.5f }, glm::radians(15.0f), m_TextureRogueLikeCharFrame2, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+        }
+
+        // 绘制角色2
+        if (animFrame2 == 0)
+        {
+            Redflag::Renderer2D::DrawQuad({ posX2, posY2, 0.1f }, { 1.5f, 1.5f },  m_TextureRogueLikeCharFrame1, 1.0f, { 0.9f, 0.9f, 1.0f, 0.9f });
+        }
+        else
+        {
+            Redflag::Renderer2D::DrawQuad({ posX2, posY2, 0.1f }, { 1.5f, 1.5f },  m_TextureRogueLikeCharFrame2, 1.0f, { 0.9f, 0.9f, 1.0f, 0.9f });
+        }
+
+        Redflag::Renderer2D::EndScene();
+    }
+
+    //=========================================================================
+	// 粒子系统：鼠标点击生成粒子效果（OnRender内部BeginScene/EndScene包裹）
     //=========================================================================
     if (Redflag::Input::IsMouseButtonPressed(RF_MOUSE_BUTTON_LEFT))
     {
@@ -162,8 +273,8 @@ void Sandbox2D::OnImGuiRender()
 {
 	RF_PROFILE_FUNCTION();
 
-	// 第一个窗口：Settings
-	ImGui::Begin("Settings");
+	// 第一个窗口：Profile
+	ImGui::Begin("Profile");
 
 	auto stats=Redflag::Renderer2D::GetStats();
 	ImGui::Text("Renderer2D Stats:");
@@ -172,6 +283,10 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
+	ImGui::End();
+
+    //第二个窗口：Color Editor
+	ImGui::Begin("Settings");
 	ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
 	ImGui::End();
 }
