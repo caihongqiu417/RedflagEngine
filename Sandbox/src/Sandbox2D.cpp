@@ -313,9 +313,6 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
         m_Particle.Position = { worldX + cameraPos.x, worldY + cameraPos.y };
 
 
-        // 先清空所有粒子再发射
-        //m_ParticleSystem.Clear();  // 添加这行！
-
         // 6. 每次点击发射粒子，产生喷射效果
         for (int i = 0; i < 5; i++)
             m_ParticleSystem.Emit(m_Particle);
@@ -330,16 +327,32 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 
 void Sandbox2D::OnImGuiRender()
 {
-	RF_PROFILE_FUNCTION();
+    RF_PROFILE_FUNCTION();
 
-	static bool dockspaceOpen = true;
+    // ======================================================
+    // DOCKING 开关 - 修改此值控制是否使用 Docking 模式
+    // ======================================================
+    static bool dockingEnable = true;  // true = 使用Docking, false = 传统模式
+
+    if (!dockingEnable)
+    {
+        // 传统模式：直接显示设置窗口
+        ImGui::Begin("Settings");
+        auto stats = Redflag::Renderer2D::GetStats();
+        ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+        ImGui::Text("Quads: %d", stats.QuadCount);
+        ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
+        ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128));
+        ImGui::End();
+        return;
+    }
+
+    // ======================================================
+    // DOCKING 模式 - 所有窗口都可以停靠
+    // ======================================================
     static bool opt_fullscreen = true;
-    static bool opt_padding = false;
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-
-    // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-    // because it would be confusing to have two docking targets within each others.
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
     if (opt_fullscreen)
     {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -348,71 +361,41 @@ void Sandbox2D::OnImGuiRender()
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-    }
-    else
-    {
-        dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     }
 
-    // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
-    // and handle the pass-thru hole, so we ask Begin() to not render a background.
-    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-        window_flags |= ImGuiWindowFlags_NoBackground;
+    ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+    if (opt_fullscreen) ImGui::PopStyleVar(2);
 
-    // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-    // all active windows docked into it will lose their parent and become undocked.
-    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-    // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
-    if (!opt_padding)
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
-    if (!opt_padding)
-        ImGui::PopStyleVar();
-
-    if (opt_fullscreen)
-        ImGui::PopStyleVar(2);
-
-    // Submit the DockSpace
+    // DockSpace
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
     }
 
-
+    // 菜单栏
     if (ImGui::BeginMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-           if(ImGui::MenuItem("Exit"))
-			   Redflag::Application::Get().Close();
+            if (ImGui::MenuItem("Exit")) Redflag::Application::Get().Close();
             ImGui::EndMenu();
         }
-
-
         ImGui::EndMenuBar();
     }
 
-	//===============================================================================
-	// 实际Dockspace内容：显示渲染统计数据和调整正方形颜色
-	//===============================================================================
+    // ======================================================
+    // 实际 DOCKSPACE 内容
+    // ======================================================
     ImGui::Begin("Settings");
-
     auto stats = Redflag::Renderer2D::GetStats();
-    ImGui::Text("Renderer2D Stats:");
     ImGui::Text("Draw Calls: %d", stats.DrawCalls);
     ImGui::Text("Quads: %d", stats.QuadCount);
-    ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-    ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
     ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
-
-	ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
-
+    ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128));
     ImGui::End();
 
     ImGui::End();
