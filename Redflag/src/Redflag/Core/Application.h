@@ -41,6 +41,9 @@ namespace Redflag
 
 		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
+
+		void Close();
+
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 	
@@ -55,7 +58,6 @@ namespace Redflag
 		static Application* s_Instance;
 
 		
-
 	};
 
 	Application* CreateApplication();
