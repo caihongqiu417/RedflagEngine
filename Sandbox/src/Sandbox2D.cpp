@@ -10,6 +10,28 @@
 
 #include "Sandbox2D.h"
 
+// 2D地图数据
+static const uint32_t s_MapWidth = 35;
+static const char* s_MapTiles =
+"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+"GDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDG"
+"GDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDG"
+"GDDDWWWWWWWWWWWWWWWWWWWWWWWWWDDDG"
+"GDDDWWWWWWWWWWWWWWWWWWWWWWWWWDDDG"
+"GDDDWWWDDDDDDDDDDDDDDDDDDWWWWDDDG"
+"GDDDWWWDDDDDDDDDDDDDDDDDDWWWWDDDG"
+"GDDDWWWDDDGGGGGGGGGGGGDDDWWWWDDDG"
+"GDDDWWWDDDGGGGGGGGGGGGDDDWWWWDDDG"
+"GDDDWWWDDDGGGGGGGGGGGGDDDWWWWDDDG"
+"GDDDWWWDDDGGGGGGGGGGGGDDDWWWWDDDG"
+"GDDDWWWDDDDDDDDDDDDDDDDDDWWWWDDDG"
+"GDDDWWWDDDDDDDDDDDDDDDDDDWWWWDDDG"
+"GDDDWWWWWWWWWWWWWWWWWWWWWWWWWDDDG"
+"GDDDWWWWWWWWWWWWWWWWWWWWWWWWWDDDG"
+"GDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDG"
+"GDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDG"
+"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+;
 
 
 Sandbox2D::Sandbox2D()
@@ -31,6 +53,13 @@ void Sandbox2D::OnAttach()
     m_TextureStairs = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7, 6 }, { 128, 128 }, { 1, 1 });
     m_TextureBarrel = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8, 2 }, { 128, 128 }, { 1, 1 });
     m_TextureTree = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2, 1 }, { 128, 128 }, { 1, 2 });
+
+	m_MapWidth = s_MapWidth;
+	m_MapHeight = strlen(s_MapTiles) / s_MapWidth;
+	//！注意：左下角为(0,0)，向右为x正方向，向上为y正方向
+	s_TextureMap['G'] = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 1,10 }, { 128, 128 }, { 1, 1 }); // 草地
+	s_TextureMap['D'] = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 6, 11 }, { 128, 128 }, { 1, 1 }); // 泥土
+	s_TextureMap['W'] = Redflag::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 11, 11 }, { 128, 128 }, { 1, 1 }); // 水面
 
     m_TextureRogueLikeCharFrame1 = Redflag::SubTexture2D::CreateFromCoords(m_rogueLikeCharSpriteSheet, { 0, 0 }, { 16, 16 }, { 1, 1 });
     m_TextureRogueLikeCharFrame2 = Redflag::SubTexture2D::CreateFromCoords(m_rogueLikeCharSpriteSheet, { 1, 0 }, { 16, 16 }, { 1, 1 });
@@ -154,7 +183,34 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     }
 
     //=========================================================================
-    // 第四批次：两个角色不同移动轨迹和变换角度
+    // 第四批次：绘制Tiled地图（放在最左侧区域，x = -50）
+    //=========================================================================
+    {
+        RF_PROFILE_SCOPE("Renderer Draw - Tiled Map");
+        Redflag::Renderer2D::BeginScene(m_CameraController.GetCamera());
+
+        for(uint32_t y = 0; y < m_MapHeight; y++)
+        {
+            for(uint32_t x = 0; x < m_MapWidth; x++)
+            {
+                // 要找到第 y 行、第 x 列的字符，需要：
+                    // - 先跳过前 y 行的所有字符：y * m_MapWidth
+                    // - 再加上当前行的第 x 列：+ x
+				char tileType = s_MapTiles[x + y * m_MapWidth];
+                Redflag::Ref<Redflag::SubTexture2D> texture;
+                if (s_TextureMap.find(tileType) != s_TextureMap.end())
+                    texture = s_TextureMap[tileType];
+                else
+                    texture = m_TextureStairs; // 默认纹理（如果字符未映射）
+                Redflag::Renderer2D::DrawQuad({ -50.0f + x * 1.0f, 10.0f - y * 1.0f, 0.1f }, { 1.0f, 1.0f }, texture, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+            }
+		}
+
+		Redflag::Renderer2D::EndScene();
+    }
+
+    //=========================================================================
+    // 第五批次：两个角色不同移动轨迹和变换角度
     //=========================================================================
     {
         RF_PROFILE_SCOPE("Renderer Draw - Two Moving Characters");
