@@ -47,6 +47,9 @@ void Sandbox2D::OnAttach()
     m_Particle.VelocityVariation = { 2.0f, 2.0f };  // 大范围变化，向四面八方散开
 
     m_Particle.LifeTime = 1.8f;  // 存活时间
+
+    //============== 配置相机初始位置 =========================
+	m_CameraController.SetZoomLevel(6.f); // 初始缩放级别
 }
 
 void Sandbox2D::OnDetach()
