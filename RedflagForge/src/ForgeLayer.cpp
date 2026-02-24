@@ -302,42 +302,35 @@ namespace Redflag {
         //=========================================================================
         // 粒子系统：鼠标点击生成粒子效果（OnRender内部BeginScene/EndScene包裹）
         //=========================================================================
-          // 只有 Viewport 获得焦点时生成粒子
         if (m_ViewportFocused && m_ViewportHovered)
         {
             if (Redflag::Input::IsMouseButtonPressed(RF_MOUSE_BUTTON_LEFT))
             {
-                // 1. 获取鼠标在屏幕上的像素坐标
                 auto [mouseX, mouseY] = Redflag::Input::GetMousePosition();
-
-                // 2. 获取窗口大小（像素单位）
                 auto windowWidth = Redflag::Application::Get().GetWindow().GetWidth();
                 auto windowHeight = Redflag::Application::Get().GetWindow().GetHeight();
 
-                // 3. 获取相机信息（用于坐标转换）
-                auto cameraBounds = m_CameraController.GetBounds();  // 相机能看到的世界范围
-                auto cameraPos = m_CameraController.GetCamera().GetPosition();   // 相机在世界中的位置
+                auto bounds = m_CameraController.GetBounds();
+                auto cameraPos = m_CameraController.GetCamera().GetPosition();
 
-                // 4. 将鼠标从屏幕坐标转换为世界坐标
-                //    屏幕坐标(0~窗口大小) -> 世界坐标(相机范围内的实际位置)
-                float worldX = (mouseX / windowWidth) * cameraBounds.GetWidth() - cameraBounds.GetWidth() * 0.5f;
-                float worldY = cameraBounds.GetHeight() * 0.5f - (mouseY / windowHeight) * cameraBounds.GetHeight();
+                // 1. 先计算相对于相机中心的坐标
+                float relX = bounds.Left + (mouseX / windowWidth) * bounds.GetWidth();
+                float relY = bounds.Top - (mouseY / windowHeight) * bounds.GetHeight();
 
-                // 5. 设置粒子发射位置（加上相机偏移）
-                m_Particle.Position = { worldX+cameraPos.x , worldY+cameraPos.y  };
+                // 2. 再加上相机位置，得到世界坐标
+                float worldX = relX + cameraPos.x;
+                float worldY = relY + cameraPos.y;
 
+                m_Particle.Position = { worldX, worldY };
 
-                // 6. 每次点击发射粒子，产生喷射效果
                 for (int i = 0; i < 5; i++)
                     m_ParticleSystem.Emit(m_Particle);
             }
-
-            // 更新所有粒子的状态（位置、生命周期、透明度等）
-            m_ParticleSystem.OnUpdate(ts);
-
-            // 渲染所有粒子
-            m_ParticleSystem.OnRender(m_CameraController.GetCamera());
         }
+
+        m_ParticleSystem.OnUpdate(ts);
+        m_ParticleSystem.OnRender(m_CameraController.GetCamera());
+
        
 
         m_Framebuffer->Unbind();

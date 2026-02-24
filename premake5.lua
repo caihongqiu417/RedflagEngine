@@ -17,6 +17,7 @@ IncludeDir["Imgui"] = "Redflag/vendor/imgui"
 IncludeDir["glm"]    = "Redflag/vendor/glm" 
 IncludeDir["stb_image"]    = "Redflag/vendor/stb_image"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"  
+IncludeDir["entt"]="Redflag/vendor/entt/include"
 
 group "Dependencies"  
     include "Redflag/vendor/GLFW"
@@ -59,6 +60,7 @@ project "Redflag"
         "%{IncludeDir.Imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
+        "%{IncludeDir.entt}",
     }
     
     links {
@@ -132,6 +134,7 @@ project "Sandbox"
         "%{IncludeDir.Imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.fmt}",
+        "%{IncludeDir.entt}",
     }
     
     links {
