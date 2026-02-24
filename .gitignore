@@ -401,7 +401,12 @@ FodyWeavers.xsd
 *.sln.iml
 “Redflag/Redflag/vendor/fmt/” 
 Redflag/vendor/fmt/
-*.json
-*.json
-*.json
-*.json
+
+
+# 忽略 Sandbox 目录下所有自动生成的 JSON 文件
+Sandbox/*.json
+Sandbox/**/*.json
+
+# 忽略 RedflagForge 目录下所有自动生成的 JSON 文件
+RedflagForge/*.json
+RedflagForge/**/*.json
