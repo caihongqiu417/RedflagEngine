@@ -29,6 +29,8 @@
 #include"Redflag/Renderer/VertexArray.h"
 
 #include"Redflag/Renderer/OrthographicCamera.h"
+
+#include"Redflag/Renderer/Framebuffer.h"
 //-------------------------------------
 
 

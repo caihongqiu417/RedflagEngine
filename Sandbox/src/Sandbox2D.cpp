@@ -79,6 +79,13 @@ void Sandbox2D::OnAttach()
 
     //============== 配置相机初始位置 =========================
 	m_CameraController.SetZoomLevel(6.f); // 初始缩放级别
+
+    //===============创建帧缓冲区===============================
+    Redflag::FramebufferSpecification fbSpec;
+    fbSpec.Width = 1600;
+    fbSpec.Height = 900;
+    m_Framebuffer = Redflag::Framebuffer::Create(fbSpec);
+    
 }
 
 void Sandbox2D::OnDetach()
@@ -99,6 +106,7 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     // 清屏
     {
         RF_PROFILE_SCOPE("Renderer Preparation");
+        m_Framebuffer->Bind();
         Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Redflag::RenderCommand::Clear();
     }
@@ -323,6 +331,8 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
 
     // 渲染所有粒子
     m_ParticleSystem.OnRender(m_CameraController.GetCamera());
+
+    m_Framebuffer->Unbind();
 }
 
 void Sandbox2D::OnImGuiRender()
@@ -394,8 +404,13 @@ void Sandbox2D::OnImGuiRender()
     auto stats = Redflag::Renderer2D::GetStats();
     ImGui::Text("Draw Calls: %d", stats.DrawCalls);
     ImGui::Text("Quads: %d", stats.QuadCount);
+    ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
+    ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
     ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
-    ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128));
+
+    uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+
+    ImGui::Image((void*)textureID, ImVec2(1600.f, 900.f));
     ImGui::End();
 
     ImGui::End();

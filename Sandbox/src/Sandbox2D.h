@@ -21,6 +21,7 @@ private:
 
 	Redflag::Ref<Redflag::Shader> m_FlatColorShader;
 	Redflag::Ref<Redflag::VertexArray> m_SquareVA;
+	Redflag::Ref<Redflag::Framebuffer> m_Framebuffer;
 
 	Redflag::Ref<Redflag::Texture2D> m_RedCloudTexture;
 	Redflag::Ref<Redflag::Texture2D> m_CheckerboardTexture;
