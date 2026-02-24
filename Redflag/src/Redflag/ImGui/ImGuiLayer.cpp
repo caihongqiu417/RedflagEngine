@@ -73,6 +73,20 @@ namespace Redflag {
        
     }
 
+    void ImGuiLayer::OnEvent(Event& e)
+    {
+       
+        if (m_BlockEvents) // 当鼠标在其他面板上时，m_BlockEvents = true
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if ((e.IsInCategory(EventCategoryMouse) && io.WantCaptureMouse) ||
+                (e.IsInCategory(EventCategoryKeyboard) && io.WantCaptureKeyboard))
+            {
+                e.SetHandled(true);
+            }
+        }
+    }
+
     void ImGuiLayer::Begin() {
 
         RF_PROFILE_FUNCTION();

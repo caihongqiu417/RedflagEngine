@@ -65,10 +65,7 @@ namespace Redflag
 
         // 创建ImGui调试界面层
         m_ImGuiLayer = new ImGuiLayer();
-        PushOverlay(m_ImGuiLayer);
-
-
-        
+        PushOverlay(m_ImGuiLayer);       
     }
 
 	Application::~Application() 
@@ -110,7 +107,7 @@ namespace Redflag
 		for (auto it = m_LayerStack.end();it != m_LayerStack.begin();)
 		{
 			(*--it)->OnEvent(e);
-			if (e.Handled())
+			if (e.m_Handled)
 				break;
 		}
 	}

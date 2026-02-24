@@ -48,8 +48,8 @@ namespace Redflag {
 		virtual std::string ToString() const { return GetName(); }
 
 		inline bool Handled() { return m_Handled; }
+		inline void SetHandled(bool handled) { m_Handled = handled; }
 
-	protected:
 		bool m_Handled = false;           //Control dispatching to lawyers
 	};
 

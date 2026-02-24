@@ -46,5 +46,8 @@ namespace Redflag {
 
 		Ref<Redflag::Framebuffer> m_Framebuffer;
 		glm::vec2 m_ViewportSize = { 0.0f,0.0f };
+
+		bool m_ViewportFocused=false;
+		bool m_ViewportHovered=false;
 	};
 }

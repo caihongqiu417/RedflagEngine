@@ -42,6 +42,8 @@ namespace Redflag
 		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
 
+		inline ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
 		void Close();
 
 		bool OnWindowClose(WindowCloseEvent& e);
