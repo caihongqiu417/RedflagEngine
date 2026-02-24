@@ -63,6 +63,9 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
@@ -138,6 +141,9 @@
     <ClInclude Include="src\Redflag\Renderer\Buffer.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Framebuffer.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
@@ -160,6 +166,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Shader.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Texture.h">
@@ -1431,15 +1440,15 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
-    <ClInclude Include="src\Redflag\Renderer\Framebuffer.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
@@ -1481,6 +1490,9 @@
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
@@ -1502,6 +1514,9 @@
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
@@ -1514,8 +1529,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
-    <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp" />
   </ItemGroup>
 </Project>
