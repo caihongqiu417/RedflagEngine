@@ -401,3 +401,6 @@ FodyWeavers.xsd
 *.sln.iml
 “Redflag/Redflag/vendor/fmt/” 
 Redflag/vendor/fmt/
+*.json
+*.json
+*.json
