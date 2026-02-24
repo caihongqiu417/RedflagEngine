@@ -108,8 +108,4 @@ namespace Redflag {
             glfwMakeContextCurrent(backup_current_context);  // ╩ж╦╢иообнд
         }
     }
-
-	
-
- 
 }

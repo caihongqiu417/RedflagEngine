@@ -339,23 +339,6 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // ======================================================
-        // DOCKING 开关 - 修改此值控制是否使用 Docking 模式
-        // ======================================================
-        static bool dockingEnable = true;  // true = 使用Docking, false = 传统模式
-
-        if (!dockingEnable)
-        {
-            // 传统模式：直接显示设置窗口
-            ImGui::Begin("Settings");
-            auto stats = Redflag::Renderer2D::GetStats();
-            ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-            ImGui::Text("Quads: %d", stats.QuadCount);
-            ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
-            ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128));
-            ImGui::End();
-            return;
-        }
 
         // ======================================================
         // DOCKING 模式 - 所有窗口都可以停靠
@@ -400,7 +383,10 @@ namespace Redflag {
         // ======================================================
         // 实际 DOCKSPACE 内容
         // ======================================================
+        
+        /*Settings*/ 
         ImGui::Begin("Settings");
+
         auto stats = Redflag::Renderer2D::GetStats();
         ImGui::Text("Draw Calls: %d", stats.DrawCalls);
         ImGui::Text("Quads: %d", stats.QuadCount);
@@ -408,17 +394,34 @@ namespace Redflag {
         ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
         ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
 
-        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+        ImGui::End();
+        /*End Settings*/
 
-        // 手动指定纹理坐标，翻转Y轴
+        /*Viewport*/
+        ImGui::Begin("Viewport");
+        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+        if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
+        {
+            // 1. 先更新成员变量（记录新尺寸）
+            m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+
+            // 2. 更新相机（逻辑层）
+            m_CameraController.OnResize(viewportPanelSize.x, viewportPanelSize.y);
+
+            // 3. 最后更新 Framebuffer（渲染层）
+            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+        }
+
+        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
         ImGui::Image(
             (void*)(uint64_t)textureID,
-            ImVec2(1600.f, 900.f),
+            ImVec2(m_ViewportSize.x,m_ViewportSize.y),
             ImVec2(0, 1),  // 左上角对应OpenGL纹理的左下角
             ImVec2(1, 0)   // 右下角对应OpenGL纹理的右上角
         );
 
         ImGui::End();
+        /*End Viewport*/
 
         ImGui::End();
     }

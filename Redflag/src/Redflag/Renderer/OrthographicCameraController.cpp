@@ -48,6 +48,13 @@ namespace Redflag {
 		dispatcher.Dispatch<WindowResizeEvent>(std::bind(&OrthographicCameraController::OnWindowResized, this, std::placeholders::_1));
 	}
 
+	void OrthographicCameraController::OnResize(float width, float height)
+	{
+		m_AspectRatio = width / height;
+
+		CalculateView();
+	}
+
 	// 根据当前的缩放级别和窗口宽高比重新计算相机的投影矩阵
 	void OrthographicCameraController::CalculateView()
 	{

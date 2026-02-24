@@ -1,6 +1,6 @@
 workspace "Redflag"
-    architecture "x64"
-    startproject "Sandbox"
+    architecture "x86_64"
+    startproject "RedflagForge"
 
     configurations 
     { 
