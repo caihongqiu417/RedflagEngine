@@ -1,7 +1,7 @@
 #pragma once
 
 
-//For use by Sandbox
+//-------------Core----------------
 #include "Redflag/Core/Application.h"
 
 #include"Redflag/Core/Layer.h"
@@ -14,8 +14,8 @@
 #include"Redflag/Core/KeyCode.h"
 #include"Redflag/Core/MouseButtonCode.h"
 #include"Redflag/Core/Input.h"
+//-------------Core----------------
 
-#include"Redflag/Renderer/OrthographicCameraController.h"
 
 //-------------Renderer----------------
 #include"Redflag/Renderer/Renderer.h"
@@ -29,8 +29,11 @@
 #include"Redflag/Renderer/VertexArray.h"
 
 #include"Redflag/Renderer/OrthographicCamera.h"
+#include"Redflag/Renderer/OrthographicCameraController.h"
 
 #include"Redflag/Renderer/Framebuffer.h"
 //-------------------------------------
 
-
+//-------------Particle----------------
+#include"Redflag/ParticleSystem/ParticleSystem.h"
+//-------------------------------------

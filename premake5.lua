@@ -18,7 +18,7 @@ IncludeDir["glm"]    = "Redflag/vendor/glm"
 IncludeDir["stb_image"]    = "Redflag/vendor/stb_image"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"  
 
-group "Dependencies"  -- 修正拼写
+group "Dependencies"  
     include "Redflag/vendor/GLFW"
     include "Redflag/vendor/Glad"
     include "Redflag/vendor/imgui"
@@ -125,7 +125,7 @@ project "Sandbox"
     
     includedirs {
         "Redflag/src",
-        "Redflag/src/Redflag",  -- 关键！让Sandbox能找到rfpch.h
+        "Redflag/src/Redflag",  
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
@@ -177,3 +177,82 @@ project "Sandbox"
             "/wd4828",
             "/wd4005",
         }
+
+
+
+
+
+project "RedflagForge"
+    location "RedflagForge"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++17"
+    staticruntime "on"
+    
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    
+     -- 明确禁用预编译头
+    flags { "NoPCH" }
+    
+    files {
+        "%{prj.name}/src/**.h",
+        "%{prj.name}/src/**.cpp",
+    }
+    
+    includedirs {
+        "Redflag/src",
+        "Redflag/src/Redflag",  
+        "%{IncludeDir.spdlog}",
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.Imgui}",
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.fmt}",
+    }
+    
+    links {
+        "Redflag",
+        "GLFW",
+        "Glad",
+        "opengl32.lib",
+    }
+    
+    filter "system:windows"
+        systemversion "latest"
+        buildoptions { 
+            "/utf-8",
+        }
+        defines {
+            "RF_PLATFORM_WINDOWS",
+            "_CRT_SECURE_NO_WARNINGS",
+        }
+    
+    filter "configurations:Debug"
+        defines "RF_DEBUG"
+        runtime "Debug"
+        symbols "On"
+        buildoptions { 
+            "/wd4828",
+            "/wd4005",
+        }
+        
+    filter "configurations:Release"
+        defines "RF_RELEASE"
+        runtime "Release"
+        optimize "On"
+        buildoptions { 
+            "/wd4828",
+            "/wd4005",
+        }
+        
+    filter "configurations:Dist"
+        defines "RF_DIST"
+        runtime "Release"
+        optimize "On"
+        buildoptions { 
+            "/wd4828",
+            "/wd4005",
+        }
+
+

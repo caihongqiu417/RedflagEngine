@@ -2,7 +2,6 @@
 
 #include"Redflag.h"
 
-#include"ParticleSystem.h"
 
 class Sandbox2D :public Redflag::Layer
 {
@@ -21,7 +20,6 @@ private:
 
 	Redflag::Ref<Redflag::Shader> m_FlatColorShader;
 	Redflag::Ref<Redflag::VertexArray> m_SquareVA;
-	Redflag::Ref<Redflag::Framebuffer> m_Framebuffer;
 
 	Redflag::Ref<Redflag::Texture2D> m_RedCloudTexture;
 	Redflag::Ref<Redflag::Texture2D> m_CheckerboardTexture;
@@ -38,8 +36,8 @@ private:
 
 	glm::vec4 m_SquareColor = { 0.95f, 0.5f, 0.5f, 1.0f }; // 樱花粉
 
-	ParticleSystem m_ParticleSystem;
-	ParticleProps m_Particle;
+	Redflag::ParticleSystem m_ParticleSystem;
+	Redflag::ParticleProps m_Particle;
 
 	uint32_t m_MapWidth, m_MapHeight;
 	std::unordered_map<char, Redflag::Ref<Redflag::SubTexture2D>> s_TextureMap; // 存储地图字符与子纹理的映射关系

@@ -80,12 +80,6 @@ void Sandbox2D::OnAttach()
     //============== 配置相机初始位置 =========================
 	m_CameraController.SetZoomLevel(6.f); // 初始缩放级别
 
-    //===============创建帧缓冲区===============================
-    Redflag::FramebufferSpecification fbSpec;
-    fbSpec.Width = 1600;
-    fbSpec.Height = 900;
-    m_Framebuffer = Redflag::Framebuffer::Create(fbSpec);
-    
 }
 
 void Sandbox2D::OnDetach()
@@ -106,7 +100,6 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     // 清屏
     {
         RF_PROFILE_SCOPE("Renderer Preparation");
-        m_Framebuffer->Bind();
         Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Redflag::RenderCommand::Clear();
     }
@@ -332,74 +325,12 @@ void Sandbox2D::OnUpdate(Redflag::Timestep ts)
     // 渲染所有粒子
     m_ParticleSystem.OnRender(m_CameraController.GetCamera());
 
-    m_Framebuffer->Unbind();
 }
 
 void Sandbox2D::OnImGuiRender()
 {
     RF_PROFILE_FUNCTION();
 
-    // ======================================================
-    // DOCKING 开关 - 修改此值控制是否使用 Docking 模式
-    // ======================================================
-    static bool dockingEnable = true;  // true = 使用Docking, false = 传统模式
-
-    if (!dockingEnable)
-    {
-        // 传统模式：直接显示设置窗口
-        ImGui::Begin("Settings");
-        auto stats = Redflag::Renderer2D::GetStats();
-        ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-        ImGui::Text("Quads: %d", stats.QuadCount);
-        ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
-        ImGui::Image((void*)m_CheckerboardTexture->GetRendererID(), ImVec2(128, 128));
-        ImGui::End();
-        return;
-    }
-
-    // ======================================================
-    // DOCKING 模式 - 所有窗口都可以停靠
-    // ======================================================
-    static bool opt_fullscreen = true;
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-
-    if (opt_fullscreen)
-    {
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    }
-
-    ImGui::Begin("DockSpace Demo", nullptr, window_flags);
-    if (opt_fullscreen) ImGui::PopStyleVar(2);
-
-    // DockSpace
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-    {
-        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
-    }
-
-    // 菜单栏
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Exit")) Redflag::Application::Get().Close();
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
-    }
-
-    // ======================================================
-    // 实际 DOCKSPACE 内容
-    // ======================================================
     ImGui::Begin("Settings");
     auto stats = Redflag::Renderer2D::GetStats();
     ImGui::Text("Draw Calls: %d", stats.DrawCalls);
@@ -408,12 +339,9 @@ void Sandbox2D::OnImGuiRender()
     ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
     ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
 
-    uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-
-    ImGui::Image((void*)textureID, ImVec2(1600.f, 900.f));
-    ImGui::End();
 
     ImGui::End();
+
 }
 
 void Sandbox2D::OnEvent(Redflag::Event& event)

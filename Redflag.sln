@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "Redflag\vendor\img
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Redflag", "Redflag\Redflag.vcxproj", "{1A74CB9E-8653-4A3A-8F6B-D510FBC9B09B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RedflagForge", "RedflagForge\RedflagForge.vcxproj", "{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -50,6 +52,12 @@ Global
 		{1A74CB9E-8653-4A3A-8F6B-D510FBC9B09B}.Dist|x64.Build.0 = Dist|x64
 		{1A74CB9E-8653-4A3A-8F6B-D510FBC9B09B}.Release|x64.ActiveCfg = Release|x64
 		{1A74CB9E-8653-4A3A-8F6B-D510FBC9B09B}.Release|x64.Build.0 = Release|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Debug|x64.ActiveCfg = Debug|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Debug|x64.Build.0 = Debug|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Dist|x64.ActiveCfg = Dist|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Dist|x64.Build.0 = Dist|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Release|x64.ActiveCfg = Release|x64
+		{4D98EB6D-39FB-7A12-E280-B3C8CEC24695}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

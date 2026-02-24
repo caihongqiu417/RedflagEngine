@@ -28,6 +28,9 @@
     <Filter Include="src\Redflag\ImGui">
       <UniqueIdentifier>{1B8A3A6A-87A0-3800-D017-C4213C6D0988}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\ParticleSystem">
+      <UniqueIdentifier>{F979AE25-E589-5AF6-4E43-BF143A72498F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Renderer">
       <UniqueIdentifier>{F7FEF883-E38D-824D-8CAC-9648781A93F3}</UniqueIdentifier>
     </Filter>
@@ -137,6 +140,9 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
       <Filter>src\Redflag\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\ParticleSystem\ParticleSystem.h">
+      <Filter>src\Redflag\ParticleSystem</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Buffer.h">
       <Filter>src\Redflag\Renderer</Filter>
@@ -1486,6 +1492,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp">
       <Filter>src\Redflag\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\ParticleSystem\ParticleSystem.cpp">
+      <Filter>src\Redflag\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp">
       <Filter>src\Redflag\Renderer</Filter>

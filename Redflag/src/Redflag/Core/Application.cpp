@@ -48,7 +48,7 @@ namespace Redflag
 
 
 
-    Application::Application()
+    Application::Application(const std::string& name)
     {
 		RF_PROFILE_FUNCTION();
 
@@ -57,7 +57,7 @@ namespace Redflag
         s_Instance = this;
 
         // 创建窗口并设置事件回调
-        m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = Window::Create(WindowProps(name));
         m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
 		//目前实际调用Renderer2D::Init()

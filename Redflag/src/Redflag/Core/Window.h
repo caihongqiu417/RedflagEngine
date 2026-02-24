@@ -8,11 +8,13 @@
 namespace Redflag {
 	struct WindowProps {
 		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
-		WindowProps(const std::string& title = "Redflag Engine", unsigned int width = 1600, unsigned int height = 900)
-			:Title(title), Width(width), Height(height) {
-		}
+		uint32_t Width;
+		uint32_t Height;
+		WindowProps(const std::string& title = "Redflag Engine", 
+					uint32_t width = 1600, uint32_t height = 900)
+					:Title(title), Width(width), Height(height) 
+				{
+				}
 	};
 	class REDFLAG_API Window {
 	public:
@@ -21,8 +23,8 @@ namespace Redflag {
 		virtual ~Window() {}
 		//=0Îª´¿Ðéº¯Êý
 		virtual void OnUpdate() = 0;
-		virtual unsigned int GetWidth() const = 0;
-		virtual unsigned int GetHeight() const = 0;
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
 
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enable) = 0;
