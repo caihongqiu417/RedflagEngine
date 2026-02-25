@@ -1,7 +1,7 @@
 #pragma once
 
 #include<glm/glm.hpp>
-#include"Redflag/Renderer/Camera.h"
+#include"SceneCamera.h"
 
 namespace Redflag {
 
@@ -40,12 +40,11 @@ namespace Redflag {
 
 	struct CameraComponent
 	{
-		Camera Camera;
+		SceneCamera Camera;
 		bool Primary = true;
+		bool FixedAspectRatio = false; //默认不用，只有视口相机需要改变宽高比
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
-		CameraComponent(const glm::mat4& projection)
-			:Camera(projection) {}
 	};
 }

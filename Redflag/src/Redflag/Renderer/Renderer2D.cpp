@@ -150,11 +150,11 @@ namespace Redflag
     //==========================================================================
     // 开始新批次：每帧开始时调用，重置批处理状态
     //==========================================================================
-    void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+    void Renderer2D::BeginScene(const glm::mat4 projection, const glm::mat4& transform)
     {
         RF_PROFILE_FUNCTION();
 
-        glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+        glm::mat4 viewProj = projection * glm::inverse(transform);
 
         // 绑定着色器并设置视图投影矩阵
         s_Data.TextureShader->Bind();
