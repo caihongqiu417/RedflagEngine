@@ -34,6 +34,9 @@
     <Filter Include="src\Redflag\Renderer">
       <UniqueIdentifier>{F7FEF883-E38D-824D-8CAC-9648781A93F3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Scene">
+      <UniqueIdentifier>{0E82EA6A-7A98-E800-C30F-74222F65B988}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
     </Filter>
@@ -179,6 +182,12 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h">
       <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Components.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Scene.h">
+      <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\rfpch.h">
       <Filter>src\Redflag</Filter>
@@ -1443,7 +1452,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Scene\Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1530,12 +1538,14 @@
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\Scene.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scene\Scene.cpp" />
   </ItemGroup>
 </Project>

@@ -186,8 +186,9 @@
     <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h" />
-    <ClInclude Include="src\Redflag\rfpch.h" />
+    <ClInclude Include="src\Redflag\Scene\Components.h" />
     <ClInclude Include="src\Redflag\Scene\Scene.h" />
+    <ClInclude Include="src\Redflag\rfpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_noise.hpp" />
@@ -638,10 +639,10 @@
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp" />
+    <ClCompile Include="src\Redflag\Scene\Scene.cpp" />
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scene\Scene.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>

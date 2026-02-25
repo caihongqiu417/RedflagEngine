@@ -37,3 +37,11 @@
 //-------------Particle----------------
 #include"Redflag/ParticleSystem/ParticleSystem.h"
 //-------------------------------------
+
+
+//----------------ECS------------------
+#include"Redflag/Scene/Scene.h"
+#include"Redflag/Scene/Components.h"
+//-------------------------------------
+
+

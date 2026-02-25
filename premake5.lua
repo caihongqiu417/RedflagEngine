@@ -212,6 +212,7 @@ project "RedflagForge"
         "%{IncludeDir.Imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.fmt}",
+         "%{IncludeDir.entt}",
     }
     
     links {
