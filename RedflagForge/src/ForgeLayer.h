@@ -23,12 +23,18 @@ namespace Redflag {
 		Ref<Redflag::Texture2D> m_RedCloudTexture;
 		Ref<Redflag::Texture2D> m_CheckerboardTexture;
 
-		Entity m_SquareEntity;
+		
 
 		Ref<Redflag::Framebuffer> m_Framebuffer;
 		glm::vec2 m_ViewportSize = { 0.0f,0.0f };
+		
 
 		Ref<Scene> m_ActiveScene;
+		Entity m_SquareEntity;
+		Entity m_CameraEntity;
+		Entity m_SecondCamera;
+
+		bool m_PrimaryCamera = true;
 
 		bool m_ViewportFocused=false;
 		bool m_ViewportHovered=false;

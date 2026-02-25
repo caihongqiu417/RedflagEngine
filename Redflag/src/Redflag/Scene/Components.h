@@ -1,6 +1,7 @@
 #pragma once
 
 #include<glm/glm.hpp>
+#include"Redflag/Renderer/Camera.h"
 
 namespace Redflag {
 
@@ -24,7 +25,7 @@ namespace Redflag {
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent& other) = default;
 		SpriteRendererComponent(const glm::vec4& color)
-			:Color(color){ }
+			:Color(color){}
 	};
 
 	struct TagComponent
@@ -34,6 +35,17 @@ namespace Redflag {
 		TagComponent() = default;
 		TagComponent(const TagComponent& other) = default;
 		TagComponent(const std::string& tag)
-			:Tag(tag){ }
+			:Tag(tag){}
+	};
+
+	struct CameraComponent
+	{
+		Camera Camera;
+		bool Primary = true;
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent& other) = default;
+		CameraComponent(const glm::mat4& projection)
+			:Camera(projection) {}
 	};
 }

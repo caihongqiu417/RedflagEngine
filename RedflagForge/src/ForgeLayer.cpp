@@ -22,17 +22,17 @@ namespace Redflag {
         RF_PROFILE_FUNCTION();
 
         // ============== 加载纹理资源 =========================
-        m_RedCloudTexture = Redflag::Texture2D::Create("assets/textures/RedCloud.png");
-        m_CheckerboardTexture = Redflag::Texture2D::Create("assets/textures/Checkerboard.png");
+        m_RedCloudTexture = Texture2D::Create("assets/textures/RedCloud.png");
+        m_CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
 
         //============== 配置相机初始位置 =========================
         m_CameraController.SetZoomLevel(6.f); // 初始缩放级别
 
         //===============创建帧缓冲区===============================
-        Redflag::FramebufferSpecification fbSpec;
+        FramebufferSpecification fbSpec;
         fbSpec.Width = 1600;
         fbSpec.Height = 900;
-        m_Framebuffer = Redflag::Framebuffer::Create(fbSpec);
+        m_Framebuffer = Framebuffer::Create(fbSpec);
 
         //===============创建ECS数据===============================
         m_ActiveScene = CreateRef<Scene>();
@@ -41,6 +41,12 @@ namespace Redflag {
         square.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
         m_SquareEntity = square;
 
+        m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+        m_CameraEntity.AddComponent<CameraComponent>(glm::ortho(-16.f, 16.f, -9.f, 9.f));
+
+        m_SecondCamera = m_ActiveScene->CreateEntity("ClipSpace Camera");
+        auto& cc=m_SecondCamera.AddComponent<CameraComponent>(glm::ortho(-1.f, 1.f, -1.f, 1.f));
+        cc.Primary = false;
     }
 
     void ForgeLayer::OnDetach()
@@ -48,7 +54,7 @@ namespace Redflag {
         RF_PROFILE_FUNCTION();
     }
 
-    void ForgeLayer::OnUpdate(Redflag::Timestep ts)
+    void ForgeLayer::OnUpdate(Timestep ts)
     {
         RF_PROFILE_FUNCTION();
 
@@ -59,17 +65,15 @@ namespace Redflag {
         }
 
         // Stat
-        Redflag::Renderer2D::ResetStats();
+        Renderer2D::ResetStats();
 
         //Render Prep
         m_Framebuffer->Bind();
-        Redflag::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-        Redflag::RenderCommand::Clear();
+        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+        RenderCommand::Clear();
 
         //Render Update（ECS）
-        Renderer2D::BeginScene(m_CameraController.GetCamera());
         m_ActiveScene->OnUpdate(ts);
-        Renderer2D::EndScene();
 
         m_Framebuffer->Unbind();
     }
@@ -113,7 +117,7 @@ namespace Redflag {
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Exit")) Redflag::Application::Get().Close();
+                if (ImGui::MenuItem("Exit")) Application::Get().Close();
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -122,16 +126,16 @@ namespace Redflag {
         // ======================================================
         // 实际 DOCKSPACE 内容
         // ======================================================
-        
-        /*Settings*/ 
+
+        /*Settings*/
         ImGui::Begin("Settings");
 
-        auto stats = Redflag::Renderer2D::GetStats();
+        auto stats = Renderer2D::GetStats();
         ImGui::Text("Draw Calls: %d", stats.DrawCalls);
         ImGui::Text("Quads: %d", stats.QuadCount);
         ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
         ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
-        
+
         if (m_SquareEntity)
         {
             ImGui::Separator();
@@ -139,7 +143,13 @@ namespace Redflag {
             auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
             ImGui::ColorEdit4("SquareColor", glm::value_ptr(squareColor));
         }
-        
+
+        ImGui::DragFloat3("Camera Transform", glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
+        if (ImGui::Checkbox("ChangeCamera", &m_PrimaryCamera))
+        {
+            m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
+            m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
+        }
 
         ImGui::End();
         /*End Settings*/
@@ -177,7 +187,7 @@ namespace Redflag {
         ImGui::End();
     }
 
-    void ForgeLayer::OnEvent(Redflag::Event& event)
+    void ForgeLayer::OnEvent(Event& event)
     {
         m_CameraController.OnEvent(event);
     }

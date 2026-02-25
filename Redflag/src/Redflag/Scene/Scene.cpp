@@ -18,22 +18,40 @@ namespace Redflag {
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		Entity entity = {m_Registry.create(),this };
+
 		entity.AddComponent<TransformComponent>();
 		auto& tag=entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
 		return entity;
 	}
 
-	void Scene::OnUpdate(Timestep ts)
-	{
-		//找到有两个组件的entity
-		auto group =m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (auto entity : group)
-		{
-			//对于每个entity，将组件存储为元组
-			auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+    void Scene::OnUpdate(Timestep ts)
+    {
+        //Render 2D
+        Camera* mainCamera = nullptr;
+        glm::mat4* cameraTransform = nullptr;
 
-			Renderer2D::DrawQuad(transform.Transform, sprite.Color);
-		}
-	}
+        // 使用 view 和 each 来查找主相机
+        auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
+        cameraView.each([&](auto entity, TransformComponent& transform, CameraComponent& camera) {
+            if (camera.Primary)
+            {
+                mainCamera = &camera.Camera;
+                cameraTransform = &transform.Transform;
+            }
+            });
+
+        if (mainCamera)
+        {
+            Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
+
+            // 使用 view 和 each 来渲染所有 Sprite
+            auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+            spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite) {
+                Renderer2D::DrawQuad(transform.Transform, sprite.Color);
+                });
+
+            Renderer2D::EndScene();
+        }
+    }
 }
