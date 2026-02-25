@@ -1,11 +1,13 @@
 #pragma once
 
-//负责存储所有entity数据
 #include "entt.hpp"
 #include"Components.h"
 #include"Redflag/Core/Timestep.h"
 
+
 namespace Redflag {
+
+	class Entity;
 
 	class Scene
 	{
@@ -13,13 +15,12 @@ namespace Redflag {
 		Scene();
 		~Scene();
 
-		entt::entity CreateEntity();
-
-		//TEMP
-		entt::registry& Reg() { return m_Rigistry; }
+		Entity CreateEntity(const std::string& name=std::string());
 
 		void OnUpdate(Timestep ts);
 	private:
-		entt::registry m_Rigistry;
+		entt::registry m_Registry;
+
+		friend class Entity;
 	};
 }

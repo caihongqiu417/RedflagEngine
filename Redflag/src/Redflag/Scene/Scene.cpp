@@ -2,6 +2,8 @@
 #include"Scene.h"
 #include"Renderer/Renderer2D.h"
 
+#include"Entity.h"
+
 namespace Redflag {
 
 	Scene::Scene()
@@ -13,15 +15,19 @@ namespace Redflag {
 	{
 
 	}
-	entt::entity Scene::CreateEntity()
+	Entity Scene::CreateEntity(const std::string& name)
 	{
-		return m_Rigistry.create();
+		Entity entity = {m_Registry.create(),this };
+		entity.AddComponent<TransformComponent>();
+		auto& tag=entity.AddComponent<TagComponent>();
+		tag.Tag = name.empty() ? "Entity" : name;
+		return entity;
 	}
 
 	void Scene::OnUpdate(Timestep ts)
 	{
 		//找到有两个组件的entity
-		auto group = m_Rigistry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		auto group =m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (auto entity : group)
 		{
 			//对于每个entity，将组件存储为元组

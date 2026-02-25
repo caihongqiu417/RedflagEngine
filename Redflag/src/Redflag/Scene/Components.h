@@ -25,6 +25,15 @@ namespace Redflag {
 		SpriteRendererComponent(const SpriteRendererComponent& other) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			:Color(color){ }
+	};
 
+	struct TagComponent
+	{
+		std::string Tag;
+
+		TagComponent() = default;
+		TagComponent(const TagComponent& other) = default;
+		TagComponent(const std::string& tag)
+			:Tag(tag){ }
 	};
 }

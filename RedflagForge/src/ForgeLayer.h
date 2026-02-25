@@ -23,7 +23,7 @@ namespace Redflag {
 		Ref<Redflag::Texture2D> m_RedCloudTexture;
 		Ref<Redflag::Texture2D> m_CheckerboardTexture;
 
-		entt::entity m_SquareEntity;
+		Entity m_SquareEntity;
 
 		Ref<Redflag::Framebuffer> m_Framebuffer;
 		glm::vec2 m_ViewportSize = { 0.0f,0.0f };

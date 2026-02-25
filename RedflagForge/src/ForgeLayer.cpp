@@ -36,11 +36,11 @@ namespace Redflag {
 
         //===============创建ECS数据===============================
         m_ActiveScene = CreateRef<Scene>();
-        auto square = m_ActiveScene->CreateEntity();
-        m_ActiveScene->Reg().emplace<TransformComponent>(square);
-        m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 0.95f, 0.5f, 0.5f, 1.0f });
 
+        auto square=m_ActiveScene->CreateEntity("Square");
+        square.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
         m_SquareEntity = square;
+
     }
 
     void ForgeLayer::OnDetach()
@@ -57,7 +57,6 @@ namespace Redflag {
         {
             m_CameraController.OnUpdate(ts);
         }
-
 
         // Stat
         Redflag::Renderer2D::ResetStats();
@@ -133,8 +132,14 @@ namespace Redflag {
         ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
         ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
         
-        auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
-        ImGui::ColorEdit4("SquareColor", glm::value_ptr(squareColor));
+        if (m_SquareEntity)
+        {
+            ImGui::Separator();
+            ImGui::Text("%s", m_SquareEntity.GetComponent<TagComponent>().Tag.c_str());
+            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+            ImGui::ColorEdit4("SquareColor", glm::value_ptr(squareColor));
+        }
+        
 
         ImGui::End();
         /*End Settings*/
@@ -152,10 +157,8 @@ namespace Redflag {
         {
             // 1. 先更新成员变量（记录新尺寸）
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-
             // 2. 更新相机（逻辑层）
             m_CameraController.OnResize(viewportPanelSize.x, viewportPanelSize.y);
-
             // 3. 最后更新 Framebuffer（渲染层）
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
