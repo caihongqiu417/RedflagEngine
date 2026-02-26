@@ -46,16 +46,6 @@ namespace Redflag {
             transform.Translation.x += speed;  
         }
 
-        // 上下移动（可选）
-        if (Input::IsKeyPressed(RF_KEY_Q))
-        {
-            transform.Translation.y -= speed;  // 向下（-Y）
-        }
-        if (Input::IsKeyPressed(RF_KEY_E))
-        {
-            transform.Translation.y += speed;  // 向上（+Y）
-        }
-
         // 临时用 R/F 代替滚轮
         if (Input::IsKeyPressed(RF_KEY_R))
         {

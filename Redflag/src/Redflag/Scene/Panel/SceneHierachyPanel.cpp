@@ -1,6 +1,7 @@
 #include"rfpch.h"
 #include"SceneHierachyPanel.h"
 #include"imgui.h"
+#include"imgui_internal.h"
 #include<glm/gtc/type_ptr.hpp>
 #include "Scene/Components.h"
 
@@ -77,6 +78,66 @@ namespace Redflag {
         }
     }
 
+    static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.f)
+    {
+        ImGui::PushID(label.c_str());
+
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::Text(label.c_str());
+        ImGui::NextColumn();
+
+        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0,0 });
+
+        float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+        ImVec2 buttonSize = { lineHeight + 3.0f,lineHeight };
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // 霓虹粉
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // 亮霓虹粉
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // 暗霓虹粉
+        if (ImGui::Button("x", buttonSize))
+            values.x = resetValue;
+        ImGui::PopStyleColor(3);
+
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##x", &values.x, 0.1f,0.0f,0.0f,"%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // 霓虹绿
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // 亮霓虹绿
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // 暗霓虹绿
+        if (ImGui::Button("y", buttonSize))
+            values.y = resetValue;
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // 电光蓝
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // 亮电光蓝
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // 暗电光蓝
+        if (ImGui::Button("z", buttonSize))
+            values.z = resetValue;
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+        ImGui::PopStyleVar();
+
+        ImGui::Columns(1);
+
+        ImGui::PopID();
+    }
+
     void SceneHierachyPanel::DrawComponents(Entity entity)
     {
         if (!entity) return;
@@ -98,19 +159,22 @@ namespace Redflag {
             }
         }
 
-        /*
-        [ 1.0   0.0   0.0   px ]
-        [ 0.0   1.0   0.0   py ]
-        [ 0.0   0.0   1.0   pz ]
-        [ 0.0   0.0   0.0   1.0]  ← 第四列：位置
-        */
+
         // Transform组件
         if (entity.HasComponent<TransformComponent>())
         {
             if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 auto& transformComponent = entity.GetComponent<TransformComponent>();
-                ImGui::DragFloat3("Position", glm::value_ptr(transformComponent.Translation), 0.1f);
+
+                DrawVec3Control("Translation", transformComponent.Translation);
+                
+                //显示转成角度，用户输入转成弧度
+                glm::vec3 rotation = glm::degrees(transformComponent.Rotation);
+                DrawVec3Control("Rotation", rotation);
+                transformComponent.Rotation = glm::radians(rotation);
+
+                DrawVec3Control("Scale", transformComponent.Scale, 1.0f);
 
                 ImGui::TreePop();
             }
