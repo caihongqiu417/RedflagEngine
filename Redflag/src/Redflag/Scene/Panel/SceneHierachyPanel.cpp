@@ -81,7 +81,7 @@ namespace Redflag {
     {
         if (!entity) return;
 
-        // Tag组件 - 可折叠
+        // Tag组件 
         if (entity.HasComponent<TagComponent>())
         {
             if (ImGui::TreeNodeEx("Tag", ImGuiTreeNodeFlags_DefaultOpen))
@@ -104,7 +104,7 @@ namespace Redflag {
         [ 0.0   0.0   1.0   pz ]
         [ 0.0   0.0   0.0   1.0]  ← 第四列：位置
         */
-        // Transform组件 - 可折叠
+        // Transform组件
         if (entity.HasComponent<TransformComponent>())
         {
             if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
@@ -183,6 +183,18 @@ namespace Redflag {
                     ImGui::Checkbox("Fixed AspectRatio", &cameraComponent.FixedAspectRatio);
                 }
 
+                ImGui::TreePop();
+            }
+        }
+
+
+        // SpriteRender组件 
+        if (entity.HasComponent<SpriteRendererComponent>())
+        {
+            if (ImGui::TreeNodeEx("Color", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
+                ImGui::ColorEdit4("RGBA", glm::value_ptr(spriteRendererComponent.Color));
                 ImGui::TreePop();
             }
         }

@@ -20,6 +20,12 @@ namespace Redflag {
 
     void CameraControllerScript::OnUpdate(Timestep ts)
     {
+        auto& cameraComponent = GetComponent<CameraComponent>();
+        // 只修改主相机
+        if (!cameraComponent.Primary)
+            return;  // 如果不是主相机，直接返回，不执行任何操作
+
+
         auto& transform = GetComponent<TransformComponent>();
         float speed = m_CameraSpeed * ts.GetSeconds();
 

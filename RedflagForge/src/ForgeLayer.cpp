@@ -162,44 +162,20 @@ namespace Redflag {
         // ======================================================
 
         /*Profile*/
-        ImGui::Begin("Profile");
+        {
+            RF_PROFILE_SCOPE("Stas");
 
-        auto stats = Renderer2D::GetStats();
-        ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-        ImGui::Text("Quads: %d", stats.QuadCount);
-        ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
-        ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
+            ImGui::Begin("Profile");
 
-        ImGui::End();
+            auto stats = Renderer2D::GetStats();
+            ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+            ImGui::Text("Quads: %d", stats.QuadCount);
+            ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
+            ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
+
+            ImGui::End();
+        }
         /*End Profile*/
-
-        /*Setting*/
-        ImGui::Begin("Setting");
-
-        if (m_SquareEntity)
-        {
-            ImGui::Separator();
-            ImGui::Text("%s", m_SquareEntity.GetComponent<TagComponent>().Tag.c_str());
-            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-            ImGui::ColorEdit4("SquareColor", glm::value_ptr(squareColor));
-        }
-
-        ImGui::DragFloat3("Camera Transform", glm::value_ptr(m_Camera.GetComponent<TransformComponent>().Transform[3]));
-        if (ImGui::Checkbox("ChangePrimaryCamera", &m_PrimaryCamera))
-        {
-            m_Camera.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
-            m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
-        }
-
-        {
-            auto& camera = m_SecondCamera.GetComponent<CameraComponent>().Camera;
-            float orthoSize = camera.GetOrthographicSize();
-            if (ImGui::DragFloat("Second Camera Ortho Size", &orthoSize))
-                camera.SetOrthographicSize(orthoSize);
-        }
-        
-        ImGui::End();
-        /*End Setting*/
 
         /*Scene Hierachy*/
         m_SceneHierachyPanel.OnImguiRender();
