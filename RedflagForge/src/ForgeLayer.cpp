@@ -43,10 +43,10 @@ namespace Redflag {
         m_SquareEntity =m_ActiveScene->CreateEntity("Square");
         m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 0.4f, 0.7f, 1.0f));
 
-        m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+        m_CameraEntity = m_ActiveScene->CreateEntity("FixedCamera_1");
         m_CameraEntity.AddComponent<CameraComponent>();
 
-        m_SecondCamera = m_ActiveScene->CreateEntity("Second Camera Entity");
+        m_SecondCamera = m_ActiveScene->CreateEntity("FixedCamera_2");
         auto& cc=m_SecondCamera.AddComponent<CameraComponent>();
         cc.Primary = false;
 
@@ -152,14 +152,20 @@ namespace Redflag {
         // Êµ¼Ê DOCKSPACE ÄÚÈÝ
         // ======================================================
 
-        /*Settings*/
-        ImGui::Begin("Settings");
+        /*Profile*/
+        ImGui::Begin("Profile");
 
         auto stats = Renderer2D::GetStats();
         ImGui::Text("Draw Calls: %d", stats.DrawCalls);
         ImGui::Text("Quads: %d", stats.QuadCount);
         ImGui::Text("Vertices:%d", stats.GetTotalVertexCount());
         ImGui::Text("Indices:%d", stats.GetTotalIndexCount());
+
+        ImGui::End();
+        /*End Profile*/
+
+        /*Setting*/
+        ImGui::Begin("Setting");
 
         if (m_SquareEntity)
         {
@@ -183,9 +189,8 @@ namespace Redflag {
                 camera.SetOrthographicSize(orthoSize);
         }
         
-
         ImGui::End();
-        /*End Settings*/
+        /*End Setting*/
 
         /*Scene Hierachy*/
         m_SceneHierachyPanel.OnImguiRender();
