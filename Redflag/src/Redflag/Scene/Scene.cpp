@@ -47,14 +47,14 @@ namespace Redflag {
         //=========================找主相机==============================
         //===============================================================
         Camera* mainCamera = nullptr;
-        glm::mat4* cameraTransform = nullptr;
+        glm::mat4 cameraTransform;
 
         auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
         cameraView.each([&](auto entity, TransformComponent& transform, CameraComponent& camera) {
             if (camera.Primary)
             {
                 mainCamera = &camera.Camera;
-                cameraTransform = &transform.Transform;
+                cameraTransform = transform.GetTransform();
             }
             });
 
@@ -63,12 +63,12 @@ namespace Redflag {
        //===============================================================
         if (mainCamera)
         {
-            Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
+            Renderer2D::BeginScene(mainCamera->GetProjection(), cameraTransform);
 
             // 使用 view 和 each 来渲染所有 Sprite
             auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
             spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite) {
-                Renderer2D::DrawQuad(transform.Transform, sprite.Color);
+                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
                 });
 
             Renderer2D::EndScene();

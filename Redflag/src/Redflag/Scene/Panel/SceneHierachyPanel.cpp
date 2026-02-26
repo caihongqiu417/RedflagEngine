@@ -109,12 +109,9 @@ namespace Redflag {
         {
             if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                auto& transform = entity.GetComponent<TransformComponent>();
-                glm::vec3 position(transform.Transform[3]);
-                if (ImGui::DragFloat3("Position", &position.x, 0.1f))
-                {
-                    transform.Transform[3] = glm::vec4(position, 1.0f);
-                }
+                auto& transformComponent = entity.GetComponent<TransformComponent>();
+                ImGui::DragFloat3("Position", glm::value_ptr(transformComponent.Translation), 0.1f);
+
                 ImGui::TreePop();
             }
         }

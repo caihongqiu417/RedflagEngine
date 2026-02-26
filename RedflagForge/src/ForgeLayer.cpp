@@ -46,10 +46,8 @@ namespace Redflag {
         m_SecondSquareEntity = m_ActiveScene->CreateEntity("Square_2");
         m_SecondSquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 1.0f, 0.7f, 1.0f));
         // 直接获取Transform并修改
-        auto& transform = m_SecondSquareEntity.GetComponent<TransformComponent>();
-        transform.Transform[3].x = -2.0f;     // 左移2
-        transform.Transform[0][0] = 0.5f;     // X轴缩小一半
-        transform.Transform[1][1] = 0.5f;     // Y轴缩小一半
+        auto& translation = m_SecondSquareEntity.GetComponent<TransformComponent>().Translation;
+        translation.x = -2.0f;     // 左移2
 
         m_Camera = m_ActiveScene->CreateEntity("FixedCamera_1");
         auto& cameraComp=m_Camera.AddComponent<CameraComponent>();

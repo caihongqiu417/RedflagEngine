@@ -29,35 +29,31 @@ namespace Redflag {
         auto& transform = GetComponent<TransformComponent>();
         float speed = m_CameraSpeed * ts.GetSeconds();
 
-        // WASD 移动相机 - 修改位置矩阵的最后一列（平移部分）
-        // glm::mat4 是列主序，transform[3] 是第4列（平移向量）
         if (Input::IsKeyPressed(RF_KEY_W))
         {
-            transform.Transform[3][1] += speed;  // 第4列，第2行 = Y轴
+            transform.Translation.y += speed;  
         }
         if (Input::IsKeyPressed(RF_KEY_S))
         {
-            transform.Transform[3][1] -= speed;  // Y轴
+            transform.Translation.y -= speed;  
         }
         if (Input::IsKeyPressed(RF_KEY_A))
         {
-            transform.Transform[3][0] -= speed;  // 第4列，第1行 = X轴
+            transform.Translation.x -= speed;  
         }
         if (Input::IsKeyPressed(RF_KEY_D))
         {
-            transform.Transform[3][0] += speed;  // X轴
+            transform.Translation.x += speed;  
         }
 
-        // Q/E 旋转相机（绕Z轴旋转）
+        // 上下移动（可选）
         if (Input::IsKeyPressed(RF_KEY_Q))
         {
-            // 绕Z轴逆时针旋转（角度制）
-            transform.Transform = glm::rotate(transform.Transform, glm::radians(speed * 30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            transform.Translation.y -= speed;  // 向下（-Y）
         }
         if (Input::IsKeyPressed(RF_KEY_E))
         {
-            // 绕Z轴顺时针旋转
-            transform.Transform = glm::rotate(transform.Transform, glm::radians(-speed * 30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            transform.Translation.y += speed;  // 向上（+Y）
         }
 
         // 临时用 R/F 代替滚轮
