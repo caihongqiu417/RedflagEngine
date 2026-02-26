@@ -6,6 +6,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Redflag/Renderer/Shader.h"
+#include"Redflag/Scene/CameraControllerScript.h"
+
 
 #include "ForgeLayer.h"
 
@@ -15,6 +17,7 @@ namespace Redflag {
     ForgeLayer::ForgeLayer()
         : Layer("ForgeLayer"), m_CameraController(1600.0f / 900.0f, true)
     {
+
     }
 
     void ForgeLayer::OnAttach()
@@ -37,18 +40,21 @@ namespace Redflag {
         //===============创建ECS数据===============================
         m_ActiveScene = CreateRef<Scene>();
 
-        auto square=m_ActiveScene->CreateEntity("Square");
-        square.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-        m_SquareEntity = square;
+        m_SquareEntity =m_ActiveScene->CreateEntity("Square");
+        m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 0.4f, 0.7f, 1.0f));
 
         m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
         m_CameraEntity.AddComponent<CameraComponent>();
 
-        m_SecondCamera = m_ActiveScene->CreateEntity("ClipSpace Camera");
+        m_SecondCamera = m_ActiveScene->CreateEntity("Second Camera Entity");
         auto& cc=m_SecondCamera.AddComponent<CameraComponent>();
         cc.Primary = false;
 
+        m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
+        m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
 
+        //===============创建面板===============================
+        m_SceneHierachyPanel.SetContext(m_ActiveScene);
     }
 
     void ForgeLayer::OnDetach()
@@ -181,6 +187,10 @@ namespace Redflag {
         ImGui::End();
         /*End Settings*/
 
+        /*Scene Hierachy*/
+        m_SceneHierachyPanel.OnImguiRender();
+        /*End Scene Hierachy*/
+
         /*Viewport*/
         ImGui::Begin("Viewport");
 
@@ -203,8 +213,7 @@ namespace Redflag {
             //m_CameraController.OnResize(viewportPanelSize.x, viewportPanelSize.y);
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // 3. 最后更新 Framebuffer（渲染层）
-            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            
+            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y); 
             
         }
 

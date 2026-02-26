@@ -1,7 +1,7 @@
 #pragma once
 
 #include"Redflag.h"
-
+#include"Scene/Panel/SceneHierachyPanel.h"
 
 namespace Redflag {
 
@@ -38,5 +38,8 @@ namespace Redflag {
 
 		bool m_ViewportFocused=false;
 		bool m_ViewportHovered=false;
+
+		//Panels
+		SceneHierachyPanel m_SceneHierachyPanel;
 	};
 }

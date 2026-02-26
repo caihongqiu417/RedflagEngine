@@ -1455,6 +1455,9 @@
     <ClInclude Include="src\Redflag\Scene\Entity.h" />
     <ClInclude Include="src\Redflag\Renderer\Camera.h" />
     <ClInclude Include="src\Redflag\Scene\SceneCamera.h" />
+    <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
+    <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h" />
+    <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1552,5 +1555,7 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
+    <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp" />
+    <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "Entity.h"
+#include"Scene.h"
 
 namespace Redflag
 {

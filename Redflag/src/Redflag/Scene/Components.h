@@ -2,6 +2,8 @@
 
 #include<glm/glm.hpp>
 #include"SceneCamera.h"
+#include"ScriptableEntity.h"
+#include"Redflag/Core/Timestep.h"
 
 namespace Redflag {
 
@@ -46,5 +48,28 @@ namespace Redflag {
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
+	};
+
+	struct NativeScriptComponent
+	{
+		ScriptableEntity* Instance = nullptr;
+
+		// 函数指针
+		ScriptableEntity* (*InstantiateScript)();  
+		void (*DestroyScript)(NativeScriptComponent*);
+
+		template<typename T>
+		void Bind()
+		{
+			// lambda存入函数指针 - 使用正确的变量名
+			InstantiateScript = []() -> ScriptableEntity* {
+				return static_cast<ScriptableEntity*>(new T());
+				};
+
+			DestroyScript = [](NativeScriptComponent* nsc) {
+				delete static_cast<ScriptableEntity*>(nsc->Instance);
+				nsc->Instance = nullptr;
+				};
+		}
 	};
 }

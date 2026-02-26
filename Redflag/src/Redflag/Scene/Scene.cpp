@@ -26,12 +26,29 @@ namespace Redflag {
 	}
 
     void Scene::OnUpdate(Timestep ts)
-    {
-        //Render 2D
+    {   //===============================================================
+        //=========================更新脚本==============================
+        //===============================================================
+        {
+            m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+            {
+                    // entity: 当前遍历到的实体
+                     // nsc: 这个实体上的 NativeScriptComponent
+                if (!nsc.Instance)
+                {
+                    nsc.Instance = nsc.InstantiateScript();
+                    nsc.Instance->m_Entity = Entity{ entity,this };
+                    nsc.Instance->OnCreate();
+                }
+                nsc.Instance->OnUpdate(ts);
+            });
+        }
+        //===============================================================
+        //=========================找主相机==============================
+        //===============================================================
         Camera* mainCamera = nullptr;
         glm::mat4* cameraTransform = nullptr;
 
-        // 使用 view 和 each 来查找主相机
         auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
         cameraView.each([&](auto entity, TransformComponent& transform, CameraComponent& camera) {
             if (camera.Primary)
@@ -41,6 +58,9 @@ namespace Redflag {
             }
             });
 
+        //===============================================================
+       //=========================实际渲染==============================
+       //===============================================================
         if (mainCamera)
         {
             Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
