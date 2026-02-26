@@ -8,7 +8,8 @@ namespace Redflag {
     void CameraControllerScript::OnCreate()
     {
         m_CameraSpeed = 5.0f;
-        std::cout << "Camera Controller Created" << std::endl;
+        auto& transform = GetComponent<TransformComponent>();
+       
     }
 
     void CameraControllerScript::OnDestroy()

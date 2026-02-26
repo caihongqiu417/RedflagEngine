@@ -85,7 +85,7 @@ namespace Redflag {
         for (auto entity : view)
         {
             auto& cameraComponent=view.get<CameraComponent>(entity);
-            if (!cameraComponent.FixedAspectRatio)
+            if (cameraComponent.FixedAspectRatio)
                 cameraComponent.Camera.SetViewportSize(width, height);
         }
     }

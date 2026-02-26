@@ -17,7 +17,7 @@ namespace Redflag {
 		m_OrthographicSize = size;
 		m_OrthographicNear = nearClip;
 		m_OrthographicFar = farClip;
-
+		m_ProjectionType = ProjectionType::Orthographic;
 		RecalculateProjection();
 	}
 
@@ -29,11 +29,19 @@ namespace Redflag {
 
 	void SceneCamera::RecalculateProjection()
 	{
-		float orthoLeft = -m_OrthographicSize * m_AspectRatio * 0.5f;
-		float orthoRight = m_OrthographicSize * m_AspectRatio * 0.5f;
-		float orthoBottom = -m_OrthographicSize * 0.5f;
-		float orthoTop = m_OrthographicSize * 0.5f;
-
-		m_Projection = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
+		if (m_ProjectionType == ProjectionType::Orthographic)
+		{
+			// 正交投影
+			float orthoLeft = -m_OrthographicSize * m_AspectRatio * 0.5f;
+			float orthoRight = m_OrthographicSize * m_AspectRatio * 0.5f;
+			float orthoBottom = -m_OrthographicSize * 0.5f;
+			float orthoTop = m_OrthographicSize * 0.5f;
+			m_Projection = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
+		}
+		else
+		{
+			// 透视投影
+			m_Projection = glm::perspective(m_PerspectiveFov, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+		}
 	}
 }

@@ -43,14 +43,23 @@ namespace Redflag {
         m_SquareEntity =m_ActiveScene->CreateEntity("Square");
         m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 0.4f, 0.7f, 1.0f));
 
-        m_CameraEntity = m_ActiveScene->CreateEntity("FixedCamera_1");
-        m_CameraEntity.AddComponent<CameraComponent>();
+        m_SecondSquareEntity = m_ActiveScene->CreateEntity("Square_2");
+        m_SecondSquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 1.0f, 0.7f, 1.0f));
+        // 直接获取Transform并修改
+        auto& transform = m_SecondSquareEntity.GetComponent<TransformComponent>();
+        transform.Transform[3].x = -2.0f;     // 左移2
+        transform.Transform[0][0] = 0.5f;     // X轴缩小一半
+        transform.Transform[1][1] = 0.5f;     // Y轴缩小一半
 
-        m_SecondCamera = m_ActiveScene->CreateEntity("FixedCamera_2");
+        m_Camera = m_ActiveScene->CreateEntity("FixedCamera_1");
+        auto& cameraComp=m_Camera.AddComponent<CameraComponent>();
+        cameraComp.FixedAspectRatio = true;
+
+        m_SecondCamera = m_ActiveScene->CreateEntity("UnFixedCamera_1");
         auto& cc=m_SecondCamera.AddComponent<CameraComponent>();
         cc.Primary = false;
 
-        m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
+        m_Camera.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
         m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
 
         //===============创建面板===============================
@@ -175,10 +184,10 @@ namespace Redflag {
             ImGui::ColorEdit4("SquareColor", glm::value_ptr(squareColor));
         }
 
-        ImGui::DragFloat3("Camera Transform", glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
-        if (ImGui::Checkbox("ChangeCamera", &m_PrimaryCamera))
+        ImGui::DragFloat3("Camera Transform", glm::value_ptr(m_Camera.GetComponent<TransformComponent>().Transform[3]));
+        if (ImGui::Checkbox("ChangePrimaryCamera", &m_PrimaryCamera))
         {
-            m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
+            m_Camera.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
             m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
         }
 
