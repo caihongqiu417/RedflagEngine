@@ -35,10 +35,17 @@ namespace Redflag {
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
             m_SelectionContext = {};
 
+        // 右击空白区域,添加实体 - 只在空白区域触发
+        if (ImGui::BeginPopupContextWindow("HierarchyPopup", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+        {
+            if (ImGui::MenuItem("Create Empty Entity"))
+                m_Context->CreateEntity("Empty Entity");
+            ImGui::EndPopup();
+        }
+
         ImGui::End();
 
         ImGui::Begin("Properties");
-        // 如果有选中的实体，显示其属性
         if (m_SelectionContext && m_Context)
         {
             DrawComponents(m_SelectionContext);
@@ -64,17 +71,34 @@ namespace Redflag {
             tagComponent.Tag.c_str()
         );
 
-        // 点击选择，下一帧修改标志
+        // 点击选择
         if (ImGui::IsItemClicked()) {
             m_SelectionContext = entity;
         }
 
-        // 如果节点打开，可以添加子内容
+        // 延迟删除标记
+        bool entityDeleted = false;
+
+        // 右键菜单 - 使用 BeginPopupContextItem 的正确方式
+        if (ImGui::BeginPopupContextItem())  // 不需要条件判断，它会自动处理右键点击
+        {
+            if (ImGui::MenuItem("Delete Entity"))
+                entityDeleted = true;  // 只设置标记，不立即删除
+
+            ImGui::EndPopup();
+        }
+
+        // 如果节点打开，添加子内容
         if (opened) {
-            // 这里可以添加子内容
-            //ImGui::Text("Transform Component");
-            // ImGui::Text("Camera Component");
             ImGui::TreePop();
+        }
+
+        // 延迟删除：在节点绘制完成后执行
+        if (entityDeleted)
+        {
+            m_Context->DestroyEntity(entity);
+            if (m_SelectionContext == entity)
+                m_SelectionContext = {};
         }
     }
 
