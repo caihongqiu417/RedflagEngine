@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -125,7 +125,7 @@
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -192,9 +192,9 @@
     <ClInclude Include="src\Redflag\Scene\Entity.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h" />
     <ClInclude Include="src\Redflag\Scene\Scene.h" />
-    <ClInclude Include="src\Redflag\rfpch.h" />
     <ClInclude Include="src\Redflag\Scene\SceneCamera.h" />
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
+    <ClInclude Include="src\Redflag\rfpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_noise.hpp" />
@@ -649,10 +649,10 @@
     <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
     <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp" />
     <ClCompile Include="src\Redflag\Scene\Scene.cpp" />
+    <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -664,6 +664,9 @@
     </ProjectReference>
     <ProjectReference Include="vendor\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="vendor\yaml-cpp\yaml-cpp.vcxproj">
+      <Project>{88F1A057-74BE-FB62-9DD7-E90A890331F1}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

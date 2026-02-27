@@ -37,6 +37,9 @@
     <Filter Include="src\Redflag\Scene">
       <UniqueIdentifier>{0E82EA6A-7A98-E800-C30F-74222F65B988}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Scene\Panel">
+      <UniqueIdentifier>{8D84742E-F9BB-BCC5-02C6-20E96E7CE3BE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
     </Filter>
@@ -147,6 +150,9 @@
     <ClInclude Include="src\Redflag\Renderer\Buffer.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Camera.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
@@ -183,10 +189,25 @@
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Components.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Entity.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h">
+      <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Scene.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\SceneCamera.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\rfpch.h">
@@ -1452,12 +1473,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Scene\Entity.h" />
-    <ClInclude Include="src\Redflag\Renderer\Camera.h" />
-    <ClInclude Include="src\Redflag\Scene\SceneCamera.h" />
-    <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
-    <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h" />
-    <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1544,7 +1559,19 @@
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\Entity.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp">
+      <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Scene.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
@@ -1553,9 +1580,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
-    <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
-    <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp" />
-    <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp" />
   </ItemGroup>
 </Project>

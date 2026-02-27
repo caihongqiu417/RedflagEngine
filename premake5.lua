@@ -18,12 +18,13 @@ IncludeDir["glm"]    = "Redflag/vendor/glm"
 IncludeDir["stb_image"]    = "Redflag/vendor/stb_image"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"  
 IncludeDir["entt"]="Redflag/vendor/entt/include"
+IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 
 group "Dependencies"  
     include "Redflag/vendor/GLFW"
     include "Redflag/vendor/Glad"
     include "Redflag/vendor/imgui"
-
+    include "Redflag/vendor/yaml-cpp"
 group ""
 
 project "Redflag"
@@ -61,6 +62,7 @@ project "Redflag"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
+         "%{IncludeDir.yaml_cpp}", 
     }
     
     links {
@@ -68,6 +70,7 @@ project "Redflag"
         "Glad",
         "ImGui",
         "opengl32.lib",
+        "yaml-cpp",
     }
     
     filter "system:windows"

@@ -40,11 +40,11 @@ namespace Redflag {
         //===============创建ECS数据===============================
         m_ActiveScene = CreateRef<Scene>();
 
-        m_SquareEntity =m_ActiveScene->CreateEntity("Square");
-        m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 0.4f, 0.7f, 1.0f));
+        m_SquareEntity = m_ActiveScene->CreateEntity("Square");
+        m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.7f, 0.1f, 0.1f, 1.0f));  // 深红色
 
         m_SecondSquareEntity = m_ActiveScene->CreateEntity("Square_2");
-        m_SecondSquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 1.0f, 0.7f, 1.0f));
+        m_SecondSquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));  // 浅灰色
         // 直接获取Transform并修改
         auto& translation = m_SecondSquareEntity.GetComponent<TransformComponent>().Translation;
         translation.x = -2.0f;     // 左移2
