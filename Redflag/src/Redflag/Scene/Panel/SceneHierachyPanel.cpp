@@ -49,6 +49,25 @@ namespace Redflag {
         if (m_SelectionContext && m_Context)
         {
             DrawComponents(m_SelectionContext);
+            
+            if (ImGui::Button("Add Component"))
+                ImGui::OpenPopup("Add Component");
+
+            if (ImGui::BeginPopup("Add Component"))
+            {
+                if (ImGui::MenuItem("Camera"))
+                {
+                    m_SelectionContext.AddComponent<CameraComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+                if (ImGui::MenuItem("Srite Renderer"))
+                {
+                    m_SelectionContext.AddComponent<SpriteRendererComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
         }
 
         ImGui::End();
@@ -166,10 +185,12 @@ namespace Redflag {
     {
         if (!entity) return;
 
+        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
+
         // Tag组件 
         if (entity.HasComponent<TagComponent>())
         {
-            if (ImGui::TreeNodeEx("Tag", ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::TreeNodeEx("Tag", treeNodeFlags))
             {
                 auto& tag = entity.GetComponent<TagComponent>().Tag;
                 char buffer[256];
@@ -183,53 +204,51 @@ namespace Redflag {
             }
         }
 
-
         // Transform组件
         if (entity.HasComponent<TransformComponent>())
         {
-            if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            ImGui::PushID("TransComponent");
+
+            if (ImGui::TreeNodeEx("Transform", treeNodeFlags))
             {
                 auto& transformComponent = entity.GetComponent<TransformComponent>();
 
                 DrawVec3Control("Translation", transformComponent.Translation);
-                
-                //显示转成角度，用户输入转成弧度
                 glm::vec3 rotation = glm::degrees(transformComponent.Rotation);
                 DrawVec3Control("Rotation", rotation);
                 transformComponent.Rotation = glm::radians(rotation);
-
                 DrawVec3Control("Scale", transformComponent.Scale, 1.0f);
 
                 ImGui::TreePop();
             }
+            ImGui::PopID();
         }
 
-        //Camera组件
+        // Camera组件
         if (entity.HasComponent<CameraComponent>())
         {
-            if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
+            ImGui::PushID("CameraComponent");
+
+            if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), treeNodeFlags, "Camera"))
             {
                 auto& cameraComponent = entity.GetComponent<CameraComponent>();
                 auto& camera = cameraComponent.Camera;
 
                 ImGui::Checkbox("Primary", &cameraComponent.Primary);
-                
 
-                const char* projectionTypeStrings[] = { "Perspective","Orthographic" };
+                const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };
                 const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
+
                 if (ImGui::BeginCombo("ProjectionType", currentProjectionTypeString))
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        //是否高亮
                         bool isSelected = (currentProjectionTypeString == projectionTypeStrings[i]);
                         if (ImGui::Selectable(projectionTypeStrings[i], isSelected))
                         {
-                            //如果用户点击了->setprojection
                             currentProjectionTypeString = projectionTypeStrings[i];
                             camera.SetProjectionType((SceneCamera::ProjectionType)i);
                         }
-
                         if (isSelected)
                             ImGui::SetItemDefaultFocus();
                     }
@@ -242,11 +261,11 @@ namespace Redflag {
                     if (ImGui::DragFloat("Fov", &verticalFov))
                         camera.SetPerspectiveFOV(glm::radians(verticalFov));
 
-                    float perspectiveNear = camera.GetPerspectiveNearClip();  
+                    float perspectiveNear = camera.GetPerspectiveNearClip();
                     if (ImGui::DragFloat("Near", &perspectiveNear))
                         camera.SetPerspectiveNearClip(perspectiveNear);
 
-                    float perspectiveFar = camera.GetPerspectiveFarClip();    
+                    float perspectiveFar = camera.GetPerspectiveFarClip();
                     if (ImGui::DragFloat("Far", &perspectiveFar))
                         camera.SetPerspectiveFarClip(perspectiveFar);
                 }
@@ -256,7 +275,7 @@ namespace Redflag {
                     float orthoSize = camera.GetOrthographicSize();
                     if (ImGui::DragFloat("Size", &orthoSize))
                         camera.SetOrthographicSize(orthoSize);
-                    
+
                     float orthoNear = camera.GetOrthographicNearClip();
                     if (ImGui::DragFloat("Near", &orthoNear))
                         camera.SetOrthographicNearClip(orthoNear);
@@ -270,18 +289,69 @@ namespace Redflag {
 
                 ImGui::TreePop();
             }
+            ImGui::PopID();
         }
 
-
-        // SpriteRender组件 
+        // SpriteRender组件 - 修复版本
+        bool removeComponent = false;
         if (entity.HasComponent<SpriteRendererComponent>())
         {
-            if (ImGui::TreeNodeEx("Color", ImGuiTreeNodeFlags_DefaultOpen))
+            // 保存当前Y位置
+            float currentY = ImGui::GetCursorPosY();
+
+            // 完全重置所有ImGui状态
+            ImGui::Columns(1);
+
+            ImGui::PushID("SpriteRenderComponent");
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4,4 });
+
+            // 手动设置光标到保存的Y位置
+            ImGui::SetCursorPosY(currentY);
+
+            bool open = ImGui::TreeNodeEx("Color", treeNodeFlags);
+
+            // 计算按钮位置
+            float windowWidth = ImGui::GetWindowWidth();
+            float buttonWidth = 20;
+            float textWidth = ImGui::CalcTextSize("Color").x;
+            float arrowWidth = ImGui::GetFrameHeight(); // 箭头宽度
+
+            // 获取TreeNode的位置信息
+            ImRect itemRect = ImGui::GetCurrentContext()->LastItemData.Rect;
+
+            // 如果TreeNode刚刚创建，手动设置SameLine和按钮位置
+            ImGui::SameLine();
+
+            // 强制设置按钮到最右边，并保持在同一Y位置
+            ImGui::SetCursorPosX(windowWidth - buttonWidth - 10);
+            ImGui::SetCursorPosY(currentY); // 关键：恢复Y位置
+
+            if (ImGui::Button("+##ColorButton", ImVec2{ buttonWidth, 20 }))
+            {
+                ImGui::OpenPopup("ComponentSettings");
+            }
+
+            ImGui::PopStyleVar();
+
+            if (ImGui::BeginPopup("ComponentSettings"))
+            {
+                if (ImGui::MenuItem("Remove Component"))
+                    removeComponent = true;
+                ImGui::EndPopup();
+            }
+
+            if (open)
             {
                 auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
                 ImGui::ColorEdit4("RGBA", glm::value_ptr(spriteRendererComponent.Color));
                 ImGui::TreePop();
             }
+
+            ImGui::PopID();
+
+            if (removeComponent)
+                entity.RemoveComponent<SpriteRendererComponent>();
         }
     }
 }

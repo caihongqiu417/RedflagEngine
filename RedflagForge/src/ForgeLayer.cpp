@@ -224,4 +224,3 @@ namespace Redflag {
         m_CameraController.OnEvent(event);
     }
 }
-
