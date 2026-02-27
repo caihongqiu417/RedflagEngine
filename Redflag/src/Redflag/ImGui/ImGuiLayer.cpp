@@ -22,11 +22,10 @@ namespace Redflag {
 
 	}
 
+    // 当ImGui层被附加到层栈时调用，初始化ImGui
     void ImGuiLayer::OnAttach()
     {
         RF_PROFILE_FUNCTION();
-
-        // 当ImGui层被附加到层栈时调用，初始化ImGui
 
        // 检查ImGui版本
         IMGUI_CHECKVERSION();
@@ -38,6 +37,9 @@ namespace Redflag {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // 启用键盘导航
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // 启用窗口停靠功能
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // 启用多视口支持
+
+        //字体
+        io.FontDefault=io.Fonts->AddFontFromFileTTF("assets/fonts/Bitter/static/Bitter-SemiBold.ttf",18.f);
 
         // 设置ImGui样式为深色主题
         ImGui::StyleColorsDark();
