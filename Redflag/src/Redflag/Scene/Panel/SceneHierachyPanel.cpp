@@ -31,18 +31,15 @@ namespace Redflag {
                 });
         }
 
-        // 点击空白区域取消选中：鼠标左键点击窗口空白处时，清空选中
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
             m_SelectionContext = {};
-
-        // 右击空白区域,添加实体 - 只在空白区域触发
+        
         if (ImGui::BeginPopupContextWindow("HierarchyPopup", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
         {
             if (ImGui::MenuItem("Create Empty Entity"))
                 m_Context->CreateEntity("Empty Entity");
             ImGui::EndPopup();
         }
-
         ImGui::End();
 
         ImGui::Begin("Properties");
@@ -292,7 +289,7 @@ namespace Redflag {
             ImGui::PopID();
         }
 
-        // SpriteRender组件 - 修复版本
+        // SpriteRender组件 
         bool removeComponent = false;
         if (entity.HasComponent<SpriteRendererComponent>())
         {
