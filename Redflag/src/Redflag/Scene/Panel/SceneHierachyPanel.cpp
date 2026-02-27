@@ -247,10 +247,10 @@ namespace Redflag {
 
         ImGui::SameLine();
         ImGui::PushItemWidth(-1);
-        if (ImGui::Button("Add Component"))
-            ImGui::OpenPopup("Add Component");
+        if (ImGui::Button("Add Comp"))
+            ImGui::OpenPopup("Add Comp");
 
-        if (ImGui::BeginPopup("Add Component"))
+        if (ImGui::BeginPopup("Add Comp"))
         {
             if (ImGui::MenuItem("Camera"))
             {

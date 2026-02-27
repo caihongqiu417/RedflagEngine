@@ -25,6 +25,8 @@ namespace Redflag
 
 		void Begin();  // 开始一个新的ImGui帧（必须在渲染前调用）
 		void End();    // 结束当前ImGui帧（必须在渲染后调用）
+
+		void SetThemeColor();
 	private:
 		float m_Time = 0.0f;
 		bool m_BlockEvents = true;  // 默认拦截事件
