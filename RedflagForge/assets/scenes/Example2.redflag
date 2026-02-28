@@ -1,0 +1,47 @@
+Scene: Perfect Pseudo-Cube
+Entities:
+  - Entity: 70000000000001
+    TagComponent:
+      Tag: Cube_Top
+    TransformComponent:
+      Translation: [0, 0.5, 0]
+      Rotation: [-1.5708, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.9, 0.2, 0.3, 1]
+  - Entity: 70000000000002
+    TagComponent:
+      Tag: Cube_Front
+    TransformComponent:
+      Translation: [0, 0, 0.5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.6, 0.1, 0.2, 1]
+  - Entity: 70000000000003
+    TagComponent:
+      Tag: Cube_Right
+    TransformComponent:
+      Translation: [0.5, 0, 0]
+      Rotation: [0, 1.5708, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.3, 0.05, 0.1, 1]
+  - Entity: 80000000000001
+    TagComponent:
+      Tag: Cinematic_Camera
+    TransformComponent:
+      Translation: [4, 4, 4]
+      Rotation: [-0.615, 0.785, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.6
+        PerspectiveNear: 0.1
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false

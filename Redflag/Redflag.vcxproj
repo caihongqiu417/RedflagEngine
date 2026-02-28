@@ -196,6 +196,7 @@
     <ClInclude Include="src\Redflag\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
     <ClInclude Include="src\Redflag\rfpch.h" />
+    <ClInclude Include="src\Redflag\Utils\PlatformUtils.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_noise.hpp" />
@@ -625,6 +626,7 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowPlatformUltils.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Redflag\Core\Application.cpp" />

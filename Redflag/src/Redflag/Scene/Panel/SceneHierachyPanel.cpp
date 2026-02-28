@@ -15,6 +15,7 @@ namespace Redflag {
 	void SceneHierachyPanel::SetContext(const Ref<Scene>& context)
 	{
 		m_Context = context;
+        m_SelectionContext = {};
 	}
 
     void SceneHierachyPanel::OnImguiRender()

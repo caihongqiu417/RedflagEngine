@@ -8,6 +8,7 @@
 #include "Redflag/Renderer/Shader.h"
 #include"Redflag/Scene/CameraControllerScript.h"
 #include "Redflag/Scene/SceneSerializer.h"
+#include "Redflag/Utils/PlatformUtils.h" 
 
 
 #include "ForgeLayer.h"
@@ -40,7 +41,9 @@ namespace Redflag {
 
 
         //===============创建ECS数据===============================
+
         m_ActiveScene = CreateRef<Scene>();
+#if 0
 
         m_SquareEntity = m_ActiveScene->CreateEntity("Square");
         m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4(0.7f, 0.1f, 0.1f, 1.0f));  // 深红色
@@ -68,6 +71,7 @@ namespace Redflag {
         //===============初始化序列化器=========================
         SceneSerializer serializer(m_ActiveScene);
         serializer.Deserialize("assets/scenes/Example.redflag");
+#endif
     }
 
     void ForgeLayer::OnDetach()
@@ -150,14 +154,63 @@ namespace Redflag {
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
         }
 
-        // 菜单栏
+           // 菜单栏
+         // ======================================================
+        // 顶部菜单栏：处理文件 IO 逻辑
+        // ======================================================
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Exit")) Application::Get().Close();
+                // 【新建场景】：清空当前场景并重置面板
+                if (ImGui::MenuItem("New", "Ctrl+N"))
+                {
+                    m_ActiveScene = CreateRef<Scene>();
+                    // 必须同步视口大小，否则新场景的相机投影矩阵是错的
+                    m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                    m_SceneHierachyPanel.SetContext(m_ActiveScene);
+                }
+
+                // 【打开场景】：从磁盘加载 .redflag 文件
+                if (ImGui::MenuItem("Load...", "Ctrl+O"))
+                {
+                    std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0\0");
+                    if (!filepath.empty())
+                    {
+                        // 1. 创建新场景实例
+                        m_ActiveScene = CreateRef<Scene>();
+                        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+
+                        // 2. 将 UI 面板关联到新场景
+                        m_SceneHierachyPanel.SetContext(m_ActiveScene);
+
+                        // 3. 反序列化（将文件内容填入场景）
+                        SceneSerializer serializer(m_ActiveScene);
+                        serializer.Deserialize(filepath);
+                    }
+                }
+
+                // 【另存为】：将当前内存中的场景序列化到磁盘
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                {
+                    std::string filepath = FileDialogs::SaveFile("Redflag Scene (*.redflag)\0*.redflag\0\0");
+                    if (!filepath.empty())
+                    {
+                        SceneSerializer serializer(m_ActiveScene);
+                        serializer.Serialize(filepath);
+                    }
+                }
+
+                ImGui::Separator(); // 分隔线
+
+                if (ImGui::MenuItem("Exit"))
+                {
+                    Application::Get().Close();
+                }
+
                 ImGui::EndMenu();
             }
+       
             ImGui::EndMenuBar();
         }
 
