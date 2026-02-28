@@ -18,6 +18,13 @@ namespace Redflag {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
+
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+		void SaveScene();
+	private:
 		OrthographicCameraController m_CameraController;
 
 		Ref<Redflag::Texture2D> m_RedCloudTexture;
@@ -39,6 +46,8 @@ namespace Redflag {
 
 		bool m_ViewportFocused=false;
 		bool m_ViewportHovered=false;
+
+		std::string m_SceneFilePath;
 
 		//Panels
 		SceneHierachyPanel m_SceneHierachyPanel;

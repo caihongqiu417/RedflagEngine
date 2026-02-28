@@ -1,15 +1,33 @@
-Scene: Perfect Pseudo-Cube
+Scene: Unamed Scene
 Entities:
-  - Entity: 70000000000001
+  - Entity: 12132151342123
     TagComponent:
-      Tag: Cube_Top
+      Tag: Cinematic_Camera
     TransformComponent:
-      Translation: [0, 0.5, 0]
-      Rotation: [-1.5708, 0, 0]
+      Translation: [4, 4, 4]
+      Rotation: [-0.61500001, 0.785000026, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.600000024
+        PerspectiveNear: 0.100000001
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 12132151342123
+    TagComponent:
+      Tag: Cube_Right
+    TransformComponent:
+      Translation: [0.5, 0, 0]
+      Rotation: [0, 1.57079995, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0.9, 0.2, 0.3, 1]
-  - Entity: 70000000000002
+      Color: [0.300000012, 0.0500000007, 0.100000001, 1]
+  - Entity: 12132151342123
     TagComponent:
       Tag: Cube_Front
     TransformComponent:
@@ -17,31 +35,13 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0.6, 0.1, 0.2, 1]
-  - Entity: 70000000000003
+      Color: [0.600000024, 0.100000001, 0.200000003, 1]
+  - Entity: 12132151342123
     TagComponent:
-      Tag: Cube_Right
+      Tag: Cube_Top
     TransformComponent:
-      Translation: [0.5, 0, 0]
-      Rotation: [0, 1.5708, 0]
+      Translation: [0, 0.5, 0]
+      Rotation: [-1.57079995, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0.3, 0.05, 0.1, 1]
-  - Entity: 80000000000001
-    TagComponent:
-      Tag: Cinematic_Camera
-    TransformComponent:
-      Translation: [4, 4, 4]
-      Rotation: [-0.615, 0.785, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        PerspectiveFov: 0.6
-        PerspectiveNear: 0.1
-        PerspectiveFar: 1000
-        OrthographicSize: 10
-        OrthographicNear: -1
-        OrthographicFar: 1000
-      Primary: true
-      FixedAspectRatio: false
+      Color: [0.899999976, 0.200000003, 0.300000012, 1]
