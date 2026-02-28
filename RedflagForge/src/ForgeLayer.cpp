@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Redflag/Renderer/Shader.h"
 #include"Redflag/Scene/CameraControllerScript.h"
+#include "Redflag/Scene/SceneSerializer.h"
 
 
 #include "ForgeLayer.h"
@@ -37,6 +38,7 @@ namespace Redflag {
         fbSpec.Height = 900;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
+
         //===============创建ECS数据===============================
         m_ActiveScene = CreateRef<Scene>();
 
@@ -59,9 +61,13 @@ namespace Redflag {
 
         m_Camera.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
         m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
-
         //===============创建面板===============================
         m_SceneHierachyPanel.SetContext(m_ActiveScene);
+
+
+        //===============初始化序列化器=========================
+        SceneSerializer serializer(m_ActiveScene);
+        serializer.Deserialize("assets/scenes/Example.redflag");
     }
 
     void ForgeLayer::OnDetach()

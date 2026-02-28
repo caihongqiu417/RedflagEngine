@@ -29,5 +29,6 @@ namespace Redflag {
 
 		friend class Entity;
 		friend class SceneHierachyPanel;
+		friend class SceneSerializer;
 	};
 }

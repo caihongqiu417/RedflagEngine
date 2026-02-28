@@ -78,11 +78,11 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /wd4828 /wd4005 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -97,14 +97,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /wd4828 /wd4005 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -120,14 +120,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /wd4828 /wd4005 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>

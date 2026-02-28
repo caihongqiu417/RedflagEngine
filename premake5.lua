@@ -40,7 +40,7 @@ project "Redflag"
     pchsource "Redflag/src/Redflag/rfpch.cpp"
     
     cppdialect "C++17"
-    staticruntime "on"
+    staticruntime "off"
     
     files {
         "%{prj.name}/src/**.h",
@@ -82,6 +82,7 @@ project "Redflag"
             "RF_PLATFORM_WINDOWS",
             "GLFW_INCLUDE_NONE",
             "_CRT_SECURE_NO_WARNINGS",
+            "YAML_CPP_STATIC_DEFINE",  -- 关键添加
         }
     
     filter "configurations:Debug"
@@ -116,7 +117,7 @@ project "Sandbox"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "on"
+    staticruntime "off"
     
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -155,6 +156,7 @@ project "Sandbox"
         defines {
             "RF_PLATFORM_WINDOWS",
             "_CRT_SECURE_NO_WARNINGS",
+            "YAML_CPP_STATIC_DEFINE",
         }
     
     filter "configurations:Debug"
@@ -193,7 +195,7 @@ project "RedflagForge"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "on"
+    staticruntime "off"
     
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -233,6 +235,7 @@ project "RedflagForge"
         defines {
             "RF_PLATFORM_WINDOWS",
             "_CRT_SECURE_NO_WARNINGS",
+            "YAML_CPP_STATIC_DEFINE",
         }
     
     filter "configurations:Debug"

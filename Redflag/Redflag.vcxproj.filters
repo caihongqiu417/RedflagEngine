@@ -207,6 +207,9 @@
     <ClInclude Include="src\Redflag\Scene\SceneCamera.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\SceneSerializer.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
@@ -1572,6 +1575,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
