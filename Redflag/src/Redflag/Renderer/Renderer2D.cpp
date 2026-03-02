@@ -209,15 +209,19 @@ namespace Redflag
     {
         RF_PROFILE_FUNCTION();
 
-        // 计算实际使用的数据大小
-        uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
-            (uint8_t*)s_Data.QuadVertexBufferBase);
+        // 只有当有东西要绘制时才上传和绘制
+        if (s_Data.QuadIndexCount > 0)
+        {
+            // 计算实际使用的数据大小
+            uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
+                (uint8_t*)s_Data.QuadVertexBufferBase);
 
-        // 将CPU端累积的顶点数据上传到GPU
-        s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+            // 将CPU端累积的顶点数据上传到GPU
+            s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
-        // 执行绘制
-        Flush();
+            // 执行绘制
+            Flush();
+        }
     }
 
     //==========================================================================

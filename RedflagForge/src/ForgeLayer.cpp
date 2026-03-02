@@ -384,18 +384,6 @@ namespace Redflag {
         }
     }
 
-    void ForgeLayer::NewScene()
-    {
-        // 1. 创建一个新的场景实例
-        m_ActiveScene = CreateRef<Scene>();
-
-        // 2. 关键：必须同步视口大小
-        // 如果不调用这个，新场景里的相机组件在渲染时会因为 AspectRatio 为 0 导致画面消失
-        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-
-        // 3. 让层级面板（Hierarchy Panel）重新指向这个新场景
-        m_SceneHierachyPanel.SetContext(m_ActiveScene);
-    }
 
     void Redflag::ForgeLayer::OpenScene()
     {
@@ -425,26 +413,9 @@ namespace Redflag {
         }
     }
 
-    void Redflag::ForgeLayer::SaveSceneAs()
-    {
-        // 1. 弹出文件保存对话框
-        std::string filepath = FileDialogs::SaveFile("Redflag Scene (*.redflag)\0*.redflag\0");
-
-        if (!filepath.empty())
-        {
-            // 2. 执行序列化（将当前内存中的 m_ActiveScene 写入磁盘）
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.Serialize(filepath);
-
-            // 3. 更新当前文件路径，后续 Ctrl+S 将不再弹出窗口
-            m_SceneFilePath = filepath;
-            RF_CORE_INFO("Scene saved as: {0}", filepath);
-        }
-    }
-
     void ForgeLayer::SaveScene()
     {
-        // 如果 m_SceneFilePath 不为空，说明是从磁盘打开的或者已经 SaveAs 过一次了
+        // 如果已经有文件路径，直接保存
         if (!m_SceneFilePath.empty())
         {
             SceneSerializer serializer(m_ActiveScene);
@@ -453,8 +424,55 @@ namespace Redflag {
         }
         else
         {
-            // 第一次保存，必须让用户选地方
+            // 第一次保存，需要选择保存位置
             SaveSceneAs();
         }
+    }
+
+    void ForgeLayer::SaveSceneAs()
+    {
+        std::string filepath = FileDialogs::SaveFile("Redflag Scene (*.redflag)\0*.redflag\0");
+
+        if (!filepath.empty())
+        {
+            // 确保文件扩展名
+            if (filepath.find(".redflag") == std::string::npos)
+                filepath += ".redflag";
+
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.Serialize(filepath);
+
+            // 更新当前文件路径
+            m_SceneFilePath = filepath;
+            RF_CORE_INFO("Scene saved as: {0}", filepath);
+        }
+    }
+
+    void Redflag::ForgeLayer::NewScene()
+    {
+        RF_CORE_INFO("Creating new scene...");
+
+        // 1. 创建新场景（旧场景会被自动销毁）
+        m_ActiveScene = CreateRef<Scene>();
+
+        // 2. 同步视口大小
+        m_ActiveScene->OnViewportResize(
+            (uint32_t)m_ViewportSize.x,
+            (uint32_t)m_ViewportSize.y
+        );
+
+        // 3. 更新层级面板
+        m_SceneHierachyPanel.SetContext(m_ActiveScene);
+
+        // 4. 清空文件路径
+        m_SceneFilePath.clear();
+
+        //  5. 关键：立即清空帧缓冲区
+        m_Framebuffer->Bind();
+        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        RenderCommand::Clear();
+        m_Framebuffer->Unbind();
+
+        RF_CORE_INFO("New empty scene created");
     }
 }
