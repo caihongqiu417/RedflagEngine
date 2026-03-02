@@ -41,6 +41,7 @@ namespace Redflag {
 
         //===============´´½¨Ö¡»º³åÇø===============================
         FramebufferSpecification fbSpec;
+        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::Depth };
         fbSpec.Width = 1600;
         fbSpec.Height = 900;
         m_Framebuffer = Framebuffer::Create(fbSpec);
@@ -252,7 +253,7 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(1);
         ImGui::Image(
             (void*)(uint64_t)textureID,
             ImVec2(m_ViewportSize.x, m_ViewportSize.y),
