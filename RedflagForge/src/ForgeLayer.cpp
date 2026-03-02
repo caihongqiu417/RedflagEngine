@@ -1,6 +1,7 @@
 #include "rfpch.h"
 
 #include"Redflag.h"
+#include "ForgeLayer.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -10,8 +11,10 @@
 #include "Redflag/Scene/SceneSerializer.h"
 #include "Redflag/Utils/PlatformUtils.h" 
 
+#include"ImGuizmo.h"
 
-#include "ForgeLayer.h"
+
+
 
 
 namespace Redflag {
@@ -248,6 +251,25 @@ namespace Redflag {
             ImVec2(0, 1),  // 左上角对应OpenGL纹理的左下角
             ImVec2(1, 0)   // 右下角对应OpenGL纹理的右上角
         );
+
+
+        //Gizmos
+        Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
+        if (selectedEntity)
+        {
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+
+            float windowWidth = (float)ImGui::GetWindowWidth();
+            float windowHeight = (float)ImGui::GetWindowHeight();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+
+        }
+
+
+
+
 
         ImGui::End();  // 结束 Viewport
         /*End Viewport*/

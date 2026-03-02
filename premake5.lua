@@ -19,6 +19,7 @@ IncludeDir["stb_image"]    = "Redflag/vendor/stb_image"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"  
 IncludeDir["entt"]="Redflag/vendor/entt/include"
 IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
+IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
 
 group "Dependencies"  
     include "Redflag/vendor/GLFW"
@@ -48,7 +49,9 @@ project "Redflag"
         "%{prj.name}/vendor/stb_image/**.h",
         "%{prj.name}/vendor/stb_image/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
-        "%{prj.name}/vendor/glm/glm/**.inl"
+        "%{prj.name}/vendor/glm/glm/**.inl",
+        "%{prj.name}/vendor/ImGuizmo/ImGuizmo.h",
+        "%{prj.name}/vendor/ImGuizmo/ImGuizmo.cpp",
     }
     
     includedirs {
@@ -63,6 +66,7 @@ project "Redflag"
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
          "%{IncludeDir.yaml_cpp}", 
+         "%{IncludeDir.ImGuizmo}", 
     }
     
     links {
@@ -72,6 +76,9 @@ project "Redflag"
         "opengl32.lib",
         "yaml-cpp",
     }
+
+    filter "files:**/vendor/ImGuizmo/**.cpp"
+    flags { "NoPCH" }
     
     filter "system:windows"
         systemversion "latest"
@@ -218,6 +225,7 @@ project "RedflagForge"
         "%{IncludeDir.glm}",
         "%{IncludeDir.fmt}",
          "%{IncludeDir.entt}",
+          "%{IncludeDir.ImGuizmo}"
     }
     
     links {

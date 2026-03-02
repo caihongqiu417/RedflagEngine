@@ -10,6 +10,7 @@
 //TEMPORARY
 #include<GLFW/glfw3.h>
 #include<glad/glad.h>
+#include"ImGuizmo.h"
 
 namespace Redflag {
 	ImGuiLayer::ImGuiLayer()
@@ -96,6 +97,10 @@ namespace Redflag {
         ImGui_ImplOpenGL3_NewFrame();  // OpenGLÐÂÖ¡
         ImGui_ImplGlfw_NewFrame();     // GLFWÐÂÖ¡
         ImGui::NewFrame();             // ImGuiÐÂÖ¡
+
+        //ImGuizmo
+        ImGuizmo::BeginFrame();
+
     }
 
     void ImGuiLayer::End() 
