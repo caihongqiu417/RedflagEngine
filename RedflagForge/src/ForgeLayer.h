@@ -51,5 +51,8 @@ namespace Redflag {
 
 		//Panels
 		SceneHierachyPanel m_SceneHierachyPanel;
+
+		//Gizmo
+		int m_GizmoType = -1;
 	};
 }

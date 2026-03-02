@@ -12,6 +12,7 @@
 #include "Redflag/Utils/PlatformUtils.h" 
 
 #include"ImGuizmo.h"
+#include"Redflag/Math/Math.h"
 
 
 
@@ -256,7 +257,7 @@ namespace Redflag {
         /* Gizmo - 实体操纵工具 */
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
 
-        if (selectedEntity)  // 有选中实体才显示Gizmo
+        if (selectedEntity&&m_GizmoType!=-1)  // 有选中实体才显示Gizmo
         {
             // 设置Gizmo显示区域
             ImGuizmo::SetOrthographic(false);
@@ -273,15 +274,34 @@ namespace Redflag {
             // 获取实体当前变换矩阵
             auto& tc = selectedEntity.GetComponent<TransformComponent>();
             glm::mat4 transform = tc.GetTransform();
+            
+            // 吸附
+            bool snap = Input::IsKeyPressed(RF_KEY_LEFT_CONTROL);
+            // 默认吸附步长值
+            float snapValue = 0.5f;
+            // 如果是旋转模式，吸附步长改为45度
+            if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+                snapValue = 45.f;
+
+            float snapValues[3] = { snapValue,snapValue,snapValue };
 
             // 显示Gizmo并处理操作
             ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-                ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transform));
+                (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),nullptr,snap?snapValues:nullptr);
 
             if (ImGuizmo::IsUsing())  // 如果正在使用Gizmo
             {
-                tc.Translation = glm::vec3(transform[3]);  // 更新实体位置
+                // 从Gizmo修改后的矩阵分解出位置、旋转和缩放
+                glm::vec3 translation, rotation, scale;
+                Math::DecomposeTransform(transform, translation, rotation, scale);
 
+                // 计算旋转增量并处理角度环绕（如 350°到10°应该+20°而不是-340°）
+                glm::vec3 deltaRotation = rotation - tc.Rotation;
+
+                // 更新变换组件
+                tc.Translation = translation;           // 直接赋值位置
+                tc.Rotation += deltaRotation;            // 增量更新旋转（保持平滑性）
+                tc.Scale = scale;                        // 直接赋值缩放
             }
         }
 
@@ -314,25 +334,39 @@ namespace Redflag {
 
         switch (e.GetKeyCode())
         {
-        case RF_KEY_N:
-        {
-            if (control)
-                NewScene();
-            break;
-        }
-        case RF_KEY_O:
-        {
-            if (control)
-                OpenScene();
-            break;
-        }
-        case RF_KEY_S:
-        {
-            if (control && shift)
-                SaveSceneAs();
-            else if (control) SaveScene();
-            break;
-        }
+            case RF_KEY_N:
+            {
+                if (control)
+                    NewScene();
+                break;
+            }
+            case RF_KEY_O:
+            {
+                if (control)
+                 OpenScene();
+                break;
+            }
+            case RF_KEY_S:
+            {
+                if (control && shift)
+                    SaveSceneAs();
+                else if (control) SaveScene();
+                break;
+            }
+
+            //Gizmos
+            case RF_KEY_Q:
+                m_GizmoType = -1;
+                break;
+            case RF_KEY_W:
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                break;
+            case RF_KEY_R:
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                break;
+            case RF_KEY_E:
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                break;
         }
     }
 

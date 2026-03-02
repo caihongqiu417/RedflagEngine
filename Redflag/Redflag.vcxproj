@@ -172,6 +172,7 @@
     <ClInclude Include="src\Redflag\Events\KeyEvent.h" />
     <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Redflag\Math\Math.h" />
     <ClInclude Include="src\Redflag\ParticleSystem\ParticleSystem.h" />
     <ClInclude Include="src\Redflag\Renderer\Buffer.h" />
     <ClInclude Include="src\Redflag\Renderer\Camera.h" />
@@ -636,6 +637,7 @@
     <ClCompile Include="src\Redflag\Core\Log.cpp" />
     <ClCompile Include="src\Redflag\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="src\Redflag\Math\Math.cpp" />
     <ClCompile Include="src\Redflag\ParticleSystem\ParticleSystem.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />
