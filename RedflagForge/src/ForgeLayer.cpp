@@ -253,18 +253,36 @@ namespace Redflag {
         );
 
 
-        //Gizmos
+        /* Gizmo - 实体操纵工具 */
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
-        if (selectedEntity)
+
+        if (selectedEntity)  // 有选中实体才显示Gizmo
         {
+            // 设置Gizmo显示区域
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y,
+                (float)ImGui::GetWindowWidth(), (float)ImGui::GetWindowHeight());
 
-            float windowWidth = (float)ImGui::GetWindowWidth();
-            float windowHeight = (float)ImGui::GetWindowHeight();
-            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+            // 获取摄像机视图投影矩阵
+            auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+            const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+            const glm::mat4& cameraProjection = camera.GetProjection();
+            glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
 
+            // 获取实体当前变换矩阵
+            auto& tc = selectedEntity.GetComponent<TransformComponent>();
+            glm::mat4 transform = tc.GetTransform();
 
+            // 显示Gizmo并处理操作
+            ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+                ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transform));
+
+            if (ImGuizmo::IsUsing())  // 如果正在使用Gizmo
+            {
+                tc.Translation = glm::vec3(transform[3]);  // 更新实体位置
+
+            }
         }
 
 
