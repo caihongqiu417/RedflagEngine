@@ -31,7 +31,22 @@ namespace Redflag {
         m_Registry.destroy(entity);
     }
 
-    void Scene::OnUpdate(Timestep ts)
+    //编辑器：用传入的编辑器相机
+    void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
+    {
+        Renderer2D::BeginScene(camera);
+
+        // 使用 view 和 each 来渲染所有 Sprite
+        auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+        spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite) {
+            Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+            });
+
+        Renderer2D::EndScene();
+    }
+
+    //runtime:从场景中找主相机
+    void Scene::OnUpdateRuntime(Timestep ts)
     {   //===============================================================
         //=========================更新脚本==============================
         //===============================================================

@@ -11,6 +11,8 @@
 #include "Redflag/Scene/SceneSerializer.h"
 #include "Redflag/Utils/PlatformUtils.h" 
 
+#include"Redflag/Renderer/EditorCamera.h"
+
 #include"ImGuizmo.h"
 #include"Redflag/Math/Math.h"
 
@@ -76,6 +78,8 @@ namespace Redflag {
         SceneSerializer serializer(m_ActiveScene);
         serializer.Deserialize("assets/scenes/Example.redflag");
 #endif
+        //===============创建EditorCamera===============================
+        m_EditorCamera = EditorCamera(30.f, 1.788, 0.1f, 1000.f);
     }
 
     void ForgeLayer::OnDetach()
@@ -104,11 +108,12 @@ namespace Redflag {
         */
 
         //Camera
-        if (m_ViewportFocused && m_ViewportHovered)
+        if (m_ViewportFocused)
         {
             m_CameraController.OnUpdate(ts);
+            m_EditorCamera.OnUpdate(ts);
         }
-
+        
         // Stat
         Renderer2D::ResetStats();
 
@@ -118,8 +123,8 @@ namespace Redflag {
         RenderCommand::Clear();
 
         //Render Update（ECS）
-        //包括BeginScene,相机更新绘制，EndScene
-        m_ActiveScene->OnUpdate(ts);
+        //包括BeginScene,EndScene
+        m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 
         m_Framebuffer->Unbind();
     }
@@ -229,7 +234,7 @@ namespace Redflag {
         /*Viewport*/
         ImGui::Begin("Viewport");
 
-        // 只有 焦点 + 悬停 同时满足才不拦截->事件会传播给其他层
+        // 只有 焦点 + 悬停 同时满足才Block->事件会传播给其他层
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
@@ -240,7 +245,9 @@ namespace Redflag {
             // 1. 先更新成员变量（记录新尺寸）
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
             // 2. 更新相机（逻辑层）
+            m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            
             // 3. 最后更新 Framebuffer（渲染层）
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
@@ -265,11 +272,17 @@ namespace Redflag {
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y,
                 (float)ImGui::GetWindowWidth(), (float)ImGui::GetWindowHeight());
 
-            // 获取摄像机视图投影矩阵
+            // 获取摄像机视图投影矩阵（Runtime)
+            /*
             auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
             const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
             const glm::mat4& cameraProjection = camera.GetProjection();
             glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+            */
+            
+            // 获取摄像机视图投影矩阵（Editor)
+            const glm::mat4& cameraProjection =m_EditorCamera.GetProjection();
+            glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
             // 获取实体当前变换矩阵
             auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -318,6 +331,7 @@ namespace Redflag {
     void ForgeLayer::OnEvent(Event& event)
     {
         m_CameraController.OnEvent(event);
+        m_EditorCamera.OnEvent(event);
 
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<KeyPressedEvent>(RF_BIND_EVENT_FN(ForgeLayer::OnKeyPressed));

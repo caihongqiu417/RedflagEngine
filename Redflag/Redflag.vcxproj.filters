@@ -1489,6 +1489,7 @@
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Math\Math.h" />
+    <ClInclude Include="src\Redflag\Renderer\EditorCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1606,5 +1607,6 @@
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Math\Math.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
   </ItemGroup>
 </Project>

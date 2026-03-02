@@ -148,6 +148,25 @@ namespace Redflag
     }
 
     //==========================================================================
+    // 开始新批次：编辑器相机
+    //==========================================================================
+    void Renderer2D::BeginScene(const EditorCamera& camera)
+    {
+        RF_PROFILE_FUNCTION();
+
+        glm::mat4 viewProj =camera.GetViewProjection();
+
+        // 绑定着色器并设置视图投影矩阵
+        s_Data.TextureShader->Bind();
+        s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+        // 重置批处理状态
+        s_Data.QuadIndexCount = 0;                           // 清空索引计数
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // 重置写入指针到缓冲区开头
+        s_Data.TextureSlotIndex = 1;                          // 重置纹理槽索引（0已用）
+    }
+
+    //==========================================================================
     // 开始新批次：每帧开始时调用，重置批处理状态
     //==========================================================================
     void Renderer2D::BeginScene(const glm::mat4 projection, const glm::mat4& transform)

@@ -6,6 +6,7 @@
 #include"Texture.h"
 
 #include"SubTexture2D.h"
+#include"Redflag/Renderer/EditorCamera.h"
 
 namespace Redflag {
 
@@ -16,6 +17,8 @@ namespace Redflag {
 		static void Shutdown();
 
 		static void BeginScene(const glm::mat4 projection,const glm::mat4& transform);
+
+		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera);  //To remove
 		
 		static void EndScene();
