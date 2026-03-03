@@ -28,6 +28,9 @@
     <Filter Include="src\Redflag\ImGui">
       <UniqueIdentifier>{1B8A3A6A-87A0-3800-D017-C4213C6D0988}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Math">
+      <UniqueIdentifier>{AA1F597F-9618-78D1-BF4A-5D56ABA257DD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\ParticleSystem">
       <UniqueIdentifier>{F979AE25-E589-5AF6-4E43-BF143A72498F}</UniqueIdentifier>
     </Filter>
@@ -150,6 +153,9 @@
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
       <Filter>src\Redflag\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Math\Math.h">
+      <Filter>src\Redflag\Math</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\ParticleSystem\ParticleSystem.h">
       <Filter>src\Redflag\ParticleSystem</Filter>
     </ClInclude>
@@ -157,6 +163,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Camera.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\EditorCamera.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h">
@@ -1488,8 +1497,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Math\Math.h" />
-    <ClInclude Include="src\Redflag\Renderer\EditorCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1540,10 +1547,16 @@
     <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp">
       <Filter>src\Redflag\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Math\Math.cpp">
+      <Filter>src\Redflag\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\ParticleSystem\ParticleSystem.cpp">
       <Filter>src\Redflag\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp">
@@ -1606,7 +1619,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Math\Math.cpp" />
-    <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
   </ItemGroup>
 </Project>

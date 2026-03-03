@@ -67,14 +67,23 @@ project "Redflag"
         "%{IncludeDir.entt}",
          "%{IncludeDir.yaml_cpp}", 
          "%{IncludeDir.ImGuizmo}", 
+         "%{os.getenv('VULKAN_SDK')}/Include", -- [新增] Vulkan SDK 头文件
     }
     
+     libdirs
+    {
+        "%{os.getenv('VULKAN_SDK')}/Lib", -- [新增] Vulkan SDK 库文件
+    }
+
     links {
         "GLFW",
         "Glad",
         "ImGui",
         "opengl32.lib",
         "yaml-cpp",
+        "shaderc_shared.lib",      -- [新增] shaderc 编译器
+        "spirv-cross-core.lib",    -- [新增] SPIR-V 核心库
+        "spirv-cross-glsl.lib"     -- [新增] SPIR-V 转 GLSL 工具
     }
 
     filter "files:**/vendor/ImGuizmo/**.cpp"
@@ -90,6 +99,13 @@ project "Redflag"
             "GLFW_INCLUDE_NONE",
             "_CRT_SECURE_NO_WARNINGS",
             "YAML_CPP_STATIC_DEFINE",  -- 关键添加
+        }
+
+        -- [新增] 复制 shaderc_shared.dll 到输出目录
+        postbuildcommands
+        {
+            "{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll %{cfg.targetdir}"
         }
     
     filter "configurations:Debug"
