@@ -93,6 +93,9 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
@@ -127,6 +130,9 @@
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core\MouseButtonCode.h">
+      <Filter>src\Redflag\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Core\Timer.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core\Timestep.h">
@@ -199,6 +205,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Texture.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\UniformBuffer.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h">
@@ -1517,6 +1526,9 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1587,6 +1599,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\UniformBuffer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp">

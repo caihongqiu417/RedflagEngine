@@ -4,6 +4,7 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "RenderCommand.h"
+#include"UniformBuffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -58,6 +59,8 @@ namespace Redflag
 
         //========== 几何数据 ==========
         glm::vec4 QuadVertexPositions[4];                    // 四边形标准顶点位置（中心为原点，范围-0.5~0.5）
+
+        Ref<UniformBuffer> CameraUniformBuffer; // [新增]
 
         Renderer2D::Statistics Stas;
     };
@@ -129,7 +132,7 @@ namespace Redflag
         //---------- 8. 创建并配置纹理着色器 ----------
         s_Data.TextureShader = Redflag::Shader::Create("assets/shaders/Texture.glsl");
         s_Data.TextureShader->Bind();
-        s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+        //s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
         //---------- 9. 初始化纹理槽 ----------
         // 0号槽永久绑定白色纹理
@@ -141,6 +144,11 @@ namespace Redflag
         s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };   // 右下
         s_Data.QuadVertexPositions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };    // 右上
         s_Data.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };   // 左上
+
+        // [新增] 创建 Camera Uniform Buffer
+        // 大小是 sizeof(mat4) = 64字节
+        // Binding Point = 0 (我们约定 0 号槽位给 Camera)
+        s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
     }
 
     //==========================================================================
@@ -162,9 +170,10 @@ namespace Redflag
 
         glm::mat4 viewProj =camera.GetViewProjection();
 
-        // 绑定着色器并设置视图投影矩阵
-        s_Data.TextureShader->Bind();
-        s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+        // [修改后]
+        // 只需要更新 UBO，不需要 Bind Shader (因为 UBO 是全局绑定的)
+        s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
+
 
         // 重置批处理状态
         s_Data.QuadIndexCount = 0;                           // 清空索引计数
@@ -181,9 +190,10 @@ namespace Redflag
 
         glm::mat4 viewProj = projection * glm::inverse(transform);
 
-        // 绑定着色器并设置视图投影矩阵
-        s_Data.TextureShader->Bind();
-        s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+        // [修改后]
+         // 只需要更新 UBO，不需要 Bind Shader (因为 UBO 是全局绑定的)
+        s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
+
 
         // 重置批处理状态
         s_Data.QuadIndexCount = 0;                           // 清空索引计数

@@ -65,25 +65,23 @@ project "Redflag"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
-         "%{IncludeDir.yaml_cpp}", 
-         "%{IncludeDir.ImGuizmo}", 
-         "%{os.getenv('VULKAN_SDK')}/Include", -- [新增] Vulkan SDK 头文件
+        "%{IncludeDir.yaml_cpp}", 
+        "%{IncludeDir.ImGuizmo}", 
+        "%{os.getenv('VULKAN_SDK')}/Include", -- [新增] Vulkan SDK 头文件
     }
     
-     libdirs
+    libdirs
     {
         "%{os.getenv('VULKAN_SDK')}/Lib", -- [新增] Vulkan SDK 库文件
     }
 
+    -- 基础链接库 (所有配置共用)
     links {
         "GLFW",
         "Glad",
         "ImGui",
         "opengl32.lib",
         "yaml-cpp",
-        "shaderc_shared.lib",      -- [新增] shaderc 编译器
-        "spirv-cross-core.lib",    -- [新增] SPIR-V 核心库
-        "spirv-cross-glsl.lib"     -- [新增] SPIR-V 转 GLSL 工具
     }
 
     filter "files:**/vendor/ImGuizmo/**.cpp"
@@ -96,18 +94,19 @@ project "Redflag"
         }
         defines {
             "RF_PLATFORM_WINDOWS",
+            "RF_BUILD_DLL",
             "GLFW_INCLUDE_NONE",
             "_CRT_SECURE_NO_WARNINGS",
-            "YAML_CPP_STATIC_DEFINE",  -- 关键添加
+            "YAML_CPP_STATIC_DEFINE",
         }
-
-        -- [新增] 复制 shaderc_shared.dll 到输出目录
+        
+        -- 基础 Post-build (所有配置共用)
         postbuildcommands
         {
             "{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll %{cfg.targetdir}"
         }
     
+    -- Debug 配置
     filter "configurations:Debug"
         defines "RF_DEBUG"
         runtime "Debug"
@@ -117,6 +116,20 @@ project "Redflag"
             "/wd4005",
         }
         
+        -- [Debug] 链接带 'd' 的库
+        links {
+            "shaderc_sharedd.lib",
+            "spirv-cross-cored.lib",
+            "spirv-cross-glsld.lib"
+        }
+        
+        -- [修改后] 显式复制到 RedflagForge 和 Sandbox 目录
+        postbuildcommands {
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/Sandbox"
+        }
+        
+    -- Release 配置
     filter "configurations:Release"
         defines "RF_RELEASE"
         runtime "Release"
@@ -126,6 +139,21 @@ project "Redflag"
             "/wd4005",
         }
         
+        -- [Release] 链接不带 'd' 的库
+        links {
+            "shaderc_shared.lib",
+            "spirv-cross-core.lib",
+            "spirv-cross-glsl.lib"
+        }
+
+        -- [Release] 复制不带 'd' 的 DLL
+       -- [修改后]
+        postbuildcommands {
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox"
+        }
+        
+    -- Dist 配置
     filter "configurations:Dist"
         defines "RF_DIST"
         runtime "Release"
@@ -133,6 +161,19 @@ project "Redflag"
         buildoptions { 
             "/wd4828",
             "/wd4005",
+        }
+        
+        -- [Dist] 链接不带 'd' 的库
+        links {
+            "shaderc_shared.lib",
+            "spirv-cross-core.lib",
+            "spirv-cross-glsl.lib"
+        }
+
+        -- [修改后]
+        postbuildcommands {
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox"
         }
 
 project "Sandbox"
@@ -209,10 +250,6 @@ project "Sandbox"
             "/wd4005",
         }
 
-
-
-
-
 project "RedflagForge"
     location "RedflagForge"
     kind "ConsoleApp"
@@ -223,7 +260,6 @@ project "RedflagForge"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
     
-     -- 明确禁用预编译头
     flags { "NoPCH" }
     
     files {
@@ -240,8 +276,8 @@ project "RedflagForge"
         "%{IncludeDir.Imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.fmt}",
-         "%{IncludeDir.entt}",
-          "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.ImGuizmo}"
     }
     
     links {
@@ -288,5 +324,3 @@ project "RedflagForge"
             "/wd4828",
             "/wd4005",
         }
-
-

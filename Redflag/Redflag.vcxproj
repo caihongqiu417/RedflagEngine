@@ -76,7 +76,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -90,12 +90,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;shaderc_shared.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;shaderc_sharedd.lib;spirv-cross-cored.lib;spirv-cross-glsld.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Debug-windows-x86_64\Redflag &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Debug-windows-x86_64\Redflag &gt; nul)</Command>
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -103,7 +104,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -126,7 +127,8 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     </Lib>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Release-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Redflag &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Redflag &gt; nul)</Command>
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -134,7 +136,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>src;src\Redflag;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -157,7 +159,8 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     </Lib>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Redflag &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Redflag &gt; nul)</Command>
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -167,6 +170,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Redflag.h" />
@@ -179,6 +183,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Core\LayerStack.h" />
     <ClInclude Include="src\Redflag\Core\Log.h" />
     <ClInclude Include="src\Redflag\Core\MouseButtonCode.h" />
+    <ClInclude Include="src\Redflag\Core\Timer.h" />
     <ClInclude Include="src\Redflag\Core\Timestep.h" />
     <ClInclude Include="src\Redflag\Core\Window.h" />
     <ClInclude Include="src\Redflag\Debug\Instrumentor.h" />
@@ -203,6 +208,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Renderer\Shader.h" />
     <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
+    <ClInclude Include="src\Redflag\Renderer\UniformBuffer.h" />
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h" />
     <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h" />
     <ClInclude Include="src\Redflag\Scene\Components.h" />
@@ -643,6 +649,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowPlatformUltils.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
@@ -667,6 +674,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\UniformBuffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp" />
     <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
