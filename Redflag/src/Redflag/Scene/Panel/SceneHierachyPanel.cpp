@@ -73,6 +73,11 @@ namespace Redflag {
         ImGui::End();
     }
 
+    void SceneHierachyPanel::SetSelectedEntity(Entity entity)
+    {
+        m_SelectionContext = entity;
+    }
+
     void SceneHierachyPanel::DrawEntityNode(Entity entity)
     {
         auto& tagComponent = entity.GetComponent<TagComponent>();

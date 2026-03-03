@@ -25,6 +25,8 @@ namespace Redflag {
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
+		entt::registry& GetRegistry() { return m_Registry; }
+
 		Entity GetPrimaryCameraEntity();
 	private:
 		template<typename T>

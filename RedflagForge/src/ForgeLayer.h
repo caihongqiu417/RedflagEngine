@@ -19,6 +19,7 @@ namespace Redflag {
 		virtual void OnEvent(Event& event) override;
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void NewScene();
 		void OpenScene();
@@ -42,6 +43,8 @@ namespace Redflag {
 		Entity m_SecondSquareEntity;
 		Entity m_Camera;
 		Entity m_SecondCamera;
+
+		Entity m_HoveredEntity;
 
 		bool m_PrimaryCamera = true;
 

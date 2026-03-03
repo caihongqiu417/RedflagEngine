@@ -92,66 +92,52 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        /*
-        * Resize:视口（用户拖拽）和画布大小不一致时:
-        * ①调节画布大小为视口大小
-        * ②更新宽高比不固定的相机为视口比例
-        */
-
-        /*
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecifictaion();
-            m_ViewportSize.x>0.0f&&m_ViewportSize.y>0.0f&&
-            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
-        {
-            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-        }
-        */
-
-        //Camera
-        if (m_ViewportFocused)
-        {
+        // Camera & Stats 更新
+        if (m_ViewportFocused) {
             m_CameraController.OnUpdate(ts);
             m_EditorCamera.OnUpdate(ts);
         }
-        
-        // Stat
         Renderer2D::ResetStats();
 
-        //Render Prep
+        // 渲染开始
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         RenderCommand::Clear();
-
-        //清除id attachement的颜色到-1
         m_Framebuffer->ClearAttachment(1, -1);
 
-        //Render Update（ECS）
-        //包括BeginScene,EndScene
         m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 
-        // 最终坐标：
-        /*
-        * mx = 从视口左边到鼠标的像素距离[0, viewportSize.x]
-        * my = 从视口底部到鼠标的像素距离[0, viewportSize.y]
-        */
+        // --- 鼠标拾取逻辑 ---
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my;
+        my = viewportSize.y - my; // 翻转 Y，适配 OpenGL 坐标系
 
         int mouseX = (int)mx;
         int mouseY = (int)my;
 
         if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
         {
-            int pixelData=m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-            RF_CORE_TRACE("pixel data={0}", pixelData);
+            // 关键：如果你正在拖拽 Gizmo，不要更新 HoveredEntity，防止鼠标滑出物体导致失去焦点
+            if (!ImGuizmo::IsUsing())
+            {
+                int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+                if (pixelData != -1)
+                {
+                    entt::entity e = (entt::entity)pixelData;
+                    if (m_ActiveScene->GetRegistry().valid(e))
+                        m_HoveredEntity = { e, m_ActiveScene.get() };
+                    else
+                        m_HoveredEntity = {};
+                }
+                else {
+                    m_HoveredEntity = {};
+                }
+            }
         }
 
-
-        m_Framebuffer->Unbind();
+        m_Framebuffer->Unbind(); // 确保在 if 外面，解决闪屏
     }
 
     void ForgeLayer::OnImGuiRender()
@@ -242,6 +228,11 @@ namespace Redflag {
 
             ImGui::Begin("Profile");
 
+            std::string name = "None";
+            if (m_HoveredEntity)
+                name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+            ImGui::Text("Hovered Entity:%s", name.c_str());
+
             auto stats = Renderer2D::GetStats();
             ImGui::Text("Draw Calls: %d", stats.DrawCalls);
             ImGui::Text("Quads: %d", stats.QuadCount);
@@ -257,106 +248,75 @@ namespace Redflag {
         /*End Scene Hierachy*/
 
         /*Viewport*/
+        /* Viewport 窗口 */
         ImGui::Begin("Viewport");
-        auto viewportOffset = ImGui::GetCursorPos();
 
-        // 只有 焦点 + 悬停 同时满足才Block->事件会传播给其他层
+        // 1. 立即计算视口边界（必须在 Image 渲染前获取，确保坐标对齐）
+        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+        auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+        auto viewportOffset = ImGui::GetWindowPos();
+        m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+        m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
+        // 2. 自动 Resize 逻辑
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
         {
-            // 1. 先更新成员变量（记录新尺寸）
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-            // 2. 更新相机（逻辑层）
             m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            
-            // 3. 最后更新 Framebuffer（渲染层）
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
+        // 3. 绘制场景纹理
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
-        ImGui::Image(
-            (void*)(uint64_t)textureID,
-            ImVec2(m_ViewportSize.x, m_ViewportSize.y),
-            ImVec2(0, 1),  // 左上角对应OpenGL纹理的左下角
-            ImVec2(1, 0)   // 右下角对应OpenGL纹理的右上角
-        );
+        ImGui::Image((void*)(uint64_t)textureID, ImVec2(m_ViewportSize.x, m_ViewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
 
-        auto windowSize = ImGui::GetWindowSize();
-        ImVec2 minBound = ImGui::GetWindowPos();
-        minBound.x += viewportOffset.x;
-        minBound.y += viewportOffset.y;
-
-        ImVec2 maxBound = { minBound.x + windowSize.x,minBound.y + windowSize.y };
-        m_ViewportBounds[0] = { minBound.x,minBound.y };
-        m_ViewportBounds[1] = { maxBound.x,maxBound.y };
-
-
-        /* Gizmo - 实体操纵工具 */
+        /* Gizmos 逻辑 */
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
-
-        if (selectedEntity&&m_GizmoType!=-1)  // 有选中实体才显示Gizmo
+        if (selectedEntity && m_GizmoType != -1)
         {
-            // 设置Gizmo显示区域
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
-            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y,
-                (float)ImGui::GetWindowWidth(), (float)ImGui::GetWindowHeight());
 
-            // 获取摄像机视图投影矩阵（Runtime)
-            /*
-            auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-            const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-            const glm::mat4& cameraProjection = camera.GetProjection();
-            glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
-            */
-            
-            // 获取摄像机视图投影矩阵（Editor)
-            const glm::mat4& cameraProjection =m_EditorCamera.GetProjection();
+            // 使用之前精确计算的 m_ViewportBounds，解决“手感不对”的偏移问题
+            ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y,
+                m_ViewportBounds[1].x - m_ViewportBounds[0].x,
+                m_ViewportBounds[1].y - m_ViewportBounds[0].y);
+
+            const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
             glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
-            // 获取实体当前变换矩阵
             auto& tc = selectedEntity.GetComponent<TransformComponent>();
             glm::mat4 transform = tc.GetTransform();
-            
-            // 吸附
+
             bool snap = Input::IsKeyPressed(RF_KEY_LEFT_CONTROL);
-            // 默认吸附步长值
-            float snapValue = 0.5f;
-            // 如果是旋转模式，吸附步长改为45度
-            if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
-                snapValue = 45.f;
+            float snapValue = (m_GizmoType == ImGuizmo::OPERATION::ROTATE) ? 45.0f : 0.5f;
+            float snapValues[3] = { snapValue, snapValue, snapValue };
 
-            float snapValues[3] = { snapValue,snapValue,snapValue };
-
-            // 显示Gizmo并处理操作
             ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-                (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),nullptr,snap?snapValues:nullptr);
+                (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+                nullptr, snap ? snapValues : nullptr);
 
-            if (ImGuizmo::IsUsing())  // 如果正在使用Gizmo
+            if (ImGuizmo::IsUsing())
             {
-                // 从Gizmo修改后的矩阵分解出位置、旋转和缩放
                 glm::vec3 translation, rotation, scale;
                 Math::DecomposeTransform(transform, translation, rotation, scale);
 
-                // 计算旋转增量并处理角度环绕（如 350°到10°应该+20°而不是-340°）
                 glm::vec3 deltaRotation = rotation - tc.Rotation;
-
-                // 更新变换组件
-                tc.Translation = translation;           // 直接赋值位置
-                tc.Rotation += deltaRotation;            // 增量更新旋转（保持平滑性）
-                tc.Scale = scale;                        // 直接赋值缩放
+                tc.Translation = translation;
+                tc.Rotation += deltaRotation;
+                tc.Scale = scale;
             }
         }
 
-        ImGui::End();  // 结束 Viewport
-        /*End Viewport*/
+        ImGui::End(); // End Viewport
 
-        ImGui::End();  // 结束 DockSpace
+        ImGui::End(); // End DockSpace
     }
 
     void ForgeLayer::OnEvent(Event& event)
@@ -366,6 +326,7 @@ namespace Redflag {
 
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<KeyPressedEvent>(RF_BIND_EVENT_FN(ForgeLayer::OnKeyPressed));
+        dispatcher.Dispatch<MouseButtonPressedEvent>(RF_BIND_EVENT_FN(ForgeLayer::OnMouseButtonPressed));
     }
 
 
@@ -415,34 +376,21 @@ namespace Redflag {
         }
     }
 
-
-    void Redflag::ForgeLayer::OpenScene()
+    bool ForgeLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
     {
-        // 1. 弹出文件选择对话框
-        // 过滤后缀为 .redflag 的文件
-        std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0");
-
-        if (!filepath.empty())
+        if (e.GetMouseButton() == RF_MOUSE_BUTTON_LEFT)
         {
-            // 2. 重置当前活动场景
-            m_ActiveScene = CreateRef<Scene>();
-
-            // 3. 必须同步当前视口大小，确保新场景相机比例正确
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-
-            // 4. 更新层级面板的上下文（指向新创建的场景）
-            m_SceneHierachyPanel.SetContext(m_ActiveScene);
-
-            // 5. 执行反序列化（从磁盘加载数据到 m_ActiveScene）
-            SceneSerializer serializer(m_ActiveScene);
-            if (serializer.Deserialize(filepath))
+            // 修改点：只有【鼠标在视口内】且【没在点 Gizmo 轴】且【没在旋转相机】时才切换选中
+            if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(RF_KEY_LEFT_ALT))
             {
-                // 6. 成功加载后记录文件路径，以便后续 Ctrl+S 直接保存
-                m_SceneFilePath = filepath;
-                RF_CORE_INFO("Successfully opened scene: {0}", filepath);
+                m_SceneHierachyPanel.SetSelectedEntity(m_HoveredEntity);
             }
         }
+        return false;
     }
+
+
+   
 
     void ForgeLayer::SaveScene()
     {
@@ -479,27 +427,47 @@ namespace Redflag {
         }
     }
 
+    
+    void Redflag::ForgeLayer::OpenScene()
+    {
+        std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0");
+
+        if (!filepath.empty())
+        {
+            // --- 核心修复：清理状态 ---
+            m_HoveredEntity = {}; // 清空悬停实体
+            // -----------------------
+
+            m_ActiveScene = CreateRef<Scene>();
+            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_SceneHierachyPanel.SetContext(m_ActiveScene);
+
+            SceneSerializer serializer(m_ActiveScene);
+            if (serializer.Deserialize(filepath))
+            {
+                m_SceneFilePath = filepath;
+                RF_CORE_INFO("Successfully opened scene: {0}", filepath);
+            }
+        }
+    }
+
     void Redflag::ForgeLayer::NewScene()
     {
         RF_CORE_INFO("Creating new scene...");
 
-        // 1. 创建新场景（旧场景会被自动销毁）
+        // --- 核心修复：清理状态 ---
+        m_HoveredEntity = {}; // 清空悬停实体
+        // -----------------------
+
         m_ActiveScene = CreateRef<Scene>();
-
-        // 2. 同步视口大小
-        m_ActiveScene->OnViewportResize(
-            (uint32_t)m_ViewportSize.x,
-            (uint32_t)m_ViewportSize.y
-        );
-
-        // 3. 更新层级面板
+        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         m_SceneHierachyPanel.SetContext(m_ActiveScene);
 
-        // 4. 清空文件路径
         m_SceneFilePath.clear();
 
-        //  5. 关键：立即清空帧缓冲区
+        // 立即清空当前 Framebuffer，防止鼠标拾取到上一帧的残留 ID
         m_Framebuffer->Bind();
+        m_Framebuffer->ClearAttachment(1, -1);
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->Unbind();
