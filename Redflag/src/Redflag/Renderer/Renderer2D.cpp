@@ -24,6 +24,10 @@ namespace Redflag
         glm::vec4 Color;         // 顶点颜色（RGBA）
         glm::vec2 TexCoord;      // 纹理坐标（UV，范围0~1）
         float textureIndex;          // 纹理索引（0=白色纹理，1~31=其他纹理）
+        float TilingFactor;
+
+        //编辑器独有，发布时游戏时删除
+        int EntityID=0;
     };
 
     //--------------------------------------------------------------------------
@@ -83,7 +87,9 @@ namespace Redflag
             {Redflag::ShaderDataType::Float3, "a_Position"},  // 位置：3个float
             {Redflag::ShaderDataType::Float4, "a_Color"},     // 颜色：4个float
             {Redflag::ShaderDataType::Float2, "a_TexCoord"},  // 纹理坐标：2个float
-            {Redflag::ShaderDataType::Float, "a_TexIndex"}    // 纹理索引：1个float
+            {Redflag::ShaderDataType::Float, "a_TexIndex"},
+            {Redflag::ShaderDataType::Float, "a_TilingFactor"} ,
+            {Redflag::ShaderDataType::Int, "a_EntityID"} ,
         };
         s_Data.QuadVertexBuffer->SetLayout(squareLayout);
         s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -375,38 +381,34 @@ namespace Redflag
     //==========================================================================
 // 绘制纯色四边形（ECS）- 使用变换矩阵（来自Transform组件）
 //==========================================================================
-    void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+    void Renderer2D::DrawQuad(const glm::mat4& transform,
+        const glm::vec4& color,
+        int entityID)
     {
         RF_PROFILE_FUNCTION();
 
-        // 检查批次是否已满，如果满了则刷新并开始新批次
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
             FlushAndReset();
 
-        const float textureIndex = 0.0f;  // 使用白色纹理（索引0）
-
-        // 标准纹理坐标
         const glm::vec2 texCoords[4] = {
-            {0.0f, 0.0f},  // 左下
-            {1.0f, 0.0f},  // 右下
-            {1.0f, 1.0f},  // 右上
-            {0.0f, 1.0f}   // 左上
+            {0.0f, 0.0f},
+            {1.0f, 0.0f},
+            {1.0f, 1.0f},
+            {0.0f, 1.0f}
         };
 
-        // 写入4个顶点的数据到缓冲区
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
             s_Data.QuadVertexBufferPtr->Color = color;
             s_Data.QuadVertexBufferPtr->TexCoord = texCoords[i];
             s_Data.QuadVertexBufferPtr->textureIndex = 0.0f;
+            s_Data.QuadVertexBufferPtr->TilingFactor = 1.0f;  
+            s_Data.QuadVertexBufferPtr->EntityID = entityID;   
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // 更新索引计数（每个四边形6个索引）
         s_Data.QuadIndexCount += 6;
-
-        // 更新统计数据
         s_Data.Stas.QuadCount++;
     }
 
@@ -414,7 +416,7 @@ namespace Redflag
     // 绘制纹理四边形（ECS）- 使用变换矩阵（来自Transform组件）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture,
-        float tilingFactor, const glm::vec4& tintColor)
+        float tilingFactor, const glm::vec4& tintColor,int entityID)
     {
         RF_PROFILE_FUNCTION();
 
@@ -463,8 +465,10 @@ namespace Redflag
         {
             s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
             s_Data.QuadVertexBufferPtr->Color = color;
-            s_Data.QuadVertexBufferPtr->TexCoord = texCoords[i] * tilingFactor;  // 应用平铺因子
+            s_Data.QuadVertexBufferPtr->TexCoord = texCoords[i]; 
             s_Data.QuadVertexBufferPtr->textureIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+            s_Data.QuadVertexBufferPtr->EntityID = entityID;
             s_Data.QuadVertexBufferPtr++;
         }
 
@@ -672,6 +676,11 @@ namespace Redflag
 
         s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
 	}
+
+    void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
+    {
+        DrawQuad(transform, src.Color, entityID);
+    }
 
     void Renderer2D::ResetStats()
     {

@@ -41,7 +41,7 @@ namespace Redflag {
 
         //===============创建帧缓冲区===============================
         FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::Depth };
+        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::RED_INTEGER,FramebufferTextureFormat::Depth };
         fbSpec.Width = 1600;
         fbSpec.Height = 900;
         m_Framebuffer = Framebuffer::Create(fbSpec);
@@ -123,9 +123,33 @@ namespace Redflag {
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         RenderCommand::Clear();
 
+        //清除id attachement的颜色到-1
+        m_Framebuffer->ClearAttachment(1, -1);
+
         //Render Update（ECS）
         //包括BeginScene,EndScene
         m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+
+        // 最终坐标：
+        /*
+        * mx = 从视口左边到鼠标的像素距离[0, viewportSize.x]
+        * my = 从视口底部到鼠标的像素距离[0, viewportSize.y]
+        */
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
+
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        {
+            int pixelData=m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+            RF_CORE_TRACE("pixel data={0}", pixelData);
+        }
+
 
         m_Framebuffer->Unbind();
     }
@@ -234,6 +258,7 @@ namespace Redflag {
 
         /*Viewport*/
         ImGui::Begin("Viewport");
+        auto viewportOffset = ImGui::GetCursorPos();
 
         // 只有 焦点 + 悬停 同时满足才Block->事件会传播给其他层
         m_ViewportFocused = ImGui::IsWindowFocused();
@@ -253,13 +278,22 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(1);
+        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
         ImGui::Image(
             (void*)(uint64_t)textureID,
             ImVec2(m_ViewportSize.x, m_ViewportSize.y),
             ImVec2(0, 1),  // 左上角对应OpenGL纹理的左下角
             ImVec2(1, 0)   // 右下角对应OpenGL纹理的右上角
         );
+
+        auto windowSize = ImGui::GetWindowSize();
+        ImVec2 minBound = ImGui::GetWindowPos();
+        minBound.x += viewportOffset.x;
+        minBound.y += viewportOffset.y;
+
+        ImVec2 maxBound = { minBound.x + windowSize.x,minBound.y + windowSize.y };
+        m_ViewportBounds[0] = { minBound.x,minBound.y };
+        m_ViewportBounds[1] = { maxBound.x,maxBound.y };
 
 
         /* Gizmo - 实体操纵工具 */
@@ -318,10 +352,6 @@ namespace Redflag {
                 tc.Scale = scale;                        // 直接赋值缩放
             }
         }
-
-
-
-
 
         ImGui::End();  // 结束 Viewport
         /*End Viewport*/

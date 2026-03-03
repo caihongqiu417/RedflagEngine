@@ -38,8 +38,9 @@ namespace Redflag {
 
         // 使用 view 和 each 来渲染所有 Sprite
         auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
-        spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite) {
-            Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+        spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
+            {
+                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (int)entity);
             });
 
         Renderer2D::EndScene();
@@ -88,8 +89,9 @@ namespace Redflag {
 
             // 使用 view 和 each 来渲染所有 Sprite
             auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
-            spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite) {
-                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+            spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
+                {
+                    Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
                 });
 
             Renderer2D::EndScene();

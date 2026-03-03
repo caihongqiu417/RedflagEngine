@@ -6,7 +6,9 @@
 #include"Texture.h"
 
 #include"SubTexture2D.h"
+#include"Scene/Components.h"
 #include"Redflag/Renderer/EditorCamera.h"
+
 
 namespace Redflag {
 
@@ -24,6 +26,9 @@ namespace Redflag {
 		static void EndScene();
 		static void Flush();
 
+		
+
+
 		//Primitive
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
@@ -33,8 +38,8 @@ namespace Redflag {
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
 		//for ECS
-		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
-		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture,float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color,int entityID=-1);
+		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture,float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f),int entityID=-1);
 
 		//rotation需要转换成弧度，例如DrawRotatedQuad(..., glm::radians(45.0f), ...);	
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
@@ -43,6 +48,9 @@ namespace Redflag {
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+
+		//draw with entity id
+		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src,int entityID);
 
 		struct Statistics
 		{

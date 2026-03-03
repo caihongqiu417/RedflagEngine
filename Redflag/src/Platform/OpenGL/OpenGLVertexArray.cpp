@@ -65,26 +65,37 @@ namespace Redflag {
 		uint32_t index = 0;  // 顶点属性位置索引，从0开始递增
 		const auto& layout = vertexBuffer->GetLayout();  // 获取顶点缓冲区的布局信息
 
-		// 遍历布局中的每个顶点属性元素（如位置、法线、纹理坐标等）
 		for (const auto& element : layout)
 		{
-			// 启用指定位置的顶点属性数组
-			// 参数index：顶点属性的位置索引，对应着色器中的location
 			glEnableVertexAttribArray(index);
 
-			// 设置顶点属性指针，告诉OpenGL如何解析顶点数据
-			glVertexAttribPointer(
-				index,  // 顶点属性位置索引
-				element.GetComponentCount(),  // 每个顶点的分量数量（如vec3为3）
-				ShaderDataTypeToOpenGLBaseType(element.Type),  // 数据类型转换为OpenGL枚举
-				element.Normalized ? GL_TRUE : GL_FALSE,  // 是否归一化
-				layout.GetStride(),  // 顶点之间的字节跨度（步长）
-				(const void*)(uintptr_t)element.Offset  // 该属性在顶点数据中的起始偏移量
-			);
+			if (element.Type == ShaderDataType::Int ||
+				element.Type == ShaderDataType::Int2 ||
+				element.Type == ShaderDataType::Int3 ||
+				element.Type == ShaderDataType::Int4)
+			{
+				glVertexAttribIPointer(
+					index,
+					element.GetComponentCount(),
+					ShaderDataTypeToOpenGLBaseType(element.Type),
+					layout.GetStride(),
+					(const void*)(uintptr_t)element.Offset
+				);
+			}
+			else
+			{
+				glVertexAttribPointer(
+					index,
+					element.GetComponentCount(),
+					ShaderDataTypeToOpenGLBaseType(element.Type),
+					element.Normalized ? GL_TRUE : GL_FALSE,
+					layout.GetStride(),
+					(const void*)(uintptr_t)element.Offset
+				);
+			}
 
-			index++;  // 递增索引，为下一个顶点属性做准备
+			index++;
 		}
-
 		// 将顶点缓冲区保存到成员变量中，防止被释放
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
