@@ -26,6 +26,13 @@ namespace Redflag {
 		void OpenScene();
 		void SaveSceneAs();
 		void SaveScene();
+
+		void OnScenePlay();
+		void OnSceneStop();
+
+		//UIÃæ°å
+		void UI_Toolbar();
+
 	private:
 		OrthographicCameraController m_CameraController;
 
@@ -62,5 +69,15 @@ namespace Redflag {
 
 		//Gizmo
 		int m_GizmoType = -1;
+
+		//²¥·Å°´Å¥
+		Ref<Texture2D> m_IconPlay, m_IconStop;
+
+		enum class SceneState
+		{
+			Edit=0,Play=1
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
 	};
 }
