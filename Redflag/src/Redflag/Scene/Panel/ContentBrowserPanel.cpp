@@ -86,6 +86,46 @@ namespace Redflag {
                 ImVec2(0, 1), ImVec2(1, 0), 0);
             ImGui::PopStyleVar();
 
+            // ===== 改进版拖拽源（对失去 active 更健壮） =====
+            std::string fullPath = directoryEntry.path().string();
+            std::string ext = directoryEntry.path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+
+            bool isTexture = (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                ext == ".bmp" || ext == ".tga" || ext == ".dds");
+
+            if (isTexture && ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
+            {
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_TEXTURE", fullPath.c_str(), fullPath.size() + 1);
+                    ImGui::TextWrapped("Texture");
+                    ImGui::Separator();
+                    if (icon && icon->GetRendererID())
+                        ImGui::Image((void*)(intptr_t)icon->GetRendererID(), ImVec2(64, 64));
+                    ImGui::TextWrapped("%s", fullPath.c_str());
+                    ImGui::EndDragDropSource();
+                }
+            }
+
+            // 场景文件拖拽（保持原样）
+            if (ext == ".redflag")
+            {
+                // 只有当用户在该项上按下并开始拖动时才 Start drag
+                if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+                {
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                    {
+                        ImGui::SetDragDropPayload("SCENE_FILE", fullPath.c_str(), fullPath.size() + 1);
+                        ImGui::Text("Scene");
+                        ImGui::Separator();
+                        ImGui::TextWrapped("%s", fullPath.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                }
+            }
+
+
             // 点击图标进入下一级（如果是目录）
             if (clicked && directoryEntry.is_directory())
             {

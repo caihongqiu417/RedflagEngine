@@ -276,6 +276,38 @@ namespace Redflag {
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
         ImGui::Image((void*)(uint64_t)textureID, ImVec2(m_ViewportSize.x, m_ViewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
 
+        // 接收拖拽的场景文件并加载
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_FILE"))
+            {
+                const char* droppedPath = (const char*)payload->Data;
+                if (droppedPath)
+                {
+                    // 清除选中状态
+                    m_HoveredEntity = {};
+
+                    // 创建新场景
+                    m_ActiveScene = CreateRef<Scene>();
+                    m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                    m_SceneHierachyPanel.SetContext(m_ActiveScene);
+
+                    // 反序列化场景文件
+                    SceneSerializer serializer(m_ActiveScene);
+                    if (serializer.Deserialize(std::string(droppedPath)))
+                    {
+                        m_SceneFilePath = std::string(droppedPath);
+                        RF_CORE_INFO("Successfully opened scene: {0}", m_SceneFilePath);
+                    }
+                    else
+                    {
+                        RF_CORE_ERROR("Failed to open scene: {0}", droppedPath);
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         /* Gizmos 逻辑 */
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
         if (selectedEntity && m_GizmoType != -1)

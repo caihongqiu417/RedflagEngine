@@ -2,6 +2,7 @@
 #include"SceneHierachyPanel.h"
 #include"imgui.h"
 #include"imgui_internal.h"
+#include<filesystem>
 #include<glm/gtc/type_ptr.hpp>
 #include "Scene/Components.h"
 
@@ -345,9 +346,57 @@ namespace Redflag {
             });
 
         // SpriteRender组件 
-        DrawComponent<SpriteRendererComponent>("Color", entity, [](auto& component)
+        DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
             {
+                // 颜色编辑
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+                // 平铺因子
+                ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.f);
+
+                // ========== 纹理拖拽区域 ==========
+                ImGui::Separator();
+                ImGui::Text("Texture");
+
+                // 显示当前纹理预览
+                if (component.Texture && component.Texture->GetRendererID())
+                {
+                    // 纹理预览
+                    ImGui::Image(
+                        (void*)(intptr_t)component.Texture->GetRendererID(),
+                        ImVec2(64, 64)
+                    );
+                }
+                else
+                {
+                    // 空纹理占位
+                    ImGui::Button("No Texture", ImVec2(64, 64));
+                }
+
+                // 拖拽目标
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        if (path)
+                        {
+                            component.Texture = Texture2D::Create(path);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                // 清除纹理按钮
+                if (component.Texture)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear Texture"))
+                    {
+                        component.Texture = nullptr;
+                    }
+                }
+                // =================================
             });
     }
 }

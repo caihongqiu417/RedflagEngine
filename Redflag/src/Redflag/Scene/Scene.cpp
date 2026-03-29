@@ -40,7 +40,7 @@ namespace Redflag {
         auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
         spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
             {
-                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (int)entity);
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
             });
 
         Renderer2D::EndScene();
