@@ -12,7 +12,6 @@ namespace Redflag {
     ContentBrowserPanel::ContentBrowserPanel()
         : m_CurrentDirectory(s_AssetPath)
     {
-        // 辅助加载：若图标文件存在则载入，否则返回 1x1 纯色占位纹理（避免每帧 IO）
         auto loadOrPlaceholder = [](const std::string& path, uint32_t color) -> Ref<Texture2D> {
             if (std::filesystem::exists(path))
                 return Texture2D::Create(path);
@@ -25,7 +24,7 @@ namespace Redflag {
             };
 
         // 尝试从 assets/icons 加载图标，若不存在使用占位
-        m_DirectoryIcon = loadOrPlaceholder("assets/icons/FolderIcon.png", 0xFFAAAAFF); // 示例颜色
+        m_DirectoryIcon = loadOrPlaceholder("assets/icons/FolderIcon.png", 0xFFAAAAFF);
         m_FileIcon = loadOrPlaceholder("assets/icons/FileIcon.png", 0xFFFFFFFF);
     }
 
@@ -57,7 +56,7 @@ namespace Redflag {
 
         // 网格设置（可调整）
         const float padding = 16.0f;             // 单元格间距
-        const float thumbnailSize = 96.0f;       // 图标大小（“很大”的图标）
+        const float thumbnailSize = 96.0f;       // 图标大小
         const float cellSize = thumbnailSize + padding;
         float panelWidth = ImGui::GetContentRegionAvail().x;
         int columnCount = (int)(panelWidth / cellSize);
@@ -80,11 +79,15 @@ namespace Redflag {
 
             // 图标（使用 ImageButton 使其可点击），ImGui 要把 GLuint 转为 void*
             ImGui::PushID(name.c_str()); // 保证同名项的 ImGui ID 唯一
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             bool clicked = ImGui::ImageButton((void*)(intptr_t)icon->GetRendererID(),
                 ImVec2(thumbnailSize, thumbnailSize),
                 ImVec2(0, 1), ImVec2(1, 0), 0);
             ImGui::PopStyleVar();
+            ImGui::PopStyleColor(3);
 
             // ===== 改进版拖拽源（对失去 active 更健壮） =====
             std::string fullPath = directoryEntry.path().string();
@@ -137,10 +140,9 @@ namespace Redflag {
                 // TODO: 打开文件 / 在侧边栏显示预览 / 选中逻辑
             }
 
-            // 下方显示路径名：视觉上“较小”的表现通过灰色且换行（若需要更小字体需加载额外 ImGui 字体）
             ImGui::Spacing();
-            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize); // 限制换行宽度为图标宽度
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.65f, 0.65f, 0.65f, 1.0f)); // 灰色文本，看起来更纤细
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize); 
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
             ImGui::TextWrapped("%s", name.c_str());
             ImGui::PopStyleColor();
             ImGui::PopTextWrapPos();
