@@ -410,3 +410,6 @@ Sandbox/**/*.json
 # 忽略 RedflagForge 目录下所有自动生成的 JSON 文件
 RedflagForge/*.json
 RedflagForge/**/*.json
+
+# Redflag Profiling
+RedflagProfile-*.json

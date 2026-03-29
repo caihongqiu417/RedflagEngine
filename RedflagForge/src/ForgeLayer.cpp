@@ -245,9 +245,9 @@ namespace Redflag {
 
         /*Scene Hierachy*/
         m_SceneHierachyPanel.OnImguiRender();
+        m_ContentBrowserPanel.OnImGuiRender();
         /*End Scene Hierachy*/
 
-        /*Viewport*/
         /* Viewport ´°¿Ú */
         ImGui::Begin("Viewport");
 

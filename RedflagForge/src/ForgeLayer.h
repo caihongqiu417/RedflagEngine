@@ -2,6 +2,7 @@
 
 #include"Redflag.h"
 #include"Scene/Panel/SceneHierachyPanel.h"
+#include"Scene/Panel/ContentBrowserPanel.h"
 
 namespace Redflag {
 
@@ -57,6 +58,7 @@ namespace Redflag {
 
 		//Panels
 		SceneHierachyPanel m_SceneHierachyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 
 		//Gizmo
 		int m_GizmoType = -1;
