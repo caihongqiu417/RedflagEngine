@@ -176,7 +176,7 @@ namespace Redflag {
                 if (ImGui::MenuItem("Exit")) Application::Get().Close();
                 ImGui::EndMenu();
             }
-            // Play/Stop
+            // ²¥·Å°´Å¥
             {
                 Ref<Texture2D> icon = (m_SceneState == SceneState::Edit) ? m_IconPlay : m_IconStop;
                 const char* label = (m_SceneState == SceneState::Edit) ? "Play" : "Stop";
