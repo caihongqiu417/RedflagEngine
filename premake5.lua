@@ -9,9 +9,14 @@ workspace "Redflag"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+--[[
+    第三方库头文件路径映射表
+    集中管理所有依赖库的 Include 路径，方便维护
+--]]
 IncludeDir = {}
 IncludeDir["GLFW"] = "Redflag/vendor/GLFW/include"
 IncludeDir["fmt"] = "Redflag/vendor/fmt/include"
+IncludeDir["Box2D"]= "Redflag/vendor/Box2D/include"
 IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
 IncludeDir["Imgui"] = "Redflag/vendor/imgui"
 IncludeDir["glm"]    = "Redflag/vendor/glm" 
@@ -22,6 +27,7 @@ IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
 
 group "Dependencies"  
+    include "Redflag/vendor/Box2D"
     include "Redflag/vendor/GLFW"
     include "Redflag/vendor/Glad"
     include "Redflag/vendor/imgui"
@@ -57,6 +63,7 @@ project "Redflag"
     includedirs {
         "%{prj.name}/src",
         "%{prj.name}/src/Redflag",
+        "%{IncludeDir.Box2D}",
         "%{IncludeDir.spdlog}", 
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.fmt}",
@@ -67,16 +74,17 @@ project "Redflag"
         "%{IncludeDir.entt}",
         "%{IncludeDir.yaml_cpp}", 
         "%{IncludeDir.ImGuizmo}", 
-        "%{os.getenv('VULKAN_SDK')}/Include", -- [新增] Vulkan SDK 头文件
+        "%{os.getenv('VULKAN_SDK')}/Include", 
     }
     
     libdirs
     {
-        "%{os.getenv('VULKAN_SDK')}/Lib", -- [新增] Vulkan SDK 库文件
+        "%{os.getenv('VULKAN_SDK')}/Lib", 
     }
 
     -- 基础链接库 (所有配置共用)
     links {
+        "Box2D",
         "GLFW",
         "Glad",
         "ImGui",
