@@ -26,6 +26,7 @@ IncludeDir["entt"]="Redflag/vendor/entt/include"
 IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
 
+--实际编译
 group "Dependencies"  
     include "Redflag/vendor/Box2D"
     include "Redflag/vendor/GLFW"
@@ -60,6 +61,7 @@ project "Redflag"
         "%{prj.name}/vendor/ImGuizmo/ImGuizmo.cpp",
     }
     
+    --告诉头文件要去这些地方找
     includedirs {
         "%{prj.name}/src",
         "%{prj.name}/src/Redflag",
