@@ -85,4 +85,36 @@ namespace Redflag {
 				};
 		}
 	};
+
+	//物理
+	struct RigidBody2DComponent
+	{
+		enum class BodyType{Static=0,Dynamic,Kinematic};
+		BodyType Type = BodyType::Static;
+		bool FixedRotation = false;
+
+		//存储Box2D信息
+		void* RuntimeBody = nullptr;
+
+		RigidBody2DComponent() = default;
+		RigidBody2DComponent(const RigidBody2DComponent&) = default;
+	};
+
+	struct BoxCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.f,0.f };
+		glm::vec2 Size = { 0.5f,0.5f };
+
+		//TODO：放入物理材质
+		float Density = 1.f;
+		float Friction = 0.5f;
+		float Restitution = 0.f;
+		float RestitutionThreshold = 0.5f; //只有当两物体 相对碰撞速度 > 0.5 米/秒 时，才启用上面设置的弹性计算。
+
+		//存储Box2D信息
+		void* RuntimeFixture = nullptr;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
 }

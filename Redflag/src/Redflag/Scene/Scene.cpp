@@ -4,7 +4,26 @@
 
 #include"Entity.h"
 
+//BOX2D
+#include"box2d/b2_world.h"
+#include"box2d/b2_fixture.h"
+#include"box2d/b2_polygon_shape.h"
+
+
 namespace Redflag {
+
+    static b2BodyType RigidBodyTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
+    {
+        switch (bodyType)
+        {
+            case RigidBody2DComponent::BodyType::Static: return b2_staticBody;
+            case RigidBody2DComponent::BodyType::Dynamic: return b2_dynamicBody;
+            case RigidBody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
+        }
+
+        RF_CORE_ASSERT(false, "Unknown body type");
+        return b2_staticBody;
+    }
 
 	Scene::Scene()
 	{
@@ -29,6 +48,52 @@ namespace Redflag {
     void Scene::DestroyEntity(Entity entity)
     {
         m_Registry.destroy(entity);
+    }
+
+    void Scene::OnRuntimeStart()
+    {
+        m_PhysicsWorld = new b2World({ 0.f,-9.8f });
+        auto view = m_Registry.view<RigidBody2DComponent>();
+        for (auto e : view)
+        {
+            Entity entity = { e,this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+            //box2DBody接管当前transform
+            b2BodyDef bodyDef;
+            bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
+            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+            bodyDef.angle = transform.Rotation.z;
+
+            b2Body* body=m_PhysicsWorld->CreateBody(&bodyDef);
+            body->SetFixedRotation(rb2d.FixedRotation);
+
+            if (entity.HasComponent<BoxCollider2DComponent>())
+            {
+                auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+                b2PolygonShape boxShape;
+                boxShape.SetAsBox(transform.Scale.x*bc2d.Size.x, transform.Scale.y*bc2d.Size.y);
+
+                //box2DBody接管当前碰撞参数
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &boxShape;
+                fixtureDef.density = bc2d.Density;
+                fixtureDef.friction = bc2d.Friction;
+                fixtureDef.restitution = bc2d.Restitution;
+                fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
+
+            //保存到组件
+            rb2d.RuntimeBody = body;
+        }
+    }
+
+    void Scene::OnRuntimeStop()
+    {
+        delete m_PhysicsWorld;
+        m_PhysicsWorld = nullptr;
     }
 
     //编辑器：用传入的编辑器相机
@@ -65,6 +130,33 @@ namespace Redflag {
                 nsc.Instance->OnUpdate(ts);
             });
         }
+
+        // 物理
+        // 脚本施加力/速度 → 根据力计算碰撞与位置 → 渲染同步变换。
+        // 防止先物理后脚本导致输入延迟
+        {
+            const int32_t velocityIterations = 6;
+            const int32_t positionIterations = 2;
+            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+
+            //从box2D获取变换
+            auto view = m_Registry.view<RigidBody2DComponent>();
+            for (auto e : view)
+            {
+                Entity entity = { e,this };
+                auto& transform = entity.GetComponent<TransformComponent>();
+                auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+                
+                // 取出之前存储并更新的刚体指针，用刚体指针将物理引擎的位置/角度同步回 Transform
+                b2Body* body = (b2Body*)rb2d.RuntimeBody;
+                const auto& position = body->GetPosition();
+                transform.Translation.x = position.x;
+                transform.Translation.y = position.y;
+                transform.Rotation.z = body->GetAngle();
+            }
+        }
+
+        
         //===============================================================
         //=========================找主相机==============================
         //===============================================================
@@ -157,6 +249,18 @@ namespace Redflag {
 
     template<>
     void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<RigidBody2DComponent>(Entity entity, RigidBody2DComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
     {
 
     }

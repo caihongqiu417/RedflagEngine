@@ -409,11 +409,13 @@ namespace Redflag {
     void ForgeLayer::OnScenePlay()
     {
         m_SceneState = SceneState::Play;
+        m_ActiveScene->OnRuntimeStart();
     }
 
     void ForgeLayer::OnSceneStop()
     {
         m_SceneState = SceneState::Edit;
+        m_ActiveScene->OnRuntimeStop();
     }
 
     void ForgeLayer::SaveScene()
