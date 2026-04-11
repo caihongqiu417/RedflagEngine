@@ -6,11 +6,12 @@
 namespace Redflag {
 
     OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding)
+        : m_Binding(binding)
     {
         glCreateBuffers(1, &m_RendererID);
-        // Ê¹ÓÃ GL_DYNAMIC_DRAW ÒòÎªÎÒÃÇ»áÆµ·±¸üÐÂËü (Ã¿Ò»Ö¡)
+        // Ê¹ï¿½ï¿½ GL_DYNAMIC_DRAW ï¿½ï¿½Îªï¿½ï¿½ï¿½Ç»ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (Ã¿Ò»Ö¡)
         glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW);
-        // °ó¶¨µ½Ö¸¶¨µÄ binding point (±ÈÈç binding=0 ¶ÔÓ¦ Camera)
+        // ï¿½ó¶¨µï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ binding point (ï¿½ï¿½ï¿½ï¿½ binding=0 ï¿½ï¿½Ó¦ Camera)
         glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_RendererID);
     }
 
@@ -21,7 +22,9 @@ namespace Redflag {
 
     void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
     {
-        // ¸üÐÂ Buffer Êý¾Ý
+        // È·ï¿½ï¿½ binding point Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ç° buffer
+        glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
+        // ï¿½ï¿½ï¿½ï¿½ Buffer ï¿½ï¿½ï¿½ï¿½
         glNamedBufferSubData(m_RendererID, offset, size, data);
     }
 

@@ -14,5 +14,6 @@ namespace Redflag {
 
     private:
         uint32_t m_RendererID = 0;
+        uint32_t m_Binding    = 0;
     };
 }
