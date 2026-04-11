@@ -131,9 +131,10 @@ namespace Redflag {
 
     static void SerializeEntity(YAML::Emitter& out, Entity entity)
     {
+        RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
         // 开始实体的 Map
         out << YAML::BeginMap;
-        out << YAML::Key << "Entity" << YAML::Value << "12132151342123";   //TODO:UUID
+        out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
         if (entity.HasComponent<TagComponent>())
         {
@@ -271,7 +272,7 @@ namespace Redflag {
         {
             for (auto entity : entities)
             {
-                uint64_t uuid = entity["Entity"].as<uint64_t>(); //TODO:UUID
+                uint64_t uuid = entity["Entity"].as<uint64_t>(); 
 
                 std::string name;
                 if (entity["TagComponent"])
@@ -279,7 +280,7 @@ namespace Redflag {
                     name = entity["TagComponent"]["Tag"].as<std::string>();
                 }
 
-                Entity deserializedEntity = m_Scene->CreateEntity(name);//TODO:UUID
+                Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid,name);
 
                 // Transform Component
                 if (entity["TransformComponent"])

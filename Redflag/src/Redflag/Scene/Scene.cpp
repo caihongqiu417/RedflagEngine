@@ -3,6 +3,7 @@
 #include"Renderer/Renderer2D.h"
 
 #include"Entity.h"
+#include"ScriptableEntity.h"
 
 //BOX2D
 #include"box2d/b2_world.h"
@@ -37,13 +38,18 @@ namespace Redflag {
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
-		Entity entity = {m_Registry.create(),this };
-
-		entity.AddComponent<TransformComponent>();
-		auto& tag=entity.AddComponent<TagComponent>();
-		tag.Tag = name.empty() ? "Entity" : name;
-		return entity;
+        return CreateEntityWithUUID(UUID(), name);
 	}
+
+    Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+    {
+        Entity entity = { m_Registry.create(),this };
+        entity.AddComponent<IDComponent>(uuid);
+        entity.AddComponent<TransformComponent>();
+        auto& tag = entity.AddComponent<TagComponent>();
+        tag.Tag = name.empty() ? "Entity" : name;
+        return entity;
+    }
 
     void Scene::DestroyEntity(Entity entity)
     {
@@ -220,7 +226,13 @@ namespace Redflag {
     template<typename T>
     void OnComponentAdded(Entity entity, T& component)
     {
-        static_assert(false);
+       // static_assert(false);
+    }
+
+    template<>
+    void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
+    {
+
     }
 
     template<>
@@ -264,4 +276,6 @@ namespace Redflag {
     {
 
     }
+
+
 }

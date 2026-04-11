@@ -1,5 +1,7 @@
 #pragma once
 #include"entt.hpp"
+#include"Redflag/Core/UUID.h"
+#include"Components.h"
 
 namespace Redflag {
 
@@ -43,6 +45,8 @@ namespace Redflag {
         operator bool() const { return m_EntityHandle != entt::null; }
         operator uint32_t() const { return (uint32_t)m_EntityHandle; }  
         operator entt::entity()const { return m_EntityHandle; }
+
+        UUID GetUUID() { return GetComponent<IDComponent>().ID; }
 
         bool operator==(const Entity& other) const
         {

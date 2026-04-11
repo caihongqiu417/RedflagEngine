@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
+#include"Redflag/Core/UUID.h"
 #include"Components.h"
 #include"Redflag/Core/Timestep.h"
 #include"Redflag/Renderer/EditorCamera.h"
@@ -18,6 +19,7 @@ namespace Redflag {
 		~Scene();
 
 		Entity CreateEntity(const std::string& name=std::string());
+		Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		//Start

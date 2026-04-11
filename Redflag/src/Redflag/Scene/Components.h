@@ -5,12 +5,20 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include<glm/gtx/quaternion.hpp>
 #include"SceneCamera.h"
-#include"ScriptableEntity.h"
 #include "Redflag/Renderer/SubTexture2D.h"
 #include"Redflag/Renderer/Texture.h"
 #include"Redflag/Core/Timestep.h"
+#include"Redflag/Core/UUID.h"
 
 namespace Redflag {
+
+	struct IDComponent
+	{
+		UUID ID;
+
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+	};
 
 	struct TransformComponent
 	{
@@ -62,6 +70,8 @@ namespace Redflag {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
 	};
+
+	class ScriptableEntity;
 
 	struct NativeScriptComponent
 	{

@@ -185,6 +185,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Core\MouseButtonCode.h" />
     <ClInclude Include="src\Redflag\Core\Timer.h" />
     <ClInclude Include="src\Redflag\Core\Timestep.h" />
+    <ClInclude Include="src\Redflag\Core\UUID.h" />
     <ClInclude Include="src\Redflag\Core\Window.h" />
     <ClInclude Include="src\Redflag\Debug\Instrumentor.h" />
     <ClInclude Include="src\Redflag\Events\ApplicationEvent.h" />
@@ -659,6 +660,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Redflag\Core\Layer.cpp" />
     <ClCompile Include="src\Redflag\Core\LayerStack.cpp" />
     <ClCompile Include="src\Redflag\Core\Log.cpp" />
+    <ClCompile Include="src\Redflag\Core\UUID.cpp" />
     <ClCompile Include="src\Redflag\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Redflag\Math\Math.cpp" />
