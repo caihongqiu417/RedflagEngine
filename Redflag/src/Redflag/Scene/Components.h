@@ -10,6 +10,7 @@
 #include"Redflag/Core/Timestep.h"
 #include"Redflag/Core/UUID.h"
 #include"Redflag/Renderer/Mesh.h"
+#include"Redflag/Renderer/Model.h"
 
 namespace Redflag {
 
@@ -138,5 +139,17 @@ namespace Redflag {
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
+	};
+
+	// 3D 模型渲染组件（通过 Assimp 从文件加载，支持多子网格）
+	struct ModelRendererComponent
+	{
+		std::string  FilePath;       // 模型文件路径，场景序列化时保存此字段
+		Ref<Model>   ModelAsset;     // 运行时句柄，由 AssetManager 管理，不序列化
+
+		glm::vec4    Color = glm::vec4(1.0f); // 无贴图时的备用颜色
+
+		ModelRendererComponent() = default;
+		ModelRendererComponent(const ModelRendererComponent&) = default;
 	};
 }

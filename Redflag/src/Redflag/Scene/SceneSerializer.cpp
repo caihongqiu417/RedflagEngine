@@ -5,6 +5,8 @@
 
 #include"Entity.h"
 #include"Components.h"
+#include "Redflag/Core/AssetManager.h"
+#include "Redflag/Renderer/Model.h"
 
 #include <fstream>
 namespace YAML {
@@ -209,6 +211,18 @@ namespace Redflag {
             out << YAML::EndMap;
         }
 
+        if (entity.HasComponent<ModelRendererComponent>())
+        {
+            out << YAML::Key << "ModelRendererComponent";
+            out << YAML::BeginMap;
+
+            auto& mr = entity.GetComponent<ModelRendererComponent>();
+            out << YAML::Key << "FilePath" << YAML::Value << mr.FilePath;
+            out << YAML::Key << "Color"    << YAML::Value << mr.Color;
+
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<RigidBody2DComponent>())
         {
             out << YAML::Key << "RigidBodyComponent";
@@ -364,6 +378,16 @@ namespace Redflag {
                     mr.Color = mrNode["Color"].as<glm::vec4>();
                     // 目前只支持立方体
                     mr.MeshData = Mesh::CreateCube();
+                }
+
+                // ModelRendererComponent
+                if (entity["ModelRendererComponent"])
+                {
+                    auto mrNode = entity["ModelRendererComponent"];
+                    auto& mr = deserializedEntity.AddComponent<ModelRendererComponent>();
+                    mr.FilePath = mrNode["FilePath"].as<std::string>();
+                    mr.Color    = mrNode["Color"].as<glm::vec4>();
+                    // ModelAsset 将在首次渲染时由 AssetManager 懒加载
                 }
             }
         }

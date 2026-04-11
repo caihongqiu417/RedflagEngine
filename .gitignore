@@ -413,3 +413,10 @@ RedflagForge/**/*.json
 
 # Redflag Profiling
 RedflagProfile-*.json
+
+# Large asset packs (models, textures, fonts etc. — managed outside git)
+RedflagForge/assets/models/
+RedflagForge/assets/textures/
+RedflagForge/assets/fonts/
+Sandbox/assets/textures/
+

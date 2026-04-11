@@ -108,6 +108,9 @@
     <ClInclude Include="src\Redflag\Core\Application.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Core\AssetManager.h">
+      <Filter>src\Redflag\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Core\Core.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
@@ -184,6 +187,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Mesh.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Model.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h">
@@ -1590,6 +1596,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Mesh.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\Model.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp">

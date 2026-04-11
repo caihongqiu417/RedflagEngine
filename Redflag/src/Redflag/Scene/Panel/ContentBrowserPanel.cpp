@@ -47,6 +47,28 @@ namespace Redflag {
     {
         ImGui::Begin("Content Browser");
 
+        // SourceExtern：在 window 级别维持拖拽，不依赖 item 的 ActiveId
+        // 只要鼠标仍按住且有记录路径，每帧持续发布 payload
+        if (!m_DragPath.empty())
+        {
+            if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+            {
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))
+                {
+                    ImGui::SetDragDropPayload(m_DragType.c_str(), m_DragPath.c_str(), m_DragPath.size() + 1);
+                    ImGui::TextUnformatted(m_DragType.c_str());
+                    ImGui::Separator();
+                    ImGui::TextWrapped("%s", m_DragPath.c_str());
+                    ImGui::EndDragDropSource();
+                }
+            }
+            else
+            {
+                m_DragPath.clear();
+                m_DragType.clear();
+            }
+        }
+
         // 返回上一级按钮（不在根目录时显示）
         if (m_CurrentDirectory != s_AssetPath)
         {
@@ -89,43 +111,24 @@ namespace Redflag {
             ImGui::PopStyleVar();
             ImGui::PopStyleColor(3);
 
-            // ===== 改进版拖拽源（对失去 active 更健壮） =====
+            // 鼠标按下时记录路径，由 window 级别的 SourceExtern 负责发布 payload
             std::string fullPath = directoryEntry.path().string();
             std::string ext = directoryEntry.path().extension().string();
             std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
 
             bool isTexture = (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
                 ext == ".bmp" || ext == ".tga" || ext == ".dds");
+            bool isModel = (ext == ".obj" || ext == ".fbx" || ext == ".gltf" ||
+                ext == ".glb" || ext == ".dae" || ext == ".3ds");
 
-            if (isTexture && ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
+            if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
             {
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-                {
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_TEXTURE", fullPath.c_str(), fullPath.size() + 1);
-                    ImGui::TextWrapped("Texture");
-                    ImGui::Separator();
-                    if (icon && icon->GetRendererID())
-                        ImGui::Image((void*)(intptr_t)icon->GetRendererID(), ImVec2(64, 64));
-                    ImGui::TextWrapped("%s", fullPath.c_str());
-                    ImGui::EndDragDropSource();
-                }
-            }
-
-            // 场景文件拖拽（保持原样）
-            if (ext == ".redflag")
-            {
-                // 只有当用户在该项上按下并开始拖动时才 Start drag
-                if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-                {
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                    {
-                        ImGui::SetDragDropPayload("SCENE_FILE", fullPath.c_str(), fullPath.size() + 1);
-                        ImGui::Text("Scene");
-                        ImGui::Separator();
-                        ImGui::TextWrapped("%s", fullPath.c_str());
-                        ImGui::EndDragDropSource();
-                    }
-                }
+                if (isTexture)
+                    { m_DragPath = fullPath; m_DragType = "CONTENT_BROWSER_TEXTURE"; }
+                else if (isModel)
+                    { m_DragPath = fullPath; m_DragType = "CONTENT_BROWSER_MODEL"; }
+                else if (ext == ".redflag")
+                    { m_DragPath = fullPath; m_DragType = "SCENE_FILE"; }
             }
 
 
@@ -141,7 +144,7 @@ namespace Redflag {
             }
 
             ImGui::Spacing();
-            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize); 
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize);
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
             ImGui::TextWrapped("%s", name.c_str());
             ImGui::PopStyleColor();

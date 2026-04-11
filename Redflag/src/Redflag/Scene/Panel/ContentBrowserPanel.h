@@ -14,18 +14,22 @@ namespace Redflag {
         void OnImGuiRender();
 
     private:
-        // µ±Ç°ä¯ÀÀÄ¿Â¼£¨ÒÔ assets Îª¸ù£©
+        // ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ assets Îªï¿½ï¿½ï¿½ï¿½
         std::filesystem::path m_CurrentDirectory;
 
-        // Í¼±êÎÆÀí»º´æ
-        Ref<Texture2D> m_DirectoryIcon;   // ÎÄ¼ş¼ĞÍ¼±ê
-        Ref<Texture2D> m_FileIcon;        // Í¨ÓÃÎÄ¼şÍ¼±ê
+        // Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        Ref<Texture2D> m_DirectoryIcon;   // ï¿½Ä¼ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
+        Ref<Texture2D> m_FileIcon;        // Í¨ï¿½ï¿½ï¿½Ä¼ï¿½Í¼ï¿½ï¿½
 
-        // ÒÔºóÀ©Õ¹¿É°´À©Õ¹Ãû»º´æ¸ü¶àÍ¼±ê£¨Ä¿Ç°Ôİ²»Ê¹ÓÃ£¬µ«±£Áô×Ö¶Î£©
+        // ï¿½Ôºï¿½ï¿½ï¿½Õ¹ï¿½É°ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ê£¨Ä¿Ç°ï¿½İ²ï¿½Ê¹ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½
         std::unordered_map<std::string, Ref<Texture2D>> m_FileTypeIcons;
 
-        // ¸ù¾İÂ·¾¶·µ»ØºÏÊÊµÄÍ¼±ê£¨Ä¿Â¼ -> m_DirectoryIcon£¬ÎÄ¼ş -> m_FileIcon »ò°´À©Õ¹Ãû£©
+        // ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½Êµï¿½Í¼ï¿½ê£¨Ä¿Â¼ -> m_DirectoryIconï¿½ï¿½ï¿½Ä¼ï¿½ -> m_FileIcon ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½
         Ref<Texture2D> GetIconForPath(const std::filesystem::path& path);
+
+        // è·¨çª—å£æ‹–æ‹½çŠ¶æ€ï¼ˆSourceExtern æ–¹æ¡ˆï¼‰
+        std::string m_DragPath;
+        std::string m_DragType;
     };
 
 } // namespace Redflag

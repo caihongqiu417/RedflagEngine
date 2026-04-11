@@ -5,6 +5,8 @@
 #include<filesystem>
 #include<glm/gtc/type_ptr.hpp>
 #include "Scene/Components.h"
+#include "Redflag/Core/AssetManager.h"
+#include "Redflag/Renderer/Model.h"
 
 namespace Redflag {
 
@@ -305,6 +307,15 @@ namespace Redflag {
                 }
             }
 
+            if (!m_SelectionContext.HasComponent<ModelRendererComponent>())
+            {
+                if (ImGui::MenuItem("Model Renderer"))
+                {
+                    m_SelectionContext.AddComponent<ModelRendererComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
             ImGui::EndPopup();
         }
         ImGui::PopItemWidth();
@@ -515,6 +526,40 @@ namespace Redflag {
                     ImGui::SameLine();
                     if (ImGui::Button("Clear Texture"))
                         component.Texture = nullptr;
+                }
+            });
+
+        // Model Renderer
+        DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& component)
+            {
+                // 文件路径（只读显示）
+                ImGui::Text("File: %s", component.FilePath.empty() ? "(none)" : component.FilePath.c_str());
+
+                // 拖拽接受区：从 Content Browser 拖入模型文件
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_MODEL"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        if (path)
+                        {
+                            component.FilePath    = path;
+                            component.ModelAsset  = AssetManager::GetOrLoad<Model>(component.FilePath);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                // 颜色（无贴图时使用）
+                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+                // 卸载按钮
+                if (component.ModelAsset)
+                {
+                    if (ImGui::Button("Unload"))
+                    {
+                        component.ModelAsset.reset();
+                    }
                 }
             });
     }

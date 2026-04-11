@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "Renderer3D.h"
+#include "Redflag/Renderer/Model.h"
 
 #include "Redflag/Renderer/RenderCommand.h"
 #include "Redflag/Renderer/Shader.h"
@@ -75,6 +76,12 @@ namespace Redflag
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 	}
 
+	void Renderer3D::BeginScene(const glm::mat4& viewProjection)
+	{
+		s_Data.CameraBuffer.ViewProjection = viewProjection;
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
+	}
+
 	void Renderer3D::EndScene()
 	{
 		// 当前无批处理，留空供后续扩展
@@ -110,5 +117,22 @@ namespace Redflag
 
 		mesh->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color)
+	{
+		if (!model)
+			return;
+
+		for (const auto& subMesh : model->GetSubMeshes())
+		{
+			if (!subMesh.MeshData)
+				continue;
+
+			if (subMesh.DiffuseTexture)
+				DrawMesh(subMesh.MeshData, transform, subMesh.DiffuseTexture);
+			else
+				DrawMesh(subMesh.MeshData, transform, color);
+		}
 	}
 }

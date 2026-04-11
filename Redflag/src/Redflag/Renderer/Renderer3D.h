@@ -2,6 +2,7 @@
 
 #include "Redflag/Renderer/EditorCamera.h"
 #include "Redflag/Renderer/Mesh.h"
+#include "Redflag/Renderer/Model.h"
 #include "Redflag/Renderer/Texture.h"
 
 #include <glm/glm.hpp>
@@ -15,6 +16,7 @@ namespace Redflag
 		static void Shutdown();
 
 		static void BeginScene(const EditorCamera& camera);
+		static void BeginScene(const glm::mat4& viewProjection);
 		static void EndScene();
 
 		// 纯色绘制
@@ -22,5 +24,8 @@ namespace Redflag
 
 		// 纹理绘制
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture);
+
+		// 绘制整个 Model（遍历所有 SubMesh）
+		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 	};
 }

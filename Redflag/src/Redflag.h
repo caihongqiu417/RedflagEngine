@@ -22,7 +22,10 @@
 #include"Redflag/Renderer/Renderer2D.h"
 #include"Redflag/Renderer/Renderer3D.h"
 #include"Redflag/Renderer/Mesh.h"
+#include"Redflag/Renderer/Model.h"
 #include"Redflag/Renderer/RenderCommand.h"
+
+#include"Redflag/Core/AssetManager.h"
 
 #include"Redflag/Renderer/Shader.h"
 #include"Redflag/Renderer/Buffer.h"

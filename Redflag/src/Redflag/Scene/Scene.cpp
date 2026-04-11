@@ -2,6 +2,8 @@
 #include"Scene.h"
 #include"Renderer/Renderer2D.h"
 #include"Renderer/Renderer3D.h"
+#include"Redflag/Core/AssetManager.h"
+#include"Redflag/Renderer/Model.h"
 
 #include"Entity.h"
 #include"ScriptableEntity.h"
@@ -91,6 +93,8 @@ namespace Redflag {
         CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
     }
@@ -188,6 +192,19 @@ namespace Redflag {
                         Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color);
                 }
             });
+
+        // 3D 渲染：ModelRendererComponent
+        auto modelView = m_Registry.view<TransformComponent, ModelRendererComponent>();
+        modelView.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
+            {
+                // 懒加载：路径有效但 ModelAsset 未加载时，通过 AssetManager 加载
+                if (!mr.ModelAsset && !mr.FilePath.empty())
+                    mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
+
+                if (mr.ModelAsset)
+                    Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color);
+            });
+
         Renderer3D::EndScene();
     }
 
@@ -267,6 +284,21 @@ namespace Redflag {
                 });
 
             Renderer2D::EndScene();
+
+            // 3D 运行时渲染：ModelRendererComponent
+            glm::mat4 inverseTransform = glm::inverse(cameraTransform);
+            glm::mat4 viewProj3D = mainCamera->GetProjection() * inverseTransform;
+            Renderer3D::BeginScene(viewProj3D);
+            auto modelView = m_Registry.view<TransformComponent, ModelRendererComponent>();
+            modelView.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
+                {
+                    if (!mr.ModelAsset && !mr.FilePath.empty())
+                        mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
+
+                    if (mr.ModelAsset)
+                        Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color);
+                });
+            Renderer3D::EndScene();
         }
     }
 
@@ -299,6 +331,8 @@ namespace Redflag {
         CopyComponentIfExist<RigidBody2DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
+        CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
+        CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -369,6 +403,12 @@ namespace Redflag {
 
     template<>
     void Scene::OnComponentAdded<MeshRendererComponent>(Entity entity, MeshRendererComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
     {
 
     }
