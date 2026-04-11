@@ -25,6 +25,7 @@ IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"
 IncludeDir["entt"]="Redflag/vendor/entt/include"
 IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
+IncludeDir["assimp"]  = "Redflag/vendor/assimp/include"
 
 --实际编译
 group "Dependencies"  
@@ -33,6 +34,7 @@ group "Dependencies"
     include "Redflag/vendor/Glad"
     include "Redflag/vendor/imgui"
     include "Redflag/vendor/yaml-cpp"
+    include "Redflag/vendor/assimp"
 group ""
 
 project "Redflag"
@@ -75,7 +77,8 @@ project "Redflag"
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.yaml_cpp}", 
-        "%{IncludeDir.ImGuizmo}", 
+        "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.assimp}",
         "%{os.getenv('VULKAN_SDK')}/Include", 
     }
     
@@ -92,6 +95,7 @@ project "Redflag"
         "ImGui",
         "opengl32.lib",
         "yaml-cpp",
+        "assimp",
     }
 
     filter "files:**/vendor/ImGuizmo/**.cpp"
