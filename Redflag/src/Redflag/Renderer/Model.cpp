@@ -5,6 +5,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <glm/glm.hpp>
+
 namespace Redflag {
 
 	Ref<Model> Model::Load(const std::string& filepath)
@@ -30,25 +32,37 @@ namespace Redflag {
 		size_t lastSlash = filepath.find_last_of("/\\");
 		model->m_Directory = (lastSlash != std::string::npos) ? filepath.substr(0, lastSlash) : ".";
 
-		model->ProcessNode(scene->mRootNode, scene);
+		model->ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f));
 		return model;
 	}
 
-	void Model::ProcessNode(aiNode* node, const aiScene* scene)
+	void Model::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform)
 	{
+		// Assimp 使用行主序矩阵，glm 使用列主序，需要转置
+		const aiMatrix4x4& am = node->mTransformation;
+		glm::mat4 localMat(
+			am.a1, am.b1, am.c1, am.d1,
+			am.a2, am.b2, am.c2, am.d2,
+			am.a3, am.b3, am.c3, am.d3,
+			am.a4, am.b4, am.c4, am.d4
+		);
+
+		// 将本节点的局部变换与父节点累积变换相乘
+		glm::mat4 nodeTransform = parentTransform * localMat;
+
 		// 处理本节点的所有网格
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			m_SubMeshes.push_back(ProcessMesh(mesh, scene));
+			m_SubMeshes.push_back(ProcessMesh(mesh, scene, nodeTransform));
 		}
 
-		// 递归处理子节点
+		// 递归处理子节点，传入当前累积变换
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
-			ProcessNode(node->mChildren[i], scene);
+			ProcessNode(node->mChildren[i], scene, nodeTransform);
 	}
 
-	SubMesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+	SubMesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform)
 	{
 		std::vector<MeshVertex> vertices;
 		std::vector<uint32_t>   indices;
@@ -86,7 +100,8 @@ namespace Redflag {
 		}
 
 		SubMesh subMesh;
-		subMesh.MeshData = Mesh::Create(vertices, indices);
+		subMesh.MeshData       = Mesh::Create(vertices, indices);
+		subMesh.LocalTransform = nodeTransform;
 
 		// 加载漫反射贴图
 		if (mesh->mMaterialIndex >= 0)

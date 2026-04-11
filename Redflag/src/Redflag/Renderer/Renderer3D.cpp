@@ -129,10 +129,12 @@ namespace Redflag
 			if (!subMesh.MeshData)
 				continue;
 
+			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
+
 			if (subMesh.DiffuseTexture)
-				DrawMesh(subMesh.MeshData, transform, subMesh.DiffuseTexture);
+				DrawMesh(subMesh.MeshData, finalTransform, subMesh.DiffuseTexture);
 			else
-				DrawMesh(subMesh.MeshData, transform, color);
+				DrawMesh(subMesh.MeshData, finalTransform, color);
 		}
 	}
 }
