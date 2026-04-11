@@ -3,6 +3,7 @@
 #include "Redflag/Renderer/EditorCamera.h"
 #include "Redflag/Renderer/Mesh.h"
 #include "Redflag/Renderer/Model.h"
+#include "Redflag/Renderer/Material.h"
 #include "Redflag/Renderer/Texture.h"
 
 #include <glm/glm.hpp>
@@ -17,15 +18,16 @@ namespace Redflag
 
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const glm::mat4& viewProjection);
+
+		// 在 EndScene 里统一排序并执行所有 DrawCommand
 		static void EndScene();
 
-		// 纯色绘制
+		// 提交到队列（不会立即绘制）
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
-
-		// 纹理绘制
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture);
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material);
 
-		// 绘制整个 Model（遍历所有 SubMesh）
+		// 绘制整个 Model（把所有 SubMesh 推入队列）
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 	};
 }

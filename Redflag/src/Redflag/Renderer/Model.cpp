@@ -6,7 +6,6 @@
 #include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
-
 namespace Redflag {
 
 	Ref<Model> Model::Load(const std::string& filepath)
@@ -103,12 +102,15 @@ namespace Redflag {
 		subMesh.MeshData       = Mesh::Create(vertices, indices);
 		subMesh.LocalTransform = nodeTransform;
 
-		// 加载漫反射贴图
+		// 加载漫反射贴图，创建 Material
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			subMesh.DiffuseTexture = LoadMaterialTexture(material, scene, aiTextureType_DIFFUSE);
+			Ref<Texture2D> diffuse = LoadMaterialTexture(material, scene, aiTextureType_DIFFUSE);
+			if (diffuse)
+				subMesh.Mat = Material::Create(diffuse);
 		}
+		// 没有贴图则 Mat 留 nullptr，Renderer3D 回退到白色
 
 		return subMesh;
 	}

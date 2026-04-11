@@ -23,6 +23,7 @@
 #include"Redflag/Renderer/Renderer3D.h"
 #include"Redflag/Renderer/Mesh.h"
 #include"Redflag/Renderer/Model.h"
+#include"Redflag/Renderer/Material.h"
 #include"Redflag/Renderer/RenderCommand.h"
 
 #include"Redflag/Core/AssetManager.h"

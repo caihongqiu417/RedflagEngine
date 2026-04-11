@@ -202,6 +202,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Redflag\Renderer\Mesh.h" />
+    <ClInclude Include="src\Redflag\Renderer\Material.h" />
     <ClInclude Include="src\Redflag\Renderer\Model.h" />
     <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Redflag\Renderer\OrthographicCameraController.h" />
@@ -673,6 +674,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Mesh.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\Material.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Model.cpp" />
     <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\OrthographicCameraController.cpp" />

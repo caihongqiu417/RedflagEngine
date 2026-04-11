@@ -3,6 +3,7 @@
 #include "Redflag/Core/Core.h"
 #include "Redflag/Renderer/Mesh.h"
 #include "Redflag/Renderer/Texture.h"
+#include "Redflag/Renderer/Material.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -17,13 +18,13 @@ struct aiMaterial;
 namespace Redflag {
 
 	// 一个模型由多个子网格（SubMesh）组成
-	// 每个 SubMesh 携带自己的漫反射贴图（可为 nullptr）
+	// 每个 SubMesh 携带自己的材质（可为 nullptr，回退到纯白色）
 	// LocalTransform 为该节点在模型本地空间中的累积变换（从根节点乘到当前节点）
 	struct SubMesh
 	{
-		Ref<Mesh>      MeshData;
-		Ref<Texture2D> DiffuseTexture;
-		glm::mat4      LocalTransform{ 1.0f };
+		Ref<Mesh>     MeshData;
+		Ref<Material> Mat;
+		glm::mat4     LocalTransform{ 1.0f };
 	};
 
 	// -----------------------------------------------------------------------
