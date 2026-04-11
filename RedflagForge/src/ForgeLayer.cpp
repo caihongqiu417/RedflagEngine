@@ -28,16 +28,16 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // ============== ¼ÓÔØÎÆÀí×ÊÔ´ =========================
+        // ============== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ =========================
         m_RedCloudTexture = Texture2D::Create("assets/textures/RedCloud.png");
         m_CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
         m_IconPlay = Texture2D::Create("assets/icons/PlayButton.png");
         m_IconStop = Texture2D::Create("assets/icons/StopButton.png");
 
-        // ============== ÅäÖÃÏà»ú³õÊ¼Î»ÖÃ =========================
+        // ============== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½ =========================
         m_CameraController.SetZoomLevel(6.f);
 
-        // =============== ´´½¨Ö¡»º³åÇø ===============================
+        // =============== ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===============================
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,
                                FramebufferTextureFormat::RED_INTEGER,
@@ -46,13 +46,16 @@ namespace Redflag {
         fbSpec.Height = 900;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
-        // =============== ´´½¨³¡¾° ===============================
+        // =============== 3D test: create cube mesh ===============================
+        m_CubeMesh = Mesh::CreateCube();
+
+        // =============== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===============================
         m_EditorScene = CreateRef<Scene>();
         m_EditorScene->OnViewportResize(1600, 900);
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
 
-        // =============== ´´½¨ EditorCamera ===============================
+        // =============== ï¿½ï¿½ï¿½ï¿½ EditorCamera ===============================
         m_EditorCamera = EditorCamera(30.f, 1.788f, 0.1f, 1000.f);
     }
 
@@ -65,7 +68,7 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // Camera ¸üÐÂ
+        // Camera ï¿½ï¿½ï¿½ï¿½
         if (m_ViewportFocused)
         {
             m_CameraController.OnUpdate(ts);
@@ -74,7 +77,7 @@ namespace Redflag {
 
         Renderer2D::ResetStats();
 
-        // äÖÈ¾¿ªÊ¼
+        // ï¿½ï¿½È¾ï¿½ï¿½Ê¼
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
@@ -94,12 +97,12 @@ namespace Redflag {
                 }
         }
 
-        // --- Êó±êÊ°È¡Âß¼­ ---
+        // --- ï¿½ï¿½ï¿½Ê°È¡ï¿½ß¼ï¿½ ---
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my; // ·­×ª Y£¬ÊÊÅä OpenGL ×ø±êÏµ
+        my = viewportSize.y - my; // ï¿½ï¿½×ª Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ OpenGL ï¿½ï¿½ï¿½ï¿½Ïµ
 
         int mouseX = (int)mx;
         int mouseY = (int)my;
@@ -164,11 +167,11 @@ namespace Redflag {
         }
 
         // ======================================================
-        // MenuBar£º×ó²à File ²Ëµ¥ £« ÖÐ¼ä Play/Stop °´Å¥
+        // MenuBarï¿½ï¿½ï¿½ï¿½ï¿½ File ï¿½Ëµï¿½ ï¿½ï¿½ ï¿½Ð¼ï¿½ Play/Stop ï¿½ï¿½Å¥
         // ======================================================
         if (ImGui::BeginMenuBar())
         {
-            // ---------- ×ó²à£ºFile ²Ëµ¥ ----------
+            // ---------- ï¿½ï¿½à£ºFile ï¿½Ëµï¿½ ----------
             if (ImGui::BeginMenu("File"))
             {
                 if (ImGui::MenuItem("New", "Ctrl+N"))       NewScene();
@@ -179,12 +182,12 @@ namespace Redflag {
                 if (ImGui::MenuItem("Exit")) Application::Get().Close();
                 ImGui::EndMenu();
             }
-            // ²¥·Å°´Å¥
+            // ï¿½ï¿½ï¿½Å°ï¿½Å¥
             {
                 Ref<Texture2D> icon = (m_SceneState == SceneState::Edit) ? m_IconPlay : m_IconStop;
                 const char* label = (m_SceneState == SceneState::Edit) ? "Play" : "Stop";
                 float requestedIconSize = 24.0f;
-                float spacing = 18.0f; // <- Ôö´óÕâ¸öÖµÒÔ·Ö¿ª°´Å¥ºÍÎÄ×Ö
+                float spacing = 18.0f; // <- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ô·Ö¿ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
                 ImVec2 textSize = ImGui::CalcTextSize(label);
                 float frameH = ImGui::GetFrameHeight();
@@ -199,7 +202,7 @@ namespace Redflag {
                 float startX = cursorStartX + availW * 0.5f - totalWidth * 0.5f;
                 float offsetY = (frameH - iconSize) * 0.5f;
 
-                // ·ÅÖÃÍ¼±ê
+                // ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
                 ImGui::SetCursorPosX(startX);
                 ImGui::SetCursorPosY(cursorStartY + offsetY);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -214,7 +217,7 @@ namespace Redflag {
                 }
                 ImGui::PopStyleColor(3);
 
-                // ¾«È··ÅÖÃÎÄ×Ö£¨È·±£²»ÖØµþ£©
+                // ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½
                 ImGui::SetCursorPosX(startX + iconSize + spacing);
                 ImGui::SetCursorPosY(cursorStartY + offsetY + (iconSize - textSize.y) * 0.5f);
                 ImGui::TextUnformatted(label);
@@ -225,7 +228,7 @@ namespace Redflag {
         }
 
         // ======================================================
-        // Profile Ãæ°å
+        // Profile ï¿½ï¿½ï¿½
         // ======================================================
         {
             RF_PROFILE_SCOPE("Stats");
@@ -253,11 +256,11 @@ namespace Redflag {
         m_ContentBrowserPanel.OnImGuiRender();
 
         // ======================================================
-        // Viewport ´°¿Ú
+        // Viewport ï¿½ï¿½ï¿½ï¿½
         // ======================================================
         ImGui::Begin("Viewport");
 
-        // 1. ¼ÆËãÊÓ¿Ú±ß½ç
+        // 1. ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú±ß½ï¿½
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
         auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
         auto viewportOffset = ImGui::GetWindowPos();
@@ -270,7 +273,7 @@ namespace Redflag {
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
-        // 2. ×Ô¶¯ Resize
+        // 2. ï¿½Ô¶ï¿½ Resize
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
         {
@@ -280,13 +283,13 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        // 3. »æÖÆ³¡¾°ÎÆÀí
+        // 3. ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
         ImGui::Image((void*)(uint64_t)textureID,
             ImVec2(m_ViewportSize.x, m_ViewportSize.y),
             ImVec2(0, 1), ImVec2(1, 0));
 
-        // 4. ÍÏ×§¼ÓÔØ³¡¾°ÎÄ¼þ
+        // 4. ï¿½ï¿½×§ï¿½ï¿½ï¿½Ø³ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_FILE"))
@@ -294,7 +297,7 @@ namespace Redflag {
                 const char* droppedPath = (const char*)payload->Data;
                 if (droppedPath)
                 {
-                    // ÏÈÍ£Ö¹²¥·Å
+                    // ï¿½ï¿½Í£Ö¹ï¿½ï¿½ï¿½ï¿½
                     if (m_SceneState != SceneState::Edit)
                         OnSceneStop();
 
@@ -433,7 +436,7 @@ namespace Redflag {
         m_SceneState = SceneState::Edit;
         m_ActiveScene->OnRuntimeStop();
 
-        // ÇÐ»Ø±à¼­Æ÷³¡¾°£¨ÓÉÓÚÒýÓÃ¼ÆÊý³¡¾°×Ô¶¯Ïú»Ù£©
+        // ï¿½Ð»Ø±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Ù£ï¿½
         m_ActiveScene = m_EditorScene;
         m_SceneState = SceneState::Edit;
     }
@@ -479,37 +482,37 @@ namespace Redflag {
 
     void ForgeLayer::OpenScene()
     {
-        // 1. Èç¹ûÕýÔÚ²¥·Å£¬ÏÈÍ£Ö¹
+        // 1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Å£ï¿½ï¿½ï¿½Í£Ö¹
         if (m_SceneState != SceneState::Edit)
             OnSceneStop();
 
-        // 2. µ¯³öÎÄ¼þÑ¡Ôñ¶Ô»°¿ò
+        // 2. ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ñ¡ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
         std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0");
         if (!filepath.empty())
         {
-            // 3. Çå¿ÕÐüÍ£ÊµÌå
+            // 3. ï¿½ï¿½ï¿½ï¿½ï¿½Í£Êµï¿½ï¿½
             m_HoveredEntity = {};
 
-            // 4. ´´½¨ÐÂµÄ±à¼­Æ÷³¡¾°
+            // 4. ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             m_EditorScene = CreateRef<Scene>();
             m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
-            // 5. ´ÓÎÄ¼þ¼ÓÔØÊý¾Ýµ½±à¼­Æ÷³¡¾°
+            // 5. ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             SceneSerializer serializer(m_EditorScene);
             if (serializer.Deserialize(filepath))
             {
-                // 6. ¼ÓÔØ³É¹¦£¬¸üÐÂ×´Ì¬
+                // 6. ï¿½ï¿½ï¿½Ø³É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
                 m_ActiveScene = m_EditorScene;
                 m_SceneFilePath = filepath;
 
-                // 7. ¸üÐÂ Hierarchy Ãæ°å
+                // 7. ï¿½ï¿½ï¿½ï¿½ Hierarchy ï¿½ï¿½ï¿½
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
 
                 RF_CORE_INFO("Successfully opened scene: {0}", filepath);
             }
             else
             {
-                // 8. ¼ÓÔØÊ§°Ü£¬»Ö¸´¿Õ³¡¾°
+                // 8. ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½Ö¸ï¿½ï¿½Õ³ï¿½ï¿½ï¿½
                 m_EditorScene = CreateRef<Scene>();
                 m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
                 m_ActiveScene = m_EditorScene;

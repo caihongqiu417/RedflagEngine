@@ -1,0 +1,68 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Debug RedflagForge",
+            "type": "shell",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "args": [
+                "Redflag.sln",
+                "/t:RedflagForge",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64",
+                "/m",
+                "/v:minimal"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Rebuild Debug RedflagForge",
+            "type": "shell",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "args": [
+                "Redflag.sln",
+                "/t:RedflagForge:Rebuild",
+                "/p:Configuration=Debug",
+                "/p:Platform=x64",
+                "/m",
+                "/v:minimal"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Release RedflagForge",
+            "type": "shell",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "args": [
+                "Redflag.sln",
+                "/t:RedflagForge",
+                "/p:Configuration=Release",
+                "/p:Platform=x64",
+                "/m",
+                "/v:minimal"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Rebuild Release RedflagForge",
+            "type": "shell",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "args": [
+                "Redflag.sln",
+                "/t:RedflagForge:Rebuild",
+                "/p:Configuration=Release",
+                "/p:Platform=x64",
+                "/m",
+                "/v:minimal"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

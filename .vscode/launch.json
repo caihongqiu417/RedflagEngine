@@ -1,0 +1,41 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug RedflagForge",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Release-windows-x86_64/RedflagForge/RedflagForge.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/RedflagForge",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Debug Sandbox",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Debug-windows-x86_64/Sandbox/Sandbox.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/Sandbox",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Release RedflagForge",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Release-windows-x86_64/RedflagForge/RedflagForge.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/RedflagForge",
+            "environment": [],
+            "console": "externalTerminal"
+        }
+    ]
+}

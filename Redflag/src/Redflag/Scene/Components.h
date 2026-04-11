@@ -9,6 +9,7 @@
 #include"Redflag/Renderer/Texture.h"
 #include"Redflag/Core/Timestep.h"
 #include"Redflag/Core/UUID.h"
+#include"Redflag/Renderer/Mesh.h"
 
 namespace Redflag {
 
@@ -27,7 +28,7 @@ namespace Redflag {
 		glm::vec3 Scale = { 1.0f,1.0f,1.0f };
 
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent& other) = default;  //Ä¬ÈÏ¿½±´£¬ÒòÎª³ÉÔ±Ã»ÓÐÖ¸Õë£¬ËùÒÔÇ³¿½±´¼´¿É
+		TransformComponent(const TransformComponent& other) = default;  //Ä¬ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ô±Ã»ï¿½ï¿½Ö¸ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		TransformComponent(const glm::vec3& translation)
 			:Translation(translation){}
 
@@ -65,7 +66,7 @@ namespace Redflag {
 	{
 		SceneCamera Camera;
 		bool Primary = true;
-		bool FixedAspectRatio = false; //Ä¬ÈÏ²»ÓÃ£¬Ö»ÓÐÊÓ¿ÚÏà»úÐèÒª¸Ä±ä¿í¸ß±È
+		bool FixedAspectRatio = false; //Ä¬ï¿½Ï²ï¿½ï¿½Ã£ï¿½Ö»ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ä±ï¿½ï¿½ï¿½ß±ï¿½
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
@@ -77,14 +78,14 @@ namespace Redflag {
 	{
 		ScriptableEntity* Instance = nullptr;
 
-		// º¯ÊýÖ¸Õë
+		// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 		ScriptableEntity* (*InstantiateScript)();  
 		void (*DestroyScript)(NativeScriptComponent*);
 
 		template<typename T>
 		void Bind()
 		{
-			// lambda´æÈëº¯ÊýÖ¸Õë - Ê¹ÓÃÕýÈ·µÄ±äÁ¿Ãû
+			// lambdaï¿½ï¿½ï¿½ëº¯ï¿½ï¿½Ö¸ï¿½ï¿½ - Ê¹ï¿½ï¿½ï¿½ï¿½È·ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½
 			InstantiateScript = []() -> ScriptableEntity* {
 				return static_cast<ScriptableEntity*>(new T());
 				};
@@ -96,14 +97,14 @@ namespace Redflag {
 		}
 	};
 
-	//ÎïÀí
+	//ï¿½ï¿½ï¿½ï¿½
 	struct RigidBody2DComponent
 	{
 		enum class BodyType{Static=0,Dynamic,Kinematic};
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 
-		//´æ´¢Box2DÐÅÏ¢
+		//ï¿½æ´¢Box2Dï¿½ï¿½Ï¢
 		void* RuntimeBody = nullptr;
 
 		RigidBody2DComponent() = default;
@@ -115,16 +116,27 @@ namespace Redflag {
 		glm::vec2 Offset = { 0.f,0.f };
 		glm::vec2 Size = { 0.5f,0.5f };
 
-		//TODO£º·ÅÈëÎïÀí²ÄÖÊ
+		//TODOï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		float Density = 1.f;
 		float Friction = 0.5f;
 		float Restitution = 0.f;
-		float RestitutionThreshold = 0.5f; //Ö»ÓÐµ±Á½ÎïÌå Ïà¶ÔÅö×²ËÙ¶È > 0.5 Ã×/Ãë Ê±£¬²ÅÆôÓÃÉÏÃæÉèÖÃµÄµ¯ÐÔ¼ÆËã¡£
+		float RestitutionThreshold = 0.5f; //Ö»ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½Ù¶ï¿½ > 0.5 ï¿½ï¿½/ï¿½ï¿½ Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÃµÄµï¿½ï¿½Ô¼ï¿½ï¿½ã¡£
 
-		//´æ´¢Box2DÐÅÏ¢
+		//ï¿½æ´¢Box2Dï¿½ï¿½Ï¢
 		void* RuntimeFixture = nullptr;
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	// 3D ç½‘æ ¼æ¸²æŸ“ç»„ä»¶
+	struct MeshRendererComponent
+	{
+		Ref<Mesh>      MeshData;
+		glm::vec4      Color = glm::vec4(1.0f);
+		Ref<Texture2D> Texture;
+
+		MeshRendererComponent() = default;
+		MeshRendererComponent(const MeshRendererComponent&) = default;
 	};
 }

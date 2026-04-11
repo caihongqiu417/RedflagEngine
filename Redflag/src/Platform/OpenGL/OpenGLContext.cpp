@@ -1,7 +1,7 @@
 // OpenGLContext.cpp
 #include "rfpch.h"
 
-// 确锟斤拷GLFW锟斤拷glad之前锟斤拷锟斤拷
+// 确保GLFW在glad之前加载
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -19,17 +19,17 @@ namespace Redflag {
 
         glfwMakeContextCurrent(m_WindowHandle);
 
-        // 锟斤拷始锟斤拷GLAD
+        // 初始化GLAD
         int status = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         RF_CORE_ASSERT(status, "Failed to initialize Glad!");
 
-        // 锟斤拷锟絆penGL锟斤拷息
+        // 打印OpenGL信息
         RF_CORE_INFO("OpenGL Info:");
         RF_CORE_INFO("  Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
         RF_CORE_INFO("  Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
         RF_CORE_INFO("  Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 
-        // 鑾峰彇绐楀彛鐨勫抚缂撳啿鍖哄昂瀵稿苟璁剧疆OpenGL瑙嗗彛
+        // 获取窗口的帧缓冲区尺寸并设置OpenGL视口
         int width, height;
         glfwGetFramebufferSize(m_WindowHandle, &width, &height);
         RF_CORE_INFO("Framebuffer Size: {0}x{1}", width, height);

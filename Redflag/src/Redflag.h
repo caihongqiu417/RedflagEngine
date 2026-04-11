@@ -20,6 +20,8 @@
 //-------------Renderer----------------
 #include"Redflag/Renderer/Renderer.h"
 #include"Redflag/Renderer/Renderer2D.h"
+#include"Redflag/Renderer/Renderer3D.h"
+#include"Redflag/Renderer/Mesh.h"
 #include"Redflag/Renderer/RenderCommand.h"
 
 #include"Redflag/Renderer/Shader.h"
@@ -40,10 +42,10 @@
 
 
 //----------------ECS------------------
-#include"Redflag/Scene/Entity.h"           // 1. ×î»ù±¾µÄEntity
-#include"Redflag/Scene/ScriptableEntity.h"  // 2. ÒÀÀµEntity
-#include"Redflag/Scene/Components.h"        // 3. ÒÀÀµEntityºÍScriptableEntity
-#include"Redflag/Scene/Scene.h"             // 4. ÒÀÀµÒÔÉÏËùÓÐ
+#include"Redflag/Scene/Entity.h"           // 1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Entity
+#include"Redflag/Scene/ScriptableEntity.h"  // 2. ï¿½ï¿½ï¿½ï¿½Entity
+#include"Redflag/Scene/Components.h"        // 3. ï¿½ï¿½ï¿½ï¿½Entityï¿½ï¿½ScriptableEntity
+#include"Redflag/Scene/Scene.h"             // 4. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //-------------------------------------
 
 

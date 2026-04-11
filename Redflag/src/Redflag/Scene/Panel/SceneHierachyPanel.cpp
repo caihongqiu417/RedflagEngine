@@ -24,10 +24,10 @@ namespace Redflag {
         ImGui::Begin("Scene Hierachy");
 
         if (m_Context) {
-            // ±éÀúËùÓÐÊµÌå²¢»æÖÆ½Úµã
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½å²¢ï¿½ï¿½ï¿½Æ½Úµï¿½
             auto view = m_Context->m_Registry.view<TagComponent>();
             view.each([&](auto entity, auto& tc) {
-                // ´´½¨Entity¶ÔÏó²¢»æÖÆ½Úµã
+                // ï¿½ï¿½ï¿½ï¿½Entityï¿½ï¿½ï¿½ó²¢»ï¿½ï¿½Æ½Úµï¿½
                 Entity ent{ entity, m_Context.get() };
                 DrawEntityNode(ent);
                 });
@@ -83,13 +83,13 @@ namespace Redflag {
     {
         auto& tagComponent = entity.GetComponent<TagComponent>();
 
-        // ÉèÖÃ½Úµã±êÖ¾
+        // ï¿½ï¿½ï¿½Ã½Úµï¿½ï¿½Ö¾
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
         if (m_SelectionContext == entity)
             flags |= ImGuiTreeNodeFlags_Selected;
 
-        // ¸ù¾Ý±êÖ¾ºÍÊµÌå»æÖÆ½Úµã
+        // ï¿½ï¿½ï¿½Ý±ï¿½Ö¾ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Æ½Úµï¿½
         bool opened = ImGui::TreeNodeEx(
             (void*)(uint64_t)(uint32_t)entity,
             flags,
@@ -97,32 +97,32 @@ namespace Redflag {
             tagComponent.Tag.c_str()
         );
 
-        // µã»÷Ñ¡Ôñ
+        // ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
         if (ImGui::IsItemClicked()) {
             m_SelectionContext = entity;
         }
 
-        // ÑÓ³ÙÉ¾³ý±ê¼Ç
+        // ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½
         bool entityDeleted = false;
 
-        // ÓÒ¼ü²Ëµ¥ - Ê¹ÓÃ BeginPopupContextItem µÄÕýÈ··½Ê½
-        if (ImGui::BeginPopupContextItem())  // ²»ÐèÒªÌõ¼þÅÐ¶Ï£¬Ëü»á×Ô¶¯´¦ÀíÓÒ¼üµã»÷
+        // ï¿½Ò¼ï¿½ï¿½Ëµï¿½ - Ê¹ï¿½ï¿½ BeginPopupContextItem ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Ê½
+        if (ImGui::BeginPopupContextItem())  // ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ï¿½
         {
             if (ImGui::MenuItem("Delete Entity"))
-                entityDeleted = true;  // Ö»ÉèÖÃ±ê¼Ç£¬²»Á¢¼´É¾³ý
+                entityDeleted = true;  // Ö»ï¿½ï¿½ï¿½Ã±ï¿½Ç£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½
 
             ImGui::EndPopup();
         }
 
-        // Èç¹û½Úµã´ò¿ª£¬Ìí¼Ó×ÓÄÚÈÝ
+        // ï¿½ï¿½ï¿½ï¿½Úµï¿½ò¿ª£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (opened) {
-            //×ÓÄÚÈÝ
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             //
             //
             ImGui::TreePop();
         }
 
-        // ÑÓ³ÙÉ¾³ý£ºÔÚ½Úµã»æÖÆÍê³ÉºóÖ´ÐÐ
+        // ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Ú½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½Ö´ï¿½ï¿½
         if (entityDeleted)
         {
             m_Context->DestroyEntity(entity);
@@ -146,9 +146,9 @@ namespace Redflag {
         float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
         ImVec2 buttonSize = { lineHeight + 3.0f,lineHeight };
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // ÄÞºç·Û
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // ÁÁÄÞºç·Û
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // °µÄÞºç·Û
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // ï¿½Þºï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // ï¿½ï¿½ï¿½Þºï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // ï¿½ï¿½ï¿½Þºï¿½ï¿½
         if (ImGui::Button("x", buttonSize))
             values.x = resetValue;
         ImGui::PopStyleColor(3);
@@ -160,9 +160,9 @@ namespace Redflag {
         ImGui::SameLine();
 
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // ÄÞºçÂÌ
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // ÁÁÄÞºçÂÌ
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // °µÄÞºçÂÌ
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // ï¿½Þºï¿½ï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // ï¿½ï¿½ï¿½Þºï¿½ï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // ï¿½ï¿½ï¿½Þºï¿½ï¿½ï¿½
         if (ImGui::Button("y", buttonSize))
             values.y = resetValue;
         ImGui::PopStyleColor(3);
@@ -172,9 +172,9 @@ namespace Redflag {
         ImGui::PopItemWidth();
         ImGui::SameLine();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // µç¹âÀ¶
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // ÁÁµç¹âÀ¶
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // °µµç¹âÀ¶
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // ï¿½ï¿½ï¿½ï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (ImGui::Button("z", buttonSize))
             values.z = resetValue;
         ImGui::PopStyleColor(3);
@@ -239,7 +239,7 @@ namespace Redflag {
 
        
         const ImGuiTreeNodeFlags tagTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
-        // Tag×é¼þ 
+        // Tagï¿½ï¿½ï¿½ 
         if (entity.HasComponent<TagComponent>())
         {
             auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -295,12 +295,22 @@ namespace Redflag {
                 }
             }
 
+            if (!m_SelectionContext.HasComponent<MeshRendererComponent>())
+            {
+                if (ImGui::MenuItem("Mesh Renderer"))
+                {
+                    auto& mr = m_SelectionContext.AddComponent<MeshRendererComponent>();
+                    mr.MeshData = Mesh::CreateCube();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
             ImGui::EndPopup();
         }
         ImGui::PopItemWidth();
 
 
-        // Transform×é¼þ
+        // Transformï¿½ï¿½ï¿½
         DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
             {
                 DrawVec3Control("Translation", component.Translation);
@@ -310,7 +320,7 @@ namespace Redflag {
                 DrawVec3Control("Scale", component.Scale, 1.0f);
             });
 
-        // Camera×é¼þ
+        // Cameraï¿½ï¿½ï¿½
         DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
             {
                 auto& camera = component.Camera;
@@ -370,23 +380,23 @@ namespace Redflag {
 
             });
 
-        // SpriteRender×é¼þ 
+        // SpriteRenderï¿½ï¿½ï¿½ 
         DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
             {
-                // ÑÕÉ«±à¼­
+                // ï¿½ï¿½É«ï¿½à¼­
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
-                // Æ½ÆÌÒò×Ó
+                // Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.f);
 
-                // ========== ÎÆÀíÍÏ×§ÇøÓò ==========
+                // ========== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ ==========
                 ImGui::Separator();
                 ImGui::Text("Texture");
 
-                // ÏÔÊ¾µ±Ç°ÎÆÀíÔ¤ÀÀ
+                // ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
                 if (component.Texture && component.Texture->GetRendererID())
                 {
-                    // ÎÆÀíÔ¤ÀÀ
+                    // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
                     ImGui::Image(
                         (void*)(intptr_t)component.Texture->GetRendererID(),
                         ImVec2(64, 64)
@@ -394,11 +404,11 @@ namespace Redflag {
                 }
                 else
                 {
-                    // ¿ÕÎÆÀíÕ¼Î»
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼Î»
                     ImGui::Button("No Texture", ImVec2(64, 64));
                 }
 
-                // ÍÏ×§Ä¿±ê
+                // ï¿½ï¿½×§Ä¿ï¿½ï¿½
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
@@ -412,7 +422,7 @@ namespace Redflag {
                     ImGui::EndDragDropTarget();
                 }
 
-                // Çå³ýÎÆÀí°´Å¥
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¥
                 if (component.Texture)
                 {
                     ImGui::SameLine();
@@ -424,10 +434,10 @@ namespace Redflag {
                 // =================================
             });
 
-        // Rigidbody2D ×é¼þ
+        // Rigidbody2D ï¿½ï¿½ï¿½
         DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](auto& component)
             {
-                // ¸ÕÌåÀàÐÍÏÂÀ­¿ò
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
                 const char* currentType = bodyTypeStrings[(int)component.Type];
 
@@ -446,25 +456,66 @@ namespace Redflag {
                     ImGui::EndCombo();
                 }
 
-                // ¹Ì¶¨Ðý×ª
+                // ï¿½Ì¶ï¿½ï¿½ï¿½×ª
                 ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
             });
 
-        // BoxCollider2D ×é¼þ
+        // BoxCollider2D ï¿½ï¿½ï¿½
         DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
             {
-                // Æ«ÒÆÁ¿
+                // Æ«ï¿½ï¿½ï¿½ï¿½
                 ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
-                // Åö×²ºÐ³ß´ç
+                // ï¿½ï¿½×²ï¿½Ð³ß´ï¿½
                 ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
-                // ÃÜ¶È
+                // ï¿½Ü¶ï¿½
                 ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
-                // Ä¦²ÁÁ¦
+                // Ä¦ï¿½ï¿½ï¿½ï¿½
                 ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
-                // µ¯ÐÔ
+                // ï¿½ï¿½ï¿½ï¿½
                 ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-                // µ¯ÌøãÐÖµ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
                 ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+            });
+
+        // Mesh Renderer
+        DrawComponent<MeshRendererComponent>("Mesh Renderer", entity, [](auto& component)
+            {
+                // é¢œè‰²
+                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+                // çº¹ç†
+                ImGui::Separator();
+                ImGui::Text("Texture");
+
+                if (component.Texture && component.Texture->GetRendererID())
+                {
+                    ImGui::Image(
+                        (void*)(intptr_t)component.Texture->GetRendererID(),
+                        ImVec2(64, 64)
+                    );
+                }
+                else
+                {
+                    ImGui::Button("No Texture", ImVec2(64, 64));
+                }
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        if (path)
+                            component.Texture = Texture2D::Create(path);
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                if (component.Texture)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear Texture"))
+                        component.Texture = nullptr;
+                }
             });
     }
 }

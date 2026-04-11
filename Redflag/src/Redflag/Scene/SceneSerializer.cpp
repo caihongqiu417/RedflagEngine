@@ -132,7 +132,7 @@ namespace Redflag {
     static void SerializeEntity(YAML::Emitter& out, Entity entity)
     {
         RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
-        // ¿ªÊ¼ÊµÌåµÄ Map
+        // ï¿½ï¿½Ê¼Êµï¿½ï¿½ï¿½ Map
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
@@ -144,7 +144,7 @@ namespace Redflag {
             auto& tag = entity.GetComponent<TagComponent>().Tag;
             out << YAML::Key << "Tag" << YAML::Value << tag;
 
-            out << YAML::EndMap; // ½áÊø TagComponent Map
+            out << YAML::EndMap; // ï¿½ï¿½ï¿½ï¿½ TagComponent Map
         }
 
         if (entity.HasComponent<TransformComponent>())
@@ -157,7 +157,7 @@ namespace Redflag {
             out << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
             out << YAML::Key << "Scale" << YAML::Value << tc.Scale;
 
-            out << YAML::EndMap; // ½áÊø TransformComponent Map
+            out << YAML::EndMap; // ï¿½ï¿½ï¿½ï¿½ TransformComponent Map
         }
 
         if (entity.HasComponent<CameraComponent>())
@@ -177,12 +177,12 @@ namespace Redflag {
             out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
             out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
             out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetPerspectiveFarClip();
-            out << YAML::EndMap; // ½áÊø Camera Map
+            out << YAML::EndMap; // ï¿½ï¿½ï¿½ï¿½ Camera Map
 
             out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
-            out << YAML::EndMap; // ½áÊø CameraComponent Map
+            out << YAML::EndMap; // ï¿½ï¿½ï¿½ï¿½ CameraComponent Map
         }
 
         if (entity.HasComponent<SpriteRendererComponent>())
@@ -193,7 +193,20 @@ namespace Redflag {
             auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
             out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
 
-            out << YAML::EndMap; // ½áÊø SpriteRendererComponent Map
+            out << YAML::EndMap; // SpriteRendererComponent Map
+        }
+
+        if (entity.HasComponent<MeshRendererComponent>())
+        {
+            out << YAML::Key << "MeshRendererComponent";
+            out << YAML::BeginMap;
+
+            auto& mr = entity.GetComponent<MeshRendererComponent>();
+            out << YAML::Key << "Color" << YAML::Value << mr.Color;
+            // MeshData ç›®å‰åªæ”¯æŒç«‹æ–¹ä½“ï¼ŒåæœŸæ‰©å±•æ–‡ä»¶è·¯å¾„
+            out << YAML::Key << "MeshType" << YAML::Value << "Cube";
+
+            out << YAML::EndMap;
         }
 
         if (entity.HasComponent<RigidBody2DComponent>())
@@ -224,7 +237,7 @@ namespace Redflag {
             out << YAML::EndMap; 
         }
 
-        // ½áÊøÊµÌåµÄ Map
+        // ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ Map
         out << YAML::EndMap;
     }
 
@@ -234,7 +247,7 @@ namespace Redflag {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unamed Scene";
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
-		// Ê¹ÓÃ view »ò storage À´±éÀúÊµÌå
+		// Ê¹ï¿½ï¿½ view ï¿½ï¿½ storage ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
 		auto view = m_Scene->m_Registry.view<entt::entity>();
 		for (auto entityID : view)
 		{
@@ -341,6 +354,16 @@ namespace Redflag {
                     bc2d.Friction = bcNode["Friction"].as<float>();
                     bc2d.Restitution = bcNode["Restitution"].as<float>();
                     bc2d.RestitutionThreshold = bcNode["RestitutionThreshold"].as<float>();
+                }
+
+                // MeshRendererComponent
+                if (entity["MeshRendererComponent"])
+                {
+                    auto mrNode = entity["MeshRendererComponent"];
+                    auto& mr = deserializedEntity.AddComponent<MeshRendererComponent>();
+                    mr.Color = mrNode["Color"].as<glm::vec4>();
+                    // ç›®å‰åªæ”¯æŒç«‹æ–¹ä½“
+                    mr.MeshData = Mesh::CreateCube();
                 }
             }
         }

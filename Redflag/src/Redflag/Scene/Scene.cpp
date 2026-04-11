@@ -1,6 +1,7 @@
 #include"rfpch.h"
 #include"Scene.h"
 #include"Renderer/Renderer2D.h"
+#include"Renderer/Renderer3D.h"
 
 #include"Entity.h"
 #include"ScriptableEntity.h"
@@ -70,20 +71,20 @@ namespace Redflag {
         auto& dstSceneRegistry = newScene->m_Registry;
         std::unordered_map<UUID, entt::entity> enttMap;
 
-        //´´½¨ÊµÌå
+        //ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
         auto idView = srcSceneRegistry.view<IDComponent>();
         for (auto e : idView)
         {
             UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
             const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
-            // ¹Ø¼ü£ºµ÷ÓÃ CreateEntityWithUUID£¬²»Ëæ»úÉú³É£¬Ê¹ÓÃ±£´æµÄ UUID
+            // ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CreateEntityWithUUIDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½Ê¹ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ UUID
             Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
 
-            // ¼ÇÂ¼Ó³Éä¹ØÏµ£ºUUID -> ÐÂÊµÌåµÄ entt ¾ä±ú
+            // ï¿½ï¿½Â¼Ó³ï¿½ï¿½ï¿½Ïµï¿½ï¿½UUID -> ï¿½ï¿½Êµï¿½ï¿½ï¿½ entt ï¿½ï¿½ï¿½
             enttMap[uuid] = (entt::entity)newEntity;
         }
 
-        // ¸´ÖÆ×é¼þ£ºÍ¨¹ýÓ³Éä±íÕÒµ½ UUID ÏàÍ¬µÄÄ¿±êÊµÌå£¬È»ºó°Ñ×é¼þÊý¾Ý¿½¹ýÈ¥
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½Òµï¿½ UUID ï¿½ï¿½Í¬ï¿½ï¿½Ä¿ï¿½ï¿½Êµï¿½å£¬È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½È¥
         CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -124,7 +125,7 @@ namespace Redflag {
             auto& transform = entity.GetComponent<TransformComponent>();
             auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
-            //box2DBody½Ó¹Üµ±Ç°transform
+            //box2DBodyï¿½Ó¹Üµï¿½Ç°transform
             b2BodyDef bodyDef;
             bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
             bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
@@ -139,7 +140,7 @@ namespace Redflag {
                 b2PolygonShape boxShape;
                 boxShape.SetAsBox(transform.Scale.x*bc2d.Size.x, transform.Scale.y*bc2d.Size.y);
 
-                //box2DBody½Ó¹Üµ±Ç°Åö×²²ÎÊý
+                //box2DBodyï¿½Ó¹Üµï¿½Ç°ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½
                 b2FixtureDef fixtureDef;
                 fixtureDef.shape = &boxShape;
                 fixtureDef.density = bc2d.Density;
@@ -149,7 +150,7 @@ namespace Redflag {
                 body->CreateFixture(&fixtureDef);
             }
 
-            //±£´æµ½×é¼þ
+            //ï¿½ï¿½ï¿½æµ½ï¿½ï¿½ï¿½
             rb2d.RuntimeBody = body;
         }
     }
@@ -160,12 +161,12 @@ namespace Redflag {
         m_PhysicsWorld = nullptr;
     }
 
-    //±à¼­Æ÷£ºÓÃ´«ÈëµÄ±à¼­Æ÷Ïà»ú
+    //ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½Ä±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
     {
         Renderer2D::BeginScene(camera);
 
-        // Ê¹ÓÃ view ºÍ each À´äÖÈ¾ËùÓÐ Sprite
+        // Ê¹ï¿½ï¿½ view ï¿½ï¿½ each ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ Sprite
         auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
         spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
             {
@@ -173,18 +174,33 @@ namespace Redflag {
             });
 
         Renderer2D::EndScene();
+
+        // 3D æ¸²æŸ“ï¼šMeshRendererComponent
+        Renderer3D::BeginScene(camera);
+        auto meshView = m_Registry.view<TransformComponent, MeshRendererComponent>();
+        meshView.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
+            {
+                if (mr.MeshData)
+                {
+                    if (mr.Texture)
+                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture);
+                    else
+                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color);
+                }
+            });
+        Renderer3D::EndScene();
     }
 
-    //runtime:´Ó³¡¾°ÖÐÕÒÖ÷Ïà»ú
+    //runtime:ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     void Scene::OnUpdateRuntime(Timestep ts)
     {   //===============================================================
-        //=========================¸üÐÂ½Å±¾==============================
+        //=========================ï¿½ï¿½ï¿½Â½Å±ï¿½==============================
         //===============================================================
         {
             m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
             {
-                    // entity: µ±Ç°±éÀúµ½µÄÊµÌå
-                     // nsc: Õâ¸öÊµÌåÉÏµÄ NativeScriptComponent
+                    // entity: ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+                     // nsc: ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Ïµï¿½ NativeScriptComponent
                 if (!nsc.Instance)
                 {
                     nsc.Instance = nsc.InstantiateScript();
@@ -195,15 +211,15 @@ namespace Redflag {
             });
         }
 
-        // ÎïÀí
-        // ½Å±¾Ê©¼ÓÁ¦/ËÙ¶È ¡ú ¸ù¾ÝÁ¦¼ÆËãÅö×²ÓëÎ»ÖÃ ¡ú äÖÈ¾Í¬²½±ä»»¡£
-        // ·ÀÖ¹ÏÈÎïÀíºó½Å±¾µ¼ÖÂÊäÈëÑÓ³Ù
+        // ï¿½ï¿½ï¿½ï¿½
+        // ï¿½Å±ï¿½Ê©ï¿½ï¿½ï¿½ï¿½/ï¿½Ù¶ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Î»ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ä»»ï¿½ï¿½
+        // ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½
         {
             const int32_t velocityIterations = 6;
             const int32_t positionIterations = 2;
             m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
-            //´Óbox2D»ñÈ¡±ä»»
+            //ï¿½ï¿½box2Dï¿½ï¿½È¡ï¿½ä»»
             auto view = m_Registry.view<RigidBody2DComponent>();
             for (auto e : view)
             {
@@ -211,7 +227,7 @@ namespace Redflag {
                 auto& transform = entity.GetComponent<TransformComponent>();
                 auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
                 
-                // È¡³öÖ®Ç°´æ´¢²¢¸üÐÂµÄ¸ÕÌåÖ¸Õë£¬ÓÃ¸ÕÌåÖ¸Õë½«ÎïÀíÒýÇæµÄÎ»ÖÃ/½Ç¶ÈÍ¬²½»Ø Transform
+                // È¡ï¿½ï¿½Ö®Ç°ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ¸ï¿½ï¿½ï¿½Ö¸ï¿½ë£¬ï¿½Ã¸ï¿½ï¿½ï¿½Ö¸ï¿½ë½«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½/ï¿½Ç¶ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ Transform
                 b2Body* body = (b2Body*)rb2d.RuntimeBody;
                 const auto& position = body->GetPosition();
                 transform.Translation.x = position.x;
@@ -222,7 +238,7 @@ namespace Redflag {
 
         
         //===============================================================
-        //=========================ÕÒÖ÷Ïà»ú==============================
+        //=========================ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½==============================
         //===============================================================
         Camera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -237,13 +253,13 @@ namespace Redflag {
             });
 
         //===============================================================
-       //=========================Êµ¼ÊäÖÈ¾==============================
+       //=========================Êµï¿½ï¿½ï¿½ï¿½È¾==============================
        //===============================================================
         if (mainCamera)
         {
             Renderer2D::BeginScene(mainCamera->GetProjection(), cameraTransform);
 
-            // Ê¹ÓÃ view ºÍ each À´äÖÈ¾ËùÓÐ Sprite
+            // Ê¹ï¿½ï¿½ view ï¿½ï¿½ each ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ Sprite
             auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
             spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
                 {
@@ -259,7 +275,7 @@ namespace Redflag {
         m_ViewportWidth = width;
         m_ViewportHeight = height;
 
-        //½«ÊÓ¿ÚÏà»ú£¨AspectRatio²»±ä£© µ÷Õû´óÐ¡
+        //ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½AspectRatioï¿½ï¿½ï¿½ä£© ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
         auto view = m_Registry.view<CameraComponent>();
         for (auto entity : view)
         {
@@ -275,8 +291,8 @@ namespace Redflag {
     {
         Entity newEntity = CreateEntity(entity.GetName());
 
-        // CreateEntity ÒÑÌí¼Ó TransformComponent
-        // ËùÒÔÓÃ CopyComponentIfExist ¸²¸Ç£¨ÄÚ²¿µ÷ ReplaceorEmplace£©
+        // CreateEntity ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ TransformComponent
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CopyComponentIfExist ï¿½ï¿½ï¿½Ç£ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ ReplaceorEmplaceï¿½ï¿½
         CopyComponentIfExist<TransformComponent>(newEntity, entity);
         CopyComponentIfExist<SpriteRendererComponent>(newEntity, entity);
         CopyComponentIfExist<CameraComponent>(newEntity, entity);
@@ -351,5 +367,10 @@ namespace Redflag {
 
     }
 
+    template<>
+    void Scene::OnComponentAdded<MeshRendererComponent>(Entity entity, MeshRendererComponent& component)
+    {
+
+    }
 
 }

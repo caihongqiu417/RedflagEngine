@@ -32,7 +32,7 @@ namespace Redflag {
 
 		void OnDuplicateEntity();
 
-		//UIÃæ°å
+		//UIï¿½ï¿½ï¿½
 		void UI_Toolbar();
 
 	private:
@@ -41,6 +41,9 @@ namespace Redflag {
 		Ref<Redflag::Texture2D> m_RedCloudTexture;
 		Ref<Redflag::Texture2D> m_CheckerboardTexture;
 
+		// 3D æµ‹è¯•ç”¨ç«‹æ–¹ä½“
+		Ref<Redflag::Mesh> m_CubeMesh;
+
 		
 
 		Ref<Redflag::Framebuffer> m_Framebuffer;
@@ -48,8 +51,8 @@ namespace Redflag {
 		glm::vec2 m_ViewportBounds[2];
 		
 
-		Ref<Scene> m_EditorScene;   // Ô­Ê¼Êý¾Ý
-		Ref<Scene> m_ActiveScene;   // µ±Ç°»îÔ¾£¨±à¼­Ê±Ö¸Ïò m_EditorScene£¬Play Ê±Ö¸Ïò¸±±¾£©
+		Ref<Scene> m_EditorScene;   // Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
+		Ref<Scene> m_ActiveScene;   // ï¿½ï¿½Ç°ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½à¼­Ê±Ö¸ï¿½ï¿½ m_EditorSceneï¿½ï¿½Play Ê±Ö¸ï¿½ò¸±±ï¿½ï¿½ï¿½
 
 		Entity m_SquareEntity;
 		Entity m_SecondSquareEntity;
@@ -74,7 +77,7 @@ namespace Redflag {
 		//Gizmo
 		int m_GizmoType = -1;
 
-		//²¥·Å°´Å¥
+		//ï¿½ï¿½ï¿½Å°ï¿½Å¥
 		Ref<Texture2D> m_IconPlay, m_IconStop;
 
 		enum class SceneState
