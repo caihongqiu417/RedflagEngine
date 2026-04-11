@@ -52,6 +52,13 @@ namespace Redflag {
         }
     }
 
+    template<typename Component>
+    static void CopyComponentIfExist(Entity dst, Entity src)
+    {
+        if (src.HasComponent<Component>())
+            dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+    }
+
     Ref<Scene> Scene::Copy(Ref<Scene> other)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
@@ -258,13 +265,24 @@ namespace Redflag {
         {
             auto& cameraComponent=view.get<CameraComponent>(entity);
             if (cameraComponent.FixedAspectRatio)
+            {
                 cameraComponent.Camera.SetViewportSize(width, height);
+            }
         }
     }
 
     void Scene::DuplicateEntity(Entity entity)
     {
-        Entity newEntity=CreateEntity(entity.GetComponent)
+        Entity newEntity = CreateEntity(entity.GetName());
+
+        // CreateEntity 已添加 TransformComponent
+        // 所以用 CopyComponentIfExist 覆盖（内部调 ReplaceorEmplace）
+        CopyComponentIfExist<TransformComponent>(newEntity, entity);
+        CopyComponentIfExist<SpriteRendererComponent>(newEntity, entity);
+        CopyComponentIfExist<CameraComponent>(newEntity, entity);
+        CopyComponentIfExist<RigidBody2DComponent>(newEntity, entity);
+        CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
+        CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()

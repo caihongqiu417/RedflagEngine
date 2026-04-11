@@ -390,6 +390,10 @@ namespace Redflag {
             if (control && shift) SaveSceneAs();
             else if (control)     SaveScene();
             break;
+        case RF_KEY_D:
+            if (control)
+            OnDuplicateEntity();
+            break;
 
             // Gizmos
         case RF_KEY_Q: m_GizmoType = -1;                              break;
@@ -432,6 +436,16 @@ namespace Redflag {
         // 切回编辑器场景（由于引用计数场景自动销毁）
         m_ActiveScene = m_EditorScene;
         m_SceneState = SceneState::Edit;
+    }
+
+    void ForgeLayer::OnDuplicateEntity()
+    {
+        if (m_SceneState != SceneState::Edit)
+            return;
+
+        Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
+        if (selectedEntity)
+            m_EditorScene->DuplicateEntity(selectedEntity);
     }
 
     void ForgeLayer::SaveScene()

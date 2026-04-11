@@ -30,6 +30,8 @@ namespace Redflag {
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void OnDuplicateEntity();
+
 		//UIÃæ°å
 		void UI_Toolbar();
 

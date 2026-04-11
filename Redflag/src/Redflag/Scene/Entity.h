@@ -22,6 +22,15 @@ namespace Redflag {
             return component;
         }
 
+        template<typename T, typename... Args>
+        T& AddOrReplaceComponent(Args&&... args)
+        {
+            RF_CORE_ASSERT(!HasComponent<T>(), "Entity already has that component");
+            T& component = m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandle, std::forward<Args>(args)...);
+            m_Scene->OnComponentAdded<T>(*this, component);
+            return component;
+        }
+
         template<typename T>
         bool HasComponent()
         {
