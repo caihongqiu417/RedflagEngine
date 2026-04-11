@@ -47,7 +47,10 @@ namespace Redflag {
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
         // =============== 创建场景 ===============================
-        m_ActiveScene = CreateRef<Scene>();
+        m_EditorScene = CreateRef<Scene>();
+        m_EditorScene->OnViewportResize(1600, 900);
+        m_ActiveScene = m_EditorScene;
+        m_SceneHierachyPanel.SetContext(m_EditorScene);
 
         // =============== 创建 EditorCamera ===============================
         m_EditorCamera = EditorCamera(30.f, 1.788f, 0.1f, 1000.f);
@@ -291,13 +294,18 @@ namespace Redflag {
                 const char* droppedPath = (const char*)payload->Data;
                 if (droppedPath)
                 {
-                    m_HoveredEntity = {};
-                    m_ActiveScene = CreateRef<Scene>();
-                    m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x,
-                        (uint32_t)m_ViewportSize.y);
-                    m_SceneHierachyPanel.SetContext(m_ActiveScene);
+                    // 先停止播放
+                    if (m_SceneState != SceneState::Edit)
+                        OnSceneStop();
 
-                    SceneSerializer serializer(m_ActiveScene);
+                    m_HoveredEntity = {};
+
+                    m_EditorScene = CreateRef<Scene>();
+                    m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                    m_ActiveScene = m_EditorScene;
+                    m_SceneHierachyPanel.SetContext(m_EditorScene);
+
+                    SceneSerializer serializer(m_EditorScene);
                     if (serializer.Deserialize(std::string(droppedPath)))
                     {
                         m_SceneFilePath = std::string(droppedPath);
@@ -408,21 +416,29 @@ namespace Redflag {
 
     void ForgeLayer::OnScenePlay()
     {
-        m_SceneState = SceneState::Play;
+        if (m_SceneState != SceneState::Edit)
+            return;
+
+        m_ActiveScene = Scene::Copy(m_EditorScene);
         m_ActiveScene->OnRuntimeStart();
+        m_SceneState = SceneState::Play;
     }
 
     void ForgeLayer::OnSceneStop()
     {
         m_SceneState = SceneState::Edit;
         m_ActiveScene->OnRuntimeStop();
+
+        // 切回编辑器场景（由于引用计数场景自动销毁）
+        m_ActiveScene = m_EditorScene;
+        m_SceneState = SceneState::Edit;
     }
 
     void ForgeLayer::SaveScene()
     {
         if (!m_SceneFilePath.empty())
         {
-            SceneSerializer serializer(m_ActiveScene);
+            SceneSerializer serializer(m_EditorScene);
             serializer.Serialize(m_SceneFilePath);
             RF_CORE_INFO("Scene saved: {0}", m_SceneFilePath);
         }
@@ -449,20 +465,43 @@ namespace Redflag {
 
     void ForgeLayer::OpenScene()
     {
+        // 1. 如果正在播放，先停止
+        if (m_SceneState != SceneState::Edit)
+            OnSceneStop();
+
+        // 2. 弹出文件选择对话框
         std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0");
         if (!filepath.empty())
         {
+            // 3. 清空悬停实体
             m_HoveredEntity = {};
-            m_ActiveScene = CreateRef<Scene>();
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x,
-                (uint32_t)m_ViewportSize.y);
-            m_SceneHierachyPanel.SetContext(m_ActiveScene);
 
-            SceneSerializer serializer(m_ActiveScene);
+            // 4. 创建新的编辑器场景
+            m_EditorScene = CreateRef<Scene>();
+            m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+
+            // 5. 从文件加载数据到编辑器场景
+            SceneSerializer serializer(m_EditorScene);
             if (serializer.Deserialize(filepath))
             {
+                // 6. 加载成功，更新状态
+                m_ActiveScene = m_EditorScene;
                 m_SceneFilePath = filepath;
+
+                // 7. 更新 Hierarchy 面板
+                m_SceneHierachyPanel.SetContext(m_EditorScene);
+
                 RF_CORE_INFO("Successfully opened scene: {0}", filepath);
+            }
+            else
+            {
+                // 8. 加载失败，恢复空场景
+                m_EditorScene = CreateRef<Scene>();
+                m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                m_ActiveScene = m_EditorScene;
+                m_SceneHierachyPanel.SetContext(m_EditorScene);
+
+                RF_CORE_ERROR("Failed to open scene: {0}", filepath);
             }
         }
     }
@@ -471,8 +510,18 @@ namespace Redflag {
     {
         RF_CORE_INFO("Creating new scene...");
 
+        if (m_SceneState != SceneState::Edit)
+            OnSceneStop();
+
         m_HoveredEntity = {};
-        m_ActiveScene = CreateRef<Scene>();
+
+        m_EditorScene = CreateRef<Scene>();
+        m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+        m_ActiveScene = m_EditorScene;
+
+        m_SceneHierachyPanel.SetContext(m_EditorScene);
+        m_SceneFilePath.clear();
+
         m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x,
             (uint32_t)m_ViewportSize.y);
         m_SceneHierachyPanel.SetContext(m_ActiveScene);

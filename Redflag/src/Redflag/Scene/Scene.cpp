@@ -36,6 +36,57 @@ namespace Redflag {
 
 	}
 
+    template<typename Component>
+    static void CopyComponent(entt::registry& dst,entt::registry& src,const std::unordered_map<UUID,entt::entity> enttMap)
+    {
+        auto view = src.view<Component>();
+        for (auto e : view)
+        {
+            UUID uuid=src.get<IDComponent>(e).ID;
+            RF_CORE_ASSERT(enttMap.find(uuid) != enttMap.end());
+
+            entt::entity dstEnttID=enttMap.at(uuid);
+
+            auto& component = src.get<Component>(e);
+            dst.emplace_or_replace<Component>(dstEnttID,component);
+        }
+    }
+
+    Ref<Scene> Scene::Copy(Ref<Scene> other)
+    {
+        Ref<Scene> newScene = CreateRef<Scene>();
+
+        newScene->m_ViewportWidth = other->m_ViewportWidth;
+        newScene->m_ViewportHeight = other->m_ViewportHeight;
+
+        auto& srcSceneRegistry = other->m_Registry;
+        auto& dstSceneRegistry = newScene->m_Registry;
+        std::unordered_map<UUID, entt::entity> enttMap;
+
+        //创建实体
+        auto idView = srcSceneRegistry.view<IDComponent>();
+        for (auto e : idView)
+        {
+            UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
+            const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
+            // 关键：调用 CreateEntityWithUUID，不随机生成，使用保存的 UUID
+            Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
+
+            // 记录映射关系：UUID -> 新实体的 entt 句柄
+            enttMap[uuid] = (entt::entity)newEntity;
+        }
+
+        // 复制组件：通过映射表找到 UUID 相同的目标实体，然后把组件数据拷过去
+        CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+        return newScene;
+    }
+
 	Entity Scene::CreateEntity(const std::string& name)
 	{
         return CreateEntityWithUUID(UUID(), name);
@@ -209,6 +260,11 @@ namespace Redflag {
             if (cameraComponent.FixedAspectRatio)
                 cameraComponent.Camera.SetViewportSize(width, height);
         }
+    }
+
+    void Scene::DuplicateEntity(Entity entity)
+    {
+        Entity newEntity=CreateEntity(entity.GetComponent)
     }
 
     Entity Scene::GetPrimaryCameraEntity()

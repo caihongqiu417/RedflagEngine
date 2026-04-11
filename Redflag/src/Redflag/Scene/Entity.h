@@ -47,6 +47,7 @@ namespace Redflag {
         operator entt::entity()const { return m_EntityHandle; }
 
         UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+        const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
 
         bool operator==(const Entity& other) const
         {
