@@ -29,6 +29,8 @@ namespace Redflag {
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void OnSceneSimulate();
+		void OnSceneSimulateStop();
 
 		void OnDuplicateEntity();
 
@@ -78,12 +80,15 @@ namespace Redflag {
 		//Gizmo
 		int m_GizmoType = -1;
 
+		// 碰撞体可视化开关（编辑模式下显示绿色线框）
+		bool m_ShowPhysicsColliders = true;
+
 		//工具栏按钮
-		Ref<Texture2D> m_IconPlay, m_IconStop;
+		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
 
 		enum class SceneState
 		{
-			Edit=0,Play=1
+			Edit=0, Play=1, Simulate=2
 		};
 
 		SceneState m_SceneState = SceneState::Edit;

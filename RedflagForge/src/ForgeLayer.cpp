@@ -10,7 +10,7 @@
 #include "Redflag/Renderer/RenderCommand.h"
 #include"Redflag/Scene/CameraControllerScript.h"
 #include "Redflag/Scene/SceneSerializer.h"
-#include "Redflag/Utils/PlatformUtils.h" 
+#include "Redflag/Utils/PlatformUtils.h"
 
 #include"Redflag/Renderer/EditorCamera.h"
 
@@ -29,34 +29,38 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // ============== ����������Դ =========================
-        m_RedCloudTexture = Texture2D::Create("assets/textures/RedCloud.png");
+        // 加载纹理资源
+        m_RedCloudTexture     = Texture2D::Create("assets/textures/RedCloud.png");
         m_CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
-        m_IconPlay = Texture2D::Create("assets/icons/PlayButton.png");
-        m_IconStop = Texture2D::Create("assets/icons/StopButton.png");
+        m_IconPlay            = Texture2D::Create("assets/icons/PlayButton.png");
+        m_IconStop            = Texture2D::Create("assets/icons/StopButton.png");
+        m_IconSimulate        = Texture2D::Create("assets/icons/SimulateButton.png");
 
-        // ============== ���������ʼλ�� =========================
+        // 初始化正交相机控制器缩放
         m_CameraController.SetZoomLevel(6.f);
 
-        // =============== ����֡������ ===============================
+        // 创建帧缓冲
+        // attachment0: RGBA8        -> 颜色输出
+        // attachment1: RED_INTEGER  -> Entity ID 拾取
+        // attachment2: Depth
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,
                                FramebufferTextureFormat::RED_INTEGER,
                                FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1600;
+        fbSpec.Width  = 1600;
         fbSpec.Height = 900;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
-        // =============== 3D test: create cube mesh ===============================
+        // 3D 测试：创建立方体 Mesh
         m_CubeMesh = Mesh::CreateCube();
 
-        // =============== �������� ===============================
+        // 初始化编辑场景
         m_EditorScene = CreateRef<Scene>();
         m_EditorScene->OnViewportResize(1600, 900);
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
 
-        // =============== ���� EditorCamera ===============================
+        // 初始化 EditorCamera（FOV=30, Aspect=16/9, Near=0.1, Far=1000）
         m_EditorCamera = EditorCamera(30.f, 1.788f, 0.1f, 1000.f);
     }
 
@@ -69,7 +73,7 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // Camera ����
+        // 仅在 Viewport 聚焦时更新相机
         if (m_ViewportFocused)
         {
             m_CameraController.OnUpdate(ts);
@@ -78,100 +82,166 @@ namespace Redflag {
 
         Renderer2D::ResetStats();
 
-        // ��Ⱦ��ʼ
+        // 绑定帧缓冲并清屏，Entity ID 附件清为 -1（无实体）
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
 
+        // 按场景状态分发更新逻辑
         switch (m_SceneState)
         {
+            // Simulate：物理步进 + EditorCamera 渲染，不执行脚本
+            case SceneState::Simulate:
+            {
+                m_ActiveScene->OnUpdateSimulation(ts, m_EditorCamera);
+                break;
+            }
+
+            // Edit：编辑器渲染，叠加碰撞体线框和相机图标
             case SceneState::Edit:
+            {
+                m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+
+                // 编辑器覆盖层
+                Renderer2D::BeginScene(m_EditorCamera);
+                Renderer2D::SetLineWidth(1.5f);
+
+                // 绘制所有 CameraComponent 的相机线框图标
+                auto camView = m_ActiveScene->GetRegistry().view<TransformComponent, CameraComponent>();
+                camView.each([&](auto entity, TransformComponent& tc, CameraComponent& cc)
                 {
-                    m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+                    Entity ent = { entity, m_ActiveScene.get() };
+                    Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
+                    // 选中时红色，普通时白色
+                    glm::vec4 lineColor = (sel && sel == ent)
+                        ? glm::vec4(0.95f, 0.25f, 0.25f, 1.0f)
+                        : glm::vec4(1.0f,  1.0f,  1.0f, 0.85f);
 
-                    // ── 编辑器覆盖层：绘制相机线框 ──
-                    Renderer2D::BeginScene(m_EditorCamera);
-                    Renderer2D::SetLineWidth(1.5f);
+                    glm::mat4 camT = tc.GetTransform();
+                    auto xf = [&](glm::vec3 v) -> glm::vec3 {
+                        return glm::vec3(camT * glm::vec4(v, 1.0f));
+                    };
 
-                    auto camView = m_ActiveScene->GetRegistry().view<TransformComponent, CameraComponent>();
-                    camView.each([&](auto entity, TransformComponent& tc, CameraComponent& cc)
+                    // 机身矩形（-Z 为朝向）
+                    float bw = 0.18f, bh = 0.12f, bd = 0.10f;
+                    glm::vec3 f0 = xf({ -bw, -bh, -bd });
+                    glm::vec3 f1 = xf({  bw, -bh, -bd });
+                    glm::vec3 f2 = xf({  bw,  bh, -bd });
+                    glm::vec3 f3 = xf({ -bw,  bh, -bd });
+                    glm::vec3 b0 = xf({ -bw, -bh,  bd });
+                    glm::vec3 b1 = xf({  bw, -bh,  bd });
+                    glm::vec3 b2 = xf({  bw,  bh,  bd });
+                    glm::vec3 b3 = xf({ -bw,  bh,  bd });
+                    // 前面轮廓
+                    Renderer2D::DrawLine(f0, f1, lineColor);
+                    Renderer2D::DrawLine(f1, f2, lineColor);
+                    Renderer2D::DrawLine(f2, f3, lineColor);
+                    Renderer2D::DrawLine(f3, f0, lineColor);
+                    // 后面轮廓
+                    Renderer2D::DrawLine(b0, b1, lineColor);
+                    Renderer2D::DrawLine(b1, b2, lineColor);
+                    Renderer2D::DrawLine(b2, b3, lineColor);
+                    Renderer2D::DrawLine(b3, b0, lineColor);
+                    // 连接棱
+                    Renderer2D::DrawLine(f0, b0, lineColor);
+                    Renderer2D::DrawLine(f1, b1, lineColor);
+                    Renderer2D::DrawLine(f2, b2, lineColor);
+                    Renderer2D::DrawLine(f3, b3, lineColor);
+
+                    // 镜头锥台
+                    float lx = 0.28f, ly = 0.20f, lz = -0.36f;
+                    glm::vec3 l0 = xf({ -lx, -ly, lz });
+                    glm::vec3 l1 = xf({  lx, -ly, lz });
+                    glm::vec3 l2 = xf({  lx,  ly, lz });
+                    glm::vec3 l3 = xf({ -lx,  ly, lz });
+                    Renderer2D::DrawLine(l0, l1, lineColor);
+                    Renderer2D::DrawLine(l1, l2, lineColor);
+                    Renderer2D::DrawLine(l2, l3, lineColor);
+                    Renderer2D::DrawLine(l3, l0, lineColor);
+                    glm::vec3 fc = xf({ 0.0f, 0.0f, -bd });
+                    Renderer2D::DrawLine(fc, l0, lineColor);
+                    Renderer2D::DrawLine(fc, l1, lineColor);
+                    Renderer2D::DrawLine(fc, l2, lineColor);
+                    Renderer2D::DrawLine(fc, l3, lineColor);
+                });
+
+                // 碰撞体可视化：绿色线框，选中时高亮为黄色
+                if (m_ShowPhysicsColliders)
+                {
+                    Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
+
+                    // BoxCollider2D：矩形线框
+                    auto bcView = m_ActiveScene->GetRegistry().view<TransformComponent, BoxCollider2DComponent>();
+                    bcView.each([&](auto entity, TransformComponent& tc, BoxCollider2DComponent& bc)
                     {
                         Entity ent = { entity, m_ActiveScene.get() };
-                        Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
-                        glm::vec4 lineColor = (sel && sel == ent)
-                            ? glm::vec4(0.95f, 0.25f, 0.25f, 1.0f)  // 选中：红色
-                            : glm::vec4(1.0f,  1.0f,  1.0f, 0.85f); // 普通：白色
+                        glm::vec4 col = (sel && sel == ent)
+                            ? glm::vec4(1.0f, 0.7f, 0.0f, 1.0f)
+                            : glm::vec4(0.0f, 1.0f, 0.0f, 0.8f);
 
-                        // 相机本地坐标系：-Z 为朝向，按实体 Transform 变换
-                        glm::mat4 camT = tc.GetTransform();
-                        auto xf = [&](glm::vec3 v) -> glm::vec3 {
-                            return glm::vec3(camT * glm::vec4(v, 1.0f));
-                        };
+                        glm::mat4 t = tc.GetTransform();
+                        auto xf = [&](glm::vec3 v) { return glm::vec3(t * glm::vec4(v, 1.0f)); };
 
-                        // 机体：小矩形（相机图标正面）
-                        float bw = 0.18f, bh = 0.12f, bd = 0.10f;
-                        // 前面四顶点
-                        glm::vec3 f0 = xf({ -bw, -bh, -bd });
-                        glm::vec3 f1 = xf({  bw, -bh, -bd });
-                        glm::vec3 f2 = xf({  bw,  bh, -bd });
-                        glm::vec3 f3 = xf({ -bw,  bh, -bd });
-                        // 后面四顶点
-                        glm::vec3 b0 = xf({ -bw, -bh,  bd });
-                        glm::vec3 b1 = xf({  bw, -bh,  bd });
-                        glm::vec3 b2 = xf({  bw,  bh,  bd });
-                        glm::vec3 b3 = xf({ -bw,  bh,  bd });
-                        // 前面轮廓
-                        Renderer2D::DrawLine(f0, f1, lineColor);
-                        Renderer2D::DrawLine(f1, f2, lineColor);
-                        Renderer2D::DrawLine(f2, f3, lineColor);
-                        Renderer2D::DrawLine(f3, f0, lineColor);
-                        // 后面轮廓
-                        Renderer2D::DrawLine(b0, b1, lineColor);
-                        Renderer2D::DrawLine(b1, b2, lineColor);
-                        Renderer2D::DrawLine(b2, b3, lineColor);
-                        Renderer2D::DrawLine(b3, b0, lineColor);
-                        // 连接棱
-                        Renderer2D::DrawLine(f0, b0, lineColor);
-                        Renderer2D::DrawLine(f1, b1, lineColor);
-                        Renderer2D::DrawLine(f2, b2, lineColor);
-                        Renderer2D::DrawLine(f3, b3, lineColor);
+                        float ox = bc.Offset.x, oy = bc.Offset.y;
+                        float sx = bc.Size.x,   sy = bc.Size.y;
+                        glm::vec3 p0 = xf({ ox - sx, oy - sy, 0.001f });
+                        glm::vec3 p1 = xf({ ox + sx, oy - sy, 0.001f });
+                        glm::vec3 p2 = xf({ ox + sx, oy + sy, 0.001f });
+                        glm::vec3 p3 = xf({ ox - sx, oy + sy, 0.001f });
 
-                        // 镜头锥台：朝 -Z 方向
-                        float lx = 0.28f, ly = 0.20f, lz = -0.36f;
-                        glm::vec3 l0 = xf({ -lx, -ly, lz });
-                        glm::vec3 l1 = xf({  lx, -ly, lz });
-                        glm::vec3 l2 = xf({  lx,  ly, lz });
-                        glm::vec3 l3 = xf({ -lx,  ly, lz });
-                        // 锥台前口
-                        Renderer2D::DrawLine(l0, l1, lineColor);
-                        Renderer2D::DrawLine(l1, l2, lineColor);
-                        Renderer2D::DrawLine(l2, l3, lineColor);
-                        Renderer2D::DrawLine(l3, l0, lineColor);
-                        // 从机体前面中心到锥台四角
-                        glm::vec3 fc = xf({ 0.0f, 0.0f, -bd });
-                        Renderer2D::DrawLine(fc, l0, lineColor);
-                        Renderer2D::DrawLine(fc, l1, lineColor);
-                        Renderer2D::DrawLine(fc, l2, lineColor);
-                        Renderer2D::DrawLine(fc, l3, lineColor);
+                        Renderer2D::DrawLine(p0, p1, col);
+                        Renderer2D::DrawLine(p1, p2, col);
+                        Renderer2D::DrawLine(p2, p3, col);
+                        Renderer2D::DrawLine(p3, p0, col);
                     });
 
-                    Renderer2D::EndScene();
-                    break;
+                    // CircleCollider2D：32 段折线近似圆形
+                    auto ccView = m_ActiveScene->GetRegistry().view<TransformComponent, CircleCollider2DComponent>();
+                    ccView.each([&](auto entity, TransformComponent& tc, CircleCollider2DComponent& cc)
+                    {
+                        Entity ent = { entity, m_ActiveScene.get() };
+                        glm::vec4 col = (sel && sel == ent)
+                            ? glm::vec4(1.0f, 0.7f, 0.0f, 1.0f)
+                            : glm::vec4(0.0f, 1.0f, 0.0f, 0.8f);
+
+                        glm::mat4 t = tc.GetTransform();
+                        auto xf = [&](glm::vec3 v) { return glm::vec3(t * glm::vec4(v, 1.0f)); };
+
+                        constexpr int   segments = 32;
+                        constexpr float twoPi    = glm::two_pi<float>();
+                        float ox = cc.Offset.x, oy = cc.Offset.y;
+                        float r  = cc.Radius;
+
+                        for (int i = 0; i < segments; ++i)
+                        {
+                            float a0 = twoPi * (float)i       / (float)segments;
+                            float a1 = twoPi * (float)(i + 1) / (float)segments;
+                            glm::vec3 v0 = xf({ ox + r * glm::cos(a0), oy + r * glm::sin(a0), 0.001f });
+                            glm::vec3 v1 = xf({ ox + r * glm::cos(a1), oy + r * glm::sin(a1), 0.001f });
+                            Renderer2D::DrawLine(v0, v1, col);
+                        }
+                    });
                 }
+
+                Renderer2D::EndScene();
+                break;
+            }
+
+            // Play：完整运行时（脚本 + 物理 + 场景主相机渲染）
             case SceneState::Play:
-                {
-                    m_ActiveScene->OnUpdateRuntime(ts);
-                    break;
-                }
+            {
+                m_ActiveScene->OnUpdateRuntime(ts);
+                break;
+            }
         }
 
-        // --- ���ʰȡ�߼� ---
+        // Entity ID 拾取：读取鼠标悬停位置的 RED_INTEGER 附件
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my; // ��ת Y������ OpenGL ����ϵ
+        my = viewportSize.y - my; // 翻转 Y 轴以对齐 OpenGL 坐标系
 
         int mouseX = (int)mx;
         int mouseY = (int)my;
@@ -204,9 +274,7 @@ namespace Redflag {
     {
         RF_PROFILE_FUNCTION();
 
-        // ======================================================
-        // DOCKING ģʽ
-        // ======================================================
+        // 全屏 DockSpace 设置
         static bool opt_fullscreen = true;
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
@@ -228,7 +296,6 @@ namespace Redflag {
         if (opt_fullscreen) ImGui::PopStyleVar(3);
         ImGui::PopStyleVar();
 
-        // DockSpace
         ImGuiIO& io = ImGui::GetIO();
         if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
@@ -236,70 +303,96 @@ namespace Redflag {
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
         }
 
-        // ======================================================
-        // MenuBar����� File �˵� �� �м� Play/Stop ��ť
-        // ======================================================
+        // MenuBar：File 菜单 / View 菜单 / 工具栏按钮
         if (ImGui::BeginMenuBar())
         {
-            // ---------- ��ࣺFile �˵� ----------
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New", "Ctrl+N"))       NewScene();
-                if (ImGui::MenuItem("Open...", "Ctrl+O"))       OpenScene();
-                if (ImGui::MenuItem("Save", "Ctrl+S"))       SaveScene();
+                if (ImGui::MenuItem("New",        "Ctrl+N"))        NewScene();
+                if (ImGui::MenuItem("Open...",    "Ctrl+O"))        OpenScene();
+                if (ImGui::MenuItem("Save",       "Ctrl+S"))        SaveScene();
                 if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) SaveSceneAs();
                 ImGui::Separator();
                 if (ImGui::MenuItem("Exit")) Application::Get().Close();
                 ImGui::EndMenu();
             }
-            // ���Ű�ť
+            if (ImGui::BeginMenu("View"))
             {
-                Ref<Texture2D> icon = (m_SceneState == SceneState::Edit) ? m_IconPlay : m_IconStop;
-                const char* label = (m_SceneState == SceneState::Edit) ? "Play" : "Stop";
-                float requestedIconSize = 24.0f;
-                float spacing = 18.0f; // <- �������ֵ�Էֿ���ť������
+                ImGui::MenuItem("Physics Colliders", nullptr, &m_ShowPhysicsColliders);
+                ImGui::EndMenu();
+            }
 
-                ImVec2 textSize = ImGui::CalcTextSize(label);
-                float frameH = ImGui::GetFrameHeight();
-                float maxIcon = std::max(4.0f, frameH - 2.0f);
-                float iconSize = requestedIconSize > maxIcon ? maxIcon : requestedIconSize;
-                float totalWidth = iconSize + spacing + textSize.x;
+            // 工具栏：Play / Simulate 两个图标按钮居中排列
+            {
+                float requestedIconSize = 24.0f;
+                float frameH    = ImGui::GetFrameHeight();
+                float maxIcon   = std::max(4.0f, frameH - 2.0f);
+                float iconSize  = requestedIconSize > maxIcon ? maxIcon : requestedIconSize;
+                float btnSpacing = 6.0f;
 
                 float cursorStartX = ImGui::GetCursorPosX();
                 float cursorStartY = ImGui::GetCursorPosY();
-                float availW = ImGui::GetContentRegionAvail().x;
-
-                float startX = cursorStartX + availW * 0.5f - totalWidth * 0.5f;
+                float availW  = ImGui::GetContentRegionAvail().x;
+                float startX  = cursorStartX + availW * 0.5f - (iconSize * 2 + btnSpacing) * 0.5f;
                 float offsetY = (frameH - iconSize) * 0.5f;
 
-                // ����ͼ��
-                ImGui::SetCursorPosX(startX);
-                ImGui::SetCursorPosY(cursorStartY + offsetY);
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.6f, 1.0f, 0.6f));
-                if (ImGui::ImageButton("##playstop", (ImTextureID)(uint64_t)icon->GetRendererID(),
-                    ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1),
-                    ImVec4(0, 0, 0, 0)))
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.2f, 0.6f, 1.0f, 0.6f));
+
+                // Play / Stop 按钮
+                // Edit->Play：触发 OnScenePlay()
+                // Play->Edit：触发 OnSceneStop()
+                // Simulate 时此按钮禁用
                 {
-                    if (m_SceneState == SceneState::Edit) OnScenePlay();
-                    else                              OnSceneStop();
+                    bool inSimulate = (m_SceneState == SceneState::Simulate);
+                    if (inSimulate) ImGui::BeginDisabled();
+
+                    Ref<Texture2D> playIcon = (m_SceneState == SceneState::Play) ? m_IconStop : m_IconPlay;
+                    ImGui::SetCursorPosX(startX);
+                    ImGui::SetCursorPosY(cursorStartY + offsetY);
+                    if (ImGui::ImageButton("##playstop", (ImTextureID)(uint64_t)playIcon->GetRendererID(),
+                        ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0)))
+                    {
+                        if (m_SceneState == SceneState::Edit) OnScenePlay();
+                        else                                  OnSceneStop();
+                    }
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip((m_SceneState == SceneState::Play) ? "Stop" : "Play");
+
+                    if (inSimulate) ImGui::EndDisabled();
                 }
+
+                // Simulate / Stop Simulate 按钮（橙色 tint 与 Play 按钮区分）
+                // Edit->Simulate：触发 OnSceneSimulate()
+                // Simulate->Edit：触发 OnSceneSimulateStop()
+                // Play 时此按钮禁用
+                {
+                    bool inPlay = (m_SceneState == SceneState::Play);
+                    if (inPlay) ImGui::BeginDisabled();
+
+                    bool simActive = (m_SceneState == SceneState::Simulate);
+                    Ref<Texture2D> simIcon = simActive ? m_IconStop : m_IconSimulate;
+                    ImVec4 simTint = simActive ? ImVec4(1, 1, 1, 1) : ImVec4(1.0f, 0.6f, 0.1f, 1.0f);
+                    ImGui::SetCursorPosX(startX + iconSize + btnSpacing);
+                    ImGui::SetCursorPosY(cursorStartY + offsetY);
+                    if (ImGui::ImageButton("##simulate", (ImTextureID)(uint64_t)simIcon->GetRendererID(),
+                        ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+                        simTint))
+                    {
+                        if (m_SceneState == SceneState::Edit) OnSceneSimulate();
+                        else                                  OnSceneSimulateStop();
+                    }
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip(simActive ? "Stop Simulate" : "Simulate");
+
+                    if (inPlay) ImGui::EndDisabled();
+                }
+
                 ImGui::PopStyleColor(3);
-
-                // ��ȷ�������֣�ȷ�����ص���
-                ImGui::SetCursorPosX(startX + iconSize + spacing);
-                ImGui::SetCursorPosY(cursorStartY + offsetY + (iconSize - textSize.y) * 0.5f);
-                ImGui::TextUnformatted(label);
-
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip(label);
             }
             ImGui::EndMenuBar();
         }
 
-        // ======================================================
-        // Profile ���
-        // ======================================================
+        // Profile / Stats 面板
         {
             RF_PROFILE_SCOPE("Stats");
 
@@ -307,17 +400,15 @@ namespace Redflag {
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
             ImGui::Begin("Profile");
 
-            // ── 颜色定义 ──
             const ImVec4 colRed       = ImVec4(0.80f, 0.08f, 0.08f, 1.0f);
             const ImVec4 colWhite     = ImVec4(0.10f, 0.10f, 0.10f, 1.0f);
             const ImVec4 colDimWhite  = ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
             const ImVec4 colHighlight = ImVec4(0.85f, 0.15f, 0.15f, 1.0f);
             const ImVec4 colSeparator = ImVec4(0.70f, 0.10f, 0.10f, 0.70f);
 
-            // ── 实体信息 ──
             Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
 
-            std::string hoveredName  = "None";
+            std::string hoveredName = "None";
             if (m_HoveredEntity)
                 hoveredName = m_HoveredEntity.GetComponent<TagComponent>().Tag;
 
@@ -325,7 +416,6 @@ namespace Redflag {
             if (selectedEntity)
                 selectedName = selectedEntity.GetComponent<TagComponent>().Tag;
 
-            // Hovered
             ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
             ImGui::Text("Hovered ");
             ImGui::PopStyleColor();
@@ -334,7 +424,6 @@ namespace Redflag {
             ImGui::Text("%s", hoveredName.c_str());
             ImGui::PopStyleColor();
 
-            // Selected
             ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
             ImGui::Text("Selected");
             ImGui::PopStyleColor();
@@ -343,27 +432,23 @@ namespace Redflag {
             ImGui::Text("%s", selectedName.c_str());
             ImGui::PopStyleColor();
 
-            // ── 分隔线 ──
             ImGui::Spacing();
             ImGui::PushStyleColor(ImGuiCol_Separator, colSeparator);
             ImGui::Separator();
             ImGui::PopStyleColor();
             ImGui::Spacing();
 
-            // ── 渲染统计 ──
             auto stats2D = Renderer2D::GetStats();
             auto stats3D = Renderer3D::GetStats();
             uint32_t totalDrawCalls = stats2D.DrawCalls + stats3D.DrawCalls;
             uint32_t totalVertices  = stats2D.GetTotalVertexCount() + stats3D.VertexCount;
             uint32_t totalIndices   = stats2D.GetTotalIndexCount()  + stats3D.IndexCount;
 
-            // 标题
             ImGui::PushStyleColor(ImGuiCol_Text, colRed);
             ImGui::Text("Render Stats");
             ImGui::PopStyleColor();
             ImGui::Spacing();
 
-            // 总览行
             ImGui::PushStyleColor(ImGuiCol_Text, colWhite);
             ImGui::Text("Draw Calls  %d", totalDrawCalls);
             ImGui::Text("Vertices    %d", totalVertices);
@@ -376,10 +461,8 @@ namespace Redflag {
             ImGui::PopStyleColor();
             ImGui::Spacing();
 
-            // 2D / 3D 分列
             float halfW = ImGui::GetContentRegionAvail().x * 0.5f;
 
-            // ─── 2D 列 ───
             ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_Text, colRed);
             ImGui::Text("2D");
@@ -394,7 +477,6 @@ namespace Redflag {
 
             ImGui::SameLine(halfW);
 
-            // ─── 3D 列 ───
             ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_Text, colRed);
             ImGui::Text("3D");
@@ -411,21 +493,17 @@ namespace Redflag {
             ImGui::PopStyleVar(2);
         }
 
-        // ======================================================
-        // Scene Hierarchy & Content Browser
-        // ======================================================
+        // 左侧面板
         m_SceneHierachyPanel.OnImguiRender();
         m_ContentBrowserPanel.OnImGuiRender();
 
-        // ======================================================
-        // Viewport ����
-        // ======================================================
+        // Viewport 面板
         ImGui::Begin("Viewport");
 
-        // 1. �����ӿڱ߽�
+        // 记录 Viewport 屏幕边界（用于鼠标坐标转换和 Gizmo 绘制范围）
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
         auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-        auto viewportOffset = ImGui::GetWindowPos();
+        auto viewportOffset    = ImGui::GetWindowPos();
         m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x,
                                 viewportMinRegion.y + viewportOffset.y };
         m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x,
@@ -435,7 +513,7 @@ namespace Redflag {
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
-        // 2. �Զ� Resize
+        // Viewport 大小变化时同步帧缓冲和相机宽高比
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
         {
@@ -445,13 +523,13 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        // 3. ���Ƴ�������
+        // 将帧缓冲 attachment0 的颜色输出渲染到 ImGui Image
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
         ImGui::Image((void*)(uint64_t)textureID,
             ImVec2(m_ViewportSize.x, m_ViewportSize.y),
             ImVec2(0, 1), ImVec2(1, 0));
 
-        // 4. ��ק���س����ļ�
+        // 拖拽 .redflag 场景文件到 Viewport 时直接打开
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_FILE"))
@@ -459,7 +537,6 @@ namespace Redflag {
                 const char* droppedPath = (const char*)payload->Data;
                 if (droppedPath)
                 {
-                    // ��ֹͣ����
                     if (m_SceneState != SceneState::Edit)
                         OnSceneStop();
 
@@ -485,7 +562,7 @@ namespace Redflag {
             ImGui::EndDragDropTarget();
         }
 
-        // 5. Gizmos
+        // Gizmo（平移/旋转/缩放，Edit 和 Simulate 下均可用）
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
         if (selectedEntity && m_GizmoType != -1)
         {
@@ -496,12 +573,12 @@ namespace Redflag {
                 m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
             const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
-            glm::mat4        cameraView = m_EditorCamera.GetViewMatrix();
+            glm::mat4        cameraView       = m_EditorCamera.GetViewMatrix();
 
             auto& tc = selectedEntity.GetComponent<TransformComponent>();
             glm::mat4 transform = tc.GetTransform();
 
-            bool  snap = Input::IsKeyPressed(RF_KEY_LEFT_CONTROL);
+            bool  snap      = Input::IsKeyPressed(RF_KEY_LEFT_CONTROL);
             float snapValue = (m_GizmoType == ImGuizmo::OPERATION::ROTATE) ? 45.0f : 0.5f;
             float snapValues[3] = { snapValue, snapValue, snapValue };
 
@@ -516,15 +593,14 @@ namespace Redflag {
                 Math::DecomposeTransform(transform, translation, rotation, scale);
 
                 glm::vec3 deltaRotation = rotation - tc.Rotation;
-                tc.Translation = translation;
-                tc.Rotation += deltaRotation;
-                tc.Scale = scale;
+                tc.Translation  = translation;
+                tc.Rotation    += deltaRotation;
+                tc.Scale        = scale;
             }
         }
 
-        ImGui::End(); // End Viewport
-
-        ImGui::End(); // End DockSpace
+        ImGui::End(); // Viewport
+        ImGui::End(); // DockSpace
     }
 
     void ForgeLayer::OnEvent(Event& event)
@@ -543,28 +619,27 @@ namespace Redflag {
             return false;
 
         bool control = Input::IsKeyPressed(RF_KEY_LEFT_CONTROL) ||
-            Input::IsKeyPressed(RF_KEY_RIGHT_CONTROL);
-        bool shift = Input::IsKeyPressed(RF_KEY_LEFT_SHIFT) ||
-            Input::IsKeyPressed(RF_KEY_RIGHT_SHIFT);
+                       Input::IsKeyPressed(RF_KEY_RIGHT_CONTROL);
+        bool shift   = Input::IsKeyPressed(RF_KEY_LEFT_SHIFT)   ||
+                       Input::IsKeyPressed(RF_KEY_RIGHT_SHIFT);
 
         switch (e.GetKeyCode())
         {
-        case RF_KEY_N: if (control)          NewScene();    break;
-        case RF_KEY_O: if (control)          OpenScene();   break;
+        case RF_KEY_N: if (control)         NewScene();    break;
+        case RF_KEY_O: if (control)         OpenScene();   break;
         case RF_KEY_S:
             if (control && shift) SaveSceneAs();
             else if (control)     SaveScene();
             break;
         case RF_KEY_D:
-            if (control)
-            OnDuplicateEntity();
+            if (control) OnDuplicateEntity();
             break;
 
-            // Gizmos
-        case RF_KEY_Q: m_GizmoType = -1;                              break;
-        case RF_KEY_W: m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;  break;
-        case RF_KEY_R: m_GizmoType = ImGuizmo::OPERATION::ROTATE;     break;
-        case RF_KEY_E: m_GizmoType = ImGuizmo::OPERATION::SCALE;      break;
+        // Gizmo 切换（Q=无 W=移动 R=旋转 E=缩放）
+        case RF_KEY_Q: m_GizmoType = -1;                             break;
+        case RF_KEY_W: m_GizmoType = ImGuizmo::OPERATION::TRANSLATE; break;
+        case RF_KEY_R: m_GizmoType = ImGuizmo::OPERATION::ROTATE;    break;
+        case RF_KEY_E: m_GizmoType = ImGuizmo::OPERATION::SCALE;     break;
         }
 
         return false;
@@ -574,6 +649,7 @@ namespace Redflag {
     {
         if (e.GetMouseButton() == RF_MOUSE_BUTTON_LEFT)
         {
+            // 左键点击 Viewport 且未操作 Gizmo 时，选中悬停实体
             if (m_ViewportHovered && !ImGuizmo::IsOver() &&
                 !Input::IsKeyPressed(RF_KEY_LEFT_ALT))
             {
@@ -583,28 +659,56 @@ namespace Redflag {
         return false;
     }
 
+    // ==================================================================
+    // 场景状态切换
+    //
+    //  Edit ──[Play 按钮]──────► Play
+    //  Play ──[Stop 按钮]──────► Edit
+    //  Edit ──[Simulate 按钮]──► Simulate
+    //  Simulate ──[Stop 按钮]──► Edit
+    //
+    //  Play     : 复制副本 → OnRuntimeStart（脚本+物理）→ 场景主相机渲染
+    //  Simulate : 复制副本 → OnSimulationStart（仅物理）→ EditorCamera 渲染
+    //  Stop     : 停止物理/脚本，丢弃副本，恢复 m_EditorScene
+    // ==================================================================
+
     void ForgeLayer::OnScenePlay()
     {
         if (m_SceneState != SceneState::Edit)
             return;
 
-        m_ActiveScene = Scene::Copy(m_EditorScene);
-        m_ActiveScene->OnRuntimeStart();
-        m_SceneState = SceneState::Play;
+        m_ActiveScene = Scene::Copy(m_EditorScene); // 复制，保护编辑数据
+        m_ActiveScene->OnRuntimeStart();            // 启动脚本 + 物理
+        m_SceneState  = SceneState::Play;
     }
 
     void ForgeLayer::OnSceneStop()
     {
-        m_SceneState = SceneState::Edit;
-        m_ActiveScene->OnRuntimeStop();
+        m_ActiveScene->OnRuntimeStop(); // 停止物理
+        m_ActiveScene = m_EditorScene;  // 恢复编辑场景
+        m_SceneState  = SceneState::Edit;
+    }
 
-        // �лر༭���������������ü��������Զ����٣�
-        m_ActiveScene = m_EditorScene;
-        m_SceneState = SceneState::Edit;
+    void ForgeLayer::OnSceneSimulate()
+    {
+        if (m_SceneState != SceneState::Edit)
+            return;
+
+        m_ActiveScene = Scene::Copy(m_EditorScene); // 复制，保护编辑数据
+        m_ActiveScene->OnSimulationStart();         // 仅启动物理
+        m_SceneState  = SceneState::Simulate;
+    }
+
+    void ForgeLayer::OnSceneSimulateStop()
+    {
+        m_ActiveScene->OnSimulationStop(); // 停止物理
+        m_ActiveScene = m_EditorScene;     // 恢复编辑场景
+        m_SceneState  = SceneState::Edit;
     }
 
     void ForgeLayer::OnDuplicateEntity()
     {
+        // 只允许在编辑模式下复制实体
         if (m_SceneState != SceneState::Edit)
             return;
 
@@ -623,7 +727,7 @@ namespace Redflag {
         }
         else
         {
-            SaveSceneAs();
+            SaveSceneAs(); // 首次保存时弹出路径选择
         }
     }
 
@@ -644,42 +748,31 @@ namespace Redflag {
 
     void ForgeLayer::OpenScene()
     {
-        // 1. ������ڲ��ţ���ֹͣ
+        // 如果当前在运行/模拟，先停止再打开
         if (m_SceneState != SceneState::Edit)
             OnSceneStop();
 
-        // 2. �����ļ�ѡ��Ի���
         std::string filepath = FileDialogs::OpenFile("Redflag Scene (*.redflag)\0*.redflag\0");
         if (!filepath.empty())
         {
-            // 3. �����ͣʵ��
             m_HoveredEntity = {};
 
-            // 4. �����µı༭������
             m_EditorScene = CreateRef<Scene>();
             m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
-            // 5. ���ļ��������ݵ��༭������
             SceneSerializer serializer(m_EditorScene);
             if (serializer.Deserialize(filepath))
             {
-                // 6. ���سɹ�������״̬
-                m_ActiveScene = m_EditorScene;
+                m_ActiveScene   = m_EditorScene;
                 m_SceneFilePath = filepath;
-
-                // 7. ���� Hierarchy ���
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
-
                 RF_CORE_INFO("Successfully opened scene: {0}", filepath);
             }
             else
             {
-                // 8. ����ʧ�ܣ��ָ��ճ���
-                m_EditorScene = CreateRef<Scene>();
-                m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                // 反序列化失败，回退到空场景
                 m_ActiveScene = m_EditorScene;
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
-
                 RF_CORE_ERROR("Failed to open scene: {0}", filepath);
             }
         }
@@ -697,13 +790,7 @@ namespace Redflag {
         m_EditorScene = CreateRef<Scene>();
         m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         m_ActiveScene = m_EditorScene;
-
         m_SceneHierachyPanel.SetContext(m_EditorScene);
-        m_SceneFilePath.clear();
-
-        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x,
-            (uint32_t)m_ViewportSize.y);
-        m_SceneHierachyPanel.SetContext(m_ActiveScene);
         m_SceneFilePath.clear();
 
         m_Framebuffer->Bind();

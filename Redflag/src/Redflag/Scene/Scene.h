@@ -28,9 +28,13 @@ namespace Redflag {
 		void OnRuntimeStart();
 		void OnRuntimeStop();
 
-		//OnUpdate;·ÖÎªEditorºÍRuntimae
+		void OnSimulationStart();
+		void OnSimulationStop();
+
+		//OnUpdate;ï¿½ï¿½ÎªEditorï¿½ï¿½Runtimeï¿½ï¿½Simulation
 		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
+		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
@@ -42,6 +46,9 @@ namespace Redflag {
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+
+		void OnPhysics2DStart();
+		void OnPhysics2DStop();
 	private:
 		entt::registry m_Registry;
 

@@ -124,67 +124,22 @@ namespace Redflag {
 
     void Scene::OnRuntimeStart()
     {
-        m_PhysicsWorld = new b2World({ 0.f,-9.8f });
-        auto view = m_Registry.view<RigidBody2DComponent>();
-        for (auto e : view)
-        {
-            Entity entity = { e,this };
-            auto& transform = entity.GetComponent<TransformComponent>();
-            auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-            //box2DBody�ӹܵ�ǰtransform
-            b2BodyDef bodyDef;
-            bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
-            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-            bodyDef.angle = transform.Rotation.z;
-
-            b2Body* body=m_PhysicsWorld->CreateBody(&bodyDef);
-            body->SetFixedRotation(rb2d.FixedRotation);
-
-            if (entity.HasComponent<BoxCollider2DComponent>())
-            {
-                auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
-                b2PolygonShape boxShape;
-                boxShape.SetAsBox(transform.Scale.x*bc2d.Size.x, transform.Scale.y*bc2d.Size.y);
-
-                //box2DBody�ӹܵ�ǰ��ײ����
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &boxShape;
-                fixtureDef.density = bc2d.Density;
-                fixtureDef.friction = bc2d.Friction;
-                fixtureDef.restitution = bc2d.Restitution;
-                fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
-            }
-
-            if (entity.HasComponent<CircleCollider2DComponent>())
-            {
-                auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
-
-                b2CircleShape circleShape;
-                // 圆心偏移（局部空间，Box2D 单位与 Transform 一致）
-                circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
-                // 半径需乘以实体的均匀缩放（取 x/y 中的较大值以保持碰撞形状合理）
-                circleShape.m_radius = glm::max(transform.Scale.x, transform.Scale.y) * cc2d.Radius;
-
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &circleShape;
-                fixtureDef.density              = cc2d.Density;
-                fixtureDef.friction             = cc2d.Friction;
-                fixtureDef.restitution          = cc2d.Restitution;
-                fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
-            }
-
-            //���浽���
-            rb2d.RuntimeBody = body;
-        }
+        OnPhysics2DStart();
     }
 
     void Scene::OnRuntimeStop()
     {
-        delete m_PhysicsWorld;
-        m_PhysicsWorld = nullptr;
+        OnPhysics2DStop();
+    }
+
+    void Scene::OnSimulationStart()
+    {
+        OnPhysics2DStart();
+    }
+
+    void Scene::OnSimulationStop()
+    {
+        OnPhysics2DStop();
     }
 
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
@@ -337,6 +292,34 @@ namespace Redflag {
         }
     }
 
+    void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+    {
+        // 步进物理（不执行 NativeScript，这是与 OnUpdateRuntime 的核心区别）
+        {
+            const int32_t velocityIterations = 6;
+            const int32_t positionIterations = 2;
+            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+
+            // 将 Box2D 计算结果同步回 TransformComponent
+            auto view = m_Registry.view<RigidBody2DComponent>();
+            for (auto e : view)
+            {
+                Entity entity = { e, this };
+                auto& transform = entity.GetComponent<TransformComponent>();
+                auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+                b2Body* body = (b2Body*)rb2d.RuntimeBody;
+                const auto& position = body->GetPosition();
+                transform.Translation.x = position.x;
+                transform.Translation.y = position.y;
+                transform.Rotation.z = body->GetAngle();
+            }
+        }
+
+        // 用 EditorCamera 渲染（与 OnUpdateEditor 相同的渲染路径）
+        OnUpdateEditor(ts, camera);
+    }
+
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
         m_ViewportWidth = width;
@@ -382,6 +365,70 @@ namespace Redflag {
                 return Entity{ entity,this };
         }
         return{};
+    }
+
+    void Scene::OnPhysics2DStart()
+    {
+        m_PhysicsWorld = new b2World({ 0.f,-9.8f });
+        auto view = m_Registry.view<RigidBody2DComponent>();
+        for (auto e : view)
+        {
+            Entity entity = { e,this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+            //box2DBody�ӹܵ�ǰtransform
+            b2BodyDef bodyDef;
+            bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
+            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+            bodyDef.angle = transform.Rotation.z;
+
+            b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+            body->SetFixedRotation(rb2d.FixedRotation);
+
+            if (entity.HasComponent<BoxCollider2DComponent>())
+            {
+                auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+                b2PolygonShape boxShape;
+                boxShape.SetAsBox(transform.Scale.x * bc2d.Size.x, transform.Scale.y * bc2d.Size.y);
+
+                //box2DBody�ӹܵ�ǰ��ײ����
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &boxShape;
+                fixtureDef.density = bc2d.Density;
+                fixtureDef.friction = bc2d.Friction;
+                fixtureDef.restitution = bc2d.Restitution;
+                fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
+
+            if (entity.HasComponent<CircleCollider2DComponent>())
+            {
+                auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+                b2CircleShape circleShape;
+                // 圆心偏移（局部空间，Box2D 单位与 Transform 一致）
+                circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
+                // 半径需乘以实体的均匀缩放（取 x/y 中的较大值以保持碰撞形状合理）
+                circleShape.m_radius = glm::max(transform.Scale.x, transform.Scale.y) * cc2d.Radius;
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &circleShape;
+                fixtureDef.density = cc2d.Density;
+                fixtureDef.friction = cc2d.Friction;
+                fixtureDef.restitution = cc2d.Restitution;
+                fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
+
+            rb2d.RuntimeBody = body;
+        }
+    }
+
+    void Scene::OnPhysics2DStop()
+    {
+        delete m_PhysicsWorld;
+        m_PhysicsWorld = nullptr;
     }
 
     template<typename T>
