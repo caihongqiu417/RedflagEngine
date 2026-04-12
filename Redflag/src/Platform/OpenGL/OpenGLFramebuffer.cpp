@@ -22,7 +22,7 @@ namespace Redflag {
 			glBindTexture(TextureTarget(multisampled),id);
 		}
 
-		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat,GLenum format, uint32_t width, uint32_t height, int index)
+		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, GLenum type, uint32_t width, uint32_t height, int index)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
@@ -32,10 +32,11 @@ namespace Redflag {
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				GLint filter = (type == GL_INT) ? GL_NEAREST : GL_LINEAR;
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -155,10 +156,10 @@ namespace Redflag {
 				switch (m_ColorAttachmentSpecifications[i].TextureFormat)
 				{
 				case FramebufferTextureFormat::RGBA8:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8,GL_RGBA, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, m_Specification.Width, m_Specification.Height, i);
 					break;
 				case FramebufferTextureFormat::RED_INTEGER:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, GL_INT, m_Specification.Width, m_Specification.Height, i);
 					break;
 				}
 			}
@@ -186,10 +187,10 @@ namespace Redflag {
 			glDrawBuffer(GL_NONE);
 		}
 
-		// === ¼ì²éÖ¡»º³åÇøÍêÕûÐÔ ===
+		// === ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
 		RF_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "framebuffer is not completed!");
 
-		// === ½â°óÖ¡»º³åÇø ===
+		// === ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -197,7 +198,7 @@ namespace Redflag {
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
-		// È·±£äÖÈ¾µÄÍ¼ÏñºÍÕû¸öÖ¡»º³åÇø´óÐ¡Ò»ÖÂ£¬±ÜÃâÀ­Éì»ò²Ã¼ô
+		// È·ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Ò»ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 
 
@@ -219,13 +220,15 @@ namespace Redflag {
 	int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
 		RF_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		RF_CORE_ASSERT(m_ColorAttachmentSpecifications[attachmentIndex].TextureFormat == FramebufferTextureFormat::RED_INTEGER,
+			"ReadPixel must read from RED_INTEGER attachment");
 
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
 		glReadPixels(x, y, 
 			1, 1,
-			GL_RED_INTEGER//¶ÁÈ¡ºìÉ«Í¨µÀ
-			, GL_INT, // ×ª»»³ÉÕûÊý
+			GL_RED_INTEGER//ï¿½ï¿½È¡ï¿½ï¿½É«Í¨ï¿½ï¿½
+			, GL_INT, // ×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			&pixelData);
 		return pixelData;
 	}
@@ -237,7 +240,7 @@ namespace Redflag {
 		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
 		spec.TextureFormat;
 
-		//Çå³ý¸½¼þµÄÑÕÉ«
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::RedflagFBTextureToGL(spec.TextureFormat), GL_INT,&value);
 	}
 

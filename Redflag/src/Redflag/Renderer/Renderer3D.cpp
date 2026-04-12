@@ -20,6 +20,7 @@ namespace Redflag
 		Ref<Mesh>     MeshData;
 		glm::mat4     Transform;
 		Ref<Material> Mat;       // 为 nullptr 时使用默认白色纯色材质
+		int           EntityID = -1;
 	};
 
 	struct Renderer3DData
@@ -42,11 +43,13 @@ namespace Redflag
 			glm::mat4 Transform;
 		};
 
-		// std140: vec4 + vec4 = 32 bytes
+		// std140: vec4 + vec4 + ivec4 = 48 bytes
 		struct MaterialData
 		{
 			glm::vec4 Color;
 			glm::vec4 Params; // x = UseTexture
+			int       EntityID;
+			int       _pad[3]; // std140 padding to 16-byte boundary
 		};
 
 		CameraData    CameraBuffer;
@@ -195,6 +198,8 @@ namespace Redflag
 			// 上传逐 draw 的变换（每次必须更新）
 			s_Data.TransformBuffer.Transform = cmd.Transform;
 			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
+			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
+			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
 
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
@@ -218,25 +223,25 @@ namespace Redflag
 	// 公开接口：推入队列
 	// -------------------------------------------------------------------
 
-	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		if (!mesh) return;
-		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(color) });
+		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(color), entityID });
 	}
 
-	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture)
+	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture, int entityID)
 	{
 		if (!mesh) return;
-		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(texture) });
+		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(texture), entityID });
 	}
 
-	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material)
+	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material, int entityID)
 	{
 		if (!mesh) return;
-		s_Data.DrawCommands.push_back({ mesh, transform, material });
+		s_Data.DrawCommands.push_back({ mesh, transform, material, entityID });
 	}
 
-	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		if (!model) return;
 
@@ -249,7 +254,7 @@ namespace Redflag
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
 			Ref<Material> mat = subMesh.Mat ? subMesh.Mat : fallback;
-			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat });
+			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat, entityID });
 		}
 	}
 }

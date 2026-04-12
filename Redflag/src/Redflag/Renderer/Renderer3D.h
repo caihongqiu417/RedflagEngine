@@ -31,12 +31,12 @@ namespace Redflag
 		static void EndScene();
 
 		// 提交到队列（不会立即绘制）
-		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
-		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture);
-		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material);
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture, int entityID = -1);
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material, int entityID = -1);
 
 		// 绘制整个 Model（把所有 SubMesh 推入队列）
-		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
 
 		static void ResetStats();
 		static Statistics GetStats();

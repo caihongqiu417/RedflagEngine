@@ -60,6 +60,7 @@ namespace Redflag {
 		Entity m_SecondCamera;
 
 		Entity m_HoveredEntity;
+		int m_LastHoveredEntityID = -1;
 
 		bool m_PrimaryCamera = true;
 

@@ -161,9 +161,7 @@ namespace Redflag {
         if (optimize)
             options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-        // [新增] 关键的一行！开启自动映射
         options.SetAutoMapLocations(true);
-        // [新增] 也可以加上这一行，防止某些 binding 报错
         options.SetAutoBindUniforms(true);
 
         std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
@@ -176,8 +174,16 @@ namespace Redflag {
             std::filesystem::path shaderFilePath = m_FilePath;
             std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageToString(stage) + ".vulkan.spv");
 
+            bool cacheValid = false;
+            if (std::filesystem::exists(cachedPath) && std::filesystem::exists(shaderFilePath))
+            {
+                auto cacheWriteTime = std::filesystem::last_write_time(cachedPath);
+                auto sourceWriteTime = std::filesystem::last_write_time(shaderFilePath);
+                cacheValid = cacheWriteTime >= sourceWriteTime;
+            }
+
             std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
-            if (in.is_open())
+            if (cacheValid && in.is_open())
             {
                 in.seekg(0, std::ios::end);
                 auto size = in.tellg();
@@ -220,7 +226,7 @@ namespace Redflag {
 
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
-        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5); // 修复枚举
+        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5); // 锟睫革拷枚锟斤拷
         const bool optimize = false;
         if (optimize)
             options.SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -267,7 +273,7 @@ namespace Redflag {
         for (auto&& [stage, spirv] : m_OpenGLSPIRV)
         {
             GLuint shaderID = shaderIDs.emplace_back(glCreateShader(stage));
-            glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), (GLsizei)(spirv.size() * sizeof(uint32_t))); // 添加 cast
+            glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), (GLsizei)(spirv.size() * sizeof(uint32_t))); // 锟斤拷锟斤拷 cast
             glSpecializeShader(shaderID, "main", 0, nullptr, nullptr);
             glAttachShader(program, shaderID);
         }
@@ -318,9 +324,9 @@ namespace Redflag {
             for (const auto& resource : resources.uniform_buffers)
             {
                 const auto& bufferType = compiler.get_type(resource.base_type_id);
-                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType); // 添加 cast
+                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType); // 锟斤拷锟斤拷 cast
                 uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-                int memberCount = (int)bufferType.member_types.size(); // 添加 cast
+                int memberCount = (int)bufferType.member_types.size(); // 锟斤拷锟斤拷 cast
 
                 RF_CORE_TRACE("  {0}", resource.name);
                 RF_CORE_TRACE("    Size = {0}, Binding = {1}, Members = {2}", bufferSize, binding, memberCount);

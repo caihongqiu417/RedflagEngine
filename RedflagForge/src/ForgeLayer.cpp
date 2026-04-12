@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Redflag/Renderer/Shader.h"
+#include "Redflag/Renderer/RenderCommand.h"
 #include"Redflag/Scene/CameraControllerScript.h"
 #include "Redflag/Scene/SceneSerializer.h"
 #include "Redflag/Utils/PlatformUtils.h" 
@@ -112,6 +113,7 @@ namespace Redflag {
             if (!ImGuizmo::IsUsing())
             {
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+                m_LastHoveredEntityID = pixelData;
                 if (pixelData != -1)
                 {
                     entt::entity e = (entt::entity)pixelData;
@@ -235,15 +237,29 @@ namespace Redflag {
 
             ImGui::Begin("Profile");
 
-            std::string name = "None";
+            Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
+
+            std::string hoveredName = "None";
             if (m_HoveredEntity)
-                name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
-            ImGui::Text("Hovered Entity: %s", name.c_str());
+                hoveredName = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+
+            std::string selectedName = "None";
+            if (selectedEntity)
+                selectedName = selectedEntity.GetComponent<TagComponent>().Tag;
+
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.55f, 0.20f, 1.0f));
+            ImGui::Text("Hovered Entity: %s", hoveredName.c_str());
+            ImGui::PopStyleColor();
+            ImGui::Text("Selected Entity: %s", selectedName.c_str());
+            ImGui::Text("Pick ID (raw): %d", m_LastHoveredEntityID);
+            ImGui::Separator();
 
             auto stats2D = Renderer2D::GetStats();
             auto stats3D = Renderer3D::GetStats();
             uint32_t totalVertices = stats2D.GetTotalVertexCount() + stats3D.VertexCount;
             uint32_t totalIndices = stats2D.GetTotalIndexCount() + stats3D.IndexCount;
+            ImGui::Text("Main Render Stats");
+            ImGui::Separator();
             ImGui::Text("2D Draw Calls: %d", stats2D.DrawCalls);
             ImGui::Text("3D Draw Calls: %d", stats3D.DrawCalls);
             ImGui::Text("Total Draw Calls: %d", stats2D.DrawCalls + stats3D.DrawCalls);

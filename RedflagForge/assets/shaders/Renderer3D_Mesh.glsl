@@ -33,6 +33,7 @@ void main()
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityID;
 
 layout(location = 0) in vec3 v_Normal;
 layout(location = 1) in vec2 v_TexCoord;
@@ -43,6 +44,7 @@ layout(std140, binding = 2) uniform Material
 {
     vec4 u_Color;
     vec4 u_Params; // x = UseTexture (0=color, 1=texture)
+    int  u_EntityID;
 };
 
 layout(binding = 3) uniform sampler2D u_Texture;
@@ -53,4 +55,6 @@ void main()
         o_Color = texture(u_Texture, v_TexCoord);
     else
         o_Color = u_Color;
+
+    o_EntityID = u_EntityID;
 }

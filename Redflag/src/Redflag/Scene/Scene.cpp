@@ -187,9 +187,9 @@ namespace Redflag {
                 if (mr.MeshData)
                 {
                     if (mr.Texture)
-                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture);
+                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
                     else
-                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color);
+                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
                 }
             });
 
@@ -202,7 +202,7 @@ namespace Redflag {
                     mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
                 if (mr.ModelAsset)
-                    Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color);
+                    Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
             });
 
         Renderer3D::EndScene();
@@ -296,7 +296,7 @@ namespace Redflag {
                         mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
                     if (mr.ModelAsset)
-                        Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color);
+                        Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
                 });
             Renderer3D::EndScene();
         }
