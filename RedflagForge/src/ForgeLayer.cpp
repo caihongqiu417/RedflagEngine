@@ -240,11 +240,22 @@ namespace Redflag {
                 name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
             ImGui::Text("Hovered Entity: %s", name.c_str());
 
-            auto stats = Renderer2D::GetStats();
-            ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-            ImGui::Text("Quads: %d", stats.QuadCount);
-            ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-            ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+            auto stats2D = Renderer2D::GetStats();
+            auto stats3D = Renderer3D::GetStats();
+            uint32_t totalVertices = stats2D.GetTotalVertexCount() + stats3D.VertexCount;
+            uint32_t totalIndices = stats2D.GetTotalIndexCount() + stats3D.IndexCount;
+            ImGui::Text("2D Draw Calls: %d", stats2D.DrawCalls);
+            ImGui::Text("3D Draw Calls: %d", stats3D.DrawCalls);
+            ImGui::Text("Total Draw Calls: %d", stats2D.DrawCalls + stats3D.DrawCalls);
+            ImGui::Text("3D Submitted: %d", stats3D.SubmittedCommands);
+            ImGui::Text("3D Vertices: %d", stats3D.VertexCount);
+            ImGui::Text("3D Indices: %d", stats3D.IndexCount);
+            ImGui::Text("Total Vertices: %d", totalVertices);
+            ImGui::Text("Total Indices: %d", totalIndices);
+            ImGui::Separator();
+            ImGui::Text("2D Quads: %d", stats2D.QuadCount);
+            ImGui::Text("2D Vertices: %d", stats2D.GetTotalVertexCount());
+            ImGui::Text("2D Indices: %d", stats2D.GetTotalIndexCount());
 
             ImGui::End();
         }

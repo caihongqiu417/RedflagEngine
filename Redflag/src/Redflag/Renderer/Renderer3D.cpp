@@ -58,6 +58,7 @@ namespace Redflag
 
 		// 统计
 		uint32_t DrawCallCount = 0;
+		Renderer3D::Statistics Stats;
 	};
 
 	static Renderer3DData s_Data;
@@ -107,6 +108,7 @@ namespace Redflag
 		s_Data.MaterialUniformBuffer  = UniformBuffer::Create(sizeof(Renderer3DData::MaterialData), 2);
 
 		s_Data.DrawCommands.reserve(1024);
+		ResetStats();
 	}
 
 	void Renderer3D::Shutdown()
@@ -126,7 +128,7 @@ namespace Redflag
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
-		s_Data.DrawCallCount = 0;
+		ResetStats();
 	}
 
 	void Renderer3D::BeginScene(const glm::mat4& viewProjection)
@@ -135,11 +137,22 @@ namespace Redflag
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
-		s_Data.DrawCallCount = 0;
+		ResetStats();
 	}
 
 	void Renderer3D::EndScene()
 	{
+		s_Data.Stats.SubmittedCommands = static_cast<uint32_t>(s_Data.DrawCommands.size());
+		s_Data.Stats.VertexCount = 0;
+		s_Data.Stats.IndexCount = 0;
+		for (const auto& cmd : s_Data.DrawCommands)
+		{
+			if (!cmd.MeshData)
+				continue;
+			s_Data.Stats.VertexCount += cmd.MeshData->GetVertexCount();
+			s_Data.Stats.IndexCount += cmd.MeshData->GetIndexCount();
+		}
+
 		if (s_Data.DrawCommands.empty())
 			return;
 
@@ -187,6 +200,18 @@ namespace Redflag
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
 			s_Data.DrawCallCount++;
 		}
+	}
+
+	void Renderer3D::ResetStats()
+	{
+		s_Data.DrawCallCount = 0;
+		s_Data.Stats = {};
+	}
+
+	Renderer3D::Statistics Renderer3D::GetStats()
+	{
+		s_Data.Stats.DrawCalls = s_Data.DrawCallCount;
+		return s_Data.Stats;
 	}
 
 	// -------------------------------------------------------------------

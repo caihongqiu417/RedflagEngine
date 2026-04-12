@@ -25,6 +25,7 @@ namespace Redflag
 		void Bind() const;
 		void Unbind() const;
 
+		uint32_t GetVertexCount() const { return m_VertexCount; }
 		uint32_t GetIndexCount() const { return m_IndexCount; }
 		const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
 
@@ -36,6 +37,7 @@ namespace Redflag
 
 	private:
 		Ref<VertexArray>  m_VertexArray;
+		uint32_t          m_VertexCount = 0;
 		uint32_t          m_IndexCount = 0;
 	};
 }

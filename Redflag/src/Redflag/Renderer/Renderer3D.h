@@ -13,6 +13,14 @@ namespace Redflag
 	class Renderer3D
 	{
 	public:
+			struct Statistics
+			{
+				uint32_t DrawCalls = 0;
+				uint32_t SubmittedCommands = 0;
+				uint32_t VertexCount = 0;
+				uint32_t IndexCount = 0;
+			};
+
 		static void Init();
 		static void Shutdown();
 
@@ -29,5 +37,8 @@ namespace Redflag
 
 		// 绘制整个 Model（把所有 SubMesh 推入队列）
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+
+		static void ResetStats();
+		static Statistics GetStats();
 	};
 }
