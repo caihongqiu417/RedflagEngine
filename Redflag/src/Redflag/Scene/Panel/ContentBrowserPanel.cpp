@@ -25,7 +25,10 @@ namespace Redflag {
 
         // 尝试从 assets/icons 加载图标，若不存在使用占位
         m_DirectoryIcon = loadOrPlaceholder("assets/icons/FolderIcon.png", 0xFFAAAAFF);
-        m_FileIcon = loadOrPlaceholder("assets/icons/FileIcon.png", 0xFFFFFFFF);
+        m_FileIcon      = loadOrPlaceholder("assets/icons/FileIcon.png",   0xFFFFFFFF);
+        m_ImageIcon     = loadOrPlaceholder("assets/icons/ImageIcon.png",  0xFF88FFAA);
+        m_SceneIcon     = loadOrPlaceholder("assets/icons/SceneIcon.png",  0xFF88CCFF);
+        m_ModelIcon     = loadOrPlaceholder("assets/icons/ModelIcon.png",  0xFFFFCC88);
     }
 
     Ref<Texture2D> ContentBrowserPanel::GetIconForPath(const std::filesystem::path& path)
@@ -33,11 +36,27 @@ namespace Redflag {
         if (std::filesystem::is_directory(path))
             return m_DirectoryIcon;
 
-        // 可按扩展名查找专用图标（若已填充 m_FileTypeIcons）
         auto ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        // 图片格式
+        if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+            ext == ".bmp" || ext == ".tga" || ext == ".dds")
+            return m_ImageIcon;
+
+        // 模型格式
+        if (ext == ".obj" || ext == ".fbx" || ext == ".gltf" ||
+            ext == ".glb" || ext == ".dae" || ext == ".3ds")
+            return m_ModelIcon;
+
+        // 场景格式
+        if (ext == ".redflag")
+            return m_SceneIcon;
+
+        // 其余扩展名查专用图标表，最后回退通用图标
         if (!ext.empty() && ext[0] == '.') ext = ext.substr(1);
-        auto it = m_FileTypeIcons.find(ext);
-        if (it != m_FileTypeIcons.end())
+        auto it = m_FileTypeIcons_reserved.find(ext);
+        if (it != m_FileTypeIcons_reserved.end())
             return it->second;
 
         return m_FileIcon;
@@ -78,7 +97,7 @@ namespace Redflag {
 
         // 网格设置（可调整）
         const float padding = 16.0f;             // 单元格间距
-        const float thumbnailSize = 96.0f;       // 图标大小
+        const float thumbnailSize = 64.0f;       // 图标大小
         const float cellSize = thumbnailSize + padding;
         float panelWidth = ImGui::GetContentRegionAvail().x;
         int columnCount = (int)(panelWidth / cellSize);

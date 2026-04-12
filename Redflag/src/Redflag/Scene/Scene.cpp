@@ -325,7 +325,6 @@ namespace Redflag {
         m_ViewportWidth = width;
         m_ViewportHeight = height;
 
-        //���ӿ������AspectRatio���䣩 ������С
         auto view = m_Registry.view<CameraComponent>();
         for (auto entity : view)
         {
@@ -341,8 +340,6 @@ namespace Redflag {
     {
         Entity newEntity = CreateEntity(entity.GetName());
 
-        // CreateEntity ������ TransformComponent
-        // ������ CopyComponentIfExist ���ǣ��ڲ��� ReplaceorEmplace��
         CopyComponentIfExist<TransformComponent>(newEntity, entity);
         CopyComponentIfExist<SpriteRendererComponent>(newEntity, entity);
         CopyComponentIfExist<CircleRendererComponent>(newEntity, entity);
@@ -377,7 +374,6 @@ namespace Redflag {
             auto& transform = entity.GetComponent<TransformComponent>();
             auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
-            //box2DBody�ӹܵ�ǰtransform
             b2BodyDef bodyDef;
             bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
             bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
@@ -391,8 +387,6 @@ namespace Redflag {
                 auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
                 b2PolygonShape boxShape;
                 boxShape.SetAsBox(transform.Scale.x * bc2d.Size.x, transform.Scale.y * bc2d.Size.y);
-
-                //box2DBody�ӹܵ�ǰ��ײ����
                 b2FixtureDef fixtureDef;
                 fixtureDef.shape = &boxShape;
                 fixtureDef.density = bc2d.Density;
