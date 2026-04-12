@@ -89,6 +89,74 @@ namespace Redflag {
             case SceneState::Edit:
                 {
                     m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+
+                    // ── 编辑器覆盖层：绘制相机线框 ──
+                    Renderer2D::BeginScene(m_EditorCamera);
+                    Renderer2D::SetLineWidth(1.5f);
+
+                    auto camView = m_ActiveScene->GetRegistry().view<TransformComponent, CameraComponent>();
+                    camView.each([&](auto entity, TransformComponent& tc, CameraComponent& cc)
+                    {
+                        Entity ent = { entity, m_ActiveScene.get() };
+                        Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
+                        glm::vec4 lineColor = (sel && sel == ent)
+                            ? glm::vec4(0.95f, 0.25f, 0.25f, 1.0f)  // 选中：红色
+                            : glm::vec4(1.0f,  1.0f,  1.0f, 0.85f); // 普通：白色
+
+                        // 相机本地坐标系：-Z 为朝向，按实体 Transform 变换
+                        glm::mat4 camT = tc.GetTransform();
+                        auto xf = [&](glm::vec3 v) -> glm::vec3 {
+                            return glm::vec3(camT * glm::vec4(v, 1.0f));
+                        };
+
+                        // 机体：小矩形（相机图标正面）
+                        float bw = 0.18f, bh = 0.12f, bd = 0.10f;
+                        // 前面四顶点
+                        glm::vec3 f0 = xf({ -bw, -bh, -bd });
+                        glm::vec3 f1 = xf({  bw, -bh, -bd });
+                        glm::vec3 f2 = xf({  bw,  bh, -bd });
+                        glm::vec3 f3 = xf({ -bw,  bh, -bd });
+                        // 后面四顶点
+                        glm::vec3 b0 = xf({ -bw, -bh,  bd });
+                        glm::vec3 b1 = xf({  bw, -bh,  bd });
+                        glm::vec3 b2 = xf({  bw,  bh,  bd });
+                        glm::vec3 b3 = xf({ -bw,  bh,  bd });
+                        // 前面轮廓
+                        Renderer2D::DrawLine(f0, f1, lineColor);
+                        Renderer2D::DrawLine(f1, f2, lineColor);
+                        Renderer2D::DrawLine(f2, f3, lineColor);
+                        Renderer2D::DrawLine(f3, f0, lineColor);
+                        // 后面轮廓
+                        Renderer2D::DrawLine(b0, b1, lineColor);
+                        Renderer2D::DrawLine(b1, b2, lineColor);
+                        Renderer2D::DrawLine(b2, b3, lineColor);
+                        Renderer2D::DrawLine(b3, b0, lineColor);
+                        // 连接棱
+                        Renderer2D::DrawLine(f0, b0, lineColor);
+                        Renderer2D::DrawLine(f1, b1, lineColor);
+                        Renderer2D::DrawLine(f2, b2, lineColor);
+                        Renderer2D::DrawLine(f3, b3, lineColor);
+
+                        // 镜头锥台：朝 -Z 方向
+                        float lx = 0.28f, ly = 0.20f, lz = -0.36f;
+                        glm::vec3 l0 = xf({ -lx, -ly, lz });
+                        glm::vec3 l1 = xf({  lx, -ly, lz });
+                        glm::vec3 l2 = xf({  lx,  ly, lz });
+                        glm::vec3 l3 = xf({ -lx,  ly, lz });
+                        // 锥台前口
+                        Renderer2D::DrawLine(l0, l1, lineColor);
+                        Renderer2D::DrawLine(l1, l2, lineColor);
+                        Renderer2D::DrawLine(l2, l3, lineColor);
+                        Renderer2D::DrawLine(l3, l0, lineColor);
+                        // 从机体前面中心到锥台四角
+                        glm::vec3 fc = xf({ 0.0f, 0.0f, -bd });
+                        Renderer2D::DrawLine(fc, l0, lineColor);
+                        Renderer2D::DrawLine(fc, l1, lineColor);
+                        Renderer2D::DrawLine(fc, l2, lineColor);
+                        Renderer2D::DrawLine(fc, l3, lineColor);
+                    });
+
+                    Renderer2D::EndScene();
                     break;
                 }
             case SceneState::Play:

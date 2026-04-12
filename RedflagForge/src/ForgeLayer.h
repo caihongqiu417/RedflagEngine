@@ -78,7 +78,7 @@ namespace Redflag {
 		//Gizmo
 		int m_GizmoType = -1;
 
-		//���Ű�ť
+		//工具栏按钮
 		Ref<Texture2D> m_IconPlay, m_IconStop;
 
 		enum class SceneState

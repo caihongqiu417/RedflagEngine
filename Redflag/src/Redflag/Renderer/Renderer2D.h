@@ -41,7 +41,11 @@ namespace Redflag {
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color,int entityID=-1);
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture,float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f),int entityID=-1);
 
-		//rotationÐèÒª×ª»»³É»¡¶È£¬ÀýÈçDrawRotatedQuad(..., glm::radians(45.0f), ...);	
+		// Lines (editor overlay)
+		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
+		static void SetLineWidth(float width);
+
+		//rotationï¿½ï¿½Òª×ªï¿½ï¿½ï¿½É»ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½DrawRotatedQuad(..., glm::radians(45.0f), ...);	
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f,const glm::vec4 & tintColor = glm::vec4(1.0f));

@@ -21,14 +21,18 @@ namespace Redflag
     //--------------------------------------------------------------------------
     struct QuadVertex
     {
-        glm::vec3 Position;      // ����λ�ã�ģ�Ϳռ����꣬���任��Ϊ�������꣩
-        glm::vec4 Color;         // ������ɫ��RGBA��
-        glm::vec2 TexCoord;      // �������꣨UV����Χ0~1��
-        float textureIndex;          // ����������0=��ɫ������1~31=����������
+        glm::vec3 Position;
+        glm::vec4 Color;
+        glm::vec2 TexCoord;
+        float textureIndex;
         float TilingFactor;
-
-        //�༭�����У�����ʱ��Ϸʱɾ��
         int EntityID=0;
+    };
+
+    struct LineVertex
+    {
+        glm::vec3 Position;
+        glm::vec4 Color;
     };
 
     //--------------------------------------------------------------------------
@@ -60,7 +64,17 @@ namespace Redflag
         //========== �������� ==========
         glm::vec4 QuadVertexPositions[4];                    // �ı��α�׼����λ�ã�����Ϊԭ�㣬��Χ-0.5~0.5��
 
-        Ref<UniformBuffer> CameraUniformBuffer; // [����]
+        Ref<UniformBuffer> CameraUniformBuffer;
+
+        // ── 线段 ──
+        static const uint32_t MaxLines    = 4096;
+        static const uint32_t MaxLineVerts = MaxLines * 2;
+        Ref<VertexArray>  LineVertexArray;
+        Ref<VertexBuffer> LineVertexBuffer;
+        Ref<Shader>       LineShader;
+        uint32_t          LineVertexCount = 0;
+        LineVertex*       LineVertexBufferBase = nullptr;
+        LineVertex*       LineVertexBufferPtr  = nullptr;
 
         Renderer2D::Statistics Stas;
     };
@@ -149,6 +163,17 @@ namespace Redflag
         // ��С�� sizeof(mat4) = 64�ֽ�
         // Binding Point = 0 (����Լ�� 0 �Ų�λ�� Camera)
         s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
+
+        // ── 初始化线段缓冲 ──
+        s_Data.LineVertexArray  = VertexArray::Create();
+        s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxLineVerts * sizeof(LineVertex));
+        s_Data.LineVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float4, "a_Color"    },
+        });
+        s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
+        s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxLineVerts];
+        s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
     }
 
     //==========================================================================
@@ -157,8 +182,7 @@ namespace Redflag
     void Renderer2D::Shutdown()
     {
         RF_PROFILE_FUNCTION();
-        // TODO: �ͷ�CPU�˷���Ļ������ڴ�
-        // delete[] s_Data.QuadVertexBufferBase;
+        delete[] s_Data.LineVertexBufferBase;
     }
 
     //==========================================================================
@@ -175,10 +199,13 @@ namespace Redflag
         s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
 
 
-        // ����������״̬
-        s_Data.QuadIndexCount = 0;                           // �����������
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // ����д��ָ�뵽��������ͷ
-        s_Data.TextureSlotIndex = 1;                          // ����������������0���ã�
+        // ────────────────────────────────────────────────────────────
+        s_Data.QuadIndexCount = 0;
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+        s_Data.TextureSlotIndex = 1;
+
+        s_Data.LineVertexCount = 0;
+        s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
     }
 
     //==========================================================================
@@ -195,10 +222,12 @@ namespace Redflag
         s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
 
 
-        // ����������״̬
-        s_Data.QuadIndexCount = 0;                           // �����������
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // ����д��ָ�뵽��������ͷ
-        s_Data.TextureSlotIndex = 1;                          // ����������������0���ã�
+        s_Data.QuadIndexCount = 0;
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+        s_Data.TextureSlotIndex = 1;
+
+        s_Data.LineVertexCount = 0;
+        s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
     }
 
     //==========================================================================
@@ -225,18 +254,25 @@ namespace Redflag
     {
         RF_PROFILE_FUNCTION();
 
-        // ֻ�е��ж���Ҫ����ʱ���ϴ��ͻ���
         if (s_Data.QuadIndexCount > 0)
         {
-            // ����ʵ��ʹ�õ����ݴ�С
             uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
                 (uint8_t*)s_Data.QuadVertexBufferBase);
-
-            // ��CPU���ۻ��Ķ��������ϴ���GPU
             s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
-
-            // ִ�л���
             Flush();
+        }
+
+        // 刷新线段
+        if (s_Data.LineVertexCount > 0)
+        {
+            uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr -
+                (uint8_t*)s_Data.LineVertexBufferBase);
+            s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
+
+            s_Data.LineShader->Bind();
+            s_Data.LineVertexArray->Bind();
+            RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
+            s_Data.Stas.DrawCalls++;
         }
     }
 
@@ -707,4 +743,25 @@ namespace Redflag
     {
         return s_Data.Stas;
 	}
+
+    void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+    {
+        if (s_Data.LineVertexCount + 2 > s_Data.MaxLineVerts)
+            return; // 超出容量直接丢弃（或可扩展为 flush）
+
+        s_Data.LineVertexBufferPtr->Position = p0;
+        s_Data.LineVertexBufferPtr->Color    = color;
+        s_Data.LineVertexBufferPtr++;
+
+        s_Data.LineVertexBufferPtr->Position = p1;
+        s_Data.LineVertexBufferPtr->Color    = color;
+        s_Data.LineVertexBufferPtr++;
+
+        s_Data.LineVertexCount += 2;
+    }
+
+    void Renderer2D::SetLineWidth(float width)
+    {
+        RenderCommand::SetLineWidth(width);
+    }
 }

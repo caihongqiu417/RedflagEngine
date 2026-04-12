@@ -8,7 +8,7 @@ namespace Redflag {
 	void OpenGLRendererAPI::Init()
 	{
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Õ∏√˜∂»ªÏ∫œ:◊Ó÷’—’…´ = ‘¥—’…´°¡Alpha + ±≥æ∞—’…´°¡(1-Alpha)
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Õ∏ÔøΩÔøΩÔøΩ»ªÔøΩÔøΩ:ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ…´ = ‘¥ÔøΩÔøΩ…´ÔøΩÔøΩAlpha + ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ…´ÔøΩÔøΩ(1-Alpha)
 
 		glEnable(GL_DEPTH_TEST);
 	}
@@ -30,6 +30,17 @@ namespace Redflag {
 	{
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count,GL_UNSIGNED_INT,nullptr);
-		glBindTexture(GL_TEXTURE_2D, 0); // ªÊ÷∆ÕÍ≥…∫ÛΩ‚∞ÛŒ∆¿Ì£¨±‹√‚”∞œÏ∫Û–¯ªÊ÷∆
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	void OpenGLRendererAPI::DrawLines(const Redflag::Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+	{
+		vertexArray->Bind();
+		glDrawArrays(GL_LINES, 0, vertexCount);
+	}
+
+	void OpenGLRendererAPI::SetLineWidth(float width)
+	{
+		glLineWidth(width);
 	}
 }

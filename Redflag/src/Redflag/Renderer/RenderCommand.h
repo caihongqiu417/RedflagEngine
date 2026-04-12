@@ -1,6 +1,6 @@
 #pragma once
 
-//RenderCommand£ºµ÷¶ÈäÖÈ¾ÃüÁî
+//RenderCommandï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
 #include "Redflag/Renderer/RendererAPI.h"
 
 
@@ -31,6 +31,16 @@ namespace Redflag {
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray,uint32_t count=0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray,count);
+		}
+
+		inline static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+		{
+			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+		}
+
+		inline static void SetLineWidth(float width)
+		{
+			s_RendererAPI->SetLineWidth(width);
 		}
 	private:
 		static RendererAPI* s_RendererAPI;
