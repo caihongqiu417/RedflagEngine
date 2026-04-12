@@ -235,11 +235,21 @@ namespace Redflag {
         {
             RF_PROFILE_SCOPE("Stats");
 
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
             ImGui::Begin("Profile");
 
+            // ── 颜色定义 ──
+            const ImVec4 colRed       = ImVec4(0.80f, 0.08f, 0.08f, 1.0f);
+            const ImVec4 colWhite     = ImVec4(0.10f, 0.10f, 0.10f, 1.0f);
+            const ImVec4 colDimWhite  = ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
+            const ImVec4 colHighlight = ImVec4(0.85f, 0.15f, 0.15f, 1.0f);
+            const ImVec4 colSeparator = ImVec4(0.70f, 0.10f, 0.10f, 0.70f);
+
+            // ── 实体信息 ──
             Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
 
-            std::string hoveredName = "None";
+            std::string hoveredName  = "None";
             if (m_HoveredEntity)
                 hoveredName = m_HoveredEntity.GetComponent<TagComponent>().Tag;
 
@@ -247,33 +257,90 @@ namespace Redflag {
             if (selectedEntity)
                 selectedName = selectedEntity.GetComponent<TagComponent>().Tag;
 
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.55f, 0.20f, 1.0f));
-            ImGui::Text("Hovered Entity: %s", hoveredName.c_str());
+            // Hovered
+            ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
+            ImGui::Text("Hovered ");
             ImGui::PopStyleColor();
-            ImGui::Text("Selected Entity: %s", selectedName.c_str());
-            ImGui::Text("Pick ID (raw): %d", m_LastHoveredEntityID);
-            ImGui::Separator();
+            ImGui::SameLine(0, 0);
+            ImGui::PushStyleColor(ImGuiCol_Text, m_HoveredEntity ? colHighlight : colDimWhite);
+            ImGui::Text("%s", hoveredName.c_str());
+            ImGui::PopStyleColor();
 
+            // Selected
+            ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
+            ImGui::Text("Selected");
+            ImGui::PopStyleColor();
+            ImGui::SameLine(0, 4);
+            ImGui::PushStyleColor(ImGuiCol_Text, selectedEntity ? colWhite : colDimWhite);
+            ImGui::Text("%s", selectedName.c_str());
+            ImGui::PopStyleColor();
+
+            // ── 分隔线 ──
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Separator, colSeparator);
+            ImGui::Separator();
+            ImGui::PopStyleColor();
+            ImGui::Spacing();
+
+            // ── 渲染统计 ──
             auto stats2D = Renderer2D::GetStats();
             auto stats3D = Renderer3D::GetStats();
-            uint32_t totalVertices = stats2D.GetTotalVertexCount() + stats3D.VertexCount;
-            uint32_t totalIndices = stats2D.GetTotalIndexCount() + stats3D.IndexCount;
-            ImGui::Text("Main Render Stats");
+            uint32_t totalDrawCalls = stats2D.DrawCalls + stats3D.DrawCalls;
+            uint32_t totalVertices  = stats2D.GetTotalVertexCount() + stats3D.VertexCount;
+            uint32_t totalIndices   = stats2D.GetTotalIndexCount()  + stats3D.IndexCount;
+
+            // 标题
+            ImGui::PushStyleColor(ImGuiCol_Text, colRed);
+            ImGui::Text("Render Stats");
+            ImGui::PopStyleColor();
+            ImGui::Spacing();
+
+            // 总览行
+            ImGui::PushStyleColor(ImGuiCol_Text, colWhite);
+            ImGui::Text("Draw Calls  %d", totalDrawCalls);
+            ImGui::Text("Vertices    %d", totalVertices);
+            ImGui::Text("Indices     %d", totalIndices);
+            ImGui::PopStyleColor();
+
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Separator, colSeparator);
             ImGui::Separator();
-            ImGui::Text("2D Draw Calls: %d", stats2D.DrawCalls);
-            ImGui::Text("3D Draw Calls: %d", stats3D.DrawCalls);
-            ImGui::Text("Total Draw Calls: %d", stats2D.DrawCalls + stats3D.DrawCalls);
-            ImGui::Text("3D Submitted: %d", stats3D.SubmittedCommands);
-            ImGui::Text("3D Vertices: %d", stats3D.VertexCount);
-            ImGui::Text("3D Indices: %d", stats3D.IndexCount);
-            ImGui::Text("Total Vertices: %d", totalVertices);
-            ImGui::Text("Total Indices: %d", totalIndices);
-            ImGui::Separator();
-            ImGui::Text("2D Quads: %d", stats2D.QuadCount);
-            ImGui::Text("2D Vertices: %d", stats2D.GetTotalVertexCount());
-            ImGui::Text("2D Indices: %d", stats2D.GetTotalIndexCount());
+            ImGui::PopStyleColor();
+            ImGui::Spacing();
+
+            // 2D / 3D 分列
+            float halfW = ImGui::GetContentRegionAvail().x * 0.5f;
+
+            // ─── 2D 列 ───
+            ImGui::BeginGroup();
+            ImGui::PushStyleColor(ImGuiCol_Text, colRed);
+            ImGui::Text("2D");
+            ImGui::PopStyleColor();
+            ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
+            ImGui::Text("Calls   %d", stats2D.DrawCalls);
+            ImGui::Text("Quads   %d", stats2D.QuadCount);
+            ImGui::Text("Verts   %d", stats2D.GetTotalVertexCount());
+            ImGui::Text("Idx     %d", stats2D.GetTotalIndexCount());
+            ImGui::PopStyleColor();
+            ImGui::EndGroup();
+
+            ImGui::SameLine(halfW);
+
+            // ─── 3D 列 ───
+            ImGui::BeginGroup();
+            ImGui::PushStyleColor(ImGuiCol_Text, colRed);
+            ImGui::Text("3D");
+            ImGui::PopStyleColor();
+            ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
+            ImGui::Text("Calls   %d", stats3D.DrawCalls);
+            ImGui::Text("Cmds    %d", stats3D.SubmittedCommands);
+            ImGui::Text("Verts   %d", stats3D.VertexCount);
+            ImGui::Text("Idx     %d", stats3D.IndexCount);
+            ImGui::PopStyleColor();
+            ImGui::EndGroup();
 
             ImGui::End();
+            ImGui::PopStyleVar(2);
         }
 
         // ======================================================
