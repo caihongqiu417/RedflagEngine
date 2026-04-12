@@ -278,6 +278,15 @@ namespace Redflag {
                     ImGui::CloseCurrentPopup();
                 }
             }
+
+            if (!m_SelectionContext.HasComponent<CircleRendererComponent>())
+            {
+                if (ImGui::MenuItem("Circle Renderer"))
+                {
+                    m_SelectionContext.AddComponent<CircleRendererComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
             
             if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
             {
@@ -293,6 +302,15 @@ namespace Redflag {
                 if (ImGui::MenuItem("Box Collider 2D"))
                 {
                     m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
+            {
+                if (ImGui::MenuItem("Circle Collider 2D"))
+                {
+                    m_SelectionContext.AddComponent<CircleCollider2DComponent>();
                     ImGui::CloseCurrentPopup();
                 }
             }
@@ -445,6 +463,15 @@ namespace Redflag {
                 // =================================
             });
 
+
+        //CircleRendererComponent
+        DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
+            {
+                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+                ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.f, 1.f);
+                ImGui::DragFloat("Fade", &component.Fade, 0.0025f, 2.f, 1.f);
+            });
+
         // Rigidbody2D ���
         DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](auto& component)
             {
@@ -485,6 +512,23 @@ namespace Redflag {
                 // ����
                 ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
                 // ������ֵ
+                ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+            });
+
+        // CircleCollider2D 属性面板
+        DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](auto& component)
+            {
+                // 碰撞圆心相对实体原点的偏移
+                ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+                // 碰撞圆的半径
+                ImGui::DragFloat("Radius", &component.Radius, 0.01f, 0.001f, FLT_MAX);
+                // 密度
+                ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+                // 摩擦系数
+                ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+                // 恢复系数（弹性）
+                ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+                // 恢复生效的最低碰撞速度阈值
                 ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
             });
 

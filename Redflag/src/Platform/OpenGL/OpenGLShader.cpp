@@ -239,6 +239,29 @@ namespace Redflag {
         for (auto&& [stage, spirv] : m_VulkanSPIRV)
         {
             spirv_cross::CompilerGLSL glslCompiler(spirv);
+
+            // spirv-cross assigns different SPIR-V IDs (and thus different variable names
+            // like "_26" vs "_69") for the same varying in the vertex and fragment stage.
+            // Some OpenGL drivers match inter-stage varyings by OpName rather than only by
+            // Location, causing program link failure. Rename all inter-stage varyings to
+            // a consistent "v_loc_N" scheme so both stages produce matching names.
+            {
+                spirv_cross::ShaderResources resources = glslCompiler.get_shader_resources();
+                auto renameByLocation = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& vars)
+                {
+                    for (const auto& r : vars)
+                    {
+                        if (glslCompiler.has_decoration(r.id, spv::DecorationLocation))
+                        {
+                            uint32_t loc = glslCompiler.get_decoration(r.id, spv::DecorationLocation);
+                            glslCompiler.set_name(r.id, "v_loc_" + std::to_string(loc));
+                        }
+                    }
+                };
+                if (stage == GL_VERTEX_SHADER)   renameByLocation(resources.stage_outputs);
+                if (stage == GL_FRAGMENT_SHADER) renameByLocation(resources.stage_inputs);
+            }
+
             m_OpenGLSourceCode[stage] = glslCompiler.compile();
             auto& source = m_OpenGLSourceCode[stage];
 

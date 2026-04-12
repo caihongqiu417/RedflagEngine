@@ -198,6 +198,19 @@ namespace Redflag {
             out << YAML::EndMap; // SpriteRendererComponent Map
         }
 
+        if (entity.HasComponent<CircleRendererComponent>())
+        {
+            out << YAML::Key << "CircleRendererComponent";
+            out << YAML::BeginMap;
+
+            auto& crc = entity.GetComponent<CircleRendererComponent>();
+            out << YAML::Key << "Color"     << YAML::Value << crc.Color;
+            out << YAML::Key << "Thickness" << YAML::Value << crc.Thickness;
+            out << YAML::Key << "Fade"      << YAML::Value << crc.Fade;
+
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<MeshRendererComponent>())
         {
             out << YAML::Key << "MeshRendererComponent";
@@ -249,6 +262,22 @@ namespace Redflag {
             out << YAML::Key << "RestitutionThreshold" << YAML::Value << bc2dComponent.RestitutionThreshold;
 
             out << YAML::EndMap; 
+        }
+
+        if (entity.HasComponent<CircleCollider2DComponent>())
+        {
+            out << YAML::Key << "CircleCollider2DComponent";
+            out << YAML::BeginMap;
+
+            auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+            out << YAML::Key << "Offset" << YAML::Value << cc2d.Offset;
+            out << YAML::Key << "Radius" << YAML::Value << cc2d.Radius;
+            out << YAML::Key << "Density" << YAML::Value << cc2d.Density;
+            out << YAML::Key << "Friction" << YAML::Value << cc2d.Friction;
+            out << YAML::Key << "Restitution" << YAML::Value << cc2d.Restitution;
+            out << YAML::Key << "RestitutionThreshold" << YAML::Value << cc2d.RestitutionThreshold;
+
+            out << YAML::EndMap;
         }
 
         // ����ʵ��� Map
@@ -346,6 +375,16 @@ namespace Redflag {
                     src.Color = srNode["Color"].as<glm::vec4>();
                 }
 
+                // Circle Renderer Component
+                if (entity["CircleRendererComponent"])
+                {
+                    auto crNode = entity["CircleRendererComponent"];
+                    auto& crc = deserializedEntity.AddComponent<CircleRendererComponent>();
+                    crc.Color     = crNode["Color"].as<glm::vec4>();
+                    crc.Thickness = crNode["Thickness"].as<float>();
+                    crc.Fade      = crNode["Fade"].as<float>();
+                }
+
                 // RigidBody2DComponent
                 if (entity["RigidBodyComponent"])
                 {
@@ -368,6 +407,20 @@ namespace Redflag {
                     bc2d.Friction = bcNode["Friction"].as<float>();
                     bc2d.Restitution = bcNode["Restitution"].as<float>();
                     bc2d.RestitutionThreshold = bcNode["RestitutionThreshold"].as<float>();
+                }
+
+                // CircleCollider2DComponent
+                if (entity["CircleCollider2DComponent"])
+                {
+                    auto ccNode = entity["CircleCollider2DComponent"];
+                    auto& cc2d = deserializedEntity.AddComponent<CircleCollider2DComponent>();
+
+                    cc2d.Offset               = ccNode["Offset"].as<glm::vec2>();
+                    cc2d.Radius               = ccNode["Radius"].as<float>();
+                    cc2d.Density              = ccNode["Density"].as<float>();
+                    cc2d.Friction             = ccNode["Friction"].as<float>();
+                    cc2d.Restitution          = ccNode["Restitution"].as<float>();
+                    cc2d.RestitutionThreshold = ccNode["RestitutionThreshold"].as<float>();
                 }
 
                 // MeshRendererComponent

@@ -12,6 +12,7 @@
 #include"box2d/b2_world.h"
 #include"box2d/b2_fixture.h"
 #include"box2d/b2_polygon_shape.h"
+#include"box2d/b2_circle_shape.h"
 
 
 namespace Redflag {
@@ -89,10 +90,12 @@ namespace Redflag {
         // ���������ͨ��ӳ����ҵ� UUID ��ͬ��Ŀ��ʵ�壬Ȼ���������ݿ���ȥ
         CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
@@ -154,6 +157,25 @@ namespace Redflag {
                 body->CreateFixture(&fixtureDef);
             }
 
+            if (entity.HasComponent<CircleCollider2DComponent>())
+            {
+                auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+                b2CircleShape circleShape;
+                // 圆心偏移（局部空间，Box2D 单位与 Transform 一致）
+                circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
+                // 半径需乘以实体的均匀缩放（取 x/y 中的较大值以保持碰撞形状合理）
+                circleShape.m_radius = glm::max(transform.Scale.x, transform.Scale.y) * cc2d.Radius;
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &circleShape;
+                fixtureDef.density              = cc2d.Density;
+                fixtureDef.friction             = cc2d.Friction;
+                fixtureDef.restitution          = cc2d.Restitution;
+                fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
+
             //���浽���
             rb2d.RuntimeBody = body;
         }
@@ -165,19 +187,24 @@ namespace Redflag {
         m_PhysicsWorld = nullptr;
     }
 
-    //�༭�����ô���ı༭�����
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
     {
         Renderer2D::BeginScene(camera);
 
-        // ʹ�� view �� each ����Ⱦ���� Sprite
         auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
         spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
             {
                 Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
             });
 
+        auto circleView = m_Registry.view<TransformComponent, CircleRendererComponent>();
+        circleView.each([&](auto entity, TransformComponent& transform, CircleRendererComponent& circle)
+            {
+                Renderer2D::DrawCircle(transform.GetTransform(),circle.Color,circle.Thickness,circle.Fade,(int)entity);
+            });
+
         Renderer2D::EndScene();
+
 
         // 3D 渲染：MeshRendererComponent
         Renderer3D::BeginScene(camera);
@@ -204,6 +231,8 @@ namespace Redflag {
                 if (mr.ModelAsset)
                     Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
             });
+
+
 
         Renderer3D::EndScene();
     }
@@ -283,6 +312,12 @@ namespace Redflag {
                     Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
                 });
 
+            auto circleView = m_Registry.view<TransformComponent, CircleRendererComponent>();
+            circleView.each([&](auto entity, TransformComponent& transform, CircleRendererComponent& circle)
+                {
+                    Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+                });
+
             Renderer2D::EndScene();
 
             // 3D 运行时渲染：ModelRendererComponent
@@ -327,9 +362,11 @@ namespace Redflag {
         // ������ CopyComponentIfExist ���ǣ��ڲ��� ReplaceorEmplace��
         CopyComponentIfExist<TransformComponent>(newEntity, entity);
         CopyComponentIfExist<SpriteRendererComponent>(newEntity, entity);
+        CopyComponentIfExist<CircleRendererComponent>(newEntity, entity);
         CopyComponentIfExist<CameraComponent>(newEntity, entity);
         CopyComponentIfExist<RigidBody2DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
+        CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
         CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
@@ -378,6 +415,12 @@ namespace Redflag {
     }
 
     template<>
+    void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
+    {
+
+    }
+
+    template<>
     void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
     {
 
@@ -397,6 +440,12 @@ namespace Redflag {
 
     template<>
     void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
     {
 
     }

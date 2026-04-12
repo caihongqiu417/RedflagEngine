@@ -53,6 +53,16 @@ namespace Redflag {
 			:Color(color){}
 	};
 
+	struct CircleRendererComponent
+	{
+		glm::vec4 Color{ 1.1f,1.f,1.f,1.f };
+		float Thickness = 1.f;
+		float Fade = 0.005f;
+
+		CircleRendererComponent() = default;
+		CircleRendererComponent(const CircleRendererComponent&) = default;
+	};
+
 	struct TagComponent
 	{
 		std::string Tag;
@@ -128,6 +138,35 @@ namespace Redflag {
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	// 2D 圆形碰撞体组件
+	// 对应 Box2D 的 b2CircleShape，用于圆形刚体的碰撞检测
+	struct CircleCollider2DComponent
+	{
+		// 碰撞圆心相对于实体 Transform 原点的偏移（局部空间，单位与场景一致）
+		glm::vec2 Offset = { 0.f, 0.f };
+
+		// 碰撞圆的半径（局部空间，默认 0.5）
+		float Radius = 0.5f;
+
+		// 密度（kg/m²），影响刚体的质量；设为 0 时视为传感器（无质量）
+		float Density = 1.f;
+
+		// 摩擦系数 [0, 1]，0 = 完全光滑，1 = 最大摩擦
+		float Friction = 0.5f;
+
+		// 恢复系数（弹性）[0, 1]，0 = 完全非弹性碰撞，1 = 完全弹性碰撞
+		float Restitution = 0.f;
+
+		// 恢复生效的最低碰撞速度阈值（m/s）；低于此速度时不应用弹性，避免微小抖动
+		float RestitutionThreshold = 0.5f;
+
+		// 运行时由 Box2D 填充的 b2Fixture* 指针，序列化时忽略
+		void* RuntimeFixture = nullptr;
+
+		CircleCollider2DComponent() = default;
+		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
 
 	// 3D 网格渲染组件

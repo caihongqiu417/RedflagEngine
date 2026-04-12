@@ -29,6 +29,17 @@ namespace Redflag
         int EntityID=0;
     };
 
+    struct CircleVertex
+    {
+        glm::vec3 WorldPosition;
+        glm::vec3 LocalPosition;
+        float Thickness;
+        glm::vec4 Color;
+        float Fade;
+
+        int EntityID = 0;
+    };
+
     struct LineVertex
     {
         glm::vec3 Position;
@@ -49,13 +60,21 @@ namespace Redflag
         //========== GPU��Դ ==========
         Ref<VertexArray> QuadVertexArray;                    // �����������VAO��
         Ref<VertexBuffer> QuadVertexBuffer;                  // ���㻺������VBO��
-        Ref<Shader> TextureShader;                            // ������ɫ��
-        Ref<Texture2D> WhiteTexture;                          // 1x1��ɫ���������ڴ�ɫ�ı��Σ�
+        Ref<Shader> QuadShader;                            // ������ɫ��
+        Ref<Texture2D> WhiteTexture;                      
+
+        Ref<VertexArray> CircleVertexArray;
+        Ref<VertexBuffer> CircleVertexBuffer;
+        Ref<Shader> CircleShader;
 
         //========== ������״̬ ==========
         uint32_t QuadIndexCount = 0;                          // ��ǰ������ʹ�õ���������
         QuadVertex* QuadVertexBufferBase = nullptr;           // CPU�˶��㻺������ַ
         QuadVertex* QuadVertexBufferPtr = nullptr;            // CPU�˶��㻺������ǰд��ָ��
+
+        uint32_t CircleIndexCount = 0;
+        CircleVertex* CircleVertexBufferBase = nullptr;
+        CircleVertex* CircleVertexBufferPtr = nullptr;
 
         //========== �������� ==========
         std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;   // ��ǰ����ʹ�õ���������
@@ -131,6 +150,21 @@ namespace Redflag
         s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
         delete[] quadIndices;
 
+        //Circles
+        s_Data.CircleVertexArray = VertexArray::Create();
+        s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
+        s_Data.CircleVertexBuffer->SetLayout({
+        { ShaderDataType::Float3, "a_WorldPosition"  },
+        { ShaderDataType::Float3, "a_LocalPosition"  },
+        { ShaderDataType::Float,  "a_Thickness" },
+        { ShaderDataType::Float4, "a_Color"     },
+        { ShaderDataType::Float,  "a_Fade"      },
+        { ShaderDataType::Int,    "a_EntityID"  }
+         });
+        s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
+        s_Data.CircleVertexArray->SetIndexBuffer(quadIB); //use quad IB
+        s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
+
         //---------- 6. ������ɫ���� ----------
         // ���ڻ��ƴ�ɫ�ı��Σ�ͨ��������ɫ��ɫ��
         s_Data.WhiteTexture = Redflag::Texture2D::Create(1, 1);
@@ -144,9 +178,11 @@ namespace Redflag
             samplers[i] = i;  // ������i��Ӧ������Ԫi
 
         //---------- 8. ����������������ɫ�� ----------
-        s_Data.TextureShader = Redflag::Shader::Create("assets/shaders/Texture.glsl");
-        s_Data.TextureShader->Bind();
-        s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+        s_Data.QuadShader = Redflag::Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
+        s_Data.CircleShader = Redflag::Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
+
+        s_Data.QuadShader->Bind();
+        s_Data.QuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
         //---------- 9. ��ʼ�������� ----------
         // 0�Ų����ð󶨰�ɫ����
@@ -182,7 +218,9 @@ namespace Redflag
     void Renderer2D::Shutdown()
     {
         RF_PROFILE_FUNCTION();
+        delete[] s_Data.QuadVertexBufferBase;
         delete[] s_Data.LineVertexBufferBase;
+        delete[] s_Data.CircleVertexBufferBase;
     }
 
     //==========================================================================
@@ -203,6 +241,9 @@ namespace Redflag
         s_Data.QuadIndexCount = 0;
         s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
         s_Data.TextureSlotIndex = 1;
+
+        s_Data.CircleIndexCount = 0;
+        s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 
         s_Data.LineVertexCount = 0;
         s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
@@ -226,6 +267,9 @@ namespace Redflag
         s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
         s_Data.TextureSlotIndex = 1;
 
+        s_Data.CircleIndexCount = 0;
+        s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
         s_Data.LineVertexCount = 0;
         s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
     }
@@ -238,8 +282,8 @@ namespace Redflag
         RF_PROFILE_FUNCTION();
 
         // ����ɫ����������ͼͶӰ����
-        s_Data.TextureShader->Bind();
-        s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+        s_Data.QuadShader->Bind();
+        s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
         // ����������״̬
         s_Data.QuadIndexCount = 0;                           // �����������
@@ -262,6 +306,19 @@ namespace Redflag
             Flush();
         }
 
+        if (s_Data.CircleIndexCount > 0)
+        {
+            uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr -
+                (uint8_t*)s_Data.CircleVertexBufferBase);
+            s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
+
+            s_Data.CircleShader->Bind();
+            s_Data.CircleVertexArray->Bind();
+            RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
+            s_Data.Stas.DrawCalls++;
+        }
+
+
         // 刷新线段
         if (s_Data.LineVertexCount > 0)
         {
@@ -281,7 +338,7 @@ namespace Redflag
     //==========================================================================
     void Renderer2D::Flush()
     {
-        s_Data.TextureShader->Bind();
+        s_Data.QuadShader->Bind();
         s_Data.QuadVertexArray->Bind();
 
         // ���������õ������������󶨵���Ӧ��������Ԫ
@@ -725,6 +782,34 @@ namespace Redflag
 
         s_Data.Stas.QuadCount++;  // ����ͳ�����ݣ��ı�����������
 	}
+
+    //Circle
+    void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color,
+        float thickness, float fade, int entityID)
+    {
+        RF_PROFILE_FUNCTION();
+
+
+        if (s_Data.CircleIndexCount >= s_Data.MaxIndices)
+        {
+            // TODO: 实现 FlushAndReset 对圆形的支持
+        }
+
+
+        for (uint32_t i = 0; i < 4; i++)
+        {
+            s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
+            s_Data.CircleVertexBufferPtr->LocalPosition = s_Data.QuadVertexPositions[i]*2.f; //用于判断每个像素到圆心的距离
+            s_Data.CircleVertexBufferPtr->Color = color;
+            s_Data.CircleVertexBufferPtr->Thickness = thickness;
+            s_Data.CircleVertexBufferPtr->Fade = fade;
+            s_Data.CircleVertexBufferPtr->EntityID = entityID;
+            s_Data.CircleVertexBufferPtr++;
+        }
+
+        s_Data.CircleIndexCount += 6;
+        s_Data.Stas.QuadCount++;  
+    }
 
     void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
     {

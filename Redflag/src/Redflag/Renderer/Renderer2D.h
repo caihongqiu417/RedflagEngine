@@ -52,6 +52,10 @@ namespace Redflag {
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		
+		//Circle
+		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.f, float fade = 0.005, int entitityID = -1);
+
 
 		//draw with entity id
 		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src,int entityID);
