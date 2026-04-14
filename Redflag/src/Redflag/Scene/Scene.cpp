@@ -1,7 +1,13 @@
 #include"rfpch.h"
 #include"Scene.h"
+
+// 渲染职责已转移到 SceneRenderer；Scene 不再直接调用 Renderer2D / Renderer3D。
+// 保留 Renderer2D.h 仅用于 ResetStats（ForgeLayer 在 OnUpdate 中调用），
+// 后续这个依赖也会移走。
 #include"Renderer/Renderer2D.h"
 #include"Renderer/Renderer3D.h"
+#include"Redflag/Renderer/SceneRenderer.h"
+
 #include"Redflag/Core/AssetManager.h"
 #include"Redflag/Renderer/Model.h"
 
@@ -144,52 +150,17 @@ namespace Redflag {
 
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
     {
-        Renderer2D::BeginScene(camera);
-
-        auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
-        spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
-            {
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-            });
-
-        auto circleView = m_Registry.view<TransformComponent, CircleRendererComponent>();
-        circleView.each([&](auto entity, TransformComponent& transform, CircleRendererComponent& circle)
-            {
-                Renderer2D::DrawCircle(transform.GetTransform(),circle.Color,circle.Thickness,circle.Fade,(int)entity);
-            });
-
-        Renderer2D::EndScene();
-
-
-        // 3D 渲染：MeshRendererComponent
-        Renderer3D::BeginScene(camera);
-        auto meshView = m_Registry.view<TransformComponent, MeshRendererComponent>();
-        meshView.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
-            {
-                if (mr.MeshData)
-                {
-                    if (mr.Texture)
-                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
-                    else
-                        Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
-                }
-            });
-
-        // 3D 渲染：ModelRendererComponent
-        auto modelView = m_Registry.view<TransformComponent, ModelRendererComponent>();
-        modelView.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
-            {
-                // 懒加载：路径有效但 ModelAsset 未加载时，通过 AssetManager 加载
-                if (!mr.ModelAsset && !mr.FilePath.empty())
-                    mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
-
-                if (mr.ModelAsset)
-                    Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
-            });
-
-
-
-        Renderer3D::EndScene();
+        // ======================================================================
+        // 渲染职责委托给 SceneRenderer
+        //
+        // 以前这里直接遍历 ECS 并调用 Renderer2D / Renderer3D，
+        // 现在统一由 SceneRenderer::RenderScene 负责。
+        //
+        // Scene 只持有数据（registry），不再决定「怎么画」。
+        // 这样后续加 Shadow / Deferred / PostProcess 等 pass 时，
+        // 只需要修改 SceneRenderer，不用动 Scene。
+        // ======================================================================
+        SceneRenderer::RenderScene(*this, camera);
     }
 
     //runtime:�ӳ������������
@@ -254,41 +225,13 @@ namespace Redflag {
             });
 
         //===============================================================
-       //=========================ʵ����Ⱦ==============================
+       //============== 渲染委托给 SceneRenderer =======================
        //===============================================================
         if (mainCamera)
         {
-            Renderer2D::BeginScene(mainCamera->GetProjection(), cameraTransform);
-
-            // ʹ�� view �� each ����Ⱦ���� Sprite
-            auto spriteView = m_Registry.view<TransformComponent, SpriteRendererComponent>();
-            spriteView.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
-                {
-                    Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-                });
-
-            auto circleView = m_Registry.view<TransformComponent, CircleRendererComponent>();
-            circleView.each([&](auto entity, TransformComponent& transform, CircleRendererComponent& circle)
-                {
-                    Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-                });
-
-            Renderer2D::EndScene();
-
-            // 3D 运行时渲染：ModelRendererComponent
-            glm::mat4 inverseTransform = glm::inverse(cameraTransform);
-            glm::mat4 viewProj3D = mainCamera->GetProjection() * inverseTransform;
-            Renderer3D::BeginScene(viewProj3D);
-            auto modelView = m_Registry.view<TransformComponent, ModelRendererComponent>();
-            modelView.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
-                {
-                    if (!mr.ModelAsset && !mr.FilePath.empty())
-                        mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
-
-                    if (mr.ModelAsset)
-                        Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
-                });
-            Renderer3D::EndScene();
+            // 查找主相机是「场景逻辑」，所以留在 Scene 里。
+            // 但实际绘制由 SceneRenderer 负责。
+            SceneRenderer::RenderRuntime(*this, mainCamera->GetProjection(), cameraTransform);
         }
     }
 

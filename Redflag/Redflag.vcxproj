@@ -201,8 +201,8 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h" />
-    <ClInclude Include="src\Redflag\Renderer\Mesh.h" />
     <ClInclude Include="src\Redflag\Renderer\Material.h" />
+    <ClInclude Include="src\Redflag\Renderer\Mesh.h" />
     <ClInclude Include="src\Redflag\Renderer\Model.h" />
     <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Redflag\Renderer\OrthographicCameraController.h" />
@@ -211,6 +211,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClInclude Include="src\Redflag\Renderer\Renderer2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Renderer3D.h" />
     <ClInclude Include="src\Redflag\Renderer\RendererAPI.h" />
+    <ClInclude Include="src\Redflag\Renderer\SceneRenderer.h" />
     <ClInclude Include="src\Redflag\Renderer\Shader.h" />
     <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
@@ -673,8 +674,8 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />
-    <ClCompile Include="src\Redflag\Renderer\Mesh.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Material.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\Mesh.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Model.cpp" />
     <ClCompile Include="src\Redflag\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\OrthographicCameraController.cpp" />
@@ -683,6 +684,7 @@ IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\Vu
     <ClCompile Include="src\Redflag\Renderer\Renderer2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Renderer3D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RendererAPI.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\SceneRenderer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />

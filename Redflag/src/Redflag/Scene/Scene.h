@@ -5,6 +5,7 @@
 #include"Components.h"
 #include"Redflag/Core/Timestep.h"
 #include"Redflag/Renderer/EditorCamera.h"
+#include"Redflag/Renderer/SceneRenderer.h"
 
 class b2World;
 
@@ -59,5 +60,6 @@ namespace Redflag {
 		friend class Entity;
 		friend class SceneHierachyPanel;
 		friend class SceneSerializer;
+		friend class SceneRenderer;  // SceneRenderer 需要访问 m_Registry
 	};
 }
