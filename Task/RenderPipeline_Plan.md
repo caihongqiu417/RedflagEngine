@@ -68,8 +68,8 @@ ForgeLayer（编辑器集成）
 
 **目标**：场景中能添加灯光实体，数据能传入 shader。
 
-- [ ] 新增 `DirectionalLightComponent`：方向、颜色、强度、是否投影
-- [ ] 新增 `PointLightComponent`：位置、颜色、强度、半径
+- [x] 新增 `DirectionalLightComponent`：方向、颜色、强度、是否投影
+- [x] 新增 `PointLightComponent`：位置、颜色、强度、半径
 - [ ] `SceneRenderer` 收集阶段：遍历灯光组件，填充 `LightData` 数组
 - [ ] 新增 `Light UBO`（binding = 3）：
   ```
@@ -82,8 +82,8 @@ ForgeLayer（编辑器集成）
   };
   // 上传：1 个方向光 + 最多 16 个点光
   ```
-- [ ] SceneHierarchyPanel 中可以添加/编辑灯光组件
-- [ ] 序列化/反序列化支持
+- [x] SceneHierarchyPanel 中可以添加/编辑灯光组件
+- [x] 序列化/反序列化支持
 
 **验证**：在面板中添加方向光，属性面板可编辑方向和颜色，不崩溃。
 

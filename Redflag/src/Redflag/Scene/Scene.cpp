@@ -446,4 +446,16 @@ namespace Redflag {
 
     }
 
+    template<>
+    void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+
+    }
+
 }

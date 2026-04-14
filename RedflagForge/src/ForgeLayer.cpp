@@ -20,6 +20,96 @@
 
 namespace Redflag {
 
+    // =================================================================
+    // 编辑器 Gizmo 绘制辅助函数
+    // 在 Renderer2D::BeginScene / EndScene 之间调用
+    // =================================================================
+
+    static void DrawCameraGizmo(const TransformComponent& tc, const glm::vec4& color)
+    {
+        glm::mat4 camT = tc.GetTransform();
+        auto xf = [&](glm::vec3 v) -> glm::vec3 {
+            return glm::vec3(camT * glm::vec4(v, 1.0f));
+        };
+
+        // 机身矩形（-Z 为朝向）
+        float bw = 0.18f, bh = 0.12f, bd = 0.10f;
+        glm::vec3 f0 = xf({ -bw, -bh, -bd }), f1 = xf({  bw, -bh, -bd });
+        glm::vec3 f2 = xf({  bw,  bh, -bd }), f3 = xf({ -bw,  bh, -bd });
+        glm::vec3 b0 = xf({ -bw, -bh,  bd }), b1 = xf({  bw, -bh,  bd });
+        glm::vec3 b2 = xf({  bw,  bh,  bd }), b3 = xf({ -bw,  bh,  bd });
+        Renderer2D::DrawLine(f0, f1, color); Renderer2D::DrawLine(f1, f2, color);
+        Renderer2D::DrawLine(f2, f3, color); Renderer2D::DrawLine(f3, f0, color);
+        Renderer2D::DrawLine(b0, b1, color); Renderer2D::DrawLine(b1, b2, color);
+        Renderer2D::DrawLine(b2, b3, color); Renderer2D::DrawLine(b3, b0, color);
+        Renderer2D::DrawLine(f0, b0, color); Renderer2D::DrawLine(f1, b1, color);
+        Renderer2D::DrawLine(f2, b2, color); Renderer2D::DrawLine(f3, b3, color);
+
+        // 镜头锥台
+        float lx = 0.28f, ly = 0.20f, lz = -0.36f;
+        glm::vec3 l0 = xf({ -lx, -ly, lz }), l1 = xf({  lx, -ly, lz });
+        glm::vec3 l2 = xf({  lx,  ly, lz }), l3 = xf({ -lx,  ly, lz });
+        Renderer2D::DrawLine(l0, l1, color); Renderer2D::DrawLine(l1, l2, color);
+        Renderer2D::DrawLine(l2, l3, color); Renderer2D::DrawLine(l3, l0, color);
+        glm::vec3 fc = xf({ 0.0f, 0.0f, -bd });
+        Renderer2D::DrawLine(fc, l0, color); Renderer2D::DrawLine(fc, l1, color);
+        Renderer2D::DrawLine(fc, l2, color); Renderer2D::DrawLine(fc, l3, color);
+    }
+
+    static void DrawDirectionalLightGizmo(const glm::vec3& pos, const glm::vec3& direction, const glm::vec4& color)
+    {
+        glm::vec3 dir = glm::normalize(direction);
+        glm::vec3 up = (glm::abs(dir.y) < 0.99f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+        glm::vec3 right = glm::normalize(glm::cross(dir, up));
+        glm::vec3 forward = glm::cross(right, dir);
+
+        constexpr int segments = 8;
+        constexpr float radius = 0.25f;
+        for (int i = 0; i < segments; i++)
+        {
+            float a0 = glm::two_pi<float>() * i / segments;
+            float a1 = glm::two_pi<float>() * (i + 1) / segments;
+            Renderer2D::DrawLine(
+                pos + right * (radius * cosf(a0)) + forward * (radius * sinf(a0)),
+                pos + right * (radius * cosf(a1)) + forward * (radius * sinf(a1)), color);
+        }
+
+        float rayLen = 1.2f;
+        for (int i = 0; i < 4; i++)
+        {
+            float angle = glm::two_pi<float>() * i / 4;
+            glm::vec3 base = pos + right * (radius * cosf(angle)) + forward * (radius * sinf(angle));
+            Renderer2D::DrawLine(base, base + dir * rayLen, color);
+        }
+        Renderer2D::DrawLine(pos, pos + dir * rayLen, color);
+    }
+
+    static void DrawPointLightGizmo(const glm::vec3& pos, float radius, const glm::vec4& color)
+    {
+        constexpr int segments = 16;
+        for (int i = 0; i < segments; i++)
+        {
+            float a0 = glm::two_pi<float>() * i / segments;
+            float a1 = glm::two_pi<float>() * (i + 1) / segments;
+            float c0 = cosf(a0), s0 = sinf(a0), c1 = cosf(a1), s1 = sinf(a1);
+            Renderer2D::DrawLine(pos + glm::vec3(radius * c0, radius * s0, 0.0f),
+                                 pos + glm::vec3(radius * c1, radius * s1, 0.0f), color);
+            Renderer2D::DrawLine(pos + glm::vec3(radius * c0, 0.0f, radius * s0),
+                                 pos + glm::vec3(radius * c1, 0.0f, radius * s1), color);
+            Renderer2D::DrawLine(pos + glm::vec3(0.0f, radius * c0, radius * s0),
+                                 pos + glm::vec3(0.0f, radius * c1, radius * s1), color);
+        }
+
+        float rayLen = radius * 0.3f;
+        glm::vec4 rayColor = color * glm::vec4(1.0f, 1.0f, 1.0f, 0.6f);
+        Renderer2D::DrawLine(pos, pos + glm::vec3( rayLen, 0, 0), rayColor);
+        Renderer2D::DrawLine(pos, pos + glm::vec3(-rayLen, 0, 0), rayColor);
+        Renderer2D::DrawLine(pos, pos + glm::vec3(0,  rayLen, 0), rayColor);
+        Renderer2D::DrawLine(pos, pos + glm::vec3(0, -rayLen, 0), rayColor);
+        Renderer2D::DrawLine(pos, pos + glm::vec3(0, 0,  rayLen), rayColor);
+        Renderer2D::DrawLine(pos, pos + glm::vec3(0, 0, -rayLen), rayColor);
+    }
+
     ForgeLayer::ForgeLayer()
         : Layer("ForgeLayer"), m_CameraController(1600.0f / 900.0f, true)
     {
@@ -113,58 +203,39 @@ namespace Redflag {
                 {
                     Entity ent = { entity, m_ActiveScene.get() };
                     Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
-                    // 选中时红色，普通时白色
-                    glm::vec4 lineColor = (sel && sel == ent)
+                    glm::vec4 color = (sel && sel == ent)
                         ? glm::vec4(0.95f, 0.25f, 0.25f, 1.0f)
                         : glm::vec4(1.0f,  1.0f,  1.0f, 0.85f);
-
-                    glm::mat4 camT = tc.GetTransform();
-                    auto xf = [&](glm::vec3 v) -> glm::vec3 {
-                        return glm::vec3(camT * glm::vec4(v, 1.0f));
-                    };
-
-                    // 机身矩形（-Z 为朝向）
-                    float bw = 0.18f, bh = 0.12f, bd = 0.10f;
-                    glm::vec3 f0 = xf({ -bw, -bh, -bd });
-                    glm::vec3 f1 = xf({  bw, -bh, -bd });
-                    glm::vec3 f2 = xf({  bw,  bh, -bd });
-                    glm::vec3 f3 = xf({ -bw,  bh, -bd });
-                    glm::vec3 b0 = xf({ -bw, -bh,  bd });
-                    glm::vec3 b1 = xf({  bw, -bh,  bd });
-                    glm::vec3 b2 = xf({  bw,  bh,  bd });
-                    glm::vec3 b3 = xf({ -bw,  bh,  bd });
-                    // 前面轮廓
-                    Renderer2D::DrawLine(f0, f1, lineColor);
-                    Renderer2D::DrawLine(f1, f2, lineColor);
-                    Renderer2D::DrawLine(f2, f3, lineColor);
-                    Renderer2D::DrawLine(f3, f0, lineColor);
-                    // 后面轮廓
-                    Renderer2D::DrawLine(b0, b1, lineColor);
-                    Renderer2D::DrawLine(b1, b2, lineColor);
-                    Renderer2D::DrawLine(b2, b3, lineColor);
-                    Renderer2D::DrawLine(b3, b0, lineColor);
-                    // 连接棱
-                    Renderer2D::DrawLine(f0, b0, lineColor);
-                    Renderer2D::DrawLine(f1, b1, lineColor);
-                    Renderer2D::DrawLine(f2, b2, lineColor);
-                    Renderer2D::DrawLine(f3, b3, lineColor);
-
-                    // 镜头锥台
-                    float lx = 0.28f, ly = 0.20f, lz = -0.36f;
-                    glm::vec3 l0 = xf({ -lx, -ly, lz });
-                    glm::vec3 l1 = xf({  lx, -ly, lz });
-                    glm::vec3 l2 = xf({  lx,  ly, lz });
-                    glm::vec3 l3 = xf({ -lx,  ly, lz });
-                    Renderer2D::DrawLine(l0, l1, lineColor);
-                    Renderer2D::DrawLine(l1, l2, lineColor);
-                    Renderer2D::DrawLine(l2, l3, lineColor);
-                    Renderer2D::DrawLine(l3, l0, lineColor);
-                    glm::vec3 fc = xf({ 0.0f, 0.0f, -bd });
-                    Renderer2D::DrawLine(fc, l0, lineColor);
-                    Renderer2D::DrawLine(fc, l1, lineColor);
-                    Renderer2D::DrawLine(fc, l2, lineColor);
-                    Renderer2D::DrawLine(fc, l3, lineColor);
+                    DrawCameraGizmo(tc, color);
                 });
+
+                // 绘制所有方向光 Gizmo
+                {
+                    auto dlView = m_ActiveScene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
+                    dlView.each([&](auto entity, TransformComponent& tc, DirectionalLightComponent& dl)
+                    {
+                        Entity ent = { entity, m_ActiveScene.get() };
+                        Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
+                        glm::vec4 color = (sel && sel == ent)
+                            ? glm::vec4(1.0f, 0.85f, 0.0f, 1.0f)
+                            : glm::vec4(1.0f, 0.9f, 0.4f, 0.85f);
+                        DrawDirectionalLightGizmo(tc.Translation, dl.Direction, color);
+                    });
+                }
+
+                // 绘制所有点光源 Gizmo
+                {
+                    auto plView = m_ActiveScene->GetRegistry().view<TransformComponent, PointLightComponent>();
+                    plView.each([&](auto entity, TransformComponent& tc, PointLightComponent& pl)
+                    {
+                        Entity ent = { entity, m_ActiveScene.get() };
+                        Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
+                        glm::vec4 color = (sel && sel == ent)
+                            ? glm::vec4(0.2f, 0.8f, 1.0f, 1.0f)
+                            : glm::vec4(0.5f, 0.85f, 1.0f, 0.7f);
+                        DrawPointLightGizmo(tc.Translation, pl.Radius, color);
+                    });
+                }
 
                 // 碰撞体可视化：绿色线框，选中时高亮为黄色
                 if (m_ShowPhysicsColliders)

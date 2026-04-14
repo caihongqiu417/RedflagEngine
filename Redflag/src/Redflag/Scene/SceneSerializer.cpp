@@ -280,6 +280,34 @@ namespace Redflag {
             out << YAML::EndMap;
         }
 
+        if (entity.HasComponent<DirectionalLightComponent>())
+        {
+            out << YAML::Key << "DirectionalLightComponent";
+            out << YAML::BeginMap;
+
+            auto& dl = entity.GetComponent<DirectionalLightComponent>();
+            out << YAML::Key << "Direction"  << YAML::Value << dl.Direction;
+            out << YAML::Key << "Color"      << YAML::Value << dl.Color;
+            out << YAML::Key << "Intensity"  << YAML::Value << dl.Intensity;
+            out << YAML::Key << "CastShadow" << YAML::Value << dl.CastShadow;
+
+            out << YAML::EndMap;
+        }
+
+        if (entity.HasComponent<PointLightComponent>())
+        {
+            out << YAML::Key << "PointLightComponent";
+            out << YAML::BeginMap;
+
+            auto& pl = entity.GetComponent<PointLightComponent>();
+            out << YAML::Key << "Color"      << YAML::Value << pl.Color;
+            out << YAML::Key << "Intensity"  << YAML::Value << pl.Intensity;
+            out << YAML::Key << "Radius"     << YAML::Value << pl.Radius;
+            out << YAML::Key << "CastShadow" << YAML::Value << pl.CastShadow;
+
+            out << YAML::EndMap;
+        }
+
         // ����ʵ��� Map
         out << YAML::EndMap;
     }
@@ -441,6 +469,28 @@ namespace Redflag {
                     mr.FilePath = mrNode["FilePath"].as<std::string>();
                     mr.Color    = mrNode["Color"].as<glm::vec4>();
                     // ModelAsset 将在首次渲染时由 AssetManager 懒加载
+                }
+
+                // DirectionalLightComponent
+                if (entity["DirectionalLightComponent"])
+                {
+                    auto dlNode = entity["DirectionalLightComponent"];
+                    auto& dl = deserializedEntity.AddComponent<DirectionalLightComponent>();
+                    dl.Direction  = dlNode["Direction"].as<glm::vec3>();
+                    dl.Color      = dlNode["Color"].as<glm::vec3>();
+                    dl.Intensity  = dlNode["Intensity"].as<float>();
+                    dl.CastShadow = dlNode["CastShadow"].as<bool>();
+                }
+
+                // PointLightComponent
+                if (entity["PointLightComponent"])
+                {
+                    auto plNode = entity["PointLightComponent"];
+                    auto& pl = deserializedEntity.AddComponent<PointLightComponent>();
+                    pl.Color      = plNode["Color"].as<glm::vec3>();
+                    pl.Intensity  = plNode["Intensity"].as<float>();
+                    pl.Radius     = plNode["Radius"].as<float>();
+                    pl.CastShadow = plNode["CastShadow"].as<bool>();
                 }
             }
         }

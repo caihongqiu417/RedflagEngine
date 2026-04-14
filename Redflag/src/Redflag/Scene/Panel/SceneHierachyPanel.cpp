@@ -334,6 +334,26 @@ namespace Redflag {
                 }
             }
 
+            ImGui::Separator();
+
+            if (!m_SelectionContext.HasComponent<DirectionalLightComponent>())
+            {
+                if (ImGui::MenuItem("Directional Light"))
+                {
+                    m_SelectionContext.AddComponent<DirectionalLightComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            if (!m_SelectionContext.HasComponent<PointLightComponent>())
+            {
+                if (ImGui::MenuItem("Point Light"))
+                {
+                    m_SelectionContext.AddComponent<PointLightComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
             ImGui::EndPopup();
         }
         ImGui::PopItemWidth();
@@ -605,6 +625,32 @@ namespace Redflag {
                         component.ModelAsset.reset();
                     }
                 }
+            });
+
+        // Directional Light 属性面板
+        DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](auto& component)
+            {
+                // 光线方向（世界空间），shader 中取反得到指向光源的向量
+                ImGui::DragFloat3("Direction", glm::value_ptr(component.Direction), 0.01f);
+                // 光源颜色
+                ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+                // 辐照度缩放
+                ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
+                // 是否投射阴影
+                ImGui::Checkbox("Cast Shadow", &component.CastShadow);
+            });
+
+        // Point Light 属性面板
+        DrawComponent<PointLightComponent>("Point Light", entity, [](auto& component)
+            {
+                // 光源颜色
+                ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+                // 辐照度缩放
+                ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
+                // 影响半径
+                ImGui::DragFloat("Radius", &component.Radius, 0.1f, 0.01f, 1000.0f);
+                // 是否投射阴影（点光用立方体 Shadow Map，开销较大）
+                ImGui::Checkbox("Cast Shadow", &component.CastShadow);
             });
     }
 }

@@ -191,4 +191,46 @@ namespace Redflag {
 		ModelRendererComponent() = default;
 		ModelRendererComponent(const ModelRendererComponent&) = default;
 	};
+
+	// ---------------------------------------------------------------
+	// 方向光组件 — 模拟无限远的平行光源（太阳光）
+	//
+	// Direction 是光线射出的方向（世界空间），shader 中通常取反
+	// 得到「从表面指向光源」的向量用于 NdotL 计算。
+	//
+	// CastShadow 标记该灯是否参与 Shadow Map 生成，
+	// 阶段 5 实现 Shadow Pass 时会读取这个标志。
+	// ---------------------------------------------------------------
+	struct DirectionalLightComponent
+	{
+		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f }; // 默认从正上方往下照
+		glm::vec3 Color     = { 1.0f, 1.0f, 1.0f };  // 白光
+		float     Intensity = 1.0f;                    // 辐照度缩放因子
+		bool      CastShadow = true;                   // 是否投射阴影
+
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+	};
+
+	// ---------------------------------------------------------------
+	// 点光源组件 — 从一个点向四周均匀辐射
+	//
+	// 位置由实体的 TransformComponent 决定，这里不重复存储。
+	// Radius 是光照影响范围，超出此距离的片元跳过该灯的计算
+	// （衰减降为零），这是性能优化的关键参数。
+	//
+	// 衰减公式（后续 shader 中使用）：
+	//   attenuation = clamp(1.0 - (distance / Radius)^2, 0, 1)^2
+	// 这是 UE4 风格的平滑衰减，避免硬截断。
+	// ---------------------------------------------------------------
+	struct PointLightComponent
+	{
+		glm::vec3 Color     = { 1.0f, 1.0f, 1.0f };
+		float     Intensity = 1.0f;
+		float     Radius    = 10.0f;  // 影响半径（世界空间单位）
+		bool      CastShadow = false;  // 点光阴影（立方体 Shadow Map），默认关闭因为开销较大
+
+		PointLightComponent() = default;
+		PointLightComponent(const PointLightComponent&) = default;
+	};
 }
