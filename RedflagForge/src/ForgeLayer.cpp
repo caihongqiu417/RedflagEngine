@@ -219,7 +219,8 @@ namespace Redflag {
                         glm::vec4 color = (sel && sel == ent)
                             ? glm::vec4(1.0f, 0.85f, 0.0f, 1.0f)
                             : glm::vec4(1.0f, 0.9f, 0.4f, 0.85f);
-                        DrawDirectionalLightGizmo(tc.Translation, dl.Direction, color);
+                        glm::vec3 worldDir = glm::normalize(glm::mat3(tc.GetTransform()) * dl.Direction);
+                        DrawDirectionalLightGizmo(tc.Translation, worldDir, color);
                     });
                 }
 

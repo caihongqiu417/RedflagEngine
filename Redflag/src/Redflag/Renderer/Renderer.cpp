@@ -5,6 +5,7 @@
 #include"Platform/OpenGL/OpenGLShader.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Renderer3D.h"
+#include "Renderer/SceneRenderer.h"
 
 namespace Redflag {
 
@@ -17,6 +18,7 @@ namespace Redflag {
 		RenderCommand::Init();
 		Renderer2D::Init();
 		Renderer3D::Init();
+		SceneRenderer::Init();
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)

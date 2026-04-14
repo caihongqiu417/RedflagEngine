@@ -2,22 +2,22 @@ Scene: Unamed Scene
 Entities:
   - Entity: 12132151342123
     TagComponent:
-      Tag: UnFixedCamera_1
+      Tag: Square
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 1
-        PerspectiveFov: 0.785398185
-        PerspectiveNear: 0.00999999978
-        PerspectiveFar: 1000
-        OrthographicSize: 10
-        OrthographicNear: -1
-        OrthographicFar: 1000
-      Primary: false
-      FixedAspectRatio: false
+    SpriteRendererComponent:
+      Color: [0.699999988, 0.100000001, 0.100000001, 1]
+  - Entity: 12132151342123
+    TagComponent:
+      Tag: Square_2
+    TransformComponent:
+      Translation: [-2, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.800000012, 0.800000012, 0.800000012, 1]
   - Entity: 12132151342123
     TagComponent:
       Tag: FixedCamera_1
@@ -38,19 +38,19 @@ Entities:
       FixedAspectRatio: true
   - Entity: 12132151342123
     TagComponent:
-      Tag: Square_2
-    TransformComponent:
-      Translation: [-2, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0.800000012, 0.800000012, 0.800000012, 1]
-  - Entity: 12132151342123
-    TagComponent:
-      Tag: Square
+      Tag: UnFixedCamera_1
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0.699999988, 0.100000001, 0.100000001, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 1
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: false
+      FixedAspectRatio: false

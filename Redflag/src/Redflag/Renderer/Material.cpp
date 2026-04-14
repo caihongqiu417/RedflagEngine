@@ -10,15 +10,15 @@ namespace Redflag {
 	Ref<Material> Material::Create(const glm::vec4& color)
 	{
 		Ref<Material> mat = Ref<Material>(new Material());
-		mat->m_Color = color;
+		mat->BaseColor = color;
 		return mat;
 	}
 
 	Ref<Material> Material::Create(const Ref<Texture2D>& texture, const glm::vec4& tint)
 	{
 		Ref<Material> mat = Ref<Material>(new Material());
-		mat->m_Texture = texture;
-		mat->m_Color   = tint;
+		mat->BaseColorMap = texture;
+		mat->BaseColor    = tint;
 		return mat;
 	}
 

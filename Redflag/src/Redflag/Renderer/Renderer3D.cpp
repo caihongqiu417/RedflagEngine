@@ -36,6 +36,7 @@ namespace Redflag
 		struct CameraData
 		{
 			glm::mat4 ViewProjection;
+			glm::vec4 ViewPosition;  // xyz = 相机世界坐标, w = unused
 		};
 
 		struct TransformData
@@ -43,13 +44,18 @@ namespace Redflag
 			glm::mat4 Transform;
 		};
 
-		// std140: vec4 + vec4 + ivec4 = 48 bytes
+		// std140: vec4(16) + 4*float/int(16) + 4*int(16) = 48 bytes
 		struct MaterialData
 		{
-			glm::vec4 Color;
-			glm::vec4 Params; // x = UseTexture
-			int       EntityID;
-			int       _pad[3]; // std140 padding to 16-byte boundary
+			glm::vec4 BaseColor;           // offset 0
+			float     Metallic;            // offset 16
+			float     Roughness;           // offset 20
+			float     AO;                  // offset 24
+			int       UseBaseColorMap;     // offset 28
+			int       UseNormalMap;        // offset 32
+			int       UseMetallicRoughnessMap; // offset 36
+			int       UseAOMap;            // offset 40
+			int       EntityID;            // offset 44
 		};
 
 		CameraData    CameraBuffer;
@@ -69,6 +75,27 @@ namespace Redflag
 	// -------------------------------------------------------------------
 	// 内部：真正执行一次绘制（供 EndScene 调用）
 	// -------------------------------------------------------------------
+	// -------------------------------------------------------------------
+	// 填充 MaterialBuffer 并绑定贴图
+	// -------------------------------------------------------------------
+	static void UploadMaterial(const Ref<Material>& mat)
+	{
+		s_Data.MaterialBuffer.BaseColor  = mat->BaseColor;
+		s_Data.MaterialBuffer.Metallic   = mat->Metallic;
+		s_Data.MaterialBuffer.Roughness  = mat->Roughness;
+		s_Data.MaterialBuffer.AO         = mat->AO;
+
+		s_Data.MaterialBuffer.UseBaseColorMap        = mat->HasBaseColorMap()        ? 1 : 0;
+		s_Data.MaterialBuffer.UseNormalMap            = mat->HasNormalMap()            ? 1 : 0;
+		s_Data.MaterialBuffer.UseMetallicRoughnessMap = mat->HasMetallicRoughnessMap() ? 1 : 0;
+		s_Data.MaterialBuffer.UseAOMap               = mat->HasAOMap()                ? 1 : 0;
+
+		if (mat->HasBaseColorMap())        mat->BaseColorMap->Bind(3);
+		if (mat->HasNormalMap())           mat->NormalMap->Bind(4);
+		if (mat->HasMetallicRoughnessMap()) mat->MetallicRoughnessMap->Bind(5);
+		if (mat->HasAOMap())               mat->AOMap->Bind(6);
+	}
+
 	static void ExecuteDraw(const DrawCommand& cmd)
 	{
 		// 上传变换
@@ -76,20 +103,9 @@ namespace Redflag
 		s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
 
 		const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
-
-		if (mat->HasTexture())
-		{
-			s_Data.MaterialBuffer.Color  = mat->GetColor();
-			s_Data.MaterialBuffer.Params = glm::vec4(1.0f); // UseTexture = 1
-			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
-			mat->GetTexture()->Bind(3);
-		}
-		else
-		{
-			s_Data.MaterialBuffer.Color  = mat->GetColor();
-			s_Data.MaterialBuffer.Params = glm::vec4(0.0f); // UseTexture = 0
-			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
-		}
+		UploadMaterial(mat);
+		s_Data.MaterialBuffer.EntityID = cmd.EntityID;
+		s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
 
 		cmd.MeshData->Bind();
 		RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
@@ -128,15 +144,17 @@ namespace Redflag
 	void Renderer3D::BeginScene(const EditorCamera& camera)
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
+		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(), 1.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
 		ResetStats();
 	}
 
-	void Renderer3D::BeginScene(const glm::mat4& viewProjection)
+	void Renderer3D::BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition)
 	{
 		s_Data.CameraBuffer.ViewProjection = viewProjection;
+		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition, 1.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
@@ -179,19 +197,8 @@ namespace Redflag
 
 			if (key != lastKey)
 			{
-				// 材质状态切换：重新上传 material UBO + 绑定纹理
-				if (mat->HasTexture())
-				{
-					s_Data.MaterialBuffer.Color  = mat->GetColor();
-					s_Data.MaterialBuffer.Params = glm::vec4(1.0f);
-					mat->GetTexture()->Bind(3);
-				}
-				else
-				{
-					s_Data.MaterialBuffer.Color  = mat->GetColor();
-					s_Data.MaterialBuffer.Params = glm::vec4(0.0f);
-				}
-				s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+				// 材质状态切换：重新上传 PBR material UBO + 绑定贴图
+				UploadMaterial(mat);
 				lastKey = key;
 			}
 
@@ -254,6 +261,23 @@ namespace Redflag
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
 			Ref<Material> mat = subMesh.Mat ? subMesh.Mat : fallback;
+			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat, entityID });
+		}
+	}
+
+	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const Ref<Material>& overrideMaterial, const glm::vec4& fallbackColor, int entityID)
+	{
+		if (!model) return;
+
+		auto fallback = Material::Create(fallbackColor);
+
+		for (const auto& subMesh : model->GetSubMeshes())
+		{
+			if (!subMesh.MeshData) continue;
+
+			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
+			// 覆盖材质 > 子网格自带材质 > 纯色回退
+			Ref<Material> mat = overrideMaterial ? overrideMaterial : (subMesh.Mat ? subMesh.Mat : fallback);
 			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat, entityID });
 		}
 	}

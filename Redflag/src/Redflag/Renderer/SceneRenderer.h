@@ -27,47 +27,59 @@
 
 #include "Redflag/Core/Core.h"
 #include "Redflag/Renderer/EditorCamera.h"
+#include "Redflag/Renderer/UniformBuffer.h"
+
+#include <glm/glm.hpp>
 
 namespace Redflag {
 
 	// 前向声明；SceneRenderer 只需要指针 / 引用访问 Scene
 	class Scene;
 
+	// =================================================================
+	// GPU 灯光数据布局 (std140)
+	//
+	// 每个灯光占 64 字节，与 shader 中的 LightData 一一对应。
+	// Type 编码：0 = 方向光，1 = 点光源
+	// =================================================================
+	struct GPULightData
+	{
+		glm::vec4 Direction;   // xyz = 归一化方向, w = type (0=dir, 1=point)
+		glm::vec4 Color;       // xyz = 颜色,       w = 强度
+		glm::vec4 Position;    // xyz = 世界坐标,   w = 半径（点光）
+		int       CastShadow;  // 0 或 1
+		int       _pad[3];     // std140 对齐到 16 字节
+	};
+
+	// UBO 头部：灯光数量 + 对齐填充
+	struct GPULightUBO
+	{
+		int NumDirectionalLights;
+		int NumPointLights;
+		int _pad[2];
+		// 后面紧跟 LightData[] 数组，通过 offset 写入
+	};
+
+	static constexpr uint32_t MAX_DIRECTIONAL_LIGHTS = 1;
+	static constexpr uint32_t MAX_POINT_LIGHTS = 16;
+	static constexpr uint32_t LIGHT_UBO_BINDING = 3;
+
 	class SceneRenderer
 	{
 	public:
-		// ------------------------------------------------------------------
-		// BeginScene / EndScene
-		// 目前是空操作。后续会在这里初始化帧级资源和 framebuffer。
-		// ------------------------------------------------------------------
+		// 初始化 / 销毁渲染资源（Light UBO 等）
+		static void Init();
+		static void Shutdown();
+
 		static void BeginScene();
 		static void EndScene();
 
-		// ------------------------------------------------------------------
-		// RenderScene — 编辑器模式下的完整渲染
-		//
-		// 参数：
-		//   scene  — 当前场景（从中读取 ECS registry）
-		//   camera — 编辑器相机
-		//
-		// 做的事：
-		//   1. 遍历 2D 实体（Sprite / Circle），用 Renderer2D 画
-		//   2. 遍历 3D 实体（Mesh / Model），用 Renderer3D 画
-		//   （后续：Shadow → GBuffer → Lighting → Transparent → Overlay → PostProcess）
-		// ------------------------------------------------------------------
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
-
-		// ------------------------------------------------------------------
-		// RenderRuntime — 运行时模式下的完整渲染
-		//
-		// 参数：
-		//   scene           — 当前场景
-		//   projection      — 主相机投影矩阵
-		//   cameraTransform — 主相机 Transform 矩阵（世界空间）
-		//
-		// 做的事同 RenderScene，但相机来源不同（是运行时场景里的主相机）
-		// ------------------------------------------------------------------
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform);
+
+	private:
+		// 遍历 registry 收集灯光数据并上传 Light UBO
+		static void CollectAndUploadLights(Scene& scene);
 	};
 
 } // namespace Redflag

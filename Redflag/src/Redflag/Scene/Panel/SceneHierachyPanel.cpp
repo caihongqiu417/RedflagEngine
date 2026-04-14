@@ -555,42 +555,59 @@ namespace Redflag {
         // Mesh Renderer
         DrawComponent<MeshRendererComponent>("Mesh Renderer", entity, [](auto& component)
             {
-                // 颜色
-                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
-
-                // 纹理
-                ImGui::Separator();
-                ImGui::Text("Texture");
-
-                if (component.Texture && component.Texture->GetRendererID())
+                // 如果还没有 Material，自动创建一个默认 PBR 材质
+                if (!component.Mat)
                 {
-                    ImGui::Image(
-                        (void*)(intptr_t)component.Texture->GetRendererID(),
-                        ImVec2(64, 64)
-                    );
+                    component.Mat = Material::Create(component.Color);
+                    if (component.Texture)
+                        component.Mat->BaseColorMap = component.Texture;
                 }
-                else
-                {
-                    ImGui::Button("No Texture", ImVec2(64, 64));
-                }
+                Ref<Material>& mat = component.Mat;
 
-                if (ImGui::BeginDragDropTarget())
+                // ---- 基础颜色 ----
+                ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
+
+                // ---- PBR 标量参数 ----
+                ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
+                ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
+                ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
+
+                // ---- 贴图槽位（统一的 helper：预览 + 拖拽 + 清除）----
+                auto TextureSlotUI = [](const char* label, Ref<Texture2D>& tex)
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                    ImGui::Separator();
+                    ImGui::Text("%s", label);
+                    if (tex && tex->GetRendererID())
+                        ImGui::Image((void*)(intptr_t)tex->GetRendererID(), ImVec2(48, 48));
+                    else
+                        ImGui::Button("None##btn", ImVec2(48, 48));
+
+                    // 拖拽接受
+                    if (ImGui::BeginDragDropTarget())
                     {
-                        const char* path = (const char*)payload->Data;
-                        if (path)
-                            component.Texture = Texture2D::Create(path);
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                        {
+                            const char* path = (const char*)payload->Data;
+                            if (path)
+                                tex = Texture2D::Create(path);
+                        }
+                        ImGui::EndDragDropTarget();
                     }
-                    ImGui::EndDragDropTarget();
-                }
+                    if (tex)
+                    {
+                        ImGui::SameLine();
+                        // 用 PushID 避免多个 Clear 按钮 ID 冲突
+                        ImGui::PushID(label);
+                        if (ImGui::Button("Clear"))
+                            tex = nullptr;
+                        ImGui::PopID();
+                    }
+                };
 
-                if (component.Texture)
-                {
-                    ImGui::SameLine();
-                    if (ImGui::Button("Clear Texture"))
-                        component.Texture = nullptr;
-                }
+                TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
+                TextureSlotUI("Normal Map",             mat->NormalMap);
+                TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
+                TextureSlotUI("AO Map",                 mat->AOMap);
             });
 
         // Model Renderer
@@ -609,13 +626,14 @@ namespace Redflag {
                         {
                             component.FilePath    = path;
                             component.ModelAsset  = AssetManager::GetOrLoad<Model>(component.FilePath);
+                            component.OverrideMaterial.reset(); // 重新加载模型时清除覆盖材质
                         }
                     }
                     ImGui::EndDragDropTarget();
                 }
 
-                // 颜色（无贴图时使用）
-                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+                // 备用颜色
+                ImGui::ColorEdit4("Fallback Color", glm::value_ptr(component.Color));
 
                 // 卸载按钮
                 if (component.ModelAsset)
@@ -624,6 +642,98 @@ namespace Redflag {
                     {
                         component.ModelAsset.reset();
                     }
+                }
+
+                // ---- 模型自带材质信息（只读预览）----
+                if (component.ModelAsset)
+                {
+                    const auto& subMeshes = component.ModelAsset->GetSubMeshes();
+                    if (!subMeshes.empty() && ImGui::TreeNode("Imported Materials"))
+                    {
+                        for (size_t i = 0; i < subMeshes.size(); i++)
+                        {
+                            const auto& sub = subMeshes[i];
+                            ImGui::PushID((int)i);
+                            if (ImGui::TreeNode("SubMesh", "SubMesh %d", (int)i))
+                            {
+                                if (sub.Mat)
+                                {
+                                    ImGui::Text("BaseColor: (%.2f, %.2f, %.2f, %.2f)",
+                                        sub.Mat->BaseColor.r, sub.Mat->BaseColor.g,
+                                        sub.Mat->BaseColor.b, sub.Mat->BaseColor.a);
+                                    ImGui::Text("Metallic: %.2f  Roughness: %.2f  AO: %.2f",
+                                        sub.Mat->Metallic, sub.Mat->Roughness, sub.Mat->AO);
+                                    ImGui::Text("Maps: %s%s%s%s",
+                                        sub.Mat->HasBaseColorMap()         ? "[Base] " : "",
+                                        sub.Mat->HasNormalMap()            ? "[Normal] " : "",
+                                        sub.Mat->HasMetallicRoughnessMap() ? "[MR] " : "",
+                                        sub.Mat->HasAOMap()                ? "[AO]" : "");
+                                }
+                                else
+                                {
+                                    ImGui::TextDisabled("No material");
+                                }
+                                ImGui::TreePop();
+                            }
+                            ImGui::PopID();
+                        }
+                        ImGui::TreePop();
+                    }
+                }
+
+                // ---- 覆盖材质（可选，优先级高于模型自带材质）----
+                ImGui::Separator();
+                bool hasOverride = component.OverrideMaterial != nullptr;
+                if (ImGui::Checkbox("Override Material", &hasOverride))
+                {
+                    if (hasOverride && !component.OverrideMaterial)
+                        component.OverrideMaterial = Material::Create(component.Color);
+                    else if (!hasOverride)
+                        component.OverrideMaterial.reset();
+                }
+
+                if (component.OverrideMaterial)
+                {
+                    Ref<Material>& mat = component.OverrideMaterial;
+
+                    ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
+                    ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
+                    ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
+                    ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
+
+                    auto TextureSlotUI = [](const char* label, Ref<Texture2D>& tex)
+                    {
+                        ImGui::Separator();
+                        ImGui::Text("%s", label);
+                        if (tex && tex->GetRendererID())
+                            ImGui::Image((void*)(intptr_t)tex->GetRendererID(), ImVec2(48, 48));
+                        else
+                            ImGui::Button("None##btn", ImVec2(48, 48));
+
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                            {
+                                const char* path = (const char*)payload->Data;
+                                if (path)
+                                    tex = Texture2D::Create(path);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (tex)
+                        {
+                            ImGui::SameLine();
+                            ImGui::PushID(label);
+                            if (ImGui::Button("Clear"))
+                                tex = nullptr;
+                            ImGui::PopID();
+                        }
+                    };
+
+                    TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
+                    TextureSlotUI("Normal Map",             mat->NormalMap);
+                    TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
+                    TextureSlotUI("AO Map",                 mat->AOMap);
                 }
             });
 

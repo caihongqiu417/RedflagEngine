@@ -4,17 +4,17 @@ Entities:
     TagComponent:
       Tag: Light
     TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [-0.0802830458, 4.8062644, -0.819999993]
+      Rotation: [0.606540143, -0.0471760482, -0.470746756]
+      Scale: [1, 0.999999702, 1.00000012]
     DirectionalLightComponent:
       Direction: [0, -1, 0]
       Color: [0.868338585, 0.533524632, 0.533524632]
-      Intensity: 1
+      Intensity: 14.8500004
       CastShadow: true
   - Entity: 12112258788623315209
     TagComponent:
-      Tag: Empty Entity
+      Tag: Model
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
@@ -40,12 +40,13 @@ Entities:
         OrthographicFar: 1000
       Primary: true
       FixedAspectRatio: false
-  - Entity: 12132151342123
+  - Entity: 6099546564087943552
     TagComponent:
-      Tag: Square
+      Tag: PbrModel
     TransformComponent:
-      Translation: [0, -1, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0.912225723, 0.102947131, 0.102947131, 1]
+      Translation: [0, 0, -3.74678874]
+      Rotation: [0.0434615836, 0, 0]
+      Scale: [0.100000001, 0.0999999791, 0.0999999791]
+    ModelRendererComponent:
+      FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
+      Color: [0.931034505, 0.931034505, 0.931034505, 1]

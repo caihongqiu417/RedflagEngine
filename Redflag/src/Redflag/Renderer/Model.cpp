@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "Model.h"
+#include <assimp/pbrmaterial.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -87,6 +88,12 @@ namespace Redflag {
 				? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
 				: glm::vec2(0.0f);
 
+			// 切线向量（由 aiProcess_CalcTangentSpace 计算）
+			// 如果无 UV 导致 Assimp 无法计算，则回退到 (1,0,0)
+			vertex.Tangent = mesh->HasTangentsAndBitangents()
+				? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z)
+				: glm::vec3(1.0f, 0.0f, 0.0f);
+
 			vertices.push_back(vertex);
 		}
 
@@ -102,15 +109,60 @@ namespace Redflag {
 		subMesh.MeshData       = Mesh::Create(vertices, indices);
 		subMesh.LocalTransform = nodeTransform;
 
-		// 加载漫反射贴图，创建 Material
+		// 加载 PBR 材质贴图
 		if (mesh->mMaterialIndex >= 0)
 		{
-			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			Ref<Texture2D> diffuse = LoadMaterialTexture(material, scene, aiTextureType_DIFFUSE);
-			if (diffuse)
-				subMesh.Mat = Material::Create(diffuse);
+			aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
+			auto mat = Ref<Material>(new Material());
+
+			// BaseColor / Diffuse 贴图
+			mat->BaseColorMap = LoadMaterialTexture(aiMat, scene, aiTextureType_DIFFUSE);
+
+			// 法线贴图
+			mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_NORMALS);
+			if (!mat->NormalMap)
+				mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_HEIGHT);
+
+			// 金属度粗糙度贴图（glTF: UNKNOWN, FBX: SHININESS 等）
+			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, scene, aiTextureType_UNKNOWN);
+
+			// 环境遮蔽贴图（Assimp 4.x: LIGHTMAP = Ambient Occlusion）
+			mat->AOMap = LoadMaterialTexture(aiMat, scene, aiTextureType_LIGHTMAP);
+
+			// 从 Assimp 材质读取标量参数
+			// 优先尝试 glTF PBR base color factor，再回退到传统 diffuse color
+			aiColor4D baseColor;
+			bool hasBaseColor = false;
+			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColor) == AI_SUCCESS)
+			{
+				mat->BaseColor = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
+				hasBaseColor = true;
+			}
+			else if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == AI_SUCCESS)
+			{
+				mat->BaseColor = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
+				hasBaseColor = true;
+			}
+
+			// 如果读到的颜色接近纯黑，但有漫反射贴图，则保持白色让贴图正常显示
+			// （FBX PBR 材质经常将传统 diffuse color 设为 (0,0,0)）
+			if (hasBaseColor && mat->BaseColorMap)
+			{
+				float luminance = mat->BaseColor.r * 0.299f + mat->BaseColor.g * 0.587f + mat->BaseColor.b * 0.114f;
+				if (luminance < 0.01f)
+					mat->BaseColor = glm::vec4(1.0f);
+			}
+
+			float metallic = 0.0f;
+			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallic) == AI_SUCCESS)
+				mat->Metallic = metallic;
+
+			float roughness = 0.5f;
+			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
+				mat->Roughness = roughness;
+
+			subMesh.Mat = mat;
 		}
-		// 没有贴图则 Mat 留 nullptr，Renderer3D 回退到白色
 
 		return subMesh;
 	}
@@ -132,8 +184,49 @@ namespace Redflag {
 			return nullptr;
 		}
 
-		// 外部纹理文件：拼接目录 + 相对路径
-		std::string fullPath = m_Directory + "/" + texPath.C_Str();
+		std::string rawPath = texPath.C_Str();
+
+		// 统一路径分隔符
+		for (auto& c : rawPath)
+			if (c == '\\') c = '/';
+
+		// 尝试 1：直接拼接目录 + 相对路径
+		std::string fullPath = m_Directory + "/" + rawPath;
+
+		// 尝试 2：如果是绝对路径或者文件不存在，提取文件名在模型目录下搜索
+		{
+			std::ifstream test(fullPath);
+			if (!test.good())
+			{
+				// 提取纯文件名
+				size_t lastSlash = rawPath.find_last_of('/');
+				std::string filename = (lastSlash != std::string::npos)
+					? rawPath.substr(lastSlash + 1) : rawPath;
+
+				// 在模型目录下直接查找
+				std::string alt1 = m_Directory + "/" + filename;
+				std::ifstream t1(alt1);
+				if (t1.good())
+				{
+					fullPath = alt1;
+				}
+				else
+				{
+					// 在 textures 子目录中查找
+					std::string alt2 = m_Directory + "/textures/" + filename;
+					std::ifstream t2(alt2);
+					if (t2.good())
+						fullPath = alt2;
+					else
+					{
+						RF_CORE_WARN("Model::LoadMaterialTexture: texture not found: '{0}' (tried '{1}', '{2}')",
+							rawPath, alt1, alt2);
+						return nullptr;
+					}
+				}
+			}
+		}
+
 		return Texture2D::Create(fullPath);
 	}
 

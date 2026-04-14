@@ -25,7 +25,7 @@ namespace Redflag
 		static void Shutdown();
 
 		static void BeginScene(const EditorCamera& camera);
-		static void BeginScene(const glm::mat4& viewProjection);
+		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition = glm::vec3(0.0f));
 
 		// 在 EndScene 里统一排序并执行所有 DrawCommand
 		static void EndScene();
@@ -37,6 +37,7 @@ namespace Redflag
 
 		// 绘制整个 Model（把所有 SubMesh 推入队列）
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
+		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const Ref<Material>& overrideMaterial, const glm::vec4& fallbackColor, int entityID = -1);
 
 		static void ResetStats();
 		static Statistics GetStats();

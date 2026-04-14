@@ -420,3 +420,22 @@ RedflagForge/assets/textures/
 RedflagForge/assets/fonts/
 Sandbox/assets/textures/
 
+# 3D model files (any location under assets/)
+**/assets/**/*.obj
+**/assets/**/*.fbx
+**/assets/**/*.gltf
+**/assets/**/*.glb
+**/assets/**/*.dae
+**/assets/**/*.3ds
+**/assets/**/*.blend
+
+# Material / texture files
+**/assets/**/*.png
+**/assets/**/*.jpg
+**/assets/**/*.jpeg
+**/assets/**/*.tga
+**/assets/**/*.bmp
+**/assets/**/*.hdr
+**/assets/**/*.exr
+**/assets/**/*.mtl
+

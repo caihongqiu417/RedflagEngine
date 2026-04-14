@@ -70,8 +70,8 @@ ForgeLayer（编辑器集成）
 
 - [x] 新增 `DirectionalLightComponent`：方向、颜色、强度、是否投影
 - [x] 新增 `PointLightComponent`：位置、颜色、强度、半径
-- [ ] `SceneRenderer` 收集阶段：遍历灯光组件，填充 `LightData` 数组
-- [ ] 新增 `Light UBO`（binding = 3）：
+- [x] `SceneRenderer` 收集阶段：遍历灯光组件，填充 `LightData` 数组
+- [x] 新增 `Light UBO`（binding = 3）：
   ```
   struct LightData {           // std140
       vec4 Direction;           // xyz = dir, w = type
@@ -89,64 +89,61 @@ ForgeLayer（编辑器集成）
 
 ---
 
-### 阶段 3 — PBR 材质升级
+### 阶段 3 — PBR 材质升级 ✅
 
 **目标**：Material 类支持 PBR 参数，Mesh 顶点带切线。
 
-- [ ] `Material` 新增字段：
-  - `BaseColorMap` + `BaseColorFactor`
+- [x] `Material` 新增字段：
+  - `BaseColorMap` + `BaseColor`（vec4）
   - `NormalMap`
-  - `MetallicFactor` / `RoughnessFactor`
-  - `MetallicRoughnessMap`（R=金属度 G=粗糙度）
-  - `AOMap`（可选）
-  - `EmissiveFactor`（可选，先留空）
-  - `AlphaMode`（Opaque / Masked / Transparent）
+  - `MetallicRoughnessMap`（G=粗糙度 B=金属度）
+  - `AOMap`
+  - `Metallic` / `Roughness` / `AO` 标量
+  - `AlphaMode`（Opaque / Mask / Blend）+ `AlphaCutoff`
   - `DoubleSided`
-- [ ] `Material GPU UBO` 布局：
+- [x] `Material GPU UBO` (binding=2, std140, 48 bytes)：
   ```
-  struct MaterialGPU {         // std140, binding = 2
-      vec4  BaseColor;
-      float Metallic;
-      float Roughness;
-      float AO;
-      int   UseBaseColorMap;
-      int   UseNormalMap;
-      int   UseMetallicRoughnessMap;
-      int   _pad[2];
-  };
+  vec4  BaseColor;              // offset 0
+  float Metallic;               // offset 16
+  float Roughness;              // offset 20
+  float AO;                     // offset 24
+  int   UseBaseColorMap;        // offset 28
+  int   UseNormalMap;           // offset 32
+  int   UseMetallicRoughnessMap;// offset 36
+  int   UseAOMap;               // offset 40
+  int   EntityID;               // offset 44
   ```
-- [ ] Mesh 顶点新增 `a_Tangent`（float3），Assimp 导入时计算切线
-- [ ] MeshRendererComponent / ModelRendererComponent 中引用 PBR Material
-- [ ] 属性面板中可编辑 PBR 参数并拖入贴图
+- [x] Mesh 顶点新增 `a_Tangent`（float3），Assimp 导入时提取切线
+- [x] Model.cpp: Assimp 导入加载 PBR 贴图（Diffuse/Normal/MetallicRoughness/AO）+ 读取 metallic/roughness 标量
+- [x] Renderer3D_Mesh.glsl 着色器同步更新（接受 a_Tangent, 新 UBO 布局, 声明 PBR 纹理采样器）
+- [x] Renderer3D.cpp `UploadMaterial()` 辅助函数：填充 PBR UBO 并绑定贴图到 slot 3-6
 
-**验证**：导入的模型在属性面板中显示 Metallic/Roughness 滑条，拖入 Normal Map 不崩溃。
+**验证**：导入的模型仍正常渲染（BaseColor + BaseColorMap），PBR 贴图数据已就绪，等待 Phase 4 着色器使用。
 
 ---
 
-### 阶段 4 — Forward PBR 主 Shader
+### 阶段 4 — Forward PBR 主 Shader ✅
 
 **目标**：用一个前向 PBR shader 替换当前的 Renderer3D_Mesh.glsl，跑出真实感。
 
-- [ ] 新建 `assets/shaders/PBR_Forward.glsl`
-- [ ] Vertex shader：
-  - 输入 `a_Position, a_Normal, a_Tangent, a_TexCoord`
-  - 输出 `v_WorldPos, v_Normal, v_TexCoord, TBN matrix`
-  - UBO: CameraData (binding=0), TransformData (binding=1)
-- [ ] Fragment shader：
-  - 采样 BaseColor / Normal / MetallicRoughness
-  - TBN 变换法线
-  - Cook-Torrance BRDF：GGX NDF + Smith Geometry + Fresnel Schlick
-  - 遍历方向光 + 点光，累加直接光照
+- [x] Camera UBO 扩展：`ViewProjection(mat4)` + `ViewPosition(vec4)`，Renderer3D::BeginScene 上传相机世界坐标
+- [x] 直接在 `Renderer3D_Mesh.glsl` 中实现 PBR（无需另建文件）：
+  - Vertex: 输出 `v_WorldPos`, `v_Normal`, `v_TexCoord`, `v_TBN(mat3)` (Gram-Schmidt 正交化)
+  - Fragment: Cook-Torrance BRDF (GGX NDF + Smith-Schlick Geometry + Fresnel-Schlick)
+  - 采样 BaseColorMap / NormalMap / MetallicRoughnessMap / AOMap
+  - TBN 法线映射
+  - 遍历 Light UBO (binding=3)：方向光 + 点光源（半径衰减）
+  - 简易环境光 `0.03 * albedo * ao`
+  - 临时 Reinhard tonemapping + Gamma 2.2（Phase 5 迁移到后处理）
   - EntityID 输出到 `layout(location=1)`
-  - HDR 输出到 `layout(location=0)`
-- [ ] `SceneRenderer` 中替换 Renderer3D 使用的 shader
-- [ ] 先不做阴影采样（下一步加）
+- [x] 运行时模式传入相机位置 `glm::vec3(cameraTransform[3])`
+- [x] ⚠️ 构建前需清除 shader SPIR-V 缓存：`assets/cache/shader/opengl/Renderer3D_Mesh*`
 
 **验证**：  
 1. 导入一个球体模型，调节 Roughness 从 0→1，高光从锐利变模糊  
 2. 调节 Metallic 从 0→1，非金属变金属外观  
 3. 法线贴图使表面出现凹凸细节  
-4. Entity picking 仍然正常  
+4. Entity picking 仍然正常
 
 ---
 

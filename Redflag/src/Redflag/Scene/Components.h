@@ -11,6 +11,7 @@
 #include"Redflag/Core/UUID.h"
 #include"Redflag/Renderer/Mesh.h"
 #include"Redflag/Renderer/Model.h"
+#include"Redflag/Renderer/Material.h"
 
 namespace Redflag {
 
@@ -175,6 +176,7 @@ namespace Redflag {
 		Ref<Mesh>      MeshData;
 		glm::vec4      Color = glm::vec4(1.0f);
 		Ref<Texture2D> Texture;
+		Ref<Material>  Mat;   // PBR 材质（若非空则优先使用，否则回退到 Color/Texture）
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
@@ -187,6 +189,7 @@ namespace Redflag {
 		Ref<Model>   ModelAsset;     // 运行时句柄，由 AssetManager 管理，不序列化
 
 		glm::vec4    Color = glm::vec4(1.0f); // 无贴图时的备用颜色
+		Ref<Material> OverrideMaterial; // 编辑器中手动设置的覆盖材质（可选）
 
 		ModelRendererComponent() = default;
 		ModelRendererComponent(const ModelRendererComponent&) = default;

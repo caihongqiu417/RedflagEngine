@@ -1,29 +1,22 @@
 // =====================================================================
-// SceneRenderer.cpp — 第一版实现（纯转发）
+// SceneRenderer.cpp — 场景渲染调度器
 //
-// 这个文件的核心思路：
-//   把原来 Scene::OnUpdateEditor 和 Scene::OnUpdateRuntime 中的
-//   「遍历实体 → 调用 Renderer2D / Renderer3D」逻辑，原封不动地
-//   搬到这里。Scene 不再直接 #include Renderer2D / Renderer3D，
-//   渲染调用全部由 SceneRenderer 发出。
-//
-//   这一步完成后，画面和功能应该与改动前完全一致。
-//   后续会在这里拆分出多个 pass（Shadow / Main / PostProcess）。
+// 职责：
+//   1. 每帧收集灯光数据 → 上传 Light UBO (binding = 3)
+//   2. 遍历 registry → 调用 Renderer2D / Renderer3D 发出绘制命令
+//   3. 后续扩展：Shadow Pass、PostProcess 等多 pass 编排
 // =====================================================================
 
 #include "rfpch.h"
 #include "SceneRenderer.h"
 
-// 需要访问 Scene 的 registry 和组件
 #include "Redflag/Scene/Scene.h"
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Scene/Components.h"
 
-// 底层渲染执行器
 #include "Redflag/Renderer/Renderer2D.h"
 #include "Redflag/Renderer/Renderer3D.h"
 
-// 资源加载（模型懒加载）
 #include "Redflag/Core/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
@@ -31,12 +24,27 @@
 
 namespace Redflag {
 
-	// ------------------------------------------------------------------
-	// BeginScene / EndScene
-	// 第一版为空操作。后续在这里：
-	//   BeginScene → 准备帧级 framebuffer、清屏、上传全局 UBO
-	//   EndScene   → 提交后处理、解绑 framebuffer
-	// ------------------------------------------------------------------
+	// =================================================================
+	// 静态资源：Light UBO
+	// =================================================================
+	static Ref<UniformBuffer> s_LightUBO;
+
+	// CPU 侧灯光缓冲区，每帧填充后一次性上传
+	// 布局：[GPULightUBO header (16B)] + [LightData[] 数组]
+	static constexpr uint32_t LIGHT_UBO_SIZE =
+		sizeof(GPULightUBO) +
+		(MAX_DIRECTIONAL_LIGHTS + MAX_POINT_LIGHTS) * sizeof(GPULightData);
+
+	void SceneRenderer::Init()
+	{
+		s_LightUBO = UniformBuffer::Create(LIGHT_UBO_SIZE, LIGHT_UBO_BINDING);
+	}
+
+	void SceneRenderer::Shutdown()
+	{
+		s_LightUBO.reset();
+	}
+
 	void SceneRenderer::BeginScene()
 	{
 	}
@@ -87,19 +95,23 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
+		// ======================== 灯光收集 ========================
+		CollectAndUploadLights(scene);
+
 		// ======================== 3D 渲染 ========================
-		// 使用编辑器相机初始化 3D 提交队列
 		Renderer3D::BeginScene(camera);
 
 		// --- MeshRendererComponent ---
-		// 单个 Mesh，支持纹理或纯色
+		// 单个 Mesh，优先使用 PBR Material，否则回退到 Color/Texture
 		{
 			auto view = registry.view<TransformComponent, MeshRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
 			{
 				if (mr.MeshData)
 				{
-					if (mr.Texture)
+					if (mr.Mat)
+						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Mat, (int)entity);
+					else if (mr.Texture)
 						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
 					else
 						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
@@ -108,7 +120,7 @@ namespace Redflag {
 		}
 
 		// --- ModelRendererComponent ---
-		// 多子网格模型，支持懒加载
+		// 多子网格模型，支持懒加载 + 覆盖材质
 		{
 			auto view = registry.view<TransformComponent, ModelRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
@@ -118,7 +130,7 @@ namespace Redflag {
 					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
 				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
+					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterial, mr.Color, (int)entity);
 			});
 		}
 
@@ -127,14 +139,6 @@ namespace Redflag {
 
 	// ==================================================================
 	// RenderRuntime — 运行时模式渲染
-	//
-	// 逻辑等价于原来 Scene::OnUpdateRuntime 中 「if (mainCamera)」
-	// 之后的渲染部分。相机数据由调用方传入，而不是 SceneRenderer
-	// 自己去查找 CameraComponent。
-	//
-	// 为什么把「查找主相机」留在 Scene 里：
-	//   因为主相机的选择是场景逻辑（哪个 CameraComponent.Primary == true），
-	//   不是渲染逻辑。SceneRenderer 只需要最终的投影和 Transform。
 	// ==================================================================
 	void SceneRenderer::RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform)
 	{
@@ -161,10 +165,13 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
+		// ======================== 灯光收集 ========================
+		CollectAndUploadLights(scene);
+
 		// ======================== 3D 渲染 ========================
-		// 运行时相机：手动构造 viewProjection = projection * inverse(cameraTransform)
 		glm::mat4 viewProj3D = projection * glm::inverse(cameraTransform);
-		Renderer3D::BeginScene(viewProj3D);
+		glm::vec3 cameraPos  = glm::vec3(cameraTransform[3]); // 从变换矩阵提取位移列
+		Renderer3D::BeginScene(viewProj3D, cameraPos);
 
 		{
 			auto view = registry.view<TransformComponent, ModelRendererComponent>();
@@ -174,11 +181,82 @@ namespace Redflag {
 					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
 				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.Color, (int)entity);
+					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterial, mr.Color, (int)entity);
 			});
 		}
 
 		Renderer3D::EndScene();
+	}
+
+	// ==================================================================
+	// CollectAndUploadLights — 遍历场景灯光实体，填充 Light UBO
+	//
+	// UBO 内存布局 (std140, binding = 3)：
+	//   offset 0  : GPULightUBO header (16 bytes)
+	//               - int NumDirectionalLights
+	//               - int NumPointLights
+	//               - int _pad[2]
+	//   offset 16 : GPULightData[0..MAX_DIR-1] 方向光数组
+	//   offset 16 + MAX_DIR*64 : GPULightData[0..MAX_POINT-1] 点光数组
+	//
+	// 每帧在 3D 渲染开始前调用，确保 shader 读到最新灯光。
+	// ==================================================================
+	void SceneRenderer::CollectAndUploadLights(Scene& scene)
+	{
+		entt::registry& registry = scene.GetRegistry();
+
+		GPULightUBO header{};
+		GPULightData dirLights[MAX_DIRECTIONAL_LIGHTS]{};
+		GPULightData pointLights[MAX_POINT_LIGHTS]{};
+
+		// --- 收集方向光 ---
+		{
+			auto view = registry.view<TransformComponent, DirectionalLightComponent>();
+			view.each([&](auto entity, TransformComponent& tc, DirectionalLightComponent& dl)
+			{
+				if (header.NumDirectionalLights >= (int)MAX_DIRECTIONAL_LIGHTS) return;
+				auto& light = dirLights[header.NumDirectionalLights];
+				glm::vec3 dir = glm::normalize(glm::mat3(tc.GetTransform()) * dl.Direction);
+				light.Direction = glm::vec4(dir, 0.0f);           // w=0 表示方向光
+				light.Color     = glm::vec4(dl.Color, dl.Intensity);
+				light.Position  = glm::vec4(0.0f);                // 方向光无位置
+				light.CastShadow = dl.CastShadow ? 1 : 0;
+				header.NumDirectionalLights++;
+			});
+		}
+
+		// --- 收集点光源 ---
+		{
+			auto view = registry.view<TransformComponent, PointLightComponent>();
+			view.each([&](auto entity, TransformComponent& tc, PointLightComponent& pl)
+			{
+				if (header.NumPointLights >= (int)MAX_POINT_LIGHTS) return;
+				auto& light = pointLights[header.NumPointLights];
+				light.Direction = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // w=1 表示点光
+				light.Color     = glm::vec4(pl.Color, pl.Intensity);
+				light.Position  = glm::vec4(tc.Translation, pl.Radius);
+				light.CastShadow = pl.CastShadow ? 1 : 0;
+				header.NumPointLights++;
+			});
+		}
+
+		// --- 上传到 GPU ---
+		uint32_t offset = 0;
+
+		RF_CORE_TRACE("Lights: {0} dir, {1} point", header.NumDirectionalLights, header.NumPointLights);
+
+		// header
+		s_LightUBO->SetData(&header, sizeof(GPULightUBO), offset);
+		offset += sizeof(GPULightUBO);
+
+		// 方向光数组
+		if (header.NumDirectionalLights > 0)
+			s_LightUBO->SetData(dirLights, header.NumDirectionalLights * sizeof(GPULightData), offset);
+		offset += MAX_DIRECTIONAL_LIGHTS * sizeof(GPULightData);
+
+		// 点光数组
+		if (header.NumPointLights > 0)
+			s_LightUBO->SetData(pointLights, header.NumPointLights * sizeof(GPULightData), offset);
 	}
 
 } // namespace Redflag

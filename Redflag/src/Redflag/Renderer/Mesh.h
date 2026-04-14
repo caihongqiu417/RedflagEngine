@@ -9,12 +9,13 @@
 
 namespace Redflag
 {
-	// 单个顶点数据：位置、法线、纹理坐标
+	// 单个顶点数据：位置、法线、纹理坐标、切线
 	struct MeshVertex
 	{
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoord;
+		glm::vec3 Tangent;   // 切线向量，用于法线贴图的 TBN 矩阵构建
 	};
 
 	class Mesh

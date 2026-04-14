@@ -221,6 +221,14 @@ namespace Redflag {
             // MeshData 目前只支持立方体，后期扩展文件路径
             out << YAML::Key << "MeshType" << YAML::Value << "Cube";
 
+            // PBR 材质参数
+            if (mr.Mat)
+            {
+                out << YAML::Key << "Metallic"  << YAML::Value << mr.Mat->Metallic;
+                out << YAML::Key << "Roughness" << YAML::Value << mr.Mat->Roughness;
+                out << YAML::Key << "AO"        << YAML::Value << mr.Mat->AO;
+            }
+
             out << YAML::EndMap;
         }
 
@@ -232,6 +240,16 @@ namespace Redflag {
             auto& mr = entity.GetComponent<ModelRendererComponent>();
             out << YAML::Key << "FilePath" << YAML::Value << mr.FilePath;
             out << YAML::Key << "Color"    << YAML::Value << mr.Color;
+
+            // 覆盖材质 PBR 参数
+            if (mr.OverrideMaterial)
+            {
+                out << YAML::Key << "HasOverrideMaterial" << YAML::Value << true;
+                out << YAML::Key << "OverrideBaseColor" << YAML::Value << mr.OverrideMaterial->BaseColor;
+                out << YAML::Key << "OverrideMetallic"  << YAML::Value << mr.OverrideMaterial->Metallic;
+                out << YAML::Key << "OverrideRoughness" << YAML::Value << mr.OverrideMaterial->Roughness;
+                out << YAML::Key << "OverrideAO"        << YAML::Value << mr.OverrideMaterial->AO;
+            }
 
             out << YAML::EndMap;
         }
@@ -459,6 +477,12 @@ namespace Redflag {
                     mr.Color = mrNode["Color"].as<glm::vec4>();
                     // 目前只支持立方体
                     mr.MeshData = Mesh::CreateCube();
+
+                    // PBR 材质参数
+                    mr.Mat = Material::Create(mr.Color);
+                    if (mrNode["Metallic"])  mr.Mat->Metallic  = mrNode["Metallic"].as<float>();
+                    if (mrNode["Roughness"]) mr.Mat->Roughness = mrNode["Roughness"].as<float>();
+                    if (mrNode["AO"])        mr.Mat->AO        = mrNode["AO"].as<float>();
                 }
 
                 // ModelRendererComponent
@@ -469,6 +493,16 @@ namespace Redflag {
                     mr.FilePath = mrNode["FilePath"].as<std::string>();
                     mr.Color    = mrNode["Color"].as<glm::vec4>();
                     // ModelAsset 将在首次渲染时由 AssetManager 懒加载
+
+                    // 覆盖材质
+                    if (mrNode["HasOverrideMaterial"] && mrNode["HasOverrideMaterial"].as<bool>())
+                    {
+                        mr.OverrideMaterial = Material::Create(glm::vec4(1.0f));
+                        if (mrNode["OverrideBaseColor"]) mr.OverrideMaterial->BaseColor = mrNode["OverrideBaseColor"].as<glm::vec4>();
+                        if (mrNode["OverrideMetallic"])  mr.OverrideMaterial->Metallic  = mrNode["OverrideMetallic"].as<float>();
+                        if (mrNode["OverrideRoughness"]) mr.OverrideMaterial->Roughness = mrNode["OverrideRoughness"].as<float>();
+                        if (mrNode["OverrideAO"])        mr.OverrideMaterial->AO        = mrNode["OverrideAO"].as<float>();
+                    }
                 }
 
                 // DirectionalLightComponent
