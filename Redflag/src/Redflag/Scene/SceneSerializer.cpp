@@ -241,14 +241,25 @@ namespace Redflag {
             out << YAML::Key << "FilePath" << YAML::Value << mr.FilePath;
             out << YAML::Key << "Color"    << YAML::Value << mr.Color;
 
-            // 覆盖材质 PBR 参数
-            if (mr.OverrideMaterial)
+            // per-submesh 覆盖材质 PBR 参数
+            if (!mr.OverrideMaterials.empty())
             {
-                out << YAML::Key << "HasOverrideMaterial" << YAML::Value << true;
-                out << YAML::Key << "OverrideBaseColor" << YAML::Value << mr.OverrideMaterial->BaseColor;
-                out << YAML::Key << "OverrideMetallic"  << YAML::Value << mr.OverrideMaterial->Metallic;
-                out << YAML::Key << "OverrideRoughness" << YAML::Value << mr.OverrideMaterial->Roughness;
-                out << YAML::Key << "OverrideAO"        << YAML::Value << mr.OverrideMaterial->AO;
+                out << YAML::Key << "OverrideMaterials";
+                out << YAML::BeginSeq;
+                for (size_t i = 0; i < mr.OverrideMaterials.size(); i++)
+                {
+                    out << YAML::BeginMap;
+                    if (mr.OverrideMaterials[i])
+                    {
+                        const auto& mat = mr.OverrideMaterials[i];
+                        out << YAML::Key << "BaseColor" << YAML::Value << mat->BaseColor;
+                        out << YAML::Key << "Metallic"  << YAML::Value << mat->Metallic;
+                        out << YAML::Key << "Roughness" << YAML::Value << mat->Roughness;
+                        out << YAML::Key << "AO"        << YAML::Value << mat->AO;
+                    }
+                    out << YAML::EndMap;
+                }
+                out << YAML::EndSeq;
             }
 
             out << YAML::EndMap;
@@ -494,14 +505,30 @@ namespace Redflag {
                     mr.Color    = mrNode["Color"].as<glm::vec4>();
                     // ModelAsset 将在首次渲染时由 AssetManager 懒加载
 
-                    // 覆盖材质
-                    if (mrNode["HasOverrideMaterial"] && mrNode["HasOverrideMaterial"].as<bool>())
+                    // per-submesh 覆盖材质
+                    if (mrNode["OverrideMaterials"])
                     {
-                        mr.OverrideMaterial = Material::Create(glm::vec4(1.0f));
-                        if (mrNode["OverrideBaseColor"]) mr.OverrideMaterial->BaseColor = mrNode["OverrideBaseColor"].as<glm::vec4>();
-                        if (mrNode["OverrideMetallic"])  mr.OverrideMaterial->Metallic  = mrNode["OverrideMetallic"].as<float>();
-                        if (mrNode["OverrideRoughness"]) mr.OverrideMaterial->Roughness = mrNode["OverrideRoughness"].as<float>();
-                        if (mrNode["OverrideAO"])        mr.OverrideMaterial->AO        = mrNode["OverrideAO"].as<float>();
+                        auto matsNode = mrNode["OverrideMaterials"];
+                        for (size_t i = 0; i < matsNode.size(); i++)
+                        {
+                            auto matNode = matsNode[i];
+                            auto mat = Material::Create(glm::vec4(1.0f));
+                            if (matNode["BaseColor"]) mat->BaseColor = matNode["BaseColor"].as<glm::vec4>();
+                            if (matNode["Metallic"])   mat->Metallic  = matNode["Metallic"].as<float>();
+                            if (matNode["Roughness"])  mat->Roughness = matNode["Roughness"].as<float>();
+                            if (matNode["AO"])         mat->AO        = matNode["AO"].as<float>();
+                            mr.OverrideMaterials.push_back(mat);
+                        }
+                    }
+                    // 向后兼容旧格式 (单一覆盖材质)
+                    else if (mrNode["HasOverrideMaterial"] && mrNode["HasOverrideMaterial"].as<bool>())
+                    {
+                        auto mat = Material::Create(glm::vec4(1.0f));
+                        if (mrNode["OverrideBaseColor"]) mat->BaseColor = mrNode["OverrideBaseColor"].as<glm::vec4>();
+                        if (mrNode["OverrideMetallic"])  mat->Metallic  = mrNode["OverrideMetallic"].as<float>();
+                        if (mrNode["OverrideRoughness"]) mat->Roughness = mrNode["OverrideRoughness"].as<float>();
+                        if (mrNode["OverrideAO"])        mat->AO        = mrNode["OverrideAO"].as<float>();
+                        mr.OverrideMaterials.push_back(mat); // 单一材质放入数组
                     }
                 }
 

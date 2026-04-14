@@ -53,7 +53,9 @@ namespace Redflag {
 
 		void ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform);
 		SubMesh ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform);
+		std::string ResolveTexturePath(aiMaterial* material, int textureType);
 		Ref<Texture2D> LoadMaterialTexture(aiMaterial* material, const aiScene* scene, int textureType);
+		Ref<Texture2D> MergeMetallicRoughnessTextures(aiMaterial* material);
 
 	private:
 		std::vector<SubMesh> m_SubMeshes;

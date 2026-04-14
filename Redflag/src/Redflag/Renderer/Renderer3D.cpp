@@ -265,19 +265,23 @@ namespace Redflag
 		}
 	}
 
-	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const Ref<Material>& overrideMaterial, const glm::vec4& fallbackColor, int entityID)
+	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, const std::vector<Ref<Material>>& overrideMaterials, const glm::vec4& fallbackColor, int entityID)
 	{
 		if (!model) return;
 
 		auto fallback = Material::Create(fallbackColor);
+		const auto& subMeshes = model->GetSubMeshes();
 
-		for (const auto& subMesh : model->GetSubMeshes())
+		for (size_t i = 0; i < subMeshes.size(); i++)
 		{
+			const auto& subMesh = subMeshes[i];
 			if (!subMesh.MeshData) continue;
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
-			// 覆盖材质 > 子网格自带材质 > 纯色回退
-			Ref<Material> mat = overrideMaterial ? overrideMaterial : (subMesh.Mat ? subMesh.Mat : fallback);
+			// per-submesh 覆盖材质 > 子网格自带材质 > 纯色回退
+			Ref<Material> mat = (i < overrideMaterials.size() && overrideMaterials[i])
+				? overrideMaterials[i]
+				: (subMesh.Mat ? subMesh.Mat : fallback);
 			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat, entityID });
 		}
 	}

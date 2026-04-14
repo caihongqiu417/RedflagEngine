@@ -22,6 +22,23 @@ namespace Redflag {
 		return mat;
 	}
 
+	Ref<Material> Material::Clone() const
+	{
+		Ref<Material> mat = Ref<Material>(new Material());
+		mat->BaseColor             = BaseColor;
+		mat->BaseColorMap          = BaseColorMap;
+		mat->NormalMap             = NormalMap;
+		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
+		mat->AOMap                 = AOMap;
+		mat->Metallic              = Metallic;
+		mat->Roughness             = Roughness;
+		mat->AO                    = AO;
+		mat->Alpha                 = Alpha;
+		mat->AlphaCutoff           = AlphaCutoff;
+		mat->DoubleSided           = DoubleSided;
+		return mat;
+	}
+
 	// --------------- MaterialLibrary ----------------------------------------
 
 	Ref<Material> MaterialLibrary::GetOrCreate(const std::string& name, const Ref<Texture2D>& texture, const glm::vec4& tint)

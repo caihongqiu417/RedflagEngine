@@ -130,7 +130,7 @@ namespace Redflag {
 					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
 				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterial, mr.Color, (int)entity);
+					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
 			});
 		}
 
@@ -181,7 +181,7 @@ namespace Redflag {
 					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
 
 				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterial, mr.Color, (int)entity);
+					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
 			});
 		}
 

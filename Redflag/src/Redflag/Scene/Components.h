@@ -189,7 +189,7 @@ namespace Redflag {
 		Ref<Model>   ModelAsset;     // 运行时句柄，由 AssetManager 管理，不序列化
 
 		glm::vec4    Color = glm::vec4(1.0f); // 无贴图时的备用颜色
-		Ref<Material> OverrideMaterial; // 编辑器中手动设置的覆盖材质（可选）
+		std::vector<Ref<Material>> OverrideMaterials; // per-submesh 覆盖材质（可选）
 
 		ModelRendererComponent() = default;
 		ModelRendererComponent(const ModelRendererComponent&) = default;

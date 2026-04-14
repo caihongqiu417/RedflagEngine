@@ -6,6 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <stb_image.h>
 #include <glm/glm.hpp>
 namespace Redflag {
 
@@ -123,8 +124,10 @@ namespace Redflag {
 			if (!mat->NormalMap)
 				mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_HEIGHT);
 
-			// 金属度粗糙度贴图（glTF: UNKNOWN, FBX: SHININESS 等）
+			// 金属度粗糙度贴图（glTF: UNKNOWN, FBX: 分离的 METALNESS + DIFFUSE_ROUGHNESS）
 			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, scene, aiTextureType_UNKNOWN);
+			if (!mat->MetallicRoughnessMap)
+				mat->MetallicRoughnessMap = MergeMetallicRoughnessTextures(aiMat);
 
 			// 环境遮蔽贴图（Assimp 4.x: LIGHTMAP = Ambient Occlusion）
 			mat->AOMap = LoadMaterialTexture(aiMat, scene, aiTextureType_LIGHTMAP);
@@ -169,20 +172,25 @@ namespace Redflag {
 
 	Ref<Texture2D> Model::LoadMaterialTexture(aiMaterial* material, const aiScene* scene, int textureType)
 	{
+		std::string fullPath = ResolveTexturePath(material, textureType);
+		if (fullPath.empty())
+			return nullptr;
+		return Texture2D::Create(fullPath);
+	}
+
+	std::string Model::ResolveTexturePath(aiMaterial* material, int textureType)
+	{
 		aiTextureType type = static_cast<aiTextureType>(textureType);
 		if (material->GetTextureCount(type) == 0)
-			return nullptr;
+			return "";
 
 		aiString texPath;
 		if (material->GetTexture(type, 0, &texPath) != AI_SUCCESS)
-			return nullptr;
+			return "";
 
-		// 嵌入式纹理（路径以 '*' 开头）暂不支持，跳过
+		// 嵌入式纹理（路径以 '*' 开头）暂不支持
 		if (texPath.data[0] == '*')
-		{
-			RF_CORE_WARN("Model::LoadMaterialTexture: embedded textures are not supported yet, skipping.");
-			return nullptr;
-		}
+			return "";
 
 		std::string rawPath = texPath.C_Str();
 
@@ -193,17 +201,15 @@ namespace Redflag {
 		// 尝试 1：直接拼接目录 + 相对路径
 		std::string fullPath = m_Directory + "/" + rawPath;
 
-		// 尝试 2：如果是绝对路径或者文件不存在，提取文件名在模型目录下搜索
+		// 尝试 2：提取文件名在模型目录下搜索
 		{
 			std::ifstream test(fullPath);
 			if (!test.good())
 			{
-				// 提取纯文件名
 				size_t lastSlash = rawPath.find_last_of('/');
 				std::string filename = (lastSlash != std::string::npos)
 					? rawPath.substr(lastSlash + 1) : rawPath;
 
-				// 在模型目录下直接查找
 				std::string alt1 = m_Directory + "/" + filename;
 				std::ifstream t1(alt1);
 				if (t1.good())
@@ -212,22 +218,102 @@ namespace Redflag {
 				}
 				else
 				{
-					// 在 textures 子目录中查找
 					std::string alt2 = m_Directory + "/textures/" + filename;
 					std::ifstream t2(alt2);
 					if (t2.good())
 						fullPath = alt2;
 					else
-					{
-						RF_CORE_WARN("Model::LoadMaterialTexture: texture not found: '{0}' (tried '{1}', '{2}')",
-							rawPath, alt1, alt2);
-						return nullptr;
-					}
+						return "";
 				}
 			}
 		}
 
-		return Texture2D::Create(fullPath);
+		// stb_image 不支持 .exr，尝试同名 .png 替代
+		{
+			size_t dotPos = fullPath.rfind('.');
+			if (dotPos != std::string::npos)
+			{
+				std::string ext = fullPath.substr(dotPos);
+				if (ext == ".exr" || ext == ".EXR")
+				{
+					std::string pngPath = fullPath.substr(0, dotPos) + ".png";
+					std::ifstream t(pngPath);
+					if (t.good())
+						fullPath = pngPath;
+				}
+			}
+		}
+
+		return fullPath;
+	}
+
+	Ref<Texture2D> Model::MergeMetallicRoughnessTextures(aiMaterial* material)
+	{
+		// Assimp 5.x 定义了 aiTextureType_METALNESS(0x15) 和 aiTextureType_DIFFUSE_ROUGHNESS(0x16)
+		// 但旧版 Assimp 4.x 没有这些枚举，FBX 导入器会映射到 SHININESS(0x7)
+		// 先尝试 Assimp 5.x 枚举值，再回退到 SHININESS
+		std::string metalPath = ResolveTexturePath(material, 0x15); // aiTextureType_METALNESS
+		std::string roughPath = ResolveTexturePath(material, 0x16); // aiTextureType_DIFFUSE_ROUGHNESS
+
+		// 回退：Assimp 4.x FBX 导入器将金属度/粗糙度映射到 SHININESS
+		if (metalPath.empty() && roughPath.empty())
+		{
+			std::string shininessPath = ResolveTexturePath(material, aiTextureType_SHININESS);
+			if (!shininessPath.empty())
+			{
+				// SHININESS 通常是粗糙度贴图
+				roughPath = shininessPath;
+			}
+		}
+
+		if (metalPath.empty() && roughPath.empty())
+			return nullptr;
+
+		stbi_set_flip_vertically_on_load(1);
+
+		int mw = 0, mh = 0, mc = 0, rw = 0, rh = 0, rc = 0;
+		stbi_uc* metalData = nullptr;
+		stbi_uc* roughData = nullptr;
+
+		if (!metalPath.empty())
+			metalData = stbi_load(metalPath.c_str(), &mw, &mh, &mc, 1);
+		if (!roughPath.empty())
+			roughData = stbi_load(roughPath.c_str(), &rw, &rh, &rc, 1);
+
+		if (!metalData && !roughData)
+			return nullptr;
+
+		int width  = metalData ? mw : rw;
+		int height = metalData ? mh : rh;
+
+		if (metalData && roughData && (mw != rw || mh != rh))
+		{
+			RF_CORE_WARN("MergeMetallicRoughness: size mismatch (metal {0}x{1}, rough {2}x{3}), using metal size",
+				mw, mh, rw, rh);
+			width = mw; height = mh;
+		}
+
+		// 合并: R=unused, G=roughness, B=metallic, A=255 (glTF 规范)
+		uint32_t pixelCount = width * height;
+		std::vector<uint8_t> merged(pixelCount * 4);
+
+		for (uint32_t i = 0; i < (uint32_t)pixelCount; i++)
+		{
+			merged[i * 4 + 0] = 0;                                        // R
+			merged[i * 4 + 1] = roughData ? roughData[i] : (uint8_t)128;  // G = roughness
+			merged[i * 4 + 2] = metalData ? metalData[i] : (uint8_t)0;    // B = metallic
+			merged[i * 4 + 3] = 255;                                      // A
+		}
+
+		auto tex = Texture2D::Create(width, height);
+		tex->SetData(merged.data(), pixelCount * 4);
+
+		if (metalData) stbi_image_free(metalData);
+		if (roughData) stbi_image_free(roughData);
+
+		RF_CORE_INFO("MergeMetallicRoughness: merged {0}x{1} MR texture from separate maps", width, height);
+		return tex;
 	}
 
 }
+

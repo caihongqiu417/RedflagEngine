@@ -41,6 +41,9 @@ namespace Redflag {
 		static Ref<Material> Create(const glm::vec4& color = glm::vec4(1.0f));
 		static Ref<Material> Create(const Ref<Texture2D>& texture, const glm::vec4& tint = glm::vec4(1.0f));
 
+		// 深拷贝：复制所有 PBR 参数和贴图引用
+		Ref<Material> Clone() const;
+
 		// --- PBR 参数 ---
 		glm::vec4 BaseColor{ 1.0f };  // 基础颜色因子（RGBA）
 

@@ -626,7 +626,7 @@ namespace Redflag {
                         {
                             component.FilePath    = path;
                             component.ModelAsset  = AssetManager::GetOrLoad<Model>(component.FilePath);
-                            component.OverrideMaterial.reset(); // 重新加载模型时清除覆盖材质
+                            component.OverrideMaterials.clear(); // 重新加载模型时清除覆盖材质
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -681,26 +681,31 @@ namespace Redflag {
                     }
                 }
 
-                // ---- 覆盖材质（可选，优先级高于模型自带材质）----
+                // ---- 覆盖材质（可选，per-submesh，优先级高于模型自带材质）----
                 ImGui::Separator();
-                bool hasOverride = component.OverrideMaterial != nullptr;
-                if (ImGui::Checkbox("Override Material", &hasOverride))
+                bool hasOverride = !component.OverrideMaterials.empty();
+                if (ImGui::Checkbox("Override Materials", &hasOverride))
                 {
-                    if (hasOverride && !component.OverrideMaterial)
-                        component.OverrideMaterial = Material::Create(component.Color);
+                    if (hasOverride && component.OverrideMaterials.empty() && component.ModelAsset)
+                    {
+                        // 从每个子网格克隆材质
+                        const auto& subMeshes = component.ModelAsset->GetSubMeshes();
+                        component.OverrideMaterials.resize(subMeshes.size());
+                        for (size_t i = 0; i < subMeshes.size(); i++)
+                        {
+                            component.OverrideMaterials[i] = subMeshes[i].Mat
+                                ? subMeshes[i].Mat->Clone()
+                                : Material::Create(component.Color);
+                        }
+                    }
                     else if (!hasOverride)
-                        component.OverrideMaterial.reset();
+                    {
+                        component.OverrideMaterials.clear();
+                    }
                 }
 
-                if (component.OverrideMaterial)
+                if (!component.OverrideMaterials.empty())
                 {
-                    Ref<Material>& mat = component.OverrideMaterial;
-
-                    ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
-                    ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
-                    ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
-                    ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
-
                     auto TextureSlotUI = [](const char* label, Ref<Texture2D>& tex)
                     {
                         ImGui::Separator();
@@ -730,10 +735,28 @@ namespace Redflag {
                         }
                     };
 
-                    TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
-                    TextureSlotUI("Normal Map",             mat->NormalMap);
-                    TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
-                    TextureSlotUI("AO Map",                 mat->AOMap);
+                    for (size_t i = 0; i < component.OverrideMaterials.size(); i++)
+                    {
+                        Ref<Material>& mat = component.OverrideMaterials[i];
+                        if (!mat) continue;
+
+                        ImGui::PushID((int)i);
+                        if (ImGui::TreeNode("SubMeshMat", "SubMesh %d Material", (int)i))
+                        {
+                            ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
+                            ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
+                            ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
+                            ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
+
+                            TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
+                            TextureSlotUI("Normal Map",             mat->NormalMap);
+                            TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
+                            TextureSlotUI("AO Map",                 mat->AOMap);
+
+                            ImGui::TreePop();
+                        }
+                        ImGui::PopID();
+                    }
                 }
             });
 

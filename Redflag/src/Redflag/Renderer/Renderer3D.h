@@ -37,7 +37,7 @@ namespace Redflag
 
 		// 绘制整个 Model（把所有 SubMesh 推入队列）
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
-		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const Ref<Material>& overrideMaterial, const glm::vec4& fallbackColor, int entityID = -1);
+		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const std::vector<Ref<Material>>& overrideMaterials, const glm::vec4& fallbackColor, int entityID = -1);
 
 		static void ResetStats();
 		static Statistics GetStats();
