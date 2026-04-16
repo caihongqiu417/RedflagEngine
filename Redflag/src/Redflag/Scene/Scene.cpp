@@ -104,6 +104,8 @@ namespace Redflag {
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
     }
@@ -293,6 +295,8 @@ namespace Redflag {
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
         CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
+        CopyComponentIfExist<DirectionalLightComponent>(newEntity, entity);
+        CopyComponentIfExist<PointLightComponent>(newEntity, entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()

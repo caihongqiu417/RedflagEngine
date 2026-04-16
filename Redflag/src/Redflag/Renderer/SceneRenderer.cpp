@@ -174,6 +174,22 @@ namespace Redflag {
 		Renderer3D::BeginScene(viewProj3D, cameraPos);
 
 		{
+			auto view = registry.view<TransformComponent, MeshRendererComponent>();
+			view.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
+			{
+				if (mr.MeshData)
+				{
+					if (mr.Mat)
+						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Mat, (int)entity);
+					else if (mr.Texture)
+						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
+					else
+						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
+				}
+			});
+		}
+
+		{
 			auto view = registry.view<TransformComponent, ModelRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
 			{
