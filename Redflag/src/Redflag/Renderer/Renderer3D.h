@@ -5,6 +5,7 @@
 #include "Redflag/Renderer/Model.h"
 #include "Redflag/Renderer/Material.h"
 #include "Redflag/Renderer/Texture.h"
+#include "Redflag/Renderer/Shader.h"
 
 #include <glm/glm.hpp>
 
@@ -38,6 +39,22 @@ namespace Redflag
 		// 绘制整个 Model（把所有 SubMesh 推入队列）
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const std::vector<Ref<Material>>& overrideMaterials, const glm::vec4& fallbackColor, int entityID = -1);
+
+		// ------------------------------------------------------------------
+		// 阴影 Pass 支持
+		//
+		// SetShadowData：SceneRenderer 在 BeginScene 之后、EndScene 之前
+		//   写入光源空间矩阵 + 阴影采样参数（bias / PCF 半径 / 开关）。
+		//   主 Mesh shader 在片元阶段读取它们做阴影查询。
+		//
+		// ExecuteShadowPass：用指定的深度 Shader 重绘当前提交的 DrawCommands
+		//   队列（仅写深度、不绑材质），用于生成 Shadow Map。调用方需要
+		//   自行绑好 Shadow FBO 与视口。
+		// ------------------------------------------------------------------
+		static void SetShadowData(const glm::mat4& lightSpaceMatrix,
+			const glm::vec4& shadowParams,
+			const glm::vec4& shadowParams2 = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f));
+		static void ExecuteShadowPass(const Ref<Shader>& depthShader);
 
 		static void ResetStats();
 		static Statistics GetStats();

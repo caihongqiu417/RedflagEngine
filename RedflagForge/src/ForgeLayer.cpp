@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Renderer/RenderCommand.h"
+#include "Redflag/Renderer/SceneRenderer.h"
 #include"Redflag/Scene/CameraControllerScript.h"
 #include "Redflag/Scene/SceneSerializer.h"
 #include "Redflag/Utils/PlatformUtils.h"
@@ -84,30 +85,72 @@ namespace Redflag {
         Renderer2D::DrawLine(pos, pos + dir * rayLen, color);
     }
 
+    // ---------------------------------------------------------------
+    // DrawPointLightGizmo — 点光源可视化
+    //
+    // 设计目标：一眼能看懂"哪里是灯"以及"照多远"，但不要抢主视觉。
+    //   1. 中心 bulb：固定小尺寸 (~0.15) 的 3 轴线框球，不随 Radius 变化
+    //      → 无论灯多大多小，位置点都清晰；不再像原来那样三大圆环重叠成水母
+    //   2. 四周短光线：8 条从 bulb 表面往外射的小段，指示"发光感"
+    //   3. 影响范围：单个 XZ 平面的虚线环 + 8 条细立柱，用更暗的 alpha
+    //      → 半径大时不会被线填满画面；关心时仍能读到范围
+    // ---------------------------------------------------------------
     static void DrawPointLightGizmo(const glm::vec3& pos, float radius, const glm::vec4& color)
     {
-        constexpr int segments = 16;
-        for (int i = 0; i < segments; i++)
+        // ---- bulb：固定半径的小线框球 ----
+        constexpr float bulbR = 0.15f;
+        constexpr int   bulbSegs = 12;
+        for (int i = 0; i < bulbSegs; ++i)
         {
-            float a0 = glm::two_pi<float>() * i / segments;
-            float a1 = glm::two_pi<float>() * (i + 1) / segments;
+            float a0 = glm::two_pi<float>() * i / bulbSegs;
+            float a1 = glm::two_pi<float>() * (i + 1) / bulbSegs;
             float c0 = cosf(a0), s0 = sinf(a0), c1 = cosf(a1), s1 = sinf(a1);
-            Renderer2D::DrawLine(pos + glm::vec3(radius * c0, radius * s0, 0.0f),
-                                 pos + glm::vec3(radius * c1, radius * s1, 0.0f), color);
-            Renderer2D::DrawLine(pos + glm::vec3(radius * c0, 0.0f, radius * s0),
-                                 pos + glm::vec3(radius * c1, 0.0f, radius * s1), color);
-            Renderer2D::DrawLine(pos + glm::vec3(0.0f, radius * c0, radius * s0),
-                                 pos + glm::vec3(0.0f, radius * c1, radius * s1), color);
+            Renderer2D::DrawLine(pos + glm::vec3(bulbR * c0, bulbR * s0, 0.0f),
+                                 pos + glm::vec3(bulbR * c1, bulbR * s1, 0.0f), color);
+            Renderer2D::DrawLine(pos + glm::vec3(bulbR * c0, 0.0f, bulbR * s0),
+                                 pos + glm::vec3(bulbR * c1, 0.0f, bulbR * s1), color);
+            Renderer2D::DrawLine(pos + glm::vec3(0.0f, bulbR * c0, bulbR * s0),
+                                 pos + glm::vec3(0.0f, bulbR * c1, bulbR * s1), color);
         }
 
-        float rayLen = radius * 0.3f;
-        glm::vec4 rayColor = color * glm::vec4(1.0f, 1.0f, 1.0f, 0.6f);
-        Renderer2D::DrawLine(pos, pos + glm::vec3( rayLen, 0, 0), rayColor);
-        Renderer2D::DrawLine(pos, pos + glm::vec3(-rayLen, 0, 0), rayColor);
-        Renderer2D::DrawLine(pos, pos + glm::vec3(0,  rayLen, 0), rayColor);
-        Renderer2D::DrawLine(pos, pos + glm::vec3(0, -rayLen, 0), rayColor);
-        Renderer2D::DrawLine(pos, pos + glm::vec3(0, 0,  rayLen), rayColor);
-        Renderer2D::DrawLine(pos, pos + glm::vec3(0, 0, -rayLen), rayColor);
+        // ---- 放射线：8 条从 bulb 表面往外射的小段 (发光感) ----
+        constexpr float rayInner = bulbR * 1.15f;  // 略离 bulb 表面一点
+        constexpr float rayOuter = bulbR * 2.2f;
+        const glm::vec3 rayDirs[8] = {
+            { 1, 0, 0}, {-1, 0, 0}, {0,  1, 0}, {0, -1, 0},
+            { 1, 0, 1}, {-1, 0, 1}, {1,  0,-1}, {-1, 0,-1},
+        };
+        for (const auto& raw : rayDirs)
+        {
+            glm::vec3 d = glm::normalize(raw);
+            Renderer2D::DrawLine(pos + d * rayInner, pos + d * rayOuter, color);
+        }
+
+        // ---- 影响范围：单个 XZ 虚线环 + 4 根立柱，颜色压到 40% alpha ----
+        if (radius > bulbR * 3.0f)
+        {
+            glm::vec4 dim = color;
+            dim.a *= 0.4f;
+
+            constexpr int rSegs = 32;
+            for (int i = 0; i < rSegs; ++i)
+            {
+                // 每隔一段画一段（虚线效果）
+                if ((i & 1) == 0) continue;
+                float a0 = glm::two_pi<float>() * i / rSegs;
+                float a1 = glm::two_pi<float>() * (i + 1) / rSegs;
+                Renderer2D::DrawLine(
+                    pos + glm::vec3(radius * cosf(a0), 0.0f, radius * sinf(a0)),
+                    pos + glm::vec3(radius * cosf(a1), 0.0f, radius * sinf(a1)), dim);
+            }
+
+            // 4 根轻量立柱暗示球形作用域（XZ 四向 + 上下竖直短线）
+            const float pole = radius * 0.08f;
+            Renderer2D::DrawLine(pos + glm::vec3( radius, 0, 0), pos + glm::vec3( radius, pole, 0), dim);
+            Renderer2D::DrawLine(pos + glm::vec3(-radius, 0, 0), pos + glm::vec3(-radius, pole, 0), dim);
+            Renderer2D::DrawLine(pos + glm::vec3(0, 0,  radius), pos + glm::vec3(0, pole,  radius), dim);
+            Renderer2D::DrawLine(pos + glm::vec3(0, 0, -radius), pos + glm::vec3(0, pole, -radius), dim);
+        }
     }
 
     ForgeLayer::ForgeLayer()
@@ -563,6 +606,36 @@ namespace Redflag {
 
             ImGui::End();
             ImGui::PopStyleVar(2);
+        }
+
+        // Shadow 调试面板 — 实时编辑 PCF / PCSS 参数，无需重启
+        {
+            ImGui::Begin("Shadow");
+            auto& s = SceneRenderer::GetShadowSettings();
+
+            const char* modeLabels[] = { "Off", "PCF 3x3 / Variable", "PCSS" };
+            ImGui::Combo("Mode", &s.Mode, modeLabels, IM_ARRAYSIZE(modeLabels));
+
+            ImGui::Separator();
+            ImGui::TextDisabled("Bias");
+            ImGui::DragFloat("Depth Bias",  &s.DepthBias,  0.0001f, 0.0f, 0.02f, "%.5f");
+            ImGui::DragFloat("Normal Bias", &s.NormalBias, 0.05f,   0.0f, 10.0f, "%.2f");
+
+            ImGui::Separator();
+            ImGui::TextDisabled("Softness");
+            // PCF Radius：1.0 ≈ 固定 3×3；>1 走 PCFVariable 5×5
+            ImGui::DragFloat("PCF Radius",  &s.PcfRadius,  0.1f, 1.0f, 8.0f,  "%.2f texel");
+            // PCSS Light Size：越大半影越宽
+            ImGui::DragFloat("PCSS Light Size", &s.LightSize, 0.1f, 0.0f, 32.0f, "%.2f");
+
+            ImGui::Separator();
+            ImGui::TextDisabled("Coverage");
+            ImGui::DragFloat("Ortho Half Size", &s.OrthoHalfSize, 0.5f, 1.0f, 200.0f, "%.1f world");
+
+            if (ImGui::Button("Reset"))
+                s = ShadowSettings{};
+
+            ImGui::End();
         }
 
         // 左侧面板

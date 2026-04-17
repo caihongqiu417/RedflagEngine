@@ -8,6 +8,9 @@
 
 #include <stb_image.h>
 #include <glm/glm.hpp>
+#include <filesystem>
+#include <algorithm>
+#include <cctype>
 namespace Redflag {
 
 	Ref<Model> Model::Load(const std::string& filepath)
@@ -116,24 +119,80 @@ namespace Redflag {
 			aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
 			auto mat = Ref<Material>(new Material());
 
-			// BaseColor / Diffuse 贴图
+			aiString aiMatName;
+			aiMat->Get(AI_MATKEY_NAME, aiMatName);
+			RF_CORE_INFO("[Model] Material '{0}' (mesh '{1}')", aiMatName.C_Str(), mesh->mName.C_Str());
+
+			// ---- 1. Assimp 材质槽优先 ----
 			mat->BaseColorMap = LoadMaterialTexture(aiMat, scene, aiTextureType_DIFFUSE);
 
-			// 法线贴图
 			mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_NORMALS);
 			if (!mat->NormalMap)
 				mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_HEIGHT);
 
-			// 金属度粗糙度贴图（glTF: UNKNOWN, FBX: 分离的 METALNESS + DIFFUSE_ROUGHNESS）
 			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, scene, aiTextureType_UNKNOWN);
 			if (!mat->MetallicRoughnessMap)
 				mat->MetallicRoughnessMap = MergeMetallicRoughnessTextures(aiMat);
 
-			// 环境遮蔽贴图（Assimp 4.x: LIGHTMAP = Ambient Occlusion）
 			mat->AOMap = LoadMaterialTexture(aiMat, scene, aiTextureType_LIGHTMAP);
 
-			// 从 Assimp 材质读取标量参数
-			// 优先尝试 glTF PBR base color factor，再回退到传统 diffuse color
+			// OPACITY 槽（Assimp 4.x FBX 导入器通常使用此槽存 alpha）
+			Ref<Texture2D> opacityTex = LoadMaterialTexture(aiMat, scene, aiTextureType_OPACITY);
+			if (opacityTex)
+				mat->AlphaMap = opacityTex;
+
+			// ---- 2. Polyhaven/Quixel 目录扫描回退 ----
+			// Assimp 4.x FBX 导入器经常丢失 metal/rough/alpha/ao 贴图，
+			// 用文件名后缀补齐。
+			if (!mat->BaseColorMap)
+			{
+				std::string p = FindTextureBySuffix({ "_diff", "_basecolor", "_albedo", "_color" });
+				if (!p.empty())
+				{
+					RF_CORE_WARN("[Model]   BaseColor fallback-scan: {0}", p);
+					mat->BaseColorMap = Texture2D::Create(p);
+				}
+			}
+			if (!mat->NormalMap)
+			{
+				std::string p = FindTextureBySuffix({ "_nor_gl", "_nor", "_normal" });
+				if (!p.empty())
+				{
+					RF_CORE_WARN("[Model]   Normal fallback-scan: {0}", p);
+					mat->NormalMap = Texture2D::Create(p);
+				}
+			}
+			if (!mat->AOMap)
+			{
+				std::string p = FindTextureBySuffix({ "_ao", "_ambientocclusion", "_occlusion" });
+				if (!p.empty())
+				{
+					RF_CORE_WARN("[Model]   AO fallback-scan: {0}", p);
+					mat->AOMap = Texture2D::Create(p);
+				}
+			}
+			if (!mat->AlphaMap)
+			{
+				// 注意：故意不对 _alpha / _opacity 文件名做目录扫描回退。
+				// Polyhaven 的 *_alpha.png 通常只是"玻璃/钟面"区域的掩膜，
+				// 但 FBX 里钟体/指针/玻璃可能共用同一个材质，此时套 Mask 会把
+				// 所有子网格里 UV 落在透明区域的片元全部 discard，导致整个钟消失。
+				// 只有在 Assimp 材质里明确声明 OPACITY 槽（AlphaMap 已在上面赋值）时才启用。
+			}
+			if (!mat->MetallicRoughnessMap)
+			{
+				// 分别找 metal / rough，合并为 MR 贴图
+				std::string metalPath = FindTextureBySuffix({ "_metal", "_metallic" });
+				std::string roughPath = FindTextureBySuffix({ "_rough", "_roughness" });
+				if (!metalPath.empty() || !roughPath.empty())
+				{
+					RF_CORE_WARN("[Model]   MR fallback-scan: metal='{0}' rough='{1}'",
+						metalPath, roughPath);
+					mat->MetallicRoughnessMap = MergeMetallicRoughnessFromPaths(metalPath, roughPath);
+				}
+			}
+
+			// ---- 3. 从 Assimp 材质读取标量参数 ----
 			aiColor4D baseColor;
 			bool hasBaseColor = false;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColor) == AI_SUCCESS)
@@ -147,6 +206,15 @@ namespace Redflag {
 				hasBaseColor = true;
 			}
 
+			// 保留原始 alpha 以便后续识别"玻璃"材质
+			float origAlpha = mat->BaseColor.a;
+
+			// 读取 opacity 标量（FBX Standard Surface 玻璃常把 COLOR_DIFFUSE 保持 1.0
+			// 但通过 OPACITY 控制透明度）。Assimp 4.x 没有 TRANSPARENCYFACTOR。
+			float opacity = 1.0f;
+			if (aiMat->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS)
+				origAlpha = std::min(origAlpha, opacity);
+
 			// 如果读到的颜色接近纯黑，但有漫反射贴图，则保持白色让贴图正常显示
 			// （FBX PBR 材质经常将传统 diffuse color 设为 (0,0,0)）
 			if (hasBaseColor && mat->BaseColorMap)
@@ -156,6 +224,9 @@ namespace Redflag {
 					mat->BaseColor = glm::vec4(1.0f);
 			}
 
+			// 所有材质最终统一 alpha=1 参与 PBR 计算；真正的透明信息已保存在 origAlpha 中
+			mat->BaseColor.a = 1.0f;
+
 			float metallic = 0.0f;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallic) == AI_SUCCESS)
 				mat->Metallic = metallic;
@@ -163,6 +234,51 @@ namespace Redflag {
 			float roughness = 0.5f;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
 				mat->Roughness = roughness;
+
+			// ---- 4. 只有在加载到真正的 alpha 贴图时才切 Mask 模式 ----
+			// 注意：盲目切 Mask 会导致阈值裁剪误伤模型（例如 FBX 的 BaseColor.a 为脏值时）。
+			// 我们在上面已经将 BaseColor.a 强制为 1，所以 AlphaMap 存在才是可靠信号。
+			if (mat->AlphaMap)
+			{
+				mat->Alpha = AlphaMode::Mask;
+				mat->AlphaCutoff = 0.5f;
+				mat->DoubleSided = true; // 玻璃/镂空物通常两面都可见
+			}
+
+			// ---- 5. "玻璃"子网格检测 ----
+			// FBX Standard Surface 玻璃材质的判定信号（任一满足都按玻璃处理）：
+			//   a) origAlpha < 0.5 （COLOR_DIFFUSE.a 或 OPACITY 明确声明透明）
+			//   b) COLOR_TRANSPARENT 非零
+			//   c) "玻璃"材质名包含 glass/window/clear/transparent 关键字
+			// 当前引擎没有半透明渲染管线，统一跳过渲染；否则玻璃会被当 Opaque
+			// 画成实心黑盘遮住内部钟针。
+			aiColor4D transparent;
+			bool hasTransparentColor = (aiMat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparent) == AI_SUCCESS)
+				&& (transparent.r > 0.01f || transparent.g > 0.01f || transparent.b > 0.01f);
+
+			std::string matNameLower = aiMatName.C_Str();
+			std::transform(matNameLower.begin(), matNameLower.end(), matNameLower.begin(),
+				[](unsigned char c) { return (char)std::tolower(c); });
+			bool hasGlassName = matNameLower.find("glass") != std::string::npos
+				|| matNameLower.find("window") != std::string::npos
+				|| matNameLower.find("clear") != std::string::npos
+				|| matNameLower.find("transparent") != std::string::npos;
+
+			bool isLikelyGlass = (origAlpha < 0.5f) || hasTransparentColor || hasGlassName;
+
+			RF_CORE_INFO("[Model]   origAlpha={0:.3f} transparent={1} glassName={2} => isGlass={3}",
+				origAlpha, hasTransparentColor, hasGlassName, isLikelyGlass);
+
+			if (isLikelyGlass)
+			{
+				RF_CORE_WARN("[Model]   Glass-like submesh detected, skip render (mat '{0}')",
+					aiMatName.C_Str());
+				subMesh.MeshData = nullptr; // DrawModel 中 if (!MeshData) continue 会跳过
+			}
+
+			RF_CORE_INFO("[Model]   Maps: base={0} nor={1} mr={2} ao={3} alpha={4}",
+				(bool)mat->BaseColorMap, (bool)mat->NormalMap, (bool)mat->MetallicRoughnessMap,
+				(bool)mat->AOMap, (bool)mat->AlphaMap);
 
 			subMesh.Mat = mat;
 		}
@@ -247,25 +363,94 @@ namespace Redflag {
 		return fullPath;
 	}
 
-	Ref<Texture2D> Model::MergeMetallicRoughnessTextures(aiMaterial* material)
+	// ---------------------------------------------------------------------
+	// 文件名后缀扫描回退
+	//
+	// Polyhaven / Quixel 等站点的材质包遵循严格命名约定：
+	//   *_diff.jpg        — 基础色 (base color / albedo)
+	//   *_nor_gl.exr/png  — OpenGL 法线
+	//   *_metal.exr/png   — 金属度
+	//   *_rough.exr/png   — 粗糙度
+	//   *_ao.exr/png      — 环境遮蔽（如有）
+	//   *_alpha.png       — 透明度 / 裁剪掩膜
+	//
+	// Assimp 4.x 的 FBX 导入器对 Blender Principled BSDF 导出的 PBR 材质
+	// 支持不完整（metal/rough/alpha 经常丢失）。这里根据文件名二次扫描模型目录
+	// 作为回退，命中率高于 Assimp 的材质槽。
+	// ---------------------------------------------------------------------
+	std::string Model::FindTextureBySuffix(const std::vector<std::string>& suffixes) const
 	{
-		// Assimp 5.x 定义了 aiTextureType_METALNESS(0x15) 和 aiTextureType_DIFFUSE_ROUGHNESS(0x16)
-		// 但旧版 Assimp 4.x 没有这些枚举，FBX 导入器会映射到 SHININESS(0x7)
-		// 先尝试 Assimp 5.x 枚举值，再回退到 SHININESS
-		std::string metalPath = ResolveTexturePath(material, 0x15); // aiTextureType_METALNESS
-		std::string roughPath = ResolveTexturePath(material, 0x16); // aiTextureType_DIFFUSE_ROUGHNESS
+		namespace fs = std::filesystem;
 
-		// 回退：Assimp 4.x FBX 导入器将金属度/粗糙度映射到 SHININESS
-		if (metalPath.empty() && roughPath.empty())
+		// 优先扩展名（stb_image 可读）
+		static const std::vector<std::string> kPreferredExts = {
+			".png", ".jpg", ".jpeg", ".tga", ".bmp"
+		};
+
+		// 收集所有待搜索目录（模型目录 + textures/ 子目录）
+		std::vector<fs::path> searchDirs;
+		fs::path modelDir(m_Directory);
+		if (fs::exists(modelDir) && fs::is_directory(modelDir))
+			searchDirs.push_back(modelDir);
+		fs::path texDir = modelDir / "textures";
+		if (fs::exists(texDir) && fs::is_directory(texDir))
+			searchDirs.push_back(texDir);
+
+		auto toLower = [](std::string s)
 		{
-			std::string shininessPath = ResolveTexturePath(material, aiTextureType_SHININESS);
-			if (!shininessPath.empty())
+			std::transform(s.begin(), s.end(), s.begin(),
+				[](unsigned char c) { return (char)std::tolower(c); });
+			return s;
+		};
+
+		// 按优先扩展名顺序遍历，命中即返回
+		for (const auto& ext : kPreferredExts)
+		{
+			for (const auto& dir : searchDirs)
 			{
-				// SHININESS 通常是粗糙度贴图
-				roughPath = shininessPath;
+				for (const auto& entry : fs::directory_iterator(dir))
+				{
+					if (!entry.is_regular_file()) continue;
+					std::string fileExt = toLower(entry.path().extension().string());
+					if (fileExt != ext) continue;
+
+					std::string stem = toLower(entry.path().stem().string());
+					for (const auto& suf : suffixes)
+					{
+						std::string lowSuf = toLower(suf);
+						// 后缀出现在文件名主干中（如 "vintage_clock_metal_4k" 包含 "_metal"）
+						if (stem.find(lowSuf) != std::string::npos)
+							return entry.path().string();
+					}
+				}
 			}
 		}
 
+		return "";
+	}
+
+	Ref<Texture2D> Model::MergeMetallicRoughnessTextures(aiMaterial* material)
+	{
+		// Assimp 4.x 没有 METALNESS(0x15) / DIFFUSE_ROUGHNESS(0x16) 枚举，
+		// FBX 导入器会把金属/粗糙度贴图映射到 SHININESS(0x7)。
+		// （硬编码 0x15/0x16 在 4.x 下是 INVALID，会被直接跳过）
+		std::string metalPath;
+		std::string roughPath;
+
+		std::string shininessPath = ResolveTexturePath(material, aiTextureType_SHININESS);
+		if (!shininessPath.empty())
+			roughPath = shininessPath;
+
+		// SPECULAR 槽在部分 FBX 中被用来装 metallic
+		std::string specPath = ResolveTexturePath(material, aiTextureType_SPECULAR);
+		if (!specPath.empty())
+			metalPath = specPath;
+
+		return MergeMetallicRoughnessFromPaths(metalPath, roughPath);
+	}
+
+	Ref<Texture2D> Model::MergeMetallicRoughnessFromPaths(const std::string& metalPath, const std::string& roughPath)
+	{
 		if (metalPath.empty() && roughPath.empty())
 			return nullptr;
 

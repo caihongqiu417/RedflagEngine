@@ -64,6 +64,22 @@ namespace Redflag {
 	static constexpr uint32_t MAX_POINT_LIGHTS = 16;
 	static constexpr uint32_t LIGHT_UBO_BINDING = 3;
 
+	// =================================================================
+	// Shadow 调参结构（对 ImGui 暴露）
+	//
+	// 所有字段在每帧 Shadow Pass 之前被读取，运行时修改会立刻生效。
+	// Mode: 0=Off, 1=PCF 3×3, 2=PCSS
+	// =================================================================
+	struct ShadowSettings
+	{
+		int   Mode        = 1;       // 0=Off, 1=PCF, 2=PCSS
+		float DepthBias   = 0.0015f; // NDC 深度偏移，消除 shadow acne
+		float NormalBias  = 1.0f;    // 纹素单位，薄面片额外防自阴影
+		float PcfRadius   = 1.5f;    // PCF 模式下的核半径（纹素）
+		float LightSize   = 6.0f;    // PCSS 模式下的虚拟光源尺寸（纹素）
+		float OrthoHalfSize = 25.0f; // 光源正交视锥半宽（世界空间）
+	};
+
 	class SceneRenderer
 	{
 	public:
@@ -76,6 +92,9 @@ namespace Redflag {
 
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform);
+
+		// 供编辑器 UI 读写阴影调参
+		static ShadowSettings& GetShadowSettings();
 
 	private:
 		// 遍历 registry 收集灯光数据并上传 Light UBO

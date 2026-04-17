@@ -39,6 +39,9 @@ layout(std140, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;      // 观察 × 投影矩阵
     vec4 u_ViewPosition;        // xyz = 相机世界坐标（PBR 镜面反射需要视线方向）
+    mat4 u_LightSpaceMatrix;    // 方向光的 Ortho × View；Shadow Pass 和主 Pass 共用
+    vec4 u_ShadowParams;        // x=depthBias y=normalBias z=invMapSize w=mode(0=off,1=PCF,2=PCSS)
+    vec4 u_ShadowParams2;       // x=pcfRadius y=lightSize z=_ w=_
 };
 
 // ---- Transform UBO (binding = 1) ----
@@ -54,6 +57,7 @@ layout(location = 1) out vec2  v_TexCoord;  // UV 坐标
 layout(location = 2) out vec3  v_Normal;    // 世界空间法线（无法线贴图时的后备）
 layout(location = 3) out mat3  v_TBN;       // 切线空间 → 世界空间 的变换矩阵
                                             // mat3 占用 location 3, 4, 5
+layout(location = 6) out vec4  v_LightSpacePos; // 光源裁剪空间位置（主 Pass 用来查 Shadow Map）
 
 void main()
 {
@@ -79,7 +83,12 @@ void main()
     v_Normal = N;
     v_TBN    = mat3(T, B, N);  // 列向量分别是 T, B, N
 
-    // 6. 最终裁剪空间位置
+    // 7. 光源裁剪空间坐标（主 Pass 做 Shadow Map 查询时使用）
+    //    注意：我们不做 perspective divide，留给片元阶段处理，
+    //    这样可以利用硬件对 w 分量的透视正确插值。
+    v_LightSpacePos = u_LightSpaceMatrix * worldPos;
+
+    // 8. 最终裁剪空间位置
     gl_Position = u_ViewProjection * worldPos;
 }
 
@@ -96,12 +105,16 @@ layout(location = 0) in vec3  v_WorldPos;
 layout(location = 1) in vec2  v_TexCoord;
 layout(location = 2) in vec3  v_Normal;
 layout(location = 3) in mat3  v_TBN;
+layout(location = 6) in vec4  v_LightSpacePos;
 
 // ---- Camera UBO (binding = 0) ----
 layout(std140, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;
     vec4 u_ViewPosition;
+    mat4 u_LightSpaceMatrix;
+    vec4 u_ShadowParams;       // x=depthBias y=normalBias z=invMapSize w=mode
+    vec4 u_ShadowParams2;      // x=pcfRadius y=lightSize z=_ w=_
 };
 
 // ---- Material UBO (binding = 2, 48 bytes, std140) ----
@@ -117,6 +130,10 @@ layout(std140, binding = 2) uniform Material
     int   u_UseMetallicRoughnessMap; // 1 = 启用金属度粗糙度贴图
     int   u_UseAOMap;                // 1 = 启用环境遮蔽贴图
     int   u_EntityID;                // 当前绘制实体的 entt ID（拾取用）
+    int   u_UseAlphaMap;             // 1 = 启用独立 alpha / opacity 贴图
+    float u_AlphaCutoff;             // Mask 模式下的裁剪阈值
+    int   u_AlphaMode;               // 0=Opaque, 1=Mask, 2=Blend
+    int   _matPad0;
 };
 
 // ---- Lights UBO (binding = 3) ----
@@ -153,6 +170,13 @@ layout(binding = 3) uniform sampler2D u_BaseColorMap;          // slot 3: 漫反
 layout(binding = 4) uniform sampler2D u_NormalMap;             // slot 4: 切线空间法线贴图
 layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;  // slot 5: G=粗糙度 B=金属度
 layout(binding = 6) uniform sampler2D u_AOMap;                 // slot 6: R=环境遮蔽
+layout(binding = 10) uniform sampler2D u_AlphaMap;             // slot 10: R=alpha / opacity
+
+// ---- Shadow Map（方向光，slot 11）----
+// 由 SceneRenderer 在 Shadow Pass 之后绑定；DEPTH32F 单通道纹理。
+// 过滤设成 NEAREST（见 OpenGLFramebuffer::AttachDepthTexture），
+// PCF 采样手动在 shader 里做，避免硬件插值把不连续深度拉扯出错误阴影。
+layout(binding = 11) uniform sampler2D u_ShadowMap;
 
 // ======================= IBL 纹理（Split Sum 预计算）=======================
 // 这三张纹理由 IBLPrecompute::Init() 在程序启动时生成，运行时只需采样。
@@ -248,10 +272,138 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 // 光照计算：对每个光源执行一次完整的 Cook-Torrance BRDF
 // =====================================================================
 
+// =====================================================================
+// Shadow Map 采样
+//
+// 约定：
+//   v_LightSpacePos = u_LightSpaceMatrix * vec4(worldPos, 1)
+//   执行透视除法后映射到 [0,1]×[0,1] 纹理坐标 + [0,1] 深度参考值
+//
+// 提供两种过滤策略（由 u_ShadowParams.w 选择）：
+//   0  关闭阴影（返回 1，即完全亮）
+//   1  PCF 3×3：9 次采样 + 等权重平均；标准、稳健
+//   2  PCSS：先做 blocker search 估算平均遮挡深度，
+//            再按 (receiver - blocker)/blocker × lightSize 动态
+//            扩大 PCF 核半径，实现越远越软的接触硬化阴影
+// =====================================================================
+
+// 单次比较采样：1 = 可见，0 = 遮挡
+float SampleShadow(vec2 uv, float refDepth)
+{
+    float occ = texture(u_ShadowMap, uv).r;
+    return refDepth <= occ ? 1.0 : 0.0;
+}
+
+// 3×3 PCF（9 taps，等权重）
+float PCF3x3(vec2 baseUV, float refDepth, float texel)
+{
+    float sum = 0.0;
+    for (int y = -1; y <= 1; ++y)
+        for (int x = -1; x <= 1; ++x)
+            sum += SampleShadow(baseUV + vec2(x, y) * texel, refDepth);
+    return sum / 9.0;
+}
+
+// 任意核半径 PCF（radius 单位为纹素；供 PCSS 动态调整 kernel 用）
+// 固定采 5×5 = 25 taps，视觉上对半影过渡更平滑。
+float PCFVariable(vec2 baseUV, float refDepth, float radius, float texel)
+{
+    float sum = 0.0;
+    float samples = 0.0;
+    for (int y = -2; y <= 2; ++y)
+    {
+        for (int x = -2; x <= 2; ++x)
+        {
+            vec2 offset = vec2(x, y) * (radius * 0.5) * texel;
+            sum     += SampleShadow(baseUV + offset, refDepth);
+            samples += 1.0;
+        }
+    }
+    return sum / samples;
+}
+
+// Blocker search（PCSS 第一步）
+//   在固定半径里找比接收点更近的样本，计算它们的平均深度。
+//   若没有任何遮挡者，返回 -1，调用方直接判定全亮。
+float FindBlockerDepth(vec2 baseUV, float refDepth, float searchRadius, float texel)
+{
+    float blockerSum = 0.0;
+    float blockers   = 0.0;
+    const int N = 2;   // 5×5 搜索核
+    for (int y = -N; y <= N; ++y)
+    {
+        for (int x = -N; x <= N; ++x)
+        {
+            vec2 offset = vec2(x, y) * (searchRadius / float(N)) * texel;
+            float d = texture(u_ShadowMap, baseUV + offset).r;
+            if (d < refDepth)
+            {
+                blockerSum += d;
+                blockers   += 1.0;
+            }
+        }
+    }
+    if (blockers < 1.0) return -1.0;
+    return blockerSum / blockers;
+}
+
+// 计算方向光的可见度 (1 = 完全可见, 0 = 完全遮挡)
+//   lightSpacePos 已经做了 u_LightSpaceMatrix × worldPos，但还没除 w
+//   N / L 用来做斜率相关的 normal bias，避免 shadow acne
+float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
+{
+    int mode = int(u_ShadowParams.w);
+    if (mode == 0) return 1.0;   // 阴影关闭
+
+    // --- 透视除法 → NDC → [0,1] ---
+    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
+    proj = proj * 0.5 + 0.5;
+
+    // 超出 Shadow Map 视锥：当作完全照亮（避免画面边缘变黑）
+    if (proj.z > 1.0 || proj.z < 0.0)                return 1.0;
+    if (any(lessThan(proj.xy, vec2(0.0))) ||
+        any(greaterThan(proj.xy, vec2(1.0))))         return 1.0;
+
+    float texel      = u_ShadowParams.z;                 // 1.0 / mapSize
+    float depthBias  = u_ShadowParams.x;
+    float normalBias = u_ShadowParams.y;
+
+    // 斜率相关 bias：光线越斜入，bias 越大，消除 shadow acne 条纹
+    float NdotL = max(dot(N, L), 0.0);
+    float bias  = max(depthBias * (1.0 - NdotL), depthBias * 0.1);
+    bias       += normalBias * texel;  // 额外再按纹素做 normal bias
+    float refDepth = proj.z - bias;
+
+    if (mode == 2)
+    {
+        // ---- PCSS ----
+        // 由 ImGui 调节：虚拟光源尺寸（纹素单位）越大半影越宽
+        float LIGHT_SIZE   = max(u_ShadowParams2.y, 0.0);
+        const float SEARCH_RADIUS = 4.0; // blocker search 固定半径
+
+        float avgBlocker = FindBlockerDepth(proj.xy, refDepth, SEARCH_RADIUS, texel);
+        if (avgBlocker < 0.0) return 1.0;  // 没有遮挡者 → 全亮
+
+        // 接触硬化：遮挡者距离接收点越近，半影越窄
+        float penumbra = (refDepth - avgBlocker) / max(avgBlocker, 0.0001);
+        float radius   = clamp(penumbra * LIGHT_SIZE, 0.5, 16.0);
+        return PCFVariable(proj.xy, refDepth, radius, texel);
+    }
+
+    // ---- 默认 PCF ----
+    // 用 u_ShadowParams2.x 作为可调核半径（纹素）。过小时退化为固定 3×3。
+    float pcfRadius = u_ShadowParams2.x;
+    if (pcfRadius <= 1.001)
+        return PCF3x3(proj.xy, refDepth, texel);
+    return PCFVariable(proj.xy, refDepth, pcfRadius, texel);
+}
+
 // ---------- 方向光（平行光，无衰减）----------
 // 太阳光等无限远光源，所有片元的光线方向相同
+// shadow 传入 [0,1]：1=完全照亮，0=完全遮挡。只对直接光部分衰减，
+// 环境光 / IBL 不受影响（物理上 shadow map 不能约束半球环境贡献）。
 vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
-                          float metallic, float roughness, vec3 F0)
+                          float metallic, float roughness, vec3 F0, float shadow)
 {
     // L = 从表面指向光源 = -光线方向
     vec3 L = normalize(-light.Direction.xyz);
@@ -274,9 +426,9 @@ vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
     // 纯金属 (metallic=1) 完全没有漫反射，只有镜面
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
-    // 最终出射辐射度 = (漫反射 + 镜面) × 入射辐射度 × cos(入射角)
+    // 最终出射辐射度 = (漫反射 + 镜面) × 入射辐射度 × cos(入射角) × 可见度
     float NdotL = max(dot(N, L), 0.0);
-    return (kD * albedo / PI + specular) * radiance * NdotL;
+    return (kD * albedo / PI + specular) * radiance * NdotL * shadow;
 }
 
 // ---------- 点光源（有位置、有半径衰减）----------
@@ -339,6 +491,18 @@ void main()
     }
     vec3 albedo = albedo4.rgb;
 
+    // ==================== 1.5 Alpha 裁剪 ====================
+    // 独立 AlphaMap 或 BaseColorMap 的 alpha 通道 → 可能用于钟面玻璃 / 植物叶片等裁剪
+    float alphaValue = albedo4.a;
+    if (u_UseAlphaMap == 1)
+        alphaValue *= texture(u_AlphaMap, v_TexCoord).r;
+    if (u_AlphaMode == 1 && alphaValue < u_AlphaCutoff)
+        discard; // Mask 模式：低于阈值直接丢弃片元，让钟面玻璃镂空
+
+    // 非 Blend 模式下，输出 alpha 强制为 1.0，避免 FBX 脏 BaseColor.a 或
+    // Renderer2D 启用的 alpha 混合把模型整体擦成透明。
+    float outAlpha = (u_AlphaMode == 2) ? alphaValue : 1.0;
+
     // 金属度 & 粗糙度：标量 × 贴图（如有）
     // glTF 规范: MetallicRoughnessMap 的 G 通道=粗糙度, B 通道=金属度
     float metallic  = u_Metallic;
@@ -390,8 +554,17 @@ void main()
     vec3 Lo = vec3(0.0);  // Lo = 所有光源的出射辐射度总和
 
     // 遍历方向光（当前最多 1 盏）
+    //   对唯一的 "主方向光" 做 Shadow Map 查询；多方向光场景这里
+    //   只对第 0 盏起作用，其余盏退化成无阴影（当前 MAX_DIRECTIONAL_LIGHTS=1，
+    //   所以完全等价）。
     for (int i = 0; i < u_NumDirectionalLights; i++)
-        Lo += CalcDirectionalLight(u_DirLights[i], N, V, albedo, metallic, roughness, F0);
+    {
+        vec3 L = normalize(-u_DirLights[i].Direction.xyz);
+        float shadow = (i == 0)
+            ? ComputeDirectionalShadow(v_LightSpacePos, N, L)
+            : 1.0;
+        Lo += CalcDirectionalLight(u_DirLights[i], N, V, albedo, metallic, roughness, F0, shadow);
+    }
 
     // 遍历点光源（当前最多 16 盏）
     for (int i = 0; i < u_NumPointLights; i++)
@@ -403,7 +576,7 @@ void main()
         LightData fallback;
         fallback.Direction = vec4(0.0, -1.0, -0.5, 0.0);
         fallback.Color     = vec4(1.0, 1.0, 1.0, 1.0);
-        Lo += CalcDirectionalLight(fallback, N, V, albedo, metallic, roughness, F0);
+        Lo += CalcDirectionalLight(fallback, N, V, albedo, metallic, roughness, F0, 1.0);
     }
 
     // ==================== 6. IBL 环境光（Split Sum 近似）====================
@@ -476,6 +649,6 @@ void main()
 
     // ==================== 8. 输出 ====================
 
-    o_Color    = vec4(color, albedo4.a);  // RGBA（alpha 用于半透明，当前默认 1.0）
+    o_Color    = vec4(color, outAlpha);   // RGBA（仅 Blend 模式透写 alpha）
     o_EntityID = u_EntityID;              // 编辑器拾取 ID，写入 RED_INTEGER 附件
 }

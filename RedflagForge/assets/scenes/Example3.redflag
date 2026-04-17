@@ -1,32 +1,20 @@
 Scene: Unamed Scene
 Entities:
-  - Entity: 1096978947276037003
+  - Entity: 18339049415164675262
     TagComponent:
-      Tag: Light
+      Tag: PbrModel2_Mirror
     TransformComponent:
-      Translation: [-0.0802830458, 4.8062644, -0.819999993]
-      Rotation: [0.606540143, -0.0471760482, -0.470746756]
-      Scale: [1, 0.999999702, 1.00000012]
-    DirectionalLightComponent:
-      Direction: [0, -1, 0]
-      Color: [0.868338585, 0.533524632, 0.533524632]
-      Intensity: 14.8500004
-      CastShadow: true
-  - Entity: 12112258788623315209
-    TagComponent:
-      Tag: Model
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [2.13791037, 0.876661301, 3.08336902]
+      Rotation: [0, 0.0191986226, 0]
+      Scale: [0.100000001, 0.100000001, 0.100000001]
     ModelRendererComponent:
-      FilePath: assets\models\kenney_toy-car-kit\Models\OBJ format\gate.obj
+      FilePath: assets\models\ornate_mirror_01_2k\ornate_mirror_01_2k.fbx
       Color: [1, 1, 1, 1]
   - Entity: 12132151342123
     TagComponent:
       Tag: UnFixedCamera_1
     TransformComponent:
-      Translation: [-0.100000001, 0.300000012, 2.70000005]
+      Translation: [-0.100000001, 0.300000012, 6.59485435]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
@@ -42,11 +30,48 @@ Entities:
       FixedAspectRatio: false
   - Entity: 6099546564087943552
     TagComponent:
-      Tag: PbrModel
+      Tag: PbrModel_Clock
     TransformComponent:
-      Translation: [0, 0, -3.74678874]
-      Rotation: [0.0434615836, 0, 0]
-      Scale: [0.100000001, 0.0999999791, 0.0999999791]
+      Translation: [0, -1.9416182, -3.83122802]
+      Rotation: [0.0434616134, 0, 0]
+      Scale: [0.150000006, 0.150000006, 0.150000006]
     ModelRendererComponent:
       FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
       Color: [0.931034505, 0.931034505, 0.931034505, 1]
+  - Entity: 1096978947276037003
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [-0.0802830458, 6.01000023, -0.819999993]
+      Rotation: [0.606540143, -0.0471760482, -0.470746756]
+      Scale: [1, 0.999999702, 1.00000012]
+    DirectionalLightComponent:
+      Direction: [-0.270000011, -0.829999983, 0.189999998]
+      Color: [1, 1, 1]
+      Intensity: 12.0500002
+      CastShadow: true
+  - Entity: 14950062399518990413
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0.0868993402, -3.6768918, -1.2550782]
+      Rotation: [0, 0, 0]
+      Scale: [19.6806126, 1, 21.2332878]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 4372577785555847753
+    TagComponent:
+      Tag: PointLight
+    TransformComponent:
+      Translation: [0, 2.87175035, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 0.800000012
+      Radius: 10.8999996
+      CastShadow: true

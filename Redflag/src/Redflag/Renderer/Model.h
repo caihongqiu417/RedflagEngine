@@ -56,6 +56,11 @@ namespace Redflag {
 		std::string ResolveTexturePath(aiMaterial* material, int textureType);
 		Ref<Texture2D> LoadMaterialTexture(aiMaterial* material, const aiScene* scene, int textureType);
 		Ref<Texture2D> MergeMetallicRoughnessTextures(aiMaterial* material);
+		Ref<Texture2D> MergeMetallicRoughnessFromPaths(const std::string& metalPath, const std::string& roughPath);
+
+		// 在模型所在目录（含 textures/ 子目录）搜索文件名包含指定后缀（如 "_diff", "_nor", "_metal"）
+		// 且扩展名可被 stb_image 读取（.png/.jpg/.tga/.bmp/.jpeg）的文件。优先匹配 .png，再退回 .jpg。
+		std::string FindTextureBySuffix(const std::vector<std::string>& suffixes) const;
 
 	private:
 		std::vector<SubMesh> m_SubMeshes;

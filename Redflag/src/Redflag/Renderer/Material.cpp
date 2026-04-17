@@ -30,6 +30,7 @@ namespace Redflag {
 		mat->NormalMap             = NormalMap;
 		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
 		mat->AOMap                 = AOMap;
+		mat->AlphaMap              = AlphaMap;
 		mat->Metallic              = Metallic;
 		mat->Roughness             = Roughness;
 		mat->AO                    = AO;

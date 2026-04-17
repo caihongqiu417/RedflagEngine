@@ -51,6 +51,7 @@ namespace Redflag {
 		Ref<Texture2D> NormalMap;              // 切线空间法线贴图
 		Ref<Texture2D> MetallicRoughnessMap;   // G=粗糙度, B=金属度
 		Ref<Texture2D> AOMap;                  // 环境遮蔽
+		Ref<Texture2D> AlphaMap;               // 独立 alpha/opacity 贴图（R 通道）
 
 		float Metallic  = 0.0f;   // 金属度 [0, 1]，非金属默认 0
 		float Roughness = 0.5f;   // 粗糙度 [0, 1]
@@ -65,6 +66,7 @@ namespace Redflag {
 		bool HasNormalMap()             const { return NormalMap != nullptr; }
 		bool HasMetallicRoughnessMap()  const { return MetallicRoughnessMap != nullptr; }
 		bool HasAOMap()                 const { return AOMap != nullptr; }
+		bool HasAlphaMap()              const { return AlphaMap != nullptr; }
 
 		// 向后兼容旧代码：GetTexture() = BaseColorMap, GetColor() = BaseColor
 		const Ref<Texture2D>& GetTexture() const { return BaseColorMap; }

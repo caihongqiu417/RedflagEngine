@@ -34,10 +34,17 @@ namespace Redflag
 		Ref<UniformBuffer> TransformUniformBuffer; // binding = 1
 		Ref<UniformBuffer> MaterialUniformBuffer;  // binding = 2
 
+		// std140: mat4(64) + vec4(16) + mat4(64) + vec4(16) + vec4(16) = 176 bytes
+		// LightSpaceMatrix / ShadowParams / ShadowParams2 由 SceneRenderer 在
+		// Shadow Pass 前后通过 SetShadowData 写入；主 Mesh shader 与 ShadowDepth
+		// shader 共享这一个 UBO，避免每帧再开一条绑定点。
 		struct CameraData
 		{
-			glm::mat4 ViewProjection;
-			glm::vec4 ViewPosition;  // xyz = 相机世界坐标, w = unused
+			glm::mat4 ViewProjection;      // offset   0
+			glm::vec4 ViewPosition;        // offset  64  (w = IBL ready flag)
+			glm::mat4 LightSpaceMatrix;    // offset  80  光源正交裁剪矩阵
+			glm::vec4 ShadowParams;        // offset 144  x=bias y=normalBias z=invMapSize w=mode
+			glm::vec4 ShadowParams2;       // offset 160  x=pcfRadius y=lightSize z=_ w=_
 		};
 
 		struct TransformData
@@ -57,6 +64,10 @@ namespace Redflag
 			int       UseMetallicRoughnessMap; // offset 36
 			int       UseAOMap;            // offset 40
 			int       EntityID;            // offset 44
+			int       UseAlphaMap;         // offset 48
+			float     AlphaCutoff;         // offset 52
+			int       AlphaMode;           // offset 56  (0=Opaque, 1=Mask, 2=Blend)
+			int       _pad0;               // offset 60  对齐到 16 字节
 		};
 
 		CameraData    CameraBuffer;
@@ -90,11 +101,16 @@ namespace Redflag
 		s_Data.MaterialBuffer.UseNormalMap            = mat->HasNormalMap()            ? 1 : 0;
 		s_Data.MaterialBuffer.UseMetallicRoughnessMap = mat->HasMetallicRoughnessMap() ? 1 : 0;
 		s_Data.MaterialBuffer.UseAOMap               = mat->HasAOMap()                ? 1 : 0;
+		s_Data.MaterialBuffer.UseAlphaMap            = mat->HasAlphaMap()             ? 1 : 0;
+		s_Data.MaterialBuffer.AlphaCutoff            = mat->AlphaCutoff;
+		s_Data.MaterialBuffer.AlphaMode              = static_cast<int>(mat->Alpha);
+		s_Data.MaterialBuffer._pad0                  = 0;
 
 		if (mat->HasBaseColorMap())        mat->BaseColorMap->Bind(3);
 		if (mat->HasNormalMap())           mat->NormalMap->Bind(4);
 		if (mat->HasMetallicRoughnessMap()) mat->MetallicRoughnessMap->Bind(5);
 		if (mat->HasAOMap())               mat->AOMap->Bind(6);
+		if (mat->HasAlphaMap())            mat->AlphaMap->Bind(10);
 	}
 
 	static void ExecuteDraw(const DrawCommand& cmd)
@@ -148,6 +164,12 @@ namespace Redflag
 		// ViewPosition.w 被复用为 IBL 就绪标志（shader 根据它选择 IBL 或常数环境光）
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(),
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
+		// Shadow 相关字段默认清零；SceneRenderer 在 Shadow Pass 前通过
+		// SetShadowData 覆写它们。这里先填 0 是为了"无方向光"或"CastShadow=false"
+		// 的场景下 shader 读到 mode=0，直接跳过阴影采样。
+		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
+		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
+		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
@@ -160,6 +182,9 @@ namespace Redflag
 		// ViewPosition.w 被复用为 IBL 就绪标志
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition,
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
+		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
+		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
+		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
@@ -233,6 +258,64 @@ namespace Redflag
 	{
 		s_Data.Stats.DrawCalls = s_Data.DrawCallCount;
 		return s_Data.Stats;
+	}
+
+	// -------------------------------------------------------------------
+	// SetShadowData — 更新 Camera UBO 中的光源空间矩阵 + 阴影参数
+	//
+	// 只写回 LightSpaceMatrix + ShadowParams + ShadowParams2 字段（96 字节），
+	// 避免覆盖 BeginScene 里已经写好的 ViewProjection / ViewPosition。
+	// -------------------------------------------------------------------
+	void Renderer3D::SetShadowData(const glm::mat4& lightSpaceMatrix,
+		const glm::vec4& shadowParams, const glm::vec4& shadowParams2)
+	{
+		s_Data.CameraBuffer.LightSpaceMatrix = lightSpaceMatrix;
+		s_Data.CameraBuffer.ShadowParams     = shadowParams;
+		s_Data.CameraBuffer.ShadowParams2    = shadowParams2;
+
+		constexpr uint32_t offset = offsetof(Renderer3DData::CameraData, LightSpaceMatrix);
+		constexpr uint32_t size   = sizeof(glm::mat4) + sizeof(glm::vec4) + sizeof(glm::vec4);
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer.LightSpaceMatrix, size, offset);
+	}
+
+	// -------------------------------------------------------------------
+	// ExecuteShadowPass — 用给定的深度 Shader 把当前队列里的几何全部画一遍
+	//
+	// 调用时机：SceneRenderer 在主 Pass (EndScene) 之前调用。
+	// 前置条件：调用方已经：
+	//   1. 绑定好 Shadow FBO 和对应视口
+	//   2. 清理好深度（glClear(GL_DEPTH_BUFFER_BIT)）
+	// 内部职责：
+	//   - 绑定 depthShader
+	//   - 按提交顺序逐个上传 Transform UBO（无需排序，没有材质切换开销）
+	//   - 直接发出 DrawIndexed
+	//
+	// 不碰 CameraUBO：LightSpaceMatrix 由 SetShadowData 预先写入。
+	// 不碰 MaterialUBO：shadow 深度不关心材质贴图。
+	// -------------------------------------------------------------------
+	void Renderer3D::ExecuteShadowPass(const Ref<Shader>& depthShader)
+	{
+		if (!depthShader || s_Data.DrawCommands.empty())
+			return;
+
+		depthShader->Bind();
+
+		for (const auto& cmd : s_Data.DrawCommands)
+		{
+			if (!cmd.MeshData) continue;
+
+			// 暂时跳过 Blend 材质（半透明玻璃等）避免错误地挡住阳光。
+			// Opaque / Mask 材质都正常投射；Mask 的 alpha 裁剪我们这里
+			// 暂不复现（代价是玻璃挂件等轮廓会投影成矩形）。
+			if (cmd.Mat && cmd.Mat->Alpha == AlphaMode::Blend)
+				continue;
+
+			s_Data.TransformBuffer.Transform = cmd.Transform;
+			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
+
+			cmd.MeshData->Bind();
+			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+		}
 	}
 
 	// -------------------------------------------------------------------

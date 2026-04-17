@@ -17,10 +17,13 @@
 #include "Redflag/Renderer/Renderer2D.h"
 #include "Redflag/Renderer/Renderer3D.h"
 #include "Redflag/Renderer/IBLPrecompute.h"
+#include "Redflag/Renderer/Framebuffer.h"
+#include "Redflag/Renderer/Shader.h"
 
 #include "Redflag/Core/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Redflag {
@@ -29,6 +32,24 @@ namespace Redflag {
 	// 静态资源：Light UBO
 	// =================================================================
 	static Ref<UniformBuffer> s_LightUBO;
+
+	// =================================================================
+	// Shadow Pass 资源
+	//
+	// 当前实现：单方向光 + 单张 2048×2048 DEPTH32F Shadow Map。
+	// 覆盖范围由固定正交视锥控制（见 BuildLightSpaceMatrix），
+	// 对"沙盒/展示"尺度场景够用；后续可接入场景包围盒或 CSM。
+	// =================================================================
+	static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
+	static constexpr uint32_t SHADOW_MAP_SLOT = 11; // 与主 Mesh shader 里的 binding = 11 对应
+
+	static Ref<Framebuffer> s_ShadowFBO;
+	static Ref<Shader>      s_ShadowDepthShader;
+
+	// Shadow 调参：所有字段暴露给 ImGui 面板，运行时可改
+	static ShadowSettings s_ShadowSettings;
+
+	ShadowSettings& SceneRenderer::GetShadowSettings() { return s_ShadowSettings; }
 
 	// CPU 侧灯光缓冲区，每帧填充后一次性上传
 	// 布局：[GPULightUBO header (16B)] + [LightData[] 数组]
@@ -44,11 +65,23 @@ namespace Redflag {
 		// 只在启动时执行一次（约 1~2 秒）。HDR 文件不存在时会打印错误并跳过，
 		// 此时 shader 会回退到常数环境光，不会影响程序运行。
 		IBLPrecompute::Init("assets/textures/environment.hdr");
+
+		// ---- Shadow Pass 资源 ----
+		// DEPTH32F depth-only FBO：无颜色附件，viewport 会绑为 ShadowMap 尺寸
+		FramebufferSpecification shadowSpec;
+		shadowSpec.Width  = SHADOW_MAP_SIZE;
+		shadowSpec.Height = SHADOW_MAP_SIZE;
+		shadowSpec.Attachments = { FramebufferTextureFormat::DEPTH32F };
+		s_ShadowFBO = Framebuffer::Create(shadowSpec);
+
+		s_ShadowDepthShader = Shader::Create("assets/shaders/ShadowDepth.glsl");
 	}
 
 	void SceneRenderer::Shutdown()
 	{
 		s_LightUBO.reset();
+		s_ShadowFBO.reset();
+		s_ShadowDepthShader.reset();
 		IBLPrecompute::Shutdown();
 	}
 
@@ -58,6 +91,88 @@ namespace Redflag {
 
 	void SceneRenderer::EndScene()
 	{
+	}
+
+	// ==================================================================
+	// TryBuildLightSpaceMatrix — 从场景里找到第一盏开启 CastShadow 的方向光
+	//
+	// 成功：outLight 记录光源方向（世界空间，已归一化），
+	//       outMatrix 填入 Ortho × View，返回 true。
+	// 失败：返回 false，调用方应当跳过 Shadow Pass。
+	//
+	// 当前实现选择固定视锥：以原点为中心的 40×40×100 正交盒，
+	// near/far = -50/50，可完整覆盖 [-25,25] 的主要摆放区域。
+	// 以后接入场景包围盒或级联阴影（CSM）再替换这个函数即可。
+	// ==================================================================
+	static bool TryBuildLightSpaceMatrix(Scene& scene,
+		glm::vec3& outLightDir, glm::mat4& outMatrix)
+	{
+		entt::registry& registry = scene.GetRegistry();
+
+		bool found = false;
+		glm::vec3 dir(0.0f);
+
+		auto view = registry.view<TransformComponent, DirectionalLightComponent>();
+		for (auto e : view)
+		{
+			auto& tc = view.get<TransformComponent>(e);
+			auto& dl = view.get<DirectionalLightComponent>(e);
+			if (!dl.CastShadow) continue;
+			dir = glm::normalize(glm::mat3(tc.GetTransform()) * dl.Direction);
+			// 防御：全零方向会让 lookAt 退化
+			if (glm::dot(dir, dir) < 1e-6f) continue;
+			found = true;
+			break;
+		}
+		if (!found) return false;
+
+		// 构造光源 view：从 "光源所在虚拟位置" 看向原点（沿光线前进方向）
+		// up 取 (0,1,0)；若光几乎平行 Y 轴，用 (0,0,1) 规避退化
+		glm::vec3 up = glm::abs(dir.y) > 0.95f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+		glm::vec3 lightPos = -dir * 30.0f; // 退后 30 单位，保证 far=50 时场景在视锥内
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), up);
+
+		// 覆盖范围：由 ImGui 调整（增大半宽会让 shadow map 精度下降）
+		const float half = s_ShadowSettings.OrthoHalfSize;
+		glm::mat4 lightProj = glm::ortho(-half, half, -half, half, -50.0f, 50.0f);
+
+		outLightDir = dir;
+		outMatrix   = lightProj * lightView;
+		return true;
+	}
+
+	// ==================================================================
+	// RunShadowPass — 把当前队列里的几何画进 Shadow Map
+	//
+	// 调用时机：在 Renderer3D 完成"提交"但尚未 EndScene 之前。
+	// 流程：
+	//   1. 保存现在绑定的 draw framebuffer + viewport，pass 后还原。
+	//   2. 绑定 Shadow FBO，清深度，使用光源空间矩阵做深度预渲染。
+	//   3. 正面剔除 (optional)：部分消除 shadow acne；对薄片几何会让
+	//      正面丢阴影，这里选择保留 BACK 剔除，依赖 bias + PCF。
+	// ==================================================================
+	static void RunShadowPass(const glm::mat4& lightSpaceMatrix)
+	{
+		// --- 保存当前 FBO / viewport ---
+		GLint  prevFBO = 0;
+		GLint  prevViewport[4];
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
+		glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+		// --- 绑定 Shadow FBO ---
+		s_ShadowFBO->Bind();                 // 内部已 glViewport 到 ShadowMap 尺寸
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// 先把 LightSpaceMatrix 写入 Camera UBO，ShadowDepth.glsl 从这里读
+		// （ShadowParams 也顺便设成 disable，确保 Shadow Pass 自身不触发阴影采样）
+		Renderer3D::SetShadowData(lightSpaceMatrix, glm::vec4(0.0f));
+
+		// --- 深度预渲染 ---
+		Renderer3D::ExecuteShadowPass(s_ShadowDepthShader);
+
+		// --- 还原 FBO / viewport ---
+		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 	}
 
 	// ==================================================================
@@ -141,6 +256,33 @@ namespace Redflag {
 			});
 		}
 
+		// ======================== Shadow Pass ========================
+		// 必须在提交全部几何 (DrawMesh/DrawModel) 后、主 Pass EndScene 前。
+		// 找到主方向光 → 深度预渲染 → 把阴影参数 + Shadow Map 提供给主 shader
+		glm::vec3 lightDir;
+		glm::mat4 lightSpaceMatrix(1.0f);
+		bool hasShadow = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
+		if (hasShadow)
+		{
+			RunShadowPass(lightSpaceMatrix);
+
+			// 把光源空间矩阵 + 阴影参数正式写进 Camera UBO，供主 Mesh shader
+			// 在片元阶段做 PCF / PCSS 采样。
+			glm::vec4 shadowParams(
+				s_ShadowSettings.DepthBias,
+				s_ShadowSettings.NormalBias,
+				1.0f / float(SHADOW_MAP_SIZE),
+				float(s_ShadowSettings.Mode));
+			glm::vec4 shadowParams2(
+				s_ShadowSettings.PcfRadius,
+				s_ShadowSettings.LightSize,
+				0.0f, 0.0f);
+			Renderer3D::SetShadowData(lightSpaceMatrix, shadowParams, shadowParams2);
+
+			// 绑定 Shadow Map 深度纹理到 slot 11（与主 shader binding = 11 对应）
+			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
+		}
+
 		Renderer3D::EndScene();
 
 		// ======================== 天空盒 ========================
@@ -212,6 +354,27 @@ namespace Redflag {
 			});
 		}
 
+		// ======================== Shadow Pass（Runtime）========================
+		{
+			glm::vec3 lightDir;
+			glm::mat4 lightSpaceMatrix(1.0f);
+			if (TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix))
+			{
+				RunShadowPass(lightSpaceMatrix);
+				glm::vec4 shadowParams(
+					s_ShadowSettings.DepthBias,
+					s_ShadowSettings.NormalBias,
+					1.0f / float(SHADOW_MAP_SIZE),
+					float(s_ShadowSettings.Mode));
+				glm::vec4 shadowParams2(
+					s_ShadowSettings.PcfRadius,
+					s_ShadowSettings.LightSize,
+					0.0f, 0.0f);
+				Renderer3D::SetShadowData(lightSpaceMatrix, shadowParams, shadowParams2);
+				glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
+			}
+		}
+
 		Renderer3D::EndScene();
 
 		// ======================== 天空盒 ========================
@@ -273,8 +436,6 @@ namespace Redflag {
 
 		// --- 上传到 GPU ---
 		uint32_t offset = 0;
-
-		RF_CORE_TRACE("Lights: {0} dir, {1} point", header.NumDirectionalLights, header.NumPointLights);
 
 		// header
 		s_LightUBO->SetData(&header, sizeof(GPULightUBO), offset);
