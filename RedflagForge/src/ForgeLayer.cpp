@@ -830,6 +830,7 @@ namespace Redflag {
     void ForgeLayer::OnSceneStop()
     {
         m_ActiveScene->OnRuntimeStop(); // 停止物理
+        m_HoveredEntity = {};           // 清除悬空指针（指向即将销毁的运行时场景）
         m_ActiveScene = m_EditorScene;  // 恢复编辑场景
         m_SceneState  = SceneState::Edit;
     }
@@ -847,6 +848,7 @@ namespace Redflag {
     void ForgeLayer::OnSceneSimulateStop()
     {
         m_ActiveScene->OnSimulationStop(); // 停止物理
+        m_HoveredEntity = {};              // 清除悬空指针
         m_ActiveScene = m_EditorScene;     // 恢复编辑场景
         m_SceneState  = SceneState::Edit;
     }

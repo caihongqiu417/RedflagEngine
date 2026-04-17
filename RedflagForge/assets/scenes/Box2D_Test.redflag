@@ -1,83 +1,5 @@
 Scene: Unamed Scene
 Entities:
-  - Entity: 75237664347813249
-    TagComponent:
-      Tag: Cube2
-    TransformComponent:
-      Translation: [-1.96969855, 1.3159194, 0]
-      Rotation: [0, 0, -0.74733144]
-      Scale: [0.556043506, 1.38346422, 1]
-    SpriteRendererComponent:
-      Color: [0.0998810753, 0.244432062, 0.758620679, 1]
-      TilingFactor: 1
-    RigidBodyComponent:
-      Body Type: Dynamic
-      Fixed Rotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 15697454013388433194
-    TagComponent:
-      Tag: Camera
-    TransformComponent:
-      Translation: [0, 1.20310009, 10.728466]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        PerspectiveFov: 0.785398185
-        PerspectiveNear: 0.00999999978
-        PerspectiveFar: 1000
-        OrthographicSize: 10
-        OrthographicNear: -1
-        OrthographicFar: 1000
-      Primary: true
-      FixedAspectRatio: false
-  - Entity: 9424538839363934768
-    TagComponent:
-      Tag: Platform
-    TransformComponent:
-      Translation: [0, -1.35332918, 0]
-      Rotation: [0, 0, 0]
-      Scale: [9, 0.400000006, 1]
-    SpriteRendererComponent:
-      Color: [0.843260169, 0.195615187, 0.195615187, 1]
-      TilingFactor: 1
-    RigidBodyComponent:
-      Body Type: Static
-      Fixed Rotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 15292394060664707247
-    TagComponent:
-      Tag: Cube
-    TransformComponent:
-      Translation: [0.0484791547, 1.95000005, 0]
-      Rotation: [0.310317934, 0.166895181, -1.45660698]
-      Scale: [1, 0.999999762, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      TilingFactor: 1
-    RigidBodyComponent:
-      Body Type: Dynamic
-      Fixed Rotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.800000012
-      RestitutionThreshold: 0.5
   - Entity: 1874164145275329181
     TagComponent:
       Tag: AtlasAnim
@@ -105,3 +27,81 @@ Entities:
       FrameCount: 23
       AnimationSpeed: 10
       Loop: true
+  - Entity: 15292394060664707247
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [0.0484791547, 1.95000005, 0]
+      Rotation: [0.310317934, 0.166895181, -1.45660698]
+      Scale: [1, 0.999999762, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      TilingFactor: 1
+    RigidBodyComponent:
+      Body Type: Dynamic
+      Fixed Rotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0.800000012
+      RestitutionThreshold: 0.5
+  - Entity: 9424538839363934768
+    TagComponent:
+      Tag: Platform
+    TransformComponent:
+      Translation: [0, -1.35332918, 0]
+      Rotation: [0, 0, 0]
+      Scale: [9, 0.400000006, 1]
+    SpriteRendererComponent:
+      Color: [0.843260169, 0.195615187, 0.195615187, 1]
+      TilingFactor: 1
+    RigidBodyComponent:
+      Body Type: Static
+      Fixed Rotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 15697454013388433194
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 1.20310009, 10.728466]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 75237664347813249
+    TagComponent:
+      Tag: Cube2
+    TransformComponent:
+      Translation: [-1.96969855, 1.3159194, 0]
+      Rotation: [0, 0, -0.74733144]
+      Scale: [0.556043506, 1.38346422, 1]
+    SpriteRendererComponent:
+      Color: [0.191468015, 0.174379185, 0.855799377, 1]
+      TilingFactor: 1
+    RigidBodyComponent:
+      Body Type: Dynamic
+      Fixed Rotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
