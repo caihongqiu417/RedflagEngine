@@ -236,4 +236,63 @@ namespace Redflag {
 		PointLightComponent() = default;
 		PointLightComponent(const PointLightComponent&) = default;
 	};
+
+	// ---------------------------------------------------------------
+	// 2D 粒子发射器组件
+	//
+	// 将 ParticleSystem 的粒子属性包装为 ECS 组件，附加到实体后
+	// 以 EmissionRate 速率从实体 Transform 位置持续发射粒子。
+	// ---------------------------------------------------------------
+	struct ParticleEmitterComponent
+	{
+		// --- 粒子外观 ---
+		glm::vec4 ColorBegin = { 0.4f, 0.7f, 1.0f, 1.0f };
+		glm::vec4 ColorEnd   = { 1.0f, 0.5f, 0.8f, 0.0f };
+
+		// --- 粒子大小 ---
+		float SizeBegin     = 0.1f;
+		float SizeEnd       = 0.02f;
+		float SizeVariation = 0.03f;
+
+		// --- 粒子运动 ---
+		glm::vec2 Velocity          = { 0.0f, 0.0f };
+		glm::vec2 VelocityVariation = { 2.0f, 2.0f };
+
+		// --- 生命周期 ---
+		float LifeTime = 1.8f;
+
+		// --- 发射控制 ---
+		float    EmissionRate = 10.0f;   // 每秒发射粒子数
+		uint32_t MaxParticles = 1000;    // 粒子池大小
+		bool     Active       = true;    // 是否正在发射
+
+		// --- 运行时数据（不序列化）---
+		void* RuntimeParticleSystem   = nullptr;
+		float EmissionAccumulator     = 0.0f;
+
+		ParticleEmitterComponent() = default;
+		ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
+	};
+
+	// ---------------------------------------------------------------
+	// 2D 纹理动画组件（精灵表帧动画）
+	//
+	// 配合 SpriteRendererComponent 使用：Sprite 上的纹理作为精灵表，
+	// 此组件控制每帧显示哪一帧子纹理。
+	// ---------------------------------------------------------------
+	struct TextureAnimationComponent
+	{
+		int   Columns        = 1;       // 精灵表列数
+		int   Rows           = 1;       // 精灵表行数
+		int   FrameCount     = 1;       // 动画总帧数（可 <= Columns * Rows）
+		float AnimationSpeed = 10.0f;   // 帧率（帧/秒）
+		bool  Loop           = true;    // 是否循环播放
+
+		// --- 运行时状态（不序列化）---
+		int   CurrentFrame = 0;
+		float Timer        = 0.0f;
+
+		TextureAnimationComponent() = default;
+		TextureAnimationComponent(const TextureAnimationComponent&) = default;
+	};
 }

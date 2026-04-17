@@ -9,6 +9,7 @@ Entities:
       Scale: [0.556043506, 1.38346422, 1]
     SpriteRendererComponent:
       Color: [0.0998810753, 0.244432062, 0.758620679, 1]
+      TilingFactor: 1
     RigidBodyComponent:
       Body Type: Dynamic
       Fixed Rotation: false
@@ -46,6 +47,7 @@ Entities:
       Scale: [9, 0.400000006, 1]
     SpriteRendererComponent:
       Color: [0.843260169, 0.195615187, 0.195615187, 1]
+      TilingFactor: 1
     RigidBodyComponent:
       Body Type: Static
       Fixed Rotation: false
@@ -65,6 +67,7 @@ Entities:
       Scale: [1, 0.999999762, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
+      TilingFactor: 1
     RigidBodyComponent:
       Body Type: Dynamic
       Fixed Rotation: false
@@ -75,3 +78,30 @@ Entities:
       Friction: 0.5
       Restitution: 0.800000012
       RestitutionThreshold: 0.5
+  - Entity: 1874164145275329181
+    TagComponent:
+      Tag: AtlasAnim
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      TilingFactor: 1
+      TexturePath: assets\textures\characters.png
+    RigidBodyComponent:
+      Body Type: Dynamic
+      Fixed Rotation: false
+    CircleCollider2DComponent:
+      Offset: [0, -0.200000003]
+      Radius: 0.300000012
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    TextureAnimationComponent:
+      Columns: 23
+      Rows: 4
+      FrameCount: 23
+      AnimationSpeed: 10
+      Loop: true

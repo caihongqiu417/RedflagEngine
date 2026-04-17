@@ -354,6 +354,26 @@ namespace Redflag {
                 }
             }
 
+            ImGui::Separator();
+
+            if (!m_SelectionContext.HasComponent<ParticleEmitterComponent>())
+            {
+                if (ImGui::MenuItem("Particle Emitter 2D"))
+                {
+                    m_SelectionContext.AddComponent<ParticleEmitterComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            if (!m_SelectionContext.HasComponent<TextureAnimationComponent>())
+            {
+                if (ImGui::MenuItem("Texture Animation"))
+                {
+                    m_SelectionContext.AddComponent<TextureAnimationComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
             ImGui::EndPopup();
         }
         ImGui::PopItemWidth();
@@ -784,6 +804,51 @@ namespace Redflag {
                 ImGui::DragFloat("Radius", &component.Radius, 0.1f, 0.01f, 1000.0f);
                 // 是否投射阴影（点光用立方体 Shadow Map，开销较大）
                 ImGui::Checkbox("Cast Shadow", &component.CastShadow);
+            });
+
+        // Particle Emitter 2D 属性面板
+        DrawComponent<ParticleEmitterComponent>("Particle Emitter 2D", entity, [](auto& component)
+            {
+                ImGui::Checkbox("Active", &component.Active);
+
+                if (ImGui::CollapsingHeader("Colors", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::ColorEdit4("Color Begin", glm::value_ptr(component.ColorBegin));
+                    ImGui::ColorEdit4("Color End",   glm::value_ptr(component.ColorEnd));
+                }
+
+                if (ImGui::CollapsingHeader("Size", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::DragFloat("Size Begin",     &component.SizeBegin,     0.01f, 0.001f, 10.0f);
+                    ImGui::DragFloat("Size End",       &component.SizeEnd,       0.01f, 0.001f, 10.0f);
+                    ImGui::DragFloat("Size Variation", &component.SizeVariation, 0.01f, 0.0f,   5.0f);
+                }
+
+                if (ImGui::CollapsingHeader("Velocity", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::DragFloat2("Velocity",          glm::value_ptr(component.Velocity),          0.1f);
+                    ImGui::DragFloat2("Velocity Variation", glm::value_ptr(component.VelocityVariation), 0.1f);
+                }
+
+                ImGui::DragFloat("Life Time",      &component.LifeTime,     0.1f, 0.1f, 30.0f);
+                ImGui::DragFloat("Emission Rate",  &component.EmissionRate, 1.0f, 0.0f, 10000.0f);
+
+                int maxP = (int)component.MaxParticles;
+                if (ImGui::DragInt("Max Particles", &maxP, 10.0f, 10, 100000))
+                    component.MaxParticles = (uint32_t)maxP;
+            });
+
+        // Texture Animation 属性面板
+        DrawComponent<TextureAnimationComponent>("Texture Animation", entity, [](auto& component)
+            {
+                ImGui::DragInt("Columns",    &component.Columns,        1.0f, 1, 64);
+                ImGui::DragInt("Rows",       &component.Rows,           1.0f, 1, 64);
+                ImGui::DragInt("Frame Count", &component.FrameCount,    1.0f, 1, 4096);
+                ImGui::DragFloat("Speed (FPS)", &component.AnimationSpeed, 0.5f, 0.0f, 120.0f);
+                ImGui::Checkbox("Loop", &component.Loop);
+
+                ImGui::Separator();
+                ImGui::Text("Runtime: Frame %d / %d", component.CurrentFrame, component.FrameCount);
             });
     }
 }

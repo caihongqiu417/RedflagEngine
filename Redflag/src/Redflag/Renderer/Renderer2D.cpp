@@ -586,6 +586,58 @@ namespace Redflag
     }
 
     //==========================================================================
+    // 绘制子纹理四边形（ECS版 - 使用变换矩阵 + SubTexture2D）
+    //==========================================================================
+    void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture,
+        float tilingFactor, const glm::vec4& tintColor, int entityID)
+    {
+        RF_PROFILE_FUNCTION();
+
+        if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+            FlushAndReset();
+
+        constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+        const glm::vec2* texCoords = subTexture->GetTexCoords();
+        const Ref<Texture2D>& texture = subTexture->GetTexture();
+
+        float textureIndex = 0.0f;
+
+        for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+        {
+            if (*s_Data.TextureSlots[i].get() == *texture.get())
+            {
+                textureIndex = (float)i;
+                break;
+            }
+        }
+
+        if (textureIndex == 0.0f)
+        {
+            if (s_Data.TextureSlotIndex >= s_Data.MaxTextureSlots)
+                FlushAndReset();
+
+            textureIndex = (float)s_Data.TextureSlotIndex;
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+            s_Data.TextureSlotIndex++;
+        }
+
+        for (uint32_t i = 0; i < 4; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = tintColor;
+            s_Data.QuadVertexBufferPtr->TexCoord = texCoords[i];
+            s_Data.QuadVertexBufferPtr->textureIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+            s_Data.QuadVertexBufferPtr->EntityID = entityID;
+            s_Data.QuadVertexBufferPtr++;
+        }
+
+        s_Data.QuadIndexCount += 6;
+        s_Data.Stas.QuadCount++;
+    }
+
+    //==========================================================================
     // ������ת��ɫ�ı��Σ�2D����汾��
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,

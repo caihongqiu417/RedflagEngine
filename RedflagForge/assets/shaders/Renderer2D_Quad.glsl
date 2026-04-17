@@ -90,5 +90,10 @@ void main()
         case 31: texColor *= texture(u_Textures[31], v_TexCoord * v_TilingFactor); break;
     }
     color = texColor;
+
+    // 丢弃接近全透明的片段，避免透明像素写入深度缓冲遮挡后续内容
+    if (color.a < 0.01)
+        discard;
+
     color2 = v_EntityID;
 }

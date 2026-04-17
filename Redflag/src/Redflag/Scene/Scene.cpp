@@ -10,6 +10,7 @@
 
 #include"Redflag/Core/AssetManager.h"
 #include"Redflag/Renderer/Model.h"
+#include"Redflag/ParticleSystem/ParticleSystem.h"
 
 #include"Entity.h"
 #include"ScriptableEntity.h"
@@ -106,6 +107,8 @@ namespace Redflag {
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<ParticleEmitterComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<TextureAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
     }
@@ -133,11 +136,47 @@ namespace Redflag {
     void Scene::OnRuntimeStart()
     {
         OnPhysics2DStart();
+
+        // 创建粒子系统运行时实例
+        {
+            auto view = m_Registry.view<ParticleEmitterComponent>();
+            for (auto e : view)
+            {
+                auto& emitter = m_Registry.get<ParticleEmitterComponent>(e);
+                emitter.RuntimeParticleSystem = new ParticleSystem(emitter.MaxParticles);
+                emitter.EmissionAccumulator = 0.0f;
+            }
+        }
+
+        // 重置纹理动画状态
+        {
+            auto view = m_Registry.view<TextureAnimationComponent>();
+            for (auto e : view)
+            {
+                auto& anim = m_Registry.get<TextureAnimationComponent>(e);
+                anim.CurrentFrame = 0;
+                anim.Timer = 0.0f;
+            }
+        }
     }
 
     void Scene::OnRuntimeStop()
     {
         OnPhysics2DStop();
+
+        // 销毁粒子系统运行时实例
+        {
+            auto view = m_Registry.view<ParticleEmitterComponent>();
+            for (auto e : view)
+            {
+                auto& emitter = m_Registry.get<ParticleEmitterComponent>(e);
+                if (emitter.RuntimeParticleSystem)
+                {
+                    delete (ParticleSystem*)emitter.RuntimeParticleSystem;
+                    emitter.RuntimeParticleSystem = nullptr;
+                }
+            }
+        }
     }
 
     void Scene::OnSimulationStart()
@@ -183,6 +222,67 @@ namespace Redflag {
                 }
                 nsc.Instance->OnUpdate(ts);
             });
+        }
+
+        //================================================================
+        //==================== 更新粒子发射器 ==========================
+        //================================================================
+        {
+            auto view = m_Registry.view<TransformComponent, ParticleEmitterComponent>();
+            for (auto e : view)
+            {
+                auto& transform = m_Registry.get<TransformComponent>(e);
+                auto& emitter   = m_Registry.get<ParticleEmitterComponent>(e);
+                if (!emitter.RuntimeParticleSystem)
+                    continue;
+
+                ParticleSystem* ps = (ParticleSystem*)emitter.RuntimeParticleSystem;
+
+                if (emitter.Active)
+                {
+                    emitter.EmissionAccumulator += emitter.EmissionRate * ts;
+                    while (emitter.EmissionAccumulator >= 1.0f)
+                    {
+                        ParticleProps props;
+                        props.Position          = { transform.Translation.x, transform.Translation.y };
+                        props.ColorBegin        = emitter.ColorBegin;
+                        props.ColorEnd          = emitter.ColorEnd;
+                        props.SizeBegin         = emitter.SizeBegin;
+                        props.SizeEnd           = emitter.SizeEnd;
+                        props.SizeVariation     = emitter.SizeVariation;
+                        props.Velocity          = emitter.Velocity;
+                        props.VelocityVariation = emitter.VelocityVariation;
+                        props.LifeTime          = emitter.LifeTime;
+                        ps->Emit(props);
+                        emitter.EmissionAccumulator -= 1.0f;
+                    }
+                }
+
+                ps->OnUpdate(ts);
+            }
+        }
+
+        //================================================================
+        //==================== 更新纹理动画 ============================
+        //================================================================
+        {
+            auto view = m_Registry.view<TextureAnimationComponent>();
+            for (auto e : view)
+            {
+                auto& anim = m_Registry.get<TextureAnimationComponent>(e);
+                if (anim.FrameCount <= 1 || anim.AnimationSpeed <= 0.0f)
+                    continue;
+
+                anim.Timer += ts;
+                float frameDuration = 1.0f / anim.AnimationSpeed;
+                while (anim.Timer >= frameDuration)
+                {
+                    anim.Timer -= frameDuration;
+                    anim.CurrentFrame++;
+                    if (anim.CurrentFrame >= anim.FrameCount)
+                        anim.CurrentFrame = anim.Loop ? 0 : anim.FrameCount - 1;
+                }
+            }
         }
 
         // ����
@@ -297,6 +397,8 @@ namespace Redflag {
         CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
         CopyComponentIfExist<DirectionalLightComponent>(newEntity, entity);
         CopyComponentIfExist<PointLightComponent>(newEntity, entity);
+        CopyComponentIfExist<ParticleEmitterComponent>(newEntity, entity);
+        CopyComponentIfExist<TextureAnimationComponent>(newEntity, entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -458,6 +560,18 @@ namespace Redflag {
 
     template<>
     void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<ParticleEmitterComponent>(Entity entity, ParticleEmitterComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<TextureAnimationComponent>(Entity entity, TextureAnimationComponent& component)
     {
 
     }

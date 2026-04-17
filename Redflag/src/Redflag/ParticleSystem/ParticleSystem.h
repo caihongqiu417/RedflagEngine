@@ -30,6 +30,9 @@ namespace Redflag
 		// 每帧渲染：绘制所有活跃粒子
 		void OnRender(OrthographicCamera& camera);
 
+		// 渲染到当前已开启的 2D 批次中（不调用 BeginScene/EndScene）
+		void RenderBatch();
+
 		// 发射一个新粒子
 		void Emit(const ParticleProps& particleProps);
 

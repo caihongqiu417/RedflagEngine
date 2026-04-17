@@ -92,6 +92,32 @@ namespace Redflag
 		Renderer2D::EndScene();
 	}
 
+	void ParticleSystem::RenderBatch()
+	{
+		for (auto& particle : m_ParticlePool)
+		{
+			if (!particle.Active)
+				continue;
+
+			float life = particle.LifeRemaining / particle.LifeTime;
+			if (life < 0.001f)
+				continue;
+
+			glm::vec4 color = glm::lerp(particle.ColorEnd, particle.ColorBegin, life);
+			float size = glm::lerp(particle.SizeEnd, particle.SizeBegin, life);
+
+			if (color.a < 0.01f || size < 0.01f)
+				continue;
+
+			Renderer2D::DrawRotatedQuad(
+				{ particle.Position.x, particle.Position.y, 0.0f },
+				{ size, size },
+				particle.Rotation,
+				color
+			);
+		}
+	}
+
 	void ParticleSystem::Emit(const ParticleProps& particleProps)
 	{
 		// 从粒子池中取出一个粒子

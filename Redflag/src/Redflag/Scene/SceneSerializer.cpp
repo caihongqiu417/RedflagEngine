@@ -194,6 +194,9 @@ namespace Redflag {
 
             auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
             out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
+            out << YAML::Key << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
+            if (spriteRendererComponent.Texture)
+                out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath();
 
             out << YAML::EndMap; // SpriteRendererComponent Map
         }
@@ -336,7 +339,41 @@ namespace Redflag {
 
             out << YAML::EndMap;
         }
+        if (entity.HasComponent<ParticleEmitterComponent>())
+        {
+            out << YAML::Key << "ParticleEmitterComponent";
+            out << YAML::BeginMap;
 
+            auto& pe = entity.GetComponent<ParticleEmitterComponent>();
+            out << YAML::Key << "ColorBegin"        << YAML::Value << pe.ColorBegin;
+            out << YAML::Key << "ColorEnd"          << YAML::Value << pe.ColorEnd;
+            out << YAML::Key << "SizeBegin"         << YAML::Value << pe.SizeBegin;
+            out << YAML::Key << "SizeEnd"           << YAML::Value << pe.SizeEnd;
+            out << YAML::Key << "SizeVariation"     << YAML::Value << pe.SizeVariation;
+            out << YAML::Key << "Velocity"          << YAML::Value << pe.Velocity;
+            out << YAML::Key << "VelocityVariation" << YAML::Value << pe.VelocityVariation;
+            out << YAML::Key << "LifeTime"          << YAML::Value << pe.LifeTime;
+            out << YAML::Key << "EmissionRate"      << YAML::Value << pe.EmissionRate;
+            out << YAML::Key << "MaxParticles"      << YAML::Value << pe.MaxParticles;
+            out << YAML::Key << "Active"            << YAML::Value << pe.Active;
+
+            out << YAML::EndMap;
+        }
+
+        if (entity.HasComponent<TextureAnimationComponent>())
+        {
+            out << YAML::Key << "TextureAnimationComponent";
+            out << YAML::BeginMap;
+
+            auto& ta = entity.GetComponent<TextureAnimationComponent>();
+            out << YAML::Key << "Columns"        << YAML::Value << ta.Columns;
+            out << YAML::Key << "Rows"           << YAML::Value << ta.Rows;
+            out << YAML::Key << "FrameCount"     << YAML::Value << ta.FrameCount;
+            out << YAML::Key << "AnimationSpeed" << YAML::Value << ta.AnimationSpeed;
+            out << YAML::Key << "Loop"           << YAML::Value << ta.Loop;
+
+            out << YAML::EndMap;
+        }
         // ����ʵ��� Map
         out << YAML::EndMap;
     }
@@ -430,6 +467,14 @@ namespace Redflag {
                     auto srNode = entity["SpriteRendererComponent"];
                     auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
                     src.Color = srNode["Color"].as<glm::vec4>();
+                    if (srNode["TilingFactor"])
+                        src.TilingFactor = srNode["TilingFactor"].as<float>();
+                    if (srNode["TexturePath"])
+                    {
+                        std::string texPath = srNode["TexturePath"].as<std::string>();
+                        if (!texPath.empty())
+                            src.Texture = Texture2D::Create(texPath);
+                    }
                 }
 
                 // Circle Renderer Component
@@ -552,6 +597,36 @@ namespace Redflag {
                     pl.Intensity  = plNode["Intensity"].as<float>();
                     pl.Radius     = plNode["Radius"].as<float>();
                     pl.CastShadow = plNode["CastShadow"].as<bool>();
+                }
+
+                // ParticleEmitterComponent
+                if (entity["ParticleEmitterComponent"])
+                {
+                    auto peNode = entity["ParticleEmitterComponent"];
+                    auto& pe = deserializedEntity.AddComponent<ParticleEmitterComponent>();
+                    pe.ColorBegin        = peNode["ColorBegin"].as<glm::vec4>();
+                    pe.ColorEnd          = peNode["ColorEnd"].as<glm::vec4>();
+                    pe.SizeBegin         = peNode["SizeBegin"].as<float>();
+                    pe.SizeEnd           = peNode["SizeEnd"].as<float>();
+                    pe.SizeVariation     = peNode["SizeVariation"].as<float>();
+                    pe.Velocity          = peNode["Velocity"].as<glm::vec2>();
+                    pe.VelocityVariation = peNode["VelocityVariation"].as<glm::vec2>();
+                    pe.LifeTime          = peNode["LifeTime"].as<float>();
+                    pe.EmissionRate      = peNode["EmissionRate"].as<float>();
+                    pe.MaxParticles      = peNode["MaxParticles"].as<uint32_t>();
+                    pe.Active            = peNode["Active"].as<bool>();
+                }
+
+                // TextureAnimationComponent
+                if (entity["TextureAnimationComponent"])
+                {
+                    auto taNode = entity["TextureAnimationComponent"];
+                    auto& ta = deserializedEntity.AddComponent<TextureAnimationComponent>();
+                    ta.Columns        = taNode["Columns"].as<int>();
+                    ta.Rows           = taNode["Rows"].as<int>();
+                    ta.FrameCount     = taNode["FrameCount"].as<int>();
+                    ta.AnimationSpeed = taNode["AnimationSpeed"].as<float>();
+                    ta.Loop           = taNode["Loop"].as<bool>();
                 }
             }
         }

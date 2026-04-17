@@ -18,6 +18,8 @@
 #include "Redflag/Renderer/Renderer3D.h"
 #include "Redflag/Renderer/IBLPrecompute.h"
 #include "Redflag/Renderer/Framebuffer.h"
+#include "Redflag/ParticleSystem/ParticleSystem.h"
+#include "Redflag/Renderer/SubTexture2D.h"
 #include "Redflag/Renderer/Shader.h"
 
 #include "Redflag/Core/AssetManager.h"
@@ -202,6 +204,24 @@ namespace Redflag {
 			auto view = registry.view<TransformComponent, SpriteRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
 			{
+				// 如果实体同时拥有纹理动画组件且有纹理，用子纹理渲染当前帧
+				if (registry.all_of<TextureAnimationComponent>(entity) && sprite.Texture)
+				{
+					auto& anim = registry.get<TextureAnimationComponent>(entity);
+					if (anim.Columns > 0 && anim.Rows > 0)
+					{
+						float cellW = (float)sprite.Texture->GetWidth()  / (float)anim.Columns;
+						float cellH = (float)sprite.Texture->GetHeight() / (float)anim.Rows;
+						int col = anim.CurrentFrame % anim.Columns;
+						int row = anim.CurrentFrame / anim.Columns;
+						auto subTex = SubTexture2D::CreateFromCoords(
+							sprite.Texture,
+							{ (float)col, (float)(anim.Rows - 1 - row) },
+							{ cellW, cellH });
+						Renderer2D::DrawQuad(transform.GetTransform(), subTex, sprite.TilingFactor, sprite.Color, (int)entity);
+						return;
+					}
+				}
 				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
 			});
 		}
@@ -304,6 +324,24 @@ namespace Redflag {
 			auto view = registry.view<TransformComponent, SpriteRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, SpriteRendererComponent& sprite)
 			{
+				// 如果实体同时拥有纹理动画组件且有纹理，用子纹理渲染当前帧
+				if (registry.all_of<TextureAnimationComponent>(entity) && sprite.Texture)
+				{
+					auto& anim = registry.get<TextureAnimationComponent>(entity);
+					if (anim.Columns > 0 && anim.Rows > 0)
+					{
+						float cellW = (float)sprite.Texture->GetWidth()  / (float)anim.Columns;
+						float cellH = (float)sprite.Texture->GetHeight() / (float)anim.Rows;
+						int col = anim.CurrentFrame % anim.Columns;
+						int row = anim.CurrentFrame / anim.Columns;
+						auto subTex = SubTexture2D::CreateFromCoords(
+							sprite.Texture,
+							{ (float)col, (float)(anim.Rows - 1 - row) },
+							{ cellW, cellH });
+						Renderer2D::DrawQuad(transform.GetTransform(), subTex, sprite.TilingFactor, sprite.Color, (int)entity);
+						return;
+					}
+				}
 				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
 			});
 		}
@@ -314,6 +352,19 @@ namespace Redflag {
 			{
 				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
 			});
+		}
+
+		// ======================== 2D 粒子渲染 ========================
+		{
+			auto view = registry.view<ParticleEmitterComponent>();
+			for (auto e : view)
+			{
+				auto& emitter = registry.get<ParticleEmitterComponent>(e);
+				if (!emitter.RuntimeParticleSystem)
+					continue;
+				ParticleSystem* ps = (ParticleSystem*)emitter.RuntimeParticleSystem;
+				ps->RenderBatch();
+			}
 		}
 
 		Renderer2D::EndScene();
