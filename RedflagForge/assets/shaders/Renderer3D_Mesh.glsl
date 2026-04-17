@@ -154,6 +154,15 @@ layout(binding = 4) uniform sampler2D u_NormalMap;             // slot 4: 切线
 layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;  // slot 5: G=粗糙度 B=金属度
 layout(binding = 6) uniform sampler2D u_AOMap;                 // slot 6: R=环境遮蔽
 
+// ======================= IBL 纹理（Split Sum 预计算）=======================
+// 这三张纹理由 IBLPrecompute::Init() 在程序启动时生成，运行时只需采样。
+// 对应课上讲义里 Split Sum 的两个积分项：
+//   u_IrradianceMap → 漫反射半球积分（"平均入射光强度"）
+//   u_PrefilterMap  → 按 roughness 分 mip 存的预滤波镜面环境图
+//   u_BRDFLUT       → (NdotV, roughness) 索引的 Fresnel 积分查找表
+layout(binding = 7) uniform samplerCube u_IrradianceMap;   // slot 7
+layout(binding = 8) uniform samplerCube u_PrefilterMap;    // slot 8 （含 mip chain）
+layout(binding = 9) uniform sampler2D   u_BRDFLUT;         // slot 9 （RG16F）
 // =====================================================================
 // PBR 核心：Cook-Torrance 微面元 BRDF
 //
@@ -220,6 +229,19 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// ----- IBL 专用 Fresnel：考虑粗糙度对掠射角反射的抑制 -----
+//
+// 为什么需要这个变体？
+//   标准 FresnelSchlick 在掠射角时会趋向 vec3(1.0)（全反射），
+//   但粗糙表面不应该有那么强的掠射反射。
+//   这里用 max(vec3(1-roughness), F0) 作为上限，
+//   roughness 越大 → 掠射反射越弱，视觉上更自然。
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0)
+             * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 // =====================================================================
@@ -384,11 +406,60 @@ void main()
         Lo += CalcDirectionalLight(fallback, N, V, albedo, metallic, roughness, F0);
     }
 
-    // ==================== 6. 环境光（临时方案）====================
+    // ==================== 6. IBL 环境光（Split Sum 近似）====================
+    //
+    // 对应课上讲义：
+    //   原始环境光积分不可实时计算，Split Sum 把它拆成两个可预计算的部分：
+    //     (1) 漫反射 = irradiance(N) × albedo
+    //     (2) 镜面   = prefilteredEnv(R, roughness) × BRDF_LUT(NdotV, roughness)
+    //   运行时只需 3 次纹理采样 + 乘加即可还原完整环境光积分。
+    //
+    // u_ViewPosition.w 被复用为 IBL 就绪标志：
+    //   1.0 = IBL 已预计算完成 → 使用 IBL 环境光
+    //   0.0 = IBL 未加载       → 回退到常数 0.03
 
-    // 简单的常数环境项，模拟天空散射光
-    // TODO: Phase 后续替换为 IBL（基于图像的光照）— 预滤波环境贴图 + BRDF LUT
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 ambient;
+
+    if (u_ViewPosition.w > 0.5)
+    {
+        // ------- Fresnel（IBL 专用版，考虑 roughness）-------
+        // 表面镜面反射与漫反射的能量分配系数
+        vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+        // 金属没有漫反射：metallic=1 → kD=0
+        vec3 kD = (1.0 - kS) * (1.0 - metallic);
+
+        // ------- 漫反射 IBL -------
+        // 用法线 N 采样辐照度图，得到 N 方向上整个半球的积分辐照度
+        // 对应课上讲义："平均入射光强度"
+        vec3 irradiance = texture(u_IrradianceMap, N).rgb;
+        vec3 diffuseIBL = irradiance * albedo;
+
+        // ------- 镜面 IBL（Split Sum 核心）-------
+        // 反射方向 R 决定采样环境图的哪个方向
+        vec3 R = reflect(-V, N);
+
+        // roughness → mip 层级（roughness 越大 → mip 越高 → 越模糊）
+        // MAX_REFLECTION_LOD = 4.0 对应预计算的 5 个 mip level (0~4)
+        const float MAX_REFLECTION_LOD = 4.0;
+        // textureLod 显式指定 mip 层级采样，实现"按 roughness 选 MipMap 层"
+        vec3 prefilteredColor = textureLod(u_PrefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+
+        // 查 BRDF LUT：(NdotV, roughness) → (Fresnel scale, Fresnel bias)
+        // 对应课上右侧公式拆出的两个积分项：
+        //   brdf.x = ∫ (f_r/F)[1-(1-cosθ)⁵] cosθ dω  → scale
+        //   brdf.y = ∫ (f_r/F)  (1-cosθ)⁵   cosθ dω  → bias
+        vec2 brdf = texture(u_BRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+        // 最终镜面 IBL = 预滤波颜色 × (F0 × scale + bias)
+        vec3 specularIBL = prefilteredColor * (kS * brdf.x + brdf.y);
+
+        // 合成环境光 = (漫反射 + 镜面) × AO
+        ambient = (kD * diffuseIBL + specularIBL) * ao;
+    }
+    else
+    {
+        // IBL 未就绪时的常数回退（与原始实现一致）
+        ambient = vec3(0.03) * albedo * ao;
+    }
 
     // 最终颜色 = 环境光 + 直接光照
     vec3 color = ambient + Lo;

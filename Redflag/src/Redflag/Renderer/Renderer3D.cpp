@@ -6,6 +6,7 @@
 #include "Redflag/Renderer/RenderCommand.h"
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Renderer/UniformBuffer.h"
+#include "Redflag/Renderer/IBLPrecompute.h"  // IBL 预计算纹理绑定
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
@@ -144,7 +145,9 @@ namespace Redflag
 	void Renderer3D::BeginScene(const EditorCamera& camera)
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
-		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(), 1.0f);
+		// ViewPosition.w 被复用为 IBL 就绪标志（shader 根据它选择 IBL 或常数环境光）
+		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(),
+			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
@@ -154,7 +157,9 @@ namespace Redflag
 	void Renderer3D::BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition)
 	{
 		s_Data.CameraBuffer.ViewProjection = viewProjection;
-		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition, 1.0f);
+		// ViewPosition.w 被复用为 IBL 就绪标志
+		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition,
+			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.DrawCommands.clear();
@@ -187,6 +192,10 @@ namespace Redflag
 			});
 
 		s_Data.MeshShader->Bind();
+
+		// 绑定 IBL 预计算纹理到 slot 7/8/9（所有 draw call 共享，只需绑一次）
+		// 对应 shader: u_IrradianceMap / u_PrefilterMap / u_BRDFLUT
+		IBLPrecompute::Bind();
 
 		// 执行排序后的命令，相同材质只绑一次纹理/UBO
 		uintptr_t lastKey = ~0ull;

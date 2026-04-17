@@ -16,6 +16,7 @@
 
 #include "Redflag/Renderer/Renderer2D.h"
 #include "Redflag/Renderer/Renderer3D.h"
+#include "Redflag/Renderer/IBLPrecompute.h"
 
 #include "Redflag/Core/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
@@ -38,11 +39,17 @@ namespace Redflag {
 	void SceneRenderer::Init()
 	{
 		s_LightUBO = UniformBuffer::Create(LIGHT_UBO_SIZE, LIGHT_UBO_BINDING);
+
+		// IBL 预计算：加载 HDR 环境贴图，生成 Irradiance / Prefilter / BRDF LUT
+		// 只在启动时执行一次（约 1~2 秒）。HDR 文件不存在时会打印错误并跳过，
+		// 此时 shader 会回退到常数环境光，不会影响程序运行。
+		IBLPrecompute::Init("assets/textures/environment.hdr");
 	}
 
 	void SceneRenderer::Shutdown()
 	{
 		s_LightUBO.reset();
+		IBLPrecompute::Shutdown();
 	}
 
 	void SceneRenderer::BeginScene()
@@ -135,6 +142,10 @@ namespace Redflag {
 		}
 
 		Renderer3D::EndScene();
+
+		// ======================== 天空盒 ========================
+		// 放在不透明几何之后、UI/调试线之前
+		IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
 	}
 
 	// ==================================================================
@@ -202,6 +213,10 @@ namespace Redflag {
 		}
 
 		Renderer3D::EndScene();
+
+		// ======================== 天空盒 ========================
+		glm::mat4 viewMat3D = glm::inverse(cameraTransform);
+		IBLPrecompute::RenderSkybox(viewMat3D, projection);
 	}
 
 	// ==================================================================

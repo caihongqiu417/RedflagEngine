@@ -186,6 +186,9 @@
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\IBLPrecompute.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Material.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
@@ -1599,6 +1602,9 @@
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\IBLPrecompute.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Material.cpp">
