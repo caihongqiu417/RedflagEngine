@@ -43,6 +43,9 @@
     <Filter Include="src\Redflag\Scene\Panel">
       <UniqueIdentifier>{8D84742E-F9BB-BCC5-02C6-20E96E7CE3BE}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Scripting">
+      <UniqueIdentifier>{739A6CDF-DF06-28DA-A8FA-BF3714264A42}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Utils">
       <UniqueIdentifier>{5116186B-BD2C-1601-06A4-A12272F9E688}</UniqueIdentifier>
     </Filter>
@@ -263,6 +266,9 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h">
       <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\ScriptEngine.h">
+      <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Utils\PlatformUtils.h">
       <Filter>src\Redflag\Utils</Filter>
@@ -1675,6 +1681,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp">
       <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\ScriptEngine.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>

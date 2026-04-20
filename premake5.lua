@@ -38,6 +38,9 @@ group "Dependencies"
     include "Redflag/vendor/assimp"
 group ""
 
+group "Core"
+    include "Redflag-ScriptCore"
+
 project "Redflag"
     location "Redflag"
     kind "StaticLib"
@@ -207,6 +210,8 @@ project "Redflag"
             "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
         }
 
+group "Misc"
+
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
@@ -280,6 +285,8 @@ project "Sandbox"
             "/wd4828",
             "/wd4005",
         }
+
+group "Tools"
 
 project "RedflagForge"
     location "RedflagForge"

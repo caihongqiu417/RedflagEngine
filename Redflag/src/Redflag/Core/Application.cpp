@@ -9,6 +9,8 @@
 #include"Input.h"
 #include "Redflag/Renderer/Renderer.h"
 
+#include"Redflag/Scripting/ScriptEngine.h"
+
 #include"GLFW/glfw3.h"
 #include"Core/Timestep.h"
 
@@ -62,6 +64,9 @@ namespace Redflag
 
 		//目前实际调用Renderer2D::Init()
 		Renderer::Init();
+
+		//脚本系统
+		ScriptEngine::Init();
 
         // 创建ImGui调试界面层
         m_ImGuiLayer = new ImGuiLayer();
