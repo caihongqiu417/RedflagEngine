@@ -1,68 +1,5 @@
 Scene: Unamed Scene
 Entities:
-  - Entity: 18339049415164675262
-    TagComponent:
-      Tag: PbrModel2_Mirror
-    TransformComponent:
-      Translation: [2.13791037, 0.876661301, 3.08336902]
-      Rotation: [0, 0.0191986226, 0]
-      Scale: [0.100000001, 0.100000001, 0.100000001]
-    ModelRendererComponent:
-      FilePath: assets\models\ornate_mirror_01_2k\ornate_mirror_01_2k.fbx
-      Color: [1, 1, 1, 1]
-  - Entity: 12132151342123
-    TagComponent:
-      Tag: UnFixedCamera_1
-    TransformComponent:
-      Translation: [-0.100000001, 0.300000012, 6.59485435]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 1
-        PerspectiveFov: 0.785398185
-        PerspectiveNear: 0.00999999978
-        PerspectiveFar: 1000
-        OrthographicSize: 10
-        OrthographicNear: -1
-        OrthographicFar: 1000
-      Primary: true
-      FixedAspectRatio: false
-  - Entity: 6099546564087943552
-    TagComponent:
-      Tag: PbrModel_Clock
-    TransformComponent:
-      Translation: [0, -1.9416182, -3.83122802]
-      Rotation: [0.0434616134, 0, 0]
-      Scale: [0.150000006, 0.150000006, 0.150000006]
-    ModelRendererComponent:
-      FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
-      Color: [0.931034505, 0.931034505, 0.931034505, 1]
-  - Entity: 1096978947276037003
-    TagComponent:
-      Tag: Light
-    TransformComponent:
-      Translation: [-0.0802830458, 6.01000023, -0.819999993]
-      Rotation: [0.606540143, -0.0471760482, -0.470746756]
-      Scale: [1, 0.999999702, 1.00000012]
-    DirectionalLightComponent:
-      Direction: [-0.270000011, -0.829999983, 0.189999998]
-      Color: [1, 1, 1]
-      Intensity: 12.0500002
-      CastShadow: true
-  - Entity: 14950062399518990413
-    TagComponent:
-      Tag: Plane
-    TransformComponent:
-      Translation: [0.0868993402, -3.6768918, -1.2550782]
-      Rotation: [0, 0, 0]
-      Scale: [19.6806126, 1, 21.2332878]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      Metallic: 0
-      Roughness: 0.5
-      AO: 1
   - Entity: 4372577785555847753
     TagComponent:
       Tag: PointLight
@@ -75,3 +12,66 @@ Entities:
       Intensity: 0.800000012
       Radius: 10.8999996
       CastShadow: true
+  - Entity: 14950062399518990413
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0.0868993402, -3.6768918, -1.2550782]
+      Rotation: [0, 0, 0]
+      Scale: [19.6806107, 1, 21.2332878]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 1096978947276037003
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [-0.0802830458, 6.01000023, -0.819999993]
+      Rotation: [0.606540143, -0.0471760482, -0.470746756]
+      Scale: [1, 0.999999702, 1.00000012]
+    DirectionalLightComponent:
+      Direction: [-0.270000011, -0.829999983, 0.189999998]
+      Color: [1, 1, 1]
+      Intensity: 12.0500002
+      CastShadow: true
+  - Entity: 6099546564087943552
+    TagComponent:
+      Tag: PbrModel_Clock
+    TransformComponent:
+      Translation: [0, -1.9416182, -3.83122802]
+      Rotation: [0.0434616134, 0, 0]
+      Scale: [0.150000006, 0.150000006, 0.150000006]
+    ModelRendererComponent:
+      FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
+      Color: [0.931034505, 0.931034505, 0.931034505, 1]
+  - Entity: 12132151342123
+    TagComponent:
+      Tag: UnFixedCamera_1
+    TransformComponent:
+      Translation: [-7.74408007, 4.96664524, 2.28564668]
+      Rotation: [0.3330248, -1.41262054, -0.751368821]
+      Scale: [0.999999881, 1.00000012, 0.999999881]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 18339049415164675262
+    TagComponent:
+      Tag: PbrModel2_Mirror
+    TransformComponent:
+      Translation: [2.13791037, 0.876661301, 3.08336902]
+      Rotation: [0, 0.0191986226, 0]
+      Scale: [0.100000001, 0.100000001, 0.100000001]
+    ModelRendererComponent:
+      FilePath: assets\models\ornate_mirror_01_2k\ornate_mirror_01_2k.fbx
+      Color: [1, 1, 1, 1]

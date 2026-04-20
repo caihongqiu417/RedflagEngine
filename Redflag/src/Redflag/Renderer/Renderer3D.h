@@ -56,6 +56,9 @@ namespace Redflag
 			const glm::vec4& shadowParams2 = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f));
 		static void ExecuteShadowPass(const Ref<Shader>& depthShader);
 
+		// 覆写 CameraUBO 中的 IBL 标志（ViewPosition.w）
+		static void OverrideIBLFlag(bool enabled);
+
 		static void ResetStats();
 		static Statistics GetStats();
 	};

@@ -51,7 +51,13 @@ namespace Redflag {
 	// Shadow 调参：所有字段暴露给 ImGui 面板，运行时可改
 	static ShadowSettings s_ShadowSettings;
 
+	// IBL / Shadow 全局开关
+	static bool s_IBLEnabled    = true;
+	static bool s_ShadowEnabled = true;
+
 	ShadowSettings& SceneRenderer::GetShadowSettings() { return s_ShadowSettings; }
+	bool& SceneRenderer::GetIBLEnabled()    { return s_IBLEnabled; }
+	bool& SceneRenderer::GetShadowEnabled() { return s_ShadowEnabled; }
 
 	// CPU 侧灯光缓冲区，每帧填充后一次性上传
 	// 布局：[GPULightUBO header (16B)] + [LightData[] 数组]
@@ -242,6 +248,8 @@ namespace Redflag {
 
 		// ======================== 3D 渲染 ========================
 		Renderer3D::BeginScene(camera);
+		if (!s_IBLEnabled)
+			Renderer3D::OverrideIBLFlag(false);
 
 		// --- MeshRendererComponent ---
 		// 单个 Mesh，优先使用 PBR Material，否则回退到 Color/Texture
@@ -281,7 +289,7 @@ namespace Redflag {
 		// 找到主方向光 → 深度预渲染 → 把阴影参数 + Shadow Map 提供给主 shader
 		glm::vec3 lightDir;
 		glm::mat4 lightSpaceMatrix(1.0f);
-		bool hasShadow = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
+		bool hasShadow = s_ShadowEnabled && TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
 		if (hasShadow)
 		{
 			RunShadowPass(lightSpaceMatrix);
@@ -307,7 +315,8 @@ namespace Redflag {
 
 		// ======================== 天空盒 ========================
 		// 放在不透明几何之后、UI/调试线之前
-		IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
+		if (s_IBLEnabled)
+			IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
 	}
 
 	// ==================================================================
@@ -376,6 +385,8 @@ namespace Redflag {
 		glm::mat4 viewProj3D = projection * glm::inverse(cameraTransform);
 		glm::vec3 cameraPos  = glm::vec3(cameraTransform[3]); // 从变换矩阵提取位移列
 		Renderer3D::BeginScene(viewProj3D, cameraPos);
+		if (!s_IBLEnabled)
+			Renderer3D::OverrideIBLFlag(false);
 
 		{
 			auto view = registry.view<TransformComponent, MeshRendererComponent>();
@@ -406,6 +417,7 @@ namespace Redflag {
 		}
 
 		// ======================== Shadow Pass（Runtime）========================
+		if (s_ShadowEnabled)
 		{
 			glm::vec3 lightDir;
 			glm::mat4 lightSpaceMatrix(1.0f);
@@ -429,8 +441,11 @@ namespace Redflag {
 		Renderer3D::EndScene();
 
 		// ======================== 天空盒 ========================
-		glm::mat4 viewMat3D = glm::inverse(cameraTransform);
-		IBLPrecompute::RenderSkybox(viewMat3D, projection);
+		if (s_IBLEnabled)
+		{
+			glm::mat4 viewMat3D = glm::inverse(cameraTransform);
+			IBLPrecompute::RenderSkybox(viewMat3D, projection);
+		}
 	}
 
 	// ==================================================================

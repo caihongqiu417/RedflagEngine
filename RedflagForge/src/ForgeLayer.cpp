@@ -434,6 +434,8 @@ namespace Redflag {
             if (ImGui::BeginMenu("View"))
             {
                 ImGui::MenuItem("Physics Colliders", nullptr, &m_ShowPhysicsColliders);
+                ImGui::MenuItem("IBL",               nullptr, &SceneRenderer::GetIBLEnabled());
+                ImGui::MenuItem("Shadow",            nullptr, &SceneRenderer::GetShadowEnabled());
                 ImGui::EndMenu();
             }
 

@@ -26,6 +26,7 @@ IncludeDir["entt"]="Redflag/vendor/entt/include"
 IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
 IncludeDir["assimp"]  = "Redflag/vendor/assimp/include"
+IncludeDir["mono"]    = "Redflag/vendor/mono/include"
 
 --实际编译
 group "Dependencies"  
@@ -79,6 +80,7 @@ project "Redflag"
         "%{IncludeDir.yaml_cpp}", 
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.assimp}",
+        "%{IncludeDir.mono}",
         "%{os.getenv('VULKAN_SDK')}/Include", 
     }
     
@@ -129,18 +131,23 @@ project "Redflag"
             "/wd4828",
             "/wd4005",
         }
+
+        libdirs { "Redflag/vendor/mono/lib/Debug" }
         
         -- [Debug] 链接带 'd' 的库
         links {
             "shaderc_sharedd.lib",
             "spirv-cross-cored.lib",
-            "spirv-cross-glsld.lib"
+            "spirv-cross-glsld.lib",
+            "mono-2.0-sgen.lib",
         }
         
         -- [修改后] 显式复制到 RedflagForge 和 Sandbox 目录
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/Sandbox"
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../Redflag/vendor/mono/lib/Debug/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} ../Redflag/vendor/mono/lib/Debug/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
         }
         
     -- Release 配置
@@ -152,19 +159,24 @@ project "Redflag"
             "/wd4828",
             "/wd4005",
         }
+
+        libdirs { "Redflag/vendor/mono/lib/Release" }
         
         -- [Release] 链接不带 'd' 的库
         links {
             "shaderc_shared.lib",
             "spirv-cross-core.lib",
-            "spirv-cross-glsl.lib"
+            "spirv-cross-glsl.lib",
+            "mono-2.0-sgen.lib",
         }
 
         -- [Release] 复制不带 'd' 的 DLL
        -- [修改后]
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox"
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
         }
         
     -- Dist 配置
@@ -176,18 +188,23 @@ project "Redflag"
             "/wd4828",
             "/wd4005",
         }
+
+        libdirs { "Redflag/vendor/mono/lib/Release" }
         
         -- [Dist] 链接不带 'd' 的库
         links {
             "shaderc_shared.lib",
             "spirv-cross-core.lib",
-            "spirv-cross-glsl.lib"
+            "spirv-cross-glsl.lib",
+            "mono-2.0-sgen.lib",
         }
 
         -- [修改后]
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox"
+            "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
         }
 
 project "Sandbox"

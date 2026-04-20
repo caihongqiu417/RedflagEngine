@@ -278,6 +278,13 @@ namespace Redflag
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer.LightSpaceMatrix, size, offset);
 	}
 
+	void Renderer3D::OverrideIBLFlag(bool enabled)
+	{
+		s_Data.CameraBuffer.ViewPosition.w = enabled ? 1.0f : 0.0f;
+		constexpr uint32_t offset = offsetof(Renderer3DData::CameraData, ViewPosition);
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer.ViewPosition, sizeof(glm::vec4), offset);
+	}
+
 	// -------------------------------------------------------------------
 	// ExecuteShadowPass — 用给定的深度 Shader 把当前队列里的几何全部画一遍
 	//
