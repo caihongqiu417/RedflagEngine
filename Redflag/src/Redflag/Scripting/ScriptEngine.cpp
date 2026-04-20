@@ -3,6 +3,7 @@
 
 #include "mono/jit/jit.h"
 #include"mono/metadata/assembly.h"
+#include"mono/metadata/object.h"
 
 namespace Redflag {
 
@@ -11,7 +12,7 @@ namespace Redflag {
 		MonoDomain* RootDomain=nullptr;
 		MonoDomain* AppDomain = nullptr;
 
-		MonoAssembly* CoreAssmebly=nullptr;
+		MonoAssembly* CoreAssembly=nullptr;
 
 	};
 
@@ -25,16 +26,26 @@ namespace Redflag {
 		InitMono();
 	}
 
+
 	void ScriptEngine::Shutdown()
 	{
-		delete s_Data;
+		ShutdownMono();      // 先关 Mono
+		delete s_Data;       // 再删数据容器
+		s_Data = nullptr;
 	}
-
-	
 
 	void ScriptEngine::ShutdownMono()
 	{
-
+		if (s_Data->AppDomain)
+		{
+			mono_domain_unload(s_Data->AppDomain);
+			s_Data->AppDomain = nullptr;
+		}
+		if (s_Data->RootDomain)
+		{
+			mono_jit_cleanup(s_Data->RootDomain);
+			s_Data->RootDomain = nullptr;
+		}
 	}
 
 	//读取二进制文件（dll)到内存
@@ -129,11 +140,44 @@ namespace Redflag {
 		mono_domain_set(s_Data->AppDomain, true);
 
 		//加载自己游戏的C#脚本（已经通过premake编译为dll）
-		s_Data->CoreAssmebly=LoadCsharpAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
-		PrintAssemblyTypes(s_Data->CoreAssmebly);
+		//自动加载到AppDomain
+		s_Data->CoreAssembly=LoadCsharpAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
+		PrintAssemblyTypes(s_Data->CoreAssembly);
 
-		//1.创建对象
+		//1.创建对象(及调用构造函数）
+		//1.1 从 Assembly 获取可执行的元数据视图
+		MonoImage* assemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		//1.2 找到具体的类
+		MonoClass* monoClass = mono_class_from_name(assemblyImage, "Redflag", "Main");
+		//1.3 在APPDomain中分配内存
+		MonoObject* instance=mono_object_new(s_Data->AppDomain, monoClass);
+		//1.4 调用构造函数，真正初始化对象
+		mono_runtime_object_init(instance);
+
 		//2.调用函数
+		MonoMethod* printMessageFunc=mono_class_get_method_from_name(monoClass, "PrintMessage", 0);
+		mono_runtime_invoke(printMessageFunc, instance, nullptr, nullptr);
+
 		//3.调用含参数的函数
+		//3.1 在C++栈上创建参数
+		MonoMethod* printIntFunc = mono_class_get_method_from_name(monoClass, "PrintInt", 1);
+		int value = 5;
+		void* param = &value;
+		mono_runtime_invoke(printIntFunc, instance, &param, nullptr);
+
+		MonoMethod* printIntsFunc = mono_class_get_method_from_name(monoClass, "PrintInts", 2);
+		int value2 = 508;
+		void* params[2] =
+		{
+			&value,
+			&value2
+		};
+		mono_runtime_invoke(printIntsFunc, instance, params, nullptr);
+
+		//3.2 在AppDomain托管堆创建参数
+		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello World From C++!");
+		MonoMethod* printCustomMessageFunc = mono_class_get_method_from_name(monoClass, "PrintCustomMessage", 1);
+		void* stringParam = monoString;
+		mono_runtime_invoke(printCustomMessageFunc, instance, &stringParam, nullptr);
 	}
 }

@@ -75,7 +75,9 @@ namespace Redflag
 
 	Application::~Application() 
 	{
-
+		RF_PROFILE_FUNCTION();
+		
+		ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
