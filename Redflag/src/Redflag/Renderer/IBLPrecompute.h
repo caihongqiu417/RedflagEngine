@@ -71,6 +71,9 @@ namespace Redflag {
 		// 在所有不透明几何体渲染完之后调用，让它只填充未被覆盖的像素
 		static void RenderSkybox(const glm::mat4& view, const glm::mat4& projection);
 
+		// 释放旧资源并用新的 HDR 路径重新初始化，可在运行时动态切换环境图
+		static void Reload(const std::string& hdrPath);
+
 		// 是否已成功完成预计算（shader 会根据此标志选择 IBL 或常数回退）
 		static bool IsReady();
 

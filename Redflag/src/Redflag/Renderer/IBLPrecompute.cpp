@@ -442,7 +442,9 @@ in  vec3 v_LocalPos;
 out vec4 FragColor;
 uniform samplerCube u_EnvMap;
 void main(){
-    vec3 color = texture(u_EnvMap, normalize(v_LocalPos)).rgb;
+    // textureLod(..., 0) 强制采样 mip 0（原始分辨率）
+    // 不能用 texture()，它会根据屏幕空间导数自动选高 mip，导致天空盒模糊
+    vec3 color = textureLod(u_EnvMap, normalize(v_LocalPos), 0.0).rgb;
     // Reinhard 色调映射 + gamma 2.2（与主 PBR shader 保持一致）
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
@@ -560,12 +562,15 @@ void main(){
 		MakeCubeVAO();
 		MakeQuadVAO();
 
+		// EnvCubemap 单面分辨率：提高此值可获得更清晰的天空盒（预计算耗时同步增加）
+		constexpr int ENV_SIZE = 2048;
+
 		// ---- 创建离屏 FBO + 深度 RBO ----
 		glGenFramebuffers(1, &s_CaptureFBO);
 		glGenRenderbuffers(1, &s_CaptureRBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, s_CaptureFBO);
 		glBindRenderbuffer(GL_RENDERBUFFER, s_CaptureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, ENV_SIZE, ENV_SIZE);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 			GL_RENDERBUFFER, s_CaptureRBO);
 
@@ -612,14 +617,14 @@ void main(){
 		stbi_image_free(pixels);
 
 		// ==============================================================
-		// Step 2: 等距柱状 → Environment Cubemap (512×512)
+		// Step 2: 等距柱状 → Environment Cubemap
 		// ==============================================================
 		glGenTextures(1, &s_IBL.EnvCubemap);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.EnvCubemap);
 		for (int i = 0; i < 6; ++i)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
-				512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+				ENV_SIZE, ENV_SIZE, 0, GL_RGB, GL_FLOAT, nullptr);
 		}
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -638,8 +643,8 @@ void main(){
 		glBindTexture(GL_TEXTURE_2D, hdrTex);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, s_CaptureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-		RenderCubeFaces(prog, s_IBL.EnvCubemap, 512);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, ENV_SIZE, ENV_SIZE);
+		RenderCubeFaces(prog, s_IBL.EnvCubemap, ENV_SIZE);
 		glDeleteProgram(prog);
 		glDeleteTextures(1, &hdrTex);   // HDR 原图已经用完
 
@@ -650,7 +655,7 @@ void main(){
 		// mipmap 已存在，现在才能安全切到 mipmap 过滤（供 Step 4 prefilter 使用 textureLod）
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-		RF_CORE_INFO("IBL: Environment cubemap generated (512, mipmapped)");
+		RF_CORE_INFO("IBL: Environment cubemap generated ({0}, mipmapped)", ENV_SIZE);
 
 		// ==============================================================
 		// Step 3: Irradiance Map (32×32)
@@ -720,7 +725,7 @@ void main(){
 		glUniform1i(glGetUniformLocation(prog, "u_EnvMap"), 0);
 		glUniformMatrix4fv(glGetUniformLocation(prog, "u_Proj"), 1, GL_FALSE, &s_Proj[0][0]);
 		// 告诉 shader 源 cubemap 每面分辨率（用于 filtered importance sampling 的 mip 计算）
-		glUniform1f(glGetUniformLocation(prog, "u_EnvMapSize"), 512.0f);
+		glUniform1f(glGetUniformLocation(prog, "u_EnvMapSize"), (float)ENV_SIZE);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.EnvCubemap);
 
@@ -793,6 +798,12 @@ void main(){
 
 		s_Ready = true;
 		RF_CORE_INFO("IBL: All pre-computation complete!");
+	}
+
+	void IBLPrecompute::Reload(const std::string& hdrPath)
+	{
+		Shutdown();
+		Init(hdrPath);
 	}
 
 	void IBLPrecompute::Shutdown()

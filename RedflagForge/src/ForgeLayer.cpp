@@ -662,6 +662,12 @@ namespace Redflag {
                 ImGui::SameLine();
                 ImGui::TextDisabled("| slot 7=Irradiance  8=Prefilter  9=BRDFLUT");
             }
+            if (ImGui::Button("Load HDR..."))
+            {
+                std::string path = FileDialogs::OpenFile("HDR Image (*.hdr)\0*.hdr\0");
+                if (!path.empty())
+                    IBLPrecompute::Reload(path);
+            }
             ImGui::TextDisabled("Note: IBL does not issue extra DrawCalls.");
             ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
