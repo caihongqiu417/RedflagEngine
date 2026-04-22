@@ -56,6 +56,10 @@ namespace Redflag
 			const glm::vec4& shadowParams2 = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f));
 		static void ExecuteShadowPass(const Ref<Shader>& depthShader);
 
+		// Z-Prepass：用主相机视角只写深度，不写颜色
+		// 须在 BeginScene 收集完所有 DrawMesh/DrawModel 之后、EndScene 之前调用
+		static void ExecuteDepthPrepass(const Ref<Shader>& depthShader);
+
 		// 覆写 CameraUBO 中的 IBL 标志（ViewPosition.w）
 		static void OverrideIBLFlag(bool enabled);
 

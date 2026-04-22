@@ -83,6 +83,11 @@ namespace Redflag {
 		// 碰撞体可视化开关（编辑模式下显示绿色线框）
 		bool m_ShowPhysicsColliders = true;
 
+		// FPS 显示缓存（每 0.5s 刷新一次）
+		float m_DisplayedFPS      = 0.0f;
+		float m_DisplayedFrameMs  = 0.0f;
+		float m_FpsAccumTime      = 0.0f;
+
 		//工具栏按钮
 		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
 

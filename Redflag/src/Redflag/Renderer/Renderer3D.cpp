@@ -8,6 +8,7 @@
 #include "Redflag/Renderer/UniformBuffer.h"
 #include "Redflag/Renderer/IBLPrecompute.h"  // IBL 预计算纹理绑定
 
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
@@ -323,6 +324,87 @@ namespace Redflag
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
 		}
+	}
+
+	// -------------------------------------------------------------------
+	// ExecuteDepthPrepass — Z-Prepass，向主帧缓冲的深度缓冲写入深度
+	//
+	// 与 ExecuteShadowPass 的区别：
+	//   - 目标是主帧缓冲（调用方不需要切换 FBO）
+	//   - 使用主相机 ViewProjection（BeginScene 已写入 Camera UBO）
+	//   - 需要关闭/恢复颜色写入，避免污染颜色附件
+	//   - Mask 材质需要上传 MaterialUBO + AlphaMap，让 shader 正确 discard
+	//   - Blend 材质跳过（透明物体深度不确定，不参与 prepass）
+	// -------------------------------------------------------------------
+	void Renderer3D::ExecuteDepthPrepass(const Ref<Shader>& depthShader)
+	{
+		if (!depthShader || s_Data.DrawCommands.empty())
+			return;
+
+		// -----------------------------------------------------------
+		// Front-to-back 排序：让 prepass 自己也享受 Early-Z
+		//
+		// 近的物体先写深度，后面被遮挡的物体在片元阶段被 Early-Z 拒绝，
+		// 不会再写深度。单个屏幕像素的深度理论上只写 1 次。
+		//
+		// 深度用 "物体在观察空间的 z"：视觉意义上的远近。
+		// 取变换矩阵的平移列作为物体位置（和相机位置做差）：
+		//   dist² = |objectPos - cameraPos|²
+		// 用平方距离，省一次 sqrt。
+		// -----------------------------------------------------------
+		const glm::vec3 camPos = glm::vec3(s_Data.CameraBuffer.ViewPosition);
+		std::sort(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
+			[&camPos](const DrawCommand& a, const DrawCommand& b)
+			{
+				glm::vec3 pa = glm::vec3(a.Transform[3]);
+				glm::vec3 pb = glm::vec3(b.Transform[3]);
+				float da = glm::dot(pa - camPos, pa - camPos);
+				float db = glm::dot(pb - camPos, pb - camPos);
+				return da < db;  // 近的排前面
+			});
+
+		// 关闭颜色写入，只让深度写入生效
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+		depthShader->Bind();
+
+		for (const auto& cmd : s_Data.DrawCommands)
+		{
+			if (!cmd.MeshData) continue;
+
+			// Blend 材质跳过（半透明物体不应参与深度预写）
+			const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
+			if (mat->Alpha == AlphaMode::Blend)
+				continue;
+
+			// 上传逐物体变换
+			s_Data.TransformBuffer.Transform = cmd.Transform;
+			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
+
+			// Mask 材质需要 MaterialUBO + AlphaMap，让 shader 做 alpha discard
+			if (mat->Alpha == AlphaMode::Mask)
+			{
+				s_Data.MaterialBuffer.AlphaMode   = static_cast<int>(mat->Alpha);
+				s_Data.MaterialBuffer.AlphaCutoff = mat->AlphaCutoff;
+				s_Data.MaterialBuffer.UseAlphaMap = mat->HasAlphaMap() ? 1 : 0;
+				s_Data.MaterialBuffer.BaseColor   = mat->BaseColor;
+				s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+				if (mat->HasAlphaMap())
+					mat->AlphaMap->Bind(10);
+			}
+			else
+			{
+				// Opaque：把 AlphaMode 写 0，shader 直接跳过 discard 逻辑
+				s_Data.MaterialBuffer.AlphaMode = 0;
+				s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+			}
+
+			cmd.MeshData->Bind();
+			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+		}
+
+		// 恢复颜色写入
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
 
 	// -------------------------------------------------------------------

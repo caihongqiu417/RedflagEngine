@@ -47,17 +47,20 @@ namespace Redflag {
 
 	static Ref<Framebuffer> s_ShadowFBO;
 	static Ref<Shader>      s_ShadowDepthShader;
+	static Ref<Shader>      s_DepthPrepassShader;
 
 	// Shadow 调参：所有字段暴露给 ImGui 面板，运行时可改
 	static ShadowSettings s_ShadowSettings;
 
-	// IBL / Shadow 全局开关
-	static bool s_IBLEnabled    = true;
-	static bool s_ShadowEnabled = true;
+	// IBL / Shadow / Z-Prepass 全局开关
+	static bool s_IBLEnabled       = true;
+	static bool s_ShadowEnabled    = true;
+	static bool s_ZPrepassEnabled  = true;
 
-	ShadowSettings& SceneRenderer::GetShadowSettings() { return s_ShadowSettings; }
-	bool& SceneRenderer::GetIBLEnabled()    { return s_IBLEnabled; }
-	bool& SceneRenderer::GetShadowEnabled() { return s_ShadowEnabled; }
+	ShadowSettings& SceneRenderer::GetShadowSettings()  { return s_ShadowSettings; }
+	bool& SceneRenderer::GetIBLEnabled()                 { return s_IBLEnabled; }
+	bool& SceneRenderer::GetShadowEnabled()              { return s_ShadowEnabled; }
+	bool& SceneRenderer::GetZPrepassEnabled()            { return s_ZPrepassEnabled; }
 
 	// CPU 侧灯光缓冲区，每帧填充后一次性上传
 	// 布局：[GPULightUBO header (16B)] + [LightData[] 数组]
@@ -82,7 +85,8 @@ namespace Redflag {
 		shadowSpec.Attachments = { FramebufferTextureFormat::DEPTH32F };
 		s_ShadowFBO = Framebuffer::Create(shadowSpec);
 
-		s_ShadowDepthShader = Shader::Create("assets/shaders/ShadowDepth.glsl");
+		s_ShadowDepthShader  = Shader::Create("assets/shaders/ShadowDepth.glsl");
+		s_DepthPrepassShader = Shader::Create("assets/shaders/Depth_Prepass.glsl");
 	}
 
 	void SceneRenderer::Shutdown()
@@ -90,6 +94,7 @@ namespace Redflag {
 		s_LightUBO.reset();
 		s_ShadowFBO.reset();
 		s_ShadowDepthShader.reset();
+		s_DepthPrepassShader.reset();
 		IBLPrecompute::Shutdown();
 	}
 
@@ -311,7 +316,23 @@ namespace Redflag {
 			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 		}
 
+		// ======================== Z-Prepass ========================
+		if (s_ZPrepassEnabled)
+		{
+			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
+			// Prepass 已将深度写满；主 Pass 只测试深度不再写入，
+			// 避免两次浮点计算的微小差异导致 Z-fighting
+			glDepthFunc(GL_LEQUAL);
+			glDepthMask(GL_FALSE);
+		}
+
 		Renderer3D::EndScene();
+
+		if (s_ZPrepassEnabled)
+		{
+			glDepthMask(GL_TRUE);
+			glDepthFunc(GL_LESS);
+		}
 
 		// ======================== 天空盒 ========================
 		// 放在不透明几何之后、UI/调试线之前
@@ -438,7 +459,21 @@ namespace Redflag {
 			}
 		}
 
+		// ======================== Z-Prepass ========================
+		if (s_ZPrepassEnabled)
+		{
+			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
+			glDepthFunc(GL_LEQUAL);
+			glDepthMask(GL_FALSE);
+		}
+
 		Renderer3D::EndScene();
+
+		if (s_ZPrepassEnabled)
+		{
+			glDepthMask(GL_TRUE);
+			glDepthFunc(GL_LESS);
+		}
 
 		// ======================== 天空盒 ========================
 		if (s_IBLEnabled)

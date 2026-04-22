@@ -96,9 +96,10 @@ namespace Redflag {
 		// 供编辑器 UI 读写阴影调参
 		static ShadowSettings& GetShadowSettings();
 
-		// IBL / Shadow 全局开关（菜单栏 Toggle）
+		// IBL / Shadow / Z-Prepass 全局开关（菜单栏 Toggle）
 		static bool& GetIBLEnabled();
 		static bool& GetShadowEnabled();
+		static bool& GetZPrepassEnabled();
 
 	private:
 		// 遍历 registry 收集灯光数据并上传 Light UBO

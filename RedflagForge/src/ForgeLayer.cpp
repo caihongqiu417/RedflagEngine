@@ -436,6 +436,7 @@ namespace Redflag {
                 ImGui::MenuItem("Physics Colliders", nullptr, &m_ShowPhysicsColliders);
                 ImGui::MenuItem("IBL",               nullptr, &SceneRenderer::GetIBLEnabled());
                 ImGui::MenuItem("Shadow",            nullptr, &SceneRenderer::GetShadowEnabled());
+                ImGui::MenuItem("Z-Prepass",         nullptr, &SceneRenderer::GetZPrepassEnabled());
                 ImGui::EndMenu();
             }
 
@@ -570,6 +571,16 @@ namespace Redflag {
             ImGui::Text("Draw Calls  %d", totalDrawCalls);
             ImGui::Text("Vertices    %d", totalVertices);
             ImGui::Text("Indices     %d", totalIndices);
+            float fps = ImGui::GetIO().Framerate;
+            // 每 0.5s 刷新一次，避免数字刷新过快难以阅读
+            m_FpsAccumTime += ImGui::GetIO().DeltaTime;
+            if (m_FpsAccumTime >= 0.5f || m_DisplayedFPS == 0.0f)
+            {
+                m_DisplayedFPS     = fps;
+                m_DisplayedFrameMs = 1000.0f / (fps > 0.0f ? fps : 1.0f);
+                m_FpsAccumTime     = 0.0f;
+            }
+            ImGui::Text("FPS         %.1f  (%.2f ms)", m_DisplayedFPS, m_DisplayedFrameMs);
             ImGui::PopStyleColor();
 
             ImGui::Spacing();
