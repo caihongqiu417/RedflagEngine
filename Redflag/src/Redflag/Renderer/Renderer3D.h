@@ -23,6 +23,19 @@ namespace Redflag
 				uint32_t CulledCount = 0;  // 视锥体剪裁掩弃的物体/子网格数量
 			};
 
+			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
+			struct DrawCallInfo
+			{
+				enum class PassType { Main, Shadow, Prepass };
+				PassType Pass       = PassType::Main;
+				uint32_t IndexCount = 0;
+				int      EntityID   = -1;
+				int      AlphaMode  = 0;   // 0=Opaque 1=Mask 2=Blend
+				uintptr_t MaterialKey = 0; // 同一 key 表示同材质
+				uintptr_t MeshPtr   = 0;   // 用作区分 Mesh 的稳定 id
+			};
+			static const std::vector<DrawCallInfo>& GetDrawCallLog();
+
 		static void Init();
 		static void Shutdown();
 

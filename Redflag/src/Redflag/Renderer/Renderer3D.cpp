@@ -87,6 +87,9 @@ namespace Redflag
 		struct DebugAABB { glm::vec3 Min; glm::vec3 Max; bool Culled; };
 		std::vector<DebugAABB> DebugAABBs;
 
+		// 每帧 DrawCall 日志（供 ImGui 面板展示）
+		std::vector<Renderer3D::DrawCallInfo> DrawCallLog;
+
 		// 统计
 		uint32_t DrawCallCount = 0;
 		Renderer3D::Statistics Stats;
@@ -195,6 +198,7 @@ namespace Redflag
 
 		s_Data.DrawCommands.clear();
 		s_Data.DebugAABBs.clear();
+		s_Data.DrawCallLog.clear();
 		ResetStats();
 	}
 
@@ -213,11 +217,14 @@ namespace Redflag
 
 		s_Data.DrawCommands.clear();
 		s_Data.DebugAABBs.clear();
+		s_Data.DrawCallLog.clear();
 		ResetStats();
 	}
 
 	void Renderer3D::EndScene()
 	{
+		RF_PROFILE_FUNCTION();
+
 		s_Data.Stats.SubmittedCommands = static_cast<uint32_t>(s_Data.DrawCommands.size());
 		s_Data.Stats.VertexCount = 0;
 		s_Data.Stats.IndexCount = 0;
@@ -251,6 +258,8 @@ namespace Redflag
 		uintptr_t lastKey = ~0ull;
 		for (const auto& cmd : s_Data.DrawCommands)
 		{
+			if (!cmd.MeshData) continue;
+
 			const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
 			uintptr_t key = mat->GetSortKey();
 
@@ -270,6 +279,11 @@ namespace Redflag
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
 			s_Data.DrawCallCount++;
+
+			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Main,
+				cmd.MeshData->GetIndexCount(), cmd.EntityID,
+				static_cast<int>(mat->Alpha), key,
+				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
 		}
 	}
 
@@ -283,6 +297,11 @@ namespace Redflag
 	{
 		s_Data.Stats.DrawCalls = s_Data.DrawCallCount;
 		return s_Data.Stats;
+	}
+
+	const std::vector<Renderer3D::DrawCallInfo>& Renderer3D::GetDrawCallLog()
+	{
+		return s_Data.DrawCallLog;
 	}
 
 	// -------------------------------------------------------------------
@@ -373,6 +392,8 @@ namespace Redflag
 	// -------------------------------------------------------------------
 	void Renderer3D::ExecuteShadowPass(const Ref<Shader>& depthShader)
 	{
+		RF_PROFILE_FUNCTION();
+
 		if (!depthShader || s_Data.DrawCommands.empty())
 			return;
 
@@ -393,6 +414,13 @@ namespace Redflag
 
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+			s_Data.DrawCallCount++; // Shadow Pass 也是真实的 GL Draw
+
+			const Ref<Material>& smat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
+			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Shadow,
+				cmd.MeshData->GetIndexCount(), cmd.EntityID,
+				static_cast<int>(smat->Alpha), smat->GetSortKey(),
+				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
 		}
 	}
 
@@ -408,6 +436,8 @@ namespace Redflag
 	// -------------------------------------------------------------------
 	void Renderer3D::ExecuteDepthPrepass(const Ref<Shader>& depthShader)
 	{
+		RF_PROFILE_FUNCTION();
+
 		if (!depthShader || s_Data.DrawCommands.empty())
 			return;
 
@@ -471,6 +501,12 @@ namespace Redflag
 
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+			s_Data.DrawCallCount++; // Z-Prepass 也是真实的 GL Draw
+
+			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Prepass,
+				cmd.MeshData->GetIndexCount(), cmd.EntityID,
+				static_cast<int>(mat->Alpha), mat->GetSortKey(),
+				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
 		}
 
 		// 恢复颜色写入

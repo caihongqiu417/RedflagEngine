@@ -45,10 +45,10 @@ layout(std140, binding = 0) uniform Camera
 };
 
 // ---- Transform UBO (binding = 1) ----
-// 由 Renderer3D 每次 DrawCall 上传
+// 由 Renderer3D::EndScene 在每次 DrawCall 前上传当前物体的模型矩阵
 layout(std140, binding = 1) uniform Transform
 {
-    mat4 u_Transform;           // 模型矩阵（局部空间 → 世界空间）
+    mat4 u_Transform;
 };
 
 // ---- 传递给片元着色器的插值变量 ----

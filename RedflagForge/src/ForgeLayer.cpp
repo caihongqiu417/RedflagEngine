@@ -9,6 +9,7 @@
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Renderer/RenderCommand.h"
 #include "Redflag/Renderer/SceneRenderer.h"
+#include "Redflag/Renderer/IBLPrecompute.h"
 #include"Redflag/Scene/CameraControllerScript.h"
 #include "Redflag/Scene/SceneSerializer.h"
 #include "Redflag/Utils/PlatformUtils.h"
@@ -154,7 +155,7 @@ namespace Redflag {
     }
 
     ForgeLayer::ForgeLayer()
-        : Layer("ForgeLayer"), m_CameraController(1600.0f / 900.0f, true)
+        : Layer("ForgeLayer"), m_CameraController(2560.0f / 1440.0f, true)
     {
     }
 
@@ -180,8 +181,8 @@ namespace Redflag {
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,
                                FramebufferTextureFormat::RED_INTEGER,
                                FramebufferTextureFormat::Depth };
-        fbSpec.Width  = 1600;
-        fbSpec.Height = 900;
+        fbSpec.Width  = 2560;
+        fbSpec.Height = 1440;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
         // 3D 测试：创建立方体 Mesh
@@ -189,7 +190,7 @@ namespace Redflag {
 
         // 初始化编辑场景
         m_EditorScene = CreateRef<Scene>();
-        m_EditorScene->OnViewportResize(1600, 900);
+        m_EditorScene->OnViewportResize(2560, 1440);
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
 
@@ -636,6 +637,92 @@ namespace Redflag {
 
             ImGui::End();
             ImGui::PopStyleVar(2);
+        }
+
+        // Draw Call 明细面板 —— 每帧把 Renderer3D 提交执行的每次 draw 都列出
+        {
+            ImGui::Begin("Draw Calls");
+            const auto& log = Renderer3D::GetDrawCallLog();
+            ImGui::Text("Total  %d", (int)log.size());
+
+            // --- IBL 说明 ---
+            ImGui::Separator();
+            bool iblReady   = IBLPrecompute::IsReady();
+            bool iblEnabled = SceneRenderer::GetIBLEnabled();
+            ImGui::TextDisabled("IBL");
+            ImGui::SameLine();
+            if (!iblReady)
+                ImGui::TextColored(ImVec4(1,0.4f,0.4f,1), "Not loaded");
+            else if (!iblEnabled)
+                ImGui::TextColored(ImVec4(0.6f,0.6f,0.6f,1), "Disabled");
+            else
+                ImGui::TextColored(ImVec4(0.4f,1,0.4f,1), "Active");
+            if (iblReady)
+            {
+                ImGui::SameLine();
+                ImGui::TextDisabled("| slot 7=Irradiance  8=Prefilter  9=BRDFLUT");
+            }
+            ImGui::TextDisabled("Note: IBL does not issue extra DrawCalls.");
+            ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
+            ImGui::Separator();
+
+            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass" };
+            ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
+
+            if (ImGui::BeginTable("dc_table", 4,
+                ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY,
+                ImVec2(0, 300)))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+                ImGui::TableSetupColumn("#",         ImGuiTableColumnFlags_WidthFixed, 32);
+                ImGui::TableSetupColumn("Pass",      ImGuiTableColumnFlags_WidthFixed, 60);
+                ImGui::TableSetupColumn("Entity",    ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Tris",      ImGuiTableColumnFlags_WidthFixed, 60);
+                ImGui::TableHeadersRow();
+                ImGui::PopStyleColor();
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("IndexCount / 3");
+
+                int row = 0;
+                for (size_t i = 0; i < log.size(); ++i)
+                {
+                    const auto& dc = log[i];
+                    if (s_PassFilter == 1 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Main)    continue;
+                    if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)  continue;
+                    if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass) continue;
+
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("%d", row++);
+
+                    ImGui::TableSetColumnIndex(1);
+                    const char* passName = (dc.Pass == Renderer3D::DrawCallInfo::PassType::Main)   ? "Main"
+                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow) ? "Shadow"
+                                                                                                   : "Prepass";
+                    ImGui::TextUnformatted(passName);
+
+                    ImGui::TableSetColumnIndex(2);
+                    if (dc.EntityID >= 0 && m_ActiveScene)
+                    {
+                        Entity e { (entt::entity)dc.EntityID, m_ActiveScene.get() };
+                        if (e && e.HasComponent<TagComponent>())
+                            ImGui::Text("%d %s", dc.EntityID, e.GetComponent<TagComponent>().Tag.c_str());
+                        else
+                            ImGui::Text("%d <gone>", dc.EntityID);
+                    }
+                    else
+                    {
+                        ImGui::Text("(none)");
+                    }
+
+                    ImGui::TableSetColumnIndex(3);
+                    ImGui::Text("%u", dc.IndexCount / 3);
+                }
+                ImGui::EndTable();
+            }
+            ImGui::End();
         }
 
         // Shadow 调试面板 — 实时编辑 PCF / PCSS 参数，无需重启
