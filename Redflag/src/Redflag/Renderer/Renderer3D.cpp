@@ -8,6 +8,7 @@
 #include "Redflag/Renderer/UniformBuffer.h"
 #include "Redflag/Renderer/IBLPrecompute.h"  // IBL 预计算纹理绑定
 #include "Redflag/Renderer/Frustum.h"
+#include "Redflag/Renderer/Renderer2D.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -82,6 +83,10 @@ namespace Redflag
 		// 当前帧视锥体（BeginScene 时构建，DrawMesh/DrawModel 使用）
 		Frustum CameraFrustum;
 
+		// 剪裁可视化用：世界空间 AABB + 是否被剪掉
+		struct DebugAABB { glm::vec3 Min; glm::vec3 Max; bool Culled; };
+		std::vector<DebugAABB> DebugAABBs;
+
 		// 统计
 		uint32_t DrawCallCount = 0;
 		Renderer3D::Statistics Stats;
@@ -91,8 +96,11 @@ namespace Redflag
 
 	// 视锥体剪裁开关（默认开启）
 	static bool s_FrustumCullingEnabled = true;
+	// 剪裁可视化开关（默认关闭）
+	static bool s_DebugCullingViz = false;
 
-	bool& Renderer3D::GetFrustumCullingEnabled() { return s_FrustumCullingEnabled; }
+	bool& Renderer3D::GetFrustumCullingEnabled()    { return s_FrustumCullingEnabled; }
+	bool& Renderer3D::GetDebugCullingVizEnabled()  { return s_DebugCullingViz; }
 
 	// -------------------------------------------------------------------
 	// 内部：真正执行一次绘制（供 EndScene 调用）
@@ -186,6 +194,7 @@ namespace Redflag
 		s_Data.CameraFrustum = Frustum::FromViewProjection(s_Data.CameraBuffer.ViewProjection);
 
 		s_Data.DrawCommands.clear();
+		s_Data.DebugAABBs.clear();
 		ResetStats();
 	}
 
@@ -203,6 +212,7 @@ namespace Redflag
 		s_Data.CameraFrustum = Frustum::FromViewProjection(viewProjection);
 
 		s_Data.DrawCommands.clear();
+		s_Data.DebugAABBs.clear();
 		ResetStats();
 	}
 
@@ -273,6 +283,52 @@ namespace Redflag
 	{
 		s_Data.Stats.DrawCalls = s_Data.DrawCallCount;
 		return s_Data.Stats;
+	}
+
+	// -------------------------------------------------------------------
+	// DrawDebugAABBs —— 用 Renderer2D::DrawLine 把这一帧收集到的
+	//   世界空间 AABB 画成线框。调用方必须在外层已经 Renderer2D::BeginScene。
+	//   绿色  = 通过剪裁（本帧实际绘制了）
+	//   红色  = 被剪裁掉（没有进入 DrawCommands）
+	// 每个 AABB 画 12 条边。
+	// -------------------------------------------------------------------
+	void Renderer3D::DrawDebugAABBs()
+	{
+		const glm::vec4 kept   (0.2f, 1.0f, 0.2f, 1.0f);
+		const glm::vec4 culled (1.0f, 0.25f, 0.25f, 1.0f);
+
+		for (const auto& box : s_Data.DebugAABBs)
+		{
+			const glm::vec4& c = box.Culled ? culled : kept;
+
+			// 8 个角点
+			glm::vec3 v[8] = {
+				{ box.Min.x, box.Min.y, box.Min.z },
+				{ box.Max.x, box.Min.y, box.Min.z },
+				{ box.Max.x, box.Max.y, box.Min.z },
+				{ box.Min.x, box.Max.y, box.Min.z },
+				{ box.Min.x, box.Min.y, box.Max.z },
+				{ box.Max.x, box.Min.y, box.Max.z },
+				{ box.Max.x, box.Max.y, box.Max.z },
+				{ box.Min.x, box.Max.y, box.Max.z },
+			};
+
+			// 底面 4 条
+			Renderer2D::DrawLine(v[0], v[1], c);
+			Renderer2D::DrawLine(v[1], v[2], c);
+			Renderer2D::DrawLine(v[2], v[3], c);
+			Renderer2D::DrawLine(v[3], v[0], c);
+			// 顶面 4 条
+			Renderer2D::DrawLine(v[4], v[5], c);
+			Renderer2D::DrawLine(v[5], v[6], c);
+			Renderer2D::DrawLine(v[6], v[7], c);
+			Renderer2D::DrawLine(v[7], v[4], c);
+			// 立柱 4 条
+			Renderer2D::DrawLine(v[0], v[4], c);
+			Renderer2D::DrawLine(v[1], v[5], c);
+			Renderer2D::DrawLine(v[2], v[6], c);
+			Renderer2D::DrawLine(v[3], v[7], c);
+		}
 	}
 
 	// -------------------------------------------------------------------
@@ -429,9 +485,7 @@ namespace Redflag
 	// -------------------------------------------------------------------
 	static bool CullMesh(const Mesh& mesh, const glm::mat4& transform)
 	{
-		if (!s_FrustumCullingEnabled)
-			return false;  // \u5f00\u5173\u5173\u95ed\uff0c\u4e0d\u526a\u88c1
-
+		// 总是先算世界空间 AABB（可视化 / 剪裁判断都要用）
 		const glm::vec3& lmin = mesh.GetAABBMin();
 		const glm::vec3& lmax = mesh.GetAABBMax();
 		glm::vec3 lCenter = 0.5f * (lmin + lmax);
@@ -448,8 +502,16 @@ namespace Redflag
 		glm::vec3 wMin = wCenter - wExtent;
 		glm::vec3 wMax = wCenter + wExtent;
 
-		// \u8fd4\u56de true \u8868\u793a\u88ab\u526a\u6389\uff08\u4e0d\u76f8\u4ea4\uff09
-		return !s_Data.CameraFrustum.IntersectsAABB(wMin, wMax);
+		// 开关关闭时从不剪裁
+		bool culled = false;
+		if (s_FrustumCullingEnabled)
+			culled = !s_Data.CameraFrustum.IntersectsAABB(wMin, wMax);
+
+		// 如果开了可视化，绿/红都记录下来供后面画线框
+		if (s_DebugCullingViz)
+			s_Data.DebugAABBs.push_back({ wMin, wMax, culled });
+
+		return culled;
 	}
 
 	// -------------------------------------------------------------------

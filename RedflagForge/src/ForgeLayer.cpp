@@ -434,10 +434,25 @@ namespace Redflag {
             if (ImGui::BeginMenu("View"))
             {
                 ImGui::MenuItem("Physics Colliders", nullptr, &m_ShowPhysicsColliders);
-                ImGui::MenuItem("IBL",               nullptr, &SceneRenderer::GetIBLEnabled());
-                ImGui::MenuItem("Shadow",            nullptr, &SceneRenderer::GetShadowEnabled());
-                ImGui::MenuItem("Z-Prepass",         nullptr, &SceneRenderer::GetZPrepassEnabled());
-                ImGui::MenuItem("Frustum Culling",   nullptr, &Renderer3D::GetFrustumCullingEnabled());
+                ImGui::MenuItem("Show Culling AABBs",nullptr, &Renderer3D::GetDebugCullingVizEnabled());
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Render"))
+            {
+                ImGui::MenuItem("IBL",             nullptr, &SceneRenderer::GetIBLEnabled());
+                ImGui::MenuItem("Shadow",          nullptr, &SceneRenderer::GetShadowEnabled());
+                ImGui::MenuItem("Z-Prepass",       nullptr, &SceneRenderer::GetZPrepassEnabled());
+                ImGui::MenuItem("Frustum Culling", nullptr, &Renderer3D::GetFrustumCullingEnabled());
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Export"))
+            {
+                ImGui::TextDisabled("Depth Buffers");
+                ImGui::Separator();
+                if (ImGui::MenuItem("Prepass Depth"))
+                    SceneRenderer::RequestDumpPrepassDepth();
+                if (ImGui::MenuItem("Shadow Depth"))
+                    SceneRenderer::RequestDumpShadowDepth();
                 ImGui::EndMenu();
             }
 

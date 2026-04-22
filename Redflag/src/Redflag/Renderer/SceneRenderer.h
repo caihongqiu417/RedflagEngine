@@ -101,6 +101,13 @@ namespace Redflag {
 		static bool& GetShadowEnabled();
 		static bool& GetZPrepassEnabled();
 
+		// 深度图导出：点一次按钮 → 下一帧把对应的 depth buffer 保存为 PNG。
+		//   Prepass 深度写到 RedflagForge/prepass_depth.png
+		//   Shadow  深度写到 RedflagForge/shadow_depth.png
+		// PNG 是 8-bit 灰度，深度已线性化并做了 gamma 调整便于肉眼观察。
+		static void RequestDumpPrepassDepth();
+		static void RequestDumpShadowDepth();
+
 	private:
 		// 遍历 registry 收集灯光数据并上传 Light UBO
 		static void CollectAndUploadLights(Scene& scene);

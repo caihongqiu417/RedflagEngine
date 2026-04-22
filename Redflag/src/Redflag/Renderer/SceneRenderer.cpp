@@ -28,7 +28,70 @@
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "stb_image_write.h"
+#include <vector>
+#include <cmath>
+
 namespace Redflag {
+
+	// =================================================================
+	// 深度图 Dump —— 把 depth buffer 转成 8-bit PNG 以便肉眼观察
+	// =================================================================
+	// 下一帧写出的请求标志；在 SceneRenderer 对应位置检查并清零
+	static bool s_DumpPrepassDepthRequested = false;
+	static bool s_DumpShadowDepthRequested  = false;
+
+	// ----------------------------------------------------------------
+	// 把当前绑定 FBO 的 depth attachment 读回 CPU 并保存为 PNG
+	//   filename       : 输出路径
+	//   w, h           : 深度附件的像素尺寸
+	//   isPerspective  : true=透视投影（需要线性化）；false=正交（Shadow）
+	//   nearP, farP    : 仅透视模式用，用来把 [0,1] depth 逆算出线性距离
+	// ----------------------------------------------------------------
+	static void DumpDepthToPNG(const char* filename, int w, int h,
+		bool isPerspective, float nearP, float farP)
+	{
+		// 1. 读回浮点深度（当前绑定的 READ_FRAMEBUFFER 的 depth）
+		std::vector<float> depth(size_t(w) * h);
+		glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depth.data());
+
+		// 2. 深度 → 灰度。直接用原始 0~1 depth，透视下远处都挤到 0.99 上一片白，
+		//    所以线性化一下：z_lin = 2*n*f / (f+n - (2d-1)*(f-n))
+		//    再归一到 [near,far]，最后做 1/gamma 增强对比。
+		std::vector<uint8_t> pixels(size_t(w) * h);
+		for (size_t i = 0; i < depth.size(); ++i)
+		{
+			float d = depth[i];
+			float g;
+			if (isPerspective)
+			{
+				float ndc = d * 2.0f - 1.0f;                                // [0,1] -> [-1,1]
+				float zLin = (2.0f * nearP * farP) / (farP + nearP - ndc * (farP - nearP));
+				g = (zLin - nearP) / (farP - nearP);                        // 归一到 [0,1]
+			}
+			else
+			{
+				g = d;  // 正交深度本身就是线性的
+			}
+			g = std::max(0.0f, std::min(1.0f, g));
+			g = std::pow(g, 1.0f / 2.2f);                                   // 轻度 gamma 让对比更明显
+			pixels[i] = uint8_t(g * 255.0f);
+		}
+
+		// 3. OpenGL 原点在左下，PNG 在左上 —— 上下翻转
+		std::vector<uint8_t> flipped(pixels.size());
+		for (int y = 0; y < h; ++y)
+			std::memcpy(&flipped[size_t(y) * w], &pixels[size_t(h - 1 - y) * w], w);
+
+		// 4. 写文件
+		if (stbi_write_png(filename, w, h, 1, flipped.data(), w) == 0)
+			RF_CORE_ERROR("Failed to write depth PNG: {}", filename);
+		else
+			RF_CORE_INFO ("Depth dumped to {}", filename);
+	}
+
+	void SceneRenderer::RequestDumpPrepassDepth() { s_DumpPrepassDepthRequested = true; }
+	void SceneRenderer::RequestDumpShadowDepth()  { s_DumpShadowDepthRequested  = true; }
 
 	// =================================================================
 	// 静态资源：Light UBO
@@ -183,6 +246,16 @@ namespace Redflag {
 		// --- 深度预渲染 ---
 		Renderer3D::ExecuteShadowPass(s_ShadowDepthShader);
 
+		// --- 如有请求，导出 Shadow Map 深度图（Shadow FBO 当前仍绑定）---
+		if (s_DumpShadowDepthRequested)
+		{
+			s_DumpShadowDepthRequested = false;
+			// 正交投影 → 深度就是线性 [0,1]，near/far 未使用
+			DumpDepthToPNG("shadow_depth.png",
+				int(SHADOW_MAP_SIZE), int(SHADOW_MAP_SIZE),
+				false, 0.0f, 1.0f);
+		}
+
 		// --- 还原 FBO / viewport ---
 		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
@@ -320,6 +393,16 @@ namespace Redflag {
 		if (s_ZPrepassEnabled)
 		{
 			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
+
+			// 如有请求，导出 Prepass 深度图（主 FBO 当前仍绑定）
+			if (s_DumpPrepassDepthRequested)
+			{
+				s_DumpPrepassDepthRequested = false;
+				GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+				DumpDepthToPNG("prepass_depth.png", vp[2], vp[3],
+					true, camera.GetNearClip(), camera.GetFarClip());
+			}
+
 			// Prepass 已将深度写满；主 Pass 只测试深度不再写入，
 			// 避免两次浮点计算的微小差异导致 Z-fighting
 			glDepthFunc(GL_LEQUAL);
@@ -338,6 +421,16 @@ namespace Redflag {
 		// 放在不透明几何之后、UI/调试线之前
 		if (s_IBLEnabled)
 			IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
+
+		// ======================== 剪裁可视化调试 ========================
+		// 用 Renderer2D 线段绘制所有提交物体的世界空间 AABB：
+		//   绿色 = 通过剪裁；红色 = 被剪掉
+		if (Renderer3D::GetDebugCullingVizEnabled())
+		{
+			Renderer2D::BeginScene(camera);
+			Renderer3D::DrawDebugAABBs();
+			Renderer2D::EndScene();
+		}
 	}
 
 	// ==================================================================
@@ -480,6 +573,14 @@ namespace Redflag {
 		{
 			glm::mat4 viewMat3D = glm::inverse(cameraTransform);
 			IBLPrecompute::RenderSkybox(viewMat3D, projection);
+		}
+
+		// ======================== 剪裁可视化调试 ========================
+		if (Renderer3D::GetDebugCullingVizEnabled())
+		{
+			Renderer2D::BeginScene(projection, cameraTransform);
+			Renderer3D::DrawDebugAABBs();
+			Renderer2D::EndScene();
 		}
 	}
 

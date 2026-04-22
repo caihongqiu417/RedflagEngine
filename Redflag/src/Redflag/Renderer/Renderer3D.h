@@ -67,6 +67,14 @@ namespace Redflag
 		// 视锥体剪裁开关（菜单 Toggle）
 		static bool& GetFrustumCullingEnabled();
 
+		// 剪裁可视化开关：开启后每帧会记录所有提交物体的世界空间 AABB，
+		// SceneRenderer 可以调用 DrawDebugAABBs() 用 Renderer2D 画出线框。
+		//   绿色 = 通过剪裁；红色 = 被剪掉。
+		static bool& GetDebugCullingVizEnabled();
+
+		// 用 Renderer2D 绘制当前帧收集到的 AABB 线框（需要先 Renderer2D::BeginScene）
+		static void DrawDebugAABBs();
+
 		static void ResetStats();
 		static Statistics GetStats();
 	};
