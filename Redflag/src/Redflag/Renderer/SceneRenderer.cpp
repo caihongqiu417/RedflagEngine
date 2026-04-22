@@ -28,70 +28,9 @@
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "stb_image_write.h"
-#include <vector>
-#include <cmath>
+#include <random>
 
 namespace Redflag {
-
-	// =================================================================
-	// 深度图 Dump —— 把 depth buffer 转成 8-bit PNG 以便肉眼观察
-	// =================================================================
-	// 下一帧写出的请求标志；在 SceneRenderer 对应位置检查并清零
-	static bool s_DumpPrepassDepthRequested = false;
-	static bool s_DumpShadowDepthRequested  = false;
-
-	// ----------------------------------------------------------------
-	// 把当前绑定 FBO 的 depth attachment 读回 CPU 并保存为 PNG
-	//   filename       : 输出路径
-	//   w, h           : 深度附件的像素尺寸
-	//   isPerspective  : true=透视投影（需要线性化）；false=正交（Shadow）
-	//   nearP, farP    : 仅透视模式用，用来把 [0,1] depth 逆算出线性距离
-	// ----------------------------------------------------------------
-	static void DumpDepthToPNG(const char* filename, int w, int h,
-		bool isPerspective, float nearP, float farP)
-	{
-		// 1. 读回浮点深度（当前绑定的 READ_FRAMEBUFFER 的 depth）
-		std::vector<float> depth(size_t(w) * h);
-		glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depth.data());
-
-		// 2. 深度 → 灰度。直接用原始 0~1 depth，透视下远处都挤到 0.99 上一片白，
-		//    所以线性化一下：z_lin = 2*n*f / (f+n - (2d-1)*(f-n))
-		//    再归一到 [near,far]，最后做 1/gamma 增强对比。
-		std::vector<uint8_t> pixels(size_t(w) * h);
-		for (size_t i = 0; i < depth.size(); ++i)
-		{
-			float d = depth[i];
-			float g;
-			if (isPerspective)
-			{
-				float ndc = d * 2.0f - 1.0f;                                // [0,1] -> [-1,1]
-				float zLin = (2.0f * nearP * farP) / (farP + nearP - ndc * (farP - nearP));
-				g = (zLin - nearP) / (farP - nearP);                        // 归一到 [0,1]
-			}
-			else
-			{
-				g = d;  // 正交深度本身就是线性的
-			}
-			g = std::max(0.0f, std::min(1.0f, g));
-			g = std::pow(g, 1.0f / 2.2f);                                   // 轻度 gamma 让对比更明显
-			pixels[i] = uint8_t(g * 255.0f);
-		}
-
-		// 3. OpenGL 原点在左下，PNG 在左上 —— 上下翻转
-		std::vector<uint8_t> flipped(pixels.size());
-		for (int y = 0; y < h; ++y)
-			std::memcpy(&flipped[size_t(y) * w], &pixels[size_t(h - 1 - y) * w], w);
-
-		// 4. 写文件
-		if (stbi_write_png(filename, w, h, 1, flipped.data(), w) == 0)
-			RF_CORE_ERROR("Failed to write depth PNG: {}", filename);
-		else
-			RF_CORE_INFO ("Depth dumped to {}", filename);
-	}
-
-	void SceneRenderer::RequestDumpPrepassDepth() { s_DumpPrepassDepthRequested = true; }
-	void SceneRenderer::RequestDumpShadowDepth()  { s_DumpShadowDepthRequested  = true; }
 
 	// =================================================================
 	// 静态资源：Light UBO
@@ -119,11 +58,75 @@ namespace Redflag {
 	static bool s_IBLEnabled       = true;
 	static bool s_ShadowEnabled    = true;
 	static bool s_ZPrepassEnabled  = true;
+	static bool s_SSAOEnabled      = true;
 
 	ShadowSettings& SceneRenderer::GetShadowSettings()  { return s_ShadowSettings; }
 	bool& SceneRenderer::GetIBLEnabled()                 { return s_IBLEnabled; }
 	bool& SceneRenderer::GetShadowEnabled()              { return s_ShadowEnabled; }
 	bool& SceneRenderer::GetZPrepassEnabled()            { return s_ZPrepassEnabled; }
+	bool& SceneRenderer::GetSSAOEnabled()                { return s_SSAOEnabled; }
+
+	// =================================================================
+	// SSAO 资源
+	//
+	// 策略 C：Z-Prepass 顺带把 view-space 法线写到主 FBO attachment2
+	//   （RGBA16F）。SSAO Pass 再采样主 FBO 的深度 + 法线 RT，做半球采
+	//   样输出 AO 到一张单独的 RGBA8 FBO。主 Mesh shader 在 ambient
+	//   合成处乘上 AO。为保持简单，没有额外的模糊 Pass —— 直接把 64
+	//   个样本的结果输出，接受一点噪点。
+	// =================================================================
+	static constexpr uint32_t SSAO_KERNEL_SIZE = 64;
+	static constexpr uint32_t SSAO_UBO_BINDING  = 4;
+	static constexpr uint32_t SSAO_MAP_SLOT     = 12; // 主 Mesh shader 读 AO 的槽
+	static constexpr uint32_t SSAO_DEPTH_SLOT   = 13;
+	static constexpr uint32_t SSAO_NORMAL_SLOT  = 14;
+	static constexpr uint32_t SSAO_NOISE_SLOT   = 15;
+
+	struct GPUSSAOParams
+	{
+		glm::mat4 Projection;
+		glm::mat4 InvProjection;
+		glm::vec4 Params;      // x=radius y=bias z=power w=kernelSize
+		glm::vec4 NoiseScale;  // xy = viewportSize/4
+		glm::vec4 Kernel[SSAO_KERNEL_SIZE];
+	};
+
+	static SSAOSettings      s_SSAOSettings;
+	static Ref<Framebuffer>  s_SSAOFBO;
+	static Ref<Shader>       s_SSAOShader;
+	static Ref<UniformBuffer> s_SSAOParamsUBO;
+	static uint32_t          s_SSAONoiseTex = 0;
+	static uint32_t          s_SSAOWhiteTex = 0; // 关闭 SSAO 时绑到 slot 12
+	static uint32_t          s_SSAOQuadVAO  = 0;
+	static uint32_t          s_SSAOQuadVBO  = 0;
+	static glm::vec4         s_SSAOKernel[SSAO_KERNEL_SIZE]{};
+	// SSAO Pass 中从主 FBO 查到的 view-normal 纹理 id，留给 ImGui 面板预览
+	static uint32_t          s_LastViewNormalTex    = 0;
+	// Z-Prepass 深度可视化纹理 id（RGBA8，线性化后），留给 ImGui 面板预览
+	static uint32_t          s_LastPrepassDepthTex  = 0;
+
+	// 深度可视化 pass 资源：CPU 读回 depth → 线性化 → 上传到 RGBA8 纹理
+	static uint32_t          s_DepthVizTex      = 0;
+	static uint32_t          s_DepthVizTexW     = 0;
+	static uint32_t          s_DepthVizTexH     = 0;
+
+	SSAOSettings& SceneRenderer::GetSSAOSettings() { return s_SSAOSettings; }
+	uint32_t SceneRenderer::GetSSAOTextureID()
+	{
+		return s_SSAOFBO ? s_SSAOFBO->GetColorAttachmentRendererID(0) : 0;
+	}
+	uint32_t SceneRenderer::GetViewNormalTextureID()
+	{
+		return s_LastViewNormalTex;
+	}
+	uint32_t SceneRenderer::GetShadowMapTextureID()
+	{
+		return s_ShadowFBO ? s_ShadowFBO->GetDepthAttachmentRendererID() : 0;
+	}
+	uint32_t SceneRenderer::GetPrepassDepthTextureID()
+	{
+		return s_LastPrepassDepthTex;
+	}
 
 	// CPU 侧灯光缓冲区，每帧填充后一次性上传
 	// 布局：[GPULightUBO header (16B)] + [LightData[] 数组]
@@ -150,6 +153,80 @@ namespace Redflag {
 
 		s_ShadowDepthShader  = Shader::Create("assets/shaders/ShadowDepth.glsl");
 		s_DepthPrepassShader = Shader::Create("assets/shaders/Depth_Prepass.glsl");
+
+		// ---- SSAO 资源 ----
+		// 单附件 RGBA8 FBO；后面主 Mesh shader 只读 .r 通道。初始尺寸与 Shadow
+		// 无关，RenderScene 每帧会根据当前 viewport 做 Resize。
+		FramebufferSpecification ssaoSpec;
+		ssaoSpec.Width  = 1280;
+		ssaoSpec.Height = 720;
+		ssaoSpec.Attachments = { FramebufferTextureFormat::RGBA8 };
+		s_SSAOFBO = Framebuffer::Create(ssaoSpec);
+
+		s_SSAOShader    = Shader::Create("assets/shaders/SSAO.glsl");
+		s_SSAOParamsUBO = UniformBuffer::Create(sizeof(GPUSSAOParams), SSAO_UBO_BINDING);
+
+		// 生成 64 个半球样本（+Z 方向，余弦偏向原点）
+		{
+			std::default_random_engine gen(1337u);
+			std::uniform_real_distribution<float> rnd01(0.0f, 1.0f);
+			for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i)
+			{
+				glm::vec3 s(rnd01(gen) * 2.0f - 1.0f,
+							rnd01(gen) * 2.0f - 1.0f,
+							rnd01(gen));          // 只取上半球
+				s = glm::normalize(s) * rnd01(gen);
+				float scale = float(i) / float(SSAO_KERNEL_SIZE);
+				// 二次重映射让样本偏向原点（靠近接收点的样本更密集）
+				scale = 0.1f + (1.0f - 0.1f) * scale * scale;
+				s *= scale;
+				s_SSAOKernel[i] = glm::vec4(s, 0.0f);
+			}
+		}
+
+		// 4×4 随机切线噪声（仅 xy 有效），用于 SSAO 里打散带状纹
+		{
+			std::default_random_engine gen(42u);
+			std::uniform_real_distribution<float> rnd01(0.0f, 1.0f);
+			glm::vec4 noise[16];
+			for (int i = 0; i < 16; ++i)
+				noise[i] = glm::vec4(rnd01(gen) * 2.0f - 1.0f,
+									  rnd01(gen) * 2.0f - 1.0f,
+									  0.0f, 0.0f);
+			glCreateTextures(GL_TEXTURE_2D, 1, &s_SSAONoiseTex);
+			glTextureStorage2D(s_SSAONoiseTex, 1, GL_RGBA16F, 4, 4);
+			glTextureSubImage2D(s_SSAONoiseTex, 0, 0, 0, 4, 4, GL_RGBA, GL_FLOAT, noise);
+			glTextureParameteri(s_SSAONoiseTex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(s_SSAONoiseTex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTextureParameteri(s_SSAONoiseTex, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTextureParameteri(s_SSAONoiseTex, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		}
+
+		// 关闭 SSAO 时绑定的 1×1 全白纹理（避免主 shader 分支）
+		{
+			glCreateTextures(GL_TEXTURE_2D, 1, &s_SSAOWhiteTex);
+			glTextureStorage2D(s_SSAOWhiteTex, 1, GL_RGBA8, 1, 1);
+			uint32_t white = 0xFFFFFFFFu;
+			glTextureSubImage2D(s_SSAOWhiteTex, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &white);
+			glTextureParameteri(s_SSAOWhiteTex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(s_SSAOWhiteTex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
+
+		// 全屏三角形 VBO/VAO（覆盖整个 NDC [-1,1] 的超大三角）
+		{
+			float verts[] = {
+				-1.0f, -1.0f,
+				 3.0f, -1.0f,
+				-1.0f,  3.0f,
+			};
+			glCreateVertexArrays(1, &s_SSAOQuadVAO);
+			glCreateBuffers(1, &s_SSAOQuadVBO);
+			glNamedBufferData(s_SSAOQuadVBO, sizeof(verts), verts, GL_STATIC_DRAW);
+			glVertexArrayVertexBuffer(s_SSAOQuadVAO, 0, s_SSAOQuadVBO, 0, sizeof(float) * 2);
+			glEnableVertexArrayAttrib(s_SSAOQuadVAO, 0);
+			glVertexArrayAttribFormat(s_SSAOQuadVAO, 0, 2, GL_FLOAT, GL_FALSE, 0);
+			glVertexArrayAttribBinding(s_SSAOQuadVAO, 0, 0);
+		}
 	}
 
 	void SceneRenderer::Shutdown()
@@ -158,6 +235,14 @@ namespace Redflag {
 		s_ShadowFBO.reset();
 		s_ShadowDepthShader.reset();
 		s_DepthPrepassShader.reset();
+		s_SSAOFBO.reset();
+		s_SSAOShader.reset();
+		s_SSAOParamsUBO.reset();
+		if (s_DepthVizTex) { glDeleteTextures(1, &s_DepthVizTex); s_DepthVizTex = 0; }
+		if (s_SSAONoiseTex) { glDeleteTextures(1, &s_SSAONoiseTex); s_SSAONoiseTex = 0; }
+		if (s_SSAOWhiteTex) { glDeleteTextures(1, &s_SSAOWhiteTex); s_SSAOWhiteTex = 0; }
+		if (s_SSAOQuadVBO)  { glDeleteBuffers (1, &s_SSAOQuadVBO);  s_SSAOQuadVBO  = 0; }
+		if (s_SSAOQuadVAO)  { glDeleteVertexArrays(1, &s_SSAOQuadVAO); s_SSAOQuadVAO = 0; }
 		IBLPrecompute::Shutdown();
 	}
 
@@ -246,19 +331,204 @@ namespace Redflag {
 		// --- 深度预渲染 ---
 		Renderer3D::ExecuteShadowPass(s_ShadowDepthShader);
 
-		// --- 如有请求，导出 Shadow Map 深度图（Shadow FBO 当前仍绑定）---
-		if (s_DumpShadowDepthRequested)
-		{
-			s_DumpShadowDepthRequested = false;
-			// 正交投影 → 深度就是线性 [0,1]，near/far 未使用
-			DumpDepthToPNG("shadow_depth.png",
-				int(SHADOW_MAP_SIZE), int(SHADOW_MAP_SIZE),
-				false, 0.0f, 1.0f);
-		}
-
 		// --- 还原 FBO / viewport ---
 		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+	}
+
+	// ==================================================================
+	// RunDepthVizPass — 当前绑定 FBO 的 depth 读回 CPU，线性化后上传到
+	// RGBA8 纹理供 ImGui 预览。比直接用 sampler 采 DEPTH24STENCIL8 更可靠。
+	// ==================================================================
+	static void RunDepthVizPass(uint32_t /*depthTex*/, int w, int h, float nearP, float farP)
+	{
+		if (w <= 0 || h <= 0) return;
+
+		// 为了不阻塞 GPU，限制回读分辨率（最大 512 宽）
+		int maxW = 512;
+		int vw = std::min(w, maxW);
+		int vh = std::max(1, h * vw / w);
+
+		// 读回当前绑定 FBO 的深度（READ_FRAMEBUFFER）
+		// 先确保 READ = DRAW
+		GLint drawFBO = 0, readFBO = 0;
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFBO);
+		glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBO);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, drawFBO);
+
+		static std::vector<float> depthBuf;
+		depthBuf.resize(size_t(w) * h);
+		glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depthBuf.data());
+
+		// 先扫出当前帧的非空深度范围（忽略 d>=0.9999 的天空/远平面像素），
+		// 然后把这个范围线性拉伸到 [0,1]。这样无论场景远近都能看清。
+		float dMin = 1.0f, dMax = 0.0f;
+		for (float d : depthBuf)
+		{
+			if (d >= 0.9999f) continue; // 天空/远平面
+			if (d < dMin) dMin = d;
+			if (d > dMax) dMax = d;
+		}
+		bool hasGeo = dMax > dMin;
+		float range = hasGeo ? (dMax - dMin) : 1.0f;
+
+		// 降采样 + 翻转 Y + 归一化到 [dMin, dMax]
+		(void)nearP; (void)farP;
+		static std::vector<uint8_t> pixels;
+		pixels.resize(size_t(vw) * vh);
+		for (int y = 0; y < vh; ++y)
+		{
+			int srcY = y * h / vh;
+			if (srcY < 0) srcY = 0;
+			if (srcY >= h) srcY = h - 1;
+			for (int x = 0; x < vw; ++x)
+			{
+				int srcX = x * w / vw;
+				float d  = depthBuf[size_t(srcY) * w + srcX];
+				float g;
+				if (d >= 0.9999f || !hasGeo)
+				{
+					g = 1.0f; // 天空 = 白
+				}
+				else
+				{
+					// 近黑远白，自动拉伸对比
+					g = (d - dMin) / range;
+				}
+				if (g < 0.0f) g = 0.0f;
+				if (g > 1.0f) g = 1.0f;
+				pixels[size_t(y) * vw + x] = uint8_t(g * 255.0f);
+			}
+		}
+
+		// 创建 / 重建 纹理
+		if (s_DepthVizTex == 0 || int(s_DepthVizTexW) != vw || int(s_DepthVizTexH) != vh)
+		{
+			if (s_DepthVizTex) { glDeleteTextures(1, &s_DepthVizTex); s_DepthVizTex = 0; }
+			glCreateTextures(GL_TEXTURE_2D, 1, &s_DepthVizTex);
+			glTextureStorage2D(s_DepthVizTex, 1, GL_R8, vw, vh);
+			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			// R8 单通道，ImGui 采样会只看 .r——通过 swizzle 把 .r 广播到 .rgb
+			GLint swizzle[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+			glTextureParameteriv(s_DepthVizTex, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+			s_DepthVizTexW = (uint32_t)vw;
+			s_DepthVizTexH = (uint32_t)vh;
+		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTextureSubImage2D(s_DepthVizTex, 0, 0, 0, vw, vh, GL_RED, GL_UNSIGNED_BYTE, pixels.data());
+
+		// 还原 READ FBO
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, readFBO);
+
+		// 更新预览纹理 ID
+		s_LastPrepassDepthTex = s_DepthVizTex;
+	}
+
+	// ==================================================================
+	// RunSSAOPass — 在主 FBO 当前绑定时调用
+	//
+	// 前置条件：
+	//   1. Z-Prepass 已完成：主 FBO 的 DEPTH + attachment2(view normal) 已写。
+	//   2. 当前绑定的 FBO 必须是主 FBO（SceneRenderer 插入时机即是这里）。
+	//
+	// 流程：
+	//   1. 从当前 FBO 查询 depth texture 和 normal texture (attachment2) 的 GL ID。
+	//   2. 如视口变化则 Resize SSAO FBO。
+	//   3. 上传 SSAOParams UBO（Projection / InvProjection / Radius / Kernel...）。
+	//   4. 绑定 SSAO FBO，全屏三角形渲染，关深度测试。
+	//   5. 还原主 FBO，把 SSAO 结果纹理绑到 slot 12 给主 Mesh shader 读取。
+	// ==================================================================
+	static void RunSSAOPass(const glm::mat4& projection)
+	{
+		if (!s_SSAOShader || !s_SSAOFBO) return;
+
+		GLint prevFBO = 0;
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
+		GLint prevViewport[4];
+		glGetIntegerv(GL_VIEWPORT, prevViewport);
+		int w = prevViewport[2];
+		int h = prevViewport[3];
+		if (w <= 0 || h <= 0) return;
+
+		// --- 查询主 FBO 的 depth / normal 附件纹理 ---
+		GLint depthTex = 0, normalTex = 0;
+		// 主 FBO 深度可能是 DEPTH_STENCIL 或纯 DEPTH，两种都查
+		glGetNamedFramebufferAttachmentParameteriv(prevFBO,
+			GL_DEPTH_STENCIL_ATTACHMENT,
+			GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+		if (depthTex == 0)
+			glGetNamedFramebufferAttachmentParameteriv(prevFBO,
+				GL_DEPTH_ATTACHMENT,
+				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+		glGetNamedFramebufferAttachmentParameteriv(prevFBO,
+			GL_COLOR_ATTACHMENT2,
+			GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
+		if (depthTex == 0 || normalTex == 0)
+			return; // FBO 没有必须的附件，跳过 SSAO
+
+		s_LastViewNormalTex   = (uint32_t)normalTex;
+		// 注意：不要把原始 DEPTH 附件覆盖到 s_LastPrepassDepthTex；
+		// Pre-Z 预览用的是 RunDepthVizPass 生成的线性化 R8 纹理。
+
+		// --- 视口变化则同步 SSAO FBO 尺寸 ---
+		const auto& spec = s_SSAOFBO->GetSpecifictaion();
+		if (int(spec.Width) != w || int(spec.Height) != h)
+			s_SSAOFBO->Resize(uint32_t(w), uint32_t(h));
+
+		// --- 上传 SSAO UBO ---
+		GPUSSAOParams p{};
+		p.Projection    = projection;
+		p.InvProjection = glm::inverse(projection);
+		int kSize = s_SSAOSettings.KernelSize;
+		if (kSize < 1) kSize = 1;
+		if (kSize > (int)SSAO_KERNEL_SIZE) kSize = (int)SSAO_KERNEL_SIZE;
+		p.Params     = glm::vec4(s_SSAOSettings.Radius,
+		                         s_SSAOSettings.Bias,
+		                         s_SSAOSettings.Power,
+		                         float(kSize));
+		p.NoiseScale = glm::vec4(float(w) / 4.0f, float(h) / 4.0f, 0.0f, 0.0f);
+		for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i)
+			p.Kernel[i] = s_SSAOKernel[i];
+		s_SSAOParamsUBO->SetData(&p, sizeof(GPUSSAOParams));
+
+		// --- 绑定 SSAO FBO，全屏渲染 ---
+		s_SSAOFBO->Bind(); // 内部 glViewport
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		s_SSAOShader->Bind();
+		glBindTextureUnit(SSAO_DEPTH_SLOT,  (GLuint)depthTex);
+		glBindTextureUnit(SSAO_NORMAL_SLOT, (GLuint)normalTex);
+		glBindTextureUnit(SSAO_NOISE_SLOT,  s_SSAONoiseTex);
+
+		glBindVertexArray(s_SSAOQuadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(0);
+
+		// 登记到 Renderer3D 的 drawcall 日志 / 统计里（3 = 一个全屏三角形）
+		Renderer3D::LogExternalDrawCall(
+			Renderer3D::DrawCallInfo::PassType::SSAO, 3);
+
+		glEnable(GL_DEPTH_TEST);
+
+		// --- 还原主 FBO / viewport ---
+		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+		// 把 SSAO 结果纹理绑到 slot 12 供主 Mesh shader 读
+		glBindTextureUnit(SSAO_MAP_SLOT, s_SSAOFBO->GetColorAttachmentRendererID(0));
+	}
+
+	// 关闭 SSAO 时绑 1×1 全白纹理到 slot 12，主 shader 无需分支
+	static void BindSSAOWhiteFallback()
+	{
+		if (s_SSAOWhiteTex)
+			glBindTextureUnit(SSAO_MAP_SLOT, s_SSAOWhiteTex);
 	}
 
 	// ==================================================================
@@ -390,17 +660,22 @@ namespace Redflag {
 		}
 
 		// ======================== Z-Prepass ========================
-		if (s_ZPrepassEnabled)
+		// SSAO 依赖 prepass 生成的 view-space 法线，因此 SSAO 开启时必须
+		// 强制跑 Z-Prepass；否则尊重用户开关。
+		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled;
+		if (runPrepass)
 		{
 			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
 
-			// 如有请求，导出 Prepass 深度图（主 FBO 当前仍绑定）
-			if (s_DumpPrepassDepthRequested)
+			// 深度可视化：线性化后写入 RGBA8 FBO 供 ImGui 预览
 			{
-				s_DumpPrepassDepthRequested = false;
+				GLint curFBO = 0, dt = 0;
+				glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
+				glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
+				if (dt == 0)
+					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
 				GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
-				DumpDepthToPNG("prepass_depth.png", vp[2], vp[3],
-					true, camera.GetNearClip(), camera.GetFarClip());
+				RunDepthVizPass((uint32_t)dt, vp[2], vp[3], camera.GetNearClip(), camera.GetFarClip());
 			}
 
 			// Prepass 已将深度写满；主 Pass 只测试深度不再写入，
@@ -409,9 +684,17 @@ namespace Redflag {
 			glDepthMask(GL_FALSE);
 		}
 
+		// ======================== SSAO Pass ========================
+		// 必须在 Z-Prepass 之后、主 Pass 之前。主 Mesh shader 会在 ambient
+		// 合成点读 slot 12 的 AO。
+		if (s_SSAOEnabled)
+			RunSSAOPass(camera.GetProjection());
+		else
+			BindSSAOWhiteFallback();
+
 		Renderer3D::EndScene();
 
-		if (s_ZPrepassEnabled)
+		if (runPrepass)
 		{
 			glDepthMask(GL_TRUE);
 			glDepthFunc(GL_LESS);
@@ -498,7 +781,7 @@ namespace Redflag {
 		// ======================== 3D 渲染 ========================
 		glm::mat4 viewProj3D = projection * glm::inverse(cameraTransform);
 		glm::vec3 cameraPos  = glm::vec3(cameraTransform[3]); // 从变换矩阵提取位移列
-		Renderer3D::BeginScene(viewProj3D, cameraPos);
+		Renderer3D::BeginScene(viewProj3D, cameraPos, glm::inverse(cameraTransform));
 		if (!s_IBLEnabled)
 			Renderer3D::OverrideIBLFlag(false);
 
@@ -553,16 +836,39 @@ namespace Redflag {
 		}
 
 		// ======================== Z-Prepass ========================
-		if (s_ZPrepassEnabled)
+		// SSAO 需要 prepass 的法线输出；开启 SSAO 时强制跑 prepass
+		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled;
+		if (runPrepass)
 		{
 			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
+
+			// 深度可视化：线性化后写入 RGBA8 FBO 供 ImGui 预览
+			{
+				GLint curFBO = 0, dt = 0;
+				glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
+				glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
+				if (dt == 0)
+					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
+				// Runtime 路径：从投影矩阵提取 near/far
+				float n = projection[3][2] / (projection[2][2] - 1.0f);
+				float f = projection[3][2] / (projection[2][2] + 1.0f);
+				GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+				RunDepthVizPass((uint32_t)dt, vp[2], vp[3], n, f);
+			}
+
 			glDepthFunc(GL_LEQUAL);
 			glDepthMask(GL_FALSE);
 		}
 
+		// ======================== SSAO Pass ========================
+		if (s_SSAOEnabled)
+			RunSSAOPass(projection);
+		else
+			BindSSAOWhiteFallback();
+
 		Renderer3D::EndScene();
 
-		if (s_ZPrepassEnabled)
+		if (runPrepass)
 		{
 			glDepthMask(GL_TRUE);
 			glDepthFunc(GL_LESS);

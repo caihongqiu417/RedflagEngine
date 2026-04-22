@@ -34,6 +34,7 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_LightSpaceMatrix;
     vec4 u_ShadowParams;
     vec4 u_ShadowParams2;
+    mat4 u_View;
 };
 
 // ---- Transform UBO (binding = 1) ----

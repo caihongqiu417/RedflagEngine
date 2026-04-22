@@ -26,7 +26,7 @@ namespace Redflag
 			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
 			struct DrawCallInfo
 			{
-				enum class PassType { Main, Shadow, Prepass };
+				enum class PassType { Main, Shadow, Prepass, SSAO };
 				PassType Pass       = PassType::Main;
 				uint32_t IndexCount = 0;
 				int      EntityID   = -1;
@@ -36,11 +36,15 @@ namespace Redflag
 			};
 			static const std::vector<DrawCallInfo>& GetDrawCallLog();
 
+			// 让非 Renderer3D 的 Pass（如 SSAO）把自己的 drawcall 登记进来，
+			// 便于统一在 Profile 面板 / Stats 里统计。
+			static void LogExternalDrawCall(DrawCallInfo::PassType pass, uint32_t indexCount);
+
 		static void Init();
 		static void Shutdown();
 
 		static void BeginScene(const EditorCamera& camera);
-		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition = glm::vec3(0.0f));
+		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition = glm::vec3(0.0f), const glm::mat4& view = glm::mat4(1.0f));
 
 		// 在 EndScene 里统一排序并执行所有 DrawCommand
 		static void EndScene();

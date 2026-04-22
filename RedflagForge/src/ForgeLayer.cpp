@@ -176,10 +176,12 @@ namespace Redflag {
         // 创建帧缓冲
         // attachment0: RGBA8        -> 颜色输出
         // attachment1: RED_INTEGER  -> Entity ID 拾取
-        // attachment2: Depth
+        // attachment2: RGBA16F      -> View-space 法线（供 SSAO Pass 采样）
+        // attachment3: Depth
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,
                                FramebufferTextureFormat::RED_INTEGER,
+                               FramebufferTextureFormat::RGBA16F,
                                FramebufferTextureFormat::Depth };
         fbSpec.Width  = 2560;
         fbSpec.Height = 1440;
@@ -221,6 +223,9 @@ namespace Redflag {
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
+        // 清 view-space 法线附件：0 向量表示"无几何/天空"，SSAO Pass 会当作
+        // 全亮处理。
+        m_Framebuffer->ClearAttachment(2, 0);
 
         // 按场景状态分发更新逻辑
         switch (m_SceneState)
@@ -443,17 +448,8 @@ namespace Redflag {
                 ImGui::MenuItem("IBL",             nullptr, &SceneRenderer::GetIBLEnabled());
                 ImGui::MenuItem("Shadow",          nullptr, &SceneRenderer::GetShadowEnabled());
                 ImGui::MenuItem("Z-Prepass",       nullptr, &SceneRenderer::GetZPrepassEnabled());
+                ImGui::MenuItem("SSAO",            nullptr, &SceneRenderer::GetSSAOEnabled());
                 ImGui::MenuItem("Frustum Culling", nullptr, &Renderer3D::GetFrustumCullingEnabled());
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Export"))
-            {
-                ImGui::TextDisabled("Depth Buffers");
-                ImGui::Separator();
-                if (ImGui::MenuItem("Prepass Depth"))
-                    SceneRenderer::RequestDumpPrepassDepth();
-                if (ImGui::MenuItem("Shadow Depth"))
-                    SceneRenderer::RequestDumpShadowDepth();
                 ImGui::EndMenu();
             }
 
@@ -672,8 +668,8 @@ namespace Redflag {
             ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
 
-            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass
-            const char* filters[] = { "All", "Main", "Shadow", "Prepass" };
+            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO" };
             ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
 
             if (ImGui::BeginTable("dc_table", 4,
@@ -698,19 +694,25 @@ namespace Redflag {
                     if (s_PassFilter == 1 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Main)    continue;
                     if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)  continue;
                     if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass) continue;
+                    if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)    continue;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("%d", row++);
 
                     ImGui::TableSetColumnIndex(1);
-                    const char* passName = (dc.Pass == Renderer3D::DrawCallInfo::PassType::Main)   ? "Main"
-                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow) ? "Shadow"
-                                                                                                   : "Prepass";
+                    const char* passName = (dc.Pass == Renderer3D::DrawCallInfo::PassType::Main)    ? "Main"
+                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow)  ? "Shadow"
+                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Prepass) ? "Prepass"
+                                                                                                   : "SSAO";
                     ImGui::TextUnformatted(passName);
 
                     ImGui::TableSetColumnIndex(2);
-                    if (dc.EntityID >= 0 && m_ActiveScene)
+                    if (dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO)
+                    {
+                        ImGui::TextDisabled("(fullscreen)");
+                    }
+                    else if (dc.EntityID >= 0 && m_ActiveScene)
                     {
                         Entity e { (entt::entity)dc.EntityID, m_ActiveScene.get() };
                         if (e && e.HasComponent<TagComponent>())
@@ -731,32 +733,85 @@ namespace Redflag {
             ImGui::End();
         }
 
-        // Shadow 调试面板 — 实时编辑 PCF / PCSS 参数，无需重启
+        // Pre-Z / Shadow / SSAO 合并面板
         {
-            ImGui::Begin("Shadow");
-            auto& s = SceneRenderer::GetShadowSettings();
+            ImGui::Begin("Render Passes", nullptr, ImGuiWindowFlags_NoTitleBar);
 
-            const char* modeLabels[] = { "Off", "PCF 3x3 / Variable", "PCSS" };
-            ImGui::Combo("Mode", &s.Mode, modeLabels, IM_ARRAYSIZE(modeLabels));
+            if (ImGui::BeginTabBar("RenderPassTabs"))
+            {
+                // ---- Pre-Z 页签 ----
+                if (ImGui::BeginTabItem("Pre-Z"))
+                {
+                    ImGui::TextDisabled("Prepass Depth");
+                    uint32_t prepassTex = SceneRenderer::GetPrepassDepthTextureID();
+                    if (prepassTex)
+                        ImGui::Image((void*)(uint64_t)prepassTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::EndTabItem();
+                }
 
-            ImGui::Separator();
-            ImGui::TextDisabled("Bias");
-            ImGui::DragFloat("Depth Bias",  &s.DepthBias,  0.0001f, 0.0f, 0.02f, "%.5f");
-            ImGui::DragFloat("Normal Bias", &s.NormalBias, 0.05f,   0.0f, 10.0f, "%.2f");
+                // ---- Shadow 页签 ----
+                if (ImGui::BeginTabItem("Shadow"))
+                {
+                    auto& s = SceneRenderer::GetShadowSettings();
 
-            ImGui::Separator();
-            ImGui::TextDisabled("Softness");
-            // PCF Radius：1.0 ≈ 固定 3×3；>1 走 PCFVariable 5×5
-            ImGui::DragFloat("PCF Radius",  &s.PcfRadius,  0.1f, 1.0f, 8.0f,  "%.2f texel");
-            // PCSS Light Size：越大半影越宽
-            ImGui::DragFloat("PCSS Light Size", &s.LightSize, 0.1f, 0.0f, 32.0f, "%.2f");
+                    const char* modeLabels[] = { "Off", "PCF 3x3 / Variable", "PCSS" };
+                    ImGui::Combo("Mode", &s.Mode, modeLabels, IM_ARRAYSIZE(modeLabels));
 
-            ImGui::Separator();
-            ImGui::TextDisabled("Coverage");
-            ImGui::DragFloat("Ortho Half Size", &s.OrthoHalfSize, 0.5f, 1.0f, 200.0f, "%.1f world");
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Bias");
+                    ImGui::DragFloat("Depth Bias",  &s.DepthBias,  0.0001f, 0.0f, 0.02f, "%.5f");
+                    ImGui::DragFloat("Normal Bias", &s.NormalBias, 0.05f,   0.0f, 10.0f, "%.2f");
 
-            if (ImGui::Button("Reset"))
-                s = ShadowSettings{};
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Softness");
+                    ImGui::DragFloat("PCF Radius",      &s.PcfRadius,  0.1f, 1.0f, 8.0f,   "%.2f texel");
+                    ImGui::DragFloat("PCSS Light Size", &s.LightSize,  0.1f, 0.0f, 32.0f,  "%.2f");
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Coverage");
+                    ImGui::DragFloat("Ortho Half Size", &s.OrthoHalfSize, 0.5f, 1.0f, 200.0f, "%.1f world");
+
+                    if (ImGui::Button("Reset"))
+                        s = ShadowSettings{};
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Shadow Map Depth");
+                    uint32_t shadowTex = SceneRenderer::GetShadowMapTextureID();
+                    if (shadowTex)
+                        ImGui::Image((void*)(uint64_t)shadowTex, ImVec2(320, 320), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::EndTabItem();
+                }
+
+                // ---- SSAO 页签 ----
+                if (ImGui::BeginTabItem("SSAO"))
+                {
+                    bool& enabled = SceneRenderer::GetSSAOEnabled();
+                    ImGui::Checkbox("Enabled", &enabled);
+                    auto& ss = SceneRenderer::GetSSAOSettings();
+                    ImGui::DragFloat("Radius", &ss.Radius, 0.01f, 0.01f, 5.0f, "%.3f");
+                    ImGui::DragFloat("Bias",   &ss.Bias,   0.001f, 0.0f, 0.2f, "%.4f");
+                    ImGui::DragFloat("Power",  &ss.Power,  0.05f,  0.1f, 8.0f, "%.2f");
+                    ImGui::SliderInt("Kernel Size", &ss.KernelSize, 4, 64);
+                    if (ImGui::Button("Reset"))
+                        ss = SSAOSettings{};
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("SSAO Output (R = visibility)");
+                    uint32_t ssaoTex = SceneRenderer::GetSSAOTextureID();
+                    if (ssaoTex)
+                        ImGui::Image((void*)(uint64_t)ssaoTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::TextDisabled("View-space Normal (from Z-Prepass)");
+                    uint32_t nTex = SceneRenderer::GetViewNormalTextureID();
+                    if (nTex)
+                        ImGui::Image((void*)(uint64_t)nTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
 
             ImGui::End();
         }
@@ -1065,6 +1120,7 @@ namespace Redflag {
 
         m_Framebuffer->Bind();
         m_Framebuffer->ClearAttachment(1, -1);
+        m_Framebuffer->ClearAttachment(2, 0);
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->Unbind();

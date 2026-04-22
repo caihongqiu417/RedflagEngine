@@ -41,7 +41,8 @@ layout(std140, binding = 0) uniform Camera
     vec4 u_ViewPosition;        // xyz = 相机世界坐标（PBR 镜面反射需要视线方向）
     mat4 u_LightSpaceMatrix;    // 方向光的 Ortho × View；Shadow Pass 和主 Pass 共用
     vec4 u_ShadowParams;        // x=depthBias y=normalBias z=invMapSize w=mode(0=off,1=PCF,2=PCSS)
-    vec4 u_ShadowParams2;       // x=pcfRadius y=lightSize z=_ w=_
+    vec4 u_ShadowParams2;       // x=pcfRadius y=lightSize z=viewportW w=viewportH
+    mat4 u_View;                // 主相机 view 矩阵（SSAO 用，主 shader 未用到）
 };
 
 // ---- Transform UBO (binding = 1) ----
@@ -114,7 +115,8 @@ layout(std140, binding = 0) uniform Camera
     vec4 u_ViewPosition;
     mat4 u_LightSpaceMatrix;
     vec4 u_ShadowParams;       // x=depthBias y=normalBias z=invMapSize w=mode
-    vec4 u_ShadowParams2;      // x=pcfRadius y=lightSize z=_ w=_
+    vec4 u_ShadowParams2;      // x=pcfRadius y=lightSize z=viewportW w=viewportH
+    mat4 u_View;
 };
 
 // ---- Material UBO (binding = 2, 48 bytes, std140) ----
@@ -177,6 +179,12 @@ layout(binding = 10) uniform sampler2D u_AlphaMap;             // slot 10: R=alp
 // 过滤设成 NEAREST（见 OpenGLFramebuffer::AttachDepthTexture），
 // PCF 采样手动在 shader 里做，避免硬件插值把不连续深度拉扯出错误阴影。
 layout(binding = 11) uniform sampler2D u_ShadowMap;
+
+// ---- SSAO Map（slot 12）----
+// 由 SceneRenderer::RunSSAOPass 生成，单通道（读 .r）。屏幕空间纹理，
+// 需要用 gl_FragCoord / viewportSize 做 UV。关闭 SSAO 时 SceneRenderer
+// 会绑定 1×1 全白纹理，读到 ao=1（无衰减）。
+layout(binding = 12) uniform sampler2D u_SSAOMap;
 
 // ======================= IBL 纹理（Split Sum 预计算）=======================
 // 这三张纹理由 IBLPrecompute::Init() 在程序启动时生成，运行时只需采样。
@@ -520,6 +528,13 @@ void main()
     float ao = u_AO;
     if (u_UseAOMap == 1)
         ao *= texture(u_AOMap, v_TexCoord).r;
+
+    // 屏幕空间 AO：把 SSAO Pass 的结果乘到材质 AO 上，只影响 ambient。
+    // 关闭时 SceneRenderer 绑定的是 1×1 白纹理，ssao=1 没有副作用。
+    // ShadowParams2.zw = viewport 尺寸（像素），用于把 gl_FragCoord 转 UV。
+    vec2 vpSize = max(u_ShadowParams2.zw, vec2(1.0));
+    float ssao  = texture(u_SSAOMap, gl_FragCoord.xy / vpSize).r;
+    ao *= ssao;
 
     // ==================== 2. 构造世界空间法线 ====================
 

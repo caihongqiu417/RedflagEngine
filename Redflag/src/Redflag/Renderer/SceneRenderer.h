@@ -80,6 +80,17 @@ namespace Redflag {
 		float OrthoHalfSize = 25.0f; // 光源正交视锥半宽（世界空间）
 	};
 
+	// =================================================================
+	// SSAO 调参（ImGui 暴露）
+	// =================================================================
+	struct SSAOSettings
+	{
+		float Radius = 0.5f;    // view space 半径（米）
+		float Bias   = 0.025f;  // 深度比较 bias，防止自遮蔽
+		float Power  = 2.0f;    // 对比度增强指数
+		int   KernelSize = 64;  // 采样数（上限 64，shader 内固定数组）
+	};
+
 	class SceneRenderer
 	{
 	public:
@@ -95,18 +106,22 @@ namespace Redflag {
 
 		// 供编辑器 UI 读写阴影调参
 		static ShadowSettings& GetShadowSettings();
+		static SSAOSettings&   GetSSAOSettings();
 
-		// IBL / Shadow / Z-Prepass 全局开关（菜单栏 Toggle）
+		// IBL / Shadow / Z-Prepass / SSAO 全局开关（菜单栏 Toggle）
 		static bool& GetIBLEnabled();
 		static bool& GetShadowEnabled();
 		static bool& GetZPrepassEnabled();
+		static bool& GetSSAOEnabled();
 
-		// 深度图导出：点一次按钮 → 下一帧把对应的 depth buffer 保存为 PNG。
-		//   Prepass 深度写到 RedflagForge/prepass_depth.png
-		//   Shadow  深度写到 RedflagForge/shadow_depth.png
-		// PNG 是 8-bit 灰度，深度已线性化并做了 gamma 调整便于肉眼观察。
-		static void RequestDumpPrepassDepth();
-		static void RequestDumpShadowDepth();
+		// SSAO 纹理（RGBA8 R 通道 = AO 可见度）GL 纹理 ID，供 ImGui 面板预览
+		static uint32_t GetSSAOTextureID();
+		// 主 FBO 的 view-space 法线附件 GL 纹理 ID（Z-Prepass 写入）
+		static uint32_t GetViewNormalTextureID();
+		// Shadow Map 深度纹理 ID，供 Shadow 面板预览
+		static uint32_t GetShadowMapTextureID();
+		// Z-Prepass 深度纹理 ID，供 Shadow 面板预览
+		static uint32_t GetPrepassDepthTextureID();
 
 	private:
 		// 遍历 registry 收集灯光数据并上传 Light UBO

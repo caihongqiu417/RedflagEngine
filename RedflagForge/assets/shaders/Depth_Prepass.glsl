@@ -24,6 +24,7 @@
 #version 450 core
 
 layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec3 a_Normal;     // 输出 view-space 法线给 SSAO
 layout(location = 2) in vec2 a_TexCoord;   // AlphaMap 采样需要 UV
 
 layout(std140, binding = 0) uniform Camera
@@ -33,6 +34,7 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_LightSpaceMatrix;
     vec4 u_ShadowParams;
     vec4 u_ShadowParams2;
+    mat4 u_View;
 };
 
 layout(std140, binding = 1) uniform Transform
@@ -41,6 +43,7 @@ layout(std140, binding = 1) uniform Transform
 };
 
 out vec2 v_TexCoord;
+out vec3 v_ViewNormal;
 
 void main()
 {
@@ -52,6 +55,13 @@ void main()
     //    导致 prepass 与主 pass 的 gl_Position.z 不一致 → Z-fighting。
     vec4 worldPos = u_Transform * vec4(a_Position, 1.0);
     gl_Position   = u_ViewProjection * worldPos;
+
+    // 把世界法线变换到 view space：normalMatrix 用 transpose(inverse) 处理
+    // 非均匀缩放；再用 mat3(u_View) 变到 view space。写入 RGBA16F 法线 RT
+    // 供 SSAO Pass 重建 TBN。
+    mat3 normalMatrix = mat3(transpose(inverse(u_Transform)));
+    vec3 Nworld  = normalize(normalMatrix * a_Normal);
+    v_ViewNormal = mat3(u_View) * Nworld;
 }
 
 // =========================== 片元着色器 =============================
@@ -59,6 +69,10 @@ void main()
 #version 450 core
 
 in vec2 v_TexCoord;
+in vec3 v_ViewNormal;
+
+// attachment 0/1 被调用方 glColorMaski 关掉了，这里只写 attachment2
+layout(location = 2) out vec4 o_ViewNormal;
 
 layout(std140, binding = 2) uniform Material
 {
@@ -90,5 +104,8 @@ void main()
         if (alpha < u_AlphaCutoff)
             discard;
     }
-    // 不输出颜色；调用方已关闭 glColorMask，片元深度由固定管线写入
+
+    // 输出 view-space 法线（RGBA16F 直接存原始值，无需 [0,1] 打包）
+    // 调用方会在 ColorMask 层面关闭 attachment0/1 的写入，不会污染颜色。
+    o_ViewNormal = vec4(normalize(v_ViewNormal), 1.0);
 }

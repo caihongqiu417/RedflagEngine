@@ -37,17 +37,20 @@ namespace Redflag
 		Ref<UniformBuffer> TransformUniformBuffer; // binding = 1
 		Ref<UniformBuffer> MaterialUniformBuffer;  // binding = 2
 
-		// std140: mat4(64) + vec4(16) + mat4(64) + vec4(16) + vec4(16) = 176 bytes
+		// std140: mat4(64) + vec4(16) + mat4(64) + vec4(16) + vec4(16) + mat4(64) = 240 bytes
 		// LightSpaceMatrix / ShadowParams / ShadowParams2 由 SceneRenderer 在
 		// Shadow Pass 前后通过 SetShadowData 写入；主 Mesh shader 与 ShadowDepth
 		// shader 共享这一个 UBO，避免每帧再开一条绑定点。
+		// View：主相机世界→观察空间矩阵。SSAO Pass 和 Z-Prepass 需要把世界法线
+		// 变换到 view space 写入法线附件。放在末尾保持已有字段的 offset 不变。
 		struct CameraData
 		{
 			glm::mat4 ViewProjection;      // offset   0
 			glm::vec4 ViewPosition;        // offset  64  (w = IBL ready flag)
 			glm::mat4 LightSpaceMatrix;    // offset  80  光源正交裁剪矩阵
 			glm::vec4 ShadowParams;        // offset 144  x=bias y=normalBias z=invMapSize w=mode
-			glm::vec4 ShadowParams2;       // offset 160  x=pcfRadius y=lightSize z=_ w=_
+			glm::vec4 ShadowParams2;       // offset 160  x=pcfRadius y=lightSize z=viewportW w=viewportH
+			glm::mat4 View;                // offset 176  主相机 view 矩阵（SSAO 用）
 		};
 
 		struct TransformData
@@ -182,6 +185,7 @@ namespace Redflag
 	void Renderer3D::BeginScene(const EditorCamera& camera)
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
+		s_Data.CameraBuffer.View           = camera.GetViewMatrix();
 		// ViewPosition.w 被复用为 IBL 就绪标志（shader 根据它选择 IBL 或常数环境光）
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(),
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
@@ -190,7 +194,10 @@ namespace Redflag
 		// 的场景下 shader 读到 mode=0，直接跳过阴影采样。
 		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
 		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
-		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
+		// ShadowParams2.zw 复用为当前视口像素尺寸（供主 Mesh shader
+		// 在 fragment 里 gl_FragCoord.xy / viewportSize 采样 SSAO map）
+		GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, float(vp[2]), float(vp[3]));
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		// 构建当帧视锥体（供 DrawMesh/DrawModel 做 AABB 剪裁）
@@ -202,15 +209,17 @@ namespace Redflag
 		ResetStats();
 	}
 
-	void Renderer3D::BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition)
+	void Renderer3D::BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition, const glm::mat4& view)
 	{
 		s_Data.CameraBuffer.ViewProjection = viewProjection;
+		s_Data.CameraBuffer.View           = view;
 		// ViewPosition.w 被复用为 IBL 就绪标志
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition,
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
 		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
 		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
-		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
+		GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, float(vp[2]), float(vp[3]));
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
 		s_Data.CameraFrustum = Frustum::FromViewProjection(viewProjection);
@@ -304,6 +313,13 @@ namespace Redflag
 		return s_Data.DrawCallLog;
 	}
 
+	void Renderer3D::LogExternalDrawCall(DrawCallInfo::PassType pass, uint32_t indexCount)
+	{
+		// 供 SSAO 等屏幕空间 Pass 登记。没有 Mesh / Material 概念，字段置 0。
+		s_Data.DrawCallCount++;
+		s_Data.DrawCallLog.push_back({ pass, indexCount, -1, 0, 0, 0 });
+	}
+
 	// -------------------------------------------------------------------
 	// DrawDebugAABBs —— 用 Renderer2D::DrawLine 把这一帧收集到的
 	//   世界空间 AABB 画成线框。调用方必须在外层已经 Renderer2D::BeginScene。
@@ -361,7 +377,11 @@ namespace Redflag
 	{
 		s_Data.CameraBuffer.LightSpaceMatrix = lightSpaceMatrix;
 		s_Data.CameraBuffer.ShadowParams     = shadowParams;
-		s_Data.CameraBuffer.ShadowParams2    = shadowParams2;
+		// 只覆盖 xy（pcfRadius / lightSize），zw 保留 BeginScene 写入的视口尺寸
+		// （SSAO 采样用 gl_FragCoord.xy / viewport）。上层调用时 zw 若不是 0
+		// 也会被保留下面 BeginScene 的值覆盖。
+		s_Data.CameraBuffer.ShadowParams2.x  = shadowParams2.x;
+		s_Data.CameraBuffer.ShadowParams2.y  = shadowParams2.y;
 
 		constexpr uint32_t offset = offsetof(Renderer3DData::CameraData, LightSpaceMatrix);
 		constexpr uint32_t size   = sizeof(glm::mat4) + sizeof(glm::vec4) + sizeof(glm::vec4);
@@ -463,8 +483,13 @@ namespace Redflag
 				return da < db;  // 近的排前面
 			});
 
-		// 关闭颜色写入，只让深度写入生效
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		// Z-Prepass 除了写深度，还顺便把 view-space 法线写到主 FBO 的
+		// attachment2（RGBA16F）供 SSAO Pass 使用。关闭 attachment0/1 的写入
+		// 避免污染颜色 / Entity ID。如果主 FBO 没有 attachment2（例如测试用的
+		// 小 FBO），glColorMaski 设在不存在的 buffer 上是无害的。
+		glColorMaski(0, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMaski(1, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMaski(2, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
 
 		depthShader->Bind();
 
@@ -509,8 +534,10 @@ namespace Redflag
 				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
 		}
 
-		// 恢复颜色写入
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		// 恢复全部颜色写入
+		glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
 
 	// -------------------------------------------------------------------
