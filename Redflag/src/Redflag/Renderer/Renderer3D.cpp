@@ -7,6 +7,7 @@
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Renderer/UniformBuffer.h"
 #include "Redflag/Renderer/IBLPrecompute.h"  // IBL 预计算纹理绑定
+#include "Redflag/Renderer/Frustum.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -78,12 +79,20 @@ namespace Redflag
 		// 每帧提交队列
 		std::vector<DrawCommand> DrawCommands;
 
+		// 当前帧视锥体（BeginScene 时构建，DrawMesh/DrawModel 使用）
+		Frustum CameraFrustum;
+
 		// 统计
 		uint32_t DrawCallCount = 0;
 		Renderer3D::Statistics Stats;
 	};
 
 	static Renderer3DData s_Data;
+
+	// 视锥体剪裁开关（默认开启）
+	static bool s_FrustumCullingEnabled = true;
+
+	bool& Renderer3D::GetFrustumCullingEnabled() { return s_FrustumCullingEnabled; }
 
 	// -------------------------------------------------------------------
 	// 内部：真正执行一次绘制（供 EndScene 调用）
@@ -173,6 +182,9 @@ namespace Redflag
 		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
+		// 构建当帧视锥体（供 DrawMesh/DrawModel 做 AABB 剪裁）
+		s_Data.CameraFrustum = Frustum::FromViewProjection(s_Data.CameraBuffer.ViewProjection);
+
 		s_Data.DrawCommands.clear();
 		ResetStats();
 	}
@@ -187,6 +199,8 @@ namespace Redflag
 		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
 		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
+
+		s_Data.CameraFrustum = Frustum::FromViewProjection(viewProjection);
 
 		s_Data.DrawCommands.clear();
 		ResetStats();
@@ -408,24 +422,58 @@ namespace Redflag
 	}
 
 	// -------------------------------------------------------------------
-	// 公开接口：推入队列
+	// \u89c6\u9525\u4f53\u526a\u88c1\uff1a\u628a Mesh \u672c\u5730 AABB \u53d8\u6362\u5230\u4e16\u754c\u7a7a\u95f4\u540e\u6d4b\u8bd5
+	//   \u7528 Arvo \u6cd5\uff1aworldCenter = T * localCenter
+	//                   worldExtent = |mat3(T)| * localExtent
+	//   \u6bd4\u53d8\u6362 8 \u4e2a\u89d2\u70b9\u518d\u91cd\u65b0\u6c42 min/max \u5feb\u5f88\u591a\u3002
+	// -------------------------------------------------------------------
+	static bool CullMesh(const Mesh& mesh, const glm::mat4& transform)
+	{
+		if (!s_FrustumCullingEnabled)
+			return false;  // \u5f00\u5173\u5173\u95ed\uff0c\u4e0d\u526a\u88c1
+
+		const glm::vec3& lmin = mesh.GetAABBMin();
+		const glm::vec3& lmax = mesh.GetAABBMax();
+		glm::vec3 lCenter = 0.5f * (lmin + lmax);
+		glm::vec3 lExtent = 0.5f * (lmax - lmin);
+
+		glm::vec3 wCenter = glm::vec3(transform * glm::vec4(lCenter, 1.0f));
+
+		glm::mat3 absM(
+			glm::abs(transform[0].x), glm::abs(transform[0].y), glm::abs(transform[0].z),
+			glm::abs(transform[1].x), glm::abs(transform[1].y), glm::abs(transform[1].z),
+			glm::abs(transform[2].x), glm::abs(transform[2].y), glm::abs(transform[2].z));
+		glm::vec3 wExtent = absM * lExtent;
+
+		glm::vec3 wMin = wCenter - wExtent;
+		glm::vec3 wMax = wCenter + wExtent;
+
+		// \u8fd4\u56de true \u8868\u793a\u88ab\u526a\u6389\uff08\u4e0d\u76f8\u4ea4\uff09
+		return !s_Data.CameraFrustum.IntersectsAABB(wMin, wMax);
+	}
+
+	// -------------------------------------------------------------------
+	// \u516c\u5f00\u63a5\u53e3\uff1a\u63a8\u5165\u961f\u5217
 	// -------------------------------------------------------------------
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		if (!mesh) return;
+		if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
 		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(color), entityID });
 	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture, int entityID)
 	{
 		if (!mesh) return;
+		if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
 		s_Data.DrawCommands.push_back({ mesh, transform, Material::Create(texture), entityID });
 	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material, int entityID)
 	{
 		if (!mesh) return;
+		if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
 		s_Data.DrawCommands.push_back({ mesh, transform, material, entityID });
 	}
 
@@ -433,7 +481,7 @@ namespace Redflag
 	{
 		if (!model) return;
 
-		// 创建一个共享的纯色材质供无材质子网格使用
+		// \u521b\u5efa\u4e00\u4e2a\u5171\u4eab\u7684\u7eaf\u8272\u6750\u8d28\u4f9b\u65e0\u6750\u8d28\u5b50\u7f51\u683c\u4f7f\u7528
 		auto fallback = Material::Create(color);
 
 		for (const auto& subMesh : model->GetSubMeshes())
@@ -441,6 +489,8 @@ namespace Redflag
 			if (!subMesh.MeshData) continue;
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
+			if (CullMesh(*subMesh.MeshData, finalTransform)) { s_Data.Stats.CulledCount++; continue; }
+
 			Ref<Material> mat = subMesh.Mat ? subMesh.Mat : fallback;
 			s_Data.DrawCommands.push_back({ subMesh.MeshData, finalTransform, mat, entityID });
 		}
@@ -459,7 +509,9 @@ namespace Redflag
 			if (!subMesh.MeshData) continue;
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
-			// per-submesh 覆盖材质 > 子网格自带材质 > 纯色回退
+			if (CullMesh(*subMesh.MeshData, finalTransform)) { s_Data.Stats.CulledCount++; continue; }
+
+			// per-submesh \u8986\u76d6\u6750\u8d28 > \u5b50\u7f51\u683c\u81ea\u5e26\u6750\u8d28 > \u7eaf\u8272\u56de\u9000
 			Ref<Material> mat = (i < overrideMaterials.size() && overrideMaterials[i])
 				? overrideMaterials[i]
 				: (subMesh.Mat ? subMesh.Mat : fallback);

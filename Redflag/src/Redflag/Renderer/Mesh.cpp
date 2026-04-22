@@ -8,6 +8,18 @@ namespace Redflag
 		m_VertexCount = (uint32_t)vertices.size();
 		m_IndexCount = (uint32_t)indices.size();
 
+		// 计算本地空间 AABB（用于视锥体剪裁）
+		if (!vertices.empty())
+		{
+			m_AABBMin = m_AABBMax = vertices[0].Position;
+			for (size_t i = 1; i < vertices.size(); ++i)
+			{
+				const glm::vec3& p = vertices[i].Position;
+				m_AABBMin = glm::min(m_AABBMin, p);
+				m_AABBMax = glm::max(m_AABBMax, p);
+			}
+		}
+
 		m_VertexArray = VertexArray::Create();
 
 		// 顶点缓冲

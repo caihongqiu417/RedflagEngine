@@ -20,6 +20,7 @@ namespace Redflag
 				uint32_t SubmittedCommands = 0;
 				uint32_t VertexCount = 0;
 				uint32_t IndexCount = 0;
+				uint32_t CulledCount = 0;  // 视锥体剪裁掩弃的物体/子网格数量
 			};
 
 		static void Init();
@@ -62,6 +63,9 @@ namespace Redflag
 
 		// 覆写 CameraUBO 中的 IBL 标志（ViewPosition.w）
 		static void OverrideIBLFlag(bool enabled);
+
+		// 视锥体剪裁开关（菜单 Toggle）
+		static bool& GetFrustumCullingEnabled();
 
 		static void ResetStats();
 		static Statistics GetStats();

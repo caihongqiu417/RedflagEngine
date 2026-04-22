@@ -30,6 +30,10 @@ namespace Redflag
 		uint32_t GetIndexCount() const { return m_IndexCount; }
 		const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
 
+		// 本地空间轴对齐包围盒（构造时从顶点扫出，用于视锥体剪裁）
+		const glm::vec3& GetAABBMin() const { return m_AABBMin; }
+		const glm::vec3& GetAABBMax() const { return m_AABBMax; }
+
 		// 从顶点/索引数据创建 Mesh
 		static Ref<Mesh> Create(const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
 
@@ -40,5 +44,8 @@ namespace Redflag
 		Ref<VertexArray>  m_VertexArray;
 		uint32_t          m_VertexCount = 0;
 		uint32_t          m_IndexCount = 0;
+
+		glm::vec3 m_AABBMin{ 0.0f };
+		glm::vec3 m_AABBMax{ 0.0f };
 	};
 }

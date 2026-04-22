@@ -437,6 +437,7 @@ namespace Redflag {
                 ImGui::MenuItem("IBL",               nullptr, &SceneRenderer::GetIBLEnabled());
                 ImGui::MenuItem("Shadow",            nullptr, &SceneRenderer::GetShadowEnabled());
                 ImGui::MenuItem("Z-Prepass",         nullptr, &SceneRenderer::GetZPrepassEnabled());
+                ImGui::MenuItem("Frustum Culling",   nullptr, &Renderer3D::GetFrustumCullingEnabled());
                 ImGui::EndMenu();
             }
 
@@ -612,6 +613,7 @@ namespace Redflag {
             ImGui::PushStyleColor(ImGuiCol_Text, colDimWhite);
             ImGui::Text("Calls   %d", stats3D.DrawCalls);
             ImGui::Text("Cmds    %d", stats3D.SubmittedCommands);
+            ImGui::Text("Culled  %d", stats3D.CulledCount);
             ImGui::Text("Verts   %d", stats3D.VertexCount);
             ImGui::Text("Idx     %d", stats3D.IndexCount);
             ImGui::PopStyleColor();
