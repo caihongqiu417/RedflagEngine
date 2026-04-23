@@ -890,6 +890,75 @@ namespace Redflag {
                     if (ImGui::Button("Reset"))
                         ts = ToneMapSettings{};
 
+                    // ---- ACES 曲线预览 ----
+                    // X 轴：原始线性 HDR 输入值 [0, xMax]
+                    // Y 轴：经曝光 → ACES → Gamma 2.2 后的显示输出 [0, 1]
+                    // 蓝色竖线 = HDR 标准白点 (input = 1.0)
+                    // 灰色对角线 = 线性参考（无 tonemap 时的结果）
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::TextUnformatted("Tone Curve  ( X = linear HDR [0..4],  Y = display )");
+
+                    ImVec2      canvasPos = ImGui::GetCursorScreenPos();
+                    const float canvasW   = ImGui::GetContentRegionAvail().x;
+                    const float canvasH   = 140.0f;
+                    ImDrawList* dl        = ImGui::GetWindowDrawList();
+
+                    // 背景 & 边框
+                    dl->AddRectFilled(canvasPos,
+                        { canvasPos.x + canvasW, canvasPos.y + canvasH },
+                        IM_COL32(25, 25, 25, 255));
+                    dl->AddRect(canvasPos,
+                        { canvasPos.x + canvasW, canvasPos.y + canvasH },
+                        IM_COL32(70, 70, 70, 255));
+
+                    // 对角线（线性参考：无 tonemap 时 output == input）
+                    dl->AddLine({ canvasPos.x,         canvasPos.y + canvasH },
+                                 { canvasPos.x + canvasW, canvasPos.y },
+                                 IM_COL32(55, 55, 55, 200));
+
+                    // 中间水平网格线（output = 0.5）
+                    dl->AddLine({ canvasPos.x,         canvasPos.y + canvasH * 0.5f },
+                                 { canvasPos.x + canvasW, canvasPos.y + canvasH * 0.5f },
+                                 IM_COL32(45, 45, 45, 180));
+
+                    // ACES Narkowicz 近似（与 shader 完全一致）
+                    auto acesF = [](float x) -> float {
+                        const float a = 2.51f, b = 0.03f, c = 2.43f, d = 0.59f, e = 0.14f;
+                        float v = (x * (a * x + b)) / (x * (c * x + d) + e);
+                        return v < 0.f ? 0.f : (v > 1.f ? 1.f : v);
+                    };
+
+                    const float xMax     = 4.0f;  // X 轴显示上限
+                    const int   STEPS    = 200;
+                    const float exposure = ts.Exposure;
+                    ImVec2      prevPt{};
+                    for (int i = 0; i <= STEPS; ++i)
+                    {
+                        float t = (float)i / (float)STEPS;
+                        float x = t * xMax;                      // 原始 HDR 值
+                        float y = acesF(x * exposure);           // 曝光后送入 ACES
+                        y = powf(y, 1.0f / 2.2f);               // Gamma 2.2，与 shader 一致
+                        ImVec2 pt{ canvasPos.x + t * canvasW,
+                                   canvasPos.y + (1.0f - y) * canvasH };
+                        if (i > 0)
+                            dl->AddLine(prevPt, pt, IM_COL32(255, 200, 50, 230), 2.0f);
+                        prevPt = pt;
+                    }
+
+                    // X = 1.0 刻度线（HDR 标准白点）
+                    {
+                        float mx = (1.0f / xMax) * canvasW;
+                        dl->AddLine({ canvasPos.x + mx, canvasPos.y },
+                                     { canvasPos.x + mx, canvasPos.y + canvasH },
+                                     IM_COL32(100, 180, 255, 100));
+                        dl->AddText({ canvasPos.x + mx + 3.0f, canvasPos.y + 3.0f },
+                                     IM_COL32(100, 180, 255, 200), "1.0");
+                    }
+
+                    // 让 ImGui 占据画布高度，避免后续控件重叠
+                    ImGui::Dummy({ canvasW, canvasH });
+
                     ImGui::EndTabItem();
                 }
 
