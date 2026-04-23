@@ -89,6 +89,10 @@ void main()
         case 30: texColor *= texture(u_Textures[30], v_TexCoord * v_TilingFactor); break;
         case 31: texColor *= texture(u_Textures[31], v_TexCoord * v_TilingFactor); break;
     }
+
+    // sRGB → 线性空间：顶点色和纹理均为 sRGB 编码，写入 HDR 线性 FBO 前需转换，
+    // 使 Composite pass 的 Gamma 校正能正确还原感知颜色。
+    texColor.rgb = pow(texColor.rgb, vec3(2.2));
     color = texColor;
 
     // 丢弃接近全透明的片段，避免透明像素写入深度缓冲遮挡后续内容

@@ -61,8 +61,6 @@ layout(std140, binding = 5) uniform BloomParams
     vec4 u_BloomB;
 };
 #define u_BloomIntensity (u_BloomA.y)
-#define u_BloomRadius    (u_BloomA.z)
-#define u_BloomTexelSize (u_BloomB.xy)
 #define u_Exposure       (u_BloomB.z)
 
 vec3 SanitizeHDR(vec3 color)
@@ -90,28 +88,11 @@ vec3 ACESTonemap(vec3 x)
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
-vec3 SampleBloomBlur(vec2 uv)
+// Bloom 上采样链已在 CPU 侧把所有 mip 层叠加到 mip[0]，
+// 这里直接采样即可，无需二次模糊（再模糊会让边缘变硬且引入能量误差）。
+vec3 SampleBloom(vec2 uv)
 {
-    vec2 offset = u_BloomTexelSize * max(u_BloomRadius, 0.1);
-
-    // 稳定的 9-tap 小核：中心 + 十字 + 对角。
-    // 这里不再依赖外部金字塔上采样，直接在 composite 里完成柔化。
-    // 权重总和严格归一化到 1，避免模糊本身放大能量。
-    const float wCenter = 0.20;
-    const float wCross  = 0.12;
-    const float wDiag   = 0.08;
-
-    vec3 sum = vec3(0.0);
-    sum += texture(u_Bloom, uv).rgb * wCenter;
-    sum += texture(u_Bloom, uv + vec2( offset.x,  0.0)).rgb * wCross;
-    sum += texture(u_Bloom, uv + vec2(-offset.x,  0.0)).rgb * wCross;
-    sum += texture(u_Bloom, uv + vec2( 0.0,  offset.y)).rgb * wCross;
-    sum += texture(u_Bloom, uv + vec2( 0.0, -offset.y)).rgb * wCross;
-    sum += texture(u_Bloom, uv + vec2( offset.x,  offset.y)).rgb * wDiag;
-    sum += texture(u_Bloom, uv + vec2(-offset.x,  offset.y)).rgb * wDiag;
-    sum += texture(u_Bloom, uv + vec2( offset.x, -offset.y)).rgb * wDiag;
-    sum += texture(u_Bloom, uv + vec2(-offset.x, -offset.y)).rgb * wDiag;
-    return SanitizeHDR(sum);
+    return SanitizeHDR(texture(u_Bloom, uv).rgb);
 }
 
 void main()
@@ -119,8 +100,8 @@ void main()
     // 1. 采样 HDR 原图
     vec3 hdrColor = SanitizeHDR(texture(u_HDR, v_TexCoord).rgb);
 
-    // 2. 对半分辨率 Bloom 图做一个小范围模糊，再叠加强度
-    vec3 bloomColor = SampleBloomBlur(v_TexCoord);
+    // 2. 直接采样已完成上采样叠加的 Bloom mip[0]
+    vec3 bloomColor = SampleBloom(v_TexCoord);
 
     // Bloom 图本身是 [0,1]，这里再次限制一下最终进入合成的强度范围。
     bloomColor = clamp(bloomColor * u_BloomIntensity, 0.0, 1.0);

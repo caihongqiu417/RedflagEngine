@@ -76,6 +76,8 @@ void main()
     
     // 7. �����ɫ
     o_Color = v_Color;
+    // sRGB → 线性空间（与 Quad shader 保持一致）
+    o_Color.rgb = pow(o_Color.rgb, vec3(2.2));
     o_Color.a *= alpha;
     o_EntityID = v_EntityID;
     

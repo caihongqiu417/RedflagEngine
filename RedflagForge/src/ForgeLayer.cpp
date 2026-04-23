@@ -222,7 +222,7 @@ namespace Redflag {
 
         // 绑定帧缓冲并清屏，Entity ID 附件清为 -1（无实体）
         m_Framebuffer->Bind();
-        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
         // 将主场景 HDR 颜色附件显式登记给 SceneRenderer，避免其依赖 GL 当前 FBO 状态。
@@ -1215,7 +1215,7 @@ namespace Redflag {
         m_Framebuffer->Bind();
         m_Framebuffer->ClearAttachment(1, -1);
         m_Framebuffer->ClearAttachment(2, 0);
-        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->Unbind();
 
