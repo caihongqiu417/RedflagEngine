@@ -60,6 +60,10 @@ namespace Redflag {
 		// hdrPath 例：  "assets/textures/environment.hdr"
 		static void Init(const std::string& hdrPath);
 
+		// 不加载 HDR，仅创建辅助几何体和 FBO。用于启动时不希望自动加载的场景。
+		// IsReady() 将返回 false，用户可在 UI 中手动调用 Reload()。
+		static void InitEmpty();
+
 		// 释放所有 GPU 纹理资源
 		static void Shutdown();
 

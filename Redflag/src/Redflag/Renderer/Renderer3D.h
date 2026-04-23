@@ -26,7 +26,7 @@ namespace Redflag
 			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
 			struct DrawCallInfo
 			{
-				enum class PassType { Main, Shadow, Prepass, SSAO, BloomBright, BloomUp, Composite };
+				enum class PassType { Main, Shadow, Prepass, SSAO, BloomBright, BloomUp, BloomTonemap };
 				PassType Pass       = PassType::Main;
 				uint32_t IndexCount = 0;
 				int      EntityID   = -1;

@@ -63,6 +63,7 @@ layout(std140, binding = 5) uniform BloomParams
 #define u_BloomIntensity (u_BloomA.y)
 #define u_BloomRadius    (u_BloomA.z)
 #define u_BloomTexelSize (u_BloomB.xy)
+#define u_Exposure       (u_BloomB.z)
 
 vec3 SanitizeHDR(vec3 color)
 {
@@ -126,6 +127,9 @@ void main()
 
     // 3. HDR 叠加：直接在线性空间相加
     vec3 combined = SanitizeHDR(hdrColor + bloomColor);
+
+    // 3.5 曝光度：在 tonemap 之前乘以曝光系数（值越大画面越亮）
+    combined *= u_Exposure;
 
     // 4. ACES 色调映射：HDR [0, ∞) → LDR [0, 1]
     vec3 tonemapped = ACESTonemap(combined);

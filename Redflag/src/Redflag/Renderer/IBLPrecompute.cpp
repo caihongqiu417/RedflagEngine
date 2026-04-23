@@ -547,6 +547,19 @@ void main(){
 	}
 
 	// =====================================================================
+	// InitEmpty — 不加载 HDR，只建辅助几何体和 FBO
+	// =====================================================================
+	void IBLPrecompute::InitEmpty()
+	{
+		MakeCubeVAO();
+		MakeQuadVAO();
+
+		glGenFramebuffers(1, &s_CaptureFBO);
+		glGenRenderbuffers(1, &s_CaptureRBO);
+		// s_Ready 保持 false，不设置任何纹理 ID
+	}
+
+	// =====================================================================
 	// Init — 执行全部预计算
 	// =====================================================================
 	void IBLPrecompute::Init(const std::string& hdrPath)
@@ -811,6 +824,9 @@ void main(){
 		if (s_IBL.IrradianceMap) { glDeleteTextures(1, &s_IBL.IrradianceMap); s_IBL.IrradianceMap = 0; }
 		if (s_IBL.PrefilterMap)  { glDeleteTextures(1, &s_IBL.PrefilterMap);  s_IBL.PrefilterMap  = 0; }
 		if (s_IBL.BRDFLUT)       { glDeleteTextures(1, &s_IBL.BRDFLUT);       s_IBL.BRDFLUT       = 0; }
+
+		if (s_CaptureFBO) { glDeleteFramebuffers(1, &s_CaptureFBO);   s_CaptureFBO = 0; }
+		if (s_CaptureRBO) { glDeleteRenderbuffers(1, &s_CaptureRBO);  s_CaptureRBO = 0; }
 
 		// 释放天空盒专用资源
 		if (s_SkyboxProgram) { glDeleteProgram(s_SkyboxProgram); s_SkyboxProgram = 0; }

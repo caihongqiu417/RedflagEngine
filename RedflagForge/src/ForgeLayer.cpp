@@ -686,8 +686,8 @@ namespace Redflag {
             ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
 
-            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=BloomBright 6=BloomUp 7=Composite
-            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "BloomBright", "BloomUp", "Composite" };
+            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=BloomBright 6=BloomUp 7=BloomTonemap
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "BloomBright", "BloomUp", "BloomTonemap" };
             ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
 
             if (ImGui::BeginTable("dc_table", 4,
@@ -715,7 +715,7 @@ namespace Redflag {
                     if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)        continue;
                     if (s_PassFilter == 5 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomBright) continue;
                     if (s_PassFilter == 6 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomUp)     continue;
-                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Composite)   continue;
+                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomTonemap) continue;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
@@ -729,14 +729,14 @@ namespace Redflag {
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO         ? "SSAO" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright  ? "BloomBrt" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp      ? "BloomUp" :
-                                                                                       "Composite";
+                                                                                       "BloomTonemap";
                     ImGui::TextUnformatted(passName);
 
                     ImGui::TableSetColumnIndex(2);
                     if (dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO ||
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright ||
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp ||
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Composite)
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomTonemap)
                     {
                         ImGui::TextDisabled("(fullscreen)");
                     }
@@ -872,6 +872,23 @@ namespace Redflag {
                     uint32_t bloomTex = SceneRenderer::GetBloomTextureID();
                     if (bloomTex)
                         ImGui::Image((void*)(uint64_t)bloomTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::EndTabItem();
+                }
+
+                // ---- ToneMapping 页签 ----
+                if (ImGui::BeginTabItem("ToneMapping"))
+                {
+                    auto& ts = SceneRenderer::GetToneMapSettings();
+
+                    ImGui::Separator();
+                    ImGui::TextUnformatted("ACES Filmic");
+
+                    ImGui::DragFloat("Exposure", &ts.Exposure, 0.05f, 0.01f, 10.0f, "%.2f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(HDR multiplier before ACES)");
+
+                    if (ImGui::Button("Reset"))
+                        ts = ToneMapSettings{};
 
                     ImGui::EndTabItem();
                 }

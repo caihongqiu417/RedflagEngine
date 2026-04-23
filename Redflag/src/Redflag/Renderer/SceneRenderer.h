@@ -103,6 +103,13 @@ namespace Redflag {
 		float Radius     = 2.0f;   // 泊松圆盘采样半径（控制上采样层的散布大小）
 		int   MipLevels  = 6;      // 下采样层数（越多层 = 越大的散布形状；2~6）
 	};
+	// =================================================================
+	// Tonemap 调参
+	// =================================================================
+	struct ToneMapSettings
+	{
+		float Exposure = 1.0f;  // 曝光度倍率（乘在 tonemap 前的 HDR 上）
+	};
 	class SceneRenderer
 	{
 	public:
@@ -136,7 +143,8 @@ namespace Redflag {
 		static uint32_t GetPrepassDepthTextureID();
 
 		// 供编辑器 UI 读写 Bloom 调参
-		static BloomSettings& GetBloomSettings();
+		static BloomSettings&   GetBloomSettings();
+		static ToneMapSettings& GetToneMapSettings();
 		static uint32_t GetBloomTextureID();
 		static void SetMainSceneColorTarget(uint32_t colorTex, int width, int height);
 

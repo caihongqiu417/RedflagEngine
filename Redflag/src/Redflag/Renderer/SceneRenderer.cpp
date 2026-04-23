@@ -175,8 +175,10 @@ namespace Redflag {
 	static Ref<UniformBuffer> s_BloomParamsUBO;
 
 	static BloomSettings     s_BloomSettings;
+	static ToneMapSettings   s_ToneMapSettings;
 
-	BloomSettings& SceneRenderer::GetBloomSettings() { return s_BloomSettings; }
+	BloomSettings&   SceneRenderer::GetBloomSettings()   { return s_BloomSettings; }
+	ToneMapSettings& SceneRenderer::GetToneMapSettings() { return s_ToneMapSettings; }
 	uint32_t SceneRenderer::GetBloomTextureID()
 	{
 		return s_BloomMips[0] ? s_BloomMips[0]->GetColorAttachmentRendererID(0) : 0;
@@ -204,10 +206,9 @@ namespace Redflag {
 	{
 		s_LightUBO = UniformBuffer::Create(LIGHT_UBO_SIZE, LIGHT_UBO_BINDING);
 
-		// IBL 预计算：加载 HDR 环境贴图，生成 Irradiance / Prefilter / BRDF LUT
-		// 只在启动时执行一次（约 1~2 秒）。HDR 文件不存在时会打印错误并跳过，
-		// 此时 shader 会回退到常数环境光，不会影响程序运行。
-		IBLPrecompute::Init("assets/textures/environment.hdr");
+		// IBL 预计算：不自动加载，等用户在 Draw Calls 面板点击 "Load HDR..." 手动选择。
+		// （自动加载会在文件不存在时打印错误，且无法运行时切换环境贴图）
+		IBLPrecompute::InitEmpty();
 
 		// ---- Shadow Pass 资源 ----
 		// DEPTH32F depth-only FBO：无颜色附件，viewport 会绑为 ShadowMap 尺寸
@@ -585,15 +586,16 @@ namespace Redflag {
 		}
 		float bloomRadius    = glm::clamp(s_BloomSettings.Radius, 0.1f, 4.0f);
 		float bloomIntensity = glm::clamp(s_BloomSettings.Intensity, 0.0f, 1.0f);
+		float exposure       = glm::max(s_ToneMapSettings.Exposure, 0.001f);
 
 		GPUBloomParams params{};
 		params.A = glm::vec4(s_BloomSettings.Threshold, bloomIntensity, bloomRadius, 0.0f);
-		params.B = glm::vec4(bloomTexelX, bloomTexelY, 0.0f, 0.0f);
+		params.B = glm::vec4(bloomTexelX, bloomTexelY, exposure, 0.0f);
 		if (s_BloomParamsUBO)
 			s_BloomParamsUBO->SetData(&params, sizeof(params));
 
 		DrawFullscreenTriangle();
-		Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::Composite, 3);
+		Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::BloomTonemap, 3);
 		s_PostColorValid = true;
 
 		glEnable(GL_DEPTH_TEST);
