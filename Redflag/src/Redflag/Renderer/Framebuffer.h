@@ -85,6 +85,10 @@ namespace Redflag {
 		
 		virtual uint32_t GetColorAttachmentRendererID(uint32_t index=0) const = 0;
 
+		// 返回 FBO 自身的 GL 对象 ID（不是纹理 ID）
+		// 用途：glBlitFramebuffer 需要直接指定源/目标 FBO
+		virtual uint32_t GetFramebufferID() const = 0;
+
 		// 获取深度附件的 OpenGL 纹理 ID，用于在 shader 中采样深度
 		// （Shadow Map、SSAO 等场景需要把深度当纹理读取）
 		virtual uint32_t GetDepthAttachmentRendererID() const = 0;

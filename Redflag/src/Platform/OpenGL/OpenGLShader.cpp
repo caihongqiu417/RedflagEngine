@@ -179,7 +179,9 @@ namespace Redflag {
             {
                 auto cacheWriteTime = std::filesystem::last_write_time(cachedPath);
                 auto sourceWriteTime = std::filesystem::last_write_time(shaderFilePath);
-                cacheValid = cacheWriteTime >= sourceWriteTime;
+                // Windows 上快速连续编辑 shader 时，源码和缓存可能落在同一个时间戳粒度内。
+                // 这里必须用严格大于，避免“源码已变但缓存时间刚好相等”时继续复用旧 SPIR-V。
+                cacheValid = cacheWriteTime > sourceWriteTime;
             }
 
             std::ifstream in(cachedPath, std::ios::in | std::ios::binary);

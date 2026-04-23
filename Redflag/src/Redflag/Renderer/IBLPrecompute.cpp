@@ -433,8 +433,9 @@ void main(){
 	// ─────────────────────────────────────────────────────────────────
 	// 天空盒片元着色器
 	//   · 直接对 EnvCubemap 采样
-	//   · 做和 PBR shader 一样的 Reinhard tone map + gamma，
-	//     保证天空亮度与场景物体匹配（不然 HDR 天空会"太亮发白"）
+	//   · 主 FBO 现在是 RGBA16F HDR，tonemap + gamma 已统一迁移到
+	//     PostProcess_Composite.glsl。这里必须输出原始线性 HDR 值，
+	//     否则天空盒会被 tonemap 两次（自己一次 + Composite 一次）导致整屏发白。
 	// ─────────────────────────────────────────────────────────────────
 	static const char* s_SkyboxFS = R"(
 #version 450 core
@@ -445,9 +446,7 @@ void main(){
     // textureLod(..., 0) 强制采样 mip 0（原始分辨率）
     // 不能用 texture()，它会根据屏幕空间导数自动选高 mip，导致天空盒模糊
     vec3 color = textureLod(u_EnvMap, normalize(v_LocalPos), 0.0).rgb;
-    // Reinhard 色调映射 + gamma 2.2（与主 PBR shader 保持一致）
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/2.2));
+    // 保持线性 HDR，交给 Composite 阶段做 tonemap + gamma
     FragColor = vec4(color, 1.0);
 }
 )";

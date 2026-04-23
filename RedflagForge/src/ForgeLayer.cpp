@@ -174,12 +174,14 @@ namespace Redflag {
         m_CameraController.SetZoomLevel(6.f);
 
         // 创建帧缓冲
-        // attachment0: RGBA8        -> 颜色输出
-        // attachment1: RED_INTEGER  -> Entity ID 拾取
+        // attachment0: RGBA16F      -> HDR 颜色输出（供 Bloom / Tonemap 后处理读取）
+        //                             改用浮点格式：场景颜色可超过 1.0，Bloom 需要在
+        //                             Tonemap 之前提取高光；RGBA8 无法存储 HDR 值。
+        // attachment1: RED_INTEGER  -> Entity ID 拾取（不受 HDR 升级影响）
         // attachment2: RGBA16F      -> View-space 法线（供 SSAO Pass 采样）
         // attachment3: Depth
         FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,
+        fbSpec.Attachments = { FramebufferTextureFormat::RGBA16F,
                                FramebufferTextureFormat::RED_INTEGER,
                                FramebufferTextureFormat::RGBA16F,
                                FramebufferTextureFormat::Depth };
@@ -223,6 +225,14 @@ namespace Redflag {
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
+        // 将主场景 HDR 颜色附件显式登记给 SceneRenderer，避免其依赖 GL 当前 FBO 状态。
+        {
+            const auto& spec = m_Framebuffer->GetSpecifictaion();
+            SceneRenderer::SetMainSceneColorTarget(
+                m_Framebuffer->GetColorAttachmentRendererID(0),
+                (int)spec.Width,
+                (int)spec.Height);
+        }
         // 清 view-space 法线附件：0 向量表示"无几何/天空"，SSAO Pass 会当作
         // 全亮处理。
         m_Framebuffer->ClearAttachment(2, 0);
@@ -357,6 +367,9 @@ namespace Redflag {
             }
         }
 
+        // SceneRenderer 的后处理会切换到自己的 FBO；拾取前重新绑定主场景 FBO。
+        m_Framebuffer->Bind();
+
         // Entity ID 拾取：读取鼠标悬停位置的 RED_INTEGER 附件
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
@@ -450,6 +463,11 @@ namespace Redflag {
                 ImGui::MenuItem("Z-Prepass",       nullptr, &SceneRenderer::GetZPrepassEnabled());
                 ImGui::MenuItem("SSAO",            nullptr, &SceneRenderer::GetSSAOEnabled());
                 ImGui::MenuItem("Frustum Culling", nullptr, &Renderer3D::GetFrustumCullingEnabled());
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("PostEffect"))
+            {
+                ImGui::MenuItem("Bloom", nullptr, &SceneRenderer::GetBloomSettings().Enabled);
                 ImGui::EndMenu();
             }
 
@@ -668,8 +686,8 @@ namespace Redflag {
             ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
 
-            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO
-            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO" };
+            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=BloomBright 6=BloomUp 7=Composite
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "BloomBright", "BloomUp", "Composite" };
             ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
 
             if (ImGui::BeginTable("dc_table", 4,
@@ -691,24 +709,34 @@ namespace Redflag {
                 for (size_t i = 0; i < log.size(); ++i)
                 {
                     const auto& dc = log[i];
-                    if (s_PassFilter == 1 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Main)    continue;
-                    if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)  continue;
-                    if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass) continue;
-                    if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)    continue;
+                    if (s_PassFilter == 1 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Main)        continue;
+                    if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)      continue;
+                    if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass)     continue;
+                    if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)        continue;
+                    if (s_PassFilter == 5 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomBright) continue;
+                    if (s_PassFilter == 6 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomUp)     continue;
+                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Composite)   continue;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("%d", row++);
 
                     ImGui::TableSetColumnIndex(1);
-                    const char* passName = (dc.Pass == Renderer3D::DrawCallInfo::PassType::Main)    ? "Main"
-                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow)  ? "Shadow"
-                                         : (dc.Pass == Renderer3D::DrawCallInfo::PassType::Prepass) ? "Prepass"
-                                                                                                   : "SSAO";
+                    const char* passName = 
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Main        ? "Main" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow       ? "Shadow" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Prepass      ? "Prepass" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO         ? "SSAO" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright  ? "BloomBrt" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp      ? "BloomUp" :
+                                                                                       "Composite";
                     ImGui::TextUnformatted(passName);
 
                     ImGui::TableSetColumnIndex(2);
-                    if (dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO)
+                    if (dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO ||
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright ||
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp ||
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Composite)
                     {
                         ImGui::TextDisabled("(fullscreen)");
                     }
@@ -810,6 +838,44 @@ namespace Redflag {
                     ImGui::EndTabItem();
                 }
 
+                // ---- Bloom 页签 ----
+                if (ImGui::BeginTabItem("Bloom"))
+                {
+                    auto& bs = SceneRenderer::GetBloomSettings();
+
+                    ImGui::Checkbox("Enabled", &bs.Enabled);
+
+                    ImGui::Separator();
+                    ImGui::TextUnformatted("Bloom Parameters");
+
+                    // Threshold：亮度阈值，越低越多像素发光（0=全部，3=只有极亮处）
+                    ImGui::DragFloat("Threshold",  &bs.Threshold,  0.05f, 0.0f, 5.0f,  "%.2f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(lum > this triggers bloom)");
+
+                    // Intensity：叠加强度，越高光晕越亮
+                    ImGui::DragFloat("Intensity",  &bs.Intensity,  0.05f, 0.0f, 5.0f,  "%.2f");
+
+                    // Radius：泊松圆盘半径（每层上采样的散布程度）
+                    ImGui::DragFloat("Radius",     &bs.Radius,     0.05f, 0.1f, 10.0f, "%.2f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(Poisson disk radius per upsample)");
+
+                    // MipLevels：下采样层数（层越多 = 光晕半径越大）
+                    ImGui::SliderInt("Mip Levels", &bs.MipLevels,  2, 6);
+                    ImGui::SameLine(); ImGui::TextDisabled("(more = larger bloom radius)");
+
+                    if (ImGui::Button("Reset"))
+                        bs = BloomSettings{};
+
+                    ImGui::Separator();
+                    // 预览 Bloom 第 0 层（多频段叠加结果）
+                    ImGui::TextDisabled("Bloom Mip[0] (actual bloom buffer)");
+                    uint32_t bloomTex = SceneRenderer::GetBloomTextureID();
+                    if (bloomTex)
+                        ImGui::Image((void*)(uint64_t)bloomTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::EndTabItem();
+                }
+
                 ImGui::EndTabBar();
             }
 
@@ -846,11 +912,22 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        // 将帧缓冲 attachment0 的颜色输出渲染到 ImGui Image
-        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
-        ImGui::Image((void*)(uint64_t)textureID,
-            ImVec2(m_ViewportSize.x, m_ViewportSize.y),
-            ImVec2(0, 1), ImVec2(1, 0));
+        // 将后处理最终输出（ACES tonemap + gamma 2.2 已完成的 LDR 纹理）渲染到 ImGui Image
+        // SceneRenderer::GetFinalColorTextureID() 返回 s_PostFBO 的 RGBA8 attachment，
+        // 主 FBO 的 attachment0 现在是 RGBA16F HDR，不能直接显示（值 > 1 会被 ImGui 钳到 1 变成纯白）。
+        uint32_t textureID = SceneRenderer::GetFinalColorTextureID();
+        if (textureID != 0)
+        {
+            ImGui::Image((void*)(uint64_t)textureID,
+                ImVec2(m_ViewportSize.x, m_ViewportSize.y),
+                ImVec2(0, 1), ImVec2(1, 0));
+        }
+        else
+        {
+            // 后处理链路尚未就绪（Composite 尚未成功写过一次）：占位显示深灰，
+            // 不回退到主 FBO 的 RGBA16F 附件，避免 HDR 值被 clamp 成整屏白。
+            ImGui::Dummy(ImVec2(m_ViewportSize.x, m_ViewportSize.y));
+        }
 
         // 拖拽 .redflag 场景文件到 Viewport 时直接打开
         if (ImGui::BeginDragDropTarget())

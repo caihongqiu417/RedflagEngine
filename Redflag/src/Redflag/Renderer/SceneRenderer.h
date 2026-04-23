@@ -90,7 +90,19 @@ namespace Redflag {
 		float Power  = 2.0f;    // 对比度增强指数
 		int   KernelSize = 64;  // 采样数（上限 64，shader 内固定数组）
 	};
-
+	// =================================================================
+	// Bloom 调参（ImGui 暴露）
+	//
+	// 算法：亮度提取 → blit 下采样金字塔 → 波松圆盘上采样叠加 → Composite
+	// =================================================================
+	struct BloomSettings
+	{
+		bool  Enabled    = true;   // 全局开关
+		float Threshold  = 0.8f;   // 亮度阈值：超过此值的片元才进入 Bloom（0.8 = 较明显，2.0 = 只有极亮处）
+		float Intensity  = 0.6f;   // Bloom 叠加强度（乘法系数）
+		float Radius     = 2.0f;   // 泊松圆盘采样半径（控制上采样层的散布大小）
+		int   MipLevels  = 6;      // 下采样层数（越多层 = 越大的散布形状；2~6）
+	};
 	class SceneRenderer
 	{
 	public:
@@ -122,6 +134,15 @@ namespace Redflag {
 		static uint32_t GetShadowMapTextureID();
 		// Z-Prepass 深度纹理 ID，供 Shadow 面板预览
 		static uint32_t GetPrepassDepthTextureID();
+
+		// 供编辑器 UI 读写 Bloom 调参
+		static BloomSettings& GetBloomSettings();
+		static uint32_t GetBloomTextureID();
+		static void SetMainSceneColorTarget(uint32_t colorTex, int width, int height);
+
+		// 返回后处理最终输出纹理 ID（s_PostFBO 的 RGBA8 attachment）
+		// ForgeLayer viewport 应调用此函数而非直接读主 FBO attachment0（主 FBO 已改为 RGBA16F HDR）
+		static uint32_t GetFinalColorTextureID();
 
 	private:
 		// 遍历 registry 收集灯光数据并上传 Light UBO

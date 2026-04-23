@@ -652,18 +652,13 @@ void main()
     // 最终颜色 = 环境光 + 直接光照
     vec3 color = ambient + Lo;
 
-    // ==================== 7. 色调映射 + Gamma 校正（临时）====================
+    // ==================== 7. 输出（HDR，不做 tonemap）====================
+    //
+    // Tonemap（ACES）和 Gamma 校正已迁移到后处理阶段（PostProcess_Composite.glsl）。
+    // 原因：Bloom 需要先从 HDR buffer 提取高光（亮度 > threshold），
+    //       如果在这里就做 tonemap，高光信息被压缩到 [0,1] 就无法准确提取了。
+    // 主 FBO attachment0 现在是 RGBA16F，可存储超过 1.0 的 HDR 值。
 
-    // Reinhard tonemapping: 把 HDR [0, ∞) 压缩到 [0, 1)
-    // 优点：简单，缺点：暗部对比度不够。Phase 5 会换成 ACES + 曝光控制
-    color = color / (color + vec3(1.0));
-
-    // Gamma 2.2 校正：线性空间 → sRGB 显示空间
-    // 因为所有光照计算都在线性空间，输出到屏幕前必须 gamma 校正
-    color = pow(color, vec3(1.0 / 2.2));
-
-    // ==================== 8. 输出 ====================
-
-    o_Color    = vec4(color, outAlpha);   // RGBA（仅 Blend 模式透写 alpha）
-    o_EntityID = u_EntityID;              // 编辑器拾取 ID，写入 RED_INTEGER 附件
+    o_Color    = vec4(color, outAlpha);   // HDR RGBA，Bloom / Tonemap 后处理会消费这张纹理
+    o_EntityID = u_EntityID;              // 编辑器拾取 ID，写入 RED_INTEGER 附件（不受影响）
 }

@@ -26,6 +26,9 @@ namespace Redflag {
 		// 返回深度附件的 GL 纹理 ID，供 shader 采样（如 Shadow Map）
 		virtual uint32_t GetDepthAttachmentRendererID() const override;
 
+		// 返回 FBO 自身的 GL 对象 ID（非纹理 ID），用于 glBlitFramebuffer
+		virtual uint32_t GetFramebufferID() const override { return m_RendererID; }
+
 		const FramebufferSpecification& OpenGLFramebuffer::GetSpecifictaion() const
 		{
 			return m_Specification;
