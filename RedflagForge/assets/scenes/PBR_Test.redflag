@@ -16,12 +16,13 @@ Entities:
     TagComponent:
       Tag: Plane
     TransformComponent:
-      Translation: [0.0868993402, -3.6768918, -1.2550782]
+      Translation: [0.0868993402, -3.6768918, -2.24090719]
       Rotation: [0, 0, 0]
       Scale: [19.6806107, 1, 21.2332878]
     MeshRendererComponent:
       Color: [1, 1, 1, 1]
       MeshType: Cube
+      BaseColor: [1, 1, 1, 1]
       Metallic: 0
       Roughness: 0.5
       AO: 1
@@ -41,9 +42,9 @@ Entities:
     TagComponent:
       Tag: PbrModel_Clock
     TransformComponent:
-      Translation: [0, -1.9416182, -3.83122802]
-      Rotation: [0.0434616134, 0, 0]
-      Scale: [0.150000006, 0.150000006, 0.150000006]
+      Translation: [-2.30642724, -1.9416182, -3.83122802]
+      Rotation: [0.0445194654, 0.218350202, 0.00964984018]
+      Scale: [0.150000006, 0.150000006, 0.150000021]
     ModelRendererComponent:
       FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
       Color: [0.931034505, 0.931034505, 0.931034505, 1]
@@ -69,9 +70,14 @@ Entities:
     TagComponent:
       Tag: PbrModel2_Mirror
     TransformComponent:
-      Translation: [2.13791037, 0.876661301, 3.08336902]
-      Rotation: [0, 0.0191986226, 0]
-      Scale: [0.100000001, 0.100000001, 0.100000001]
+      Translation: [4.4460721, 0.212276369, 0.0909700766]
+      Rotation: [-0.383559972, -0.396493942, -0.0226111617]
+      Scale: [0.0499999523, 0.040000014, 0.0799999908]
     ModelRendererComponent:
-      FilePath: assets\models\ornate_mirror_01_2k\ornate_mirror_01_2k.fbx
+      FilePath: assets\models\mirror-9-mb\Mirror.fbx
       Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [1, 1, 1, 1]
+          Metallic: 1
+          Roughness: 0.5
+          AO: 1

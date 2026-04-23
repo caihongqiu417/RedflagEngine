@@ -430,6 +430,11 @@ vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3  specular    = numerator / denominator;
 
+    // 高光爆炸抑制（UE4 风格能量钳制）：
+    // 方向光是 delta 光源（立体角=0），碰上低粗糙度会让 NDF 发散到数十万，
+    // 导致镜面类表面整块爆白。物理上真实太阳有一定立体角，这里用硬钳制近似。
+    specular = min(specular, vec3(80.0));
+
     // 能量守恒：被菲涅尔反射的部分不参与漫反射
     // 纯金属 (metallic=1) 完全没有漫反射，只有镜面
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
@@ -471,6 +476,7 @@ vec3 CalcPointLight(LightData light, vec3 N, vec3 V, vec3 worldPos,
     vec3  numerator   = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3  specular    = numerator / denominator;
+    specular = min(specular, vec3(80.0));   // 与方向光相同的爆炸抑制
 
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
@@ -521,8 +527,10 @@ void main()
         roughness *= mrSample.g;  // G 通道 = 粗糙度
         metallic  *= mrSample.b;  // B 通道 = 金属度
     }
-    // 钳制粗糙度下限 0.04，防止 GGX 分母趋近于零导致高光爆炸
-    roughness = clamp(roughness, 0.04, 1.0);
+    // 钳制粗糙度下限 0.089（Filament 推荐值），防止 GGX 分母趋近于零导致
+    // 方向光高光爆炸（太阳 delta 光源 × 超尖 NDF → 整块镜面饱和白）。
+    // 0.04 过低在 metallic=1 的平面镜上仍然会整块爆白。
+    roughness = clamp(roughness, 0.089, 1.0);
 
     // 环境遮蔽：标量 × AOMap 的 R 通道（如有）
     float ao = u_AO;

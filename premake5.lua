@@ -27,6 +27,8 @@ IncludeDir["yaml_cpp"]="Redflag/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]="Redflag/vendor/ImGuizmo"
 IncludeDir["assimp"]  = "Redflag/vendor/assimp/include"
 IncludeDir["mono"]    = "Redflag/vendor/mono/include"
+IncludeDir["tinyexr"]  = "Redflag/vendor/tinyexr"
+IncludeDir["miniz"]    = "Redflag/vendor/tinyexr/deps/miniz"
 
 --实际编译
 group "Dependencies"  
@@ -65,6 +67,7 @@ project "Redflag"
         "%{prj.name}/vendor/glm/glm/**.inl",
         "%{prj.name}/vendor/ImGuizmo/ImGuizmo.h",
         "%{prj.name}/vendor/ImGuizmo/ImGuizmo.cpp",
+        "%{prj.name}/vendor/tinyexr/deps/miniz/miniz.c",
     }
     
     --告诉头文件要去这些地方找
@@ -84,6 +87,8 @@ project "Redflag"
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.mono}",
+        "%{IncludeDir.tinyexr}",
+        "%{IncludeDir.miniz}",
         "%{os.getenv('VULKAN_SDK')}/Include", 
     }
     
@@ -104,7 +109,11 @@ project "Redflag"
     }
 
     filter "files:**/vendor/ImGuizmo/**.cpp"
-    flags { "NoPCH" }
+        flags { "NoPCH" }
+
+    filter "files:**/vendor/tinyexr/deps/miniz/miniz.c"
+        flags { "NoPCH" }
+        compileas "C"
     
     filter "system:windows"
         systemversion "latest"

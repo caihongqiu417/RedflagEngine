@@ -585,7 +585,8 @@ namespace Redflag {
                 Ref<Material>& mat = component.Mat;
 
                 // ---- 基础颜色 ----
-                ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
+                if (ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor)))
+                    component.Color = mat->BaseColor;  // 保持 mr.Color 与 mat->BaseColor 同步
 
                 // ---- PBR 标量参数 ----
                 ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);

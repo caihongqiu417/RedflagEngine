@@ -224,9 +224,10 @@ namespace Redflag {
             // MeshData 目前只支持立方体，后期扩展文件路径
             out << YAML::Key << "MeshType" << YAML::Value << "Cube";
 
-            // PBR 材质参数
+            // PBR 材质参数（BaseColor 取 mat->BaseColor，它才是 Inspector 编辑的值）
             if (mr.Mat)
             {
+                out << YAML::Key << "BaseColor" << YAML::Value << mr.Mat->BaseColor;
                 out << YAML::Key << "Metallic"  << YAML::Value << mr.Mat->Metallic;
                 out << YAML::Key << "Roughness" << YAML::Value << mr.Mat->Roughness;
                 out << YAML::Key << "AO"        << YAML::Value << mr.Mat->AO;
@@ -535,7 +536,10 @@ namespace Redflag {
                     mr.MeshData = Mesh::CreateCube();
 
                     // PBR 材质参数
+                    // BaseColor 优先用 mat->BaseColor（Inspector 编辑的值），
+                    // 向后兼容：旧文件没有 BaseColor 字段时回退到 mr.Color。
                     mr.Mat = Material::Create(mr.Color);
+                    if (mrNode["BaseColor"]) mr.Mat->BaseColor = mrNode["BaseColor"].as<glm::vec4>();
                     if (mrNode["Metallic"])  mr.Mat->Metallic  = mrNode["Metallic"].as<float>();
                     if (mrNode["Roughness"]) mr.Mat->Roughness = mrNode["Roughness"].as<float>();
                     if (mrNode["AO"])        mr.Mat->AO        = mrNode["AO"].as<float>();

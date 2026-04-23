@@ -1,96 +1,188 @@
 Scene: Unamed Scene
 Entities:
-  - Entity: 15712868764251011975
+  - Entity: 5208259081308379664
     TagComponent:
-      Tag: Gate1
+      Tag: Duck
     TransformComponent:
-      Translation: [0, 0.284277499, 1.25121152]
+      Translation: [22.6732903, 0, 15.9427547]
       Rotation: [0, 0, 0]
-      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
     ModelRendererComponent:
-      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
       Color: [1, 1, 1, 1]
-  - Entity: 8351800843422021918
+  - Entity: 14008501608673321832
     TagComponent:
-      Tag: Gate1
-    TransformComponent:
-      Translation: [0, 0.400565386, -1.4358958]
-      Rotation: [0, 0, 0]
-      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
-    ModelRendererComponent:
-      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
-      Color: [1, 1, 1, 1]
-  - Entity: 4817358316669574915
-    TagComponent:
-      Tag: Gate1
-    TransformComponent:
-      Translation: [0, 0.493212223, 3.67474461]
-      Rotation: [0, 0, 0]
-      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
-    ModelRendererComponent:
-      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
-      Color: [1, 1, 1, 1]
-  - Entity: 15849396106654211648
-    TagComponent:
-      Tag: Cube4
-    TransformComponent:
-      Translation: [0, 0, 2.43941069]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      Metallic: 0
-      Roughness: 0.5
-      AO: 1
-  - Entity: 5265558242219076247
-    TagComponent:
-      Tag: Cube1
-    TransformComponent:
-      Translation: [0, 1.41897297, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      Metallic: 0
-      Roughness: 0.5
-      AO: 1
-  - Entity: 11401727395107602806
-    TagComponent:
-      Tag: Cube2
+      Tag: Plane
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [75.3656235, 1, 65.1796036]
     MeshRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [0.292037219, 0.796238244, 0.687178969, 1]
       MeshType: Cube
+      BaseColor: [0.292037219, 0.796238244, 0.687178969, 1]
       Metallic: 0
       Roughness: 0.5
       AO: 1
-  - Entity: 7369917117601695905
-    TagComponent:
-      Tag: Cube3
-    TransformComponent:
-      Translation: [0, 1.50823021, 2.36785245]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      Metallic: 0
-      Roughness: 0.5
-      AO: 1
-  - Entity: 2822176143238249473
+  - Entity: 7152570186230795178
     TagComponent:
       Tag: Light
     TransformComponent:
-      Translation: [0, 3.20190716, -0.129271686]
+      Translation: [0, 24.2351894, 32.866993]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    PointLightComponent:
+    DirectionalLightComponent:
+      Direction: [0, -0.5, -0.829999983]
       Color: [1, 1, 1]
-      Intensity: 4.05000019
-      Radius: 8.10000038
-      CastShadow: false
+      Intensity: 1.60000002
+      CastShadow: true
+  - Entity: 1777350197083605274
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-29.3056831, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 10707159990668656956
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-15.5132008, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 5559168255643937461
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-2.89598823, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 14954029815795167596
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [12.0697184, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 13948338357209614030
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [26.3549461, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 12411709498006819685
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [26.3549461, 0, -18.7722969]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 2577648721652981758
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [13.8549461, 0, -18.7722969]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 12908389586859496468
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [0.854946136, 0, -18.7722969]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 13678131802599565777
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-10.6450539, 0, -18.7722969]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 15914704643599615719
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-28.1450539, 0, -18.7722969]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 10741165390567281705
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-28.1450539, 0, 15.9427547]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 2626962020019614833
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-16.9137478, 0, 15.9427547]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 10221746390978870136
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [-4.47772408, 0, 15.9427547]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 1782966712528563264
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [9.17329025, 0, 15.9427547]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 2351986241879064425
+    TagComponent:
+      Tag: Duck
+    TransformComponent:
+      Translation: [22.6732903, 0, 15.9427547]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.200000003, 0.200000003]
+    ModelRendererComponent:
+      FilePath: assets\models\rubber_duck_toy_4k\rubber_duck_toy_4k.fbx
+      Color: [1, 1, 1, 1]

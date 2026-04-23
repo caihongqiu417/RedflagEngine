@@ -268,6 +268,7 @@ vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
     float G   = GeometrySmith(N, V, L, roughness);
     vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
     vec3  specular = (NDF * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001);
+    specular = min(specular, vec3(80.0));   // 高光爆炸抑制（UE4 风格能量钳制）
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
     return (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0) * shadow;
 }
@@ -287,6 +288,7 @@ vec3 CalcPointLight(LightData light, vec3 N, vec3 V, vec3 worldPos,
     float G   = GeometrySmith(N, V, L, roughness);
     vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
     vec3  specular = (NDF * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001);
+    specular = min(specular, vec3(80.0));   // 高光爆炸抑制
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
     return (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 }
@@ -314,7 +316,7 @@ void main()
         roughness *= mr.g;
         metallic  *= mr.b;
     }
-    roughness = clamp(roughness, 0.04, 1.0);
+    roughness = clamp(roughness, 0.089, 1.0);
 
     if (u_UseAOMap == 1)
         ao *= texture(u_AOMap, v_TexCoord).r;

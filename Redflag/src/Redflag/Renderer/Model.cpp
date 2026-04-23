@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 
 #include <stb_image.h>
+#include "tinyexr.h"
 #include <glm/glm.hpp>
 #include <filesystem>
 #include <algorithm>
@@ -18,9 +19,10 @@ namespace Redflag {
 		Assimp::Importer importer;
 
 		const aiScene* scene = importer.ReadFile(filepath,
-			aiProcess_Triangulate      |
-			aiProcess_GenSmoothNormals |
-			aiProcess_CalcTangentSpace
+			aiProcess_Triangulate        |
+			aiProcess_GenSmoothNormals   |
+			aiProcess_CalcTangentSpace   |
+			aiProcess_FixInfacingNormals
 		);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -128,7 +130,15 @@ namespace Redflag {
 
 			mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_NORMALS);
 			if (!mat->NormalMap)
+			{
+				// aiTextureType_NORMALS 未命中时打印 assimp 给的原始路径，便于排查
+				if (aiMat->GetTextureCount(aiTextureType_NORMALS) > 0)
+				{
+					aiString p; aiMat->GetTexture(aiTextureType_NORMALS, 0, &p);
+					RF_CORE_WARN("[Model]   NORMALS slot path not resolved: '{0}'", p.C_Str());
+				}
 				mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_HEIGHT);
+			}
 
 			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, scene, aiTextureType_UNKNOWN);
 			if (!mat->MetallicRoughnessMap)
@@ -235,6 +245,15 @@ namespace Redflag {
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
 				mat->Roughness = roughness;
 
+			// FBX 通常不显式写 metallic/roughness 标量——它们被存在 MR 贴图里。
+			// 保持默认 0 会让 shader 的 "metallic *= mr.b" 永远归零；
+			// 只要有 MR 贴图就把标量设为 1（中性乘数，让贴图完全控制）。
+			if (mat->MetallicRoughnessMap)
+			{
+				if (mat->Metallic  < 0.001f) mat->Metallic  = 1.0f;
+				if (mat->Roughness < 0.001f) mat->Roughness = 1.0f;
+			}
+
 			// ---- 4. 只有在加载到真正的 alpha 贴图时才切 Mask 模式 ----
 			// 注意：盲目切 Mask 会导致阈值裁剪误伤模型（例如 FBX 的 BaseColor.a 为脏值时）。
 			// 我们在上面已经将 BaseColor.a 强制为 1，所以 AlphaMap 存在才是可靠信号。
@@ -264,16 +283,62 @@ namespace Redflag {
 				|| matNameLower.find("clear") != std::string::npos
 				|| matNameLower.find("transparent") != std::string::npos;
 
-			bool isLikelyGlass = (origAlpha < 0.5f) || hasTransparentColor || hasGlassName;
+			// "镜子"特殊处理：mirror = 玻璃+背镀银，物理上应作为高反射
+			// 不透明物渲染，而不是按普通玻璃跳过。
+			//
+			// Polyhaven 的 ornate_mirror FBX 里镜面子网格的材质名是 "glass"，
+			// "mirror" 字样出现在 mesh 名或模型文件路径中，所以同时检查这三处。
+			std::string meshNameLower = mesh->mName.C_Str();
+			std::transform(meshNameLower.begin(), meshNameLower.end(), meshNameLower.begin(),
+				[](unsigned char c) { return (char)std::tolower(c); });
+			std::string filePathLower = m_FilePath;
+			std::transform(filePathLower.begin(), filePathLower.end(), filePathLower.begin(),
+				[](unsigned char c) { return (char)std::tolower(c); });
 
-			RF_CORE_INFO("[Model]   origAlpha={0:.3f} transparent={1} glassName={2} => isGlass={3}",
-				origAlpha, hasTransparentColor, hasGlassName, isLikelyGlass);
+			bool isMirrorAsset = matNameLower.find("mirror") != std::string::npos
+				|| meshNameLower.find("mirror") != std::string::npos
+				|| filePathLower.find("mirror") != std::string::npos;
+
+			bool isLikelyGlass = !isMirrorAsset &&
+				((origAlpha < 0.5f) || hasTransparentColor || hasGlassName);
+
+			RF_CORE_INFO("[Model]   mat='{0}' mesh='{1}' origAlpha={2:.3f} transparent={3} glass={4} mirrorAsset={5} => isGlass={6}",
+				aiMatName.C_Str(), mesh->mName.C_Str(), origAlpha,
+				hasTransparentColor, hasGlassName, isMirrorAsset, isLikelyGlass);
 
 			if (isLikelyGlass)
 			{
 				RF_CORE_WARN("[Model]   Glass-like submesh detected, skip render (mat '{0}')",
 					aiMatName.C_Str());
 				subMesh.MeshData = nullptr; // DrawModel 中 if (!MeshData) continue 会跳过
+			}
+			else if (isMirrorAsset && (hasGlassName || origAlpha < 0.5f || hasTransparentColor))
+			{
+				// 这个 FBX 属于镜子资产，而且当前子网格的材质信号指向"玻璃"
+				// (material 叫 glass / 或 alpha 很低)，说明这就是镜面那一片。
+				// 强制渲染为高反射金属，让 IBL 环境光反射能出现。
+				mat->Metallic  = 1.0f;
+				mat->Roughness = 0.05f;
+				mat->BaseColor = glm::vec4(1.0f);
+				mat->Alpha     = AlphaMode::Opaque;
+				mat->AlphaMap.reset();   // 丢弃 FBX 的玻璃 alpha 掩膜，避免被 Mask discard
+				// 丢弃法线贴图：完美镜面下，法线贴图里木板/背板的细微凹凸会
+				// 把反射向量扰动到天空盒完全不同的位置，放大成可见条纹。
+				mat->NormalMap.reset();
+				RF_CORE_WARN("[Model]   Mirror reflective submesh detected, force metallic=1 roughness=0.05 (mat '{0}')",
+					aiMatName.C_Str());
+			}
+			else if (isMirrorAsset)
+			{
+				// 整块镜子只有一个材质（镜框+镜面共用）的情况：
+				// MR 贴图的 metallic=1 区域就是镜面；镜面部分 roughness 在贴图里已是 0。
+				// 问题：Polyhaven 的 normal map 在整张贴图（包括镜面 UV 区域）都保留了
+				// 木板/背板的细微凹凸，镜面区域一旦用这些扰动的法线，反射就全是条纹。
+				// 最稳妥的办法是整块 mesh 不用法线贴图——镜框失去一点细节，
+				// 但镜面不会出条纹。
+				mat->NormalMap.reset();
+				RF_CORE_WARN("[Model]   Mirror asset detected, drop normal map to avoid banding on reflective surface (mat '{0}')",
+					aiMatName.C_Str());
 			}
 
 			RF_CORE_INFO("[Model]   Maps: base={0} nor={1} mr={2} ao={3} alpha={4}",
@@ -291,7 +356,33 @@ namespace Redflag {
 		std::string fullPath = ResolveTexturePath(material, textureType);
 		if (fullPath.empty())
 			return nullptr;
-		return Texture2D::Create(fullPath);
+
+		auto tex = Texture2D::Create(fullPath);
+
+		// EXR 加载失败（如 DWAA 压缩不支持），尝试同名 PNG
+		if (tex && tex->GetRendererID() == 0)
+		{
+			size_t dotPos = fullPath.rfind('.');
+			if (dotPos != std::string::npos)
+			{
+				std::string ext = fullPath.substr(dotPos);
+				if (ext == ".exr" || ext == ".EXR")
+				{
+					std::string pngPath = fullPath.substr(0, dotPos) + ".png";
+					std::ifstream probe(pngPath);
+					if (probe.good())
+					{
+						RF_CORE_WARN("[Model] EXR unsupported compression, fallback PNG: {0}", pngPath);
+						auto fallback = Texture2D::Create(pngPath);
+						if (fallback && fallback->GetRendererID() != 0)
+							return fallback;
+					}
+				}
+			}
+			return nullptr; // 加载彻底失败，让 fallback scan 接手
+		}
+
+		return tex;
 	}
 
 	std::string Model::ResolveTexturePath(aiMaterial* material, int textureType)
@@ -344,7 +435,7 @@ namespace Redflag {
 			}
 		}
 
-		// stb_image 不支持 .exr，尝试同名 .png 替代
+		// EXR 有同名 PNG 时优先用 PNG（Polyhaven EXR 用 DWAA 压缩，tinyexr 不支持）
 		{
 			size_t dotPos = fullPath.rfind('.');
 			if (dotPos != std::string::npos)
@@ -353,8 +444,7 @@ namespace Redflag {
 				if (ext == ".exr" || ext == ".EXR")
 				{
 					std::string pngPath = fullPath.substr(0, dotPos) + ".png";
-					std::ifstream t(pngPath);
-					if (t.good())
+					if (std::ifstream(pngPath).good())
 						fullPath = pngPath;
 				}
 			}
@@ -382,7 +472,7 @@ namespace Redflag {
 	{
 		namespace fs = std::filesystem;
 
-		// 优先扩展名（stb_image 可读）
+		// 优先扩展名（stb_image 可读；.exr 由 tinyexr 处理）
 		static const std::vector<std::string> kPreferredExts = {
 			".png", ".jpg", ".jpeg", ".tga", ".bmp"
 		};
@@ -426,6 +516,22 @@ namespace Redflag {
 			}
 		}
 
+		// 未命中：打印扫描目录里所有图像文件，帮助排查命名不匹配
+		RF_CORE_WARN("[Model] FindTextureBySuffix: no match for suffixes in dir '{0}'", m_Directory);
+		for (const auto& dir : searchDirs)
+		{
+			for (const auto& entry : fs::directory_iterator(dir))
+			{
+				if (!entry.is_regular_file()) continue;
+				std::string ext = toLower(entry.path().extension().string());
+				if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+					ext == ".tga" || ext == ".bmp" || ext == ".exr")
+				{
+					RF_CORE_WARN("[Model]   found image: {0}", entry.path().filename().string());
+				}
+			}
+		}
+
 		return "";
 	}
 
@@ -454,19 +560,64 @@ namespace Redflag {
 		if (metalPath.empty() && roughPath.empty())
 			return nullptr;
 
+		auto isExr = [](const std::string& p) {
+			return p.size() > 4 &&
+				(p.compare(p.size() - 4, 4, ".exr") == 0 ||
+				 p.compare(p.size() - 4, 4, ".EXR") == 0);
+		};
+
 		stbi_set_flip_vertically_on_load(1);
 
-		int mw = 0, mh = 0, mc = 0, rw = 0, rh = 0, rc = 0;
-		stbi_uc* metalData = nullptr;
-		stbi_uc* roughData = nullptr;
+		int mw = 0, mh = 0, rw = 0, rh = 0;
+		const stbi_uc* metalData = nullptr;
+		const stbi_uc* roughData = nullptr;
+		// stbi buffers that need stbi_image_free; EXR data is owned by vectors below
+		stbi_uc* metalStbi = nullptr;
+		stbi_uc* roughStbi = nullptr;
+		std::vector<uint8_t> metalEXR, roughEXR;
+
+		auto loadEXRGray = [](const std::string& path, int& w, int& h, std::vector<uint8_t>& buf) -> bool
+		{
+			float* exrData = nullptr; const char* err = nullptr;
+			if (LoadEXR(&exrData, &w, &h, path.c_str(), &err) != TINYEXR_SUCCESS)
+			{
+				if (err) FreeEXRErrorMessage(err);
+				return false;
+			}
+			buf.resize(w * h);
+			for (int i = 0; i < w * h; ++i)
+				buf[i] = (uint8_t)std::min(255, (int)(exrData[i * 4] * 255.0f)); // R channel (grayscale)
+			free(exrData);
+			return true;
+		};
 
 		if (!metalPath.empty())
-			metalData = stbi_load(metalPath.c_str(), &mw, &mh, &mc, 1);
+		{
+			if (isExr(metalPath)) {
+				if (loadEXRGray(metalPath, mw, mh, metalEXR)) metalData = metalEXR.data();
+			} else {
+				int mc = 0;
+				metalStbi = stbi_load(metalPath.c_str(), &mw, &mh, &mc, 1);
+				metalData = metalStbi;
+			}
+		}
 		if (!roughPath.empty())
-			roughData = stbi_load(roughPath.c_str(), &rw, &rh, &rc, 1);
+		{
+			if (isExr(roughPath)) {
+				if (loadEXRGray(roughPath, rw, rh, roughEXR)) roughData = roughEXR.data();
+			} else {
+				int rc = 0;
+				roughStbi = stbi_load(roughPath.c_str(), &rw, &rh, &rc, 1);
+				roughData = roughStbi;
+			}
+		}
 
 		if (!metalData && !roughData)
+		{
+			if (metalStbi) stbi_image_free(metalStbi);
+			if (roughStbi) stbi_image_free(roughStbi);
 			return nullptr;
+		}
 
 		int width  = metalData ? mw : rw;
 		int height = metalData ? mh : rh;
@@ -479,22 +630,22 @@ namespace Redflag {
 		}
 
 		// 合并: R=unused, G=roughness, B=metallic, A=255 (glTF 规范)
-		uint32_t pixelCount = width * height;
+		uint32_t pixelCount = (uint32_t)(width * height);
 		std::vector<uint8_t> merged(pixelCount * 4);
 
-		for (uint32_t i = 0; i < (uint32_t)pixelCount; i++)
+		for (uint32_t i = 0; i < pixelCount; i++)
 		{
-			merged[i * 4 + 0] = 0;                                        // R
+			merged[i * 4 + 0] = 0;
 			merged[i * 4 + 1] = roughData ? roughData[i] : (uint8_t)128;  // G = roughness
 			merged[i * 4 + 2] = metalData ? metalData[i] : (uint8_t)0;    // B = metallic
-			merged[i * 4 + 3] = 255;                                      // A
+			merged[i * 4 + 3] = 255;
 		}
 
 		auto tex = Texture2D::Create(width, height);
 		tex->SetData(merged.data(), pixelCount * 4);
 
-		if (metalData) stbi_image_free(metalData);
-		if (roughData) stbi_image_free(roughData);
+		if (metalStbi) stbi_image_free(metalStbi);
+		if (roughStbi) stbi_image_free(roughStbi);
 
 		RF_CORE_INFO("MergeMetallicRoughness: merged {0}x{1} MR texture from separate maps", width, height);
 		return tex;
