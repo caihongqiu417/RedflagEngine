@@ -25,6 +25,7 @@ namespace Redflag
 		glm::mat4     Transform;
 		Ref<Material> Mat;       // 为 nullptr 时使用默认白色纯色材质
 		int           EntityID = -1;
+		bool          Skip     = false; // 已由 Instancing Pass 处理，跳过常规路径
 	};
 
 	struct Renderer3DData
@@ -79,6 +80,32 @@ namespace Redflag
 		CameraData    CameraBuffer;
 		TransformData TransformBuffer;
 		MaterialData  MaterialBuffer;
+
+		// -------------------------------------------------------------------
+		// GPU Instancing 资源
+		//
+		// 每帧在 EndScene 里将"同 Mesh + 无贴图 + Opaque"的命令批量写入
+		// InstanceVBO，一次 glDrawElementsInstanced 替代 N 个独立 draw call。
+		//
+		// 实例数据布局（与 Renderer3D_Mesh_Instanced.glsl 的 layout 对应）：
+		//   location 4-7 : mat4  Transform   (64 bytes)
+		//   location 8   : vec4  BaseColor   (16 bytes)
+		//   location 9   : vec4  MatParams   (x=metallic, y=roughness, z=ao, w=0)
+		//   location 10  : int   EntityID    (4 bytes)
+		// -------------------------------------------------------------------
+		struct InstanceData
+		{
+			glm::mat4 Transform;    // offset   0, 64 bytes
+			glm::vec4 BaseColor;    // offset  64, 16 bytes
+			glm::vec4 MatParams;    // offset  80, 16 bytes
+			int       EntityID;     // offset  96,  4 bytes
+			int       _pad[3];      // offset 100, 12 bytes → stride = 112
+		};
+
+		static constexpr uint32_t MAX_INSTANCES = 2048;
+
+		Ref<Shader>  InstancedMeshShader;
+		uint32_t     InstanceVBO = 0;
 
 		// 每帧提交队列
 		std::vector<DrawCommand> DrawCommands;
@@ -155,7 +182,13 @@ namespace Redflag
 
 	void Renderer3D::Init()
 	{
-		s_Data.MeshShader = Shader::Create("assets/shaders/Renderer3D_Mesh.glsl");
+		s_Data.MeshShader          = Shader::Create("assets/shaders/Renderer3D_Mesh.glsl");
+		s_Data.InstancedMeshShader = Shader::Create("assets/shaders/Renderer3D_Mesh_Instanced.glsl");
+
+		glCreateBuffers(1, &s_Data.InstanceVBO);
+		glNamedBufferData(s_Data.InstanceVBO,
+			Renderer3DData::MAX_INSTANCES * (GLsizeiptr)sizeof(Renderer3DData::InstanceData),
+			nullptr, GL_DYNAMIC_DRAW);
 
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteData = 0xffffffff;
@@ -174,6 +207,8 @@ namespace Redflag
 	void Renderer3D::Shutdown()
 	{
 		s_Data.MeshShader.reset();
+		s_Data.InstancedMeshShader.reset();
+		if (s_Data.InstanceVBO) { glDeleteBuffers(1, &s_Data.InstanceVBO); s_Data.InstanceVBO = 0; }
 		s_Data.WhiteTexture.reset();
 		s_Data.DefaultMaterial.reset();
 		s_Data.CameraUniformBuffer.reset();
@@ -248,7 +283,185 @@ namespace Redflag
 		if (s_Data.DrawCommands.empty())
 			return;
 
-		// 按 SortKey（纹理指针）排序，相同材质的命令聚集在一起
+		// ================================================================
+		// GPU Instancing Pass
+		//
+		// 条件：同一 MeshData 指针 + 无任何贴图 + Opaque，且同组数量 >= 2。
+		// 这类命令打包进 InstanceVBO，一次 glDrawElementsInstanced 替代 N 个 draw。
+		// Shadow Pass / Depth Prepass 在 EndScene 之前已执行，仍走逐个 draw（保证阴影正确）。
+		// ================================================================
+		if (s_Data.InstancedMeshShader && s_Data.InstanceVBO)
+		{
+			// ---- 收集可合批候选（所有 Opaque 命令，含贴图）----
+			// 分组键：(Mesh, BaseColorMap, NormalMap, MetallicRoughnessMap, AOMap, AlphaMap)
+			// 相同 Mesh + 完全相同的贴图组合 → 可以合批实例化绘制
+			struct Candidate {
+				size_t     idx;
+				Mesh*      mesh;
+				Texture2D* texBC;
+				Texture2D* texN;
+				Texture2D* texMR;
+				Texture2D* texAO;
+				Texture2D* texA;
+			};
+			std::vector<Candidate> candidates;
+			candidates.reserve(s_Data.DrawCommands.size());
+
+			for (size_t i = 0; i < s_Data.DrawCommands.size(); i++)
+			{
+				const auto& cmd = s_Data.DrawCommands[i];
+				if (!cmd.MeshData) continue;
+				const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
+				if (mat->Alpha == AlphaMode::Opaque)
+				{
+					candidates.push_back({ i, cmd.MeshData.get(),
+						mat->BaseColorMap.get(), mat->NormalMap.get(),
+						mat->MetallicRoughnessMap.get(), mat->AOMap.get(),
+						mat->AlphaMap.get() });
+				}
+			}
+
+			// 按 (Mesh, textures) 排序，使同组候选相邻
+			std::sort(candidates.begin(), candidates.end(),
+				[](const Candidate& a, const Candidate& b) {
+					if (a.mesh  != b.mesh)  return a.mesh  < b.mesh;
+					if (a.texBC != b.texBC) return a.texBC < b.texBC;
+					if (a.texN  != b.texN)  return a.texN  < b.texN;
+					if (a.texMR != b.texMR) return a.texMR < b.texMR;
+					if (a.texAO != b.texAO) return a.texAO < b.texAO;
+					return a.texA < b.texA;
+				});
+
+			// ---- 遍历分组，组内 >=2 则走 Instancing ----
+			bool didInstance = false;
+
+			s_Data.InstancedMeshShader->Bind();
+			IBLPrecompute::Bind();
+
+			static std::vector<Renderer3DData::InstanceData> instBuf;
+
+			size_t grpStart = 0;
+			while (grpStart < candidates.size())
+			{
+				// 找到 (Mesh + 全部贴图) 完全相同的连续区间 [grpStart, grpEnd)
+				size_t grpEnd = grpStart;
+				while (grpEnd < candidates.size() &&
+					candidates[grpEnd].mesh  == candidates[grpStart].mesh  &&
+					candidates[grpEnd].texBC == candidates[grpStart].texBC &&
+					candidates[grpEnd].texN  == candidates[grpStart].texN  &&
+					candidates[grpEnd].texMR == candidates[grpStart].texMR &&
+					candidates[grpEnd].texAO == candidates[grpStart].texAO &&
+					candidates[grpEnd].texA  == candidates[grpStart].texA)
+					grpEnd++;
+
+				size_t grpSize = grpEnd - grpStart;
+
+				if (grpSize >= 2)
+				{
+					didInstance = true;
+					const Ref<Mesh>& mesh = s_Data.DrawCommands[candidates[grpStart].idx].MeshData;
+
+					// 标记所有组内命令跳过常规路径
+					for (size_t k = grpStart; k < grpEnd; k++)
+						s_Data.DrawCommands[candidates[k].idx].Skip = true;
+
+					// 上传 per-batch 材质状态（贴图 UseXxx 标志 + 绑定贴图）
+					// 组内所有实例共用同一套贴图，只需上传一次
+					const Ref<Material>& batchMat = s_Data.DrawCommands[candidates[grpStart].idx].Mat
+						? s_Data.DrawCommands[candidates[grpStart].idx].Mat
+						: s_Data.DefaultMaterial;
+					UploadMaterial(batchMat);
+					s_Data.MaterialBuffer.EntityID = 0; // instanced path 通过 v_EntityID 传递
+					s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+
+					// 分批：每批最多 MAX_INSTANCES 个实例
+					size_t offset = 0;
+					while (offset < grpSize)
+					{
+						size_t batchCount = std::min(grpSize - offset, (size_t)Renderer3DData::MAX_INSTANCES);
+						instBuf.resize(batchCount);
+
+						for (size_t k = 0; k < batchCount; k++)
+						{
+							const auto& cmd = s_Data.DrawCommands[candidates[grpStart + offset + k].idx];
+							const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
+							instBuf[k].Transform = cmd.Transform;
+							instBuf[k].BaseColor = mat->BaseColor;
+							instBuf[k].MatParams = glm::vec4(mat->Metallic, mat->Roughness, mat->AO, 0.0f);
+							instBuf[k].EntityID  = cmd.EntityID;
+							instBuf[k]._pad[0] = instBuf[k]._pad[1] = instBuf[k]._pad[2] = 0;
+						}
+
+						glNamedBufferSubData(s_Data.InstanceVBO, 0,
+							(GLsizeiptr)(batchCount * sizeof(Renderer3DData::InstanceData)),
+							instBuf.data());
+
+						// 绑定 Mesh VAO，然后在其上附加实例 VBO 属性
+						mesh->Bind();
+						glBindBuffer(GL_ARRAY_BUFFER, s_Data.InstanceVBO);
+						constexpr GLsizei stride = (GLsizei)sizeof(Renderer3DData::InstanceData);
+
+						// Transform: mat4 = 4 × vec4，locations 4-7，divisor=1
+						for (int col = 0; col < 4; col++)
+						{
+							glEnableVertexAttribArray(4 + col);
+							glVertexAttribPointer(4 + col, 4, GL_FLOAT, GL_FALSE, stride,
+								(const void*)(offsetof(Renderer3DData::InstanceData, Transform) + col * sizeof(glm::vec4)));
+							glVertexAttribDivisor(4 + col, 1);
+						}
+						// BaseColor: location 8，divisor=1
+						glEnableVertexAttribArray(8);
+						glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, BaseColor));
+						glVertexAttribDivisor(8, 1);
+						// MatParams: location 9，divisor=1
+						glEnableVertexAttribArray(9);
+						glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, MatParams));
+						glVertexAttribDivisor(9, 1);
+						// EntityID: location 10，integer，divisor=1
+						glEnableVertexAttribArray(10);
+						glVertexAttribIPointer(10, 1, GL_INT, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, EntityID));
+						glVertexAttribDivisor(10, 1);
+
+						glDrawElementsInstanced(GL_TRIANGLES,
+							(GLsizei)mesh->GetIndexCount(), GL_UNSIGNED_INT,
+							nullptr, (GLsizei)batchCount);
+						s_Data.DrawCallCount++;
+
+						s_Data.DrawCallLog.push_back({
+							Renderer3D::DrawCallInfo::PassType::Main,
+							mesh->GetIndexCount(),
+							s_Data.DrawCommands[candidates[grpStart + offset].idx].EntityID,
+							(int)AlphaMode::Opaque, 0,
+							reinterpret_cast<uintptr_t>(mesh.get()) });
+
+						// 清理实例属性，避免污染该 VAO 的后续非 instanced 使用
+						for (int loc = 4; loc <= 10; loc++)
+							glDisableVertexAttribArray(loc);
+
+						offset += batchCount;
+					}
+				}
+
+				grpStart = grpEnd;
+			}
+
+			// 从队列移除已合批的命令，让常规路径只处理剩余命令
+			if (didInstance)
+			{
+				s_Data.DrawCommands.erase(
+					std::remove_if(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
+						[](const DrawCommand& c) { return c.Skip; }),
+					s_Data.DrawCommands.end());
+			}
+
+			if (s_Data.DrawCommands.empty())
+				return;
+		}
+
+		// 按 SortKey（材质指针）排序，相同材质的命令聚集在一起
 		std::sort(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
 			[](const DrawCommand& a, const DrawCommand& b)
 			{

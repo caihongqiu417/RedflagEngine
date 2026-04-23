@@ -394,7 +394,21 @@ namespace Redflag {
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
+        if (newEntity.HasComponent<MeshRendererComponent>())
+        {
+            auto& mrc = newEntity.GetComponent<MeshRendererComponent>();
+            if (mrc.Mat)
+                mrc.Mat = mrc.Mat->Clone();
+        }
+
         CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
+        if (newEntity.HasComponent<ModelRendererComponent>())
+        {
+            auto& mrc = newEntity.GetComponent<ModelRendererComponent>();
+            for (auto& mat : mrc.OverrideMaterials)
+                if (mat)
+                    mat = mat->Clone();
+        }
         CopyComponentIfExist<DirectionalLightComponent>(newEntity, entity);
         CopyComponentIfExist<PointLightComponent>(newEntity, entity);
         CopyComponentIfExist<ParticleEmitterComponent>(newEntity, entity);

@@ -73,8 +73,8 @@ namespace Redflag {
 		const glm::vec4&      GetColor()   const { return BaseColor; }
 		bool HasTexture() const { return BaseColorMap != nullptr; }
 
-		// 排序键：以 BaseColorMap 指针为主键
-		uintptr_t GetSortKey() const { return reinterpret_cast<uintptr_t>(BaseColorMap.get()); }
+		// 排序键：以材质对象指针为主键，确保不同材质各自上传 UBO
+		uintptr_t GetSortKey() const { return reinterpret_cast<uintptr_t>(this); }
 
 	private:
 		// 旧字段已合并到 PBR 参数中，不再单独保留

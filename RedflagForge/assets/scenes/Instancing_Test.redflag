@@ -1,0 +1,96 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 15712868764251011975
+    TagComponent:
+      Tag: Gate1
+    TransformComponent:
+      Translation: [0, 0.284277499, 1.25121152]
+      Rotation: [0, 0, 0]
+      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+    ModelRendererComponent:
+      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 8351800843422021918
+    TagComponent:
+      Tag: Gate1
+    TransformComponent:
+      Translation: [0, 0.400565386, -1.4358958]
+      Rotation: [0, 0, 0]
+      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+    ModelRendererComponent:
+      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 4817358316669574915
+    TagComponent:
+      Tag: Gate1
+    TransformComponent:
+      Translation: [0, 0.493212223, 3.67474461]
+      Rotation: [0, 0, 0]
+      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+    ModelRendererComponent:
+      FilePath: assets\models\kenney_toy-car-kit\Models\FBX format\gate.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 15849396106654211648
+    TagComponent:
+      Tag: Cube4
+    TransformComponent:
+      Translation: [0, 0, 2.43941069]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 5265558242219076247
+    TagComponent:
+      Tag: Cube1
+    TransformComponent:
+      Translation: [0, 1.41897297, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 11401727395107602806
+    TagComponent:
+      Tag: Cube2
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 7369917117601695905
+    TagComponent:
+      Tag: Cube3
+    TransformComponent:
+      Translation: [0, 1.50823021, 2.36785245]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      Metallic: 0
+      Roughness: 0.5
+      AO: 1
+  - Entity: 2822176143238249473
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [0, 3.20190716, -0.129271686]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 4.05000019
+      Radius: 8.10000038
+      CastShadow: false
