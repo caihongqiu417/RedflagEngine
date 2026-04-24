@@ -1554,6 +1554,7 @@
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1712,5 +1713,6 @@
     <ClCompile Include="vendor\tinyexr\deps\miniz\miniz.c">
       <Filter>vendor\tinyexr\deps\miniz</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp" />
   </ItemGroup>
 </Project>

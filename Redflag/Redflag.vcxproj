@@ -235,6 +235,7 @@ IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /
     <ClInclude Include="src\Redflag\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
     <ClInclude Include="src\Redflag\Scripting\ScriptEngine.h" />
+    <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h" />
     <ClInclude Include="src\Redflag\Utils\PlatformUtils.h" />
     <ClInclude Include="src\Redflag\rfpch.h" />
     <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h" />
@@ -712,6 +713,7 @@ IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp" />
     <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
