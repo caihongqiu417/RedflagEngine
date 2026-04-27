@@ -179,6 +179,10 @@ namespace Redflag {
 		static uint32_t GetRSMFluxTextureID();
 		static uint32_t GetRSMNormalTextureID();
 		static uint32_t GetRSMDistanceTextureID();
+		// TAA resolved 间接光纹理（供 Render Passes 面板预览）
+		static uint32_t GetRSMResolvedTextureID();
+		// TAA 历史混合权重（0=每帧独立, 0.9=强时域平滑），供 ImGui 调节
+		static float& GetRSMBlendAlpha();
 
 		// 返回后处理最终输出纹理 ID（s_PostFBO 的 RGBA8 attachment）
 		// ForgeLayer viewport 应调用此函数而非直接读主 FBO attachment0（主 FBO 已改为 RGBA16F HDR）

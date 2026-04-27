@@ -872,8 +872,14 @@ namespace Redflag {
                     if (ImGui::Button("Reset"))
                         rs = RSMSettings{};
 
+                    // TAA 时域混合权重
                     ImGui::Separator();
-                    ImGui::TextDisabled("RSM Flux  (albedo × light × NdotL)");
+                    ImGui::TextUnformatted("TAA Temporal Accumulation");
+                    ImGui::SliderFloat("Blend Alpha", &SceneRenderer::GetRSMBlendAlpha(), 0.0f, 0.99f, "%.2f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(0=no TAA, 0.9=strong smoothing)");
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("RSM Flux  (albedo x light x NdotL)");
                     uint32_t fluxTex = SceneRenderer::GetRSMFluxTextureID();
                     if (fluxTex)
                         ImGui::Image((void*)(uint64_t)fluxTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
@@ -887,6 +893,11 @@ namespace Redflag {
                     uint32_t distTex = SceneRenderer::GetRSMDistanceTextureID();
                     if (distTex)
                         ImGui::Image((void*)(uint64_t)distTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::TextDisabled("RSM Resolved  (TAA accumulated indirect)");
+                    uint32_t resolvedTex = SceneRenderer::GetRSMResolvedTextureID();
+                    if (resolvedTex)
+                        ImGui::Image((void*)(uint64_t)resolvedTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 
                     ImGui::EndTabItem();
                 }

@@ -219,11 +219,49 @@ namespace Redflag {
 	static Ref<UniformBuffer> s_RSMParamsUBO;
 	static glm::vec4          s_RSMSamples[RSM_MAX_SAMPLES]{};
 
-	// 关闭 RSM 时绑到 slot 13/14/15 的 1×1 黑纹理，避免主 shader 采到
-	// 未绑定的纹理触发 GL undefined behavior（core profile）。
+	// 关闭 RSM 时绑到 slot 13/14/15/17 的 1×1 黑纹理
 	static uint32_t           s_RSMBlackTex = 0;
 
+	// ---- RSM TAA 资源 ----
+	static constexpr uint32_t RSM_INDIRECT_SCENE_DEPTH_SLOT = 18;
+	static constexpr uint32_t RSM_INDIRECT_VIEW_NORMAL_SLOT = 19;
+	static constexpr uint32_t RSM_RESOLVED_SLOT             = 17;
+
+	static Ref<Framebuffer>   s_RSMIndirectFBO;       // 屏幕分辨率 RGBA16F：本帧 RSM 计算结果
+	static Ref<Framebuffer>   s_RSMHistoryFBO[2];     // ping-pong 历史，各屏幕分辨率 RGBA16F
+	static int                s_RSMHistoryIndex = 0;  // 当前写入目标索引（0 或 1）
+	static uint32_t           s_FrameIndex      = 0;  // 全局帧计数，驱动旋转 jitter
+	static glm::mat4          s_PrevViewProj    = glm::mat4(1.0f);
+	static bool               s_RSMHistoryValid = false; // 历史 buffer 是否有有效内容
+	static float              s_RSMBlendAlpha   = 0.9f;  // 时域融合权重
+
+	static Ref<Shader>        s_RSMIndirectShader;
+	static Ref<Shader>        s_RSMTemporalResolveShader;
+
+	static constexpr uint32_t RSM_INDIRECT_PARAMS_BINDING  = 7;
+	static constexpr uint32_t RSM_TEMPORAL_PARAMS_BINDING  = 8;
+
+	struct GPURSMIndirectParams
+	{
+		glm::mat4 InvViewProj;
+		int       FrameIndex;
+		int       _pad0, _pad1, _pad2;
+	};
+
+	struct GPURSMTemporalParams
+	{
+		glm::mat4 InvViewProj;
+		glm::mat4 PrevViewProj;
+		float     BlendAlpha;
+		int       ResetHistory;
+		float     _pad0, _pad1;
+	};
+
+	static Ref<UniformBuffer> s_RSMIndirectParamsUBO;
+	static Ref<UniformBuffer> s_RSMTemporalParamsUBO;
+
 	RSMSettings& SceneRenderer::GetRSMSettings() { return s_RSMSettings; }
+	float& SceneRenderer::GetRSMBlendAlpha()      { return s_RSMBlendAlpha; }
 
 	uint32_t SceneRenderer::GetRSMFluxTextureID()
 	{
@@ -237,6 +275,13 @@ namespace Redflag {
 	{
 		// RSM FBO 自身的深度附件（正交投影下线性 = 离光源 near 平面的距离）
 		return s_RSMFBO ? s_RSMFBO->GetDepthAttachmentRendererID() : 0;
+	}
+	uint32_t SceneRenderer::GetRSMResolvedTextureID()
+	{
+		// 上一帧写入完成的 resolved buffer（历史 ping-pong 中另一侧）
+		int readIdx = 1 - s_RSMHistoryIndex;
+		return (s_RSMHistoryValid && s_RSMHistoryFBO[readIdx])
+			? s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0) : 0;
 	}
 	uint32_t SceneRenderer::GetBloomTextureID()
 	{
@@ -427,8 +472,12 @@ namespace Redflag {
 			}
 		}
 
-		s_RSMDepthShader = Shader::Create("assets/shaders/RSMDepth.glsl");
-		s_RSMParamsUBO   = UniformBuffer::Create(sizeof(GPURSMParams), RSM_UBO_BINDING);
+		s_RSMDepthShader             = Shader::Create("assets/shaders/RSMDepth.glsl");
+		s_RSMIndirectShader          = Shader::Create("assets/shaders/RSMIndirect.glsl");
+		s_RSMTemporalResolveShader   = Shader::Create("assets/shaders/RSMTemporalResolve.glsl");
+		s_RSMParamsUBO               = UniformBuffer::Create(sizeof(GPURSMParams), RSM_UBO_BINDING);
+		s_RSMIndirectParamsUBO       = UniformBuffer::Create(sizeof(GPURSMIndirectParams), RSM_INDIRECT_PARAMS_BINDING);
+		s_RSMTemporalParamsUBO       = UniformBuffer::Create(sizeof(GPURSMTemporalParams), RSM_TEMPORAL_PARAMS_BINDING);
 
 		// 预生成 128 个低差异单位圆盘采样点。
 		// 纯随机极坐标 + 每像素旋转很容易在平坦表面上形成粉末状白噪声；
@@ -490,7 +539,16 @@ namespace Redflag {
 		// RSM 资源
 		s_RSMFBO.reset();
 		s_RSMDepthShader.reset();
+		s_RSMIndirectShader.reset();
+		s_RSMTemporalResolveShader.reset();
 		s_RSMParamsUBO.reset();
+		s_RSMIndirectParamsUBO.reset();
+		s_RSMTemporalParamsUBO.reset();
+		s_RSMIndirectFBO.reset();
+		s_RSMHistoryFBO[0].reset();
+		s_RSMHistoryFBO[1].reset();
+		s_RSMHistoryValid = false;
+		s_FrameIndex      = 0;
 		if (s_RSMBlackTex) { glDeleteTextures(1, &s_RSMBlackTex); s_RSMBlackTex = 0; }
 		IBLPrecompute::Shutdown();
 	}
@@ -845,45 +903,159 @@ namespace Redflag {
 	}
 
 	// ==================================================================
-	// BindRSMResources — 在主 Pass 之前绑 RSM 纹理 + 上传 RSM Params UBO
+	// RunRSMIndirectPass — 屏幕空间 RSM 间接光延迟 pass
 	//
-	// 关闭时也必须执行：把 1×1 黑纹理绑到 13/14/15，并把 NumSamples 写为 0
-	// 让 shader 中 for 循环 0 次即返回，等价于完全不参与渲染。
+	// 从 Z-Prepass 的深度 + view-normal 重建每像素世界坐标和法线，
+	// 计算 RSM 间接光并写入 s_RSMIndirectFBO（屏幕分辨率 RGBA16F）。
 	// ==================================================================
-	static void BindRSMResources()
+	static void RunRSMIndirectPass(int w, int h,
+	                               const glm::mat4& viewProj,
+	                               GLint sceneDepthTex,
+	                               GLint viewNormalTex)
 	{
-		if (!s_RSMParamsUBO) return;
+		if (!s_RSMIndirectShader || !s_RSMParamsUBO || !s_RSMIndirectParamsUBO || !s_RSMFBO) return;
 
-		const bool active = s_RSMSettings.Enabled && s_RSMFBO != nullptr;
-		const int  numSamples = active
-			? glm::clamp(s_RSMSettings.NumSamples, 0, (int)RSM_MAX_SAMPLES)
-			: 0;
+		// 创建 / 同步 FBO 尺寸
+		if (!s_RSMIndirectFBO)
+		{
+			FramebufferSpecification spec;
+			spec.Width       = uint32_t(w);
+			spec.Height      = uint32_t(h);
+			spec.Attachments = { FramebufferTextureFormat::RGBA16F };
+			s_RSMIndirectFBO = Framebuffer::Create(spec);
+		}
+		else
+		{
+			const auto& sp = s_RSMIndirectFBO->GetSpecifictaion();
+			if (int(sp.Width) != w || int(sp.Height) != h)
+			{
+				s_RSMIndirectFBO->Resize(uint32_t(w), uint32_t(h));
+				s_RSMHistoryValid = false; // viewport 变化，历史失效
+			}
+		}
+		if (!s_RSMIndirectFBO) return;
 
-		// 上传 Header + Samples（一次性整个 GPURSMParams）
+		// 上传 RSM Params UBO（RSMIndirect shader 读取）
+		const int numSamples = glm::clamp(s_RSMSettings.NumSamples, 0, (int)RSM_MAX_SAMPLES);
 		GPURSMParams params{};
-		params.Header = glm::vec4(
-			(float)numSamples,
-			s_RSMSettings.Intensity,
-			s_RSMSettings.SampleRadius,
-			active ? 1.0f : 0.0f);
+		params.Header = glm::vec4(float(numSamples), s_RSMSettings.Intensity,
+		                          s_RSMSettings.SampleRadius, 1.0f);
 		for (uint32_t i = 0; i < RSM_MAX_SAMPLES; ++i)
 			params.Samples[i] = s_RSMSamples[i];
 		s_RSMParamsUBO->SetData(&params, sizeof(GPURSMParams));
 
-		// 绑定纹理槽：开启时绑 RSM 产物，关闭时绑黑纹理避免未定义行为
+		// 绑定 RSM map 纹理（VPL 数据）
+		glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMFBO->GetColorAttachmentRendererID(0));
+		glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMFBO->GetColorAttachmentRendererID(1));
+		glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMFBO->GetColorAttachmentRendererID(2));
+		glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMFBO->GetDepthAttachmentRendererID());
+		// 主 FBO 深度和 view-normal（接收点重建用）
+		glBindTextureUnit(RSM_INDIRECT_SCENE_DEPTH_SLOT, (GLuint)sceneDepthTex);
+		glBindTextureUnit(RSM_INDIRECT_VIEW_NORMAL_SLOT, (GLuint)viewNormalTex);
+
+		s_RSMIndirectFBO->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		GPURSMIndirectParams iParams{};
+		iParams.InvViewProj = glm::inverse(viewProj);
+		iParams.FrameIndex  = (int)s_FrameIndex;
+		s_RSMIndirectParamsUBO->SetData(&iParams, sizeof(iParams));
+
+		s_RSMIndirectShader->Bind();
+
+		DrawFullscreenTriangle();
+
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	// ==================================================================
+	// RunRSMTemporalResolvePass — 时域累积 RSMIndirect 结果
+	//
+	// 将本帧 s_RSMIndirectFBO 与历史 ping-pong buffer 融合，
+	// 输出到 s_RSMHistoryFBO[s_RSMHistoryIndex]，然后翻转索引。
+	// ==================================================================
+	static void RunRSMTemporalResolvePass(int w, int h,
+	                                      const glm::mat4& viewProj,
+	                                      GLint sceneDepthTex)
+	{
+		if (!s_RSMTemporalResolveShader || !s_RSMTemporalParamsUBO || !s_RSMIndirectFBO) return;
+
+		// 创建 / 同步 history FBO 尺寸
+		for (int i = 0; i < 2; ++i)
+		{
+			if (!s_RSMHistoryFBO[i])
+			{
+				FramebufferSpecification spec;
+				spec.Width       = uint32_t(w);
+				spec.Height      = uint32_t(h);
+				spec.Attachments = { FramebufferTextureFormat::RGBA16F };
+				s_RSMHistoryFBO[i] = Framebuffer::Create(spec);
+			}
+			else
+			{
+				const auto& sp = s_RSMHistoryFBO[i]->GetSpecifictaion();
+				if (int(sp.Width) != w || int(sp.Height) != h)
+					s_RSMHistoryFBO[i]->Resize(uint32_t(w), uint32_t(h));
+			}
+		}
+		if (!s_RSMHistoryFBO[0] || !s_RSMHistoryFBO[1]) return;
+
+		int writeIdx = s_RSMHistoryIndex;
+		int readIdx  = 1 - s_RSMHistoryIndex;
+
+		s_RSMHistoryFBO[writeIdx]->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		s_RSMTemporalResolveShader->Bind();
+
+		// slot 0 = 本帧 RSMIndirect
+		glBindTextureUnit(0, s_RSMIndirectFBO->GetColorAttachmentRendererID(0));
+		// slot 1 = 上一帧 resolved history
+		glBindTextureUnit(1, s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0));
+		// slot 2 = 场景深度（反投影用）
+		glBindTextureUnit(2, (GLuint)sceneDepthTex);
+
+		GPURSMTemporalParams tParams{};
+		tParams.InvViewProj  = glm::inverse(viewProj);
+		tParams.PrevViewProj = s_PrevViewProj;
+		tParams.BlendAlpha   = s_RSMBlendAlpha;
+		tParams.ResetHistory = s_RSMHistoryValid ? 0 : 1;
+		s_RSMTemporalParamsUBO->SetData(&tParams, sizeof(tParams));
+
+		DrawFullscreenTriangle();
+
+		glEnable(GL_DEPTH_TEST);
+
+		// 翻转 ping-pong 索引，更新历史矩阵
+		s_RSMHistoryIndex = 1 - s_RSMHistoryIndex;
+		s_PrevViewProj    = viewProj;
+		s_RSMHistoryValid = true;
+	}
+
+	// ==================================================================
+	// BindRSMResources — 在主 Pass 之前绑 RSM resolved 纹理到 slot 17
+	//
+	// 关闭时绑 1×1 黑纹理，Lo += 0 × albedo = 无贡献。
+	// ==================================================================
+	static void BindRSMResources()
+	{
+		// 主 Pass 需要的 resolved 纹理
+		const bool active = s_RSMSettings.Enabled && s_RSMHistoryValid
+			&& s_RSMHistoryFBO[0] && s_RSMHistoryFBO[1];
+
 		if (active)
 		{
-			glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMFBO->GetColorAttachmentRendererID(0));
-			glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMFBO->GetColorAttachmentRendererID(1));
-			glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMFBO->GetColorAttachmentRendererID(2));
-			glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMFBO->GetDepthAttachmentRendererID());
+			int readIdx = 1 - s_RSMHistoryIndex;
+			glBindTextureUnit(RSM_RESOLVED_SLOT,
+				s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0));
 		}
 		else
 		{
-			glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMBlackTex);
-			glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMBlackTex);
-			glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMBlackTex);
-			glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMBlackTex);
+			glBindTextureUnit(RSM_RESOLVED_SLOT, s_RSMBlackTex);
 		}
 	}
 
@@ -1228,9 +1400,8 @@ namespace Redflag {
 		}
 
 		// ======================== Z-Prepass ========================
-		// SSAO 依赖 prepass 生成的 view-space 法线，因此 SSAO 开启时必须
-		// 强制跑 Z-Prepass；否则尊重用户开关。
-		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled;
+		// SSAO 和 RSMIndirect 都依赖 prepass 生成的深度和 view-space 法线。
+		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled || runRSM;
 		if (runPrepass)
 		{
 			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
@@ -1260,14 +1431,57 @@ namespace Redflag {
 		else
 			BindSSAOWhiteFallback();
 
+		// ======================== RSM Indirect + Temporal Resolve ========================
+		// 从当前绑定的主 FBO 查询深度和 view-normal 纹理，运行延迟 RSM 屏幕空间 pass
+		// 和时域累积 pass，将结果写入 ping-pong history buffer。
+		// 必须在 Z-Prepass 之后（有 depth + view-normal），在主 Pass 之前（写 resolved）。
+		if (runRSM && runPrepass)
+		{
+			GLint mainFBO = 0;
+			glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mainFBO);
+			GLint vp[4];
+			glGetIntegerv(GL_VIEWPORT, vp);
+			int w = vp[2], h = vp[3];
+
+			// 查询主 FBO 附件
+			GLint depthTex = 0, normalTex = 0;
+			glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+				GL_DEPTH_STENCIL_ATTACHMENT,
+				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+			if (depthTex == 0)
+				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+					GL_DEPTH_ATTACHMENT,
+					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+			glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+				GL_COLOR_ATTACHMENT2,
+				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
+
+			if (w > 0 && h > 0 && depthTex && normalTex)
+			{
+				const glm::mat4 vp_mat = camera.GetViewProjection();
+				RunRSMIndirectPass(w, h, vp_mat, depthTex, normalTex);
+				RunRSMTemporalResolvePass(w, h, vp_mat, depthTex);
+
+				// 还原主 FBO 和 viewport（两个新 pass 完成后需要回到主 FBO）
+				glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+				glViewport(vp[0], vp[1], vp[2], vp[3]);
+			}
+		}
+		else if (!runRSM)
+		{
+			// RSM 关闭时让 history 失效，下次开启时从第一帧重新累积
+			s_RSMHistoryValid = false;
+		}
+
 		// ======================== RSM 绑定 ========================
-		// SSAO Pass 用了 13/14/15 槽位（深度/法线/噪声），结束后会留存。
-		// 在主 Pass 之前覆盖为 RSM 纹理 + 上传 RSM Params UBO。
-		// 关闭时本函数也会把黑纹理绑到这三个槽 + NumSamples=0，主 shader
-		// 退化为 0 间接光，等价于完全不参与渲染。
+		// 把 TAA resolved 结果绑到 slot 17，主 shader 采样。
+		// 关闭时绑黑纹理，间接光贡献为 0。
 		BindRSMResources();
 
 		Renderer3D::EndScene();
+
+		// 帧计数递增（在 EndScene 之后，确保同帧渲染一致）
+		++s_FrameIndex;
 
 		if (runPrepass)
 		{
@@ -1411,81 +1625,111 @@ namespace Redflag {
 		}
 
 		// ======================== Shadow / RSM Pass（Runtime）========================
-		// 见编辑器路径同名段的解释：RSM 必须独立于 shadow 开关，否则关闭 shadow
-		// 会让主 shader 拿不到正确的 LightSpaceMatrix → RSM UV 错位。
+		glm::vec3 lightDir_rt;
+		glm::mat4 lightSpaceMatrix_rt(1.0f);
+		bool hasDirLight_rt = TryBuildLightSpaceMatrix(scene, lightDir_rt, lightSpaceMatrix_rt);
+		bool runShadow_rt   = s_ShadowEnabled && hasDirLight_rt;
+		bool runRSM_rt      = s_RSMSettings.Enabled && hasDirLight_rt;
+
+		if (runShadow_rt)
+			RunShadowPass(lightSpaceMatrix_rt);
+
+		if (runRSM_rt)
+			RunRSMPass(lightSpaceMatrix_rt);
+
+		if (hasDirLight_rt)
 		{
-			glm::vec3 lightDir;
-			glm::mat4 lightSpaceMatrix(1.0f);
-			bool hasDirLight = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
-			bool runShadow   = s_ShadowEnabled && hasDirLight;
-			bool runRSM      = s_RSMSettings.Enabled && hasDirLight;
-
-			if (runShadow)
-				RunShadowPass(lightSpaceMatrix);
-
-			if (runRSM)
-				RunRSMPass(lightSpaceMatrix);
-
-			if (hasDirLight)
-			{
-				glm::vec4 shadowParams(
-					s_ShadowSettings.DepthBias,
-					s_ShadowSettings.NormalBias,
-					1.0f / float(SHADOW_MAP_SIZE),
-					runShadow ? float(s_ShadowSettings.Mode) : 0.0f);
-				glm::vec4 shadowParams2(
-					s_ShadowSettings.PcfRadius,
-					s_ShadowSettings.LightSize,
-					0.0f, 0.0f);
-				Renderer3D::SetShadowData(lightSpaceMatrix, shadowParams, shadowParams2);
-			}
-
-			if (runShadow)
-				glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
+			glm::vec4 shadowParams(
+				s_ShadowSettings.DepthBias,
+				s_ShadowSettings.NormalBias,
+				1.0f / float(SHADOW_MAP_SIZE),
+				runShadow_rt ? float(s_ShadowSettings.Mode) : 0.0f);
+			glm::vec4 shadowParams2(
+				s_ShadowSettings.PcfRadius,
+				s_ShadowSettings.LightSize,
+				0.0f, 0.0f);
+			Renderer3D::SetShadowData(lightSpaceMatrix_rt, shadowParams, shadowParams2);
 		}
+
+		if (runShadow_rt)
+			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 
 		// ======================== Z-Prepass ========================
-		// SSAO 需要 prepass 的法线输出；开启 SSAO 时强制跑 prepass
-		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled;
-		if (runPrepass)
+		// SSAO 和 RSMIndirect 都依赖 prepass 生成的深度和 view-space 法线。
 		{
-			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
-
-			// 深度可视化：线性化后写入 RGBA8 FBO 供 ImGui 预览
+			bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled || runRSM_rt;
+			if (runPrepass)
 			{
-				GLint curFBO = 0, dt = 0;
-				glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
-				glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-				if (dt == 0)
-					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-				// Runtime 路径：从投影矩阵提取 near/far
-				float n = projection[3][2] / (projection[2][2] - 1.0f);
-				float f = projection[3][2] / (projection[2][2] + 1.0f);
-				GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
-				RunDepthVizPass((uint32_t)dt, vp[2], vp[3], n, f);
+				Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
+
+				// 深度可视化
+				{
+					GLint curFBO = 0, dt = 0;
+					glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
+					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
+					if (dt == 0)
+						glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
+					float n = projection[3][2] / (projection[2][2] - 1.0f);
+					float f = projection[3][2] / (projection[2][2] + 1.0f);
+					GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+					RunDepthVizPass((uint32_t)dt, vp[2], vp[3], n, f);
+				}
+
+				glDepthFunc(GL_LEQUAL);
+				glDepthMask(GL_FALSE);
 			}
 
-			glDepthFunc(GL_LEQUAL);
-			glDepthMask(GL_FALSE);
-		}
+			// ======================== SSAO Pass ========================
+			if (s_SSAOEnabled)
+				RunSSAOPass(projection);
+			else
+				BindSSAOWhiteFallback();
 
-		// ======================== SSAO Pass ========================
-		if (s_SSAOEnabled)
-			RunSSAOPass(projection);
-		else
-			BindSSAOWhiteFallback();
+			// ======================== RSM Indirect + Temporal Resolve ========================
+			if (runRSM_rt && runPrepass)
+			{
+				GLint mainFBO = 0;
+				glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mainFBO);
+				GLint vp[4];
+				glGetIntegerv(GL_VIEWPORT, vp);
+				int w = vp[2], h = vp[3];
 
-		// ======================== RSM 绑定 ========================
-		// 必须在 SSAO 之后、主 Pass 之前；关闭时也需要把黑纹理绑到槽位避免
-		// 主 shader 采到未绑定的纹理。
-		BindRSMResources();
+				GLint depthTex = 0, normalTex = 0;
+				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+					GL_DEPTH_STENCIL_ATTACHMENT,
+					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+				if (depthTex == 0)
+					glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+						GL_DEPTH_ATTACHMENT,
+						GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
+				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
+					GL_COLOR_ATTACHMENT2,
+					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
 
-		Renderer3D::EndScene();
+				if (w > 0 && h > 0 && depthTex && normalTex)
+				{
+					const glm::mat4 vp_rt = projection * glm::inverse(cameraTransform);
+					RunRSMIndirectPass(w, h, vp_rt, depthTex, normalTex);
+					RunRSMTemporalResolvePass(w, h, vp_rt, depthTex);
 
-		if (runPrepass)
-		{
-			glDepthMask(GL_TRUE);
-			glDepthFunc(GL_LESS);
+					glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+					glViewport(vp[0], vp[1], vp[2], vp[3]);
+				}
+			}
+			if (!runRSM_rt)
+				s_RSMHistoryValid = false;
+
+			// ======================== RSM 绑定 ========================
+			BindRSMResources();
+
+			Renderer3D::EndScene();
+			++s_FrameIndex;
+
+			if (runPrepass)
+			{
+				glDepthMask(GL_TRUE);
+				glDepthFunc(GL_LESS);
+			}
 		}
 
 		// ======================== 天空盒 ========================
