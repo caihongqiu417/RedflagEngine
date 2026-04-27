@@ -658,6 +658,56 @@ namespace Redflag
 	}
 
 	// -------------------------------------------------------------------
+	// ExecuteRSMPass — 用 RSM Depth shader 把当前队列里的几何重绘一次
+	//
+	// 与 ExecuteShadowPass 的区别：
+	//   - 同时上传 Material UBO（RSM 片元需要 BaseColor / 贴图开关）
+	//   - 同时绑定 BaseColorMap 等纹理（slot 3/4/5/6/10，复用 UploadMaterial）
+	//   - 每个 cmd 仍然跳过 Blend 材质（与 Shadow Pass 一致）
+	//
+	// 调用方负责：
+	//   - 绑定 RSM FBO（3 颜色 MRT + 深度）和对应视口
+	//   - 清掉 RSM FBO 的颜色 + 深度
+	//   - SetShadowData 写好光源空间矩阵
+	// -------------------------------------------------------------------
+	void Renderer3D::ExecuteRSMPass(const Ref<Shader>& rsmShader)
+	{
+		RF_PROFILE_FUNCTION();
+
+		if (!rsmShader || s_Data.DrawCommands.empty())
+			return;
+
+		rsmShader->Bind();
+
+		for (const auto& cmd : s_Data.DrawCommands)
+		{
+			if (!cmd.MeshData) continue;
+			if (cmd.Mat && cmd.Mat->Alpha == AlphaMode::Blend)
+				continue;
+
+			// Transform UBO（每个 cmd 都要上传）
+			s_Data.TransformBuffer.Transform = cmd.Transform;
+			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
+
+			// Material UBO + 绑定贴图：RSM 片元只读 u_BaseColor / u_UseBaseColorMap
+			// 其余字段虽未用但 std140 布局必须一致，所以走完整 UploadMaterial
+			const Ref<Material>& mat = cmd.Mat ? cmd.Mat : s_Data.DefaultMaterial;
+			UploadMaterial(mat);
+			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
+			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+
+			cmd.MeshData->Bind();
+			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+			s_Data.DrawCallCount++;
+
+			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::RSM,
+				cmd.MeshData->GetIndexCount(), cmd.EntityID,
+				static_cast<int>(mat->Alpha), mat->GetSortKey(),
+				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
+		}
+	}
+
+	// -------------------------------------------------------------------
 	// ExecuteDepthPrepass — Z-Prepass，向主帧缓冲的深度缓冲写入深度
 	//
 	// 与 ExecuteShadowPass 的区别：

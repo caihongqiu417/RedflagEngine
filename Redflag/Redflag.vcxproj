@@ -710,10 +710,10 @@ IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp" />
     <ClCompile Include="src\Redflag\Scripting\ScriptEngine.cpp" />
+    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp" />
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp" />
     <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

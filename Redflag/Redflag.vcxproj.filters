@@ -282,6 +282,9 @@
     <ClInclude Include="src\Redflag\Scripting\ScriptEngine.h">
       <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Utils\PlatformUtils.h">
       <Filter>src\Redflag\Utils</Filter>
     </ClInclude>
@@ -1554,7 +1557,6 @@
     <ClInclude Include="vendor\stb_image\stb_image_write.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1701,6 +1703,9 @@
     <ClCompile Include="src\Redflag\Scripting\ScriptEngine.cpp">
       <Filter>src\Redflag\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>
     </ClCompile>
@@ -1713,6 +1718,5 @@
     <ClCompile Include="vendor\tinyexr\deps\miniz\miniz.c">
       <Filter>vendor\tinyexr\deps\miniz</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,130 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 2310000000000002
+    TagComponent:
+      Tag: Ceiling
+    TransformComponent:
+      Translation: [0, 3, 0]
+      Rotation: [0, 0, 0]
+      Scale: [6.19999981, 0.200000003, 6.19999981]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.899999976, 0.899999976, 0.899999976, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 2310000000000003
+    TagComponent:
+      Tag: BackWall
+    TransformComponent:
+      Translation: [0, 0, -3]
+      Rotation: [0, 0, 0]
+      Scale: [6.19999981, 6.19999981, 0.200000003]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.899999976, 0.899999976, 0.899999976, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 2310000000000004
+    TagComponent:
+      Tag: LeftWall_Red
+    TransformComponent:
+      Translation: [-3, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 6.19999981, 6.19999981]
+    MeshRendererComponent:
+      Color: [0.899999976, 0.0700000003, 0.0500000007, 1]
+      MeshType: Cube
+      BaseColor: [0.899999976, 0.0700000003, 0.0500000007, 1]
+      Metallic: 0
+      Roughness: 0.899999976
+      AO: 1
+  - Entity: 2310000000000005
+    TagComponent:
+      Tag: RightWall_Green
+    TransformComponent:
+      Translation: [3, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 6.19999981, 6.19999981]
+    MeshRendererComponent:
+      Color: [0.0500000007, 0.800000012, 0.100000001, 1]
+      MeshType: Cube
+      BaseColor: [0.0500000007, 0.800000012, 0.100000001, 1]
+      Metallic: 0
+      Roughness: 0.899999976
+      AO: 1
+  - Entity: 2310000000000006
+    TagComponent:
+      Tag: ShortBox
+    TransformComponent:
+      Translation: [1, -2.1500001, -0.800000012]
+      Rotation: [0, 0.296700001, 0]
+      Scale: [1.5, 1.5, 1.5]
+    MeshRendererComponent:
+      Color: [0.879999995, 0.879999995, 0.879999995, 1]
+      MeshType: Cube
+      BaseColor: [0.879999995, 0.879999995, 0.879999995, 1]
+      Metallic: 0
+      Roughness: 0.899999976
+      AO: 1
+  - Entity: 2310000000000007
+    TagComponent:
+      Tag: TallBox
+    TransformComponent:
+      Translation: [-0.899999976, -1.39999998, -1.5]
+      Rotation: [0, -0.296700001, 0]
+      Scale: [1.5, 3, 1.5]
+    MeshRendererComponent:
+      Color: [0.879999995, 0.879999995, 0.879999995, 1]
+      MeshType: Cube
+      BaseColor: [0.879999995, 0.879999995, 0.879999995, 1]
+      Metallic: 0
+      Roughness: 0.899999976
+      AO: 1
+  - Entity: 2310000000000010
+    TagComponent:
+      Tag: Sun
+    TransformComponent:
+      Translation: [0, 4, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [2.41000009, -0.939999998, -1.64999998]
+      Color: [1, 1, 1]
+      Intensity: 1.89999998
+      CastShadow: true
+  - Entity: 2310000000000001
+    TagComponent:
+      Tag: Floor
+    TransformComponent:
+      Translation: [0, -3, 0]
+      Rotation: [0, 0, 0]
+      Scale: [6.19999981, 0.200000003, 6.19999981]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.899999976, 0.899999976, 0.899999976, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 2310000000000009
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 9]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 1.04719758
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false

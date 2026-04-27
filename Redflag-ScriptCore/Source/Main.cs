@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Redflag
 {
-    // 确保内存布局与 glm::vec3 一致（3个连续的float）
+    // 确保内存布局与 glm::vec3 一致（12)
     public struct Vector3
     {
         public float X, Y, Z;

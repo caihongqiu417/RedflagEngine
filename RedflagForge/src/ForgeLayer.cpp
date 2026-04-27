@@ -462,6 +462,7 @@ namespace Redflag {
                 ImGui::MenuItem("Shadow",          nullptr, &SceneRenderer::GetShadowEnabled());
                 ImGui::MenuItem("Z-Prepass",       nullptr, &SceneRenderer::GetZPrepassEnabled());
                 ImGui::MenuItem("SSAO",            nullptr, &SceneRenderer::GetSSAOEnabled());
+                ImGui::MenuItem("RSM",             nullptr, &SceneRenderer::GetRSMSettings().Enabled);
                 ImGui::MenuItem("Frustum Culling", nullptr, &Renderer3D::GetFrustumCullingEnabled());
                 ImGui::EndMenu();
             }
@@ -686,8 +687,8 @@ namespace Redflag {
             ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
 
-            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=BloomBright 6=BloomUp 7=BloomTonemap
-            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "BloomBright", "BloomUp", "BloomTonemap" };
+            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=RSM 6=BloomBright 7=BloomUp 8=BloomTonemap
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "RSM", "BloomBright", "BloomUp", "BloomTonemap" };
             ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
 
             if (ImGui::BeginTable("dc_table", 4,
@@ -713,20 +714,22 @@ namespace Redflag {
                     if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)      continue;
                     if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass)     continue;
                     if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)        continue;
-                    if (s_PassFilter == 5 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomBright) continue;
-                    if (s_PassFilter == 6 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomUp)     continue;
-                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomTonemap) continue;
+                    if (s_PassFilter == 5 && dc.Pass != Renderer3D::DrawCallInfo::PassType::RSM)         continue;
+                    if (s_PassFilter == 6 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomBright) continue;
+                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomUp)     continue;
+                    if (s_PassFilter == 8 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomTonemap) continue;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("%d", row++);
 
                     ImGui::TableSetColumnIndex(1);
-                    const char* passName = 
+                    const char* passName =
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::Main        ? "Main" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow       ? "Shadow" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::Prepass      ? "Prepass" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO         ? "SSAO" :
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::RSM          ? "RSM" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright  ? "BloomBrt" :
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp      ? "BloomUp" :
                                                                                        "BloomTonemap";
@@ -834,6 +837,56 @@ namespace Redflag {
                     uint32_t nTex = SceneRenderer::GetViewNormalTextureID();
                     if (nTex)
                         ImGui::Image((void*)(uint64_t)nTex, ImVec2(320, 180), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::EndTabItem();
+                }
+
+                // ---- RSM 页签 ----
+                // RSM (Reflective Shadow Maps) — 1-bounce 间接光
+                // 主 Pass 在直接光累加之后随机采样 Flux/WorldPos/Normal，
+                // 把每个 lit texel 当虚拟点光源 (VPL)。三张产物：
+                //   Flux     : albedo × lightColor × NdotL（被照表面的出射通量）
+                //   Normal   : 世界法线（压缩到 [0,1]）
+                //   Distance : 光源视角下的深度（正交投影下线性 = 到 near 平面的距离）
+                if (ImGui::BeginTabItem("RSM"))
+                {
+                    auto& rs = SceneRenderer::GetRSMSettings();
+
+                    ImGui::Checkbox("Enabled", &rs.Enabled);
+
+                    ImGui::Separator();
+                    ImGui::TextUnformatted("RSM Parameters");
+
+                    // VPL 采样数：越多越平滑，越少越快
+                    ImGui::SliderInt("Num Samples", &rs.NumSamples, 16, 128);
+                    ImGui::SameLine(); ImGui::TextDisabled("(VPLs per pixel)");
+
+                    // 间接光强度倍率（÷N 归一化下单样本 ~0.01，需要较大 intensity）
+                    ImGui::DragFloat("Intensity",     &rs.Intensity,     0.2f, 0.0f, 50.0f, "%.2f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(1-bounce strength)");
+
+                    // shadow map UV 空间内的采样半径
+                    ImGui::DragFloat("Sample Radius", &rs.SampleRadius, 0.001f, 0.005f, 0.5f, "%.3f");
+                    ImGui::SameLine(); ImGui::TextDisabled("(UV-space radius)");
+
+                    if (ImGui::Button("Reset"))
+                        rs = RSMSettings{};
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("RSM Flux  (albedo × light × NdotL)");
+                    uint32_t fluxTex = SceneRenderer::GetRSMFluxTextureID();
+                    if (fluxTex)
+                        ImGui::Image((void*)(uint64_t)fluxTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::TextDisabled("RSM Normal  (world-space, packed [0,1])");
+                    uint32_t normalTex = SceneRenderer::GetRSMNormalTextureID();
+                    if (normalTex)
+                        ImGui::Image((void*)(uint64_t)normalTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+
+                    ImGui::TextDisabled("RSM Distance  (light-view depth)");
+                    uint32_t distTex = SceneRenderer::GetRSMDistanceTextureID();
+                    if (distTex)
+                        ImGui::Image((void*)(uint64_t)distTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 
                     ImGui::EndTabItem();
                 }

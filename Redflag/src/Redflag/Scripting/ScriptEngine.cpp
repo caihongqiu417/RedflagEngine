@@ -138,7 +138,7 @@ namespace Redflag {
 	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
 		//创建AppDomain
-		//脚本系统所在（热更新）
+		//脚本系统dll（热更新）
 		s_Data->AppDomain = mono_domain_create_appdomain("RedflagScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 

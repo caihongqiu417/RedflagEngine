@@ -26,7 +26,7 @@ namespace Redflag
 			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
 			struct DrawCallInfo
 			{
-				enum class PassType { Main, Shadow, Prepass, SSAO, BloomBright, BloomUp, BloomTonemap };
+				enum class PassType { Main, Shadow, Prepass, SSAO, RSM, BloomBright, BloomUp, BloomTonemap };
 				PassType Pass       = PassType::Main;
 				uint32_t IndexCount = 0;
 				int      EntityID   = -1;
@@ -73,6 +73,11 @@ namespace Redflag
 			const glm::vec4& shadowParams,
 			const glm::vec4& shadowParams2 = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f));
 		static void ExecuteShadowPass(const Ref<Shader>& depthShader);
+
+		// RSM Pass：和 Shadow Pass 一样从光源视角重绘一遍队列，但同时上传
+		//   Material UBO + 绑定 BaseColorMap，让 RSM shader 能输出 albedo
+		//   加权的 flux。调用方需要自行绑好 RSM FBO 与视口（深度+三张 MRT 颜色）。
+		static void ExecuteRSMPass(const Ref<Shader>& rsmShader);
 
 		// Z-Prepass：用主相机视角只写深度，不写颜色
 		// 须在 BeginScene 收集完所有 DrawMesh/DrawModel 之后、EndScene 之前调用

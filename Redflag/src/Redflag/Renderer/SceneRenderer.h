@@ -77,7 +77,9 @@ namespace Redflag {
 		float NormalBias  = 1.0f;    // 纹素单位，薄面片额外防自阴影
 		float PcfRadius   = 1.5f;    // PCF 模式下的核半径（纹素）
 		float LightSize   = 6.0f;    // PCSS 模式下的虚拟光源尺寸（纹素）
-		float OrthoHalfSize = 25.0f; // 光源正交视锥半宽（世界空间）
+		float OrthoHalfSize = 5.0f;  // 光源正交视锥半宽（世界空间）。Cornell box 等小场景用 4~5；
+		                             // 大场景需要在 UI 里调到 25~50。半宽过大会让 RSM 大部分 texel
+		                             // 落在场景外（flux=0），间接光信号被稀释，bleeding 看不出来。
 	};
 
 	// =================================================================
@@ -110,6 +112,27 @@ namespace Redflag {
 	{
 		float Exposure = 1.0f;  // 曝光度倍率（乘在 tonemap 前的 HDR 上）
 	};
+
+	// =================================================================
+	// RSM (Reflective Shadow Maps) 调参
+	//
+	// 在 Shadow Pass 之外额外渲染一遍场景到 RSM FBO（Flux/WorldPos/Normal
+	// 三张 RGBA16F 颜色附件），主 Mesh shader 在直接光累加之后随机采样
+	// 这些 VPL 计算 1-bounce 间接漫反射。
+	//
+	// Enabled = false 时本特性完全不参与渲染，等价于关闭前的状态。
+	// =================================================================
+	struct RSMSettings
+	{
+		bool  Enabled      = true;    // 关闭时跳过 RSM Pass + shader 中 NumSamples 置 0
+		int   NumSamples   = 128;     // 每像素采样的 VPL 数量（16~128，越大越平滑）
+		// shader 中按 ÷NumSamples 归一化（form-factor 平均值），单样本 geom ~0.01-0.05，
+		// 默认 ~10 才能让 Cornell box 里的 color bleeding 肉眼可见。
+		float Intensity    = 10.0f;   // 间接光整体强度（0~50）
+		// 在 shadow map UV 空间的采样半径。OrthoHalfSize=5 时 1.0 UV ≈ 10 世界单位，
+		// Cornell box 占 ~0.6 UV，0.4 足以让样本采到对面墙体产生 color bleeding。
+		float SampleRadius = 0.40f;   // 0.01 ~ 0.6
+	};
 	class SceneRenderer
 	{
 	public:
@@ -126,6 +149,7 @@ namespace Redflag {
 		// 供编辑器 UI 读写阴影调参
 		static ShadowSettings& GetShadowSettings();
 		static SSAOSettings&   GetSSAOSettings();
+		static RSMSettings&    GetRSMSettings();
 
 		// IBL / Shadow / Z-Prepass / SSAO 全局开关（菜单栏 Toggle）
 		static bool& GetIBLEnabled();
@@ -147,6 +171,14 @@ namespace Redflag {
 		static ToneMapSettings& GetToneMapSettings();
 		static uint32_t GetBloomTextureID();
 		static void SetMainSceneColorTarget(uint32_t colorTex, int width, int height);
+
+		// RSM 三张产物纹理（供 Render Passes 面板预览）：
+		//   Flux      = 颜色附件 0，光源照亮表面的出射通量
+		//   Normal    = 颜色附件 2，世界法线（压缩到 [0,1]）
+		//   Distance  = 深度附件，光源视角下到 near 平面的距离（正交投影下线性）
+		static uint32_t GetRSMFluxTextureID();
+		static uint32_t GetRSMNormalTextureID();
+		static uint32_t GetRSMDistanceTextureID();
 
 		// 返回后处理最终输出纹理 ID（s_PostFBO 的 RGBA8 attachment）
 		// ForgeLayer viewport 应调用此函数而非直接读主 FBO attachment0（主 FBO 已改为 RGBA16F HDR）

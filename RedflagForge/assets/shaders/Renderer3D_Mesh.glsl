@@ -195,6 +195,23 @@ layout(binding = 12) uniform sampler2D u_SSAOMap;
 layout(binding = 7) uniform samplerCube u_IrradianceMap;   // slot 7
 layout(binding = 8) uniform samplerCube u_PrefilterMap;    // slot 8 （含 mip chain）
 layout(binding = 9) uniform sampler2D   u_BRDFLUT;         // slot 9 （RG16F）
+
+// ---- RSM 纹理（slot 13/14/15/16）----
+// 由 SceneRenderer::BindRSMResources 绑定。关闭时绑 1×1 黑纹理 + NumSamples=0
+// 即可让间接光退化为 0，不影响其它渲染特性。
+layout(binding = 13) uniform sampler2D u_RSMFlux;       // slot 13
+layout(binding = 14) uniform sampler2D u_RSMWorldPos;   // slot 14
+layout(binding = 15) uniform sampler2D u_RSMNormal;     // slot 15
+layout(binding = 16) uniform sampler2D u_RSMDepth;      // slot 16
+
+// ---- RSM 参数 UBO (binding = 6) ----
+// Header.x = numSamples, .y = intensity, .z = sampleRadius, .w = enabledFlag
+// 关闭时 numSamples=0，下面的 for 循环跑 0 次直接返回 0。
+layout(std140, binding = 6) uniform RSMData
+{
+    vec4 u_RSMHeader;
+    vec4 u_RSMSamples[128]; // xy=单位圆盘偏移 z=样本权重 w=未用
+};
 // =====================================================================
 // PBR 核心：Cook-Torrance 微面元 BRDF
 //
@@ -217,6 +234,27 @@ layout(binding = 9) uniform sampler2D   u_BRDFLUT;         // slot 9 （RG16F）
 // =====================================================================
 
 const float PI = 3.14159265359;
+
+float Hash12(vec2 p)
+{
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float ValueNoise2D(vec2 p)
+{
+    vec2 cell = floor(p);
+    vec2 fracPart = fract(p);
+    vec2 blend = fracPart * fracPart * (3.0 - 2.0 * fracPart);
+
+    float v00 = Hash12(cell);
+    float v10 = Hash12(cell + vec2(1.0, 0.0));
+    float v01 = Hash12(cell + vec2(0.0, 1.0));
+    float v11 = Hash12(cell + vec2(1.0, 1.0));
+
+    return mix(mix(v00, v10, blend.x), mix(v01, v11, blend.x), blend.y);
+}
 
 // ----- D: GGX / Trowbridge-Reitz 法线分布 -----
 // 返回微面元法线朝向 H 的概率密度
@@ -404,6 +442,139 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
     if (pcfRadius <= 1.001)
         return PCF3x3(proj.xy, refDepth, texel);
     return PCFVariable(proj.xy, refDepth, pcfRadius, texel);
+}
+
+// 直接 texelFetch 单个 VPL — 不做手工 bilinear。
+//
+// 之前的 2x2 加权混合在概念上就是错的：VPL 是离散点光源，把相邻像素
+// 的 worldPos / normal / flux 平均会创造出几何上不存在的"假 VPL"，
+// 即便有 plane/normal/depth 拒绝项也只是缓解。同时一次采样 4 张纹理
+// × 2x2 = 16+ 次 texelFetch，是主 Pass 卡顿的主要来源。
+//
+// 改成 nearest 取一个 VPL 后，跨表面 VPL 由几何项 vplFacing × fragFacing
+// 自然衰减；残余的颗粒感由 NumSamples 和 per-pixel 旋转处理。
+bool SampleRSMPoint(vec2 uv, out vec3 flux, out vec3 worldPos, out vec3 normal, out float depth)
+{
+    ivec2 texSize = textureSize(u_RSMDepth, 0);
+    if (texSize.x <= 0 || texSize.y <= 0)
+        return false;
+
+    ivec2 coord = clamp(ivec2(floor(uv * vec2(texSize))), ivec2(0), texSize - 1);
+
+    depth = texelFetch(u_RSMDepth, coord, 0).r;
+    if (depth >= 0.9999)
+        return false;
+
+    flux     = texelFetch(u_RSMFlux,     coord, 0).rgb;
+    worldPos = texelFetch(u_RSMWorldPos, coord, 0).rgb;
+    normal   = normalize(texelFetch(u_RSMNormal, coord, 0).rgb * 2.0 - 1.0);
+    return true;
+}
+
+// =====================================================================
+// RSM 间接光（一次弹射，Lambert 漫反射）
+//
+// 物理公式（form factor 形式）：
+//   E(x,n) = Σ_i Φ_i × max(0, cos θ_i) × max(0, cos θ) / ||x-x_i||²
+//   其中 cos θ_i = n_i · normalize(x-x_i)，cos θ = n · normalize(x_i-x)
+//
+// 三个抗噪 / 抗摩尔纹关键技巧：
+//
+//   1. 每像素旋转（IGN noise）
+//      所有像素共用同一组 128 采样点会让相邻像素看到几乎相同的 VPL，
+//      产生结构化条纹 / 摩尔纹。给每个像素一个不同角度的随机旋转后，
+//      相邻像素采到不同 VPL 子集，结构噪声退化为可接受的高频白噪声。
+//
+//   2. 距离软门限 (dist² + bias)
+//      原始 1/D² 在 D→0 时爆炸（自身或邻接表面附近的 VPL 把贡献炸成
+//      白色火萤）。+bias 让超近距离的贡献被夹到一个有限值。
+//      bias 单位 = 世界空间距离²，0.05 ≈ 22cm 软门限。
+//
+//   3. 单 VPL 贡献钳位
+//      即便加了 bias，靠近边缘且法向极佳对齐的样本仍可能拉出火萤。
+//      最后再 saturate 一次单样本贡献，彻底压制极端值。
+// =====================================================================
+vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
+{
+    int numSamples = int(u_RSMHeader.x);
+    if (numSamples <= 0) return vec3(0.0);
+
+    float intensity    = u_RSMHeader.y;
+    float sampleRadius = u_RSMHeader.z;
+
+    // ---- 屏幕空间高频 per-pixel 噪声旋转 ----
+    // 用 gl_FragCoord 的 per-pixel hash 做旋转 — 相邻像素之间完全
+    // 去相关，结构噪声被打散成像素级白噪声。
+    //
+    // 注意：不要再叠加额外的 patternJitter 把样本从 Vogel 位置"推开"，
+    // 我之前用 0.35 半径的额外抖动把样本平移了 ~Cornell box 的尺寸，
+    // 等于完全摧毁了 Vogel 圆盘的低差异结构 — 命中红绿墙的少数样本
+    // 会因此被埋进噪声，看起来"加 intensity 只是噪声变多"。
+    float angle = 6.28318530718 * Hash12(gl_FragCoord.xy);
+    float cosA  = cos(angle);
+    float sinA  = sin(angle);
+
+    vec3 indirect = vec3(0.0);
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        vec2  baseOffset = u_RSMSamples[i].xy;
+        float sampleWeight = u_RSMSamples[i].z;
+
+        // 把单位圆采样模板按当前像素的角度旋转
+        vec2 offset = vec2(
+            cosA * baseOffset.x - sinA * baseOffset.y,
+            sinA * baseOffset.x + cosA * baseOffset.y);
+
+        vec2 vplUV = shadowUV + offset * sampleRadius;
+        if (vplUV.x < 0.0 || vplUV.x > 1.0 ||
+            vplUV.y < 0.0 || vplUV.y > 1.0)
+            continue;
+
+        vec3 vplFlux;
+        vec3 vplPos;
+        vec3 vplNormal;
+        float vplDepth;
+        if (!SampleRSMPoint(vplUV, vplFlux, vplPos, vplNormal, vplDepth))
+            continue;
+
+        // 之前这里有一段 light-space depthDelta 过滤，初衷是抑制跨墙漏光，但
+        // 实际上 Cornell Box 这种倾斜方向光投影下，墙和地板的 light-NDC 深度
+        // 差能到 0.5+，远超 0.02 容差 — 把墙→地板这种最有意义的 color
+        // bleeding 全部砍掉，配合 per-pixel 旋转直接表现成黑色噪点。
+        //
+        // 跨表面抑制实际上由下面 vplFacing × fragFacing / (d² + bias) 几何项
+        // 自然完成：法线垂直/方向不对 → 几何项 → 0；DIST_BIAS 处理近距离爆炸；
+        // min(geom, 4) 钳位极端值。深度过滤是冗余且有害的。
+
+        vec3 dir = fragWorldPos - vplPos;
+        float dist2 = dot(dir, dir);
+        if (dist2 < 1e-4) continue;          // 自采样保护
+
+        // ---- 几何项：cos × cos / D² ----
+        // 用归一化方向计算两个 cos，分母用 (D² + bias) 软门限避免火萤
+        vec3  dirN       = dir * inversesqrt(dist2);
+        float vplFacing  = max(0.0, dot(vplNormal, dirN));
+        float fragFacing = max(0.0, dot(N, -dirN));
+
+        const float DIST_BIAS = 0.05;        // ≈ 22cm 软门限（世界单位）
+        float geom = vplFacing * fragFacing / (dist2 + DIST_BIAS);
+
+        // 单 VPL 贡献钳位：彻底压住偶发极端值
+        float contrib = min(geom, 4.0) * sampleWeight;
+
+        indirect += vplFlux * contrib;
+    }
+
+    // 按常量 numSamples 归一化 — 让 intensity 线性可控、per-pixel 方差被压低。
+    // 不归一化时 128 个样本的 sum 在相邻像素间方差很大（采到红墙的样本数从
+    // 5 到 15 都有可能，per-pixel 旋转下尤其严重），表现为强烈的颗粒噪声。
+    // ÷N 之后每个样本的影响 ≈ 1/N，intensity 直接乘到稳定的均值上。
+    //
+    // 系数补偿：单样本 geom ≈ 0.01~0.05，÷128 后乘 intensity，
+    // intensity 默认 ~10 才能看到肉眼可见的 bleeding。UI 中默认值
+    // 已经调高，对应 SceneRenderer.h::RSMSettings::Intensity。
+    return indirect * (intensity / float(numSamples));
 }
 
 // ---------- 方向光（平行光，无衰减）----------
@@ -600,6 +771,26 @@ void main()
         fallback.Direction = vec4(0.0, -1.0, -0.5, 0.0);
         fallback.Color     = vec4(1.0, 1.0, 1.0, 1.0);
         Lo += CalcDirectionalLight(fallback, N, V, albedo, metallic, roughness, F0, 1.0);
+    }
+
+    // ==================== 5.5 RSM 间接光（一次弹射 Lambert）====================
+    //
+    // 把直接光打亮的表面当做 VPL，求和它们对当前像素的漫反射贡献。
+    // 只在方向光投射的 shadow map 范围内才有 VPL；超出 NDC 范围的片元
+    // 直接得到 0，与现有 ComputeDirectionalShadow 的边界处理保持一致。
+    //
+    // 关闭 RSM 时 SceneRenderer 把 numSamples 写为 0，函数立刻返回 0，
+    // 等价于完全不参与渲染。
+    {
+        vec3 lsProj = v_LightSpacePos.xyz / max(v_LightSpacePos.w, 1e-6);
+        lsProj      = lsProj * 0.5 + 0.5;
+        if (lsProj.z >= 0.0 && lsProj.z <= 1.0)
+        {
+            vec3 rsmIndirect = ComputeRSMIndirect(v_WorldPos, N, lsProj.xy);
+            // Lambert：接收点也按自身 albedo 反射间接光
+            // 直接累加到 Lo（受同一行 tone mapping 流程处理）
+            Lo += rsmIndirect * albedo;
+        }
     }
 
     // ==================== 6. IBL 环境光（Split Sum 近似）====================

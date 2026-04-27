@@ -179,6 +179,65 @@ namespace Redflag {
 
 	BloomSettings&   SceneRenderer::GetBloomSettings()   { return s_BloomSettings; }
 	ToneMapSettings& SceneRenderer::GetToneMapSettings() { return s_ToneMapSettings; }
+
+	// =================================================================
+	// RSM (Reflective Shadow Maps) 资源
+	//
+	// 设计：完全独立于 Shadow Pass，不修改 s_ShadowFBO / s_ShadowDepthShader。
+	//   - s_RSMFBO：2048×2048，3 颜色附件 (Flux/WorldPos/Normal RGBA16F) + 1 深度
+	//   - 主 Pass 通过 binding=13/14/15 采样这三张图
+	//   - Enabled=false 时本特性完全不参与渲染
+	//
+	// 当前将 RSM 分辨率提升到和 Shadow Map 一样的 2048²，用更高的 VPL 采样
+	// 密度换取更平滑的间接光重建，代价是显存占用显著增加。
+	//   2048² × RGBA16F × 3 + 2048² × DEPTH32F ≈ 112MB。
+	// =================================================================
+	// RSM 只用作 VPL 容器：每像素只采样 128 个 VPL，再高分辨率也利用不到。
+	// 512² 对应单 VPL 半径里 ~25 个采样点，已经远超 Vogel disk 的 128 样本密度。
+	// 之前 2048² 是与 Shadow Map 对齐，但 RSM Pass 光栅化 + 主 Pass texelFetch
+	// 都按这个分辨率付代价，整体卡顿主要来自这里。
+	static constexpr uint32_t RSM_MAP_SIZE        = 512;
+	static constexpr uint32_t RSM_FLUX_SLOT       = 13;
+	static constexpr uint32_t RSM_WORLDPOS_SLOT   = 14;
+	static constexpr uint32_t RSM_NORMAL_SLOT     = 15;
+	static constexpr uint32_t RSM_DEPTH_SLOT      = 16;
+	static constexpr uint32_t RSM_UBO_BINDING     = 6;   // 已用：0~5
+	static constexpr uint32_t RSM_MAX_SAMPLES     = 128;
+
+	// RSM Params UBO 布局（std140）：
+	//   vec4 Header  : x = numSamples, y = intensity, z = sampleRadius, w = enabled
+	//   vec4 Samples[RSM_MAX_SAMPLES] : xy = 单位圆盘偏移, z = 样本权重, w = unused
+	struct GPURSMParams
+	{
+		glm::vec4 Header;
+		glm::vec4 Samples[RSM_MAX_SAMPLES];
+	};
+
+	static RSMSettings        s_RSMSettings;
+	static Ref<Framebuffer>   s_RSMFBO;
+	static Ref<Shader>        s_RSMDepthShader;
+	static Ref<UniformBuffer> s_RSMParamsUBO;
+	static glm::vec4          s_RSMSamples[RSM_MAX_SAMPLES]{};
+
+	// 关闭 RSM 时绑到 slot 13/14/15 的 1×1 黑纹理，避免主 shader 采到
+	// 未绑定的纹理触发 GL undefined behavior（core profile）。
+	static uint32_t           s_RSMBlackTex = 0;
+
+	RSMSettings& SceneRenderer::GetRSMSettings() { return s_RSMSettings; }
+
+	uint32_t SceneRenderer::GetRSMFluxTextureID()
+	{
+		return s_RSMFBO ? s_RSMFBO->GetColorAttachmentRendererID(0) : 0;
+	}
+	uint32_t SceneRenderer::GetRSMNormalTextureID()
+	{
+		return s_RSMFBO ? s_RSMFBO->GetColorAttachmentRendererID(2) : 0;
+	}
+	uint32_t SceneRenderer::GetRSMDistanceTextureID()
+	{
+		// RSM FBO 自身的深度附件（正交投影下线性 = 离光源 near 平面的距离）
+		return s_RSMFBO ? s_RSMFBO->GetDepthAttachmentRendererID() : 0;
+	}
 	uint32_t SceneRenderer::GetBloomTextureID()
 	{
 		return s_BloomMips[0] ? s_BloomMips[0]->GetColorAttachmentRendererID(0) : 0;
@@ -339,6 +398,66 @@ namespace Redflag {
 
 		// Bloom 参数 UBO
 		s_BloomParamsUBO = UniformBuffer::Create(sizeof(GPUBloomParams), BLOOM_UBO_BINDING);
+
+		// ---- RSM 资源 ----
+		// 3 颜色 MRT + 1 深度，OpenGLFramebuffer 自动调用 glDrawBuffers。
+		// 注意 RSM 的 Flux / WorldPos / Normal 本质上是 G-buffer 数据，不是可平滑插值
+		// 的最终颜色；如果对它们做 LINEAR，会把不同表面混成一个"假 VPL"，直接
+		// 表现成漏光和沿几何边缘的结构条纹。因此这里创建后显式改成 NEAREST。
+		{
+			FramebufferSpecification rsmSpec;
+			rsmSpec.Width  = RSM_MAP_SIZE;
+			rsmSpec.Height = RSM_MAP_SIZE;
+			rsmSpec.Attachments = {
+				FramebufferTextureFormat::RGBA16F,   // 0: Flux
+				FramebufferTextureFormat::RGBA16F,   // 1: WorldPos
+				FramebufferTextureFormat::RGBA16F,   // 2: Normal
+				FramebufferTextureFormat::DEPTH32F   // depth (RSM Pass 自身的 z-test 用)
+			};
+			s_RSMFBO = Framebuffer::Create(rsmSpec);
+
+			if (s_RSMFBO)
+			{
+				for (uint32_t i = 0; i < 3; ++i)
+				{
+					uint32_t tex = s_RSMFBO->GetColorAttachmentRendererID(i);
+					glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				}
+			}
+		}
+
+		s_RSMDepthShader = Shader::Create("assets/shaders/RSMDepth.glsl");
+		s_RSMParamsUBO   = UniformBuffer::Create(sizeof(GPURSMParams), RSM_UBO_BINDING);
+
+		// 预生成 128 个低差异单位圆盘采样点。
+		// 纯随机极坐标 + 每像素旋转很容易在平坦表面上形成粉末状白噪声；
+		// Vogel disk 能更均匀地覆盖圆盘，shader 端再按有效样本数归一化，
+		// 让 NumSamples 主要影响平滑度而不是整体亮度。
+		{
+			constexpr float GOLDEN_ANGLE = 2.39996322973f;
+			for (uint32_t i = 0; i < RSM_MAX_SAMPLES; ++i)
+			{
+				float t      = (static_cast<float>(i) + 0.5f) / static_cast<float>(RSM_MAX_SAMPLES);
+				float radius = glm::sqrt(t);
+				float theta  = GOLDEN_ANGLE * static_cast<float>(i);
+				s_RSMSamples[i] = glm::vec4(
+					radius * glm::cos(theta),
+					radius * glm::sin(theta),
+					1.0f,
+					0.0f);
+			}
+		}
+
+		// 1×1 黑纹理：RSM 关闭时绑到 13/14/15 槽位
+		{
+			glCreateTextures(GL_TEXTURE_2D, 1, &s_RSMBlackTex);
+			glTextureStorage2D(s_RSMBlackTex, 1, GL_RGBA16F, 1, 1);
+			float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			glTextureSubImage2D(s_RSMBlackTex, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, black);
+			glTextureParameteri(s_RSMBlackTex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(s_RSMBlackTex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
 	}
 
 	void SceneRenderer::Shutdown()
@@ -368,6 +487,11 @@ namespace Redflag {
 		s_MainSceneColorTex = 0;
 		s_MainSceneWidth = 0;
 		s_MainSceneHeight = 0;
+		// RSM 资源
+		s_RSMFBO.reset();
+		s_RSMDepthShader.reset();
+		s_RSMParamsUBO.reset();
+		if (s_RSMBlackTex) { glDeleteTextures(1, &s_RSMBlackTex); s_RSMBlackTex = 0; }
 		IBLPrecompute::Shutdown();
 	}
 
@@ -684,6 +808,86 @@ namespace Redflag {
 	}
 
 	// ==================================================================
+	// RunRSMPass — 把场景从光源视角再渲染一次，输出 Flux/WorldPos/Normal
+	// 三张 MRT 颜色附件到 s_RSMFBO，主 Pass 之后随机采样这些 VPL 算间接光。
+	//
+	// 与 RunShadowPass 的区别：
+	//   - 目标 FBO 不同（独立的 s_RSMFBO，不影响 s_ShadowFBO）
+	//   - 用 s_RSMDepthShader（写 3 个颜色附件）而不是空 fragment 的 shadow 深度 shader
+	//   - 调用 ExecuteRSMPass 而不是 ExecuteShadowPass（多上传 Material UBO）
+	//
+	// 注意：会复用 Camera UBO 中由 RunShadowPass 写入的 LightSpaceMatrix，
+	//   所以本函数必须在 RunShadowPass 之后、Renderer3D::SetShadowData
+	//   被主 Pass 阴影参数覆盖之前调用。当前调用顺序确保了这一点。
+	// ==================================================================
+	static void RunRSMPass(const glm::mat4& lightSpaceMatrix)
+	{
+		if (!s_RSMFBO || !s_RSMDepthShader)
+			return;
+
+		GLint prevFBO = 0;
+		GLint prevViewport[4];
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
+		glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+		s_RSMFBO->Bind(); // viewport → RSM_MAP_SIZE
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// 写 LightSpaceMatrix（如果上一步 RunShadowPass 没跑，这里也兜底写入）
+		Renderer3D::SetShadowData(lightSpaceMatrix, glm::vec4(0.0f));
+
+		// 用 RSM shader 重绘几何（带 Material UBO + BaseColorMap）
+		Renderer3D::ExecuteRSMPass(s_RSMDepthShader);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+	}
+
+	// ==================================================================
+	// BindRSMResources — 在主 Pass 之前绑 RSM 纹理 + 上传 RSM Params UBO
+	//
+	// 关闭时也必须执行：把 1×1 黑纹理绑到 13/14/15，并把 NumSamples 写为 0
+	// 让 shader 中 for 循环 0 次即返回，等价于完全不参与渲染。
+	// ==================================================================
+	static void BindRSMResources()
+	{
+		if (!s_RSMParamsUBO) return;
+
+		const bool active = s_RSMSettings.Enabled && s_RSMFBO != nullptr;
+		const int  numSamples = active
+			? glm::clamp(s_RSMSettings.NumSamples, 0, (int)RSM_MAX_SAMPLES)
+			: 0;
+
+		// 上传 Header + Samples（一次性整个 GPURSMParams）
+		GPURSMParams params{};
+		params.Header = glm::vec4(
+			(float)numSamples,
+			s_RSMSettings.Intensity,
+			s_RSMSettings.SampleRadius,
+			active ? 1.0f : 0.0f);
+		for (uint32_t i = 0; i < RSM_MAX_SAMPLES; ++i)
+			params.Samples[i] = s_RSMSamples[i];
+		s_RSMParamsUBO->SetData(&params, sizeof(GPURSMParams));
+
+		// 绑定纹理槽：开启时绑 RSM 产物，关闭时绑黑纹理避免未定义行为
+		if (active)
+		{
+			glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMFBO->GetColorAttachmentRendererID(0));
+			glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMFBO->GetColorAttachmentRendererID(1));
+			glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMFBO->GetColorAttachmentRendererID(2));
+			glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMFBO->GetDepthAttachmentRendererID());
+		}
+		else
+		{
+			glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMBlackTex);
+			glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMBlackTex);
+			glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMBlackTex);
+			glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMBlackTex);
+		}
+	}
+
+	// ==================================================================
 	// RunDepthVizPass — 当前绑定 FBO 的 depth 读回 CPU，线性化后上传到
 	// RGBA8 纹理供 ImGui 预览。比直接用 sampler 采 DEPTH24STENCIL8 更可靠。
 	// ==================================================================
@@ -981,30 +1185,45 @@ namespace Redflag {
 			});
 		}
 
-		// ======================== Shadow Pass ========================
+		// ======================== Shadow / RSM Pass ========================
 		// 必须在提交全部几何 (DrawMesh/DrawModel) 后、主 Pass EndScene 前。
-		// 找到主方向光 → 深度预渲染 → 把阴影参数 + Shadow Map 提供给主 shader
+		//
+		// 关键：RSM **不能** 被 s_ShadowEnabled 关掉。
+		// 主 shader 用 v_LightSpacePos.xy 当作 RSM 采样 UV，所以只要场景里有
+		// 方向光，就必须把 LightSpaceMatrix 上传到 Camera UBO；否则 UV 退化为
+		// identity，RSM 直接采到错位/未定义数据。Shadow 和 RSM 各自独立判断。
 		glm::vec3 lightDir;
 		glm::mat4 lightSpaceMatrix(1.0f);
-		bool hasShadow = s_ShadowEnabled && TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
-		if (hasShadow)
-		{
+		bool hasDirLight = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
+		bool runShadow   = s_ShadowEnabled && hasDirLight;
+		bool runRSM      = s_RSMSettings.Enabled && hasDirLight;
+
+		if (runShadow)
 			RunShadowPass(lightSpaceMatrix);
 
-			// 把光源空间矩阵 + 阴影参数正式写进 Camera UBO，供主 Mesh shader
-			// 在片元阶段做 PCF / PCSS 采样。
+		if (runRSM)
+			RunRSMPass(lightSpaceMatrix);
+
+		if (hasDirLight)
+		{
+			// 必须无条件上传 LightSpaceMatrix —— RSM 在主 shader 里也依赖它来
+			// 计算采样 UV。Shadow 关闭时把 mode 写 0，shader 跳过 shadow map 查询，
+			// 但 LightSpaceMatrix 仍然有效。
 			glm::vec4 shadowParams(
 				s_ShadowSettings.DepthBias,
 				s_ShadowSettings.NormalBias,
 				1.0f / float(SHADOW_MAP_SIZE),
-				float(s_ShadowSettings.Mode));
+				runShadow ? float(s_ShadowSettings.Mode) : 0.0f);
 			glm::vec4 shadowParams2(
 				s_ShadowSettings.PcfRadius,
 				s_ShadowSettings.LightSize,
 				0.0f, 0.0f);
 			Renderer3D::SetShadowData(lightSpaceMatrix, shadowParams, shadowParams2);
+		}
 
-			// 绑定 Shadow Map 深度纹理到 slot 11（与主 shader binding = 11 对应）
+		if (runShadow)
+		{
+			// 仅 shadow 开启时才绑 Shadow Map；关闭时主 shader mode==0 直接 return 1.0
 			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 		}
 
@@ -1040,6 +1259,13 @@ namespace Redflag {
 			RunSSAOPass(camera.GetProjection());
 		else
 			BindSSAOWhiteFallback();
+
+		// ======================== RSM 绑定 ========================
+		// SSAO Pass 用了 13/14/15 槽位（深度/法线/噪声），结束后会留存。
+		// 在主 Pass 之前覆盖为 RSM 纹理 + 上传 RSM Params UBO。
+		// 关闭时本函数也会把黑纹理绑到这三个槽 + NumSamples=0，主 shader
+		// 退化为 0 间接光，等价于完全不参与渲染。
+		BindRSMResources();
 
 		Renderer3D::EndScene();
 
@@ -1184,26 +1410,38 @@ namespace Redflag {
 			});
 		}
 
-		// ======================== Shadow Pass（Runtime）========================
-		if (s_ShadowEnabled)
+		// ======================== Shadow / RSM Pass（Runtime）========================
+		// 见编辑器路径同名段的解释：RSM 必须独立于 shadow 开关，否则关闭 shadow
+		// 会让主 shader 拿不到正确的 LightSpaceMatrix → RSM UV 错位。
 		{
 			glm::vec3 lightDir;
 			glm::mat4 lightSpaceMatrix(1.0f);
-			if (TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix))
-			{
+			bool hasDirLight = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
+			bool runShadow   = s_ShadowEnabled && hasDirLight;
+			bool runRSM      = s_RSMSettings.Enabled && hasDirLight;
+
+			if (runShadow)
 				RunShadowPass(lightSpaceMatrix);
+
+			if (runRSM)
+				RunRSMPass(lightSpaceMatrix);
+
+			if (hasDirLight)
+			{
 				glm::vec4 shadowParams(
 					s_ShadowSettings.DepthBias,
 					s_ShadowSettings.NormalBias,
 					1.0f / float(SHADOW_MAP_SIZE),
-					float(s_ShadowSettings.Mode));
+					runShadow ? float(s_ShadowSettings.Mode) : 0.0f);
 				glm::vec4 shadowParams2(
 					s_ShadowSettings.PcfRadius,
 					s_ShadowSettings.LightSize,
 					0.0f, 0.0f);
 				Renderer3D::SetShadowData(lightSpaceMatrix, shadowParams, shadowParams2);
-				glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 			}
+
+			if (runShadow)
+				glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 		}
 
 		// ======================== Z-Prepass ========================
@@ -1236,6 +1474,11 @@ namespace Redflag {
 			RunSSAOPass(projection);
 		else
 			BindSSAOWhiteFallback();
+
+		// ======================== RSM 绑定 ========================
+		// 必须在 SSAO 之后、主 Pass 之前；关闭时也需要把黑纹理绑到槽位避免
+		// 主 shader 采到未绑定的纹理。
+		BindRSMResources();
 
 		Renderer3D::EndScene();
 
