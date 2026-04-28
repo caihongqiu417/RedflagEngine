@@ -269,6 +269,15 @@ namespace Redflag {
                     ImGui::CloseCurrentPopup();
                 }
             }
+
+            if (!m_SelectionContext.HasComponent<ScriptComponent>())
+            {
+                if (ImGui::MenuItem("Script"))
+                {
+                    m_SelectionContext.AddComponent<ScriptComponent>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
             
             if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
             {
@@ -449,7 +458,46 @@ namespace Redflag {
 
             });
 
-        // SpriteRender��� 
+        // Script 组件面板
+        DrawComponent<ScriptComponent>("Script Component", entity, [](auto& component)
+            {
+                // 1. 先假设类不存在
+                bool scriptClassExsists = ScriptEngine::EntityClassExists(component.ClassName);
+
+                // 2. 获取所有已注册的脚本类（就是 LoadAssemblyClasses 存入的 map）
+                const auto& entityClasses = ScriptEngine::GetEntityClasses();
+                // entityClasses 是 std::unordered_map<std::string, Ref<ScriptClass>>
+                // 例如：{"Redflag.Player", ScriptClass对象}, {"Redflag.Enemy", ScriptClass对象}
+
+                // 3. 在 map 中查找你输入的类名
+                if (entityClasses.find(component.ClassName) != entityClasses.end())
+                    scriptClassExsists = true;
+                // 如果找到了，说明这个类在 C# DLL 中确实存在
+                // 如果找不到，说明你输入了一个不存在的类名
+               
+
+                //输入
+                char buffer[64];
+                memset(buffer, 0, sizeof(buffer));
+                strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
+
+                // 1. 如果类名不存在，把后续所有UI文字颜色设为红色
+                if (!scriptClassExsists)
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));  // 红不拉几的颜色
+
+                // 2. 绘制输入框（此时如果类不存在，文字就是红色）
+                if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+                {
+                    component.ClassName = std::string(buffer);
+                }
+
+                // 3. 恢复原来的文字颜色（只影响 PushStyleColor 和 PopStyleColor 之间的UI）
+                if (!scriptClassExsists)
+                    ImGui::PopStyleColor();
+            });
+
+
+        // SpriteRender
         DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
             {
                 // ��ɫ�༭

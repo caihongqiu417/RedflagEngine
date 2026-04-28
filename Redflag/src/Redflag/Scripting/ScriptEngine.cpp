@@ -7,11 +7,15 @@
 #include"mono/metadata/object.h"
 #include"ScriptGlue.h"
 
+#include"Scene/Scene.h"
+#include "Scene/Entity.h"        // Entity ç±»å®šä¹‰
+#include "Scene/Components.h"    // ScriptComponent å®šä¹‰
+
 namespace Redflag {
 
 	namespace Utils {
-		//TODO:ÎÄ¼şÏµÍ³
-		//¶ÁÈ¡¶ş½øÖÆÎÄ¼ş£¨dll)µ½ÄÚ´æ
+		//TODO:æ–‡ä»¶ç³»ç»Ÿ
+		//è¯»å–äºŒè¿›åˆ¶æ–‡ä»¶ï¼ˆdllï¼‰åˆ°å†…å­˜
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
 		{
 			std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
@@ -36,31 +40,55 @@ namespace Redflag {
 
 		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
 		{
-			//¼ÓÔØdll
+			//åŠ è½½dll
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath, &fileSize);
 
-			//¸ù¾İdll·µ»ØÒ»¸ö MonoImage* ¾ä±ú
-			//£¨ºóĞøËùÓĞ¶Ô³ÌĞò¼¯µÄÔªÊı¾İ¶ÁÈ¡£¨Àà¡¢·½·¨£©¶¼ÒÀÀµÕâ¸ö¾ä±ú£©
+			//æ ¹æ®dllè¿”å›ä¸€ä¸ª MonoImage* å¥æŸ„
+			//ï¼ˆåç»­æ‰€æœ‰å¯¹ç¨‹åºé›†çš„å…ƒæ•°æ®è¯»å–ï¼ˆç±»ã€æ–¹æ³•ï¼‰éƒ½ä¾èµ–è¿™ä¸ªå¥æŸ„ï¼‰
 			MonoImageOpenStatus status;
 			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
 
 			if (status != MONO_IMAGE_OK)
 			{
 				const char* errorMessage = mono_image_strerror(status);
-				// ÕâÀïÓ¦¸Ã¼ÇÂ¼´íÎó»òÕßÊä³ö´íÎóĞÅÏ¢
+				// è¿™é‡Œåº”è¯¥è®°å½•é”™è¯¯æˆ–è€…è¾“å‡ºé”™è¯¯ä¿¡æ¯
 				RF_CORE_ERROR("Failed to load assembly: {0}", errorMessage);
-				delete[] fileData;  // ²»ÒªÍüÁËÊÍ·ÅÄÚ´æ
+				delete[] fileData;  // ä¸è¦å¿˜äº†é‡Šæ”¾å†…å­˜
 				return nullptr;
 			}
 
-			// ´Ó Image ´´½¨ Assembly£¨¿ÉÖ´ĞĞµÄ³ÌĞò¼¯£©
+			// ä» Image åˆ›å»º Assemblyï¼ˆå¯æ‰§è¡Œçš„ç¨‹åºé›†ï¼‰
 			std::string pathString = assemblyPath.string();
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
 
 			delete[] fileData;
 			return assembly;
+		}
+
+		void PrintAssemblyTypes(MonoAssembly* assembly)
+		{
+			MonoImage* image = mono_assembly_get_image(assembly);
+
+			//å…ƒæ•°æ®è¡¨
+			const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+			int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+
+			//éå†æ‰€æœ‰ namespace.name
+			for (int32_t i = 0; i < numTypes; i++)
+			{
+				uint32_t cols[MONO_TYPEDEF_SIZE];
+				// è§£ç ç¬¬ i è¡Œçš„æ‰€æœ‰åˆ—åˆ° cols æ•°ç»„ä¸­
+				mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
+
+				// cols[MONO_TYPEDEF_NAME]       â†’ ç±»å‹åç§°åœ¨å­—ç¬¦ä¸²å †ä¸­çš„ç´¢å¼•
+				// cols[MONO_TYPEDEF_NAMESPACE]  â†’ å‘½åç©ºé—´åç§°åœ¨å­—ç¬¦ä¸²å †ä¸­çš„ç´¢å¼•
+				const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+				const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
+
+				RF_CORE_TRACE("{}.{}", nameSpace, name);
+			}
 		}
 	}
 
@@ -73,40 +101,53 @@ namespace Redflag {
 		MonoImage* CoreAssemblyImage = nullptr;
 
 		ScriptClass EntityClass;
+
+		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
+
+		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+
+		//è¿è¡Œæ—¶
+		Scene* SceneContext = nullptr;
+
 	};
 
 	static ScriptEngineData* s_Data;
 
 
-	
+
 
 
 	void ScriptEngine::Init()
 	{
 		s_Data = new ScriptEngineData();
 
-		//³õÊ¼»¯RootDomain
+		//åˆå§‹åŒ–RootDomain
 		InitMono();
 
-		//³õÊ¼»¯AppDomain
+		//åˆå§‹åŒ–AppDomain
 		LoadAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
 
-		// ×¢²á internal calls(ÉÏÏÂÎÄÊÇAppDomain)
-		ScriptGlue::RegisterFunctions();
-
-		//´Ó Assembly »ñÈ¡¿ÉÖ´ĞĞµÄÔªÊı¾İÊÓÍ¼
+		//ä» Assembly è·å–å¯æ‰§è¡Œçš„å…ƒæ•°æ®è§†å›¾
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 
-		//»ñÈ¡ºÍC#Àà(´æ´¢ÔÚs_Data,·ÀÖ¹ÖØ¸´¹¹½¨£©
+		//éå†æ‰€æœ‰ç±»å‹ï¼Œæ‰¾åˆ°Entityå­ç±»å¹¶å­˜å…¥map(EntityClasses)
+		LoadAssemblyClasses(s_Data->CoreAssembly);
+
+		// æ³¨å†Œ internal calls(ä¸Šä¸‹æ–‡æ˜¯AppDomain)
+		ScriptGlue::RegisterFunctions();
+
+
+#if 0
+		//è·å–å’ŒC#ç±»(å­˜å‚¨åœ¨s_Data,é˜²æ­¢é‡å¤æ„å»ºï¼‰
 		s_Data->EntityClass = ScriptClass("Redflag", "Entity");
-		
+
 		MonoObject* instance = s_Data->EntityClass.Instantiate();
 
-		//µ÷ÓÃC#º¯Êı
-		MonoMethod* printMessageFunc = s_Data->EntityClass.GetMethod("PrintMessage",0);
-		s_Data->EntityClass.InvokeMethod(instance,printMessageFunc,nullptr);
+		//è°ƒç”¨C#å‡½æ•°
+		MonoMethod* printMessageFunc = s_Data->EntityClass.GetMethod("PrintMessage", 0);
+		s_Data->EntityClass.InvokeMethod(instance, printMessageFunc, nullptr);
 
-		//µ÷ÓÃC#º¯Êı£¨´ø²ÎÊı£©
+		//è°ƒç”¨C#å‡½æ•°ï¼ˆå¸¦å‚æ•°ï¼‰
 		MonoMethod* printIntFunc = s_Data->EntityClass.GetMethod("PrintInt", 1);
 		int value = 5;
 		void* param = &value;
@@ -124,29 +165,75 @@ namespace Redflag {
 		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello World From C++!");
 		MonoMethod* printCustomMessageFunc = s_Data->EntityClass.GetMethod("PrintCustomMessage", 1);
 		void* stringParam = monoString;
-		s_Data->EntityClass.InvokeMethod( instance, printCustomMessageFunc,&stringParam);
+		s_Data->EntityClass.InvokeMethod(instance, printCustomMessageFunc, &stringParam);
+#endif
 	}
 
 
 	void ScriptEngine::Shutdown()
 	{
-		ShutdownMono();      // ÏÈ¹Ø Mono
-		delete s_Data;       // ÔÙÉ¾Êı¾İÈİÆ÷
+		ShutdownMono();      // å…ˆå…³ Mono
+		delete s_Data;       // å†åˆ æ•°æ®å®¹å™¨
 		s_Data = nullptr;
 	}
 
 	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
-		//´´½¨AppDomain
-		//½Å±¾ÏµÍ³dll£¨ÈÈ¸üĞÂ£©
+		//åˆ›å»ºAppDomain
+		//è„šæœ¬ç³»ç»Ÿdllï¼ˆçƒ­æ›´æ–°ï¼‰
 		s_Data->AppDomain = mono_domain_create_appdomain("RedflagScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
 
-		//¼ÓÔØ×Ô¼ºÓÎÏ·µÄC#½Å±¾£¨ÒÑ¾­Í¨¹ıpremake±àÒëÎªdll£©
-		//×Ô¶¯¼ÓÔØµ½AppDomain
+		//åŠ è½½è‡ªå·±æ¸¸æˆçš„C#è„šæœ¬ï¼ˆå·²ç»é€šè¿‡premakeç¼–è¯‘ä¸ºdllï¼‰
+		//è‡ªåŠ¨åŠ è½½åˆ°AppDomain
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
 		//PrintAssemblyTypes(s_Data->CoreAssembly);
+	}
+
+	void ScriptEngine::OnRuntimeStart(Scene* scene)
+	{
+		s_Data->SceneContext = scene;
+	}
+
+	void ScriptEngine::OnRuntimeStop()
+	{
+		s_Data->SceneContext = nullptr;
+		s_Data->EntityInstances.clear();
+	}
+
+	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
+	{
+		return s_Data->EntityClasses.find(fullClassName) != s_Data->EntityClasses.end();
+	}
+
+	void ScriptEngine::OnCreateEntity(Entity entity)
+	{
+		const auto& sc = entity.GetComponent<ScriptComponent>();
+		if (ScriptEngine::EntityClassExists(sc.ClassName))
+		{
+			//åˆ›å»ºè„šæœ¬å®ä¾‹å¹¶å­˜å…¥è¡¨
+			Ref<ScriptInstance> instance=CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName]);
+			s_Data->EntityInstances[entity.GetUUID()] = instance;
+
+			//è°ƒç”¨å‡½æ•°
+			instance->InvokeOnCreate();
+		}
+	}
+
+	void ScriptEngine::OnUpdateEntity(Entity entity,float ts)
+	{
+		UUID entityUUID = entity.GetUUID();
+		RF_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
+
+		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+
+		instance->InvokeOnUpdate(ts);
+	}
+
+	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
+	{
+		return s_Data->EntityClasses;
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -163,38 +250,17 @@ namespace Redflag {
 		}
 	}
 
-	void PrintAssemblyTypes(MonoAssembly* assembly)
-	{
-		MonoImage* image = mono_assembly_get_image(assembly);
 
-		//ÔªÊı¾İ±í
-		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
-		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
-
-		for (int32_t i = 0; i < numTypes; i++)
-		{
-			uint32_t cols[MONO_TYPEDEF_SIZE];
-			// ½âÂëµÚ i ĞĞµÄËùÓĞÁĞµ½ cols Êı×éÖĞ
-			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
-
-			// cols[MONO_TYPEDEF_NAME]       ¡ú ÀàĞÍÃû³ÆÔÚ×Ö·û´®¶ÑÖĞµÄË÷Òı
-			// cols[MONO_TYPEDEF_NAMESPACE]  ¡ú ÃüÃû¿Õ¼äÃû³ÆÔÚ×Ö·û´®¶ÑÖĞµÄË÷Òı
-			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
-			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
-
-			RF_CORE_TRACE("{}.{}", nameSpace, name);
-		}
-	}
 
 
 	void ScriptEngine::InitMono()
 	{
-		//¼ÓÔØ³ÌĞò¼¯
-		//È¥ mono/lib ÎÄ¼ş¼ĞÕÒ C# µÄºËĞÄÏµÍ³¿â(Èçmscorlib.dll¡¢System.dll£©
+		//åŠ è½½ç¨‹åºé›†
+		//å» mono/lib æ–‡ä»¶å¤¹æ‰¾ C# çš„æ ¸å¿ƒç³»ç»Ÿåº“(å¦‚mscorlib.dllã€System.dllï¼‰
 		mono_set_assemblies_path("mono/lib");
 
-		//´´½¨RootDomain
-		//MonoĞéÄâ»úËùÔÚ
+		//åˆ›å»ºRootDomain
+		//Monoè™šæ‹Ÿæœºæ‰€åœ¨
 		MonoDomain* rootDomain = mono_jit_init("RedflagJITRuntime");
 		RF_CORE_ASSERT(rootDomain);
 
@@ -203,12 +269,49 @@ namespace Redflag {
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
 	{
-		//ÔÚAppDomainÉÏ·ÖÅä¿Õ¼ä
+		//åœ¨AppDomainä¸Šåˆ†é…ç©ºé—´
 		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
-		//ÕæÕıÊµÀı»¯
+		//çœŸæ­£å®ä¾‹åŒ–
 		mono_runtime_object_init(instance);
 
 		return instance;
+	}
+
+	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	{
+		s_Data->EntityClasses.clear();
+		MonoImage* image = mono_assembly_get_image(assembly);
+
+		//å…ƒæ•°æ®è¡¨
+		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+
+		MonoClass* entityClass = mono_class_from_name(image, "Redflag", "Entity");
+
+		//éå†Redflag-ScriptCore.dll ä¸­å®šä¹‰çš„æ‰€æœ‰ç±»å‹
+		for (int32_t i = 0; i < numTypes; i++)
+		{
+			uint32_t cols[MONO_TYPEDEF_SIZE];
+			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
+
+			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);        // ç±»åï¼Œå¦‚ "Entity"
+			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]); // å‘½åç©ºé—´ï¼Œå¦‚ "Redflag"
+
+			std::string fullName;
+			if (strlen(nameSpace) != 0)              // å¦‚æœæœ‰å‘½åç©ºé—´
+				fullName = fmt::format("{}.{}", nameSpace, name);  // â†’ "Redflag.Entity"
+			else                                      // å¦‚æœæ²¡æœ‰å‘½åç©ºé—´ï¼ˆå…¨å±€ç±»å‹ï¼‰
+				fullName = name;                      // â†’ "Entity"
+
+			//æ‰¾åˆ°Entityçš„å­ç±»å¹¶å­˜å…¥Map
+			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+			if (monoClass == nullptr)
+				continue;
+
+			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
+			if (isEntity)
+				s_Data->EntityClasses[fullName] = CreateRef <ScriptClass>(nameSpace, name);
+		}
 	}
 
 
@@ -223,14 +326,38 @@ namespace Redflag {
 		return ScriptEngine::InstantiateClass(m_MonoClass);
 	}
 
-	MonoMethod* ScriptClass::GetMethod(const std::string& name,int parameterCount)
+
+	MonoMethod* ScriptClass::GetMethod(const std::string& name, int parameterCount)
 	{
 		return mono_class_get_method_from_name(m_MonoClass, name.c_str(), parameterCount);
 	}
 
-	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance,MonoMethod* method, void** params)
+	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
 		return mono_runtime_invoke(method, instance, params, nullptr);
+	}
+
+	ScriptInstance::ScriptInstance(Ref<ScriptClass> ScriptClass)
+		:m_ScriptClass(ScriptClass)
+	{
+		//åœ¨AppDomainä¸Šåˆ†é…MonoObjectå†…å­˜
+		m_Instance = ScriptClass->Instantiate();
+		
+		//è·å–æ–¹æ³•å¹¶å­˜å…¥å‡½æ•°æŒ‡é’ˆ
+		m_OnCreateMethod = ScriptClass->GetMethod("OnCreate", 0);
+		m_OnUpdateMethod = ScriptClass->GetMethod("OnUpdate", 1);
+	}
+
+	void ScriptInstance::InvokeOnCreate()
+	{
+		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod,nullptr);
+	}
+
+	void ScriptInstance::InvokeOnUpdate(float ts)
+	{
+		void* param = &ts;
+
+		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 	}
 
 }

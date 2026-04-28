@@ -78,10 +78,18 @@ namespace Redflag {
 	{
 		SceneCamera Camera;
 		bool Primary = true;
-		bool FixedAspectRatio = false; //Ĭ�ϲ��ã�ֻ���ӿ������Ҫ�ı���߱�
+		bool FixedAspectRatio = false;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
+	};
+
+	struct ScriptComponent
+	{
+		std::string ClassName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent& other) = default;
 	};
 
 	class ScriptableEntity;
@@ -108,6 +116,7 @@ namespace Redflag {
 				};
 		}
 	};
+
 
 	//����
 	struct RigidBody2DComponent

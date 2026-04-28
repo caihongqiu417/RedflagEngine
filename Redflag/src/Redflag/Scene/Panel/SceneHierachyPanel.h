@@ -3,6 +3,7 @@
 #include"Redflag/Core/Core.h"
 #include"Redflag/Scene/Scene.h"
 #include"Redflag/Scene/Entity.h"
+#include"Redflag/Scripting/ScriptEngine.h"
 
 
 namespace Redflag {

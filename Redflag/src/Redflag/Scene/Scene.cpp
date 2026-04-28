@@ -100,6 +100,7 @@ namespace Redflag {
         CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<ScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -137,6 +138,21 @@ namespace Redflag {
     {
         OnPhysics2DStart();
 
+        //脚本系统
+        {
+            //获取场景
+            ScriptEngine::OnRuntimeStart(this);
+
+            //初始化脚本实体
+            auto view = m_Registry.view<ScriptComponent>();
+            for (auto e : view)
+            {
+                Entity entity = { e,this };
+                ScriptEngine::OnCreateEntity(entity);
+
+            }
+        }
+
         // 创建粒子系统运行时实例
         {
             auto view = m_Registry.view<ParticleEmitterComponent>();
@@ -163,6 +179,8 @@ namespace Redflag {
     void Scene::OnRuntimeStop()
     {
         OnPhysics2DStop();
+
+        ScriptEngine::OnRuntimeStop();
 
         // 销毁粒子系统运行时实例
         {
@@ -204,12 +222,19 @@ namespace Redflag {
         SceneRenderer::RenderScene(*this, camera);
     }
 
-    //runtime:�ӳ������������
+    //runtime
     void Scene::OnUpdateRuntime(Timestep ts)
     {   //===============================================================
-        //=========================���½ű�==============================
+        //=========================Scripts==============================
         //===============================================================
         {
+            auto view = m_Registry.view<ScriptComponent>();
+            for (auto e : view)
+            {
+                Entity entity = { e,this };
+                ScriptEngine::OnUpdateEntity(entity, ts);
+            }
+
             m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
             {
                     // entity: ��ǰ��������ʵ��
@@ -393,6 +418,7 @@ namespace Redflag {
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
+        CopyComponentIfExist<ScriptComponent>(newEntity, entity);
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
         if (newEntity.HasComponent<MeshRendererComponent>())
         {
@@ -526,6 +552,12 @@ namespace Redflag {
 
     template<>
     void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
     {
 
     }

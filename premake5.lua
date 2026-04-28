@@ -143,9 +143,8 @@ project "Redflag"
             "/wd4828",
             "/wd4005",
         }
+        libdirs { "Redflag/vendor/mono/lib/Release" }
 
-        libdirs { "Redflag/vendor/mono/lib/Debug" }
-        
         -- [Debug] 链接带 'd' 的库
         links {
             "shaderc_sharedd.lib",
@@ -153,13 +152,14 @@ project "Redflag"
             "spirv-cross-glsld.lib",
             "mono-2.0-sgen.lib",
         }
-        
-        -- [修改后] 显式复制到 RedflagForge 和 Sandbox 目录
+
+        -- [Debug] 复制 DLL 和 Mono 托管程序集目录
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/Sandbox",
-            "{COPY} ../Redflag/vendor/mono/lib/Debug/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} ../Redflag/vendor/mono/lib/Debug/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
+            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
         
     -- Release 配置
@@ -182,13 +182,13 @@ project "Redflag"
             "mono-2.0-sgen.lib",
         }
 
-        -- [Release] 复制不带 'd' 的 DLL
-       -- [修改后]
+        -- [Release] 复制不带 'd' 的 DLL 和 Mono 托管程序集目录
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
             "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
         
     -- Dist 配置
@@ -217,6 +217,7 @@ project "Redflag"
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
             "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
 
 group "Misc"
@@ -276,6 +277,10 @@ project "Sandbox"
             "/wd4828",
             "/wd4005",
         }
+        -- spirv-cross-cored.lib 用 /MTd 编译，嵌入了 LIBCMTD + LIBCPMTD 两个静态 CRT 默认库，
+        -- 与项目 /MDd (msvcrtd + msvcprtd) 冲突，导致 msvcp140d.lib 中新增的
+        -- __std_find_last_trivial_1 等符号无法解析，需同时屏蔽两者。
+        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCPMTD" }
         
     filter "configurations:Release"
         defines "RF_RELEASE"
@@ -353,6 +358,10 @@ project "RedflagForge"
             "/wd4828",
             "/wd4005",
         }
+        -- spirv-cross-cored.lib 用 /MTd 编译，嵌入了 LIBCMTD + LIBCPMTD 两个静态 CRT 默认库，
+        -- 与项目 /MDd (msvcrtd + msvcprtd) 冲突，导致 msvcp140d.lib 中新增的
+        -- __std_find_last_trivial_1 等符号无法解析，需同时屏蔽两者。
+        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCPMTD" }
         
     filter "configurations:Release"
         defines "RF_RELEASE"

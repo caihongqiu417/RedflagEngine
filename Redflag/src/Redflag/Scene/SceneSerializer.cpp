@@ -187,6 +187,15 @@ namespace Redflag {
             out << YAML::EndMap; // ���� CameraComponent Map
         }
 
+        if (entity.HasComponent<ScriptComponent>())
+        {
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            out << YAML::Key << "ScriptComponent";  // 修正拼写 "SciptComponent" → "ScriptComponent"
+            out << YAML::BeginMap;
+            out << YAML::Key << "Class" << YAML::Value << scriptComponent.ClassName;  
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<SpriteRendererComponent>())
         {
             out << YAML::Key << "SpriteRendererComponent";
@@ -460,6 +469,14 @@ namespace Redflag {
 
                     cameraComp.Primary = ccNode["Primary"].as<bool>();
                     cameraComp.FixedAspectRatio = ccNode["FixedAspectRatio"].as<bool>();
+                }
+
+                // ScriptComponent
+                if (entity["ScriptComponent"])
+                {
+                    auto scNode = entity["ScriptComponent"];
+                    auto& sc = deserializedEntity.AddComponent<ScriptComponent>();  // 修正：用 AddComponent 而不是 GetComponent
+                    sc.ClassName = scNode["Class"].as<std::string>();  // 修正：ClassName → Name
                 }
 
                 // Sprite Renderer Component

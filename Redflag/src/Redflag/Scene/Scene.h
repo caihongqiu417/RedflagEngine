@@ -6,6 +6,7 @@
 #include"Redflag/Core/Timestep.h"
 #include"Redflag/Renderer/EditorCamera.h"
 #include"Redflag/Renderer/SceneRenderer.h"
+#include"Redflag/Scripting/ScriptEngine.h"
 
 class b2World;
 
