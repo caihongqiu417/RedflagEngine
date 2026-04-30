@@ -19,6 +19,7 @@ namespace Redflag {
 	class Entity;
 	class Scene;
 
+	//MonoClass°ü×°Àà
 	class ScriptClass
 	{
 	public:
@@ -42,7 +43,7 @@ namespace Redflag {
 	class ScriptInstance
 	{
 	public:
-		ScriptInstance(Ref<ScriptClass> ScriptClass);
+		ScriptInstance(Ref<ScriptClass> ScriptClass, Entity entity);
 
 		void InvokeOnCreate();
 		void InvokeOnUpdate(float ts);
@@ -51,6 +52,7 @@ namespace Redflag {
 		Ref<ScriptClass> m_ScriptClass;
 
 		MonoObject* m_Instance = nullptr;
+		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
 	};
@@ -72,6 +74,8 @@ namespace Redflag {
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity,float ts);
 
+		static Scene* GetSceneContext();
+
 		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
 
 	private:
@@ -83,6 +87,4 @@ namespace Redflag {
 
 		friend class ScriptClass;
 	};
-
-	
 }

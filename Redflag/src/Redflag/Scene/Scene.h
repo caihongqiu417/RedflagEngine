@@ -42,6 +42,8 @@ namespace Redflag {
 
 		void DuplicateEntity(Entity entity);
 
+		Entity GetEntityByUUID(UUID uuid);
+
 		entt::registry& GetRegistry() { return m_Registry; }
 
 		Entity GetPrimaryCameraEntity();
@@ -58,9 +60,13 @@ namespace Redflag {
 
 		b2World* m_PhysicsWorld = nullptr;
 
+		std::unordered_map<UUID, entt::entity> m_EntityMap;
+
 		friend class Entity;
 		friend class SceneHierachyPanel;
 		friend class SceneSerializer;
 		friend class SceneRenderer;  // SceneRenderer 需要访问 m_Registry
+
+
 	};
 }

@@ -190,7 +190,7 @@ namespace Redflag {
         if (entity.HasComponent<ScriptComponent>())
         {
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
-            out << YAML::Key << "ScriptComponent";  // 修正拼写 "SciptComponent" → "ScriptComponent"
+            out << YAML::Key << "ScriptComponent";  
             out << YAML::BeginMap;
             out << YAML::Key << "Class" << YAML::Value << scriptComponent.ClassName;  
             out << YAML::EndMap;

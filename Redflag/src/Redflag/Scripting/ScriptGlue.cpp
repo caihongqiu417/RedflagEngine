@@ -1,7 +1,11 @@
 #include "rfpch.h"
 #include "ScriptGlue.h"
+#include "ScriptEngine.h"
 #include "mono/metadata/object.h"
 #include <glm/glm.hpp>
+#include"Scene/Scene.h"
+#include "Scene/Entity.h" 
+#include"Redflag/Core/Input.h"
 
 //包装mono_add_internal_call
 #define RF_ADD_INTERNAL_CALL(Name) mono_add_internal_call("Redflag.InternalCalls::" #Name, reinterpret_cast<const void*>(Name))
@@ -34,11 +38,39 @@ namespace Redflag {
         }
     }
 
+    //组件的Translation返回给C#
+    static void Entity_GetTranslation(UUID entityID,glm::vec3* outTranslation)
+    {
+        Scene* scene = ScriptEngine::GetSceneContext();
+        
+        Entity entity = scene->GetEntityByUUID(entityID);
+        *outTranslation=entity.GetComponent<TransformComponent>().Translation;
+    }
+
+    //C#传入参数给组件
+    static void Entity_SetTranslation(UUID entityID,glm::vec3* translation)
+    {
+        Scene* scene = ScriptEngine::GetSceneContext();
+
+        Entity entity = scene->GetEntityByUUID(entityID);
+        entity.GetComponent<TransformComponent>().Translation = *translation;
+    }
+
+    static bool Input_IsKeyDown(int keycode)
+    {
+        return Input::IsKeyPressed(keycode);
+    }
+
     //注册internalcall
     void ScriptGlue::RegisterFunctions()  
     {
         // internal call - 注意前两个参数是直接传递，outResult 通过指针返回
         RF_ADD_INTERNAL_CALL(NativeLog);
         RF_ADD_INTERNAL_CALL(NativeLog_Vector);
+
+        RF_ADD_INTERNAL_CALL(Entity_GetTranslation);
+        RF_ADD_INTERNAL_CALL(Entity_SetTranslation);
+
+        RF_ADD_INTERNAL_CALL(Input_IsKeyDown);
     }
 }

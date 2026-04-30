@@ -23,8 +23,8 @@ Entities:
       Color: [1, 1, 1, 1]
       MeshType: Cube
       BaseColor: [1, 1, 1, 1]
-      Metallic: 0
-      Roughness: 0.5
+      Metallic: 0.811999977
+      Roughness: 0.134000003
       AO: 1
   - Entity: 1096978947276037003
     TagComponent:
@@ -48,6 +48,15 @@ Entities:
     ModelRendererComponent:
       FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
       Color: [0.931034505, 0.931034505, 0.931034505, 1]
+      OverrideMaterials:
+        - BaseColor: [0.800000012, 0.800000012, 0.800000012, 1]
+          Metallic: 1
+          Roughness: 0.5
+          AO: 1
+        - BaseColor: [0.800000012, 0.800000012, 0.800000012, 1]
+          Metallic: 1
+          Roughness: 0.5
+          AO: 1
   - Entity: 12132151342123
     TagComponent:
       Tag: UnFixedCamera_1
@@ -77,7 +86,7 @@ Entities:
       FilePath: assets\models\mirror-9-mb\Mirror.fbx
       Color: [1, 1, 1, 1]
       OverrideMaterials:
-        - BaseColor: [1, 1, 1, 1]
+        - BaseColor: [0.603827357, 0.603827357, 0.603827357, 1]
           Metallic: 1
           Roughness: 0.5
           AO: 1

@@ -81,20 +81,17 @@ namespace Redflag {
         auto& dstSceneRegistry = newScene->m_Registry;
         std::unordered_map<UUID, entt::entity> enttMap;
 
-        //����ʵ��
         auto idView = srcSceneRegistry.view<IDComponent>();
         for (auto e : idView)
         {
             UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
             const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
-            // �ؼ������� CreateEntityWithUUID����������ɣ�ʹ�ñ���� UUID
+
             Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
 
-            // ��¼ӳ���ϵ��UUID -> ��ʵ��� entt ���
             enttMap[uuid] = (entt::entity)newEntity;
         }
 
-        // ���������ͨ��ӳ����ҵ� UUID ��ͬ��Ŀ��ʵ�壬Ȼ���������ݿ���ȥ
         CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -126,12 +123,17 @@ namespace Redflag {
         entity.AddComponent<TransformComponent>();
         auto& tag = entity.AddComponent<TagComponent>();
         tag.Tag = name.empty() ? "Entity" : name;
+
+        //UUID->entity映射表，因为C++和C#之间传递uuid
+        m_EntityMap[uuid] = entity;
+
         return entity;
     }
 
     void Scene::DestroyEntity(Entity entity)
     {
         m_Registry.destroy(entity);
+        m_EntityMap.erase(entity.GetUUID());
     }
 
     void Scene::OnRuntimeStart()
@@ -310,15 +312,11 @@ namespace Redflag {
             }
         }
 
-        // ����
-        // �ű�ʩ����/�ٶ� �� ������������ײ��λ�� �� ��Ⱦͬ���任��
-        // ��ֹ��������ű����������ӳ�
         {
             const int32_t velocityIterations = 6;
             const int32_t positionIterations = 2;
             m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
-            //��box2D��ȡ�任
             auto view = m_Registry.view<RigidBody2DComponent>();
             for (auto e : view)
             {
@@ -335,10 +333,6 @@ namespace Redflag {
             }
         }
 
-        
-        //===============================================================
-        //=========================�������==============================
-        //===============================================================
         Camera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
 
@@ -439,6 +433,14 @@ namespace Redflag {
         CopyComponentIfExist<PointLightComponent>(newEntity, entity);
         CopyComponentIfExist<ParticleEmitterComponent>(newEntity, entity);
         CopyComponentIfExist<TextureAnimationComponent>(newEntity, entity);
+    }
+
+    Entity Scene::GetEntityByUUID(UUID uuid)
+    {
+        if (m_EntityMap.find(uuid) != m_EntityMap.end())
+            return{ m_EntityMap.at(uuid),this };
+
+        return {};
     }
 
     Entity Scene::GetPrimaryCameraEntity()

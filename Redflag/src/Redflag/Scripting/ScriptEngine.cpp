@@ -130,6 +130,10 @@ namespace Redflag {
 		//从 Assembly 获取可执行的元数据视图
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 
+		//缓存C#基类
+		s_Data->EntityClass = ScriptClass("Redflag", "Entity");
+		RF_CORE_ASSERT(s_Data->EntityClass.m_MonoClass, "Failed to find script base class Redflag.Entity");
+
 		//遍历所有类型，找到Entity子类并存入map(EntityClasses)
 		LoadAssemblyClasses(s_Data->CoreAssembly);
 
@@ -213,7 +217,7 @@ namespace Redflag {
 		if (ScriptEngine::EntityClassExists(sc.ClassName))
 		{
 			//创建脚本实例并存入表
-			Ref<ScriptInstance> instance=CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName]);
+			Ref<ScriptInstance> instance=CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName],entity);
 			s_Data->EntityInstances[entity.GetUUID()] = instance;
 
 			//调用函数
@@ -229,6 +233,11 @@ namespace Redflag {
 		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
 
 		instance->InvokeOnUpdate(ts);
+	}
+
+	Scene* ScriptEngine::GetSceneContext()
+	{
+		return s_Data->SceneContext;
 	}
 
 	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
@@ -287,6 +296,7 @@ namespace Redflag {
 		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 
 		MonoClass* entityClass = mono_class_from_name(image, "Redflag", "Entity");
+		RF_CORE_ASSERT(entityClass, "Failed to find script base class Redflag.Entity while loading assembly classes");
 
 		//遍历Redflag-ScriptCore.dll 中定义的所有类型
 		for (int32_t i = 0; i < numTypes; i++)
@@ -319,16 +329,24 @@ namespace Redflag {
 		:m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
 		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+
+		if (!m_MonoClass)
+		{
+			std::string fullClassName = classNamespace.empty() ? className : fmt::format("{0}.{1}", classNamespace, className);
+			RF_CORE_ERROR("Failed to find script class {0}", fullClassName);
+		}
 	}
 
 	MonoObject* ScriptClass::Instantiate()
 	{
+		RF_CORE_ASSERT(m_MonoClass, "Cannot instantiate an invalid script class");
 		return ScriptEngine::InstantiateClass(m_MonoClass);
 	}
 
 
 	MonoMethod* ScriptClass::GetMethod(const std::string& name, int parameterCount)
 	{
+		RF_CORE_ASSERT(m_MonoClass, "Cannot fetch method from an invalid script class");
 		return mono_class_get_method_from_name(m_MonoClass, name.c_str(), parameterCount);
 	}
 
@@ -337,17 +355,24 @@ namespace Redflag {
 		return mono_runtime_invoke(method, instance, params, nullptr);
 	}
 
-	ScriptInstance::ScriptInstance(Ref<ScriptClass> ScriptClass)
+	ScriptInstance::ScriptInstance(Ref<ScriptClass> ScriptClass,Entity entity)
 		:m_ScriptClass(ScriptClass)
 	{
 		//在AppDomain上分配MonoObject内存
 		m_Instance = ScriptClass->Instantiate();
 		
 		//获取方法并存入函数指针
+		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = ScriptClass->GetMethod("OnCreate", 0);
 		m_OnUpdateMethod = ScriptClass->GetMethod("OnUpdate", 1);
+		
+		//调用实体的C#构造函数，传入UUID
+		UUID entityID = entity.GetUUID();
+		void* param = &entityID;
+		m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
 	}
 
+	//引擎创建完所有实体统一调用
 	void ScriptInstance::InvokeOnCreate()
 	{
 		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod,nullptr);
