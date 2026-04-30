@@ -3,6 +3,10 @@
 
 #include "mono/jit/jit.h"
 #include"mono/metadata/assembly.h"
+#include "mono/metadata/attrdefs.h"
+#include "mono/metadata/blob.h"
+#include "mono/metadata/class.h"
+#include "mono/metadata/metadata.h"
 #include"glm/glm.hpp"
 #include"mono/metadata/object.h"
 #include"ScriptGlue.h"
@@ -14,6 +18,42 @@
 namespace Redflag {
 
 	namespace Utils {
+		static ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
+		{
+			switch (mono_type_get_type(monoType))
+			{
+				case MONO_TYPE_R4:
+					return ScriptFieldType::Float;
+				case MONO_TYPE_I4:
+					return ScriptFieldType::Int;
+				case MONO_TYPE_BOOLEAN:
+					return ScriptFieldType::Bool;
+				case MONO_TYPE_VALUETYPE:
+				{
+					MonoClass* fieldClass = mono_type_get_class(monoType);
+					if (!fieldClass)
+						return ScriptFieldType::None;
+
+					const char* nameSpace = mono_class_get_namespace(fieldClass);
+					const char* name = mono_class_get_name(fieldClass);
+					if (strcmp(nameSpace, "Redflag") == 0 && strcmp(name, "Vector3") == 0)
+						return ScriptFieldType::Vector3;
+
+					return ScriptFieldType::None;
+				}
+			}
+
+			return ScriptFieldType::None;
+		}
+
+		static std::string MonoTypeToString(MonoType* monoType)
+		{
+			char* typeName = mono_type_get_name(monoType);
+			std::string result = typeName ? typeName : "<unknown>";
+			mono_free(typeName);
+			return result;
+		}
+
 		//TODO:文件系统
 		//读取二进制文件（dll）到内存
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
@@ -260,6 +300,15 @@ namespace Redflag {
 		return s_Data->SceneContext;
 	}
 
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityUUID)
+	{
+		auto it = s_Data->EntityInstances.find(entityUUID);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second;
+	}
+
 	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
@@ -340,7 +389,48 @@ namespace Redflag {
 
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
 			if (isEntity)
-				s_Data->EntityClasses[fullName] = CreateRef <ScriptClass>(image, nameSpace, name);
+			{
+				Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(image, nameSpace, name);
+				LoadClassFields(scriptClass);
+				s_Data->EntityClasses[fullName] = scriptClass;
+			}
+		}
+	}
+
+	void ScriptEngine::LoadClassFields(const Ref<ScriptClass>& scriptClass)
+	{
+		RF_CORE_ASSERT(scriptClass && scriptClass->m_MonoClass, "Cannot load fields for an invalid script class");
+
+		scriptClass->m_Fields.clear();
+
+		void* iterator = nullptr;
+		while (MonoClassField* field = mono_class_get_fields(scriptClass->m_MonoClass, &iterator))
+		{
+			const uint32_t flags = mono_field_get_flags(field);
+			const bool isPublic = (flags & MONO_FIELD_ATTR_FIELD_ACCESS_MASK) == MONO_FIELD_ATTR_PUBLIC;
+			const bool isStatic = (flags & MONO_FIELD_ATTR_STATIC) != 0;
+
+			if (!isPublic || isStatic)
+				continue;
+
+			MonoType* monoType = mono_field_get_type(field);
+			ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(monoType);
+
+			if (fieldType == ScriptFieldType::None)
+			{
+				RF_CORE_WARN("Skipping unsupported script field {0}.{1} ({2})",
+					scriptClass->GetFullName(),
+					mono_field_get_name(field),
+					Utils::MonoTypeToString(monoType));
+				continue;
+			}
+
+			ScriptField scriptField;
+			scriptField.Name = mono_field_get_name(field);
+			scriptField.Type = fieldType;
+			scriptField.ClassField = field;
+
+			scriptClass->m_Fields.push_back(scriptField);
 		}
 	}
 
@@ -355,6 +445,22 @@ namespace Redflag {
 			std::string fullClassName = classNamespace.empty() ? className : fmt::format("{0}.{1}", classNamespace, className);
 			RF_CORE_ERROR("Failed to find script class {0}", fullClassName);
 		}
+	}
+
+	std::string ScriptClass::GetFullName() const
+	{
+		return m_ClassNamespace.empty() ? m_ClassName : fmt::format("{0}.{1}", m_ClassNamespace, m_ClassName);
+	}
+
+	const ScriptField* ScriptClass::GetField(const std::string& name) const
+	{
+		for (const ScriptField& field : m_Fields)
+		{
+			if (field.Name == name)
+				return &field;
+		}
+
+		return nullptr;
 	}
 
 	MonoObject* ScriptClass::Instantiate()
@@ -390,6 +496,24 @@ namespace Redflag {
 		UUID entityID = entity.GetUUID();
 		void* param = &entityID;
 		m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
+	}
+
+	bool ScriptInstance::GetFieldValue(const ScriptField& field, void* buffer) const
+	{
+		if (!m_Instance || !field.ClassField || !buffer)
+			return false;
+
+		mono_field_get_value(m_Instance, field.ClassField, buffer);
+		return true;
+	}
+
+	bool ScriptInstance::SetFieldValue(const ScriptField& field, const void* value)
+	{
+		if (!m_Instance || !field.ClassField || !value)
+			return false;
+
+		mono_field_set_value(m_Instance, field.ClassField, const_cast<void*>(value));
+		return true;
 	}
 
 	//引擎创建完所有实体统一调用

@@ -38,7 +38,20 @@ namespace Redflag {
         }
 
         template<typename T>
+        bool HasComponent() const
+        {
+            return m_Scene->m_Registry.any_of<T>(m_EntityHandle);
+        }
+
+        template<typename T>
         T& GetComponent()
+        {
+            RF_CORE_ASSERT(HasComponent<T>(), "Entity does not have that component!");
+            return m_Scene->m_Registry.get<T>(m_EntityHandle);
+        }
+
+        template<typename T>
+        const T& GetComponent() const
         {
             RF_CORE_ASSERT(HasComponent<T>(), "Entity does not have that component!");
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
@@ -55,8 +68,8 @@ namespace Redflag {
         operator uint32_t() const { return (uint32_t)m_EntityHandle; }  
         operator entt::entity()const { return m_EntityHandle; }
 
-        UUID GetUUID() { return GetComponent<IDComponent>().ID; }
-        const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
+        UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
+        const std::string& GetName() const { return GetComponent<TagComponent>().Tag; }
 
         bool operator==(const Entity& other) const
         {

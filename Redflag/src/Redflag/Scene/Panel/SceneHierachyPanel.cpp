@@ -10,6 +10,23 @@
 
 namespace Redflag {
 
+    static const char* ScriptFieldTypeToString(ScriptFieldType type)
+    {
+        switch (type)
+        {
+            case ScriptFieldType::Float:
+                return "Float";
+            case ScriptFieldType::Int:
+                return "Int";
+            case ScriptFieldType::Bool:
+                return "Bool";
+            case ScriptFieldType::Vector3:
+                return "Vector3";
+            default:
+                return "Unknown";
+        }
+    }
+
 	SceneHierachyPanel::SceneHierachyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -189,6 +206,74 @@ namespace Redflag {
         ImGui::PopStyleVar();
 
         ImGui::Columns(1);
+
+        ImGui::PopID();
+    }
+
+    static void DrawRuntimeScriptFieldControl(const ScriptField& field, const Ref<ScriptInstance>& scriptInstance)
+    {
+        ImGui::PushID(field.Name.c_str());
+
+        switch (field.Type)
+        {
+            case ScriptFieldType::Float:
+            {
+                float value = 0.0f;
+                if (!scriptInstance->GetFieldValue(field, &value))
+                {
+                    ImGui::TextDisabled("%s", field.Name.c_str());
+                    break;
+                }
+
+                if (ImGui::DragFloat(field.Name.c_str(), &value, 0.1f))
+                    scriptInstance->SetFieldValue(field, &value);
+                break;
+            }
+            case ScriptFieldType::Int:
+            {
+                int value = 0;
+                if (!scriptInstance->GetFieldValue(field, &value))
+                {
+                    ImGui::TextDisabled("%s", field.Name.c_str());
+                    break;
+                }
+
+                if (ImGui::DragInt(field.Name.c_str(), &value))
+                    scriptInstance->SetFieldValue(field, &value);
+                break;
+            }
+            case ScriptFieldType::Bool:
+            {
+                bool value = false;
+                if (!scriptInstance->GetFieldValue(field, &value))
+                {
+                    ImGui::TextDisabled("%s", field.Name.c_str());
+                    break;
+                }
+
+                if (ImGui::Checkbox(field.Name.c_str(), &value))
+                    scriptInstance->SetFieldValue(field, &value);
+                break;
+            }
+            case ScriptFieldType::Vector3:
+            {
+                glm::vec3 value(0.0f);
+                if (!scriptInstance->GetFieldValue(field, &value))
+                {
+                    ImGui::TextDisabled("%s", field.Name.c_str());
+                    break;
+                }
+
+                glm::vec3 previousValue = value;
+                DrawVec3Control(field.Name, value);
+                if (value.x != previousValue.x || value.y != previousValue.y || value.z != previousValue.z)
+                    scriptInstance->SetFieldValue(field, &value);
+                break;
+            }
+            default:
+                ImGui::TextDisabled("%s (%s)", field.Name.c_str(), ScriptFieldTypeToString(field.Type));
+                break;
+        }
 
         ImGui::PopID();
     }
@@ -459,21 +544,10 @@ namespace Redflag {
             });
 
         // Script 组件面板
-        DrawComponent<ScriptComponent>("Script Component", entity, [](auto& component)
+        DrawComponent<ScriptComponent>("Script Component", entity, [entity](auto& component)
             {
-                // 1. 先假设类不存在
-                bool scriptClassExsists = ScriptEngine::EntityClassExists(component.ClassName);
-
-                // 2. 获取所有已注册的脚本类（就是 LoadAssemblyClasses 存入的 map）
                 const auto& entityClasses = ScriptEngine::GetEntityClasses();
-                // entityClasses 是 std::unordered_map<std::string, Ref<ScriptClass>>
-                // 例如：{"Redflag.Player", ScriptClass对象}, {"Redflag.Enemy", ScriptClass对象}
-
-                // 3. 在 map 中查找你输入的类名
-                if (entityClasses.find(component.ClassName) != entityClasses.end())
-                    scriptClassExsists = true;
-                // 如果找到了，说明这个类在 C# DLL 中确实存在
-                // 如果找不到，说明你输入了一个不存在的类名
+            const bool scriptClassExsists = entityClasses.find(component.ClassName) != entityClasses.end();
                
 
                 //输入
@@ -494,6 +568,39 @@ namespace Redflag {
                 // 3. 恢复原来的文字颜色（只影响 PushStyleColor 和 PopStyleColor 之间的UI）
                 if (!scriptClassExsists)
                     ImGui::PopStyleColor();
+
+				const auto scriptClassIt = entityClasses.find(component.ClassName);
+				const bool hasValidScriptClass = scriptClassIt != entityClasses.end();
+
+                if (!hasValidScriptClass)
+                    return;
+
+                const Ref<ScriptClass>& scriptClass = scriptClassIt->second;
+                const auto& fields = scriptClass->GetFields();
+                Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::TextDisabled(scriptInstance ? "Runtime Fields" : "Public Fields");
+
+                if (fields.empty())
+                {
+                    ImGui::TextDisabled("No supported public fields");
+                    return;
+                }
+
+				if (!scriptInstance)
+				{
+					ImGui::TextDisabled("Enter Play mode to inspect values");
+
+					for (const ScriptField& field : fields)
+						ImGui::BulletText("%s (%s)", field.Name.c_str(), ScriptFieldTypeToString(field.Type));
+
+					return;
+				}
+
+                for (const ScriptField& field : fields)
+                    DrawRuntimeScriptFieldControl(field, scriptInstance);
             });
 
 
