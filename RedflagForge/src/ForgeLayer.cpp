@@ -1112,9 +1112,10 @@ namespace Redflag {
             ImGui::EndDragDropTarget();
         }
 
-        // Gizmo（平移/旋转/缩放，Edit 和 Simulate 下均可用）
+        // Gizmo（平移/旋转/缩放，仅在 Edit / Simulate 下可用）
         Entity selectedEntity = m_SceneHierachyPanel.GetSelectedEntity();
-        if (selectedEntity && m_GizmoType != -1)
+        const bool canUseGizmo = m_SceneState != SceneState::Play;
+        if (canUseGizmo && selectedEntity && m_GizmoType != -1)
         {
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
@@ -1199,9 +1200,12 @@ namespace Redflag {
     {
         if (e.GetMouseButton() == RF_MOUSE_BUTTON_LEFT)
         {
-            // 左键点击 Viewport 且未操作 Gizmo 时，选中悬停实体
+            // 左键点击 Viewport 且未操作 Gizmo 时，选中悬停实体。
+            // Play 模式下不把运行时副本里的实体写进面板选中状态，
+            // 否则 Stop 同一帧切回编辑场景后，后面的 Gizmo 代码会拿到悬空实体。
             if (m_ViewportHovered && !ImGuizmo::IsOver() &&
-                !Input::IsKeyPressed(RF_KEY_LEFT_ALT))
+                !Input::IsKeyPressed(RF_KEY_LEFT_ALT) &&
+                m_SceneState != SceneState::Play)
             {
                 m_SceneHierachyPanel.SetSelectedEntity(m_HoveredEntity);
             }
