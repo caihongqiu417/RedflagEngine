@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Redflag
 {
     public enum KeyCode
     {
         // Printable keys
         Space = 32,
-        Apostrophe = 39,   // '
-        Comma = 44,        // ,
-        Minus = 45,        // -
-        Period = 46,       // .
-        Slash = 47,        // /
+        Apostrophe = 39,
+        Comma = 44,
+        Minus = 45,
+        Period = 46,
+        Slash = 47,
         D0 = 48,
         D1 = 49,
         D2 = 50,
@@ -25,8 +19,8 @@ namespace Redflag
         D7 = 55,
         D8 = 56,
         D9 = 57,
-        Semicolon = 59,    // ;
-        Equal = 61,        // =
+        Semicolon = 59,
+        Equal = 61,
         A = 65,
         B = 66,
         C = 67,
@@ -53,10 +47,10 @@ namespace Redflag
         X = 88,
         Y = 89,
         Z = 90,
-        LeftBracket = 91,  // [
-        Backslash = 92,    // \
-        RightBracket = 93, // ]
-        GraveAccent = 96,  // `
+        LeftBracket = 91,
+        Backslash = 92,
+        RightBracket = 93,
+        GraveAccent = 96,
         World1 = 161,
         World2 = 162,
 

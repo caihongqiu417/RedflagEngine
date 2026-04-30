@@ -25,12 +25,13 @@ namespace Redflag {
 	public:
 		ScriptClass() = default;
 
-		ScriptClass(const std::string& classNamespace, const std::string& className);
+		ScriptClass(MonoImage* image, const std::string& classNamespace, const std::string& className);
 
 		MonoObject* Instantiate();
 
 		MonoMethod* GetMethod(const std::string& name, int parameterCount);
 		MonoObject* InvokeMethod(MonoObject* instance, MonoMethod* method, void** params);
+		bool IsValid() const { return m_MonoClass != nullptr; }
 
 	private:
 		std::string m_ClassNamespace;
@@ -64,8 +65,6 @@ namespace Redflag {
 
 		static void Shutdown();
 
-		static void LoadAssembly(const std::filesystem::path& filepath);
-
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
 
@@ -81,6 +80,7 @@ namespace Redflag {
 	private:
 		static void InitMono();
 		static void ShutdownMono();
+		static MonoAssembly* LoadAssembly(const std::filesystem::path& filepath);
 
 		static MonoObject* InstantiateClass(MonoClass* monoClass);
 		static void LoadAssemblyClasses(MonoAssembly* assembly);

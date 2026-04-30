@@ -44,6 +44,12 @@ namespace Redflag {
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath, &fileSize);
 
+			if (!fileData || fileSize == 0)
+			{
+				RF_CORE_ERROR("Failed to read script assembly: {0}", assemblyPath.string());
+				return nullptr;
+			}
+
 			//根据dll返回一个 MonoImage* 句柄
 			//（后续所有对程序集的元数据读取（类、方法）都依赖这个句柄）
 			MonoImageOpenStatus status;
@@ -99,6 +105,8 @@ namespace Redflag {
 
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
+		MonoAssembly* AppAssembly = nullptr;
+		MonoImage* AppAssemblyImage = nullptr;
 
 		ScriptClass EntityClass;
 
@@ -124,18 +132,26 @@ namespace Redflag {
 		//初始化RootDomain
 		InitMono();
 
-		//初始化AppDomain
-		LoadAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
+		//加载核心脚本 API 程序集
+		s_Data->CoreAssembly = LoadAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
+		RF_CORE_ASSERT(s_Data->CoreAssembly, "Failed to load script core assembly Redflag-ScriptCore.dll");
 
-		//从 Assembly 获取可执行的元数据视图
+		//从核心程序集获取可执行的元数据视图
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		RF_CORE_ASSERT(s_Data->CoreAssemblyImage, "Failed to get image for Redflag-ScriptCore.dll");
 
 		//缓存C#基类
-		s_Data->EntityClass = ScriptClass("Redflag", "Entity");
-		RF_CORE_ASSERT(s_Data->EntityClass.m_MonoClass, "Failed to find script base class Redflag.Entity");
+		s_Data->EntityClass = ScriptClass(s_Data->CoreAssemblyImage, "Redflag", "Entity");
+		RF_CORE_ASSERT(s_Data->EntityClass.IsValid(), "Failed to find script base class Redflag.Entity");
 
-		//遍历所有类型，找到Entity子类并存入map(EntityClasses)
-		LoadAssemblyClasses(s_Data->CoreAssembly);
+		//加载游戏脚本程序集
+		s_Data->AppAssembly = LoadAssembly("Resources/Scripts/Sandbox.dll");
+		RF_CORE_ASSERT(s_Data->AppAssembly, "Failed to load app assembly Sandbox.dll");
+		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+		RF_CORE_ASSERT(s_Data->AppAssemblyImage, "Failed to get image for Sandbox.dll");
+
+		//遍历游戏程序集中的所有类型，找到 Entity 子类并存入 map(EntityClasses)
+		LoadAssemblyClasses(s_Data->AppAssembly);
 
 		// 注册 internal calls(上下文是AppDomain)
 		ScriptGlue::RegisterFunctions();
@@ -143,7 +159,7 @@ namespace Redflag {
 
 #if 0
 		//获取和C#类(存储在s_Data,防止重复构建）
-		s_Data->EntityClass = ScriptClass("Redflag", "Entity");
+		s_Data->EntityClass = ScriptClass(s_Data->CoreAssemblyImage, "Redflag", "Entity");
 
 		MonoObject* instance = s_Data->EntityClass.Instantiate();
 
@@ -181,18 +197,22 @@ namespace Redflag {
 		s_Data = nullptr;
 	}
 
-	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	MonoAssembly* ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
-		//创建AppDomain
-		//脚本系统dll（热更新）
-		s_Data->AppDomain = mono_domain_create_appdomain("RedflagScriptRuntime", nullptr);
+		if (!s_Data->AppDomain)
+		{
+			//脚本系统 dll 统一运行在同一个 AppDomain
+			s_Data->AppDomain = mono_domain_create_appdomain("RedflagScriptRuntime", nullptr);
+			RF_CORE_ASSERT(s_Data->AppDomain, "Failed to create script app domain");
+		}
+
 		mono_domain_set(s_Data->AppDomain, true);
 
+		MonoAssembly* assembly = Utils::LoadMonoAssembly(filepath);
+		if (!assembly)
+			RF_CORE_ERROR("Failed to load script assembly {0}", filepath.string());
 
-		//加载自己游戏的C#脚本（已经通过premake编译为dll）
-		//自动加载到AppDomain
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
-		//PrintAssemblyTypes(s_Data->CoreAssembly);
+		return assembly;
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
@@ -295,10 +315,10 @@ namespace Redflag {
 		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
 		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 
-		MonoClass* entityClass = mono_class_from_name(image, "Redflag", "Entity");
+		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Redflag", "Entity");
 		RF_CORE_ASSERT(entityClass, "Failed to find script base class Redflag.Entity while loading assembly classes");
 
-		//遍历Redflag-ScriptCore.dll 中定义的所有类型
+		//遍历游戏脚本程序集中的所有类型
 		for (int32_t i = 0; i < numTypes; i++)
 		{
 			uint32_t cols[MONO_TYPEDEF_SIZE];
@@ -320,15 +340,15 @@ namespace Redflag {
 
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
 			if (isEntity)
-				s_Data->EntityClasses[fullName] = CreateRef <ScriptClass>(nameSpace, name);
+				s_Data->EntityClasses[fullName] = CreateRef <ScriptClass>(image, nameSpace, name);
 		}
 	}
 
 
-	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+	ScriptClass::ScriptClass(MonoImage* image, const std::string& classNamespace, const std::string& className)
 		:m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
-		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+		m_MonoClass = mono_class_from_name(image, classNamespace.c_str(), className.c_str());
 
 		if (!m_MonoClass)
 		{

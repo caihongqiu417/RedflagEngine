@@ -42,6 +42,7 @@ group ""
 
 group "Core"
     include "Redflag-ScriptCore"
+    include "SandboxProject"
 
 project "Redflag"
     location "Redflag"
@@ -308,6 +309,7 @@ project "RedflagForge"
     language "C++"
     cppdialect "C++17"
     staticruntime "off"
+    dependson { "Redflag-ScriptCore", "SandboxProject" }
     
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
