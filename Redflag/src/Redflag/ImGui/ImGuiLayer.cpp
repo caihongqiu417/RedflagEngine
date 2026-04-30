@@ -10,9 +10,31 @@
 //TEMPORARY
 #include<GLFW/glfw3.h>
 #include<glad/glad.h>
+#include <filesystem>
 #include"ImGuizmo.h"
 
 namespace Redflag {
+    namespace
+    {
+        static std::filesystem::path FindChineseFontPath()
+        {
+            const std::array<std::filesystem::path, 4> candidatePaths = {
+                "C:/Windows/Fonts/msyh.ttc",
+                "C:/Windows/Fonts/msyh.ttf",
+                "C:/Windows/Fonts/simhei.ttf",
+                "C:/Windows/Fonts/simsun.ttc"
+            };
+
+            for (const auto& candidatePath : candidatePaths)
+            {
+                if (std::filesystem::exists(candidatePath))
+                    return candidatePath;
+            }
+
+            return {};
+        }
+    }
+
 	ImGuiLayer::ImGuiLayer()
 		:Layer("ImGuiLayer")
 	{
@@ -40,7 +62,21 @@ namespace Redflag {
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // 启用多视口支持
 
         //字体
-        io.FontDefault=io.Fonts->AddFontFromFileTTF("assets/fonts/Bitter/static/Bitter-SemiBold.ttf",18.f);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/Bitter/static/Bitter-SemiBold.ttf", 18.0f);
+
+        const std::filesystem::path chineseFontPath = FindChineseFontPath();
+        if (!chineseFontPath.empty())
+        {
+            ImFontConfig chineseFontConfig;
+            chineseFontConfig.MergeMode = true;
+            chineseFontConfig.PixelSnapH = true;
+            io.Fonts->AddFontFromFileTTF(chineseFontPath.string().c_str(), 18.0f, &chineseFontConfig,
+                io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        }
+        else
+        {
+            RF_CORE_WARN("No Chinese font found. ImGui Chinese text may render as '?'.");
+        }
 
         // 设置ImGui样式为深色主题
         SetThemeColor();

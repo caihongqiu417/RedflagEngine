@@ -156,10 +156,42 @@ namespace Redflag {
 
 		//运行时
 		Scene* SceneContext = nullptr;
+		std::string AssemblyStatusMessage;
 
 	};
 
 	static ScriptEngineData* s_Data;
+
+	namespace
+	{
+		static const std::filesystem::path s_CoreAssemblyPath = "Resources/Scripts/Redflag-ScriptCore.dll";
+		static const std::filesystem::path s_AppAssemblyPath = "Resources/Scripts/Sandbox.dll";
+
+		static void ResetAssemblyData()
+		{
+			s_Data->CoreAssembly = nullptr;
+			s_Data->CoreAssemblyImage = nullptr;
+			s_Data->AppAssembly = nullptr;
+			s_Data->AppAssemblyImage = nullptr;
+			s_Data->EntityClass = ScriptClass();
+			s_Data->EntityClasses.clear();
+			s_Data->EntityInstances.clear();
+		}
+
+		static void DestroyAppDomain()
+		{
+			if (s_Data->AppDomain)
+			{
+				if (s_Data->RootDomain)
+					mono_domain_set(s_Data->RootDomain, false);
+
+				mono_domain_unload(s_Data->AppDomain);
+				s_Data->AppDomain = nullptr;
+			}
+
+			ResetAssemblyData();
+		}
+	}
 
 
 
@@ -171,30 +203,8 @@ namespace Redflag {
 
 		//初始化RootDomain
 		InitMono();
-
-		//加载核心脚本 API 程序集
-		s_Data->CoreAssembly = LoadAssembly("Resources/Scripts/Redflag-ScriptCore.dll");
-		RF_CORE_ASSERT(s_Data->CoreAssembly, "Failed to load script core assembly Redflag-ScriptCore.dll");
-
-		//从核心程序集获取可执行的元数据视图
-		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
-		RF_CORE_ASSERT(s_Data->CoreAssemblyImage, "Failed to get image for Redflag-ScriptCore.dll");
-
-		//缓存C#基类
-		s_Data->EntityClass = ScriptClass(s_Data->CoreAssemblyImage, "Redflag", "Entity");
-		RF_CORE_ASSERT(s_Data->EntityClass.IsValid(), "Failed to find script base class Redflag.Entity");
-
-		//加载游戏脚本程序集
-		s_Data->AppAssembly = LoadAssembly("Resources/Scripts/Sandbox.dll");
-		RF_CORE_ASSERT(s_Data->AppAssembly, "Failed to load app assembly Sandbox.dll");
-		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
-		RF_CORE_ASSERT(s_Data->AppAssemblyImage, "Failed to get image for Sandbox.dll");
-
-		//遍历游戏程序集中的所有类型，找到 Entity 子类并存入 map(EntityClasses)
-		LoadAssemblyClasses(s_Data->AppAssembly);
-
-		// 注册 internal calls(上下文是AppDomain)
-		ScriptGlue::RegisterFunctions();
+		const bool assembliesLoaded = LoadAssemblies();
+		RF_CORE_ASSERT(assembliesLoaded, s_Data->AssemblyStatusMessage.c_str());
 
 
 #if 0
@@ -233,8 +243,111 @@ namespace Redflag {
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();      // 先关 Mono
+		ResetAssemblyData();
 		delete s_Data;       // 再删数据容器
 		s_Data = nullptr;
+	}
+
+	bool ScriptEngine::IsRuntimeActive()
+	{
+		return s_Data && s_Data->SceneContext != nullptr;
+	}
+
+	bool ScriptEngine::UnloadAssemblies()
+	{
+		if (!s_Data)
+			return false;
+
+		if (IsRuntimeActive() || !s_Data->EntityInstances.empty())
+		{
+			s_Data->AssemblyStatusMessage = "Stop runtime before unloading script assemblies";
+			return false;
+		}
+
+		DestroyAppDomain();
+		s_Data->AssemblyStatusMessage = "Script assemblies unloaded";
+		return true;
+	}
+
+	bool ScriptEngine::LoadAssemblies()
+	{
+		if (!s_Data)
+			return false;
+
+		if (!s_Data->RootDomain)
+		{
+			s_Data->AssemblyStatusMessage = "Mono root domain is not initialized";
+			return false;
+		}
+
+		if (s_Data->AppDomain)
+			DestroyAppDomain();
+
+		//加载核心脚本 API 程序集
+		s_Data->CoreAssembly = LoadAssembly(s_CoreAssemblyPath);
+		if (!s_Data->CoreAssembly)
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to load script core assembly Redflag-ScriptCore.dll";
+			return false;
+		}
+
+		//从核心程序集获取可执行的元数据视图
+		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		if (!s_Data->CoreAssemblyImage)
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to get image for Redflag-ScriptCore.dll";
+			return false;
+		}
+
+		//缓存C#基类
+		s_Data->EntityClass = ScriptClass(s_Data->CoreAssemblyImage, "Redflag", "Entity");
+		if (!s_Data->EntityClass.IsValid())
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to find script base class Redflag.Entity";
+			return false;
+		}
+
+		//加载游戏脚本程序集
+		s_Data->AppAssembly = LoadAssembly(s_AppAssemblyPath);
+		if (!s_Data->AppAssembly)
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to load app assembly Sandbox.dll";
+			return false;
+		}
+
+		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+		if (!s_Data->AppAssemblyImage)
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to get image for Sandbox.dll";
+			return false;
+		}
+
+		//遍历游戏程序集中的所有类型，找到 Entity 子类并存入 map(EntityClasses)
+		LoadAssemblyClasses(s_Data->AppAssembly);
+
+		// 注册 internal calls(上下文是AppDomain)
+		ScriptGlue::RegisterFunctions();
+		s_Data->AssemblyStatusMessage = fmt::format("Loaded {0} script classes", s_Data->EntityClasses.size());
+		return true;
+	}
+
+	bool ScriptEngine::ReloadAssemblies()
+	{
+		if (!UnloadAssemblies())
+			return false;
+
+		return LoadAssemblies();
+	}
+
+	const std::string& ScriptEngine::GetAssemblyStatusMessage()
+	{
+		static const std::string emptyMessage;
+		return s_Data ? s_Data->AssemblyStatusMessage : emptyMessage;
 	}
 
 	MonoAssembly* ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
@@ -318,14 +431,14 @@ namespace Redflag {
 	{
 		if (s_Data->AppDomain)
 		{
-			mono_domain_unload(s_Data->AppDomain);
-			s_Data->AppDomain = nullptr;
+			DestroyAppDomain();
 		}
 		if (s_Data->RootDomain)
 		{
 			mono_jit_cleanup(s_Data->RootDomain);
 			s_Data->RootDomain = nullptr;
 		}
+		s_Data->SceneContext = nullptr;
 	}
 
 

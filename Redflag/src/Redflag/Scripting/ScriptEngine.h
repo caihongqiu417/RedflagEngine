@@ -97,6 +97,12 @@ namespace Redflag {
 
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
+		static bool IsRuntimeActive();
+
+		static bool UnloadAssemblies();
+		static bool LoadAssemblies();
+		static bool ReloadAssemblies();
+		static const std::string& GetAssemblyStatusMessage();
 
 		static bool EntityClassExists(const std::string& fullClassName);
 

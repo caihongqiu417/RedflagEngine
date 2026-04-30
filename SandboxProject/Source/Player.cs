@@ -6,6 +6,9 @@ namespace Sandbox
     {
         public float Speed = 5.0f;
 
+        //Test HotUpdate
+        //public int TestValue = 3;
+
         void OnCreate()
         {
         }
@@ -24,7 +27,10 @@ namespace Sandbox
             else if (Input.IsKeyDown(KeyCode.D))
                 velocity.X = 1.0f;
 
+            //Internal Get
             var transform = GetComponent<TransformComponent>();
+
+            //Internal Set
             transform.Translation += velocity * Speed * ts;
         }
     }

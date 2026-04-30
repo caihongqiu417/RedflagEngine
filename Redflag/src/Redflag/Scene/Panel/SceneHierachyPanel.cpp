@@ -2,13 +2,405 @@
 #include"SceneHierachyPanel.h"
 #include"imgui.h"
 #include"imgui_internal.h"
+#include <algorithm>
+#include <array>
 #include<filesystem>
+#include <fstream>
+#include <shellapi.h>
 #include<glm/gtc/type_ptr.hpp>
+#include <sstream>
 #include "Scene/Components.h"
 #include "Redflag/Core/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
 namespace Redflag {
+
+    struct ScriptSourceCacheEntry
+    {
+        std::filesystem::path Path;
+        std::filesystem::file_time_type LastWriteTime{};
+        std::string Contents;
+        bool Initialized = false;
+        bool Found = false;
+    };
+
+    struct ScriptBuildState
+    {
+        bool Initialized = false;
+        bool SourcesDirty = false;
+        bool StatusIsError = false;
+        std::string StatusMessage;
+        std::chrono::steady_clock::time_point LastScanTime{};
+    };
+
+    static std::filesystem::path FindWorkspaceRoot()
+    {
+        std::filesystem::path currentPath = std::filesystem::current_path();
+
+        while (!currentPath.empty())
+        {
+            if (std::filesystem::exists(currentPath / "SandboxProject" / "Source"))
+                return currentPath;
+
+            std::filesystem::path parentPath = currentPath.parent_path();
+            if (parentPath == currentPath)
+                break;
+
+            currentPath = parentPath;
+        }
+
+        return {};
+    }
+
+    static std::array<std::filesystem::path, 2> GetScriptSourceRoots(const std::filesystem::path& workspaceRoot)
+    {
+        return {
+            workspaceRoot / "SandboxProject" / "Source",
+            workspaceRoot / "Redflag-ScriptCore" / "Source"
+        };
+    }
+
+    static std::array<std::filesystem::path, 2> GetScriptAssemblyPaths(const std::filesystem::path& workspaceRoot)
+    {
+        const std::filesystem::path scriptsRoot = workspaceRoot / "RedflagForge" / "Resources" / "Scripts";
+        return {
+            scriptsRoot / "Sandbox.dll",
+            scriptsRoot / "Redflag-ScriptCore.dll"
+        };
+    }
+
+    static std::filesystem::path FindScriptSourcePath(const ScriptClass& scriptClass)
+    {
+        const std::filesystem::path workspaceRoot = FindWorkspaceRoot();
+        if (workspaceRoot.empty())
+            return {};
+
+        const std::string fullClassName = scriptClass.GetFullName();
+        const size_t lastDot = fullClassName.find_last_of('.');
+        const std::string className = lastDot == std::string::npos ? fullClassName : fullClassName.substr(lastDot + 1);
+
+        const auto searchRoots = GetScriptSourceRoots(workspaceRoot);
+
+        for (const std::filesystem::path& searchRoot : searchRoots)
+        {
+            if (!std::filesystem::exists(searchRoot))
+                continue;
+
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(searchRoot))
+            {
+                if (!entry.is_regular_file())
+                    continue;
+
+                if (entry.path().filename() == className + ".cs")
+                    return entry.path();
+            }
+        }
+
+        return {};
+    }
+
+    static bool ReadTextFile(const std::filesystem::path& path, std::string& outContents)
+    {
+        std::ifstream stream(path);
+        if (!stream)
+            return false;
+
+        std::stringstream buffer;
+        buffer << stream.rdbuf();
+        outContents = buffer.str();
+        return true;
+    }
+
+    static const ScriptSourceCacheEntry& GetScriptSourceCacheEntry(const ScriptClass& scriptClass)
+    {
+        static std::unordered_map<std::string, ScriptSourceCacheEntry> sourceCache;
+
+        const std::string fullClassName = scriptClass.GetFullName();
+        ScriptSourceCacheEntry& cacheEntry = sourceCache[fullClassName];
+
+        if (!cacheEntry.Initialized || (cacheEntry.Found && !std::filesystem::exists(cacheEntry.Path)))
+        {
+            cacheEntry.Path = FindScriptSourcePath(scriptClass);
+            cacheEntry.Found = !cacheEntry.Path.empty();
+            cacheEntry.Initialized = true;
+            cacheEntry.Contents.clear();
+            cacheEntry.LastWriteTime = {};
+
+            if (cacheEntry.Found && std::filesystem::exists(cacheEntry.Path))
+            {
+                cacheEntry.LastWriteTime = std::filesystem::last_write_time(cacheEntry.Path);
+                ReadTextFile(cacheEntry.Path, cacheEntry.Contents);
+            }
+        }
+        else if (cacheEntry.Found && std::filesystem::exists(cacheEntry.Path))
+        {
+            const auto lastWriteTime = std::filesystem::last_write_time(cacheEntry.Path);
+            if (lastWriteTime != cacheEntry.LastWriteTime || cacheEntry.Contents.empty())
+            {
+                cacheEntry.LastWriteTime = lastWriteTime;
+                ReadTextFile(cacheEntry.Path, cacheEntry.Contents);
+            }
+        }
+        else
+        {
+            cacheEntry.Found = false;
+            cacheEntry.Path.clear();
+            cacheEntry.Contents.clear();
+        }
+
+        return cacheEntry;
+    }
+
+    static ScriptBuildState& GetScriptBuildState()
+    {
+        static ScriptBuildState buildState;
+        return buildState;
+    }
+
+    static bool TryGetFileWriteTime(const std::filesystem::path& path, std::filesystem::file_time_type& outWriteTime)
+    {
+        std::error_code errorCode;
+        if (!std::filesystem::exists(path, errorCode) || errorCode)
+            return false;
+
+        outWriteTime = std::filesystem::last_write_time(path, errorCode);
+        return !errorCode;
+    }
+
+    static bool TryGetLatestWriteTimeUnderRoot(const std::filesystem::path& root, const char* extension, std::filesystem::file_time_type& outWriteTime)
+    {
+        std::error_code errorCode;
+        if (!std::filesystem::exists(root, errorCode) || errorCode)
+            return false;
+
+        bool found = false;
+        for (std::filesystem::recursive_directory_iterator it(root, std::filesystem::directory_options::skip_permission_denied, errorCode), end;
+            it != end;
+            it.increment(errorCode))
+        {
+            if (errorCode)
+            {
+                errorCode.clear();
+                continue;
+            }
+
+            if (!it->is_regular_file(errorCode))
+            {
+                errorCode.clear();
+                continue;
+            }
+
+            if (it->path().extension() != extension)
+                continue;
+
+            const std::filesystem::file_time_type writeTime = std::filesystem::last_write_time(it->path(), errorCode);
+            if (errorCode)
+            {
+                errorCode.clear();
+                continue;
+            }
+
+            if (!found || writeTime > outWriteTime)
+                outWriteTime = writeTime;
+
+            found = true;
+        }
+
+        return found;
+    }
+
+    static void RefreshScriptBuildState()
+    {
+        ScriptBuildState& buildState = GetScriptBuildState();
+        const auto now = std::chrono::steady_clock::now();
+        if (buildState.Initialized && now - buildState.LastScanTime < std::chrono::milliseconds(500))
+            return;
+
+        buildState.Initialized = true;
+        buildState.LastScanTime = now;
+        buildState.SourcesDirty = false;
+
+        const std::filesystem::path workspaceRoot = FindWorkspaceRoot();
+        if (workspaceRoot.empty())
+            return;
+
+        bool hasSourceFiles = false;
+        std::filesystem::file_time_type latestSourceWriteTime{};
+        for (const std::filesystem::path& sourceRoot : GetScriptSourceRoots(workspaceRoot))
+        {
+            std::filesystem::file_time_type rootWriteTime{};
+            if (!TryGetLatestWriteTimeUnderRoot(sourceRoot, ".cs", rootWriteTime))
+                continue;
+
+            if (!hasSourceFiles || rootWriteTime > latestSourceWriteTime)
+                latestSourceWriteTime = rootWriteTime;
+
+            hasSourceFiles = true;
+        }
+
+        bool hasAssemblies = false;
+        std::filesystem::file_time_type latestAssemblyWriteTime{};
+        for (const std::filesystem::path& assemblyPath : GetScriptAssemblyPaths(workspaceRoot))
+        {
+            std::filesystem::file_time_type assemblyWriteTime{};
+            if (!TryGetFileWriteTime(assemblyPath, assemblyWriteTime))
+                continue;
+
+            if (!hasAssemblies || assemblyWriteTime > latestAssemblyWriteTime)
+                latestAssemblyWriteTime = assemblyWriteTime;
+
+            hasAssemblies = true;
+        }
+
+        buildState.SourcesDirty = hasSourceFiles && (!hasAssemblies || latestSourceWriteTime > latestAssemblyWriteTime);
+    }
+
+    static const char* GetManagedBuildConfiguration()
+    {
+#if defined(RF_DEBUG)
+        return "Debug";
+#elif defined(RF_RELEASE)
+        return "Release";
+#else
+        return "Dist";
+#endif
+    }
+
+    static std::filesystem::path FindMSBuildPath()
+    {
+        std::vector<std::filesystem::path> candidatePaths;
+
+        char programFilesX86[MAX_PATH] = {};
+        const DWORD programFilesLength = GetEnvironmentVariableA("ProgramFiles(x86)", programFilesX86, MAX_PATH);
+        if (programFilesLength > 0 && programFilesLength < MAX_PATH)
+        {
+            const std::filesystem::path basePath = programFilesX86;
+            candidatePaths = {
+                basePath / "Microsoft Visual Studio" / "2022" / "BuildTools" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe",
+                basePath / "Microsoft Visual Studio" / "2022" / "Community" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe",
+                basePath / "Microsoft Visual Studio" / "2022" / "Professional" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe",
+                basePath / "Microsoft Visual Studio" / "2022" / "Enterprise" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe",
+                basePath / "Microsoft Visual Studio" / "2019" / "BuildTools" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe",
+                basePath / "Microsoft Visual Studio" / "2019" / "Community" / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe"
+            };
+        }
+
+        for (const std::filesystem::path& candidatePath : candidatePaths)
+        {
+            if (std::filesystem::exists(candidatePath))
+                return candidatePath;
+        }
+
+        char resolvedPath[MAX_PATH] = {};
+        const DWORD resolvedLength = SearchPathA(nullptr, "MSBuild.exe", nullptr, MAX_PATH, resolvedPath, nullptr);
+        if (resolvedLength > 0 && resolvedLength < MAX_PATH)
+            return resolvedPath;
+
+        return {};
+    }
+
+    static bool RunProcessAndWait(const std::filesystem::path& executablePath, const std::string& arguments,
+        const std::filesystem::path& workingDirectory, DWORD& outExitCode)
+    {
+        outExitCode = 1;
+
+        STARTUPINFOA startupInfo{};
+        startupInfo.cb = sizeof(STARTUPINFOA);
+
+        PROCESS_INFORMATION processInfo{};
+        std::string commandLine = std::string("\"") + executablePath.string() + "\" " + arguments;
+        std::vector<char> commandLineBuffer(commandLine.begin(), commandLine.end());
+        commandLineBuffer.push_back('\0');
+
+        const std::string workingDirectoryString = workingDirectory.string();
+        const BOOL created = CreateProcessA(nullptr, commandLineBuffer.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW,
+            nullptr, workingDirectoryString.c_str(), &startupInfo, &processInfo);
+        if (!created)
+            return false;
+
+        WaitForSingleObject(processInfo.hProcess, INFINITE);
+        if (!GetExitCodeProcess(processInfo.hProcess, &outExitCode))
+            outExitCode = 1;
+
+        CloseHandle(processInfo.hThread);
+        CloseHandle(processInfo.hProcess);
+        return true;
+    }
+
+    static bool OpenScriptSourceFile(const std::filesystem::path& sourcePath)
+    {
+        const std::string sourcePathString = sourcePath.string();
+        return (INT_PTR)ShellExecuteA(nullptr, "open", sourcePathString.c_str(), nullptr, nullptr, SW_SHOWNORMAL) > 32;
+    }
+
+    static bool RecompileScriptAssemblies(std::string& outMessage)
+    {
+        const std::filesystem::path workspaceRoot = FindWorkspaceRoot();
+        if (workspaceRoot.empty())
+        {
+            outMessage = "Workspace root not found";
+            return false;
+        }
+
+        if (ScriptEngine::IsRuntimeActive())
+        {
+            outMessage = "Stop Play mode before recompiling scripts";
+            return false;
+        }
+
+        const std::filesystem::path msbuildPath = FindMSBuildPath();
+        if (msbuildPath.empty())
+        {
+            outMessage = "MSBuild.exe not found";
+            return false;
+        }
+
+        const std::filesystem::path sandboxProjectPath = workspaceRoot / "SandboxProject" / "SandboxProject.csproj";
+        if (!std::filesystem::exists(sandboxProjectPath))
+        {
+            outMessage = "SandboxProject.csproj not found";
+            return false;
+        }
+
+        if (!ScriptEngine::UnloadAssemblies())
+        {
+            outMessage = ScriptEngine::GetAssemblyStatusMessage();
+            return false;
+        }
+
+        DWORD exitCode = 1;
+        const std::string arguments = std::string("\"") + sandboxProjectPath.string() +
+            "\" /t:Build /p:Configuration=" + GetManagedBuildConfiguration() +
+            " /p:Platform=x64 /nologo /v:minimal";
+
+        if (!RunProcessAndWait(msbuildPath, arguments, workspaceRoot, exitCode))
+        {
+            outMessage = std::string("Failed to launch MSBuild, error code ") + std::to_string(GetLastError());
+            if (ScriptEngine::LoadAssemblies())
+                outMessage += ", restored previous assemblies";
+            return false;
+        }
+
+        if (exitCode != 0)
+        {
+            outMessage = std::string("Script compilation failed, MSBuild exit code ") + std::to_string(exitCode);
+            if (ScriptEngine::LoadAssemblies())
+                outMessage += ", restored previous assemblies";
+            else
+                outMessage += std::string(", failed to restore assemblies: ") + ScriptEngine::GetAssemblyStatusMessage();
+            return false;
+        }
+
+        if (!ScriptEngine::LoadAssemblies())
+        {
+            outMessage = std::string("Script reload failed: ") + ScriptEngine::GetAssemblyStatusMessage();
+            return false;
+        }
+
+        GetScriptBuildState().Initialized = false;
+        outMessage = "Scripts recompiled and reloaded";
+        return true;
+    }
 
     static const char* ScriptFieldTypeToString(ScriptFieldType type)
     {
@@ -547,30 +939,50 @@ namespace Redflag {
         DrawComponent<ScriptComponent>("Script Component", entity, [entity](auto& component)
             {
                 const auto& entityClasses = ScriptEngine::GetEntityClasses();
-            const bool scriptClassExsists = entityClasses.find(component.ClassName) != entityClasses.end();
+
+                std::vector<std::string> classNames;
+                classNames.reserve(entityClasses.size());
+                for (const auto& [className, scriptClass] : entityClasses)
+                    classNames.push_back(className);
+
+                std::sort(classNames.begin(), classNames.end());
+
+                const bool scriptClassExsists = entityClasses.find(component.ClassName) != entityClasses.end();
+                const char* previewValue = component.ClassName.empty() ? "<None>" : component.ClassName.c_str();
                
-
-                //输入
-                char buffer[64];
-                memset(buffer, 0, sizeof(buffer));
-                strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
-
-                // 1. 如果类名不存在，把后续所有UI文字颜色设为红色
                 if (!scriptClassExsists)
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));  // 红不拉几的颜色
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
-                // 2. 绘制输入框（此时如果类不存在，文字就是红色）
-                if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+                if (ImGui::BeginCombo("Class", previewValue))
                 {
-                    component.ClassName = std::string(buffer);
+                    const bool noneSelected = component.ClassName.empty();
+                    if (ImGui::Selectable("<None>", noneSelected))
+                        component.ClassName.clear();
+
+                    if (noneSelected)
+                        ImGui::SetItemDefaultFocus();
+
+                    for (const std::string& className : classNames)
+                    {
+                        const bool isSelected = component.ClassName == className;
+                        if (ImGui::Selectable(className.c_str(), isSelected))
+                            component.ClassName = className;
+
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+
+                    ImGui::EndCombo();
                 }
 
-                // 3. 恢复原来的文字颜色（只影响 PushStyleColor 和 PopStyleColor 之间的UI）
                 if (!scriptClassExsists)
                     ImGui::PopStyleColor();
 
 				const auto scriptClassIt = entityClasses.find(component.ClassName);
 				const bool hasValidScriptClass = scriptClassIt != entityClasses.end();
+
+                if (!component.ClassName.empty() && !hasValidScriptClass)
+                    ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.3f, 1.0f), "Missing script class: %s", component.ClassName.c_str());
 
                 if (!hasValidScriptClass)
                     return;
@@ -586,21 +998,82 @@ namespace Redflag {
                 if (fields.empty())
                 {
                     ImGui::TextDisabled("No supported public fields");
-                    return;
                 }
-
-				if (!scriptInstance)
+                else if (!scriptInstance)
 				{
 					ImGui::TextDisabled("Enter Play mode to inspect values");
 
 					for (const ScriptField& field : fields)
 						ImGui::BulletText("%s (%s)", field.Name.c_str(), ScriptFieldTypeToString(field.Type));
-
-					return;
 				}
+                else
+                {
+                    for (const ScriptField& field : fields)
+                        DrawRuntimeScriptFieldControl(field, scriptInstance);
+                }
 
-                for (const ScriptField& field : fields)
-                    DrawRuntimeScriptFieldControl(field, scriptInstance);
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::TextDisabled("Script Source");
+
+                ScriptBuildState& buildState = GetScriptBuildState();
+                RefreshScriptBuildState();
+
+                const ImVec4 attentionRed = ImVec4(0.95f, 0.16f, 0.20f, 1.0f);
+                const ImVec4 successGreen = ImVec4(0.12f, 0.82f, 0.28f, 1.0f);
+
+                if (buildState.SourcesDirty)
+                {
+                    ImGui::TextColored(attentionRed, "%s", "Scripts changed. Click to recompile.");
+
+                    const bool canRecompileScripts = !ScriptEngine::IsRuntimeActive();
+                    if (!canRecompileScripts)
+                        ImGui::BeginDisabled();
+
+                    if (ImGui::Button("Recompile Scripts"))
+                    {
+                        std::string statusMessage;
+                        const bool recompileSucceeded = RecompileScriptAssemblies(statusMessage);
+                        buildState.StatusMessage = statusMessage;
+                        buildState.StatusIsError = !recompileSucceeded;
+                        buildState.Initialized = false;
+                    }
+
+                    if (!canRecompileScripts)
+                        ImGui::EndDisabled();
+
+                    if (!canRecompileScripts)
+                        ImGui::TextColored(attentionRed, "%s", "Stop Play mode before recompiling");
+                }
+
+                if (!buildState.StatusMessage.empty())
+                {
+                    const ImVec4 statusColor = buildState.StatusIsError
+                        ? attentionRed
+                        : successGreen;
+                    ImGui::TextColored(statusColor, "%s", buildState.StatusMessage.c_str());
+                }
+
+                const ScriptSourceCacheEntry& sourceEntry = GetScriptSourceCacheEntry(*scriptClass);
+                if (!sourceEntry.Found)
+                {
+                    ImGui::TextDisabled("Source file not found");
+                    return;
+                }
+
+                if (ImGui::Button("Open File"))
+                {
+                    if (!OpenScriptSourceFile(sourceEntry.Path))
+                    {
+                        buildState.StatusMessage = std::string("Failed to open script file: ") + sourceEntry.Path.string();
+                        buildState.StatusIsError = true;
+                    }
+                }
+
+                ImGui::TextWrapped("%s", sourceEntry.Path.string().c_str());
+                ImGui::BeginChild("ScriptSourceView", ImVec2(0.0f, 260.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::TextUnformatted(sourceEntry.Contents.c_str());
+                ImGui::EndChild();
             });
 
 
