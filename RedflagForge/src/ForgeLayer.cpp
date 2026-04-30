@@ -478,7 +478,7 @@ namespace Redflag {
                 float frameH    = ImGui::GetFrameHeight();
                 float maxIcon   = std::max(4.0f, frameH - 2.0f);
                 float iconSize  = requestedIconSize > maxIcon ? maxIcon : requestedIconSize;
-                float btnSpacing = 6.0f;
+                float btnSpacing = 15.0f;
 
                 float cursorStartX = ImGui::GetCursorPosX();
                 float cursorStartY = ImGui::GetCursorPosY();
@@ -684,7 +684,6 @@ namespace Redflag {
                     IBLPrecompute::Reload(path);
             }
             ImGui::TextDisabled("Note: IBL does not issue extra DrawCalls.");
-            ImGui::TextDisabled("Skybox = 1 glDrawArrays after Main pass (not in log).");
             ImGui::Separator();
 
             static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=RSM 6=BloomBright 7=BloomUp 8=BloomTonemap

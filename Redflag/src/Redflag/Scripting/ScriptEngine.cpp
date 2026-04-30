@@ -154,6 +154,9 @@ namespace Redflag {
 
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
 
+		// 编辑器模式下用户填的字段默认值，进入 Play 时复制到 ScriptInstance
+		std::unordered_map<UUID, ScriptEngine::EntityScriptFieldMap> ScriptFieldCache;
+
 		//运行时
 		Scene* SceneContext = nullptr;
 		std::string AssemblyStatusMessage;
@@ -390,8 +393,23 @@ namespace Redflag {
 		if (ScriptEngine::EntityClassExists(sc.ClassName))
 		{
 			//创建脚本实例并存入表
-			Ref<ScriptInstance> instance=CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName],entity);
+			const Ref<ScriptClass>& scriptClass = s_Data->EntityClasses[sc.ClassName];
+			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(scriptClass, entity);
 			s_Data->EntityInstances[entity.GetUUID()] = instance;
+
+			// 把编辑器面板里设置的字段默认值应用到实例
+			// 必须在 InvokeOnCreate 之前执行，否则用户在 OnCreate 里读到的就是未覆盖的旧值
+			auto cacheIt = s_Data->ScriptFieldCache.find(entity.GetUUID());
+			if (cacheIt != s_Data->ScriptFieldCache.end())
+			{
+				for (const auto& [fieldName, bytes] : cacheIt->second)
+				{
+					if (bytes.empty())
+						continue;
+					if (const ScriptField* field = scriptClass->GetField(fieldName))
+						instance->SetFieldValue(*field, bytes.data());
+				}
+			}
 
 			//调用函数
 			instance->InvokeOnCreate();
@@ -425,6 +443,25 @@ namespace Redflag {
 	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
+	}
+
+	ScriptEngine::EntityScriptFieldMap& ScriptEngine::GetScriptFieldCache(UUID entityUUID)
+	{
+		// operator[] 不存在则插入空 map，符合"按需创建"的语义
+		return s_Data->ScriptFieldCache[entityUUID];
+	}
+
+	size_t ScriptFieldTypeSize(ScriptFieldType type)
+	{
+		// Mono 中 bool 占 1 字节，int 4 字节，float 4 字节，glm::vec3 与 C# Vector3 同布局 12 字节
+		switch (type)
+		{
+			case ScriptFieldType::Float:   return sizeof(float);
+			case ScriptFieldType::Int:     return sizeof(int32_t);
+			case ScriptFieldType::Bool:    return sizeof(bool);
+			case ScriptFieldType::Vector3: return sizeof(glm::vec3);
+			default:                       return 0;
+		}
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -544,6 +581,24 @@ namespace Redflag {
 			scriptField.ClassField = field;
 
 			scriptClass->m_Fields.push_back(scriptField);
+		}
+
+		// 临时实例化一次，读出 C# 字段初始化器执行后的值作为默认值
+		// 这个对象只用来读默认值，之后由 Mono GC 自动回收
+		if (!scriptClass->m_Fields.empty())
+		{
+			MonoObject* defaultsInstance = InstantiateClass(scriptClass->m_MonoClass);
+			if (defaultsInstance)
+			{
+				for (ScriptField& f : scriptClass->m_Fields)
+				{
+					const size_t typeSize = ScriptFieldTypeSize(f.Type);
+					if (typeSize == 0)
+						continue;
+					f.DefaultValue.assign(typeSize, 0);
+					mono_field_get_value(defaultsInstance, f.ClassField, f.DefaultValue.data());
+				}
+			}
 		}
 	}
 

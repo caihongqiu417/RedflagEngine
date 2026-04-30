@@ -602,6 +602,62 @@ namespace Redflag {
         ImGui::PopID();
     }
 
+    // 编辑器模式下的字段控件：直接读写 ScriptEngine 维护的字节缓存
+    // 与 DrawRuntimeScriptFieldControl 不同，这里不存在 ScriptInstance，值进入 Play 时才生效
+    static void DrawEditorScriptFieldControl(const ScriptField& field, ScriptEngine::EntityScriptFieldMap& fieldCache)
+    {
+        const size_t typeSize = ScriptFieldTypeSize(field.Type);
+        if (typeSize == 0)
+        {
+            ImGui::TextDisabled("%s (%s)", field.Name.c_str(), ScriptFieldTypeToString(field.Type));
+            return;
+        }
+
+        // 命中缓存→显示用户填的值；未命中→显示 C# 字段初始化器（= xxx）的默认值
+        // 仅"看一眼"不会写入缓存，所以不会覆盖 C# 端的初值
+        auto cacheIt = fieldCache.find(field.Name);
+        std::vector<uint8_t> buffer;
+        if (cacheIt != fieldCache.end())
+            buffer = cacheIt->second;
+        else if (field.DefaultValue.size() == typeSize)
+            buffer = field.DefaultValue;
+        else
+            buffer.assign(typeSize, 0);
+
+        ImGui::PushID(field.Name.c_str());
+        bool changed = false;
+
+        switch (field.Type)
+        {
+            case ScriptFieldType::Float:
+                changed = ImGui::DragFloat(field.Name.c_str(), reinterpret_cast<float*>(buffer.data()), 0.1f);
+                break;
+            case ScriptFieldType::Int:
+                changed = ImGui::DragInt(field.Name.c_str(), reinterpret_cast<int*>(buffer.data()));
+                break;
+            case ScriptFieldType::Bool:
+                changed = ImGui::Checkbox(field.Name.c_str(), reinterpret_cast<bool*>(buffer.data()));
+                break;
+            case ScriptFieldType::Vector3:
+            {
+                glm::vec3* vecPtr = reinterpret_cast<glm::vec3*>(buffer.data());
+                glm::vec3 previousValue = *vecPtr;
+                DrawVec3Control(field.Name, *vecPtr);
+                changed = (previousValue != *vecPtr);
+                break;
+            }
+            default:
+                ImGui::TextDisabled("%s", field.Name.c_str());
+                break;
+        }
+
+        ImGui::PopID();
+
+        // 仅在用户实际修改时才写入缓存，避免无意覆盖 C# 默认值
+        if (changed)
+            fieldCache[field.Name] = std::move(buffer);
+    }
+
     static void DrawRuntimeScriptFieldControl(const ScriptField& field, const Ref<ScriptInstance>& scriptInstance)
     {
         ImGui::PushID(field.Name.c_str());
@@ -993,7 +1049,8 @@ namespace Redflag {
 
                 ImGui::Spacing();
                 ImGui::Separator();
-                ImGui::TextDisabled(scriptInstance ? "Runtime Fields" : "Public Fields");
+                if (scriptInstance)
+                    ImGui::TextDisabled("Runtime Fields");
 
                 if (fields.empty())
                 {
@@ -1001,10 +1058,10 @@ namespace Redflag {
                 }
                 else if (!scriptInstance)
 				{
-					ImGui::TextDisabled("Enter Play mode to inspect values");
-
+					// 编辑器模式：通过字段缓存编辑，进入 Play 时这些值会被写入 ScriptInstance
+					auto& fieldCache = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
 					for (const ScriptField& field : fields)
-						ImGui::BulletText("%s (%s)", field.Name.c_str(), ScriptFieldTypeToString(field.Type));
+						DrawEditorScriptFieldControl(field, fieldCache);
 				}
                 else
                 {
@@ -1014,7 +1071,6 @@ namespace Redflag {
 
                 ImGui::Spacing();
                 ImGui::Separator();
-                ImGui::TextDisabled("Script Source");
 
                 ScriptBuildState& buildState = GetScriptBuildState();
                 RefreshScriptBuildState();

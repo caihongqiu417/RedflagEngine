@@ -33,14 +33,20 @@ namespace Redflag {
 		Vector3
 	};
 
+	// 返回字段类型对应的字节数，用于在编辑器缓存中按值存储
+	size_t ScriptFieldTypeSize(ScriptFieldType type);
+
 	struct ScriptField
 	{
 		std::string Name;
 		ScriptFieldType Type = ScriptFieldType::None;
 		MonoClassField* ClassField = nullptr;
+
+		// C# 字段的默认值（即代码里 = xxx 的初始化结果），编辑器面板未命中缓存时回退显示
+		std::vector<uint8_t> DefaultValue;
 	};
 
-	//MonoClass��װ��
+	//MonoClass��װ��
 	class ScriptClass
 	{
 	public:
@@ -91,6 +97,10 @@ namespace Redflag {
 	class ScriptEngine
 	{
 	public:
+		// 编辑器模式下每个实体的脚本字段值缓存：字段名 → 原始字节序列
+		// 进入 Play 时会被复制到真正的 ScriptInstance，实现"编辑器里设置默认值"
+		using EntityScriptFieldMap = std::unordered_map<std::string, std::vector<uint8_t>>;
+
 		static void Init();
 
 		static void Shutdown();
@@ -113,6 +123,9 @@ namespace Redflag {
 
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityUUID);
 		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
+
+		// 获取实体的字段缓存引用（不存在则返回空 map），编辑器面板读写都通过这里
+		static EntityScriptFieldMap& GetScriptFieldCache(UUID entityUUID);
 
 	private:
 		static void InitMono();
