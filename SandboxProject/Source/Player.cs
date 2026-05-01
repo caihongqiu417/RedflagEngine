@@ -5,6 +5,7 @@ namespace Sandbox
     public class Player : Entity
     {
         public float Speed = 5.0f;
+        //public Entity Target;
 
         //Test HotUpdate
         //public int TestValue = 3;

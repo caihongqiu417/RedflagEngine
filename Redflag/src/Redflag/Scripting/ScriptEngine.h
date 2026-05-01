@@ -30,7 +30,8 @@ namespace Redflag {
 		Float,
 		Int,
 		Bool,
-		Vector3
+		Vector3,
+		Entity
 	};
 
 	// 返回字段类型对应的字节数，用于在编辑器缓存中按值存储
@@ -118,6 +119,7 @@ namespace Redflag {
 
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity,float ts);
+		static void OnDestroyEntity(UUID entityUUID);
 
 		static Scene* GetSceneContext();
 

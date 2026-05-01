@@ -29,14 +29,29 @@ namespace Redflag {
     static void TransformComponent_GetTranslation(UUID entityID, glm::vec3* outTranslation)
     {
         Scene* scene = ScriptEngine::GetSceneContext();
+        if (!scene || !outTranslation)
+            return;
+
         Entity entity = scene->GetEntityByUUID(entityID);
+        if (!entity || !entity.HasComponent<TransformComponent>())
+        {
+            *outTranslation = glm::vec3(0.0f);
+            return;
+        }
+
         *outTranslation = entity.GetComponent<TransformComponent>().Translation;
     }
 
     static void TransformComponent_SetTranslation(UUID entityID, glm::vec3* translation)
     {
         Scene* scene = ScriptEngine::GetSceneContext();
+        if (!scene || !translation)
+            return;
+
         Entity entity = scene->GetEntityByUUID(entityID);
+        if (!entity || !entity.HasComponent<TransformComponent>())
+            return;
+
         entity.GetComponent<TransformComponent>().Translation = *translation;
     }
 

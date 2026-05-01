@@ -1,0 +1,53 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 11356403396238088077
+    TagComponent:
+      Tag: Player
+    TransformComponent:
+      Translation: [-4.58007145, 1.90079701, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.800000012, 0.800000012, 0.800000012]
+    ScriptComponent:
+      Class: Sandbox.Player
+      ScriptFields:
+        - Name: Speed
+          Type: Float
+          Value: 21.5
+    CircleRendererComponent:
+      Color: [0.978056431, 0.257544637, 0.257544637, 1]
+      Thickness: 1
+      Fade: 0.00499999989
+  - Entity: 7633253553784115785
+    TagComponent:
+      Tag: Cam
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 1
+        PerspectiveFov: 0.0174532924
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 16233612213451166735
+    TagComponent:
+      Tag: Chaser
+    TransformComponent:
+      Translation: [4.64819145, -2.69853926, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      Class: Sandbox.Chaser
+      ScriptFields:
+        - Name: Target
+          Type: Entity
+          Value: 11356403396238088077
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      TilingFactor: 1

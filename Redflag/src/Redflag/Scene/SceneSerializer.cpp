@@ -131,6 +131,119 @@ namespace Redflag {
         return RigidBody2DComponent::BodyType::Static;
     }
 
+    static const char* ScriptFieldTypeToString(ScriptFieldType type)
+    {
+        switch (type)
+        {
+            case ScriptFieldType::Float:   return "Float";
+            case ScriptFieldType::Int:     return "Int";
+            case ScriptFieldType::Bool:    return "Bool";
+            case ScriptFieldType::Vector3: return "Vector3";
+            case ScriptFieldType::Entity:  return "Entity";
+            default:                       return "None";
+        }
+    }
+
+    static ScriptFieldType ScriptFieldTypeFromString(const std::string& typeString)
+    {
+        if (typeString == "Float")   return ScriptFieldType::Float;
+        if (typeString == "Int")     return ScriptFieldType::Int;
+        if (typeString == "Bool")    return ScriptFieldType::Bool;
+        if (typeString == "Vector3") return ScriptFieldType::Vector3;
+        if (typeString == "Entity")  return ScriptFieldType::Entity;
+        return ScriptFieldType::None;
+    }
+
+    template<typename T>
+    static bool ReadScriptFieldBytes(const std::vector<uint8_t>& bytes, T& outValue)
+    {
+        if (bytes.size() != sizeof(T))
+            return false;
+
+        memcpy(&outValue, bytes.data(), sizeof(T));
+        return true;
+    }
+
+    template<typename T>
+    static std::vector<uint8_t> MakeScriptFieldBytes(const T& value)
+    {
+        std::vector<uint8_t> bytes(sizeof(T));
+        memcpy(bytes.data(), &value, sizeof(T));
+        return bytes;
+    }
+
+    static void SerializeScriptFieldValue(YAML::Emitter& out, ScriptFieldType type, const std::vector<uint8_t>& bytes)
+    {
+        switch (type)
+        {
+            case ScriptFieldType::Float:
+            {
+                float value = 0.0f;
+                if (ReadScriptFieldBytes(bytes, value))
+                    out << value;
+                break;
+            }
+            case ScriptFieldType::Int:
+            {
+                int32_t value = 0;
+                if (ReadScriptFieldBytes(bytes, value))
+                    out << value;
+                break;
+            }
+            case ScriptFieldType::Bool:
+            {
+                bool value = false;
+                if (ReadScriptFieldBytes(bytes, value))
+                    out << value;
+                break;
+            }
+            case ScriptFieldType::Vector3:
+            {
+                glm::vec3 value(0.0f);
+                if (ReadScriptFieldBytes(bytes, value))
+                    out << value;
+                break;
+            }
+            case ScriptFieldType::Entity:
+            {
+                uint64_t value = 0;
+                if (ReadScriptFieldBytes(bytes, value))
+                    out << value;
+                break;
+            }
+            default:
+                out << YAML::Null;
+                break;
+        }
+    }
+
+    static bool DeserializeScriptFieldValue(const YAML::Node& valueNode, ScriptFieldType type, std::vector<uint8_t>& outBytes)
+    {
+        if (!valueNode || type == ScriptFieldType::None)
+            return false;
+
+        switch (type)
+        {
+            case ScriptFieldType::Float:
+                outBytes = MakeScriptFieldBytes(valueNode.as<float>());
+                return true;
+            case ScriptFieldType::Int:
+                outBytes = MakeScriptFieldBytes((int32_t)valueNode.as<int>());
+                return true;
+            case ScriptFieldType::Bool:
+                outBytes = MakeScriptFieldBytes(valueNode.as<bool>());
+                return true;
+            case ScriptFieldType::Vector3:
+                outBytes = MakeScriptFieldBytes(valueNode.as<glm::vec3>());
+                return true;
+            case ScriptFieldType::Entity:
+                outBytes = MakeScriptFieldBytes(valueNode.as<uint64_t>());
+                return true;
+            default:
+                return false;
+        }
+    }
+
     static void SerializeEntity(YAML::Emitter& out, Entity entity)
     {
         RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
@@ -193,6 +306,29 @@ namespace Redflag {
             out << YAML::Key << "ScriptComponent";  
             out << YAML::BeginMap;
             out << YAML::Key << "Class" << YAML::Value << scriptComponent.ClassName;  
+
+            auto& fieldCache = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
+            auto scriptClasses = ScriptEngine::GetEntityClasses();
+            auto scriptClassIt = scriptClasses.find(scriptComponent.ClassName);
+            if (scriptClassIt != scriptClasses.end() && !fieldCache.empty())
+            {
+                out << YAML::Key << "ScriptFields" << YAML::Value << YAML::BeginSeq;
+                for (const auto& [fieldName, bytes] : fieldCache)
+                {
+                    const ScriptField* field = scriptClassIt->second->GetField(fieldName);
+                    if (!field || bytes.size() != ScriptFieldTypeSize(field->Type))
+                        continue;
+
+                    out << YAML::BeginMap;
+                    out << YAML::Key << "Name" << YAML::Value << fieldName;
+                    out << YAML::Key << "Type" << YAML::Value << ScriptFieldTypeToString(field->Type);
+                    out << YAML::Key << "Value" << YAML::Value;
+                    SerializeScriptFieldValue(out, field->Type, bytes);
+                    out << YAML::EndMap;
+                }
+                out << YAML::EndSeq;
+            }
+
             out << YAML::EndMap;
         }
 
@@ -477,6 +613,22 @@ namespace Redflag {
                     auto scNode = entity["ScriptComponent"];
                     auto& sc = deserializedEntity.AddComponent<ScriptComponent>();  // 修正：用 AddComponent 而不是 GetComponent
                     sc.ClassName = scNode["Class"].as<std::string>();  // 修正：ClassName → Name
+
+                    if (scNode["ScriptFields"])
+                    {
+                        auto& fieldCache = ScriptEngine::GetScriptFieldCache(deserializedEntity.GetUUID());
+                        for (auto fieldNode : scNode["ScriptFields"])
+                        {
+                            if (!fieldNode["Name"] || !fieldNode["Type"] || !fieldNode["Value"])
+                                continue;
+
+                            std::string fieldName = fieldNode["Name"].as<std::string>();
+                            ScriptFieldType fieldType = ScriptFieldTypeFromString(fieldNode["Type"].as<std::string>());
+                            std::vector<uint8_t> bytes;
+                            if (DeserializeScriptFieldValue(fieldNode["Value"], fieldType, bytes))
+                                fieldCache[fieldName] = std::move(bytes);
+                        }
+                    }
                 }
 
                 // Sprite Renderer Component

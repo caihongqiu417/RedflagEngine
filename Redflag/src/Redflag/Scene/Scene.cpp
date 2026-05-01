@@ -132,8 +132,10 @@ namespace Redflag {
 
     void Scene::DestroyEntity(Entity entity)
     {
+		UUID entityID = entity.GetUUID();
+		ScriptEngine::OnDestroyEntity(entityID);
         m_Registry.destroy(entity);
-        m_EntityMap.erase(entity.GetUUID());
+		m_EntityMap.erase(entityID);
     }
 
     void Scene::OnRuntimeStart()
@@ -413,6 +415,8 @@ namespace Redflag {
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<ScriptComponent>(newEntity, entity);
+		if (newEntity.HasComponent<ScriptComponent>())
+			ScriptEngine::GetScriptFieldCache(newEntity.GetUUID()) = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
         if (newEntity.HasComponent<MeshRendererComponent>())
         {

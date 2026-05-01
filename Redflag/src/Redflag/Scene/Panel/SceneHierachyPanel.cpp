@@ -414,9 +414,174 @@ namespace Redflag {
                 return "Bool";
             case ScriptFieldType::Vector3:
                 return "Vector3";
+            case ScriptFieldType::Entity:
+                return "Entity";
             default:
                 return "Unknown";
         }
+    }
+
+    static constexpr const char* s_SceneEntityPayloadType = "SCENE_ENTITY";
+
+    static uint64_t ReadEntityIDFromBuffer(const std::vector<uint8_t>& buffer)
+    {
+        uint64_t entityID = 0;
+        if (buffer.size() >= sizeof(entityID))
+            memcpy(&entityID, buffer.data(), sizeof(entityID));
+        return entityID;
+    }
+
+    static void WriteEntityIDToBuffer(std::vector<uint8_t>& buffer, uint64_t entityID)
+    {
+        buffer.assign(sizeof(entityID), 0);
+        memcpy(buffer.data(), &entityID, sizeof(entityID));
+    }
+
+    static Ref<Texture2D> GetEntityIconTexture()
+    {
+        static Ref<Texture2D> iconTexture;
+        static bool loadAttempted = false;
+
+        if (!loadAttempted)
+        {
+            loadAttempted = true;
+            const std::filesystem::path iconPath = "assets/icons/Entity.png";
+            if (std::filesystem::exists(iconPath))
+                iconTexture = Texture2D::Create(iconPath.string());
+        }
+
+        return iconTexture;
+    }
+
+    static bool AcceptSceneEntityPayload(uint64_t& entityID)
+    {
+        bool changed = false;
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(s_SceneEntityPayloadType))
+            {
+                if (payload->DataSize == sizeof(uint64_t))
+                {
+                    uint64_t droppedEntityID = 0;
+                    memcpy(&droppedEntityID, payload->Data, sizeof(droppedEntityID));
+                    if (entityID != droppedEntityID)
+                    {
+                        entityID = droppedEntityID;
+                        changed = true;
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        return changed;
+    }
+
+    static std::string GetEntityReferenceLabel(Scene* scene, uint64_t entityID)
+    {
+        if (entityID == 0)
+            return "None";
+
+        if (scene)
+        {
+            Entity entity = scene->GetEntityByUUID(UUID(entityID));
+            if (entity)
+                return entity.GetName();
+        }
+
+        return std::string("Missing (") + std::to_string(entityID) + ")";
+    }
+
+    static void PushScriptFieldFillStyle()
+    {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.86f, 0.18f, 0.18f, 0.85f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.92f, 0.22f, 0.22f, 0.95f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.78f, 0.14f, 0.14f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.86f, 0.18f, 0.18f, 0.85f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.92f, 0.22f, 0.22f, 0.95f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.78f, 0.14f, 0.14f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.86f, 0.18f, 0.18f, 0.75f));
+        ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(0.92f, 0.22f, 0.22f, 0.90f));
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 0.90f, 0.90f, 1.0f));
+    }
+
+    static void PopScriptFieldFillStyle()
+    {
+        ImGui::PopStyleColor(9);
+    }
+
+    static void DrawReadOnlyTextControl(const std::string& label, const std::string& value, float columnWidth = 100.0f)
+    {
+        ImGui::PushID(label.c_str());
+
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::TextDisabled("%s", label.c_str());
+        ImGui::NextColumn();
+
+        ImGui::TextDisabled("%s", value.c_str());
+
+        ImGui::Columns(1);
+        ImGui::PopID();
+    }
+
+    static bool DrawEntityReferenceControl(const std::string& label, Scene* scene, uint64_t& entityID, float columnWidth = 100.0f)
+    {
+        bool changed = false;
+
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::TextUnformatted(label.c_str());
+        ImGui::NextColumn();
+
+        const float clearButtonWidth = 28.0f;
+        const float iconSize = ImGui::GetFrameHeight();
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
+        const float availableWidth = ImGui::GetContentRegionAvail().x;
+        const bool hasEntityReference = entityID != 0;
+        const float iconAndSpacingWidth = hasEntityReference ? iconSize + spacing : 0.0f;
+        const float buttonWidth = std::max(80.0f, availableWidth - iconAndSpacingWidth - clearButtonWidth - spacing);
+
+        if (hasEntityReference)
+        {
+            Ref<Texture2D> entityIcon = GetEntityIconTexture();
+            if (entityIcon && entityIcon->GetRendererID())
+                ImGui::Image((void*)(intptr_t)entityIcon->GetRendererID(), ImVec2(iconSize, iconSize));
+            else
+                ImGui::Button("E", ImVec2(iconSize, iconSize));
+
+            changed |= AcceptSceneEntityPayload(entityID);
+
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Entity reference");
+
+            ImGui::SameLine();
+        }
+
+        std::string buttonLabel = GetEntityReferenceLabel(scene, entityID) + "##EntityReference";
+    PushScriptFieldFillStyle();
+        ImGui::Button(buttonLabel.c_str(), ImVec2(buttonWidth, 0.0f));
+    PopScriptFieldFillStyle();
+        changed |= AcceptSceneEntityPayload(entityID);
+
+        ImGui::SameLine();
+        const bool clearDisabled = entityID == 0;
+        if (clearDisabled)
+            ImGui::BeginDisabled();
+
+        if (ImGui::Button("X", ImVec2(clearButtonWidth, 0.0f)) && !clearDisabled)
+        {
+            entityID = 0;
+            changed = true;
+        }
+
+        if (clearDisabled)
+            ImGui::EndDisabled();
+
+        ImGui::Columns(1);
+
+        return changed;
     }
 
 	SceneHierachyPanel::SceneHierachyPanel(const Ref<Scene>& context)
@@ -428,6 +593,7 @@ namespace Redflag {
 	{
 		m_Context = context;
         m_SelectionContext = {};
+        m_EntityToDelete = {};
 	}
 
     void SceneHierachyPanel::OnImguiRender()
@@ -442,6 +608,15 @@ namespace Redflag {
                 Entity ent{ entity, m_Context.get() };
                 DrawEntityNode(ent);
                 });
+
+            if (m_EntityToDelete)
+            {
+                if (m_SelectionContext == m_EntityToDelete)
+                    m_SelectionContext = {};
+
+                m_Context->DestroyEntity(m_EntityToDelete);
+                m_EntityToDelete = {};
+            }
         }
 
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
@@ -508,9 +683,17 @@ namespace Redflag {
             tagComponent.Tag.c_str()
         );
 
-        // ���ѡ��
-        if (ImGui::IsItemClicked()) {
+        // Select on release so dragging an entity into the Properties panel does not switch the inspected entity.
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             m_SelectionContext = entity;
+        }
+
+        if (ImGui::BeginDragDropSource())
+        {
+            uint64_t entityID = entity.GetUUID();
+            ImGui::SetDragDropPayload(s_SceneEntityPayloadType, &entityID, sizeof(entityID));
+            ImGui::TextUnformatted(tagComponent.Tag.c_str());
+            ImGui::EndDragDropSource();
         }
 
         // �ӳ�ɾ�����
@@ -536,9 +719,7 @@ namespace Redflag {
         // �ӳ�ɾ�����ڽڵ������ɺ�ִ��
         if (entityDeleted)
         {
-            m_Context->DestroyEntity(entity);
-            if (m_SelectionContext == entity)
-                m_SelectionContext = {};
+			m_EntityToDelete = entity;
         }
     }
 
@@ -602,9 +783,56 @@ namespace Redflag {
         ImGui::PopID();
     }
 
+    static void BeginScriptFieldRow(const std::string& label, float columnWidth = 100.0f)
+    {
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::TextUnformatted(label.c_str());
+        ImGui::NextColumn();
+    }
+
+    static void EndScriptFieldRow()
+    {
+        ImGui::Columns(1);
+    }
+
+    static bool DrawScriptFloatControl(const std::string& label, float& value)
+    {
+        BeginScriptFieldRow(label);
+        ImGui::PushItemWidth(-1.0f);
+        PushScriptFieldFillStyle();
+        bool changed = ImGui::DragFloat("##value", &value, 0.1f);
+        PopScriptFieldFillStyle();
+        ImGui::PopItemWidth();
+        EndScriptFieldRow();
+        return changed;
+    }
+
+    static bool DrawScriptIntControl(const std::string& label, int& value)
+    {
+        BeginScriptFieldRow(label);
+        ImGui::PushItemWidth(-1.0f);
+        PushScriptFieldFillStyle();
+        bool changed = ImGui::DragInt("##value", &value);
+        PopScriptFieldFillStyle();
+        ImGui::PopItemWidth();
+        EndScriptFieldRow();
+        return changed;
+    }
+
+    static bool DrawScriptBoolControl(const std::string& label, bool& value)
+    {
+        BeginScriptFieldRow(label);
+        PushScriptFieldFillStyle();
+        bool changed = ImGui::Checkbox("##value", &value);
+        PopScriptFieldFillStyle();
+        EndScriptFieldRow();
+        return changed;
+    }
+
     // 编辑器模式下的字段控件：直接读写 ScriptEngine 维护的字节缓存
     // 与 DrawRuntimeScriptFieldControl 不同，这里不存在 ScriptInstance，值进入 Play 时才生效
-    static void DrawEditorScriptFieldControl(const ScriptField& field, ScriptEngine::EntityScriptFieldMap& fieldCache)
+    static void DrawEditorScriptFieldControl(const ScriptField& field, ScriptEngine::EntityScriptFieldMap& fieldCache, Scene* scene)
     {
         const size_t typeSize = ScriptFieldTypeSize(field.Type);
         if (typeSize == 0)
@@ -630,13 +858,13 @@ namespace Redflag {
         switch (field.Type)
         {
             case ScriptFieldType::Float:
-                changed = ImGui::DragFloat(field.Name.c_str(), reinterpret_cast<float*>(buffer.data()), 0.1f);
+                changed = DrawScriptFloatControl(field.Name, *reinterpret_cast<float*>(buffer.data()));
                 break;
             case ScriptFieldType::Int:
-                changed = ImGui::DragInt(field.Name.c_str(), reinterpret_cast<int*>(buffer.data()));
+                changed = DrawScriptIntControl(field.Name, *reinterpret_cast<int*>(buffer.data()));
                 break;
             case ScriptFieldType::Bool:
-                changed = ImGui::Checkbox(field.Name.c_str(), reinterpret_cast<bool*>(buffer.data()));
+                changed = DrawScriptBoolControl(field.Name, *reinterpret_cast<bool*>(buffer.data()));
                 break;
             case ScriptFieldType::Vector3:
             {
@@ -644,6 +872,14 @@ namespace Redflag {
                 glm::vec3 previousValue = *vecPtr;
                 DrawVec3Control(field.Name, *vecPtr);
                 changed = (previousValue != *vecPtr);
+                break;
+            }
+            case ScriptFieldType::Entity:
+            {
+                uint64_t entityID = ReadEntityIDFromBuffer(buffer);
+                changed = DrawEntityReferenceControl(field.Name, scene, entityID);
+                if (changed)
+                    WriteEntityIDToBuffer(buffer, entityID);
                 break;
             }
             default:
@@ -658,7 +894,7 @@ namespace Redflag {
             fieldCache[field.Name] = std::move(buffer);
     }
 
-    static void DrawRuntimeScriptFieldControl(const ScriptField& field, const Ref<ScriptInstance>& scriptInstance)
+    static void DrawRuntimeScriptFieldControl(const ScriptField& field, const Ref<ScriptInstance>& scriptInstance, Scene* scene)
     {
         ImGui::PushID(field.Name.c_str());
 
@@ -673,7 +909,7 @@ namespace Redflag {
                     break;
                 }
 
-                if (ImGui::DragFloat(field.Name.c_str(), &value, 0.1f))
+                if (DrawScriptFloatControl(field.Name, value))
                     scriptInstance->SetFieldValue(field, &value);
                 break;
             }
@@ -686,7 +922,7 @@ namespace Redflag {
                     break;
                 }
 
-                if (ImGui::DragInt(field.Name.c_str(), &value))
+                if (DrawScriptIntControl(field.Name, value))
                     scriptInstance->SetFieldValue(field, &value);
                 break;
             }
@@ -699,7 +935,7 @@ namespace Redflag {
                     break;
                 }
 
-                if (ImGui::Checkbox(field.Name.c_str(), &value))
+                if (DrawScriptBoolControl(field.Name, value))
                     scriptInstance->SetFieldValue(field, &value);
                 break;
             }
@@ -716,6 +952,20 @@ namespace Redflag {
                 DrawVec3Control(field.Name, value);
                 if (value.x != previousValue.x || value.y != previousValue.y || value.z != previousValue.z)
                     scriptInstance->SetFieldValue(field, &value);
+                break;
+            }
+            case ScriptFieldType::Entity:
+            {
+                uint64_t entityID = 0;
+                if (!scriptInstance->GetFieldValue(field, &entityID))
+                {
+                    ImGui::TextDisabled("%s", field.Name.c_str());
+                    break;
+                }
+
+                uint64_t previousEntityID = entityID;
+                if (DrawEntityReferenceControl(field.Name, scene, entityID) && entityID != previousEntityID)
+                    scriptInstance->SetFieldValue(field, &entityID);
                 break;
             }
             default:
@@ -781,15 +1031,19 @@ namespace Redflag {
             char buffer[256];
             memset(buffer, 0, sizeof(buffer));
             strcpy_s(buffer, sizeof(buffer), tag.c_str());
+
+            const float addComponentButtonWidth = 88.0f;
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            ImGui::PushItemWidth(std::max(120.0f, ImGui::GetContentRegionAvail().x - addComponentButtonWidth - spacing));
             if (ImGui::InputText("##ReName", buffer, sizeof(buffer)))
             {
                 tag = std::string(buffer);
             }
+            ImGui::PopItemWidth();
         }
 
         ImGui::SameLine();
-        ImGui::PushItemWidth(-1);
-        if (ImGui::Button("Add Comp"))
+        if (ImGui::Button("Add Comp", ImVec2(88.0f, 0.0f)))
             ImGui::OpenPopup("Add Comp");
 
         if (ImGui::BeginPopup("Add Comp"))
@@ -918,7 +1172,11 @@ namespace Redflag {
 
             ImGui::EndPopup();
         }
-        ImGui::PopItemWidth();
+
+        ImGui::Spacing();
+        DrawReadOnlyTextControl("UUID", std::to_string((uint64_t)entity.GetUUID()));
+        DrawReadOnlyTextControl("EntityID", std::to_string((uint32_t)entity));
+        ImGui::Spacing();
 
 
         // Transform���
@@ -992,7 +1250,7 @@ namespace Redflag {
             });
 
         // Script 组件面板
-        DrawComponent<ScriptComponent>("Script Component", entity, [entity](auto& component)
+        DrawComponent<ScriptComponent>("Script Component", entity, [entity, this](auto& component)
             {
                 const auto& entityClasses = ScriptEngine::GetEntityClasses();
 
@@ -1061,12 +1319,12 @@ namespace Redflag {
 					// 编辑器模式：通过字段缓存编辑，进入 Play 时这些值会被写入 ScriptInstance
 					auto& fieldCache = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
 					for (const ScriptField& field : fields)
-						DrawEditorScriptFieldControl(field, fieldCache);
+						DrawEditorScriptFieldControl(field, fieldCache, m_Context.get());
 				}
                 else
                 {
                     for (const ScriptField& field : fields)
-                        DrawRuntimeScriptFieldControl(field, scriptInstance);
+                        DrawRuntimeScriptFieldControl(field, scriptInstance, m_Context.get());
                 }
 
                 ImGui::Spacing();

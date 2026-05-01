@@ -18,6 +18,16 @@
 namespace Redflag {
 
 	namespace Utils {
+		static bool IsRedflagClass(MonoClass* monoClass, const char* className)
+		{
+			if (!monoClass)
+				return false;
+
+			const char* nameSpace = mono_class_get_namespace(monoClass);
+			const char* name = mono_class_get_name(monoClass);
+			return strcmp(nameSpace, "Redflag") == 0 && strcmp(name, className) == 0;
+		}
+
 		static ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
 		{
 			switch (mono_type_get_type(monoType))
@@ -34,10 +44,16 @@ namespace Redflag {
 					if (!fieldClass)
 						return ScriptFieldType::None;
 
-					const char* nameSpace = mono_class_get_namespace(fieldClass);
-					const char* name = mono_class_get_name(fieldClass);
-					if (strcmp(nameSpace, "Redflag") == 0 && strcmp(name, "Vector3") == 0)
+					if (IsRedflagClass(fieldClass, "Vector3"))
 						return ScriptFieldType::Vector3;
+
+					return ScriptFieldType::None;
+				}
+				case MONO_TYPE_CLASS:
+				{
+					MonoClass* fieldClass = mono_type_get_class(monoType);
+					if (IsRedflagClass(fieldClass, "Entity"))
+						return ScriptFieldType::Entity;
 
 					return ScriptFieldType::None;
 				}
@@ -149,6 +165,8 @@ namespace Redflag {
 		MonoImage* AppAssemblyImage = nullptr;
 
 		ScriptClass EntityClass;
+		MonoClassField* EntityIDField = nullptr;
+		MonoMethod* EntityConstructor = nullptr;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 
@@ -177,6 +195,8 @@ namespace Redflag {
 			s_Data->AppAssembly = nullptr;
 			s_Data->AppAssemblyImage = nullptr;
 			s_Data->EntityClass = ScriptClass();
+			s_Data->EntityIDField = nullptr;
+			s_Data->EntityConstructor = nullptr;
 			s_Data->EntityClasses.clear();
 			s_Data->EntityInstances.clear();
 		}
@@ -313,6 +333,15 @@ namespace Redflag {
 			return false;
 		}
 
+		s_Data->EntityIDField = mono_class_get_field_from_name(s_Data->EntityClass.m_MonoClass, "ID");
+		s_Data->EntityConstructor = s_Data->EntityClass.GetMethod(".ctor", 1);
+		if (!s_Data->EntityIDField || !s_Data->EntityConstructor)
+		{
+			DestroyAppDomain();
+			s_Data->AssemblyStatusMessage = "Failed to find Redflag.Entity ID field or constructor";
+			return false;
+		}
+
 		//加载游戏脚本程序集
 		s_Data->AppAssembly = LoadAssembly(s_AppAssemblyPath);
 		if (!s_Data->AppAssembly)
@@ -407,7 +436,11 @@ namespace Redflag {
 					if (bytes.empty())
 						continue;
 					if (const ScriptField* field = scriptClass->GetField(fieldName))
+					{
+						if (bytes.size() != ScriptFieldTypeSize(field->Type))
+							continue;
 						instance->SetFieldValue(*field, bytes.data());
+					}
 				}
 			}
 
@@ -419,11 +452,54 @@ namespace Redflag {
 	void ScriptEngine::OnUpdateEntity(Entity entity,float ts)
 	{
 		UUID entityUUID = entity.GetUUID();
-		RF_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
+		auto instanceIt = s_Data->EntityInstances.find(entityUUID);
+		if (instanceIt == s_Data->EntityInstances.end())
+			return;
 
-		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+		Ref<ScriptInstance> instance = instanceIt->second;
 
 		instance->InvokeOnUpdate(ts);
+	}
+
+	void ScriptEngine::OnDestroyEntity(UUID entityUUID)
+	{
+		if (!s_Data)
+			return;
+
+		s_Data->EntityInstances.erase(entityUUID);
+		s_Data->ScriptFieldCache.erase(entityUUID);
+
+		const uint64_t deletedEntityID = entityUUID;
+		for (auto& [ownerEntityID, fieldCache] : s_Data->ScriptFieldCache)
+		{
+			for (auto& [fieldName, bytes] : fieldCache)
+			{
+				if (bytes.size() != sizeof(uint64_t))
+					continue;
+
+				bool isEntityField = false;
+				for (const auto& [className, scriptClass] : s_Data->EntityClasses)
+				{
+					const ScriptField* field = scriptClass->GetField(fieldName);
+					if (field && field->Type == ScriptFieldType::Entity)
+					{
+						isEntityField = true;
+						break;
+					}
+				}
+
+				if (!isEntityField)
+					continue;
+
+				uint64_t referencedEntityID = 0;
+				memcpy(&referencedEntityID, bytes.data(), sizeof(referencedEntityID));
+				if (referencedEntityID == deletedEntityID)
+				{
+					referencedEntityID = 0;
+					memcpy(bytes.data(), &referencedEntityID, sizeof(referencedEntityID));
+				}
+			}
+		}
 	}
 
 	Scene* ScriptEngine::GetSceneContext()
@@ -460,6 +536,7 @@ namespace Redflag {
 			case ScriptFieldType::Int:     return sizeof(int32_t);
 			case ScriptFieldType::Bool:    return sizeof(bool);
 			case ScriptFieldType::Vector3: return sizeof(glm::vec3);
+			case ScriptFieldType::Entity:  return sizeof(uint64_t);
 			default:                       return 0;
 		}
 	}
@@ -596,7 +673,22 @@ namespace Redflag {
 					if (typeSize == 0)
 						continue;
 					f.DefaultValue.assign(typeSize, 0);
-					mono_field_get_value(defaultsInstance, f.ClassField, f.DefaultValue.data());
+
+					if (f.Type == ScriptFieldType::Entity)
+					{
+						MonoObject* entityObject = nullptr;
+						mono_field_get_value(defaultsInstance, f.ClassField, &entityObject);
+
+						uint64_t entityID = 0;
+						if (entityObject && s_Data->EntityIDField)
+							mono_field_get_value(entityObject, s_Data->EntityIDField, &entityID);
+
+						memcpy(f.DefaultValue.data(), &entityID, sizeof(entityID));
+					}
+					else
+					{
+						mono_field_get_value(defaultsInstance, f.ClassField, f.DefaultValue.data());
+					}
 				}
 			}
 		}
@@ -661,7 +753,7 @@ namespace Redflag {
 		m_OnUpdateMethod = ScriptClass->GetMethod("OnUpdate", 1);
 		
 		//调用实体的C#构造函数，传入UUID
-		UUID entityID = entity.GetUUID();
+		uint64_t entityID = entity.GetUUID();
 		void* param = &entityID;
 		m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
 	}
@@ -670,6 +762,19 @@ namespace Redflag {
 	{
 		if (!m_Instance || !field.ClassField || !buffer)
 			return false;
+
+		if (field.Type == ScriptFieldType::Entity)
+		{
+			MonoObject* entityObject = nullptr;
+			mono_field_get_value(m_Instance, field.ClassField, &entityObject);
+
+			uint64_t entityID = 0;
+			if (entityObject && s_Data->EntityIDField)
+				mono_field_get_value(entityObject, s_Data->EntityIDField, &entityID);
+
+			memcpy(buffer, &entityID, sizeof(entityID));
+			return true;
+		}
 
 		mono_field_get_value(m_Instance, field.ClassField, buffer);
 		return true;
@@ -680,6 +785,30 @@ namespace Redflag {
 		if (!m_Instance || !field.ClassField || !value)
 			return false;
 
+		if (field.Type == ScriptFieldType::Entity)
+		{
+			uint64_t entityID = 0;
+			memcpy(&entityID, value, sizeof(entityID));
+
+			MonoObject* entityObject = nullptr;
+			if (entityID != 0)
+			{
+				bool entityExists = true;
+				if (s_Data->SceneContext)
+					entityExists = (bool)s_Data->SceneContext->GetEntityByUUID(UUID(entityID));
+
+				if (entityExists)
+				{
+					entityObject = s_Data->EntityClass.Instantiate();
+					void* param = &entityID;
+					s_Data->EntityClass.InvokeMethod(entityObject, s_Data->EntityConstructor, &param);
+				}
+			}
+
+			mono_field_set_value(m_Instance, field.ClassField, entityObject);
+			return true;
+		}
+
 		mono_field_set_value(m_Instance, field.ClassField, const_cast<void*>(value));
 		return true;
 	}
@@ -687,11 +816,17 @@ namespace Redflag {
 	//引擎创建完所有实体统一调用
 	void ScriptInstance::InvokeOnCreate()
 	{
+		if (!m_OnCreateMethod)
+			return;
+
 		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod,nullptr);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts)
 	{
+		if (!m_OnUpdateMethod)
+			return;
+
 		void* param = &ts;
 
 		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
