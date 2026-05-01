@@ -1,62 +1,15 @@
 Scene: Unamed Scene
 Entities:
-  - Entity: 4372577785555847753
+  - Entity: 18339049415164675262
     TagComponent:
-      Tag: PointLight
+      Tag: PbrModel2_Mirror
     TransformComponent:
-      Translation: [0, 2.87175035, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    PointLightComponent:
-      Color: [1, 1, 1]
-      Intensity: 0.800000012
-      Radius: 10.8999996
-      CastShadow: true
-  - Entity: 14950062399518990413
-    TagComponent:
-      Tag: Plane
-    TransformComponent:
-      Translation: [0.0868993402, -3.6768918, -2.24090719]
-      Rotation: [0, 0, 0]
-      Scale: [19.6806107, 1, 21.2332878]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      BaseColor: [1, 1, 1, 1]
-      Metallic: 0.811999977
-      Roughness: 0.134000003
-      AO: 1
-  - Entity: 1096978947276037003
-    TagComponent:
-      Tag: Light
-    TransformComponent:
-      Translation: [-0.0802830458, 6.01000023, -0.819999993]
-      Rotation: [0.606540143, -0.0471760482, -0.470746756]
-      Scale: [1, 0.999999702, 1.00000012]
-    DirectionalLightComponent:
-      Direction: [-0.270000011, -0.829999983, 0.189999998]
-      Color: [1, 1, 1]
-      Intensity: 12.0500002
-      CastShadow: true
-  - Entity: 6099546564087943552
-    TagComponent:
-      Tag: PbrModel_Clock
-    TransformComponent:
-      Translation: [-2.30642724, -1.9416182, -3.83122802]
-      Rotation: [0.0445194654, 0.218350202, 0.00964984018]
-      Scale: [0.150000006, 0.150000006, 0.150000021]
+      Translation: [4.4460721, 0.212276369, 0.0909700766]
+      Rotation: [-0.383559972, -0.396493942, -0.0226111617]
+      Scale: [0.0499999523, 0.040000014, 0.0799999908]
     ModelRendererComponent:
-      FilePath: assets\models\vintage_telephone_wall_clock_4k\vintage_telephone_wall_clock_4k.fbx
-      Color: [0.931034505, 0.931034505, 0.931034505, 1]
-      OverrideMaterials:
-        - BaseColor: [0.800000012, 0.800000012, 0.800000012, 1]
-          Metallic: 1
-          Roughness: 0.5
-          AO: 1
-        - BaseColor: [0.800000012, 0.800000012, 0.800000012, 1]
-          Metallic: 1
-          Roughness: 0.5
-          AO: 1
+      FilePath: assets\models\mirror\Mirror.fbx
+      Color: [1, 1, 1, 1]
   - Entity: 12132151342123
     TagComponent:
       Tag: UnFixedCamera_1
@@ -75,18 +28,51 @@ Entities:
         OrthographicFar: 1000
       Primary: true
       FixedAspectRatio: false
-  - Entity: 18339049415164675262
+  - Entity: 6099546564087943552
     TagComponent:
-      Tag: PbrModel2_Mirror
+      Tag: PbrModel_Clock
     TransformComponent:
-      Translation: [4.4460721, 0.212276369, 0.0909700766]
-      Rotation: [-0.383559972, -0.396493942, -0.0226111617]
-      Scale: [0.0499999523, 0.040000014, 0.0799999908]
+      Translation: [-2.30642724, -1.9416182, -3.83122802]
+      Rotation: [0.0445194654, 0.218350202, 0.00964984018]
+      Scale: [0.150000006, 0.150000006, 0.150000021]
     ModelRendererComponent:
-      FilePath: assets\models\mirror-9-mb\Mirror.fbx
+      FilePath: assets\models\clock\vintage_telephone_wall_clock_4k.fbx
+      Color: [0.931034505, 0.931034505, 0.931034505, 1]
+  - Entity: 1096978947276037003
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [-0.0802830458, 6.01000023, -0.819999993]
+      Rotation: [0.606540143, -0.0471760482, -0.470746756]
+      Scale: [1, 0.999999702, 1.00000012]
+    DirectionalLightComponent:
+      Direction: [-0.270000011, -0.829999983, 0.189999998]
+      Color: [1, 1, 1]
+      Intensity: 12.0500002
+      CastShadow: true
+  - Entity: 14950062399518990413
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0.0868993402, -3.6768918, -2.24090719]
+      Rotation: [0, 0, 0]
+      Scale: [19.6806107, 1, 21.2332878]
+    MeshRendererComponent:
       Color: [1, 1, 1, 1]
-      OverrideMaterials:
-        - BaseColor: [0.603827357, 0.603827357, 0.603827357, 1]
-          Metallic: 1
-          Roughness: 0.5
-          AO: 1
+      MeshType: Cube
+      BaseColor: [1, 1, 1, 1]
+      Metallic: 0.811999977
+      Roughness: 0.134000003
+      AO: 1
+  - Entity: 4372577785555847753
+    TagComponent:
+      Tag: PointLight
+    TransformComponent:
+      Translation: [0, 2.87175035, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 0.800000012
+      Radius: 10.8999996
+      CastShadow: true

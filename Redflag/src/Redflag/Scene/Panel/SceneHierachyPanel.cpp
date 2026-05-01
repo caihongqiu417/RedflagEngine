@@ -633,7 +633,10 @@ namespace Redflag {
         ImGui::Begin("Properties");
         if (m_SelectionContext && m_Context)
         {
+            ImGui::BeginChild("PropertiesContent", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
             DrawComponents(m_SelectionContext);
+            ImGui::Dummy(ImVec2(0.0f, ImGui::GetStyle().ItemSpacing.y));
+            ImGui::EndChild();
             
             /*
             if (ImGui::Button("Add Component"))
@@ -1385,9 +1388,17 @@ namespace Redflag {
                 }
 
                 ImGui::TextWrapped("%s", sourceEntry.Path.string().c_str());
-                ImGui::BeginChild("ScriptSourceView", ImVec2(0.0f, 260.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
-                ImGui::TextUnformatted(sourceEntry.Contents.c_str());
-                ImGui::EndChild();
+
+                static bool showSourcePreview = false;
+                if (ImGui::SmallButton(showSourcePreview ? "Hide Source" : "Show Source"))
+                    showSourcePreview = !showSourcePreview;
+
+                if (showSourcePreview)
+                {
+                    ImGui::BeginChild("ScriptSourceView", ImVec2(0.0f, 160.0f), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+                    ImGui::TextUnformatted(sourceEntry.Contents.c_str());
+                    ImGui::EndChild();
+                }
             });
 
 
@@ -1669,6 +1680,8 @@ namespace Redflag {
 
                 if (!component.OverrideMaterials.empty())
                 {
+                    ImGui::BeginChild("OverrideMaterialsList", ImVec2(0.0f, 320.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
                     auto TextureSlotUI = [](const char* label, Ref<Texture2D>& tex)
                     {
                         ImGui::Separator();
@@ -1720,6 +1733,8 @@ namespace Redflag {
                         }
                         ImGui::PopID();
                     }
+
+                    ImGui::EndChild();
                 }
             });
 

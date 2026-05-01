@@ -1,0 +1,39 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 10003970928703562882
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 1
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 5
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 12082247657542992458
+    TagComponent:
+      Tag: Particle
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ParticleEmitterComponent:
+      ColorBegin: [0.400000006, 0.699999988, 1, 1]
+      ColorEnd: [1, 0.5, 0.800000012, 0]
+      SizeBegin: 0.100000001
+      SizeEnd: 0.0199999996
+      SizeVariation: 0.0299999993
+      Velocity: [0, 0]
+      VelocityVariation: [2, 2]
+      LifeTime: 1.79999995
+      EmissionRate: 10
+      MaxParticles: 4220
+      Active: true

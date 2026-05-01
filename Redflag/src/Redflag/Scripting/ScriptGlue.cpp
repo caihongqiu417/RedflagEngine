@@ -55,6 +55,35 @@ namespace Redflag {
         entity.GetComponent<TransformComponent>().Translation = *translation;
     }
 
+    static void TransformComponent_GetRotation(UUID entityID, glm::vec3* outRotation)
+    {
+        Scene* scene = ScriptEngine::GetSceneContext();
+        if (!scene || !outRotation)
+            return;
+
+        Entity entity = scene->GetEntityByUUID(entityID);
+        if (!entity || !entity.HasComponent<TransformComponent>())
+        {
+            *outRotation = glm::vec3(0.0f);
+            return;
+        }
+
+        *outRotation = entity.GetComponent<TransformComponent>().Rotation;
+    }
+
+    static void TransformComponent_SetRotation(UUID entityID, glm::vec3* rotation)
+    {
+        Scene* scene = ScriptEngine::GetSceneContext();
+        if (!scene || !rotation)
+            return;
+
+        Entity entity = scene->GetEntityByUUID(entityID);
+        if (!entity || !entity.HasComponent<TransformComponent>())
+            return;
+
+        entity.GetComponent<TransformComponent>().Rotation = *rotation;
+    }
+
     static bool Input_IsKeyDown(int keycode)
     {
         return Input::IsKeyPressed(keycode);
@@ -67,6 +96,8 @@ namespace Redflag {
 
         RF_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
         RF_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+        RF_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
+        RF_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
 
         RF_ADD_INTERNAL_CALL(Input_IsKeyDown);
     }

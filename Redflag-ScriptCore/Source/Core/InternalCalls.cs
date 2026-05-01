@@ -17,6 +17,12 @@ namespace Redflag
         internal static extern void TransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void TransformComponent_GetRotation(ulong entityID, out Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void TransformComponent_SetRotation(ulong entityID, ref Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsKeyDown(KeyCode keycode);
     }
 }
