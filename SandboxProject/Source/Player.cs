@@ -7,7 +7,7 @@ namespace Sandbox
         public float Speed = 5.0f;
 
         //热更新测试
-        //public int TestValue = 3;
+        public int TestValue = 3;
 
         void OnCreate()
         {

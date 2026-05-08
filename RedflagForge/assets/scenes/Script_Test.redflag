@@ -1,5 +1,59 @@
 Scene: Unamed Scene
 Entities:
+  - Entity: 9218595194737938306
+    TagComponent:
+      Tag: Player_Apple
+    TransformComponent:
+      Translation: [0, 0.514361143, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.200000003, 0.199999988, 0.200000003]
+    ScriptComponent:
+      Class: Sandbox.Player
+    ModelRendererComponent:
+      FilePath: assets\models\apple\food_apple_01_2k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 17962531572953408569
+    TagComponent:
+      Tag: Chaser_Rat
+    TransformComponent:
+      Translation: [-15.2104406, 0.449140787, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1.00000012, 1]
+    ScriptComponent:
+      Class: Sandbox.Chaser
+      ScriptFields:
+        - Name: Target
+          Type: Entity
+          Value: 9218595194737938306
+    ModelRendererComponent:
+      FilePath: assets\models\rat\street_rat_2k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 12630800036119136622
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0, 0.386769295, 0]
+      Rotation: [0, 0, 0]
+      Scale: [53.2344742, 0.200000003, 64.3199997]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [1, 1, 1, 1]
+      Metallic: 0.493999988
+      Roughness: 0.389999986
+      AO: 1
+  - Entity: 3901418219453878090
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [0, 13.0067186, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [0, -1, 0]
+      Color: [1, 1, 1]
+      Intensity: 4.19999981
+      CastShadow: true
   - Entity: 2566840129041612925
     TagComponent:
       Tag: Camera
@@ -18,57 +72,3 @@ Entities:
         OrthographicFar: 1000
       Primary: true
       FixedAspectRatio: false
-  - Entity: 3901418219453878090
-    TagComponent:
-      Tag: Light
-    TransformComponent:
-      Translation: [0, 13.0067186, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    DirectionalLightComponent:
-      Direction: [0, -1, 0]
-      Color: [1, 1, 1]
-      Intensity: 4.19999981
-      CastShadow: true
-  - Entity: 12630800036119136622
-    TagComponent:
-      Tag: Plane
-    TransformComponent:
-      Translation: [0, 0.386769295, 0]
-      Rotation: [0, 0, 0]
-      Scale: [53.2344742, 0.200000003, 64.3199997]
-    MeshRendererComponent:
-      Color: [1, 1, 1, 1]
-      MeshType: Cube
-      BaseColor: [1, 1, 1, 1]
-      Metallic: 0
-      Roughness: 0.00300000003
-      AO: 1
-  - Entity: 17962531572953408569
-    TagComponent:
-      Tag: Chaser_Rat
-    TransformComponent:
-      Translation: [-15.2104406, 0.449140787, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1.00000012, 1]
-    ScriptComponent:
-      Class: Sandbox.Chaser
-      ScriptFields:
-        - Name: Target
-          Type: Entity
-          Value: 9218595194737938306
-    ModelRendererComponent:
-      FilePath: assets\models\rat\street_rat_2k.fbx
-      Color: [1, 1, 1, 1]
-  - Entity: 9218595194737938306
-    TagComponent:
-      Tag: Player_Apple
-    TransformComponent:
-      Translation: [0, 0.514361143, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.200000003, 0.199999988, 0.200000003]
-    ScriptComponent:
-      Class: Sandbox.Player
-    ModelRendererComponent:
-      FilePath: assets\models\apple\food_apple_01_2k.fbx
-      Color: [1, 1, 1, 1]

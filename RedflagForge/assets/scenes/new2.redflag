@@ -1,0 +1,66 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 17340264952547106334
+    TagComponent:
+      Tag: Cam
+    TransformComponent:
+      Translation: [-16.7018795, 6.85905743, 24.944952]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1000
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 11217399063501154056
+    TagComponent:
+      Tag: Light
+    TransformComponent:
+      Translation: [0, 8.42493057, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.221725434, 0.524365246, 0.648902833]
+      Intensity: 6.19999981
+      Radius: 20.2000008
+      CastShadow: false
+  - Entity: 12014277686884314140
+    TagComponent:
+      Tag: Apple
+    TransformComponent:
+      Translation: [0, 4.66609097, 19.2596626]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ModelRendererComponent:
+      FilePath: assets\models\apple\food_apple_01_2k.fbx
+      Color: [1, 1, 1, 1]
+  - Entity: 12182444175019961965
+    TagComponent:
+      Tag: Box2D
+    TransformComponent:
+      Translation: [0, 13.9283199, 0]
+      Rotation: [-1.57261717, 1.03024101, 0.158044457]
+      Scale: [15.7999887, 11.3000212, 0.999998927]
+    SpriteRendererComponent:
+      Color: [0.278200895, 0.934169292, 0.915662289, 1]
+      TilingFactor: 1
+  - Entity: 14103386392843955862
+    TagComponent:
+      Tag: Box
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [20.5, 8, 15.3000002]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [1, 1, 1, 1]
+      Metallic: 0.648000002
+      Roughness: 0.126000002
+      AO: 0.72299999

@@ -238,6 +238,10 @@ ClientBin/
 *~
 *.dbmdl
 *.dbproj.schemaview
+
+# Local thesis materials
+Thesis/
+thesis/
 *.jfm
 *.pfx
 *.publishsettings
