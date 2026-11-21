@@ -1,14 +1,21 @@
 # RHI 方案的插图
 
-五幅图均用 TikZ 绘制，PDF 中的名称、箭头和数字可直接放大。类图中的关系分别对应现有源码与拟议接口。
+下列插图均用 TikZ 绘制，PDF 中的名称、箭头和数字可直接放大。现有类按仓库的成员与调用绘制，拟议接口在图和正文中单独标明。
 
 | 图 | 源码 | 图中内容 |
 | --- | --- | --- |
-| 1 | [interfaces.tex](interfaces.tex) | 立方体从加载到编辑器显示。上两行是调用方向，末行沿后处理的图像流向阅读。 |
-| 2 | [model-classes.tex](model-classes.tex) | 现有 Model 包含 SubMesh，子网格分别持有网格与材质，材质可以引用底色图。依据为项目的 Model.h 与 Material.h。 |
-| 3 | [classes.tex](classes.tex) | 拟议的 RenderDevice 和 CommandList。空心三角指向 OpenGL 与 Vulkan 两套实现共同遵循的接口。 |
-| 4 | [texture-lifetime.tex](texture-lifetime.tex) | 面板从 640 × 360 拖到 960 × 540。CPU 与 GPU 两条时间线说明最后一次读小图的提交 17 何时完成。 |
-| 5 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度由附录 A 的公式计算。 |
+| 1 | [interfaces.tex](interfaces.tex) | 从首次加载到每帧显示。箭头标明下一步收到的模型、绘制数据或图像。 |
+| 2 | [model-classes.tex](model-classes.tex) | AssetManager 按编号查询 AssetLibrary，首次加载后缓存 Model。Model 包含 SubMesh，子网格持有 Mesh 与 Material。 |
+| 3 | [mesh-shader-resources.tex](mesh-shader-resources.tex) | Mesh、VertexArray 和两种缓冲区的持有关系，以及 3D 材质、2D 子贴图、ShaderLibrary 和相机数据的使用方法。 |
+| 4 | [rhi-architecture.tex](rhi-architecture.tex) | 从引擎调用者经过公共设备和命令列表，到 OpenGL 与 Vulkan 各自的创建和绘制方法。 |
+| 5 | [classes.tex](classes.tex) | 拟议后端类。空心三角指向两种实现共同遵循的接口。 |
+| 6 | [backend-resources.tex](backend-resources.tex) | 纹理、缓冲区、着色器与管线、交换链图像在 Vulkan 后端拟持有或借用哪些对象。 |
+| 7 | [draw-calls.tex](draw-calls.tex) | 从 CreateTexture、CreateBuffer 的请求与返回，到 BeginPass、DrawIndexed、EndPass 和帧末提交。 |
+| 8 | [cpu-gpu-draw.tex](cpu-gpu-draw.tex) | GLSL 编译、资源上传、命令录制与队列提交，以及 GPU 上的顶点着色、光栅化和片元着色。 |
+| 9 | [effect-resources.tex](effect-resources.tex) | 按 SceneRenderer、IBLPrecompute 和 PostProcess 的实际成员与调用画出阴影、环境光、间接光历史、泛光和输出图。 |
+| 10 | [window-targets.tex](window-targets.tex) | ForgeLayer 的离屏画面如何显示在窗口中。并列展示现有 OpenGL 上下文和拟议 Vulkan 交换链的工作。 |
+| 11 | [texture-lifetime.tex](texture-lifetime.tex) | 面板拖大后，CPU 怎样知道最后一次使用小图的 GPU 提交已经完成。 |
+| 12 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度由附录 A 的公式计算。 |
 
 ## Khronos 的参考原图
 

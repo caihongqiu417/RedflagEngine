@@ -1,0 +1,46 @@
+% 上方两个框分别持有光照资源。箭头指向读取它们的绘制阶段。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.3}{13}\selectfont},
+  box/.style={rounded corners=1.3mm,line width=.6pt},
+  title/.style={font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont},
+  flowarrow/.style={draw=Ink,line width=.7pt,-{Stealth[length=1.6mm,width=1.6mm]}}]
+  \definecolor{SceneBlue}{HTML}{305C80}
+  \definecolor{LightGreen}{HTML}{246659}
+  \definecolor{BloomOchre}{HTML}{86502A}
+  \draw[box,draw=Ink!72,fill=Paper] (0,0) rectangle (158,118);
+  \draw[box,draw=SceneBlue!78,fill=SceneBlue!7] (4,72) rectangle (82,114);
+  \draw[box,draw=LightGreen!78,fill=LightGreen!7] (86,72) rectangle (154,114);
+
+  \node[title,text=SceneBlue] at (7,108.5) {{\mdseries\ttfamily SceneRenderer} 持有};
+  \draw[SceneBlue!40] (7,104)--(79,104);
+  \node at (7,99) {\texttt{RunShadowPass} 写光源深度图};
+  \node at (7,92.5) {\texttt{RunSSAOPass} 写环境遮蔽图};
+  \node at (7,85.5) {\texttt{RunRSMTemporalResolvePass}};
+  \node at (7,78.8) {读上一张历史图，将间接光写进另一张。};
+
+  \node[title,text=LightGreen] at (89,108.5) {{\mdseries\ttfamily IBLPrecompute} 持有};
+  \draw[LightGreen!40] (89,104)--(151,104);
+  \node at (89,99) {\texttt{GetTextures()} 可查询四张图};
+  \node at (89,92.5) {\texttt{Bind()} 选用漫反射图、反射图};
+  \node at (89,85.5) {和 BRDF 查找表供材质着色。};
+  \node at (89,78.8) {另一张图是天空背景。};
+
+  \draw[flowarrow] (39,72)--(39,63);
+  \draw[flowarrow] (116,72)--(116,63);
+  \draw[box,draw=SceneBlue!70,fill=SceneBlue!5] (4,46) rectangle (154,63);
+  \node[title,text=SceneBlue] at (8,54.5) {场景绘制};
+  \node at (32,57.9) {\texttt{Renderer3D::EndScene()} 绘制模型时读取光照贴图。};
+  \node at (32,51) {\texttt{IBLPrecompute::RenderSkybox()} 用天空图填上背景。};
+  \draw[flowarrow] (19,46)--(19,38);
+  \node at (23,42) {场景颜色图};
+
+  \draw[box,draw=BloomOchre!78,fill=BloomOchre!8] (4,15) rectangle (154,38);
+  \node[title,text=BloomOchre] at (8,32.5) {{\mdseries\ttfamily PostProcess::Render()}};
+  \node at (63,32.5) {借用场景颜色图，持有泛光层和输出图。};
+  \node at (8,25.9) {\texttt{m\_BloomMips} 保存各层泛光，\texttt{Composite()} 将合成结果写入 \texttt{m\_Output}。};
+  \node at (8,19.4) {编辑器通过 \texttt{SceneRenderer::GetFinalColorTextureID()} 取得输出图的 OpenGL 编号。};
+
+  \draw[box,draw=Ink!55,densely dashed,fill=Paper] (4,4) rectangle (154,12);
+  \node at (8,8) {\textbf{拟议的 RHI}\quad 视口持有输出图。调用者将输入图和输出图作为纹理引用传给后处理。};
+\end{tikzpicture}

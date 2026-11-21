@@ -1,0 +1,53 @@
+% 上框画编辑器面板里的离屏图，下框画整个桌面窗口的显示路径。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.2}{13}\selectfont},
+  title/.style={font=\sffamily\bfseries\fontsize{11.4}{14}\selectfont},
+  subhead/.style={font=\sffamily\bfseries\fontsize{10.5}{13}\selectfont},
+  panel/.style={rounded corners=1.4mm,line width=.7pt},
+  arrow/.style={draw=Ink,line width=.8pt,-{Stealth[length=1.8mm]}}]
+  \definecolor{ViewportBlue}{HTML}{305C80}
+  \definecolor{WindowGreen}{HTML}{246659}
+  \definecolor{WindowOchre}{HTML}{96502B}
+  \draw[rounded corners=2mm,draw=Ink!72,line width=.85pt] (0,0) rectangle (158,117);
+
+  \draw[panel,draw=ViewportBlue!80,fill=ViewportBlue!7] (3,70) rectangle (155,114);
+  \node[title,text=ViewportBlue] at (6,109.5) {场景面板里的图像};
+  \draw[ViewportBlue!45] (77,79)--(77,105.1);
+  \node[subhead] at (6,101.9) {{\mdseries\ttfamily ForgeLayer} 持有主帧缓冲};
+  \node at (6,95) {\texttt{Framebuffer::Create(spec)} 创建离屏图。};
+  \node at (6,88.3) {\texttt{Resize(w,h)} 跟随面板尺寸。};
+  \node at (6,81.6) {\texttt{ReadPixel(1,x,y)} 读实体编号。};
+  \node[subhead] at (81,101.9) {{\mdseries\ttfamily SceneRenderer} 调用后处理};
+  \node at (81,95) {\texttt{PostProcess::Render} 写出最终图。};
+  \node at (81,88.3) {面板用 \texttt{GetFinalColorTextureID()}};
+  \node at (81,81.6) {取得纹理编号，交给 \texttt{ImGui::Image}。};
+  \draw[ViewportBlue!35] (6,77.8)--(152,77.8);
+  \node[text=ViewportBlue] at (6,73.6) {拟让各视口分别持有场景颜色、深度、实体编号和面板输出图。};
+
+  \draw[Ink,line width=.8pt] (79,70)--(79,64.5);
+  \draw[arrow] (79,64.5)--(40,64.5)--(40,58);
+  \draw[arrow] (79,64.5)--(118,64.5)--(118,58);
+  \node[anchor=center,fill=Paper,inner xsep=1.7mm,text=Muted] at (79,64.5)
+    {面板图和工具栏一起画进窗口};
+
+  \draw[panel,draw=WindowGreen!80,fill=WindowGreen!8] (3,3) rectangle (77,58);
+  \node[title,text=WindowGreen] at (6,53.5) {现有 OpenGL 窗口};
+  \node at (6,46.2) {\texttt{Application} 调用 \texttt{Window::Create}。};
+  \node at (6,39.9) {\texttt{WindowsWindow} 管理 \texttt{GLFWwindow}。};
+  \node at (6,33.6) {\texttt{Application::GetWindow()} 取窗口引用。};
+  \draw[WindowGreen!40] (6,29)--(74,29);
+  \node at (6,24.4) {帧末 \texttt{WindowsWindow::OnUpdate()}};
+  \node at (6,17.9) {调用 \texttt{OpenGLContext::SwapBuffers()}，};
+  \node at (6,11.4) {由 \texttt{glfwSwapBuffers} 交换前后缓冲。};
+
+  \draw[panel,draw=WindowOchre!80,fill=WindowOchre!7] (81,3) rectangle (155,58);
+  \node[title,text=WindowOchre] at (84,53.5) {拟议 Vulkan 窗口};
+  \node at (84,46.2) {用 GLFW 窗口创建 \texttt{VkSurfaceKHR}，};
+  \node at (84,39.9) {再创建交换链，向它取得一组};
+  \node at (84,33.6) {能在这个窗口轮流显示的图像。};
+  \draw[WindowOchre!40] (84,29)--(152,29);
+  \node at (84,24.4) {\texttt{vkAcquireNextImageKHR} 取窗口图。};
+  \node at (84,17.9) {把界面画进这张图并提交绘制。};
+  \node at (84,11.4) {\texttt{vkQueuePresentKHR} 交给窗口显示。};
+\end{tikzpicture}

@@ -2,11 +2,12 @@
 \begin{tikzpicture}[x=1mm,y=1mm,
   every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont},
   interface/.style={draw=Teal,line width=.7pt},
-  backend/.style={draw=Rule,line width=.65pt},
+  backend/.style={draw=Rust!55,fill=Rust!5,line width=.65pt},
   method/.style={anchor=west,font=\ttfamily\fontsize{10.5}{13}\selectfont},
   hint/.style={text=Muted,font=\sffamily\fontsize{10.2}{13}\selectfont},
   implements/.style={draw=Teal,dash pattern=on 1.3mm off .8mm,line width=.75pt},
   tointerface/.style={implements,-{Triangle[open,length=2.4mm,width=3.1mm]}}]
+  \draw[draw=Ink!72,line width=.85pt,rounded corners=2mm] (-6,-4) rectangle (148,86);
   % 左侧两个类各有一个名称栏和一个方法栏。
   \foreach \base/\api/\role/\first/\second in {
     52/RenderDevice/创建资源/{CreateTexture(spec)}/{CreateBuffer(spec)},

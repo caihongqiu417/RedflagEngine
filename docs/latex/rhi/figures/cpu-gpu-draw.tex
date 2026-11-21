@@ -1,0 +1,63 @@
+% 拟议的 Vulkan 首次绘制：复制和绘制录入同一图形队列，在 GPU 端按需同步。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.5}{13}\selectfont},
+  band/.style={rounded corners=1.6mm,line width=.65pt},
+  title/.style={font=\sffamily\bfseries\fontsize{12}{15}\selectfont},
+  labeltext/.style={font=\sffamily\bfseries\fontsize{10.8}{13}\selectfont},
+  api/.style={font=\ttfamily\fontsize{10.5}{13}\selectfont},
+  flowarrow/.style={draw=Ink,line width=.72pt,-{Stealth[length=1.7mm,width=1.6mm]}}]
+  \definecolor{HostBlue}{HTML}{305C80}
+  \definecolor{QueueOchre}{HTML}{86502A}
+  \definecolor{DeviceGreen}{HTML}{246659}
+  \draw[band,draw=Ink!72,fill=Paper] (0,0) rectangle (158,152);
+  \draw[band,draw=HostBlue!78,fill=HostBlue!7] (4,71) rectangle (154,148);
+  \draw[band,draw=QueueOchre!78,fill=QueueOchre!9] (4,55) rectangle (154,66);
+  \draw[band,draw=DeviceGreen!78,fill=DeviceGreen!7] (4,4) rectangle (154,50);
+
+  \begin{scope}[yshift=16mm]
+  \node[title,text=HostBlue] at (8,126) {CPU 准备资源，录制绘制命令};
+  \draw[HostBlue!38] (8,121.8)--(150,121.8);
+  \draw[HostBlue!38] (78,92)--(78,118);
+  \node[labeltext,text=HostBlue] at (8,116.3) {创建着色器和图形管线};
+  \node at (8,109.9) {glslc 将 GLSL 编译为 SPIR-V};
+  \node[api] at (8,103.4) {vkCreateShaderModule};
+  \node[api] at (8,97) {vkCreateGraphicsPipelines};
+  \node[labeltext,text=HostBlue] at (82,116.3) {首次上传模型};
+  \node at (82,109.9) {把顶点、索引和像素写进中转缓冲};
+  \node[api] at (82,103.4) {vkCmdCopyBuffer};
+  \node[api] at (82,97) {vkCmdCopyBufferToImage};
+  \draw[HostBlue!38] (8,92)--(150,92);
+  \end{scope}
+  \node[labeltext,text=HostBlue] at (8,102) {选好本次绘制要用的资源};
+  \node at (8,95) {\texttt{vkCmdBindPipeline}　选管线};
+  \node at (82,95) {\texttt{vkCmdBindVertexBuffers}　选顶点};
+  \node at (8,88) {\texttt{vkCmdBindDescriptorSets}　选相机与贴图};
+  \node at (82,88) {\texttt{vkCmdBindIndexBuffer}　选索引};
+  \node[api] at (8,77.9) {vkCmdDrawIndexed};
+  \node at (45,77.9) {记录一个按索引绘制网格的请求（Draw Call）};
+
+  \draw[flowarrow] (18,71)--(18,66);
+  \node[labeltext,text=QueueOchre] at (8,60.5) {CPU 提交};
+  \node[api] at (29,60.5) {vkQueueSubmit2};
+  \node at (64.5,60.5) {把命令交给图形队列，GPU 随后执行};
+  \draw[flowarrow] (18,55)--(18,50);
+
+  \node[title,text=DeviceGreen] at (8,44.2) {GPU 执行复制与绘制};
+  \draw[DeviceGreen!38] (8,40)--(150,40);
+  \node[labeltext,text=DeviceGreen] at (8,34.8) {执行复制};
+  \node at (29,34.8) {从中转缓冲复制到顶点缓冲、索引缓冲和砖墙纹理。};
+  \node at (29,28.6) {复制的结果可供绘制读取后，再使用这些资源。};
+  \draw[flowarrow] (22,31.4)--(22,22.3);
+  \foreach \start/\head/\detail in {
+    7/顶点着色/变换顶点位置,
+    44/光栅化/生成三角形片元,
+    81/片元着色/采样贴图算光照,
+    118/写入结果/场景颜色图}{
+    \draw[rounded corners=1mm,draw=DeviceGreen!64,fill=Paper]
+      (\start,8) rectangle (\start+32,22.3);
+    \node[labeltext,anchor=center,text=DeviceGreen] at (\start+16,18) {\head};
+    \node[anchor=center] at (\start+16,11.8) {\detail};
+  }
+  \foreach \start in {39,76,113}{\draw[flowarrow] (\start,15)--(\start+5,15);}
+\end{tikzpicture}

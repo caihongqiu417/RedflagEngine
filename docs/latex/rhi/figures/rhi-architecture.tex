@@ -1,0 +1,54 @@
+% 从上往下读调用关系，向上的箭头表示把创建好的资源返回给调用者。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.3}{13}\selectfont},
+  layer/.style={rounded corners=1.4mm,line width=.7pt},
+  title/.style={font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont},
+  relation/.style={draw=Ink,line width=.8pt,-{Stealth[length=1.8mm]}},
+  returns/.style={relation,densely dashed},
+  labeltext/.style={text=Muted,font=\sffamily\fontsize{10.1}{13}\selectfont}]
+  \definecolor{SceneBlue}{HTML}{305C80}
+  \definecolor{RhiGreen}{HTML}{246659}
+  \definecolor{DriverBrown}{HTML}{96502B}
+  \draw[rounded corners=2mm,draw=Ink!72,line width=.85pt] (0,0) rectangle (158,110);
+
+  \draw[layer,draw=SceneBlue!80,fill=SceneBlue!7] (3,82) rectangle (155,107);
+  \draw[SceneBlue!43] (77,84.5)--(77,99);
+  \node[title,text=SceneBlue] at (6,102.7) {引擎中的调用者};
+  \node at (6,95.4) {模型加载器读出网格和贴图。};
+  \node at (6,87.9) {网格持有缓冲区，材质持有底色图。};
+  \node at (81,95.4) {\texttt{Renderer3D} 选网格和材质。};
+  \node at (81,87.9) {\texttt{PostProcess} 读取场景颜色图。};
+
+  \draw[relation] (13,82)--(13,71.5);
+  \node[labeltext] at (15,76.7) {请求创建};
+  \draw[returns] (45,71.5)--(45,82);
+  \node[labeltext] at (47,76.7) {返回资源引用};
+  \draw[relation] (88,82)--(88,71.5);
+  \node[labeltext] at (90,76.7) {传入绘制目标和要使用的资源};
+
+  \draw[layer,draw=RhiGreen!80,fill=RhiGreen!8] (3,39) rectangle (155,71.5);
+  \draw[RhiGreen!45] (77,42)--(77,64.1);
+  \node[title,text=RhiGreen] at (6,67.4) {公共 RHI（拟议接口）};
+  \node at (6,60) {\texttt{RenderDevice} 创建资源};
+  \node at (6,52.4) {\texttt{CreateBuffer(spec)}};
+  \node at (6,44.8) {\texttt{CreateTexture(spec)}};
+  \node at (81,60) {\texttt{CommandList} 记录绘制};
+  \node at (81,52.4) {\texttt{BeginPass}、\texttt{BindMesh}};
+  \node at (81,44.8) {\texttt{DrawIndexed}、\texttt{EndPass}};
+
+  \draw[Ink,line width=.8pt] (79,39)--(79,33.4);
+  \draw[relation] (79,33.4)--(41,33.4)--(41,26);
+  \draw[relation] (79,33.4)--(117,33.4)--(117,26);
+  \node[labeltext,anchor=center,fill=Paper,inner xsep=1.6mm] at (79,33.4)
+    {启动时选定一套后端};
+
+  \draw[layer,draw=DriverBrown!80,fill=DriverBrown!7] (3,3) rectangle (77,26);
+  \draw[layer,draw=DriverBrown!80,fill=DriverBrown!7] (81,3) rectangle (155,26);
+  \node[title,text=DriverBrown] at (6,21.5) {OpenGL（现有驱动调用）};
+  \node at (6,14.4) {创建图像\enspace\texttt{glCreateTextures}};
+  \node at (6,7.4) {绘制网格\enspace\texttt{glDrawElements}};
+  \node[title,text=DriverBrown] at (84,21.5) {Vulkan（计划接入）};
+  \node at (84,14.4) {创建图像\enspace\texttt{vkCreateImage}};
+  \node at (84,7.4) {记录绘制\enspace\texttt{vkCmdDrawIndexed}};
+\end{tikzpicture}

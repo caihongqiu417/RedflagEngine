@@ -1,0 +1,65 @@
+% 两段各从上向下读。实线发起调用，虚线带回创建好的对象。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={font=\sffamily\fontsize{10.4}{13}\selectfont,text=Ink,
+    inner sep=0pt,outer sep=0pt},
+  title/.style={anchor=west,font=\sffamily\bfseries\fontsize{12}{14}\selectfont},
+  role/.style={fill=Paper,draw=#1!70,rounded corners=1mm,
+    minimum height=6mm,inner xsep=2mm,font=\ttfamily\fontsize{10.7}{13}\selectfont},
+  call/.style={line width=.75pt,-{Stealth[length=1.7mm,width=1.45mm]}},
+  reply/.style={call,dash pattern=on 1.5mm off .85mm},
+  line/.style={line width=.55pt,densely dotted},
+  message/.style={inner xsep=1.3mm,inner ysep=.3mm,fill=#1,
+    font=\sffamily\fontsize{10.2}{12}\selectfont}]
+  \definecolor{CallsBlue}{HTML}{305C80}
+  \definecolor{CallsGreen}{HTML}{246659}
+  \colorlet{LoadPanel}{CallsBlue!6}
+  \colorlet{DrawPanel}{CallsGreen!6}
+  \draw[rounded corners=2mm,draw=Ink!72,fill=Paper,line width=.85pt]
+    (0,0) rectangle (158,136);
+  \draw[rounded corners=1.4mm,draw=CallsBlue!75,fill=LoadPanel,line width=.65pt]
+    (3,83) rectangle (155,133);
+  \node[title,text=CallsBlue] at (6,128) {加载资源};
+  \node[anchor=west] at (29,128) {\texttt{Texture2D::Create(path)} 拟先解码图片，再把像素交给设备。};
+
+  \node[role=CallsBlue] at (25,119.5) {\sffamily 模型加载器与资源工厂};
+  \node[role=CallsBlue] at (135,119.5) {RenderDevice};
+  \draw[line,CallsBlue!75] (25,116.5)--(25,85);
+  \draw[line,CallsBlue!75] (135,116.5)--(135,85);
+  \draw[call,CallsBlue] (25,112)--(135,112)
+    node[midway,message=LoadPanel] {\texttt{CreateTexture(spec)}　传入尺寸、格式与像素};
+  \draw[reply,CallsBlue] (135,104)--(25,104)
+    node[midway,message=LoadPanel] {返回纹理，材质保存这张砖墙贴图};
+  \draw[call,CallsBlue] (25,96)--(135,96)
+    node[midway,message=LoadPanel] {\texttt{CreateBuffer(spec)}　分别传入顶点或索引};
+  \draw[reply,CallsBlue] (135,88)--(25,88)
+    node[midway,message=LoadPanel] {返回缓冲区，由网格保存};
+
+  \draw[rounded corners=1.4mm,draw=CallsGreen!75,fill=DrawPanel,line width=.65pt]
+    (3,3) rectangle (155,80.5);
+  \node[title,text=CallsGreen] at (6,75.5) {绘制一帧};
+  \node[anchor=west] at (29,75.5) {场景安排主绘制。下方列出绘制一个可见网格时的调用。};
+  \node[role=CallsGreen] at (21,67) {SceneRenderer};
+  \node[role=CallsGreen] at (58,67) {Renderer3D};
+  \node[role=CallsGreen] at (136,67) {CommandList};
+  \draw[line,CallsGreen!75] (21,64)--(21,11);
+  \draw[line,CallsGreen!75] (58,64)--(58,11);
+  \draw[line,CallsGreen!75] (136,64)--(136,11);
+
+  \draw[call,CallsGreen] (21,60)--(136,60)
+    node[midway,message=DrawPanel] {\texttt{BeginPass(targets)}　指定场景颜色图与深度图};
+  \draw[call,CallsGreen] (21,53)--(58,53)
+    node[midway,message=DrawPanel] {相机、模型、位置};
+  \foreach \at/\method/\purpose in {
+    48/{BindPipeline(pipeline)}/{选绘制规则},
+    42/{BindCamera(cameraData)}/{传入相机矩阵},
+    36/{BindMesh(mesh)}/{选网格},
+    30/{BindMaterial(material)}/{选材质},
+    24/{BindObject(objectData)}/{传入位置与编号},
+    18/{DrawIndexed(indexCount)}/{按索引绘制}}{
+    \draw[call,CallsGreen] (58,\at)--(136,\at)
+      node[midway,message=DrawPanel] {\texttt{\method}　\purpose};
+  }
+  \draw[call,CallsGreen] (21,12)--(136,12)
+    node[midway,message=DrawPanel] {\texttt{EndPass()}　结束主绘制};
+  \node[anchor=west] at (7,6.7) {本帧后处理与界面也录完后，由设备 \texttt{Submit(commands)} 统一提交。};
+\end{tikzpicture}

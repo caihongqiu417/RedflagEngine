@@ -1,0 +1,60 @@
+% 每组独立阅读。网格与贴图中的箭头指向实际持有的对象。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={font=\sffamily\fontsize{10.3}{13}\selectfont,text=Ink,
+    inner sep=0pt,outer sep=0pt},
+  title/.style={anchor=west,font=\sffamily\bfseries\fontsize{11.8}{14}\selectfont},
+  note/.style={anchor=west},
+  box/.style={draw=#1!70,fill=Paper,rounded corners=.8mm,minimum height=6.6mm,
+    font=\ttfamily\fontsize{10.8}{13}\selectfont,inner xsep=1.8mm,line width=.6pt},
+  arrow/.style={draw=#1,line width=.7pt,-{Stealth[length=1.55mm]}},
+  relationlabel/.style={font=\ttfamily\fontsize{10.1}{12}\selectfont,text=#1}]
+  \definecolor{Geom}{HTML}{305C80}
+  \definecolor{Surface}{HTML}{96502B}
+  \definecolor{Program}{HTML}{246659}
+  \draw[rounded corners=2mm,draw=Ink!72,fill=Paper,line width=.85pt]
+    (0,0) rectangle (158,119);
+  \foreach \low/\high/\shade in {75/116/Geom,39/73/Surface,3/37/Program}
+    \draw[rounded corners=1.4mm,draw=\shade!75,fill=\shade!6,line width=.65pt]
+      (3,\low) rectangle (155,\high);
+
+  \node[title,text=Geom] at (6,110.6) {网格几何};
+  \node[note] at (30,110.6) {沿箭头可以找到网格持有的顶点、索引和顶点格式。};
+  \node[box=Geom] (mesh) at (14.5,95.7) {Mesh};
+  \node[box=Geom] (vao) at (52,95.7) {VertexArray};
+  \node[box=Geom] (vertex) at (96,100.4) {VertexBuffer};
+  \node[box=Geom] (index) at (96,90.3) {IndexBuffer};
+  \node[box=Geom] (layout) at (137,100.4) {BufferLayout};
+  \draw[arrow=Geom] (mesh.east)--(vao.west);
+  \draw[Geom,line width=.7pt] (vao.east)--(74,95.7);
+  \draw[arrow=Geom] (74,95.7)|-(vertex.west);
+  \draw[arrow=Geom] (74,95.7)|-(index.west);
+  \draw[arrow=Geom] (vertex.east)--(layout.west);
+  \node at (137,92.3) {字段顺序与间距};
+  \node[note] at (7,80.8) {\texttt{Mesh} 创建时调用 \texttt{AddVertexBuffer} 和 \texttt{SetIndexBuffer}，把两种缓冲交给顶点数组。};
+
+  \node[title,text=Surface] at (6,67.6) {材质与子贴图};
+  \node[note] at (38,67.6) {3D 材质可引用多张表面贴图，2D 精灵可取整张图的一部分。};
+  \node[box=Surface] (mat) at (21,56.5) {Material};
+  \node[box=Surface] (color) at (79,56.5) {Texture2D};
+  \node[box=Surface] (sub) at (21,44.9) {SubTexture2D};
+  \node[box=Surface] (atlas) at (79,44.9) {Texture2D};
+  \draw[arrow=Surface] (mat.east)--(color.west);
+  \draw[arrow=Surface] (sub.east)--(atlas.west);
+  \node[relationlabel=Surface] at (49,59.4) {BaseColorMap};
+  \node[relationlabel=Surface] at (49,47.8) {m\_Texture};
+  \node[note] at (93,56.5) {\texttt{Clone()} 复制材质，贴图仍共用。};
+  \node[note] at (93,44.9) {子贴图另存四个角的坐标。};
+
+  \node[title,text=Program] at (6,31.8) {着色器与相机};
+  \node[note] at (38,31.8) {3D 主绘制用的程序由 \texttt{Renderer3D} 调用 \texttt{Shader::Create} 创建。};
+  \node[box=Program] (lib) at (21,20.4) {ShaderLibrary};
+  \node[box=Program] (shader) at (79,20.4) {Shader};
+  \node[box=Program] (renderer) at (21,8.9) {Renderer3D};
+  \node[box=Program] (uniform) at (79,8.9) {UniformBuffer};
+  \draw[arrow=Program] (lib.east)--(shader.west);
+  \draw[arrow=Program] (renderer.east)--(uniform.west);
+  \node[relationlabel=Program] at (50,23.4) {Load / Get};
+  \node[relationlabel=Program] at (50,11.9) {BeginScene};
+  \node[note] at (95,20.4) {库按名称保存和取回着色器。};
+  \node[note] at (95,8.9) {\texttt{SetData} 写入相机矩阵与位置。};
+\end{tikzpicture}

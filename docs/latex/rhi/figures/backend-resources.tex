@@ -1,0 +1,43 @@
+% 左列是引擎持有的公共对象，右列是同一对象在 Vulkan 后端中的拟议实现。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.3}{13}\selectfont},
+  heading/.style={font=\sffamily\bfseries\fontsize{11.3}{14}\selectfont},
+  resource/.style={font=\sffamily\bfseries\fontsize{10.8}{13}\selectfont},
+  band/.style={rounded corners=1.3mm,line width=.65pt}]
+  \definecolor{AssetGreen}{HTML}{246659}
+  \definecolor{PipelineBlue}{HTML}{305C80}
+  \definecolor{PresentOchre}{HTML}{96502B}
+  \draw[rounded corners=2mm,draw=Ink!72,line width=.85pt] (0,0) rectangle (158,106);
+  \node[heading] at (6,100.5) {上层持有的公共对象};
+  \node[heading] at (54,100.5) {Vulkan 后端内部（拟议设计）};
+
+  \foreach \lo/\hi/\tint in {77/94.5/AssetGreen,58/75.5/AssetGreen,
+      35/56.5/PipelineBlue,11.5/33.5/PresentOchre}{
+    \draw[band,draw=\tint!63,fill=\tint!8] (3,\lo) rectangle (155,\hi);
+    \draw[\tint!43] (50,\lo+2)--(50,\hi-2);
+  }
+  \node[resource,text=AssetGreen] at (6,88.9) {材质的底色贴图};
+  \node at (6,81.7) {\texttt{Ref<Texture2D>}};
+  \node at (54,88.9) {\texttt{VkImage} 绑定显存，\texttt{VkImageView} 指定可读范围。};
+  \node at (54,81.7) {\texttt{VkSampler} 决定怎样采样，多张贴图可以共用。};
+
+  \node[resource,text=AssetGreen] at (6,69.9) {网格的缓冲区};
+  \node at (6,62.7) {顶点数据与索引数据};
+  \node at (54,69.9) {\texttt{VkBuffer} 可用作顶点缓冲或索引缓冲。};
+  \node at (54,62.7) {后端记录用途、占用的显存区段和可用字节范围。};
+
+  \node[resource,text=PipelineBlue] at (6,49) {渲染器的绘制规则};
+  \node at (6,41.4) {\texttt{Shader}、\texttt{Pipeline}};
+  \node at (54,51.7) {用 SPIR-V 创建 \texttt{VkShaderModule}，再创建 \texttt{VkPipeline}。};
+  \node at (54,45.7) {建好管线即可销毁模块。后端保存管线和兼容的};
+  \node at (54,39.7) {\texttt{VkPipelineLayout}，用它为绘制指定着色器输入。};
+
+  \node[resource,text=PresentOchre] at (6,25.7) {窗口的交换链};
+  \node at (6,18.1) {轮换显示的图像};
+  \node at (54,28.6) {\texttt{VkSwapchainKHR} 拥有窗口图像，后端为每张图};
+  \node at (54,22.4) {创建自己的视图。等绘制与呈现都用完，先销毁};
+  \node at (54,16.2) {这些视图，再回收旧交换链。};
+
+  \node[text=Muted] at (6,6) {贴图和缓冲区可以从同一块兼容的显存中各取一段。};
+\end{tikzpicture}

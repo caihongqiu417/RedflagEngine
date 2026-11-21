@@ -1,45 +1,56 @@
-% 上两行是请求的去向；最下一行沿图像的读写顺序排。
+% 箭头自上而下，旁边标明交给下一步的模型、绘制数据或图像。
 \begin{tikzpicture}[x=1mm,y=1mm,
-  every node/.style={font=\sffamily\fontsize{10.5}{13}\selectfont,text=Ink,inner sep=0pt,outer sep=0pt},
-  linehead/.style={anchor=west,font=\sffamily\bfseries\fontsize{11}{14}\selectfont,text=Teal},
-  sub/.style={text=Muted,font=\sffamily\fontsize{10.1}{13}\selectfont},
-  call/.style={draw=Teal,line width=.8pt,-{Stealth[length=1.8mm]}},
-  imageflow/.style={draw=Rust,line width=.85pt,-{Stealth[length=1.8mm]}}]
-  \node[linehead] at (0,72) {加载模型};
-  \node[anchor=west] at (21,72) {材质保存设备创建的砖墙贴图};
-  \draw[Rule] (0,68.7)--(142,68.7);
-  \node at (20,62) {\texttt{AssetManager}};
-  \node[sub] at (20,55.5) {按编号加载立方体};
-  \node at (70,62) {模型加载器};
-  \node[sub] at (70,55.5) {读出网格与材质};
-  \node at (121.5,62) {\texttt{RenderDevice}};
-  \node[sub] at (121.5,55.5) {创建贴图和顶点缓冲};
-  \draw[call] (38,62)--(50,62);
-  \draw[call] (88,62)--(100,62);
+  every node/.style={anchor=west,inner sep=0pt,outer sep=0pt,text=Ink,
+    font=\sffamily\fontsize{10.5}{13}\selectfont},
+  heading/.style={font=\sffamily\bfseries\fontsize{12}{15}\selectfont},
+  handoff/.style={font=\sffamily\fontsize{10.3}{13}\selectfont,text=Muted},
+  arrow/.style={draw=Ink,line width=.85pt,-{Stealth[length=2mm,width=1.75mm]}},
+  stage/.style={rounded corners=1.5mm,line width=.65pt}]
+  \definecolor{LoadBlue}{HTML}{305C80}
+  \definecolor{DrawGreen}{HTML}{246659}
+  \definecolor{PanelOchre}{HTML}{96502B}
+  \draw[rounded corners=2mm,draw=Ink!72,fill=Paper,line width=.85pt]
+    (0,0) rectangle (158,101);
 
-  \node[linehead] at (0,46) {绘制模型};
-  \node[anchor=west] at (21,46) {\texttt{SceneRenderer} 把模型交给 3D 渲染器};
-  \draw[Rule] (0,42.7)--(142,42.7);
-  \node at (20,36) {\texttt{Renderer3D}};
-  \node[sub] at (20,29.5) {选定网格和材质};
-  \node at (70,36) {\texttt{CommandList}};
-  \node[sub] at (70,29.5) {指定目标并请求绘制};
-  \node at (121.5,36) {OpenGL 或 Vulkan 后端};
-  \node[sub] at (121.5,29.5) {把模型画入场景颜色图};
-  \draw[call] (38,36)--(50,36);
-  \draw[call] (88,36)--(100,36);
+  % 同一绿色的两步分别决定画什么、怎样交给后端。
+  \foreach \bottom/\shade in {79/LoadBlue,54/DrawGreen,29/DrawGreen,4/PanelOchre}{
+    \draw[stage,draw=\shade!80,fill=\shade!8] (4,\bottom) rectangle (154,\bottom+18);
+    \draw[\shade!42,line width=.55pt] (36,\bottom+3.3)--(36,\bottom+14.7);
+  }
+  \node[heading,text=LoadBlue] at (8,88) {加载模型};
+  \node at (40,91.5) {\texttt{AssetManager} 找到模型文件，加载器读取网格和材质。};
+  \node at (40,84.5) {拟由 \texttt{RenderDevice} 创建顶点缓冲和砖墙贴图。};
 
-  \node[linehead,text=Rust] at (0,20) {显示结果};
-  \node[anchor=west] at (21,20) {后处理写出面板需要的那张图};
-  \draw[Rule] (0,16.7)--(142,16.7);
-  \node at (11,9) {场景颜色图};
-  \node at (49,9) {后处理};
-  \node at (89,9) {面板输出图};
-  \node at (128,9) {编辑器 ImGui};
-  \draw[imageflow] (23,9)--(40,9);
-  \draw[imageflow] (57,9)--(77,9);
-  \draw[imageflow] (101,9)--(115,9);
-  \node[sub] at (31.5,3.3) {读取};
-  \node[sub] at (67,3.3) {写入};
-  \node[sub] at (108,3.3) {显示};
+  \node[heading,text=DrawGreen] at (8,63) {选择网格};
+  \node at (40,66.5) {\texttt{SceneRenderer} 把模型、位置和编号交给 \texttt{Renderer3D}。};
+  \node at (40,59.5) {\texttt{Renderer3D} 选出相机能看到的网格和对应的材质。};
+
+  \node[heading,text=DrawGreen] at (8,38) {绘制场景};
+  \node at (40,41.5) {拟由 \texttt{CommandList} 接收绘制命令，交给后端执行。};
+  \node at (40,34.5) {后端将网格画进场景颜色图。现用 OpenGL，拟接入 Vulkan。};
+
+  \node[heading,text=PanelOchre] at (8,13) {显示画面};
+  \node at (40,16.5) {后处理调整曝光，写出面板输出图。};
+  \node at (40,9.5) {编辑器用 ImGui 把这张图显示在场景面板里。};
+
+  \foreach \high/\low/\what in {
+    79/72/{加载好的模型，后续帧可以复用},
+    54/47/{选定的网格、材质和物体位置},
+    29/22/{画好的场景颜色图}}{
+    \draw[arrow] (20,\high)--(20,\low);
+    \node[handoff] at (24,{(\high+\low)/2}) {\what};
+  }
+
+  % 面板中的立方体是流程的输出示意。
+  \begin{scope}[shift={(128,6.2)}]
+    \filldraw[fill=Paper,draw=PanelOchre!80,line width=.5pt]
+      (0,0) rectangle (22,13.6);
+    \fill[PanelOchre!23] (.2,11.6) rectangle (21.8,13.3);
+    \fill[PanelOchre!72] (5.4,8.5)--(10.6,6.5)--(10.6,1.2)--(5.4,3.2)--cycle;
+    \fill[PanelOchre] (10.6,6.5)--(16.5,8.7)--(16.5,3.4)--(10.6,1.2)--cycle;
+    \fill[PanelOchre!46] (5.4,8.5)--(11.3,10.7)--(16.5,8.7)--(10.6,6.5)--cycle;
+    \draw[Paper!84!PanelOchre,line width=.35pt]
+      (5.4,5.85)--(10.6,3.85)--(16.5,6.05)
+      (8,7.5)--(8,4.85) (13.55,4.95)--(13.55,2.3);
+  \end{scope}
 \end{tikzpicture}

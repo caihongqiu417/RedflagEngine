@@ -1,19 +1,31 @@
+% 上半图是按编号加载的调用；下半图是加载完成后的 C++ 对象。
 \begin{tikzpicture}[x=1mm,y=1mm,
-  cls/.style={draw=Teal!55,fill=Soft,rounded corners=1pt,minimum width=24mm,
-    minimum height=8mm,inner sep=1pt,font=\ttfamily\fontsize{10.8}{13}\selectfont,text=Ink},
-  rel/.style={draw=Muted,line width=.8pt},
-  ref/.style={rel,-{Stealth[length=1.7mm]}},
-  tag/.style={font=\sffamily\fontsize{10}{12}\selectfont,text=Muted,inner sep=1pt}]
-  \node[cls] (model) at (12,13) {Model};
-  \node[cls] (sub) at (53,13) {SubMesh};
-  \node[cls] (mesh) at (94,22) {Mesh};
-  \node[cls] (mat) at (94,4) {Material};
-  \node[cls] (tex) at (133,4) {Texture2D};
-  \fill[Muted] (24,13)--(26,14.2)--(28,13)--(26,11.8)--cycle;
-  \draw[rel] (28,13)--(sub.west);
-  \node[tag] at (32,18) {包含};
-  \draw[ref] (sub.east)--(71,13)|-(mesh.west);
-  \draw[ref] (71,13)|-(mat.west);
-  \draw[ref] (mat.east)--(tex.west);
-  \node[tag] at (114,10) {底色图};
+  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont},
+  block/.style={draw=Teal!75,fill=Paper,rounded corners=.8mm,minimum height=8mm,minimum width=26mm,font=\ttfamily\fontsize{10.8}{13}\selectfont},
+  note/.style={font=\sffamily\fontsize{10}{13}\selectfont,text=Muted},
+  link/.style={draw=Ink,line width=.7pt,-{Stealth[length=1.8mm]}},
+  title/.style={anchor=west,font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont}]
+  \draw[draw=Ink!72,line width=.85pt,rounded corners=2mm] (0,0) rectangle (158,66);
+  \draw[draw=blue!65,fill=blue!6,rounded corners=1mm] (3,40) rectangle (155,63);
+  \node[title,text=blue!75!black] at (7,58) {按模型编号加载};
+  \node at (25,47) {\texttt{AssetManager}};
+  \node at (86,47) {\texttt{AssetLibrary}};
+  \draw[link] (42,47)--(67,47);
+  \node[note] at (54.5,51) {\texttt{Get(id)}};
+  \node[note,anchor=west] at (103,47) {查到类型和文件路径};
+  \draw[link] (15,40)--(15,33);
+  \node[note,anchor=west] at (19,36.5) {首次加载调用 \texttt{Model::Load(path)}，缓存返回的模型};
+  \draw[draw=Teal!65,fill=Soft,rounded corners=1mm] (3,3) rectangle (155,33);
+  \node[block] (model) at (18,18) {Model};
+  \node[block] (sub) at (59,18) {SubMesh};
+  \node[block] (mesh) at (96,26.8) {Mesh};
+  \node[block] (mat) at (96,10.2) {Material};
+  \node[block] (tex) at (139,10.2) {Texture2D};
+  \fill[Ink] (31,18)--(33.4,19.35)--(35.8,18)--(33.4,16.65)--cycle;
+  \draw[Ink,line width=.7pt] (35.8,18)--(sub.west);
+  \node[note] at (38.5,23) {包含};
+  \draw[link] (sub.east)--(77,18)|-(mesh.west);
+  \draw[link] (77,18)|-(mat.west);
+  \draw[link] (mat.east)--(tex.west);
+  \node[note] at (118,15.4) {底色图};
 \end{tikzpicture}
