@@ -1,0 +1,464 @@
+{
+  "replay_version": "1.47",
+  "matched_entire_images": [
+    "RGBA16F color",
+    "R32I entity",
+    "D32F depth"
+  ],
+  "captures": {
+    "separate": {
+      "capture": "separate_capture.rdc",
+      "sha256": "a562c6f528b8b9b6f1807235a6d276bf1493baaa0796126626273e196c70419d",
+      "capture_message_counts": {
+        "MessageSeverity.Info": 140,
+        "MessageSeverity.Medium": 2
+      },
+      "counter_names": [
+        "Samples Passed",
+        "PS Invocations"
+      ],
+      "capture_diagnostics": [
+        {
+          "event": 24,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+        },
+        {
+          "event": 24,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state, and was not found in the disk cache"
+        }
+      ],
+      "phases": {
+        "Main: color and entity IDs": {
+          "events": [
+            24,
+            31,
+            38,
+            45,
+            52,
+            59,
+            66,
+            73,
+            80,
+            87,
+            94,
+            101,
+            108,
+            115,
+            122,
+            129,
+            136,
+            143,
+            150,
+            157,
+            164,
+            171,
+            178,
+            185,
+            192,
+            199,
+            206,
+            213,
+            220,
+            227,
+            234,
+            241,
+            248,
+            255,
+            262,
+            269,
+            276,
+            283,
+            290,
+            297,
+            304,
+            311,
+            318,
+            325,
+            332,
+            339,
+            346,
+            353,
+            360,
+            367,
+            374,
+            381,
+            388,
+            395,
+            402,
+            409,
+            416,
+            423,
+            430,
+            437,
+            444,
+            451,
+            458,
+            465
+          ],
+          "draws": 64,
+          "indices_per_draw": [
+            6
+          ],
+          "instances_per_draw": [
+            1
+          ],
+          "triangles": 128,
+          "final_draw_state": {
+            "test": true,
+            "depth_compare": "CompareFunction.Less",
+            "write_depth": true,
+            "color_masks": [
+              15,
+              15,
+              15
+            ]
+          },
+          "counters_all_draws": {
+            "Samples Passed": 43264,
+            "PS Invocations": 43264
+          }
+        }
+      },
+      "final_event": 465,
+      "image_sha256": {
+        "color": "1737e7e0ecdebb8239cbadcdbfd6986b8e0742e9f3ca151832e4df4abe3d1dea",
+        "entity": "c799d50de6279236266d54f0ce67708307365411c0b568ba08614a4b8fec1ff7",
+        "depth": "ee9f73f65db7e7749573558665851cff6afdc83e1df7fd9b2395faa8ce2d7a8c"
+      },
+      "background_pixels": 22272,
+      "covered_pixels": 43264,
+      "distinct_entity_ids_excluding_background": 64,
+      "pick_pixel_top_left": [
+        {
+          "xy": [
+            16,
+            15
+          ],
+          "entity": 56
+        },
+        {
+          "xy": [
+            16,
+            239
+          ],
+          "entity": 0
+        },
+        {
+          "xy": [
+            240,
+            239
+          ],
+          "entity": 7
+        },
+        {
+          "xy": [
+            31,
+            31
+          ],
+          "entity": -1
+        }
+      ]
+    },
+    "instanced": {
+      "capture": "instanced_capture.rdc",
+      "sha256": "bc360422d869420ec4e8deaaf11823bb2410aadc7e56551b739f8d101e185367",
+      "capture_message_counts": {
+        "MessageSeverity.Info": 16,
+        "MessageSeverity.Medium": 3
+      },
+      "counter_names": [
+        "Samples Passed",
+        "PS Invocations"
+      ],
+      "capture_diagnostics": [
+        {
+          "event": 44,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+        },
+        {
+          "event": 44,
+          "severity": "MessageSeverity.Medium",
+          "id": 131186,
+          "message": "Buffer performance warning: Buffer object 13 (bound to GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (4), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (5), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (6), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (7), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (8), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (9), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (10), GL_ARRAY_BUFFER_ARB, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+        },
+        {
+          "event": 0,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+        }
+      ],
+      "phases": {
+        "Main: color and entity IDs": {
+          "events": [
+            44
+          ],
+          "draws": 1,
+          "indices_per_draw": [
+            6
+          ],
+          "instances_per_draw": [
+            64
+          ],
+          "triangles": 128,
+          "final_draw_state": {
+            "test": true,
+            "depth_compare": "CompareFunction.Less",
+            "write_depth": true,
+            "color_masks": [
+              15,
+              15,
+              15
+            ]
+          },
+          "counters_all_draws": {
+            "Samples Passed": 43264,
+            "PS Invocations": 43264
+          }
+        }
+      },
+      "final_event": 44,
+      "image_sha256": {
+        "color": "1737e7e0ecdebb8239cbadcdbfd6986b8e0742e9f3ca151832e4df4abe3d1dea",
+        "entity": "c799d50de6279236266d54f0ce67708307365411c0b568ba08614a4b8fec1ff7",
+        "depth": "ee9f73f65db7e7749573558665851cff6afdc83e1df7fd9b2395faa8ce2d7a8c"
+      },
+      "background_pixels": 22272,
+      "covered_pixels": 43264,
+      "distinct_entity_ids_excluding_background": 64,
+      "pick_pixel_top_left": [
+        {
+          "xy": [
+            16,
+            15
+          ],
+          "entity": 56
+        },
+        {
+          "xy": [
+            16,
+            239
+          ],
+          "entity": 0
+        },
+        {
+          "xy": [
+            240,
+            239
+          ],
+          "entity": 7
+        },
+        {
+          "xy": [
+            31,
+            31
+          ],
+          "entity": -1
+        }
+      ]
+    },
+    "prepass": {
+      "capture": "prepass_capture.rdc",
+      "sha256": "491e61cc5bc8849ae58a680b2dc6b00cdfb8cd7be11ad6de3355e3306e35a3f1",
+      "capture_message_counts": {
+        "MessageSeverity.Info": 21,
+        "MessageSeverity.Medium": 4
+      },
+      "counter_names": [
+        "Samples Passed",
+        "PS Invocations"
+      ],
+      "capture_diagnostics": [
+        {
+          "event": 26,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+        },
+        {
+          "event": 26,
+          "severity": "MessageSeverity.Medium",
+          "id": 131186,
+          "message": "Buffer performance warning: Buffer object 15 (bound to GL_UNIFORM_BUFFER (1), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+        },
+        {
+          "event": 503,
+          "severity": "MessageSeverity.Medium",
+          "id": 131186,
+          "message": "Buffer performance warning: Buffer object 13 (bound to GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (4), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (5), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (6), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (7), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (8), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (9), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (10), GL_ARRAY_BUFFER_ARB, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+        },
+        {
+          "event": 0,
+          "severity": "MessageSeverity.Medium",
+          "id": 131218,
+          "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+        }
+      ],
+      "phases": {
+        "Pre-Z: depth and normals": {
+          "events": [
+            26,
+            33,
+            40,
+            47,
+            54,
+            61,
+            68,
+            75,
+            82,
+            89,
+            96,
+            103,
+            110,
+            117,
+            124,
+            131,
+            138,
+            145,
+            152,
+            159,
+            166,
+            173,
+            180,
+            187,
+            194,
+            201,
+            208,
+            215,
+            222,
+            229,
+            236,
+            243,
+            250,
+            257,
+            264,
+            271,
+            278,
+            285,
+            292,
+            299,
+            306,
+            313,
+            320,
+            327,
+            334,
+            341,
+            348,
+            355,
+            362,
+            369,
+            376,
+            383,
+            390,
+            397,
+            404,
+            411,
+            418,
+            425,
+            432,
+            439,
+            446,
+            453,
+            460,
+            467
+          ],
+          "draws": 64,
+          "indices_per_draw": [
+            6
+          ],
+          "instances_per_draw": [
+            1
+          ],
+          "triangles": 128,
+          "final_draw_state": {
+            "test": true,
+            "depth_compare": "CompareFunction.Less",
+            "write_depth": true,
+            "color_masks": [
+              0,
+              0,
+              15
+            ]
+          },
+          "counters_all_draws": {
+            "Samples Passed": 43264,
+            "PS Invocations": 43264
+          }
+        },
+        "Main: color and entity IDs": {
+          "events": [
+            503
+          ],
+          "draws": 1,
+          "indices_per_draw": [
+            6
+          ],
+          "instances_per_draw": [
+            64
+          ],
+          "triangles": 128,
+          "final_draw_state": {
+            "test": true,
+            "depth_compare": "CompareFunction.LessEqual",
+            "write_depth": false,
+            "color_masks": [
+              15,
+              15,
+              15
+            ]
+          },
+          "counters_all_draws": {
+            "Samples Passed": 43264,
+            "PS Invocations": 43264
+          }
+        }
+      },
+      "final_event": 503,
+      "image_sha256": {
+        "color": "1737e7e0ecdebb8239cbadcdbfd6986b8e0742e9f3ca151832e4df4abe3d1dea",
+        "entity": "c799d50de6279236266d54f0ce67708307365411c0b568ba08614a4b8fec1ff7",
+        "depth": "ee9f73f65db7e7749573558665851cff6afdc83e1df7fd9b2395faa8ce2d7a8c"
+      },
+      "background_pixels": 22272,
+      "covered_pixels": 43264,
+      "distinct_entity_ids_excluding_background": 64,
+      "pick_pixel_top_left": [
+        {
+          "xy": [
+            16,
+            15
+          ],
+          "entity": 56
+        },
+        {
+          "xy": [
+            16,
+            239
+          ],
+          "entity": 0
+        },
+        {
+          "xy": [
+            240,
+            239
+          ],
+          "entity": 7
+        },
+        {
+          "xy": [
+            31,
+            31
+          ],
+          "entity": -1
+        }
+      ],
+      "prepass_end_depth_matches_main": true
+    }
+  }
+}

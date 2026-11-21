@@ -1,0 +1,256 @@
+{
+  "capture": "Sprites_capture.rdc",
+  "sha256": "43791339df8b5f210c48c6ef78ab45ff3c7e4a7940f43472019c07e6f6523439",
+  "replay_version": "1.47",
+  "api": "OpenGL",
+  "target": [
+    256,
+    256
+  ],
+  "api_validation": true,
+  "passes": {
+    "individual": {
+      "draw_events": [
+        13,
+        23,
+        33,
+        43,
+        53,
+        63,
+        73,
+        83,
+        93,
+        103,
+        113,
+        123,
+        133,
+        143,
+        153,
+        163,
+        173,
+        183,
+        193,
+        203,
+        213,
+        223,
+        233,
+        243,
+        253,
+        263,
+        273,
+        283,
+        293,
+        303,
+        313,
+        323,
+        333,
+        343,
+        353,
+        363,
+        373,
+        383,
+        393,
+        403,
+        413,
+        423,
+        433,
+        443,
+        453,
+        463,
+        473,
+        483,
+        493,
+        503,
+        513,
+        523,
+        533,
+        543,
+        553,
+        563,
+        573,
+        583,
+        593,
+        603,
+        613,
+        623,
+        633,
+        643
+      ],
+      "indices_per_draw": 6,
+      "draws": 64,
+      "triangles": 128,
+      "instances_per_draw": 1,
+      "rgba8_sha256": "a345d05f2f93d00e93ec70ce0a80129a909909dc13886d6c5a6b0efcd463491b",
+      "r32i_sha256": "728b77c71ab82a069bd1f7d8009fbba7ccf5cae8086b19e6903c4a8b35f87634",
+      "attachment": "individual.png",
+      "center_samples": [
+        {
+          "xy": [
+            16,
+            16
+          ],
+          "entity": 57,
+          "rgba8": [
+            173,
+            219,
+            255,
+            255
+          ]
+        },
+        {
+          "xy": [
+            48,
+            16
+          ],
+          "entity": 58,
+          "rgba8": [
+            255,
+            244,
+            126,
+            255
+          ]
+        }
+      ]
+    },
+    "batch": {
+      "draw_events": [
+        658
+      ],
+      "indices_per_draw": 384,
+      "draws": 1,
+      "triangles": 128,
+      "instances_per_draw": 1,
+      "rgba8_sha256": "a345d05f2f93d00e93ec70ce0a80129a909909dc13886d6c5a6b0efcd463491b",
+      "r32i_sha256": "728b77c71ab82a069bd1f7d8009fbba7ccf5cae8086b19e6903c4a8b35f87634",
+      "attachment": "batch.png",
+      "center_samples": [
+        {
+          "xy": [
+            16,
+            16
+          ],
+          "entity": 57,
+          "rgba8": [
+            173,
+            219,
+            255,
+            255
+          ]
+        },
+        {
+          "xy": [
+            48,
+            16
+          ],
+          "entity": 58,
+          "rgba8": [
+            255,
+            244,
+            126,
+            255
+          ]
+        }
+      ]
+    }
+  },
+  "partial_image": {
+    "event": 323,
+    "file": "individual-half.png"
+  },
+  "match": "RGBA8 and R32I: 65536 of 65536 pixels are byte-identical on both attachments",
+  "capture_messages": [
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 14 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 15 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 16 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 15 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 17 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 3,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 18 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "eid": 4,
+      "severity": "MessageSeverity.Medium",
+      "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+    },
+    {
+      "eid": 13,
+      "severity": "MessageSeverity.Medium",
+      "message": "Buffer performance warning: Buffer object 13 (bound to GL_ARRAY_BUFFER_ARB, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "eid": 13,
+      "severity": "MessageSeverity.Medium",
+      "message": "Pixel-path performance warning: Pixel transfer is synchronized with 3D rendering."
+    },
+    {
+      "eid": 13,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 13 (bound to GL_ARRAY_BUFFER_ARB, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 23,
+      "severity": "MessageSeverity.Medium",
+      "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+    },
+    {
+      "eid": 648,
+      "severity": "MessageSeverity.Medium",
+      "message": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+    }
+  ],
+  "replay_messages": [
+    {
+      "eid": 0,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 17 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "eid": 0,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 18 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "eid": 0,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 13 (bound to GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (0), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (1), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (2), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (3), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (4), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (5), GL_ARRAY_BUFFER_ARB, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "eid": 0,
+      "severity": "MessageSeverity.Info",
+      "message": "Buffer detailed info: Buffer object 13 (bound to GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (0), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (1), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (2), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (3), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (4), GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB (5), GL_ARRAY_BUFFER_ARB, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    }
+  ],
+  "status": "passed"
+}

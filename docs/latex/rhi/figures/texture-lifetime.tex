@@ -1,22 +1,27 @@
+% 同一机位。两个内容矩形严格按 640:960 的比例绘制。
 \begin{tikzpicture}[x=1mm,y=1mm,
-  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont}]
-  \path[use as bounding box] (0,0) rectangle (141,56);
-  \draw[Muted,-{Stealth[length=1.8mm]},line width=.65pt] (21,48)--(141,48);
-  \foreach \x/\event in {30/{提交帧 A},75/{调整视口},119/{显卡完成帧 A}}{
-    \draw[Rule,densely dashed] (\x,47)--(\x,4);
-    \fill[Ink] (\x,48) circle (.9mm);
-    \node[anchor=south] at (\x,51) {\event};
-  }
-  \node[anchor=west] at (0,33) {旧纹理};
-  \path[fill=Soft] (21,28) rectangle (75,38);
-  \path[fill=Rust!13] (75,28) rectangle (119,38);
-  \draw[Teal,line width=1pt] (21,28)--(75,28);
-  \draw[Rust,line width=1pt] (75,28)--(119,28);
-  \node at (48,33) {帧 A 使用旧图};
-  \node at (97,33) {为帧 A 保留};
-  \node[anchor=west,text=Muted] at (121.5,33) {可释放};
-  \node[anchor=west] at (0,14) {新纹理};
-  \path[fill=Soft] (75,9) rectangle (139,19);
-  \draw[Teal,line width=1pt,-{Stealth[length=2mm]}] (75,9)--(141,9);
-  \node at (107,14) {后续帧使用新尺寸的图};
+  every node/.style={font=\sffamily\fontsize{10.6}{13}\selectfont,text=Ink,inner sep=0pt},
+  pics/room/.style={code={
+    % 16:9 视口中的房间和方块。坐标按同一比例缩放。
+    \fill[black!4] (0,0) rectangle (32,18);
+    \fill[Rust!32] (0,0)--(5,4)--(5,14)--(0,18)--cycle;
+    \fill[Teal!22] (32,0)--(27,4)--(27,14)--(32,18)--cycle;
+    \fill[Ink!10] (0,0)--(32,0)--(27,4)--(5,4)--cycle;
+    \fill[Ink!5] (0,18)--(5,14)--(27,14)--(32,18)--cycle;
+    \fill[Ink!14] (10,2.8)--(18,1.5)--(24,3.1)--(16,4.4)--cycle;
+    \fill[Teal!65] (11,5)--(16,3.3)--(16,9.3)--(11,11)--cycle;
+    \fill[Teal] (16,3.3)--(20,5.4)--(20,11.4)--(16,9.3)--cycle;
+    \fill[Teal!32] (11,11)--(15,13.1)--(20,11.4)--(16,9.3)--cycle;
+    \draw[Ink!65,line width=.6pt] (0,0) rectangle (32,18);
+  }}]
+  \node[font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont] at (27,54) {拖动前的场景面板};
+  \node[font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont] at (106,54) {拖大后的场景面板};
+  \pic[scale=1.25] at (7,15) {room};
+  \pic[scale=1.875] at (76,15) {room};
+  \draw[Teal,line width=.9pt,-{Stealth[length=2mm]}] (49,25)--(73,25);
+  \node[text=Muted] at (61,29.5) {拖大面板};
+  \node[font=\sffamily\bfseries] at (27,10) {$640 \times 360$ 像素};
+  \node[font=\sffamily\bfseries] at (106,10) {$960 \times 540$ 像素};
+  \node[text=Rust] at (27,3.5) {上一帧的界面命令读取小图};
+  \node[text=Teal] at (106,3.5) {下一帧把场景画进大图};
 \end{tikzpicture}

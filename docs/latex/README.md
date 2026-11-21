@@ -10,6 +10,8 @@
 
 ## LaTeX 源码与编译
 
+[渲染性能实测](../../output/pdf/Redflag-Rendering-Performance.pdf) 记录深度预写、2D 批渲染和 3D 实例化的实际 RenderDoc 事件、离屏 CPU/GPU 计时，以及接下来值得做的对照。表格由原始 CSV 生成。新增优化的取证方式见[项目协作工作流](../AI-Workflow.md)。
+
 在本目录用 PowerShell 运行对应的脚本。每个脚本调用两次 XeLaTeX，使交叉引用和图号更新，再将 PDF 放入 `output/pdf/`。中间文件留在各册的 `build/` 目录。TeX Live 需包含 ctex、TikZ、Fandol 和 TeX Gyre 字体。
 
 | 文档 | 可编辑的主文件 | 编译命令 |
@@ -19,6 +21,7 @@
 | RHI 与 Vulkan | [rhi/main.tex](rhi/main.tex) | `./rhi/build.ps1` |
 | 排错记录 | [debugging/main.tex](debugging/main.tex) | `./debugging/build.ps1` |
 | 技术选型 | [decisions/main.tex](decisions/main.tex) | `./decisions/build.ps1` |
+| 渲染性能实测 | [performance/main.tex](performance/main.tex) | `./performance/build.ps1`（需 Python 3） |
 | 经典场景实测 | [scenes/main.tex](scenes/main.tex) | `./scenes/build.ps1` |
 
 架构图可以直接在 LaTeX 中修改。数学册中的[核验脚本](math/verify.py)会复算书中的数值例，并逐段对照引用的着色器或 C++ 源文件。从仓库根目录运行 `python docs/latex/math/verify.py` 即可。实测使用的场景截图、RenderDoc 回放结果和 CPU 采样记录分别保存在 [scenes](../../output/scenes/)、[captures](../../output/captures/) 和 [profiling](../../output/profiling/) 目录。

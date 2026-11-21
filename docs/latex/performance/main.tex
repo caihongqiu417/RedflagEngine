@@ -1,0 +1,105 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\input{../rhi/layout}
+\input{build/timing-rows}
+\hypersetup{pdftitle={Redflag 渲染性能实测},pdfsubject={2D 批渲染、3D 实例化与深度预写}}
+\fancyhead[R]{\sffamily\small\color{Muted}OpenGL / 性能实测}
+\graphicspath{{../../../output/profiling/}}
+\newcommand{\smalltable}{\sffamily\fontsize{10.3}{14}\selectfont\renewcommand{\arraystretch}{1.35}}
+\newcommand{\panelimage}[3]{\begin{minipage}[t]{#1}\centering\vspace{0pt}#2\par
+  \vspace{2pt}{\small\sffamily\color{Muted}#3\par}\end{minipage}}
+\begin{document}
+\bodytype
+\section{渲染性能实测}
+同是画 64 个四边形，2D 渲染器可以把它们的顶点拼在一起，3D 渲染器可以让同一份网格在 64 个位置各画一次。两种做法都能减少绘制调用。深度预写（Pre-Z）恰好在做相反的交换：先多画一遍，换取主绘制少处理一些被挡住的像素。这次在同一台电脑上把三项分别做了对照。
+
+\subsection{一次提交和一次绘制各用了多久}
+{\smalltable\begin{tabularx}{\linewidth}{@{}Xrrrr@{}}\toprule
+&\multicolumn{2}{c}{CPU 提交（微秒）}&\multicolumn{2}{c}{GPU 区间（微秒）}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+同一画面的画法 & 中位数 & P10--P90 & 中位数 & P10--P90\\\midrule
+\drawTimingRows
+\bottomrule\end{tabularx}\par}
+每种画法先预热 30 帧，再记录 120 帧，轮换每轮先执行的画法。中位数表示有一半样本用时比它短。P10 到 P90 是中间八成样本所在的区间。横向读同一行，可以区分 CPU 发出命令和显卡完成这段工作的时间；比较两种画法，则在同一组内纵向读。
+
+二维和三维各自使用固定的 $256\times256$ 离屏目标。设备为 Ryzen 9 8945HX、RTX 5070 Ti Laptop GPU，Windows 平衡电源方案，OpenGL 4.6，NVIDIA 驱动 616.56，Debug/x64。计时时不加载 RenderDoc。CPU 从清屏和组织绘制开始计，最后一次提交返回就停表。GPU 用 \code{GL\_TIME\_ELAPSED} 测相同命令区间，其中可能包含显卡等待后续命令的空闲时间。
+
+每轮在计时结束后等本帧完成，再开始下一帧。引擎编译时启用了性能埋点。即使关闭日志文件，执行这些函数仍会计时、处理字符串，逐个提交会多次支付这些开销。这里可以比较两种画法在当前构建下的成本，编辑器中的帧率还取决于其他效果、界面与呈现。
+\readings{\refitem{https://registry.khronos.org/OpenGL/extensions/ARB/ARB_timer_query.txt}{Khronos · OpenGL 计时查询}\quad
+原始样本见 \path{output/profiling/} 下两个实验的 \path{timing.csv}。}
+
+\newpage
+\section{2D 精灵的批渲染}
+画面里有 64 个精灵，交替使用蓝色十字和黄色菱形两张贴图。第一种画法每个精灵单独开始、结束一次场景。第二种只开始一次场景，等 64 个精灵全部加入后一起绘制。精灵的位置、入队顺序、贴图、透明部分与拾取编号相同。
+
+\begin{figure}[H]\centering
+\panelimage{.46\linewidth}{\includegraphics[width=45mm]{batch2d/individual-half.png}}{事件 323 · 已画出前 32 个}
+\hfill
+\panelimage{.46\linewidth}{\includegraphics[width=45mm]{batch2d/batch.png}}{事件 658 · 一次画齐 64 个}
+\caption{RenderDoc 回放导出的颜色图。逐个提交结束时（事件 643）的颜色和拾取编号，与右图整幅逐字节相同。}\end{figure}
+
+每个精灵由两个三角形组成，使用 6 个索引。逐个提交能看到 64 次 \code{glDrawElements(6)}。合批把 256 个顶点放进同一批，事件 658 一次读 384 个索引。左右仍各画 128 个三角形。图中的两种图案也都保留了各自的编号，点左上蓝十字读到 57，点旁边的黄菱形读到 58。
+
+\begin{figure}[H]\centering\includegraphics[width=79mm]{batch2d/renderdoc-events.png}
+\caption{实际事件列表的末尾。643 结束逐个提交，646 开始合批对照；清空上一幅图后，658 完成整批绘制。}\end{figure}
+逐个提交还重复更新相机、上传顶点并绑定资源。第 1 页测得的差额包含这一整套调用。测试只用了两张不同的图，下一步要看一批里出现很多种贴图时，拆批会让开销增加多少。
+
+\newpage
+\section{3D 网格的实例化绘制}
+同一份几何可以用一组顶点画很多遍。每个实例另存自己的变换和拾取编号，所以第 1 个方块和第 64 个方块可以出现在不同位置。为了让现有引擎走普通绘制路径，对照组创建了 64 份内容相同、对象不同的网格。实例化组的 64 个对象则引用同一份网格。两组在本页都关闭 Pre-Z。
+
+\begin{figure}[H]\centering
+{\setlength{\fboxsep}{0pt}\colorbox{Ink}{\includegraphics[width=49mm]{mesh/final-color.png}}}
+\caption{RenderDoc 回放的 3D 颜色输出，透明背景衬以深色。两个模式在全部 65,536 个像素上的 HDR 颜色、实体编号、深度均逐字节相同。}\end{figure}
+
+{\smalltable\begin{tabularx}{\linewidth}{@{}Xrrr@{}}\toprule
+主绘制 & 绘制次数 & 每次索引 & 每次实例 \\\midrule
+独立网格，事件 24 至 465 & 64 & 6 & 1\\
+共享网格，事件 44 & 1 & 6 & 64\\\bottomrule
+\end{tabularx}\par}
+2D 批渲染把多份顶点拼起来，一次使用 384 个索引。3D 实例化仍然只有 6 个索引，显卡用 64 份实例数据反复画同一张网格。这里两组都留下 43,264 个方块像素，逐点核对编号也能排除“看起来相同，却只能选到一个物体”的错误。
+
+共享网格后 CPU 少提交了 63 条绘制，但还要给物体分组，整理并上传 64 份实例数据。对照组使用不同的网格对象，也会切换对应的顶点数组。因此本次差额包括网格复用、实例化和驱动状态切换的共同影响。场景里有许多不同网格时，要重新测量实际能合成多少组。
+{\small\sffamily\color{Muted}原始帧位于 \path{output/profiling/mesh/}。\\
+逐个绘制用 \path{separate_capture.rdc}，实例化用 \path{instanced_capture.rdc}。\par}
+
+\newpage
+\section{深度预写与遮挡}
+在同一排方块上只加一项操作：正式着色前先画深度和法线。预写时关闭场景颜色和实体编号的写入，使用严格的“小于”深度比较。主绘制再允许“等于”通过，同时关闭深度写入。这样同一表面可以着色，并保留刚写好的深度。
+
+\begin{figure}[H]\centering
+\panelimage{.32\linewidth}{\includegraphics[width=39mm]{mesh/prepass-depth.png}}{事件 467 · 预写结束}
+\hfill
+\panelimage{.63\linewidth}{\includegraphics[width=\linewidth]{mesh/renderdoc-events.png}}{事件 503 · 画 64 个实例}
+\caption{左图是回放导出的深度，灰色方块为 0.5，白色背景为 1。右图是同一捕获的事件列表，最后一次普通绘制之后紧跟实例化主绘制。}\end{figure}
+
+{\smalltable\begin{tabularx}{\linewidth}{@{}Xrrr@{}}\toprule
+回放中的阶段 & 绘制次数 & 三角形 & 片元着色调用 \\\midrule
+关闭预写，只画主画面 & 1 & 128 & 43,264\\
+开启预写，先写深度和法线 & 64 & 128 & 43,264\\
+开启预写，再画主画面 & 1 & 128 & 43,264\\\bottomrule
+\end{tabularx}\par}
+RenderDoc 的 \code{PS Invocations} 计数记录片元着色器启动了多少次。这些方块彼此分开，预写没有挡住主绘制的任何方块。主绘制的计数完全相同，预写却多执行一遍，整帧的 CPU 和 GPU 区间中位数都变长了。捕获还核实了事件 467 的深度与主绘制结束时逐字节相同。
+
+在完整场景中，近处墙体可能遮住后方的一大片模型，那些像素就有机会省下主着色的成本。SSAO 和 RSM 还要读取深度或法线，现有场景渲染器在它们启用时也会安排预写。单独比较 Pre-Z 的速度时，应先让两组对这些输入的需求相同，再解释差额。
+\readings{捕获见 \path{output/profiling/mesh/prepass_capture.rdc}。每个阶段的状态、计数和像素核对见同目录 \path{replay.json}。}
+
+\newpage
+\section{下一轮值得测什么}
+\subsection{从无遮挡改为前后遮挡}
+当前样本里多出的 64 次预写没有省下主着色。下一组保留相同的模型数、材质、投影和分辨率，只改变它们前后重叠的程度，每一种布局分别开关 Pre-Z。记录主绘制省下多少片元着色、预写自己花掉多少 GPU 时间。若主绘制变便宜而整帧仍变慢，再试让共享网格的深度预写也用实例化，同时核对 Mask 材质的透明轮廓和深度。
+
+\subsection{很多小批次的开销}
+这次 3D 的 64 个物体恰好能合成一组。可以让物体总数不变，依次改成每个网格只有 1、2、4、8 个实例，比较分组、上传和主绘制的时间，看看两件物体就合批的取舍是否合适。2D 测试则让屏幕布局保持不变，只增加独立贴图数，跨过当前批次的贴图容量。结合事件列表里的拆批位置、CPU 提交时间，以及透明边缘的颜色和编号，判断是否值得调整贴图的组织方式。
+
+\subsection{把候选改法放回编辑器}
+这次循环只测离屏绘制。下一次用 Release 构建，编译时关闭性能埋点，再固定 Sponza 的镜头检查遮挡与多材质，固定 Cornell Box 的镜头检查间接光。编辑器的深度预览还会把原尺寸深度图读回 CPU，再生成缩略图。对同一镜头单独开关预览，测 CPU 等待和 GPU 区间。如果读回确实占主要时间，再试直接用着色器显示深度。以上是待验证的方向。
+
+\subsection{复查与复现}
+原始帧在 \path{output/profiling/} 的 \code{batch2d} 和 \code{mesh} 子目录中，可以用 RenderDoc 打开。各目录的 README 列有采集命令、设置和回放脚本。计时在仓库根目录依次执行下列命令。
+\begin{lstlisting}
+tests\run_sprite_batch.cmd --measure
+tests\run_profile_tests.cmd --measure output\profiling\mesh\timing.csv
+\end{lstlisting}
+两份 CSV 保留每次执行的顺序和纳秒值。编译本册时先核对四份原始帧与回放记录的文件摘要，再从 CSV 重算第 1 页的表。旧版的 Chrome CPU 时间线另存于 \path{output/profiling/}，当时每轮等待显卡并写日志，采样条件与本册不同。
+\end{document}

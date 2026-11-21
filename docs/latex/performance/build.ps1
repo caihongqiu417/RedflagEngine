@@ -1,0 +1,19 @@
+param([switch]$BuildOnly)
+
+$ErrorActionPreference = 'Stop'
+Push-Location $PSScriptRoot
+try {
+    if (-not (Test-Path build)) { New-Item -ItemType Directory build | Out-Null }
+    & python timing_table.py
+    if ($LASTEXITCODE -ne 0) { throw '无法生成性能表，请检查上面指出的原始帧、回放记录或计时数据。' }
+    for ($pass = 0; $pass -lt 2; $pass++) {
+        & xelatex -interaction=nonstopmode -halt-on-error -output-directory=build main.tex
+        if ($LASTEXITCODE -ne 0) { throw 'XeLaTeX 编译失败，请查看 build/main.log。' }
+    }
+    if (-not $BuildOnly) {
+        $output = Join-Path $PSScriptRoot '../../../output/pdf/Redflag-Rendering-Performance.pdf'
+        Copy-Item -LiteralPath 'build/main.pdf' -Destination $output -Force
+        Write-Output "生成：$output"
+    }
+}
+finally { Pop-Location }

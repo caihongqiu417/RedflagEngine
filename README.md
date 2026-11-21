@@ -12,9 +12,9 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 要顺着代码看一个模型怎样加载和绘制，可以接着读[引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)。[RHI 与 Vulkan 方案](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 用一张场景颜色图说明哪些调用可以共用，OpenGL 和 Vulkan 分别怎样执行。目前编辑器仍使用 OpenGL。
 
-遇到错图时，[排错记录](output/pdf/Redflag-Debugging-Notes.pdf) 可以从现象追到当时的源码与 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions.pdf) 解释当时为什么选择这种实现，以及性能记录实际测到了什么。六册的 LaTeX 源码与编译命令收在[文档目录](docs/latex/README.md)。
+遇到错图时，[排错记录](output/pdf/Redflag-Debugging-Notes.pdf) 可以从现象追到当时的源码与 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions.pdf) 解释当时为什么选择这种实现。[渲染性能实测](output/pdf/Redflag-Rendering-Performance.pdf) 用实际帧和计时对照深度预写、2D 批渲染和 3D 实例化。各册的 LaTeX 源码与编译命令收在[文档目录](docs/latex/README.md)。
 
-日常开发使用的[项目记忆](AGENTS.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)也随仓库保存。
+日常开发使用的[项目记忆](AGENTS.md)、[AI 协作工作流](docs/AI-Workflow.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)也随仓库保存。
 
 ## 编译与渲染测试
 

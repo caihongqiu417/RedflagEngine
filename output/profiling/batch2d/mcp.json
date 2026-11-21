@@ -1,0 +1,26 @@
+{
+  "capture": "Sprites_capture.rdc",
+  "sha256": "43791339df8b5f210c48c6ef78ab45ff3c7e4a7940f43472019c07e6f6523439",
+  "tool": "renderdoc-mcp v0.3.0 (stdio)",
+  "api": "OpenGL",
+  "total_draws": 65,
+  "passes": [
+    {
+      "dispatchCount": 0,
+      "drawCount": 64,
+      "eventId": 2,
+      "name": "Sprites: individual submissions"
+    },
+    {
+      "dispatchCount": 0,
+      "drawCount": 1,
+      "eventId": 646,
+      "name": "Sprites: shared batch"
+    }
+  ],
+  "draw_events_match_replay_json": true,
+  "messages_returned_by_get_log": {
+    "count": 0,
+    "messages": []
+  }
+}

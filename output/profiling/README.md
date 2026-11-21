@@ -1,6 +1,10 @@
-# Redflag CPU 计时记录
+# Redflag 渲染性能记录
 
-采集日期：2026-11-21。本目录只包含本次专用测试的记录。Forge 和 Sandbox 原有的性能文件没有覆盖，也没有把条件未知的历史记录当作本轮结果。
+2026-11-21 在两项离屏实验中采集了真实 RenderDoc 帧，并在单独运行中分别测了 CPU 提交和 GPU 命令区间。[2D 精灵](batch2d/README.md)比较逐个提交与合批，[3D 网格](mesh/README.md)比较独立网格、共享网格实例化，以及加上深度预写的开销。每组的捕获帧、回放结果和原始计时保存在各自目录。[渲染性能实测](../pdf/Redflag-Rendering-Performance.pdf)汇总数据、画面和后续验证方向。
+
+## 旧版 CPU 时间线
+
+下文是同日较早的专项 CPU 采样，只涉及原来的测试配置。Forge 和 Sandbox 的性能文件另行保存。
 
 `redflag-cpu-trace.json` 是项目 `Instrumentor` 直接写出的原始 Trace Event JSON，未修改事件或耗时，共 300 个事件、一个 CPU 线程，大小约 39 KB。文件只含函数名称、时间和本次线程的哈希编号，没有账号、用户目录或资产路径。
 

@@ -5,7 +5,7 @@
 | 图 | 源码 | 图中内容 |
 | --- | --- | --- |
 | 1 | [interfaces.tex](interfaces.tex) | Redflag 拟议的纹理创建与模型绘制接口，以及各自选中的后端实现。 |
-| 2 | [texture-lifetime.tex](texture-lifetime.tex) | 假设帧 A 是最后一个使用旧视口纹理的提交。调整面板后新旧纹理并存，直到显卡完成帧 A。 |
+| 2 | [texture-lifetime.tex](texture-lifetime.tex) | 同一机位下的方块和场景面板均为原创示意。面板由 640 × 360 拖大至 960 × 540，两张图的宽高按实际示例比例绘制。上一帧仍可能读取小图，下一帧绘制到大图。 |
 | 3 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度直接由正文公式计算。 |
 
 ## Khronos 的参考原图

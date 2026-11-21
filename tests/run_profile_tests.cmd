@@ -2,6 +2,8 @@
 setlocal
 set "RF_TRACE=%~dp0..\output\profiling\redflag-cpu-trace.json"
 if not "%~1"=="" set "RF_TRACE=%~f1"
+if "%~1"=="--capture" set "RF_CAPTURE_DLL=%~f3"
+if "%~1"=="--measure" set "RF_TIMING=%~f2"
 cd /d "%~dp0.."
 set "RF_VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 for /f "usebackq tokens=*" %%i in (`"%RF_VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "RF_VS=%%i"
@@ -19,5 +21,13 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
 if errorlevel 1 exit /b 1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 cd RedflagForge
+if "%~1"=="--capture" (
+    ..\bin-int\Tests\ProfileTraceTests.exe --capture "%~2" "%RF_CAPTURE_DLL%"
+    exit /b
+)
+if "%~1"=="--measure" (
+    ..\bin-int\Tests\ProfileTraceTests.exe --measure "%RF_TIMING%"
+    exit /b
+)
 ..\bin-int\Tests\ProfileTraceTests.exe "%RF_TRACE%"
 exit /b %errorlevel%
