@@ -58,6 +58,7 @@ namespace Redflag{
 		Add(name,shader);
 		return shader;
 	}
+
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		// 按名获取；缺失时抛出 out_of_range，不向库中插入空项。
