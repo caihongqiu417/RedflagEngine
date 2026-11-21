@@ -1,6 +1,28 @@
 # 图形学与引擎教材
 
-读公式时，可以先用 LearnOpenGL 的图看清光从哪里来，再对照 PBRT 的推导和 Redflag 的着色器。下面按书、课程和源码列出章节，便于从项目中的一个问题查回原文。网页与版次核对日期为 2026-11-21。
+这份索引记录 Redflag 设计和验证渲染器时用到的资料。下面的阅读记录写到具体函数、章节或讲义页码。本次按问题选读了这些内容，尚未通读整套教材或逐文件审查两个引擎仓库。后面的书目也保留了供日后查阅的主题。
+
+## RHI 方案的阅读记录（2026-11-21）
+
+**资源创建与绘制。** Hazel 的两个 `Texture2D::Create` 分别接收纹理描述和文件路径，在函数内选择后端并返回 `Ref<Texture2D>`。`RenderCommand::DrawIndexed` 接到绘制请求便转给 `s_RendererAPI`。Redflag 借用前一种写法，让材质持有公共纹理类型。方案中新加的命令记录和提交功能由 Redflag 自己设计。[Hazel Texture.cpp](https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/Texture.cpp) · [RenderCommand.h](https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/RenderCommand.h)
+
+**引擎资源与显卡资源。** GAMES104 第 2 讲第 12–14 页介绍资源导入、标识和运行时的引用，第 26 页用多个图形 API 说明 RHI 的用途，第 30 页给出上层依赖下层接口的原则。配套引擎 Piccolo 在 `RenderSystem::initialize` 中先创建 `VulkanRHI`，再将它传给 `RenderResource`，由后者上传环境光照纹理。在 Redflag，场景里的资源 ID 用来找回模型，绘制时用到的顶点和贴图则由当前后端创建。[GAMES104 第 2 讲](https://cdn.boomingtech.com/games104_static/upload/GAMES104_lecture02Layered%20Architecture%20of%20Game%20Engine.pdf#page=12) · [Piccolo render_system.cpp](https://github.com/BoomingTech/Piccolo/blob/f5053707fed4d3f94d270a436fb0d3a8ae54e3e5/engine/source/runtime/function/render/render_system.cpp) · [rhi.h](https://github.com/BoomingTech/Piccolo/blob/f5053707fed4d3f94d270a436fb0d3a8ae54e3e5/engine/source/runtime/function/render/interface/rhi.h)
+
+**模型实例与场景渲染器。** Jason Gregory 在《游戏引擎架构》首版（2009）第 14 章 §14.6.2 用网格实例讲分工。游戏对象改变实例的位置、可见性和材质，渲染系统等对象更新完，再绘制可见实例。这个例子说明了为什么 Redflag 可以在场景中保留实体数据，由场景渲染器集中决定要画什么。第四版卷二另有第 11 章 *Rendering* 和第 12 章 *Lighting and Post-Processing*，本轮核对了这两章的目录，正文仍待阅读。[首版作者书摘](https://www.gamedeveloper.com/programming/book-excerpt-game-engine-architecture) · [第四版卷二目录](https://www.routledge.com/Game-Engine-Architecture-Volume-II-Graphics-Motion-and-Sound/Gregory/p/book/9781041162575)
+
+**场景颜色与后处理。** LearnOpenGL 的 *Framebuffers* 先将场景画进一张纹理，下一次绘制再读取它。Unity 6.0 的 URP 示例给这两张图各自指定用途。`UseTexture(source)` 声明要读取的图，`SetRenderAttachment(destination, 0)` 指定结果写到哪里，`SetRenderFunc` 指定实际执行的函数。Redflag 可以让后处理直接接收场景颜色和输出图，在现有固定绘制顺序里把这两个参数讲清楚。[LearnOpenGL：Framebuffers](https://learnopengl.com/Advanced-OpenGL/Framebuffers) · [Unity 6.0：Write a render pass](https://docs.unity.com/en-us/engine/6000.0/manual/render-pipelines/universal-render-pipeline/customizing-urp/render-graph/write-render-pass)
+
+**Vulkan 的创建、绘制与呈现。** Khronos 的 *Creating an instance* 示例从 GLFW 取得窗口系统所需的扩展。*Building a Simple Engine* 的渲染流程章把场景收集、可见性判断和命令提交分开，也注明了示例引擎直接发起各次绘制。动态渲染示例在每次开始绘制时指明目标图像。Redflag 因此可以先让视口交出本次输出，让 Vulkan 后端填写自己的图像参数。[Instance](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html) · [Rendering Pipeline](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html) · [Dynamic rendering](https://docs.vulkan.org/samples/latest/samples/extensions/dynamic_rendering/README.html)
+
+交换链还有一项独立约定。CPU 等到一帧绘制完成时，窗口系统可能仍在等待呈现这张图。Khronos 的示例给每张交换链图像配一个供呈现等待的信号量，重新取到同一张图并等到取图完成后，才复用它。Redflag 的 Vulkan 后端据此分别管理每帧提交的状态和每张图呈现所需的信号。[Khronos：Swapchain Semaphore Reuse](https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html)
+
+### 两种后端的画面验证
+
+**顶点、深度和法线。** 《Fundamentals of Computer Graphics》第五版 §1.3–1.4（印刷页 4–5）介绍绘图接口、顶点怎样投到屏幕，以及深度缓冲怎样判定前后。作者的 Cornell 课程第 14 讲第 2–3 页画出了从模型到屏幕的各次变换。GAMES101 第 4 讲第 17、21–24 页接着说明如何把正交视体移到原点，再缩放到标准立方体。Redflag 对照两个后端时，可以给定同一个顶点，按各自 API 的深度约定换算后，再比较屏幕位置和深度。[FCG 第五版公开试读](https://api.pageplace.de/preview/DT0400.9781000426281_A41250965/preview-9781000426281_A41250965.pdf) · [Cornell CS4620 第 14 讲](https://www.cs.cornell.edu/courses/cs4620/2014fa/lectures/14pipeline.pdf#page=2) · [GAMES101 第 4 讲](https://sites.cs.ucsb.edu/~lingqi/teaching/resources/GAMES101_Lecture_04.pdf#page=17)
+
+《Real-Time Rendering》第四版附录 A.4（印刷页 15–16）用齐次坐标区分位置和方向，并介绍透视除法。PBRT 第四版 §3.10.3 则从法线应与切线垂直推导出逆转置矩阵。若同一模型在两个后端轮廓一致、明暗却不同，可以用带非均匀缩放的平面核对法线。[RTR4 附录 A.4](https://www.realtimerendering.com/Real-Time_Rendering_4th-Appendices.pdf#page=19) · [PBRT 第四版：Applying Transformations](https://pbr-book.org/4ed/Geometry_and_Transformations/Applying_Transformations)
+
+**反射阴影图（RSM）。** GAMES202 第 7 讲第 32–39 页从受直射光的表面出发，解释这些表面怎样给其他点提供间接光。第 39 页将光源视角的深度、世界位置、法线和反射通量并排展示。Redflag 在 Cornell Box 核对彩色反光，也可以先查红墙是否出现在这些图里，再检查白墙接收的间接光。第 41 页还指出了采样误差和间接光遮挡的限制。[GAMES202 第 7 讲](https://sites.cs.ucsb.edu/~lingqi/teaching/resources/GAMES202_Lecture_07.pdf#page=32) · [项目的 RSM 推导](latex/math/rsm.tex)
 
 ## 坐标、光照与渲染教材
 
@@ -10,7 +32,7 @@
 | Physically Based Rendering: From Theory to Implementation（PBRT） | 辐射度量、BRDF/BSDF、渲染方程、概率密度、蒙特卡洛积分、重要性采样与光传输 | [官方入口](https://pbr-book.org/)、[第四版目录](https://pbr-book.org/4ed/contents)；用户未指定版次，默认查公开第四版并标明 |
 | Real-Time Rendering, Fourth Edition（RTR4） | 实时渲染管线、着色、阴影、纹理过滤、抗锯齿、全局光照和性能取舍 | [作者网站](https://www.realtimerendering.com/)、[出版社页面](https://www.routledge.com/Real-Time-Rendering/Akenine-Moller-Haines-Hoffman-Pesce-Iwanicki-Hillaire/p/book/9781138627000)；固定第四版 |
 | Khronos Vulkan Tutorial | Vulkan 对象、资源生命周期、管线、命令提交与同步；比较 OpenGL 隐式状态和 Vulkan 显式管理 | [教程入口](https://docs.vulkan.org/tutorial/latest/00_Introduction.html)、[用户指定的 Instance 章节](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html)；latest 会变化，使用时核对版本 |
-| Fundamentals of Computer Graphics（FCG） | 向量矩阵、几何、坐标变换、投影、光栅化与光线追踪的基础概念和推导 | [作者第5版配套网站](https://www.cs.cornell.edu/~srm/fcg5/)、[出版社第5版页面](https://www.routledge.com/Fundamentals-of-Computer-Graphics/Shirley-Marschner/p/book/9780367505035)；用户未指定版次，第5版只是目前核实的入口 |
+| Fundamentals of Computer Graphics（FCG） | 向量矩阵、几何、坐标变换、投影、光栅化与光线追踪的基础概念和推导 | [作者第5版配套网站](https://www.cs.cornell.edu/~srm/fcg5/)、[出版社第5版页面](https://www.routledge.com/Fundamentals-of-Computer-Graphics/Marschner-Shirley/p/book/9781032122861)；本轮使用第五版公开试读和作者课件 |
 | Game Engine Architecture（Jason Gregory，《游戏引擎架构》） | 引擎分层、平台抽象、资源管线、资源何时创建和释放、编辑器怎样调用渲染器 | [作者网站](https://gameenginebook.com/)、[出版社第四版两卷本](https://www.routledge.com/Game-Engine-Architecture-Two-Volume-Set/Gregory/p/book/9781041162599)；作者站目前介绍第四版。用户未指定版次，引用时写明版本，不将第三版页码套入第四版 |
 
 ## 课程与引擎源码
@@ -73,7 +95,7 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 | Lambert 系数 | [PBRT 第四版 §9.2：Diffuse Reflection](https://pbr-book.org/4ed/Reflection_Models/Diffuse_Reflection) | 核对漫反射 BRDF 中的反射率与 1/π，解释 RSM 发送和接收两端各自的系数 |
 | GPU 对象释放 | [Khronos：glDeleteVertexArrays](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteVertexArrays.xhtml) | VAO 的创建与删除必须配对，C++ 引用释放不自动删除未封装好的 GL 对象 |
 | 深度读回 | [Khronos：glReadPixels](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glReadPixels.xhtml) | 核对读取范围、格式与目标内存，区分 CPU 预览和 GPU 附件本身 |
-| 截帧中的资源绑定 | [RenderDoc 官方文档：Pipeline State](https://github.com/baldurk/renderdoc/blob/v1.x/docs/window/pipeline_state.rst) | 在选定绘制之后核对实际状态、参数缓冲与纹理，不仅查看调用代码 |
+| 截帧中的资源绑定 | [RenderDoc 官方文档：Pipeline State](https://github.com/baldurk/renderdoc/blob/v1.x/docs/window/pipeline_state.rst) | 在选定的绘制事件中核对着色器实际读到的相机矩阵、曝光值和纹理 |
 | 附件像素检查 | [RenderDoc 官方文档：Inspect a pixel value](https://github.com/baldurk/renderdoc/blob/v1.x/docs/how/how_inspect_pixel.rst) | 选择正确附件与子资源，查看真实像素值，避免把显示范围调整当成数据变化 |
 | CPU 时间线 | [Chrome DevTools：Performance features reference](https://developer.chrome.com/docs/devtools/performance/reference) | 查看导入时间线的事件与嵌套区间；Redflag 的 Instrumentor 计时属于 CPU 范围，不代替 GPU 时间查询 |
 

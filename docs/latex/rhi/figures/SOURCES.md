@@ -1,6 +1,16 @@
-# 外部示例图
+# RHI 方案的插图
 
-以下两图下载于 2026-11-21，原始像素未修改，文档中仅缩放显示。它们说明参考教程的组织方式，不表示 Redflag 已实现对应系统。Redflag 的目标架构与资源生命周期图另外用 TikZ 绘制。
+正文三幅图用 TikZ 绘制，中文与数字在 PDF 中均可选取、放大。每幅图的调用、时间或坐标都在正文相应段落解释。
+
+| 图 | 源码 | 图中内容 |
+| --- | --- | --- |
+| 1 | [interfaces.tex](interfaces.tex) | Redflag 拟议的纹理创建与模型绘制接口，以及各自选中的后端实现。 |
+| 2 | [texture-lifetime.tex](texture-lifetime.tex) | 假设帧 A 是最后一个使用旧视口纹理的提交。调整面板后新旧纹理并存，直到显卡完成帧 A。 |
+| 3 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度直接由正文公式计算。 |
+
+## Khronos 的参考原图
+
+下面两张 PNG 于 2026-11-21 从教程下载，保留原始像素，可按原尺寸单独打开。正文使用上面的中文示意图。
 
 | 文件 | 原图与所在章节 | 用于说明 |
 | --- | --- | --- |
@@ -20,4 +30,4 @@ e99a0fe5b701c3965a0eb750a3dc79100df4304c399a21e54402956b2b21cbe2
 
 GAMES104 第 2 讲课件另从[课程官网](https://games104.boomingtech.com/sc/course-list/)链接的 [BoomingTech CDN](https://cdn.boomingtech.com/games104_static/upload/GAMES104_lecture02Layered%20Architecture%20of%20Game%20Engine.pdf) 下载到临时资料目录，核对了 PDF 第 12–14、26、30 页的资源与 RHI 内容。本设计没有嵌入该课件整页，没有宣称取得课件和其中第三方配图的再分发授权。
 
-《游戏引擎架构》本轮核对了 Jason Gregory 作者站的版次和主题介绍，未下载整本书，也未使用未经核实的书中图号或页码。
+《游戏引擎架构》所据的首版书摘、第四版目录与其他参考资料的实际查阅范围，见[图形学与引擎教材](../../../Graphics-References.md)。

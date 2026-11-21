@@ -1,0 +1,22 @@
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont}]
+  \path[use as bounding box] (0,0) rectangle (141,56);
+  \draw[Muted,-{Stealth[length=1.8mm]},line width=.65pt] (21,48)--(141,48);
+  \foreach \x/\event in {30/{提交帧 A},75/{调整视口},119/{显卡完成帧 A}}{
+    \draw[Rule,densely dashed] (\x,47)--(\x,4);
+    \fill[Ink] (\x,48) circle (.9mm);
+    \node[anchor=south] at (\x,51) {\event};
+  }
+  \node[anchor=west] at (0,33) {旧纹理};
+  \path[fill=Soft] (21,28) rectangle (75,38);
+  \path[fill=Rust!13] (75,28) rectangle (119,38);
+  \draw[Teal,line width=1pt] (21,28)--(75,28);
+  \draw[Rust,line width=1pt] (75,28)--(119,28);
+  \node at (48,33) {帧 A 使用旧图};
+  \node at (97,33) {为帧 A 保留};
+  \node[anchor=west,text=Muted] at (121.5,33) {可释放};
+  \node[anchor=west] at (0,14) {新纹理};
+  \path[fill=Soft] (75,9) rectangle (139,19);
+  \draw[Teal,line width=1pt,-{Stealth[length=2mm]}] (75,9)--(141,9);
+  \node at (107,14) {后续帧使用新尺寸的图};
+\end{tikzpicture}

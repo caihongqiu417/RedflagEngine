@@ -1,0 +1,33 @@
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont},
+  arrow/.style={draw=Teal,line width=.75pt,-{Stealth[length=1.7mm]}},
+  branch/.style={draw=Teal,line width=.65pt,line cap=round},
+  heading/.style={anchor=west,text=Muted,font=\sffamily\fontsize{10}{12}\selectfont}]
+  \node[heading] at (0,61) {调用方};
+  \node[heading] at (37,61) {公共接口};
+  \node[heading] at (93,61) {后端实现};
+  \draw[Rule] (0,57.5)--(141,57.5);
+
+  \foreach \y in {45,16}{
+    \draw[draw=Teal!45,fill=Soft,rounded corners=1.5pt]
+      (36,\y-8) rectangle (76,\y+8);
+    \draw[arrow] (28,\y)--(35,\y);
+    \draw[branch] (76,\y)--(82,\y);
+    \draw[branch] (82,\y-5)--(82,\y+5);
+    \draw[arrow] (82,\y+5)--(90,\y+5);
+    \draw[arrow] (82,\y-5)--(90,\y-5);
+  }
+  \node[anchor=west] at (0,48) {模型加载器};
+  \node[heading] at (0,41.5) {创建材质贴图};
+  \node[anchor=west] at (0,19) {场景渲染器};
+  \node[heading] at (0,12.5) {绘制可见模型};
+  \node[text=Teal] at (56,48) {\texttt{RenderDevice}};
+  \node at (56,41.5) {创建纹理和缓冲区};
+  \node[text=Teal] at (56,19) {\texttt{CommandList}};
+  \node at (56,12.5) {设置目标并绘制};
+  \node[anchor=west] at (93,50) {\texttt{OpenGL}\quad 创建纹理对象};
+  \node[anchor=west] at (93,40) {\texttt{Vulkan}\quad 创建图像和视图};
+  \node[anchor=west] at (93,21) {\texttt{OpenGL}\quad 调用驱动绘制};
+  \node[anchor=west] at (93,11) {\texttt{Vulkan}\quad 录制绘制命令};
+  \draw[Rule] (0,30.5)--(141,30.5);
+\end{tikzpicture}

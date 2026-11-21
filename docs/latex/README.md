@@ -4,7 +4,7 @@
 
 想了解一帧怎样画出来，可以先读[经典场景实测](../../output/pdf/Redflag-Classic-Scenes.pdf)。在 Cornell Box 的红墙旁找一小块白地面，比较开启和关闭间接光时它的颜色。接着读[渲染公式与实现](../../output/pdf/Redflag-Rendering-Math.pdf)，同一块地面会再次出现。这次可以顺着光的方向，把读到的红色增量对回公式和着色器。书中配图的[几何与材质来源](math/figures/geometry-sources.md)和[光照与后处理来源](math/figures/effects-sources.md)收在源码旁。
 
-[引擎架构](../../output/pdf/Redflag-Architecture-LaTeX.pdf) 讲的是另一件事。模型已经有了顶点和贴图，接下来是谁加载它，谁决定要画哪些物体，编辑器又怎样拿到这张图？读到后处理时，可以翻到 [RHI 与 Vulkan 方案](../../output/pdf/Redflag-RHI-Vulkan-Plan.pdf)，看两个图形后端怎样执行同一条合成命令。方案中的参考架构图有[单独的出处与许可记录](rhi/figures/SOURCES.md)。
+[引擎架构](../../output/pdf/Redflag-Architecture-LaTeX.pdf) 介绍模型的加载、可见物体的选择，以及编辑器怎样取得渲染结果。[RHI 与 Vulkan 方案](../../output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 结合贴图工厂和后处理说明接口怎样封装，并用三张图讲解资源创建与绘制、视口纹理何时释放，以及深度换算。图的[可编辑源码和参考原图](rhi/figures/SOURCES.md)放在一起，书籍、讲义和引擎源码的阅读范围见[资料索引](../Graphics-References.md)。
 
 遇到问题时，先从[排错记录](../../output/pdf/Redflag-Debugging-Notes.pdf)找相似的画面。旧错误的代码、修正过程与能回放的帧放在一起。[技术选型](../../output/pdf/Redflag-Technical-Decisions.pdf) 则解释为什么采用这种实现。涉及性能的章节给出采样条件、实际 CPU 时间线，以及当时还能从数据里得出什么结论。
 

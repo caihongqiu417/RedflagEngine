@@ -1,0 +1,18 @@
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont}]
+  \path[use as bounding box] (0,2) rectangle (135,45);
+  \node[text=Muted] at (43,42) {近裁面};
+  \node[text=Muted] at (86,42) {区间中点};
+  \node[text=Muted] at (129,42) {远裁面};
+  \node[anchor=west] at (0,28) {\texttt{OpenGL}\quad $z/w$};
+  \node[anchor=west] at (0,9) {\texttt{Vulkan}\quad $z/w$};
+  \draw[Teal,line width=1.2pt] (43,28)--(129,28);
+  \draw[Rust,line width=1.2pt] (43,9)--(129,9);
+  \foreach \x/\gl/\vk in {43/{-1}/{0},86/{0}/{0.5},129/{1}/{1}}{
+    \draw[Rule,densely dashed] (\x,26.5)--(\x,10.5);
+    \fill[Teal] (\x,28) circle (.9mm);
+    \fill[Rust] (\x,9) circle (.9mm);
+    \node[anchor=south] at (\x,30.2) {$\gl$};
+    \node[anchor=north] at (\x,6.8) {$\vk$};
+  }
+\end{tikzpicture}

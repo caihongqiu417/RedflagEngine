@@ -1,0 +1,46 @@
+% 本册的页幅、图注和代码排版。
+\geometry{paperwidth=190mm,paperheight=252mm,left=21mm,right=21mm,
+  top=22mm,bottom=21mm,headheight=21pt,headsep=4mm,footskip=10mm}
+\usepackage{amsmath,listings,type1cm}
+\definecolor{Ink}{HTML}{202E33}
+\definecolor{Muted}{HTML}{4C6064}
+\definecolor{Teal}{HTML}{12665F}
+\definecolor{Rust}{HTML}{9E452B}
+\definecolor{Rule}{HTML}{B3C6C1}
+\definecolor{Soft}{HTML}{EAF3F0}
+\definecolor{Paper}{HTML}{FFFFFF}
+\setmainfont{TeX Gyre Pagella}
+\renewcommand{\familydefault}{\rmdefault}
+\linespread{1}
+\setcounter{secnumdepth}{0}
+\setlength{\emergencystretch}{2em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.8pt}
+\ctexset{section={format=\raggedright\sffamily\bfseries\fontsize{23}{30}\selectfont\color{Ink},
+    beforeskip=0pt,afterskip=9pt},
+  subsection={format=\raggedright\sffamily\bfseries\fontsize{13}{18}\selectfont\color{Teal},
+    beforeskip=8pt,afterskip=2pt}}
+\hypersetup{urlcolor=Teal,linkcolor=Teal,bookmarksnumbered=false,
+  pdfsubject={Redflag 渲染接口、后端实现与验证}}
+\fancyhf{}
+\setlength{\headwidth}{\textwidth}
+\fancyhead[L]{\sffamily\fontsize{9.5}{12}\selectfont\bfseries\color{Teal}Redflag\enspace{\mdseries\color{Muted}图形引擎}}
+\fancyhead[R]{\sffamily\small\color{Muted}RHI / Vulkan}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{Rule}\leaders\hrule height .55pt\hfill}}
+\fancyfoot[L]{\small\sffamily\color{Muted}\nouppercase{\leftmark}}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\fancyfoot[R]{\large\sffamily\bfseries\color{Teal}\thepage}
+\renewcommand{\code}[1]{{\ttfamily\fontsize{10.4}{14}\selectfont #1}}
+\newcommand{\readings}[1]{\par\noindent{\sffamily\fontsize{9.6}{14}\selectfont
+  \color{Muted}参考\enspace #1\par}}
+\newcommand{\refitem}[2]{\href{#1}{#2}}
+\newcommand{\figpanel}[2]{\begin{figure}[H]\centering\input{figures/#1}\caption{#2}\end{figure}}
+\DeclareCaptionFont{rhicapt}{\sffamily\fontsize{10}{14}\selectfont\color{Muted}}
+\captionsetup{font=rhicapt,labelfont={bf,color=Teal},textfont=rhicapt,
+  labelsep=quad,justification=raggedright,singlelinecheck=false,skip=4pt}
+\setlength{\intextsep}{7pt plus 1pt minus 1pt}
+\lstset{basicstyle=\ttfamily\fontsize{10.7}{15}\selectfont\color{Ink},
+  backgroundcolor=\color{Soft},frame=l,rulecolor=\color{Teal},framerule=1.5pt,
+  xleftmargin=5mm,xrightmargin=2mm,framexleftmargin=3mm,framesep=2pt,
+  aboveskip=6pt,belowskip=6pt,columns=fullflexible,keepspaces=true,showstringspaces=false}
+\newcommand{\bodytype}{\normalfont\fontsize{11.4}{17.8}\selectfont\color{Ink}}
