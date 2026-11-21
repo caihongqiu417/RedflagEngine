@@ -47,7 +47,7 @@ namespace Redflag {
 		std::vector<uint8_t> DefaultValue;
 	};
 
-	//MonoClass��װ��
+	//MonoClass包装类
 	class ScriptClass
 	{
 	public:

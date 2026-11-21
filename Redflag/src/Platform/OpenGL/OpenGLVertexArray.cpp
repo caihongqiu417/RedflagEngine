@@ -24,7 +24,6 @@ namespace Redflag {
 		case Redflag::ShaderDataType::Bool:    return GL_BOOL;
 
 		default:
-			// 错误处理：未知类型
 			RF_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			return 0;
 		}
@@ -37,7 +36,6 @@ namespace Redflag {
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
-	// 在有效的 OpenGL 上下文中释放。
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		glDeleteVertexArrays(1, &m_RendererID);
@@ -53,29 +51,24 @@ namespace Redflag {
 		glBindVertexArray(0);
 	}
 
-
-
-
-
+	// ---- 顶点与索引 ----
 	void OpenGLVertexArray::AddVertexBuffer(const Redflag::Ref<VertexBuffer>& vertexBuffer)
 	{
 		RF_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "VBO has no layout!");
 		
-		// 绑定当前VAO（Vertex Array Object），所有的顶点属性设置都会记录到这个VAO中
+		// 先选网格的顶点数组和顶点缓冲，OpenGL 才能记下这个网格的位置、颜色等属性从哪里读。
 		glBindVertexArray(m_RendererID);
-
-		// 绑定VBO（Vertex Buffer Object），准备设置其顶点属性
 		vertexBuffer->Bind();
 		
 
-		uint32_t index = 0;  // 顶点属性位置索引，从0开始递增
-		const auto& layout = vertexBuffer->GetLayout();  // 获取顶点缓冲区的布局信息
+		uint32_t index = 0;
+		const auto& layout = vertexBuffer->GetLayout();
 
 		for (const auto& element : layout)
 		{
 			glEnableVertexAttribArray(index);
 
-			// 整型属性保留整数值（如 EntityID），不能走浮点属性的转换路径。
+			// 实体编号在着色器里是 int，要用读取整数的接口。
 			if (element.Type == ShaderDataType::Int ||
 				element.Type == ShaderDataType::Int2 ||
 				element.Type == ShaderDataType::Int3 ||
@@ -85,8 +78,8 @@ namespace Redflag {
 					index,
 					element.GetComponentCount(),
 					ShaderDataTypeToOpenGLBaseType(element.Type),
-					layout.GetStride(),
-					(const void*)(uintptr_t)element.Offset
+					layout.GetStride() /* 相邻两个顶点相隔的字节数 */,
+					(const void*)(uintptr_t)element.Offset /* 这个属性距顶点开头的字节数 */
 				);
 			}
 			else
@@ -103,12 +96,11 @@ namespace Redflag {
 
 			index++;
 		}
-		// 将顶点缓冲区保存到成员变量中，防止被释放
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
 
-	// 索引缓冲绑定记录在当前 VAO 中，先绑定 VAO 再切换 IBO。
+	// 索引跟着顶点数组一起切换。先选这个网格，再指定它要用的索引。
 	void OpenGLVertexArray::SetIndexBuffer(const Redflag::Ref<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);

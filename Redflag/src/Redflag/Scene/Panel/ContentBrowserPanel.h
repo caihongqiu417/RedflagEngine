@@ -14,10 +14,10 @@ namespace Redflag {
         void OnImGuiRender();
 
     private:
-        // ��ǰ���Ŀ¼���� assets Ϊ����
+        // 当前浏览目录（以 assets 为根）
         std::filesystem::path m_CurrentDirectory;
 
-        // ͼ����������
+        // 图标纹理缓存
         Ref<Texture2D> m_DirectoryIcon;   // 文件夹图标
         Ref<Texture2D> m_FileIcon;        // 通用文件图标
         Ref<Texture2D> m_ImageIcon;       // 图片文件图标

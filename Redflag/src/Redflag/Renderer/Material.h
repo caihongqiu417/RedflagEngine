@@ -8,13 +8,13 @@
 namespace Redflag {
 
 	// ----------
-	// AlphaMode — 透明度处理方式
+	// 透明度
 	// ----------
 	enum class AlphaMode : int
 	{
 		Opaque = 0,   // 完全不透明，忽略 alpha
-		Mask   = 1,   // Alpha 裁剪（alpha < cutoff 则 discard）
-		Blend  = 2    // 半透明混合
+		Mask   = 1,   // 透明度低于阈值的部分会被裁掉
+		Blend  = 2    // 半透明材质标记，当前 3D 绘制还未实现排序混合
 	};
 
 	/*
@@ -29,7 +29,7 @@ namespace Redflag {
 		static Ref<Material> Create(const glm::vec4& color = glm::vec4(1.0f));
 		static Ref<Material> Create(const Ref<Texture2D>& texture, const glm::vec4& tint = glm::vec4(1.0f));
 
-		// 复制参数到独立材质，贴图仍共享；用于实体单独修改材质参数。
+		// 给一个实体单独调颜色或粗糙度时复制材质，贴图仍用原来那张。
 		Ref<Material> Clone() const;
 
 		// ---- 表面参数 ----
@@ -44,7 +44,7 @@ namespace Redflag {
 
 		// ---- 光照参数 ----
 		float Metallic  = 0.0f;   // 金属度 [0, 1]，非金属默认 0
-		float Roughness = 0.5f;   // 粗糙度 [0, 1]
+		float Roughness = 0.5f;   // 越接近 0，高光越集中；越接近 1，高光越宽
 		float AO        = 1.0f;   // 环境遮蔽强度，1.0 = 无遮蔽
 
 		// ---- 透明度与面朝向 ----
@@ -59,7 +59,7 @@ namespace Redflag {
 		bool HasAOMap()                 const { return AOMap != nullptr; }
 		bool HasAlphaMap()              const { return AlphaMap != nullptr; }
 
-		// 排序键：以材质对象指针为主键，确保不同材质各自上传 UBO
+		// 让使用同一份材质的绘制排在一起。
 		uintptr_t GetSortKey() const { return reinterpret_cast<uintptr_t>(this); }
 	};
 

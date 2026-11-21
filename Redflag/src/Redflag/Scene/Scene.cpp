@@ -224,8 +224,8 @@ namespace Redflag {
 
             m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
             {
-                    // entity: ��ǰ��������ʵ��
-                     // nsc: ���ʵ���ϵ� NativeScriptComponent
+                    // entity: 当前遍历到的实体
+                     // nsc: 这个实体上的 NativeScriptComponent
                 if (!nsc.Instance)
                 {
                     nsc.Instance = nsc.InstantiateScript();
@@ -309,7 +309,7 @@ namespace Redflag {
                 auto& transform = entity.GetComponent<TransformComponent>();
                 auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
                 
-                // ȡ��֮ǰ�洢�����µĸ���ָ�룬�ø���ָ�뽫���������λ��/�Ƕ�ͬ���� Transform
+                // 取出之前存储并更新的刚体指针，用刚体指针将物理引擎的位置/角度同步回 Transform
                 b2Body* body = (b2Body*)rb2d.RuntimeBody;
                 const auto& position = body->GetPosition();
                 transform.Translation.x = position.x;

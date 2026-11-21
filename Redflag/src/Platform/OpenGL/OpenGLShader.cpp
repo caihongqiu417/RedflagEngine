@@ -47,7 +47,7 @@ namespace Redflag {
             return nullptr;
         }
 
-        // #version 前允许有空白和注释；只读取第一个有效指令。
+        // #version 前面可以写注释，也可以留空行。
         static size_t FirstDirective(const std::string& source)
         {
             size_t pos = source.find_first_not_of(" \t\r\n");
@@ -85,7 +85,7 @@ namespace Redflag {
 
         static std::filesystem::path GetCachePath(GLenum stage, const std::string& source)
         {
-            // FNV-1a；配置或编译器变化时更新版本，源码构造也使用同一缓存规则。
+            // 源码决定缓存文件名。改编译选项或升级编译器时，要改下面的版本号才能让旧缓存失效。
             const std::string key = "opengl45-performance-auto-locations-auto-bind-v1\n" + source;
             uint64_t hash = 14695981039346656037ull;
             for (unsigned char value : key)
@@ -107,7 +107,7 @@ namespace Redflag {
         if (!define.empty())
         {
             m_Name += "_" + define;
-            // GLSL 要求 #version 位于首行有效指令。宏参与源码哈希，两个版本分别缓存。
+            // 把宏放在 #version 下一行。启用实例化时源码多了这个宏，会得到单独的缓存文件。
             for (auto& [stage, source] : sources)
             {
                 const size_t lineEnd = source.find('\n', Utils::FirstDirective(source));
@@ -162,8 +162,8 @@ namespace Redflag {
         return result;
     }
 
-    // ---- 阶段拆分 ----
-    // #type 行只用于划分源码，不传入各阶段编译器。
+    // ---- 拆分顶点与片元着色器 ----
+    // 项目用 #type 标记每一段的开头，编译时从下一行 GLSL 读起。
     std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
     {
         std::unordered_map<GLenum, std::string> shaderSources;
@@ -189,8 +189,7 @@ namespace Redflag {
         return shaderSources;
     }
 
-    // ---- 中间 SPIR-V 与反射 ----
-    // 相同源码和编译配置可复用同一阶段的中间代码。
+    // ---- SPIR-V 缓存 ----
     OpenGLShader::ShaderBinaries OpenGLShader::LoadBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
     {
         std::filesystem::create_directories(Utils::GetCacheDirectory());
@@ -213,7 +212,7 @@ namespace Redflag {
             if (in)
             {
                 const std::streamsize size = in.tellg();
-                // 磁盘缓存可能被截断；无效数据重新编译。
+                // SPIR-V 每 4 个字节一组，开头有固定标记。文件读不全或标记不对，就从源码重新编译。
                 if (size > 0 && size % sizeof(uint32_t) == 0)
                 {
                     data.resize(static_cast<size_t>(size) / sizeof(uint32_t));
@@ -241,8 +240,7 @@ namespace Redflag {
         return shaderData;
     }
 
-    // ---- OpenGL SPIR-V ----
-    // 从中间数据反编译 GLSL，统一跨阶段变量名后重新编译；此阶段每次执行。
+    // ---- 匹配顶点与片元着色器的变量 ----
     void OpenGLShader::CompileBinaries(ShaderBinaries& binaries)
     {
         shaderc::Compiler compiler;
@@ -253,12 +251,9 @@ namespace Redflag {
         {
             spirv_cross::CompilerGLSL glslCompiler(spirv);
 
-            // 顶点输出与片元输入按 location 统一命名，避免跨阶段 SPIR-V ID 不同而名称不一致。
-            // 只处理阶段间变量，不改顶点属性或片元输出。
             {
                 spirv_cross::ShaderResources resources = glslCompiler.get_shader_resources();
-                // 两个阶段独立编译时可能生成相同的临时名。参数块按数据所在位置命名，
-                // 让链接器区分顶点阶段的模型矩阵与片元阶段的材质。
+                // 模型矩阵和材质分别编译时，可能碰巧同名。用 GLSL 里各自的 binding 编号取名，链接时就能分清。
                 for (const auto& block : resources.uniform_buffers)
                 {
                     std::string binding = std::to_string(glslCompiler.get_decoration(block.id, spv::DecorationBinding));
@@ -266,6 +261,7 @@ namespace Redflag {
                     glslCompiler.set_name(block.id, "params" + binding);
                 }
 
+                // 顶点着色器传出的 UV 和片元着色器收到的 UV 共用一个 location。按它取名，两边就能对上。
                 auto renameByLocation = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& vars)
                 {
                     for (const auto& r : vars)
@@ -295,10 +291,9 @@ namespace Redflag {
     }
 
     // ---- 程序链接 ----
-    // 旧版 GLSL 使用具名 uniform，交给 OpenGL 编译以保留按名称设置参数的接口。
     void OpenGLShader::CreateProgram(const std::unordered_map<GLenum, std::string>& sources)
     {
-        // 工程的 GLSL 330 示例直接上传矩阵和颜色。GLSL 450 渲染阶段使用缓存的中间代码。
+        // GLSL 330 示例按名字设置矩阵和颜色，直接让 OpenGL 编译源码，保留这些名字。
         const bool useSource = Utils::UsesGLSL330(sources.at(GL_VERTEX_SHADER));
         ShaderBinaries binaries;
         if (!useSource)
@@ -387,9 +382,9 @@ namespace Redflag {
             for (const auto& resource : resources.uniform_buffers)
             {
                 const auto& bufferType = compiler.get_type(resource.base_type_id);
-                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType); // 反射结构体总字节数
+                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType);
                 uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-                int memberCount = (int)bufferType.member_types.size(); // 参数块成员数量
+                int memberCount = (int)bufferType.member_types.size();
 
                 RF_CORE_TRACE("  {0}", resource.name);
                 RF_CORE_TRACE("    Size = {0}, Binding = {1}, Members = {2}", bufferSize, binding, memberCount);
@@ -397,7 +392,7 @@ namespace Redflag {
         }
     }
 
-    // ---- 绑定与 Uniform ----
+    // ---- 选择程序与设置参数 ----
     void OpenGLShader::Bind() const
     {
         glUseProgram(m_RendererID);
@@ -483,6 +478,6 @@ namespace Redflag {
     void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value)
     {
         GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+        glUniformMatrix4fv(location, 1, GL_FALSE /* GLM 的矩阵已按列存放 */, glm::value_ptr(value));
     }
 }

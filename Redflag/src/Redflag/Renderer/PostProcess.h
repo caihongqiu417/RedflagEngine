@@ -14,22 +14,22 @@ namespace Redflag
 	struct BloomSettings
 	{
 		bool Enabled = true;
-		float Threshold = 0.8f; // 线性 HDR 亮度阈值，执行时下限为 0.5
-		float Intensity = 0.6f; // Bloom 合成权重 [0,1]
-		float Radius = 2.0f; // 上采样滤波半径，以当前源层纹素为单位
+		float Threshold = 0.8f;  // 按线性亮度挑出泛光的亮区，最低取 0.5
+		float Intensity = 0.6f;  // 合成时加入多少泛光，范围为 0 到 1
+		float Radius = 2.0f;  // 模糊半径，用正在读取的那层图的像素计
 		int MipLevels = 6; // 使用 1~6 层，首层为输入宽高的一半
 	};
 
 	struct ToneMapSettings
 	{
-		float Exposure = 1.0f; // 色调映射前的线性曝光倍率，1 表示不缩放
+		float Exposure = 1.0f;  // 映射到显示范围之前先乘这个值，1 保留原亮度
 	};
 
 	/*
-	 * 对已画好的场景图添加泛光，再把亮度压到显示范围；每个视口可持有一个实例。
-	 * 输入图由调用方持有，中间的泛光层和最终输出由本对象持有。
-	 * 构造、Render 和析构均在有效图形上下文中执行，多个实例的输出彼此独立。
-	 * 有效输入下 Render 会切到输出帧缓冲，结束时深度测试开启、混合关闭；后续绘制须重新绑定目标。
+	 * 为一个视口绘制泛光，再将场景亮度压到显示范围。
+	 * 场景颜色图由调用方提供，泛光层和最终输出由这里持有。
+	 * 创建、使用和销毁时都需要有效的图形上下文。
+	 * 绘制结束时目标仍是输出图，深度测试开启，混合关闭。继续画场景前要先切回场景目标。
 	 */
 	class PostProcess
 	{
@@ -41,9 +41,9 @@ namespace Redflag
 		PostProcess& operator=(const PostProcess&) = delete;
 
 		// ---- 执行与输出 ----
-		// 输入为 OpenGL 2D HDR 纹理，尺寸以像素计；空纹理或零尺寸使本帧输出失效。
+		// 读取场景的 HDR 颜色，宽高按像素计。输入无效时，查询本帧输出会得到 0。
 		void Render(uint32_t color /* 借用的纹理 ID */, int width, int height);
-		// 返回借用的 OpenGL 纹理 ID；未产生有效输出时为 0，Resize 后须重新查询。
+		// 输出纹理由后处理持有，视口尺寸变化后应重新取 ID。
 		uint32_t GetColorTextureID() const;
 		uint32_t GetBloomTextureID() const;
 

@@ -6,7 +6,7 @@
 #include "Redflag/Renderer/RenderCommand.h"
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Renderer/UniformBuffer.h"
-#include "Redflag/Renderer/IBLPrecompute.h"  // IBL 预计算纹理绑定
+#include "Redflag/Renderer/IBLPrecompute.h"
 #include "Redflag/Renderer/Frustum.h"
 #include "Redflag/Renderer/Renderer2D.h"
 
@@ -18,17 +18,15 @@
 
 namespace Redflag
 {
-	// ----------
-	// 一条提交命令：一个 Mesh + 最终变换 + 材质
-	// ----------
+	// 每条记录描述场景要画的一个网格。
 	struct DrawCommand
 	{
 		Ref<Mesh>     MeshData;
 		glm::mat4     Transform;
-		Ref<Material> Mat;       // 入队时已填充默认材质，Pass 内不再判断空引用
+		Ref<Material> Mat;  // 提交时已选好材质。
 		int           EntityID = -1;
 		bool          CameraCulled = false; // 只影响主相机绘制，仍可向画面内投影或反射光
-		bool          Skip     = false; // 已由 Instancing Pass 处理，跳过常规路径
+		bool          Skip     = false;  // 这条记录已合批绘制。
 	};
 
 	struct Renderer3DData
@@ -36,24 +34,19 @@ namespace Redflag
 		Ref<Shader>        MeshShader;
 		Ref<Material>      DefaultMaterial; // 白色纯色
 
-		Ref<UniformBuffer> CameraUniformBuffer;    // binding = 0
-		Ref<UniformBuffer> TransformUniformBuffer; // binding = 1
-		Ref<UniformBuffer> MaterialUniformBuffer;  // binding = 2
+		Ref<UniformBuffer> CameraUniformBuffer;
+		Ref<UniformBuffer> TransformUniformBuffer;
+		Ref<UniformBuffer> MaterialUniformBuffer;
 
-		// std140: mat4(64) + vec4(16) + mat4(64) + vec4(16) + vec4(16) + mat4(64) = 240 bytes
-		// LightSpaceMatrix / ShadowParams / ShadowParams2 由 SceneRenderer 在
-		// Shadow Pass 前后通过 SetShadowData 写入；主 Mesh shader 与 ShadowDepth
-		// shader 共享这一个 UBO，避免每帧再开一条绑定点。
-		// View：主相机世界→观察空间矩阵。SSAO Pass 和 Z-Prepass 需要把世界法线
-		// 变换到 view space 写入法线附件。放在末尾保持已有字段的 offset 不变。
+		// 阴影和主画面共用同一份相机数据，字段顺序对应着色器的 Camera。
 		struct CameraData
 		{
-			glm::mat4 ViewProjection;      // offset   0
-			glm::vec4 ViewPosition;        // offset  64  (w = IBL ready flag)
-			glm::mat4 LightSpaceMatrix;    // offset  80  光源正交裁剪矩阵
-			glm::vec4 ShadowParams;        // offset 144  x=bias y=normalBias z=invMapSize w=mode
-			glm::vec4 ShadowParams2;       // offset 160  x=pcfRadius y=lightSize z=viewportW w=viewportH
-			glm::mat4 View;                // offset 176  主相机 view 矩阵（SSAO 用）
+			glm::mat4 ViewProjection;
+			glm::vec4 ViewPosition;  // xyz 是相机世界位置，w 表示是否启用环境光贴图。
+			glm::mat4 LightSpaceMatrix;  // 从世界坐标投影到灯光视角。
+			glm::vec4 ShadowParams;  // 深度偏移、额外偏移、阴影图宽度的倒数、阴影模式。
+			glm::vec4 ShadowParams2;  // 阴影采样半径、光源大小、主视口宽和高。
+			glm::mat4 View;  // 从世界空间换到相机空间。
 		};
 
 		struct TransformData
@@ -61,47 +54,36 @@ namespace Redflag
 			glm::mat4 Transform;
 		};
 
-		// std140 共 64 字节，包含 AlphaMode 与末尾填充，与 Mesh Shader 的 Material 块一致。
+		// 材质在着色器中占 64 字节，末尾的填充也计入大小。
 		struct MaterialData
 		{
-			glm::vec4 BaseColor;           // offset 0
-			float     Metallic;            // offset 16
-			float     Roughness;           // offset 20
-			float     AO;                  // offset 24
-			int       UseBaseColorMap;     // offset 28
-			int       UseNormalMap;        // offset 32
-			int       UseMetallicRoughnessMap; // offset 36
-			int       UseAOMap;            // offset 40
-			int       EntityID;            // offset 44
-			int       UseAlphaMap;         // offset 48
-			float     AlphaCutoff;         // offset 52
-			int       AlphaMode;           // offset 56  (0=Opaque, 1=Mask, 2=Blend)
-			int       _pad0;               // offset 60  对齐到 16 字节
+			glm::vec4 BaseColor;
+			float     Metallic;
+			float     Roughness;
+			float     AO;
+			int       UseBaseColorMap;
+			int       UseNormalMap;
+			int       UseMetallicRoughnessMap;
+			int       UseAOMap;
+			int       EntityID;
+			int       UseAlphaMap;
+			float     AlphaCutoff;
+			int       AlphaMode;
+			int       _pad0;
 		};
 
 		CameraData    CameraBuffer;
 		TransformData TransformBuffer;
 		MaterialData  MaterialBuffer;
 
-		// ----------
-		// GPU Instancing 资源
-		//
-		// 每帧在 EndScene 里将同 Mesh、同贴图组合的 Opaque 命令批量写入
-		// InstanceVBO，一次 glDrawElementsInstanced 替代 N 个独立 draw call。
-		//
-		// 实例数据布局（与 Renderer3D_Mesh.glsl / INSTANCED 的 layout 对应）：
-		//   location 4-7 : mat4  Transform   (64 bytes)
-		//   location 8   : vec4  BaseColor   (16 bytes)
-		//   location 9   : vec4  MatParams   (x=metallic, y=roughness, z=ao, w=0)
-		//   location 10  : int   EntityID    (4 bytes)
-		// ----------
+		// 同一批物体共用网格和贴图，各自的位置、底色和实体编号存在这里。
 		struct InstanceData
 		{
-			glm::mat4 Transform;    // offset   0, 64 bytes
-			glm::vec4 BaseColor;    // offset  64, 16 bytes
-			glm::vec4 MatParams;    // offset  80, 16 bytes
-			int       EntityID;     // offset  96,  4 bytes
-			int       _pad[3];      // offset 100, 12 bytes → stride = 112
+			glm::mat4 Transform;
+			glm::vec4 BaseColor;
+			glm::vec4 MatParams;  // x 金属度、y 粗糙度、z 环境遮蔽。
+			int       EntityID;
+			int       _pad[3];
 		};
 
 		static constexpr uint32_t MAX_INSTANCES = 2048;
@@ -109,7 +91,6 @@ namespace Redflag
 		Ref<Shader>  InstancedMeshShader;
 		uint32_t     InstanceVBO = 0;
 
-		// 每帧提交队列
 		std::vector<DrawCommand> DrawCommands;
 
 		// 当前帧视锥体（BeginScene 时构建，DrawMesh/DrawModel 使用）
@@ -122,23 +103,20 @@ namespace Redflag
 		// 每帧 DrawCall 日志（供 ImGui 面板展示）
 		std::vector<Renderer3D::DrawCallInfo> DrawCallLog;
 
-		// 统计
 		uint32_t DrawCallCount = 0;
 		Renderer3D::Statistics Stats;
 	};
 
 	static Renderer3DData s_Data;
 
-	// 视锥体剪裁开关（默认开启）
 	static bool s_FrustumCullingEnabled = true;
-	// 剪裁可视化开关（默认关闭）
 	static bool s_DebugCullingViz = false;
 
 	bool& Renderer3D::GetFrustumCullingEnabled()    { return s_FrustumCullingEnabled; }
 	bool& Renderer3D::GetDebugCullingVizEnabled()  { return s_DebugCullingViz; }
 
 	// ---- 材质与单次绘制 ----
-	// 填充 CPU 侧材质数据并绑定贴图；EntityID 与 UBO 上传由每次绘制补齐。
+	// 准备材质的颜色和贴图。拾取编号由具体绘制的物体决定。
 	static void UploadMaterial(const Ref<Material>& mat)
 	{
 		s_Data.MaterialBuffer.BaseColor  = mat->BaseColor;
@@ -200,21 +178,17 @@ namespace Redflag
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
 		s_Data.CameraBuffer.View           = camera.GetViewMatrix();
-		// ViewPosition.w 被复用为 IBL 就绪标志（shader 根据它选择 IBL 或常数环境光）
+		// 相机位置只用前三项，w 告诉着色器环境光贴图是否准备好了。
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(camera.GetPosition(),
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
-		// Shadow 相关字段默认清零；SceneRenderer 在 Shadow Pass 前通过
-		// SetShadowData 覆写它们。这里先填 0 是为了"无方向光"或"CastShadow=false"
-		// 的场景下 shader 读到 mode=0，直接跳过阴影采样。
+		// 默认关闭阴影。场景里找到投影的方向光后再填入光源矩阵和参数。
 		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
 		s_Data.CameraBuffer.ShadowParams     = glm::vec4(0.0f);
-		// ShadowParams2.zw 复用为当前视口像素尺寸（供主 Mesh shader
-		// 在 fragment 里 gl_FragCoord.xy / viewportSize 采样 SSAO map）
+		// 着色器用视口宽高把像素坐标换成 UV，读取该处的遮蔽和间接光。
 		GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
 		s_Data.CameraBuffer.ShadowParams2    = glm::vec4(1.5f, 6.0f, float(vp[2]), float(vp[3]));
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer3DData::CameraData));
 
-		// 构建当帧视锥体（供 DrawMesh/DrawModel 做 AABB 剪裁）
 		s_Data.CameraFrustum = Frustum::FromViewProjection(s_Data.CameraBuffer.ViewProjection);
 
 		s_Data.DrawCommands.clear();
@@ -227,7 +201,6 @@ namespace Redflag
 	{
 		s_Data.CameraBuffer.ViewProjection = viewProjection;
 		s_Data.CameraBuffer.View           = view;
-		// ViewPosition.w 被复用为 IBL 就绪标志
 		s_Data.CameraBuffer.ViewPosition   = glm::vec4(cameraPosition,
 			IBLPrecompute::IsReady() ? 1.0f : 0.0f);
 		s_Data.CameraBuffer.LightSpaceMatrix = glm::mat4(1.0f);
@@ -244,8 +217,7 @@ namespace Redflag
 		ResetStats();
 	}
 
-	// ---- 主 Pass ----
-	// 先绘制可实例化的 Opaque 分组，再按材质对象排序绘制剩余队列。
+	// ---- 主画面 ----
 	void Renderer3D::EndScene()
 	{
 		RF_PROFILE_FUNCTION();
@@ -268,18 +240,9 @@ namespace Redflag
 		if (s_Data.DrawCommands.empty())
 			return;
 
-		// ----------
-		// GPU Instancing Pass
-		//
-		// 条件：同一 MeshData 指针、全部贴图指针相同、Opaque，且同组数量 >= 2。
-		// 这类命令打包进 InstanceVBO，一次 glDrawElementsInstanced 替代 N 个 draw。
-		// Shadow Pass / Depth Prepass 在 EndScene 之前已执行，仍走逐个 draw（保证阴影正确）。
-		// ----------
+		// 两个以上的不透明物体共用网格和全部贴图时，可以一次画出。
 		if (s_Data.InstancedMeshShader && s_Data.InstanceVBO)
 		{
-			// ---- 收集可合批候选（所有 Opaque 命令，含贴图）----
-			// 分组键：(Mesh, BaseColorMap, NormalMap, MetallicRoughnessMap, AOMap, AlphaMap)
-			// 相同 Mesh + 完全相同的贴图组合 → 可以合批实例化绘制
 			struct Candidate
 			{
 				size_t CommandIndex;
@@ -302,7 +265,7 @@ namespace Redflag
 				}
 			}
 
-			// 按 (Mesh, textures) 排序，使同组候选相邻
+			// 把共用网格和贴图的物体排在一起。
 			std::sort(candidates.begin(), candidates.end(),
 				[](const Candidate& a, const Candidate& b)
 				{
@@ -310,7 +273,6 @@ namespace Redflag
 						b.Key.begin(), b.Key.end(), std::less<const void*>());
 				});
 
-			// ---- 遍历分组，组内 >=2 则走 Instancing ----
 			bool didInstance = false;
 
 			s_Data.InstancedMeshShader->Bind();
@@ -321,7 +283,6 @@ namespace Redflag
 			size_t grpStart = 0;
 			while (grpStart < candidates.size())
 			{
-				// 找到 (Mesh + 全部贴图) 完全相同的连续区间 [grpStart, grpEnd)
 				size_t grpEnd = grpStart;
 				while (grpEnd < candidates.size() &&
 					candidates[grpEnd].Key == candidates[grpStart].Key)
@@ -334,18 +295,16 @@ namespace Redflag
 					didInstance = true;
 					const Ref<Mesh>& mesh = s_Data.DrawCommands[candidates[grpStart].CommandIndex].MeshData;
 
-					// 标记所有组内命令跳过常规路径
 					for (size_t k = grpStart; k < grpEnd; k++)
 						s_Data.DrawCommands[candidates[k].CommandIndex].Skip = true;
 
-					// 上传 per-batch 材质状态（贴图 UseXxx 标志 + 绑定贴图）
-					// 组内所有实例共用同一套贴图，只需上传一次
+					// 用第一个物体选整批的贴图，每个物体自己的颜色和粗糙度稍后单独填写。
 					const Ref<Material>& batchMat = s_Data.DrawCommands[candidates[grpStart].CommandIndex].Mat;
 					UploadMaterial(batchMat);
-					s_Data.MaterialBuffer.EntityID = 0; // instanced path 通过 v_EntityID 传递
+					s_Data.MaterialBuffer.EntityID = 0;  // 拾取编号从每个实例单独读取。
 					s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
 
-					// 分批：每批最多 MAX_INSTANCES 个实例
+					// 一组物体超过实例缓冲容量时，分几次画完。
 					size_t offset = 0;
 					while (offset < grpSize)
 					{
@@ -367,30 +326,28 @@ namespace Redflag
 							(GLsizeiptr)(batchCount * sizeof(Renderer3DData::InstanceData)),
 							instBuf.data());
 
-						// 绑定 Mesh VAO，然后在其上附加实例 VBO 属性
+						// 顶点随网格读取，位置矩阵、颜色和材质参数则每画一个物体换一份。
 						mesh->Bind();
 						glBindBuffer(GL_ARRAY_BUFFER, s_Data.InstanceVBO);
 						constexpr GLsizei stride = (GLsizei)sizeof(Renderer3DData::InstanceData);
 
-						// Transform: mat4 = 4 × vec4，locations 4-7，divisor=1
+						// 着色器分四列读取一个模型矩阵。
 						for (int col = 0; col < 4; col++)
 						{
 							glEnableVertexAttribArray(4 + col);
 							glVertexAttribPointer(4 + col, 4, GL_FLOAT, GL_FALSE, stride,
 								(const void*)(offsetof(Renderer3DData::InstanceData, Transform) + col * sizeof(glm::vec4)));
-							glVertexAttribDivisor(4 + col, 1);
+							glVertexAttribDivisor(4 + col, 1 /* 每画一个实例换一次矩阵 */);
 						}
-						// BaseColor: location 8，divisor=1
 						glEnableVertexAttribArray(8);
 						glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, stride,
 							(const void*)offsetof(Renderer3DData::InstanceData, BaseColor));
 						glVertexAttribDivisor(8, 1);
-						// MatParams: location 9，divisor=1
 						glEnableVertexAttribArray(9);
 						glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, stride,
 							(const void*)offsetof(Renderer3DData::InstanceData, MatParams));
 						glVertexAttribDivisor(9, 1);
-						// EntityID: location 10，integer，divisor=1
+						// 实体编号按整数传入，编辑器用它判断点中了哪一个物体。
 						glEnableVertexAttribArray(10);
 						glVertexAttribIPointer(10, 1, GL_INT, stride,
 							(const void*)offsetof(Renderer3DData::InstanceData, EntityID));
@@ -398,7 +355,7 @@ namespace Redflag
 
 						glDrawElementsInstanced(GL_TRIANGLES,
 							(GLsizei)mesh->GetIndexCount(), GL_UNSIGNED_INT,
-							nullptr, (GLsizei)batchCount);
+							nullptr /* 从索引开头画 */, (GLsizei)batchCount);
 						s_Data.DrawCallCount++;
 
 						s_Data.DrawCallLog.push_back({
@@ -408,7 +365,7 @@ namespace Redflag
 							(int)AlphaMode::Opaque, 0,
 							reinterpret_cast<uintptr_t>(mesh.get()) });
 
-						// 清理实例属性，避免污染该 VAO 的后续非 instanced 使用
+						// 这个网格还会单独绘制，画完这一批就停用逐物体的输入。
 						for (int loc = 4; loc <= 10; loc++)
 							glDisableVertexAttribArray(loc);
 
@@ -419,7 +376,7 @@ namespace Redflag
 				grpStart = grpEnd;
 			}
 
-			// 从队列移除已合批的命令，让常规路径只处理剩余命令
+			// 已经合批的物体从队列移除，避免画第二遍。
 			if (didInstance)
 			{
 				s_Data.DrawCommands.erase(
@@ -432,7 +389,7 @@ namespace Redflag
 				return;
 		}
 
-		// 按 SortKey（材质指针）排序，相同材质的命令聚集在一起
+		// 让材质相同的物体连续绘制，中途可以沿用同一组贴图。
 		std::sort(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
 			[](const DrawCommand& a, const DrawCommand& b)
 			{
@@ -443,11 +400,10 @@ namespace Redflag
 
 		s_Data.MeshShader->Bind();
 
-		// 绑定 IBL 预计算纹理到 slot 7/8/9（所有 draw call 共享，只需绑一次）
-		// 对应 shader: u_IrradianceMap / u_PrefilterMap / u_BRDFLUT
+		// 这些物体都从同一组环境贴图读取光照。
 		IBLPrecompute::Bind();
 
-		// 同材质复用贴图绑定和CPU参数；EntityID 随命令变化，材质 UBO 仍每次上传。
+		// 相邻物体即使共用材质，也需要各自的拾取编号。
 		uintptr_t lastKey = ~0ull;
 		for (const auto& cmd : s_Data.DrawCommands)
 		{
@@ -457,12 +413,10 @@ namespace Redflag
 
 			if (key != lastKey)
 			{
-				// 材质切换时更新 CPU 参数并绑定贴图，下面统一上传 UBO。
 				UploadMaterial(mat);
 				lastKey = key;
 			}
 
-			// 上传逐 draw 的变换（每次必须更新）
 			s_Data.TransformBuffer.Transform = cmd.Transform;
 			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
 			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
@@ -498,18 +452,13 @@ namespace Redflag
 
 	void Renderer3D::LogExternalDrawCall(DrawCallInfo::PassType pass, uint32_t indexCount)
 	{
-		// 供 SSAO 等屏幕空间 Pass 登记。没有 Mesh / Material 概念，字段置 0。
+		// 全屏效果也计入绘制次数，日志中相应的网格和材质留空。
 		s_Data.DrawCallCount++;
 		s_Data.DrawCallLog.push_back({ pass, indexCount, -1, 0, 0, 0 });
 	}
 
-	// ----------
-	// DrawDebugAABBs：用 Renderer2D::DrawLine 把这一帧收集到的
-	//   世界空间 AABB 画成线框。调用方必须在外层已经 Renderer2D::BeginScene。
-	//   绿色  = 通过剪裁（本帧实际绘制了）
-	//   红色  = 主相机剔除（仍参与阴影和 RSM）
-	// 每个 AABB 画 12 条边。
-	// ----------
+	// ---- 包围盒预览 ----
+	// 绿色表示包围盒与主相机视野相交，红色表示在视野外。
 	void Renderer3D::DrawDebugAABBs()
 	{
 		const glm::vec4 kept   (0.2f, 1.0f, 0.2f, 1.0f);
@@ -549,20 +498,13 @@ namespace Redflag
 		}
 	}
 
-	// ----------
-	// SetShadowData — 更新 Camera UBO 中的光源空间矩阵 + 阴影参数
-	//
-	// 只写回 LightSpaceMatrix + ShadowParams + ShadowParams2 字段（96 字节），
-	// 避免覆盖 BeginScene 里已经写好的 ViewProjection / ViewPosition。
-	// ----------
+	// ---- 阴影与深度 ----
 	void Renderer3D::SetShadowData(const glm::mat4& lightSpaceMatrix,
 		const glm::vec4& shadowParams, const glm::vec4& shadowParams2)
 	{
 		s_Data.CameraBuffer.LightSpaceMatrix = lightSpaceMatrix;
 		s_Data.CameraBuffer.ShadowParams     = shadowParams;
-		// 只覆盖 xy（pcfRadius / lightSize），zw 保留 BeginScene 写入的视口尺寸
-		// （SSAO 采样用 gl_FragCoord.xy / viewport）。上层调用时 zw 若不是 0
-		// 也会被保留下面 BeginScene 的值覆盖。
+		// 只改阴影软化所需的两项，后两项仍是主画面的宽高。
 		s_Data.CameraBuffer.ShadowParams2.x  = shadowParams2.x;
 		s_Data.CameraBuffer.ShadowParams2.y  = shadowParams2.y;
 
@@ -578,21 +520,7 @@ namespace Redflag
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer.ViewPosition, sizeof(glm::vec4), offset);
 	}
 
-	// ----------
-	// ExecuteShadowPass — 用给定的深度 Shader 把当前队列里的几何全部画一遍
-	//
-	// 调用时机：SceneRenderer 在主 Pass (EndScene) 之前调用。
-	// 前置条件：调用方已经：
-	//   1. 绑定好 Shadow FBO 和对应视口
-	//   2. 清理好深度（glClear(GL_DEPTH_BUFFER_BIT)）
-	// 内部职责：
-	//   - 绑定 depthShader
-	//   - 按提交顺序逐个上传 Transform UBO（无需排序，没有材质切换开销）
-	//   - 直接发出 DrawIndexed
-	//
-	// 不碰 CameraUBO：LightSpaceMatrix 由 SetShadowData 预先写入。
-	// Mask 使用与主画面相同的透明度裁剪，避免镂空表面投出实心阴影。
-	// ----------
+	// 从灯光方向写深度。树叶等镂空材质沿用主画面的透明裁剪，否则影子会填满整片。
 	void Renderer3D::ExecuteShadowPass(const Ref<Shader>& depthShader)
 	{
 		RF_PROFILE_FUNCTION();
@@ -620,7 +548,7 @@ namespace Redflag
 
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
-			s_Data.DrawCallCount++; // Shadow Pass 也是真实的 GL Draw
+			s_Data.DrawCallCount++;
 
 			const Ref<Material>& smat = cmd.Mat;
 			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Shadow,
@@ -630,19 +558,7 @@ namespace Redflag
 		}
 	}
 
-	// ----------
-	// ExecuteRSMPass — 用 RSM Depth shader 把当前队列里的几何重绘一次
-	//
-	// 与 ExecuteShadowPass 的区别：
-	//   - 同时上传 Material UBO（RSM 片元需要 BaseColor / 贴图开关）
-	//   - 同时绑定 BaseColorMap 等纹理（slot 3/4/5/6/10，复用 UploadMaterial）
-	//   - 每个 cmd 仍然跳过 Blend 材质（与 Shadow Pass 一致）
-	//
-	// 调用方负责：
-	//   - 绑定 RSM FBO（3 颜色 MRT + 深度）和对应视口
-	//   - 清掉 RSM FBO 的颜色 + 深度
-	//   - SetShadowData 写好光源空间矩阵
-	// ----------
+	// 反射阴影图还记录灯光看到的表面位置、朝向和反射通量密度。
 	void Renderer3D::ExecuteRSMPass(const Ref<Shader>& rsmShader)
 	{
 		RF_PROFILE_FUNCTION();
@@ -657,11 +573,10 @@ namespace Redflag
 			if (cmd.Mat->Alpha == AlphaMode::Blend)
 				continue;
 
-			// Transform UBO（每个 cmd 都要上传）
 			s_Data.TransformBuffer.Transform = cmd.Transform;
 			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
 
-			// 材质同时决定反射颜色和 Mask 覆盖率，与主画面的透明度相乘规则一致。
+			// 底色和金属度决定漫反射的颜色，镂空处跳过。
 			const Ref<Material>& mat = cmd.Mat;
 			UploadMaterial(mat);
 			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
@@ -678,16 +593,7 @@ namespace Redflag
 		}
 	}
 
-	// ----------
-	// ExecuteDepthPrepass — Z-Prepass，向主帧缓冲的深度缓冲写入深度
-	//
-	// 与 ExecuteShadowPass 的区别：
-	//   - 目标是主帧缓冲（调用方不需要切换 FBO）
-	//   - 使用主相机 ViewProjection（BeginScene 已写入 Camera UBO）
-	//   - 仅关闭颜色0/1写入，颜色2存观察空间法线，供SSAO和RSM读取
-	//   - Mask 材质上传颜色因子、基础色贴图和 AlphaMap，保持主画面的覆盖率
-	//   - Blend 材质跳过（透明物体深度不确定，不参与 prepass）
-	// ----------
+	// 从主相机先画深度和法线，供环境遮蔽和间接光使用。
 	void Renderer3D::ExecuteDepthPrepass(const Ref<Shader>& depthShader)
 	{
 		RF_PROFILE_FUNCTION();
@@ -695,8 +601,7 @@ namespace Redflag
 		if (!depthShader || s_Data.DrawCommands.empty())
 			return;
 
-		// 按物体原点到相机的平方距离由近到远排序，尽量让近处几何先写深度。
-		// dist²=|objectPos-cameraPos|²；这是物体级近似，不能保证每个像素只写一次。
+		// 按物体原点离相机的远近排序，近处先写深度，后面被挡住的像素就有机会提前跳过。
 		const glm::vec3 camPos = glm::vec3(s_Data.CameraBuffer.ViewPosition);
 		std::sort(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
 			[&camPos](const DrawCommand& a, const DrawCommand& b)
@@ -705,16 +610,12 @@ namespace Redflag
 				glm::vec3 pb = glm::vec3(b.Transform[3]);
 				float da = glm::dot(pa - camPos, pa - camPos);
 				float db = glm::dot(pb - camPos, pb - camPos);
-				return da < db;  // 近的排前面
+				return da < db;
 			});
 
-		// Z-Prepass 除了写深度，还顺便把 view-space 法线写到主 FBO 的
-		// attachment2（RGBA16F）供 SSAO Pass 使用。关闭 attachment0/1 的写入
-		// 避免污染颜色 / Entity ID。如果主 FBO 没有 attachment2（例如测试用的
-		// 小 FBO），glColorMaski 设在不存在的 buffer 上是无害的。
-		glColorMaski(0, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glColorMaski(1, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glColorMaski(2, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
+		glColorMaski(0 /* 场景颜色 */, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMaski(1 /* 拾取编号 */, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMaski(2 /* 观察空间法线 */, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
 
 		depthShader->Bind();
 
@@ -724,12 +625,11 @@ namespace Redflag
 			if (cmd.CameraCulled)
 				continue;
 
-			// Blend 材质跳过（半透明物体不应参与深度预写）
+			// 半透明表面不预写深度，否则其后方可透见的物体会被挡住。
 			const Ref<Material>& mat = cmd.Mat;
 			if (mat->Alpha == AlphaMode::Blend)
 				continue;
 
-			// 上传逐物体变换
 			s_Data.TransformBuffer.Transform = cmd.Transform;
 			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
 
@@ -741,14 +641,13 @@ namespace Redflag
 			}
 			else
 			{
-				// Opaque：把 AlphaMode 写 0，shader 直接跳过 discard 逻辑
 				s_Data.MaterialBuffer.AlphaMode = 0;
 				s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
 			}
 
 			cmd.MeshData->Bind();
 			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
-			s_Data.DrawCallCount++; // Z-Prepass 也是真实的 GL Draw
+			s_Data.DrawCallCount++;
 
 			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Prepass,
 				cmd.MeshData->GetIndexCount(), cmd.EntityID,
@@ -756,21 +655,15 @@ namespace Redflag
 				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
 		}
 
-		// 恢复全部颜色写入
 		glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
 
-	// ----------
-	// 视锥体剪裁：把 Mesh 本地 AABB 变换到世界空间后测试
-	//   用 Arvo 法：worldCenter = T * localCenter
-	//                   worldExtent = |mat3(T)| * localExtent
-	//   比变换 8 个角点再重新求 min/max 快很多。
-	// ----------
+	// ---- 相机剔除 ----
+	// 中心按模型矩阵变换。各局部轴在世界轴上的投影长度相加，得到新的包围盒半长。
 	static bool CullMesh(const Mesh& mesh, const glm::mat4& transform)
 	{
-		// 总是先算世界空间 AABB（可视化 / 剪裁判断都要用）
 		const glm::vec3& lmin = mesh.GetAABBMin();
 		const glm::vec3& lmax = mesh.GetAABBMax();
 		glm::vec3 lCenter = 0.5f * (lmin + lmax);
@@ -787,21 +680,18 @@ namespace Redflag
 		glm::vec3 wMin = wCenter - wExtent;
 		glm::vec3 wMax = wCenter + wExtent;
 
-		// 开关关闭时从不剪裁
 		bool culled = false;
 		if (s_FrustumCullingEnabled)
 			culled = !s_Data.CameraFrustum.IntersectsAABB(wMin, wMax);
 
-		// 如果开了可视化，绿/红都记录下来供后面画线框
+		// 预览也要画出被剔除的物体，方便检查包围盒有没有算错。
 		if (s_DebugCullingViz)
 			s_Data.DebugAABBs.push_back({ wMin, wMax, culled });
 
 		return culled;
 	}
 
-	// ----------
-	// 公开接口：推入队列
-	// ----------
+	// ---- 提交网格与模型 ----
 	static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
 		const Ref<Material>& material, int entityID)
 	{
@@ -836,7 +726,6 @@ namespace Redflag
 	{
 		if (!model) return;
 
-		// 创建一个共享的纯色材质供无材质子网格使用
 		auto fallback = Material::Create(color);
 
 		for (const auto& subMesh : model->GetSubMeshes())
@@ -862,7 +751,7 @@ namespace Redflag
 			if (!subMesh.MeshData) continue;
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
-			// per-submesh 覆盖材质 > 子网格自带材质 > 纯色回退
+			// 优先用场景里的替换材质，其次用模型自带的材质，两者都没有时才用纯色。
 			Ref<Material> mat = (i < overrideMaterials.size() && overrideMaterials[i])
 				? overrideMaterials[i]
 				: (subMesh.Mat ? subMesh.Mat : fallback);

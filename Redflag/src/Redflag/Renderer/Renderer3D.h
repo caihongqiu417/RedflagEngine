@@ -13,8 +13,8 @@ namespace Redflag
 {
 	/*
 	 * 先收集要画的网格，再把能一起画的对象合批，其余按材质排序后统一绘制。
-	 * BeginScene 设置相机，DrawMesh/DrawModel 提交，EndScene 执行；队列存活期间持有网格和材质引用。
-	 * 主相机剔除只影响主画面和深度预写；阴影、RSM 仍可使用屏幕外物体。
+	 * BeginScene 设置相机，DrawMesh/DrawModel 将网格和材质加入队列，EndScene 绘制主画面。
+	 * 阴影和反射阴影图沿用完整队列，画面外的物体也能影响画面内的光照。
 	 * 主帧缓冲由调用方持有，各 Pass 的执行顺序由 SceneRenderer 安排。
 	 */
 	class Renderer3D
@@ -26,7 +26,7 @@ namespace Redflag
 				uint32_t SubmittedCommands = 0;
 				uint32_t VertexCount = 0;
 				uint32_t IndexCount = 0;
-				uint32_t CulledCount = 0;  // 视锥体剪裁掩弃的物体/子网格数量
+				uint32_t CulledCount = 0;  // 主相机视野外的网格数
 			};
 
 			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
@@ -42,8 +42,7 @@ namespace Redflag
 			};
 			static const std::vector<DrawCallInfo>& GetDrawCallLog();
 
-			// 让非 Renderer3D 的 Pass（如 SSAO）把自己的 drawcall 登记进来，
-			// 便于统一在 Profile 面板 / Stats 里统计。
+			// 全屏绘制也计入性能面板里的绘制次数。
 			static void LogExternalDrawCall(DrawCallInfo::PassType pass, uint32_t indexCount);
 
 		// ---- 初始化与销毁 ----
@@ -55,47 +54,40 @@ namespace Redflag
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition = glm::vec3(0.0f), const glm::mat4& view = glm::mat4(1.0f));
 
-		// 在 EndScene 里统一排序并执行所有 DrawCommand
 		static void EndScene();
 
-		// 提交到队列（不会立即绘制）；transform 为网格局部到世界变换，entityID 用于拾取。
+		// 把网格加入本帧队列。transform 将顶点从模型空间变到世界空间，entityID 用于鼠标拾取。
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Texture2D>& texture, int entityID = -1);
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Material>& material, int entityID = -1);
 
-		// 将全部 SubMesh 推入队列，最终变换为实体 transform * 节点 LocalTransform。
+		// 子网格先按模型节点的变换摆放，再随整个实体移动。
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, const std::vector<Ref<Material>>& overrideMaterials, const glm::vec4& fallbackColor, int entityID = -1);
 
-		// ---- 几何 Pass ----
-		// 以下 Pass 复用尚未执行的提交队列，调用方负责绑定目标、视口及清理附件。
-		// lightSpaceMatrix 为 world→light clip；shadowParams=(深度偏移,法线偏移,1/图尺寸,模式)。
-		// shadowParams2.xy=(PCF半径,光源尺寸)，单位为纹素，zw 保留当前视口像素尺寸。
+		// ---- 阴影、反射阴影图与深度预写 ----
+		// 这些绘制共用已提交的网格。调用方先选好要写入的图像和视口。
+		// lightSpaceMatrix 将世界坐标变到光源裁剪空间。shadowParams 依次保存两项深度偏移、图宽的倒数和阴影模式。
+		// shadowParams2 的前两项是采样半径与光源大小，按阴影图像素计。后两项沿用主视口宽高。
 		static void SetShadowData(const glm::mat4& lightSpaceMatrix,
 			const glm::vec4& shadowParams,
 			const glm::vec4& shadowParams2 = glm::vec4(1.5f, 6.0f, 0.0f, 0.0f));
-		// 仅写深度，Opaque / Mask 与主画面使用相同覆盖率，跳过 Blend。
+		// 从光源方向写深度，镂空材质沿用主画面的裁剪条件，半透明材质跳过。
 		static void ExecuteShadowPass(const Ref<Shader>& depthShader);
 
-		// RSM Pass：和 Shadow Pass 一样从光源视角重绘一遍队列，但同时上传
-		//   Material UBO + 绑定 BaseColorMap，让 RSM shader 能输出 albedo
-		//   加权的 flux。调用方需要自行绑好 RSM FBO 与视口（深度+三张 MRT 颜色）。
+		// 记录光源照到的表面位置、朝向，以及表面向外反射多少漫射光。
 		static void ExecuteRSMPass(const Ref<Shader>& rsmShader);
 
-		// Z-Prepass：写主相机深度与颜色附件2的观察空间法线，保留颜色0/1。
-		// 须在 BeginScene 收集完所有 DrawMesh/DrawModel 之后、EndScene 之前调用
+		// 提交完网格、绘制主画面之前，先生成主相机的深度和观察空间法线。
 		static void ExecuteDepthPrepass(const Ref<Shader>& depthShader);
 
-		// 覆写 CameraUBO 中的 IBL 标志（ViewPosition.w）
+		// 临时切换主绘制的环境贴图光照。
 		static void OverrideIBLFlag(bool enabled);
 
 		// ---- 剔除与调试 ----
-		// 视锥体剪裁开关（菜单 Toggle）
 		static bool& GetFrustumCullingEnabled();
 
-		// 剪裁可视化开关：开启后每帧会记录所有提交物体的世界空间 AABB，
-		// SceneRenderer 可以调用 DrawDebugAABBs() 用 Renderer2D 画出线框。
-		//   绿色 = 通过剪裁；红色 = 被剪掉。
+		// 用包围盒检查剔除结果。绿色表示与相机视野相交，红色表示在视野外。
 		static bool& GetDebugCullingVizEnabled();
 
 		// 用 Renderer2D 绘制当前帧收集到的 AABB 线框（需要先 Renderer2D::BeginScene）

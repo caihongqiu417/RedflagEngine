@@ -33,7 +33,7 @@ namespace Redflag {
 		void OnSimulationStart();
 		void OnSimulationStop();
 
-		//OnUpdate;��ΪEditor��Runtime��Simulation
+		// 编辑、运行和物理模拟分别更新。
 		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
 		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);

@@ -2,18 +2,15 @@
 
 #include "Redflag/Renderer/Shader.h"
 #include <glm/glm.hpp>
-#include <vector> // SPIR-V 字数组
+#include <vector>
 #include <string>
 
-// 仅声明 GL 枚举类型，避免在公共头中引入 glad。
+// 这里仅用 GLenum 声明接口，glad 留在实现文件里。
 typedef unsigned int GLenum;
 
 namespace Redflag {
 
-    /*
-     * 持有链接后的 OpenGL 程序，将分阶段 GLSL 编译为 SPIR-V 并交给驱动。
-     * 磁盘缓存保存中间二进制；创建、绑定与销毁均依赖有效 OpenGL 上下文。
-     */
+    /* 从 GLSL 源码创建绘制程序。对象销毁时一并释放 OpenGL 程序。 */
     class OpenGLShader : public Shader
     {
     public:
@@ -23,7 +20,7 @@ namespace Redflag {
         virtual ~OpenGLShader();
 
         // ---- 程序与参数 ----
-        // Set 系列写入当前绑定程序的 uniform，调用前先 Bind 此对象。
+        // 先 Bind，再用 Set 设置颜色或矩阵。OpenGL 会把这些值写给当前选中的程序。
         virtual void Bind() const override;
         virtual void Unbind() const override;
 
@@ -39,7 +36,7 @@ namespace Redflag {
         virtual const std::unordered_map<std::string, ShaderUniformBuffer>& GetShaderUniformBuffers() const override { return m_ShaderUniformBuffers; }
         virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const override { return m_Resources; }
 
-        // ---- Uniform 上传 ----
+        // ---- 按名称上传参数 ----
         void UploadUniformInt(const std::string& name, int value);
         void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
         void UploadUniformFloat(const std::string& name, float value);
@@ -50,7 +47,7 @@ namespace Redflag {
         void UploadUniformMat4(const std::string& name, const glm::mat4& value);
 
     private:
-        // ---- 编译阶段 ----
+        // ---- 编译与链接 ----
         std::string ReadFile(const std::string& filepath);
         std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 
@@ -62,10 +59,10 @@ namespace Redflag {
 
     private:
         uint32_t m_RendererID = 0;
-        std::string m_FilePath; // 源文件路径，用于定位编译错误
+        std::string m_FilePath;
         std::string m_Name;
 
-        // 当前 Reflect 仅记录日志，以下查询表尚未填充。
+        // 从着色器读到的资源信息只写入日志，这两张表目前为空。
         std::unordered_map<std::string, ShaderUniformBuffer> m_ShaderUniformBuffers;
         std::unordered_map<std::string, ShaderResourceDeclaration> m_Resources;
     };

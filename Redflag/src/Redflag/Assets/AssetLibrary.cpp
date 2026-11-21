@@ -12,11 +12,11 @@ namespace Redflag
 		if (path.empty() || !std::filesystem::is_regular_file(path))
 			return 0;
 
-		// 先消除相对段和路径别名，同一源文件共用一份旁置元数据。
+		// 用同一条完整路径登记文件，避免把 models/a.obj 和 models/./a.obj 记成两个模型。
 		const auto source = std::filesystem::weakly_canonical(std::filesystem::absolute(path));
 		const auto meta = MetaPath(source);
 		AssetInfo info;
-		// 已有文件沿用 ID，首次登记才生成 ID 并落盘。
+		// 模型旁有 .rfmeta 就沿用里面的 ID，第一次登记才写新文件。
 		if (std::filesystem::exists(meta))
 		{
 			info = Read(meta);
@@ -38,7 +38,7 @@ namespace Redflag
 
 	void AssetLibrary::Scan(const std::filesystem::path& directory)
 	{
-		// 先在临时库完成读取和重复 ID 检查，成功后整体替换，避免留下半张表。
+		// 先扫描到一张新表里。遇到重复 ID 时，编辑器还可以继续用原来的表。
 		AssetLibrary scanned;
 		if (std::filesystem::exists(directory))
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))

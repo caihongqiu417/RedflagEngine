@@ -1,11 +1,8 @@
 /*
- * 把透视相机的深度贴图显示成灰度图，方便检查表面远近。
- * 深度纹理中的数值与实际距离不是线性关系，直接显示时大部分区域会挤在接近白色的位置。
- * 这里根据相机的近平面和远平面还原距离，再映射为灰度，让近处的变化更容易看清。
- * 这套公式用于透视相机，不能直接套到正交阴影贴图；编辑器当前另用 CPU 回读方式预览深度。
+ * 把透视相机的深度画成灰度图。近处较暗，远处较亮，背景为白色。
+ * 编辑器另在 CPU 上生成深度预览，这里的还原公式适用于透视投影。
  */
 
-// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -19,7 +16,6 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
-// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -31,7 +27,7 @@ layout(binding = 0) uniform sampler2D u_DepthTex;
 
 layout(std140, binding = 5) uniform DepthVizParams
 {
-    vec4 u_NearFar; // x = near, y = far
+    vec4 u_NearFar;  /* x、y 分别是这台透视相机的近、远裁剪距离，单位与场景坐标相同。 */
 };
 
 void main()
@@ -41,12 +37,12 @@ void main()
     float near = u_NearFar.x;
     float far  = u_NearFar.y;
 
-    // 透视深度线性化
+    // 透视相机存下的深度和距离并不成正比。先还原沿相机前方的距离，再从近到远画成黑到白。
     float ndc  = d * 2.0 - 1.0;
     float zLin = (2.0 * near * far) / (far + near - ndc * (far - near));
     float g    = clamp((zLin - near) / (far - near), 0.0, 1.0);
 
-    // gamma 矫正让近处对比更明显
+    // 提亮较暗的灰阶，让近处的深度变化更明显。
     g = pow(g, 1.0 / 2.2);
 
     o_Color = vec4(g, g, g, 1.0);

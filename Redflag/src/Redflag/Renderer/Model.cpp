@@ -120,7 +120,7 @@ namespace Redflag {
 		subMesh.LocalTransform = nodeTransform;
 
 		// ---- 材质导入 ----
-		// 先读取材质槽，再按文件名补缺失贴图，最后确定标量与透明度模式。
+		// 先读模型指定的材质，再补缺少的贴图。
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
@@ -130,7 +130,7 @@ namespace Redflag {
 			aiMat->Get(AI_MATKEY_NAME, aiMatName);
 			RF_CORE_INFO("[Model] Material '{0}' (mesh '{1}')", aiMatName.C_Str(), mesh->mName.C_Str());
 
-			// ---- 1. Assimp 材质槽优先 ----
+			// ---- 模型文件里指定的贴图 ----
 			mat->BaseColorMap = LoadMaterialTexture(aiMat, aiTextureType_DIFFUSE);
 
 			mat->NormalMap = LoadMaterialTexture(aiMat, aiTextureType_NORMALS);
@@ -156,9 +156,7 @@ namespace Redflag {
 			if (opacityTex)
 				mat->AlphaMap = opacityTex;
 
-			// ---- 2. Polyhaven/Quixel 目录扫描回退 ----
-			// Assimp 4.x FBX 导入器经常丢失 metal/rough/alpha/ao 贴图，
-			// 用文件名后缀补齐。
+			// ---- 按文件名补齐缺少的颜色、法线和材质贴图 ----
 			if (!mat->BaseColorMap)
 			{
 				std::string p = FindTextureBySuffix({ "_diff", "_basecolor", "_albedo", "_color" });
@@ -199,7 +197,7 @@ namespace Redflag {
 				}
 			}
 
-			// ---- 3. 从 Assimp 材质读取标量参数 ----
+			// ---- 基础色、金属度与粗糙度 ----
 			aiColor4D baseColor;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColor) == AI_SUCCESS)
 			{
@@ -221,14 +219,12 @@ namespace Redflag {
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
 				mat->Roughness = roughness;
 
-			// ---- 4. 只有在加载到真正的 alpha 贴图时才切 Mask 模式 ----
-			// 注意：盲目切 Mask 会导致阈值裁剪误伤模型（例如 FBX 的 BaseColor.a 为脏值时）。
-			// AlphaMap 明确提供逐像素覆盖率，其余导入材质保持 Opaque。
+			// 文件指定了透明度图，才按图上的明暗裁出孔洞。
 			if (mat->AlphaMap)
 			{
 				mat->Alpha = AlphaMode::Mask;
 				mat->AlphaCutoff = 0.5f;
-				mat->DoubleSided = true; // 玻璃/镂空物通常两面都可见
+				mat->DoubleSided = true; // 薄片的正反两面都可能看见。
 			}
 
 			RF_CORE_INFO("[Model]   Maps: base={0} nor={1} mr={2} ao={3} alpha={4}",
@@ -270,7 +266,7 @@ namespace Redflag {
 					}
 				}
 			}
-			return nullptr; // 加载彻底失败，让 fallback scan 接手
+			return nullptr;
 		}
 
 		return tex;
@@ -344,26 +340,12 @@ namespace Redflag {
 		return fullPath;
 	}
 
-	// ----------
-	// 文件名后缀扫描回退
-	//
-	// Polyhaven / Quixel 等站点的材质包遵循严格命名约定：
-	//   *_diff.jpg        — 基础色 (base color / albedo)
-	//   *_nor_gl.exr/png  — OpenGL 法线
-	//   *_metal.exr/png   — 金属度
-	//   *_rough.exr/png   — 粗糙度
-	//   *_ao.exr/png      — 环境遮蔽（如有）
-	//   *_alpha.png       — 透明度 / 裁剪掩膜
-	//
-	// Assimp 4.x 的 FBX 导入器对 Blender Principled BSDF 导出的 PBR 材质
-	// 支持不完整（metal/rough/alpha 经常丢失）。这里根据文件名二次扫描模型目录
-	// 作为回退，命中率高于 Assimp 的材质槽。
-	// ----------
+	// 模型没写明贴图路径时，从模型目录和 textures 子目录按名称查找，例如用 _rough 找粗糙度图。
 	std::string Model::FindTextureBySuffix(const std::vector<std::string>& suffixes) const
 	{
 		namespace fs = std::filesystem;
 
-		// 优先扩展名（stb_image 可读；.exr 由 tinyexr 处理）
+		// 同时找到 PNG 和 JPG 时优先用 PNG。
 		static const std::vector<std::string> kPreferredExts = {
 			".png", ".jpg", ".jpeg", ".tga", ".bmp"
 		};

@@ -33,8 +33,7 @@ namespace Redflag {
 			{
 				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
 
-				// 整数格式（如 Entity ID）必须用 NEAREST，否则插值会产生无效值。
-				// 归一化/浮点格式（RGBA8、RGBA16F 等）用 LINEAR 采样。
+				// 物体边缘两侧可能是不同的实体。采样编号纹理时只能取最近的像素，两个编号之间没有中间值。
 				GLint filter = (type == GL_INT || type == GL_UNSIGNED_INT) ? GL_NEAREST : GL_LINEAR;
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
@@ -56,10 +55,7 @@ namespace Redflag {
 			{
 				glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
 
-				// 深度纹理用 NEAREST 更安全：
-				//   - Shadow Map 采样时避免在深度不连续处插值出错误的遮挡判断
-				//   - 如果后面要做 PCF 软阴影，会在 shader 里手动采多次，不需要硬件插值
-				// 如果你以后想做 VSM（方差阴影）等需要 LINEAR 的方案，再改这里
+				// 物体边缘两侧的深度可能相差很大。软阴影要逐个像素比较深度，再把遮挡结果平均。
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -69,13 +65,6 @@ namespace Redflag {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
 		}
 
-		// ----------
-		// IsDepthFormat — 判断一个格式是否属于深度类格式
-		//
-		// 这个函数在构造函数中用于把 attachment 规格分成
-		// 「颜色附件」和「深度附件」两类。
-		// 新增格式时必须同步更新这里。
-		// ----------
 		static bool IsDepthFormat(FramebufferTextureFormat format)
 		{
 			switch (format)
@@ -86,17 +75,7 @@ namespace Redflag {
 			return false;
 		}
 
-		// ----------
-		// RedflagFBTextureToGL — 获取 glClearTexImage 等接口需要的
-		//                        「外部像素格式」（format 参数）
-		//
-		// 注意区分三个概念：
-		//   internalFormat — GPU 内部存储格式（如 GL_RGBA16F）
-		//   format         — CPU → GPU 传输时的像素布局（如 GL_RGBA）
-		//   type           — CPU 侧每分量的数据类型（如 GL_FLOAT）
-		//
-		// 这个函数返回的是 format。
-		// ----------
+		// 清除一张纹理时，告诉 OpenGL 每个像素要写几个分量。
 		static GLenum RedflagFBTextureToGL(FramebufferTextureFormat format)
 		{
 			switch (format)
@@ -110,15 +89,6 @@ namespace Redflag {
 			return 0;
 		}
 
-		// ----------
-		// GLDataType — 获取 format 对应的 CPU 侧数据类型
-		//
-		// 用途：glClearTexImage 的 type 参数、glTexImage2D 的 type 参数。
-		// 关键点：
-		//   - RED_INTEGER 用 GL_INT（对应 R32I）
-		//   - RGBA8 用 GL_UNSIGNED_BYTE
-		//   - RGBA16F / RG16F 用 GL_FLOAT（half 精度上传也用 float，驱动会转换）
-		// ----------
 		static GLenum GLDataType(FramebufferTextureFormat format)
 		{
 			switch (format)
@@ -157,7 +127,7 @@ namespace Redflag {
 	// ---- 附件重建 ----
 	void OpenGLFramebuffer::Invalidate()
 	{
-		// Resize 会删除旧附件；外部保存的纹理 ID 不能跨重建使用。
+		// 视口大小改变后会换一批纹理，编辑器预览要重新取纹理 ID。
 		if (m_RendererID)
 		{
 			glDeleteFramebuffers(1, &m_RendererID);
@@ -184,66 +154,46 @@ namespace Redflag {
 				Utils::BindTexture(multisample, m_ColorAttachments[i]);
 				switch (m_ColorAttachmentSpecifications[i].TextureFormat)
 				{
-				// --- LDR 颜色（8-bit）---
-				// internalFormat = GL_RGBA8  → GPU 内部每通道 8 位无符号整数
-				// format         = GL_RGBA   → 4 通道像素布局
-				// type           = GL_UNSIGNED_BYTE
 				case FramebufferTextureFormat::RGBA8:
 					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples,
 						GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
 						m_Specification.Width, m_Specification.Height, i);
 					break;
 
-				// --- HDR 颜色（16-bit 浮点）---
-				// internalFormat = GL_RGBA16F → GPU 内部每通道 16 位半精度浮点
-				// format         = GL_RGBA    → 4 通道
-				// type           = GL_FLOAT   → CPU 侧用 float 上传，驱动自动截断为 half
-				//
-				// 为什么选 RGBA16F 而不是 RGBA32F？
-				//   带宽减半，精度对 HDR 场景颜色足够。RGBA32F 通常只用于计算 buffer。
 				case FramebufferTextureFormat::RGBA16F:
 					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples,
-						GL_RGBA16F, GL_RGBA, GL_FLOAT,
+						GL_RGBA16F /* 可保留超过 1 的亮度 */, GL_RGBA, GL_FLOAT,
 						m_Specification.Width, m_Specification.Height, i);
 					break;
 
-				// --- 双通道 16-bit 浮点 ---
-				// 用于法线压缩（xy 两分量，z 可由 sqrt(1-x²-y²) 重建）
-				// 或运动向量（motion vector）等只需要 2 通道的场景
 				case FramebufferTextureFormat::RG16F:
 					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples,
 						GL_RG16F, GL_RG, GL_FLOAT,
 						m_Specification.Width, m_Specification.Height, i);
 					break;
 
-				// --- 整数单通道（Entity ID 拾取）---
-				// internalFormat = GL_R32I      → 32 位有符号整数
-				// format         = GL_RED_INTEGER
-				// type           = GL_INT
 				case FramebufferTextureFormat::RED_INTEGER:
 					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples,
-						GL_R32I, GL_RED_INTEGER, GL_INT,
+						GL_R32I /* 每个像素存一个实体编号 */, GL_RED_INTEGER, GL_INT,
 						m_Specification.Width, m_Specification.Height, i);
 					break;
 				}
 			}
 		}
 
+		// ---- 深度附件 ----
 		if (m_DepthAttachmentSpecifications.TextureFormat != FramebufferTextureFormat::None)
 		{
 			Utils::CreateTextures(multisample, &m_DepthAttachment, 1);
 			Utils::BindTexture(multisample, m_DepthAttachment);
 			switch (m_DepthAttachmentSpecifications.TextureFormat)
 			{
-			// 24-bit 深度 + 8-bit 模板，最常用的组合。
-			// attachmentType = GL_DEPTH_STENCIL_ATTACHMENT 表示同时绑定深度和模板。
 			case FramebufferTextureFormat::DEPTH24STENCIL8:
 				Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples,
 					GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT,
 					m_Specification.Width, m_Specification.Height);
 				break;
 
-			// 32 位浮点深度，只挂到深度附件，不包含模板。
 			case FramebufferTextureFormat::DEPTH32F:
 				Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples,
 					GL_DEPTH_COMPONENT32F, GL_DEPTH_ATTACHMENT,
@@ -260,13 +210,11 @@ namespace Redflag {
 		}
 		else if(m_ColorAttachments.empty())
 		{
-			glDrawBuffer(GL_NONE);
+			glDrawBuffer(GL_NONE /* 阴影图只写深度 */);
 		}
 
-		// 检查颜色/深度附件的组合是否可渲染。
 		RF_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "framebuffer is not completed!");
 
-		// 创建完成后解除绑定，绘制目标由调用方选择。
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -274,7 +222,7 @@ namespace Redflag {
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
-		// FBO 绑定不自动改变视口，这里同步为附件的像素尺寸。
+		// 阴影图和编辑器视口的大小可能不同。切换绘制目标后，按这张图的宽高绘制。
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 
 
@@ -293,6 +241,7 @@ namespace Redflag {
 		Invalidate();
 	}
 
+	// ---- 实体拾取 ----
 	int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
 		RF_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
@@ -301,17 +250,11 @@ namespace Redflag {
 
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
-		glReadPixels(x, y, 
-			1, 1,
-			GL_RED_INTEGER// 单通道有符号整数，用于实体拾取
-			, GL_INT, // CPU 输出类型与附件 R32I 对齐
-			&pixelData);
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		return pixelData;
 	}
 
-	// ---- 附件清理 ----
-	// 整数附件直接写 int；其他格式先把 value 转为 float，再填充全部颜色分量。
-	// glClearTexImage 直接指定纹理，无需将该 FBO 绑定为当前目标。
+	// ---- 清除附件 ----
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
 		RF_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
@@ -323,13 +266,11 @@ namespace Redflag {
 
 		if (type == GL_INT)
 		{
-			// 整数格式：直接把 int value 写入（Entity ID 清为 -1 等场景）
+			// 编辑器每帧先填 -1，鼠标点在背景上就知道没选中实体。
 			glClearTexImage(m_ColorAttachments[attachmentIndex], 0, format, GL_INT, &value);
 		}
 		else
 		{
-			// 浮点/归一化格式：做数值转换，不按原始比特重新解释。
-			// 常见用法：value=0 → 清为黑色（0.0f）
 			float fValue = static_cast<float>(value);
 			float clearColor[4] = { fValue, fValue, fValue, fValue };
 			glClearTexImage(m_ColorAttachments[attachmentIndex], 0, format, GL_FLOAT, clearColor);
@@ -342,18 +283,6 @@ namespace Redflag {
 		return m_ColorAttachments[index];
 	}
 
-	// ----------
-	// GetDepthAttachmentRendererID — 返回深度附件的 GL 纹理 ID
-	//
-	// 用途：
-	//   1. Shadow Map Pass 把场景深度写入一个 depth-only FBO，
-	//      然后主渲染 Pass 需要绑定这个深度纹理作为 sampler2DShadow。
-	//   2. SSAO 需要读取场景深度来计算遮蔽。
-	//   3. 编辑器调试视图中显示 Depth buffer。
-	//
-	// 如果 FBO 没有深度附件（m_DepthAttachment == 0），返回 0，
-	// 调用方应该检查返回值。
-	// ----------
 	uint32_t OpenGLFramebuffer::GetDepthAttachmentRendererID() const
 	{
 		return m_DepthAttachment;

@@ -46,10 +46,10 @@
 
 
 // ECS
-#include"Redflag/Scene/Entity.h"           // 1. �������Entity
-#include"Redflag/Scene/ScriptableEntity.h"  // 2. ����Entity
-#include"Redflag/Scene/Components.h"        // 3. ����Entity��ScriptableEntity
-#include"Redflag/Scene/Scene.h"             // 4. ������������
+#include"Redflag/Scene/Entity.h"           // 1. 最基本的Entity
+#include"Redflag/Scene/ScriptableEntity.h"  // 2. 依赖Entity
+#include"Redflag/Scene/Components.h"        // 3. 依赖Entity和ScriptableEntity
+#include"Redflag/Scene/Scene.h"             // 4. 依赖以上所有
 // ----------
 
 

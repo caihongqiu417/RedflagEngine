@@ -22,7 +22,7 @@ namespace Redflag {
     void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
     {
         // 让着色器用这份参数。比如画第二个视口时，用它自己的曝光值。
-        glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
+        glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID /* 这份数据在 OpenGL 里的 ID */);
         glNamedBufferSubData(m_RendererID, offset, size, data);
     }
 

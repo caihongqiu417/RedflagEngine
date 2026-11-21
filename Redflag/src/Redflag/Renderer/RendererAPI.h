@@ -3,7 +3,7 @@
 #include<glm/glm.hpp>
 #include"VertexArray.h"
 
-//RendererAPI������ײ�ͼ��API��������ô����
+//RendererAPI：抽象底层图形API（定义怎么画）
 
 namespace Redflag
 {

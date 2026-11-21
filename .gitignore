@@ -239,9 +239,6 @@ ClientBin/
 *.dbmdl
 *.dbproj.schemaview
 
-# Local thesis materials
-Thesis/
-thesis/
 *.jfm
 *.pfx
 *.publishsettings
@@ -458,3 +455,25 @@ Redflag/vendor/mono/lib/**/*.sh
 RedflagForge/assets/models/**
 !RedflagForge/assets/models/**/
 !RedflagForge/assets/models/**/*.rfmeta
+
+# 只发布 Redflag 项目生成的 PDF
+/output/pdf/*
+!/output/pdf/Redflag-*.pdf
+
+# 本机的论文、简历和面试准备材料
+Thesis/
+thesis/
+/Task/resume/
+/Task/Client_Interview_Master_Guide*
+/Task/interview_assets/
+/Task/rewrite_parts/
+/Task/other_projects_*.md
+/Task/*_expansion.md
+/Task/*interview*.py
+/Task/*interview*.cjs
+/Task/document_tools/
+*简历*.pdf
+*简历*.docx
+*毕业论文*.pdf
+*毕业论文*.docx
+*答辩*.pptx

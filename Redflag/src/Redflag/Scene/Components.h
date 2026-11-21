@@ -32,7 +32,7 @@ namespace Redflag {
 		glm::vec3 Scale = { 1.0f,1.0f,1.0f };
 
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent& other) = default;  //Ĭ�Ͽ�������Ϊ��Աû��ָ�룬����ǳ��������
+		TransformComponent(const TransformComponent& other) = default;  //默认拷贝，因为成员没有指针，所以浅拷贝即可
 		TransformComponent(const glm::vec3& translation)
 			:Translation(translation){}
 
@@ -100,14 +100,14 @@ namespace Redflag {
 	{
 		ScriptableEntity* Instance = nullptr;
 
-		// ����ָ��
+		// 函数指针
 		ScriptableEntity* (*InstantiateScript)();  
 		void (*DestroyScript)(NativeScriptComponent*);
 
 		template<typename T>
 		void Bind()
 		{
-			// lambda���뺯��ָ�� - ʹ����ȷ�ı�����
+			// lambda存入函数指针 - 使用正确的变量名
 			InstantiateScript = []() -> ScriptableEntity* {
 				return static_cast<ScriptableEntity*>(new T());
 				};
@@ -120,14 +120,14 @@ namespace Redflag {
 	};
 
 
-	//����
+	//物理
 	struct RigidBody2DComponent
 	{
 		enum class BodyType{Static=0,Dynamic,Kinematic};
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 
-		//�洢Box2D��Ϣ
+		//存储Box2D信息
 		void* RuntimeBody = nullptr;
 
 		RigidBody2DComponent() = default;
@@ -139,13 +139,13 @@ namespace Redflag {
 		glm::vec2 Offset = { 0.f,0.f };
 		glm::vec2 Size = { 0.5f,0.5f };
 
-		//TODO��������������
+		//TODO：放入物理材质
 		float Density = 1.f;
 		float Friction = 0.5f;
 		float Restitution = 0.f;
-		float RestitutionThreshold = 0.5f; //ֻ�е������� �����ײ�ٶ� > 0.5 ��/�� ʱ���������������õĵ��Լ��㡣
+		float RestitutionThreshold = 0.5f; //只有当两物体 相对碰撞速度 > 0.5 米/秒 时，才启用上面设置的弹性计算。
 
-		//�洢Box2D��Ϣ
+		//存储Box2D信息
 		void* RuntimeFixture = nullptr;
 
 		BoxCollider2DComponent() = default;

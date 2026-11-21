@@ -9,20 +9,16 @@
 
 namespace Redflag {
 
-	// 前向声明；SceneRenderer 只需要指针 / 引用访问 Scene
 	class Scene;
 
-	// ----------
-	// 送给着色器的灯光数据。std140 规定字段的间隔，使 C++ 与着色器按相同位置读取。
-	// 每盏灯占 64 字节，与着色器里的 LightData 对应。
-	// ----------
+	// 每盏灯占 64 字节，成员顺序与着色器里的 LightData 一致。
 	struct GPULightData
 	{
-		glm::vec4 Direction;   // xyz = 归一化方向, w = type (0=dir, 1=point)
+		glm::vec4 Direction;  // xyz 沿光线方向，w 为 0 表示方向光，1 表示点光
 		glm::vec4 Color;       // xyz = 颜色,       w = 强度
 		glm::vec4 Position;    // xyz = 世界坐标,   w = 半径（点光）
 		int       CastShadow;  // 0 或 1
-		int       _pad[3];     // 补足末尾 16 字节，不能当成下一盏灯的数据
+		int       _pad[3];  // 着色器每隔 64 字节开始读下一盏灯
 	};
 
 	// 灯光数量放在整块数据的开头，着色器据此决定读取几盏灯。
@@ -38,32 +34,24 @@ namespace Redflag {
 	static constexpr uint32_t MAX_POINT_LIGHTS = 16;
 	static constexpr uint32_t LIGHT_UBO_BINDING = 3;
 
-	// ----------
-	// Shadow 调参结构（对 ImGui 暴露）
-	//
-	// 所有字段在每帧 Shadow Pass 之前被读取，运行时修改会立刻生效。
-	// Mode: 0=Off, 1=PCF 3×3, 2=PCSS
-	// ----------
+	// ---- 阴影参数 ----
 	struct ShadowSettings
 	{
 		int   Mode        = 1;       // 0=Off, 1=PCF, 2=PCSS
-		float DepthBias   = 0.0015f; // [0,1] 深度比较偏移，减轻表面自阴影
-		float NormalBias  = 1.0f;    // 纹素单位，薄面片额外防自阴影
-		float PcfRadius   = 1.5f;    // PCF 模式下的核半径（纹素）
-		float LightSize   = 6.0f;    // PCSS 模式下的虚拟光源尺寸（纹素）
-		float OrthoHalfSize = 5.0f;  // 光源正交视锥半宽（世界空间）。Cornell box 等小场景用 4~5；
-		                             // 大场景可调大覆盖范围，但固定分辨率下每个纹素会覆盖更大面积。
+		float DepthBias   = 0.0015f;  // 减轻表面在自己身上投下的阴影，表面越背向光线，偏移越大
+		float NormalBias  = 1.0f;  // 额外的深度偏移，除以阴影图宽度后参与比较
+		float PcfRadius   = 1.5f;  // PCF 采样半径，以阴影图像素计
+		float LightSize   = 6.0f;  // PCSS 光源大小，以阴影图像素计，值越大阴影边缘越宽
+		float OrthoHalfSize = 5.0f;  // 灯光照到的正方形区域半宽（世界单位）。范围越大，每个阴影像素覆盖的面积越大。
 	};
 
-	// ----------
-	// SSAO 调参（ImGui 暴露）
-	// ----------
+	// ---- 屏幕空间环境遮蔽（SSAO）参数 ----
 	struct SSAOSettings
 	{
 		float Radius = 0.5f;    // 观察空间采样半径，与场景长度单位一致
 		float Bias   = 0.025f;  // 观察空间深度偏移，与 Radius 同单位
-		float Power  = 2.0f;    // 对比度增强指数
-		int   KernelSize = 64;  // 采样数（上限 64，shader 内固定数组）
+		float Power  = 2.0f;  // 值越大，受遮蔽的地方越暗
+		int   KernelSize = 64;  // 每个像素检查多少个邻近位置，最多 64 个
 	};
 	// ---- RSM 参数 ----
 	// 反射阴影图（RSM）记录灯光照到的表面，用这些表面估算一次反弹的光。
@@ -77,9 +65,9 @@ namespace Redflag {
 		float SampleRadius = 0.40f;   // 0.01 ~ 0.6
 	};
 	/*
-	 * 组织一帧场景画面：读取实体和灯光，安排阴影、遮蔽、间接光、主画面与后处理的先后顺序。
-	 * Scene 由调用方持有；当前渲染目标、间接光的历史画面及开关仍是单视口静态状态。
-	 * 编辑器绑定主场景帧缓冲并借入颜色纹理，PostProcess 持有后处理的最终输出。
+	 * 读取场景里的物体和灯光，安排阴影、遮蔽、间接光、主画面和后处理的绘制顺序。
+	 * 调用方持有 Scene。这里为一个视口保存绘制目标、上一帧的间接光和渲染开关。
+	 * 编辑器提供场景颜色图，PostProcess 保存后处理完成的图像。
 	 */
 	class SceneRenderer
 	{
@@ -91,7 +79,7 @@ namespace Redflag {
 
 
 		// ---- 场景绘制 ----
-		// 调用前绑定主 FBO：颜色0=HDR、颜色1=实体ID、颜色2=观察空间法线，并提供深度附件。
+		// 调用前选好主画面的绘制目标。它需能保存 HDR 颜色、拾取编号、观察空间法线和深度。
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform /* 相机到世界空间 */);
 
@@ -100,28 +88,25 @@ namespace Redflag {
 		static SSAOSettings&   GetSSAOSettings();
 		static RSMSettings&    GetRSMSettings();
 
-		// IBL / Shadow / Z-Prepass / SSAO 全局开关（菜单栏 Toggle）
 		static bool& GetIBLEnabled();
 		static bool& GetShadowEnabled();
 		static bool& GetZPrepassEnabled();
 		static bool& GetSSAOEnabled();
 
 		// ---- 调试输出 ----
-		// 以下 ID 均为借用的 OpenGL 纹理名，目标重建后需重新查询，调用方不得释放。
-		// SSAO 纹理（RGBA8 R 通道 = AO 可见度）GL 纹理 ID，供 ImGui 面板预览
+		// 这些预览纹理由渲染器持有，尺寸改变后请重新取 ID。遮蔽图越暗，环境光越弱。
 		static uint32_t GetSSAOTextureID();
-		// 主 FBO 的 view-space 法线附件 GL 纹理 ID（Z-Prepass 写入）
+		// 深度预写时从相机看到的表面法线。
 		static uint32_t GetViewNormalTextureID();
-		// Shadow Map 深度纹理 ID，供 Shadow 面板预览
 		static uint32_t GetShadowMapTextureID();
-		// Z-Prepass 的 R8 深度预览纹理，值经过当帧对比拉伸，不是原始深度附件
+		// 深度预览把本帧最近到最远的物体映射成黑到白，方便分辨前后。
 		static uint32_t GetPrepassDepthTextureID();
 
 		// ---- 后处理 ----
 		static BloomSettings&   GetBloomSettings();
 		static ToneMapSettings& GetToneMapSettings();
 		static uint32_t GetBloomTextureID();
-		// 借用本帧主场景 HDR 颜色纹理及像素尺寸，不接管 FBO 或纹理的生命周期。
+		// 后处理在本帧读取这张场景颜色图，由调用方保管。宽高以像素计。
 		static void SetMainSceneColorTarget(uint32_t colorTex, int width, int height);
 
 		// RSM 三张产物纹理（供 Render Passes 面板预览）：
@@ -140,7 +125,6 @@ namespace Redflag {
 		static uint32_t GetFinalColorTextureID();
 
 	private:
-		// 遍历 registry 收集灯光数据并上传 Light UBO
 		static void CollectAndUploadLights(Scene& scene);
 	};
 

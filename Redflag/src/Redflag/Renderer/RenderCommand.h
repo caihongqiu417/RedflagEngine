@@ -1,6 +1,6 @@
 #pragma once
 
-//RenderCommand��������Ⱦ����
+//RenderCommand：调度渲染命令
 #include "Redflag/Renderer/RendererAPI.h"
 
 

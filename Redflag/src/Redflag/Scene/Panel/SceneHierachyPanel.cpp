@@ -601,10 +601,10 @@ namespace Redflag {
         ImGui::Begin("Scene Hierachy");
 
         if (m_Context) {
-            // ��������ʵ�岢���ƽڵ�
+            // 遍历所有实体并绘制节点
             auto view = m_Context->m_Registry.view<TagComponent>();
             view.each([&](auto entity, auto& tc) {
-                // ����Entity���󲢻��ƽڵ�
+                // 创建Entity对象并绘制节点
                 Entity ent{ entity, m_Context.get() };
                 DrawEntityNode(ent);
                 });
@@ -672,13 +672,13 @@ namespace Redflag {
     {
         auto& tagComponent = entity.GetComponent<TagComponent>();
 
-        // ���ýڵ��־
+        // 设置节点标志
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
         if (m_SelectionContext == entity)
             flags |= ImGuiTreeNodeFlags_Selected;
 
-        // ���ݱ�־��ʵ����ƽڵ�
+        // 根据标志和实体绘制节点
         bool opened = ImGui::TreeNodeEx(
             (void*)(uint64_t)(uint32_t)entity,
             flags,
@@ -699,27 +699,27 @@ namespace Redflag {
             ImGui::EndDragDropSource();
         }
 
-        // �ӳ�ɾ�����
+        // 延迟删除标记
         bool entityDeleted = false;
 
-        // �Ҽ��˵� - ʹ�� BeginPopupContextItem ����ȷ��ʽ
-        if (ImGui::BeginPopupContextItem())  // ����Ҫ�����жϣ������Զ������Ҽ����
+        // 右键菜单 - 使用 BeginPopupContextItem 的正确方式
+        if (ImGui::BeginPopupContextItem())  // 不需要条件判断，它会自动处理右键点击
         {
             if (ImGui::MenuItem("Delete Entity"))
-                entityDeleted = true;  // ֻ���ñ�ǣ�������ɾ��
+                entityDeleted = true;  // 只设置标记，不立即删除
 
             ImGui::EndPopup();
         }
 
-        // ����ڵ�򿪣�����������
+        // 如果节点打开，添加子内容
         if (opened) {
-            //������
+            //子内容
             //
             //
             ImGui::TreePop();
         }
 
-        // �ӳ�ɾ�����ڽڵ������ɺ�ִ��
+        // 延迟删除：在节点绘制完成后执行
         if (entityDeleted)
         {
 			m_EntityToDelete = entity;
@@ -741,9 +741,9 @@ namespace Redflag {
         float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
         ImVec2 buttonSize = { lineHeight + 3.0f,lineHeight };
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // �޺��
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // ���޺��
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // ���޺��
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // 霓虹粉
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // 亮霓虹粉
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // 暗霓虹粉
         if (ImGui::Button("x", buttonSize))
             values.x = resetValue;
         ImGui::PopStyleColor(3);
@@ -755,9 +755,9 @@ namespace Redflag {
         ImGui::SameLine();
 
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // �޺���
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // ���޺���
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // ���޺���
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // 霓虹绿
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // 亮霓虹绿
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // 暗霓虹绿
         if (ImGui::Button("y", buttonSize))
             values.y = resetValue;
         ImGui::PopStyleColor(3);
@@ -767,9 +767,9 @@ namespace Redflag {
         ImGui::PopItemWidth();
         ImGui::SameLine();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // �����
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // �������
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // �������
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // 电光蓝
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // 亮电光蓝
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // 暗电光蓝
         if (ImGui::Button("z", buttonSize))
             values.z = resetValue;
         ImGui::PopStyleColor(3);
@@ -1027,7 +1027,7 @@ namespace Redflag {
 
        
         const ImGuiTreeNodeFlags tagTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
-        // Tag��� 
+        // Tag组件
         if (entity.HasComponent<TagComponent>())
         {
             auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -1182,7 +1182,7 @@ namespace Redflag {
         ImGui::Spacing();
 
 
-        // Transform���
+        // Transform组件
         DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
             {
                 DrawVec3Control("Translation", component.Translation);
@@ -1192,7 +1192,7 @@ namespace Redflag {
                 DrawVec3Control("Scale", component.Scale, 1.0f);
             });
 
-        // Camera���
+        // Camera组件
         DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
             {
                 auto& camera = component.Camera;
@@ -1405,20 +1405,20 @@ namespace Redflag {
         // SpriteRender
         DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
             {
-                // ��ɫ�༭
+                // 颜色编辑
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
-                // ƽ������
+                // 平铺因子
                 ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.f);
 
-                // ������ק����
+                // 可把资源浏览器里的贴图拖到预览上。
                 ImGui::Separator();
                 ImGui::Text("Texture");
 
-                // ��ʾ��ǰ����Ԥ��
+                // 显示当前纹理预览
                 if (component.Texture && component.Texture->GetRendererID())
                 {
-                    // ����Ԥ��
+                    // 纹理预览
                     ImGui::Image(
                         (void*)(intptr_t)component.Texture->GetRendererID(),
                         ImVec2(64, 64)
@@ -1426,11 +1426,11 @@ namespace Redflag {
                 }
                 else
                 {
-                    // ������ռλ
+                    // 空纹理占位
                     ImGui::Button("No Texture", ImVec2(64, 64));
                 }
 
-                // ��קĿ��
+                // 拖拽目标
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
@@ -1444,7 +1444,7 @@ namespace Redflag {
                     ImGui::EndDragDropTarget();
                 }
 
-                // ���������ť
+                // 清除纹理按钮
                 if (component.Texture)
                 {
                     ImGui::SameLine();
@@ -1465,10 +1465,10 @@ namespace Redflag {
                 ImGui::DragFloat("Fade", &component.Fade, 0.0025f, 2.f, 1.f);
             });
 
-        // Rigidbody2D ���
+        // Rigidbody2D 组件
         DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](auto& component)
             {
-                // ��������������
+                // 刚体类型下拉框
                 const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
                 const char* currentType = bodyTypeStrings[(int)component.Type];
 
@@ -1487,24 +1487,24 @@ namespace Redflag {
                     ImGui::EndCombo();
                 }
 
-                // �̶���ת
+                // 固定旋转
                 ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
             });
 
-        // BoxCollider2D ���
+        // BoxCollider2D 组件
         DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
             {
-                // ƫ����
+                // 偏移量
                 ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
-                // ��ײ�гߴ�
+                // 碰撞盒尺寸
                 ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
-                // �ܶ�
+                // 密度
                 ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
-                // Ħ����
+                // 摩擦力
                 ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
-                // ����
+                // 弹性
                 ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-                // ������ֵ
+                // 弹跳阈值
                 ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
             });
 

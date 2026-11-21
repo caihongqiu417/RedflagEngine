@@ -247,7 +247,7 @@ namespace Redflag {
     static void SerializeEntity(YAML::Emitter& out, Entity entity)
     {
         RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
-        // ��ʼʵ��� Map
+        // 开始实体的 Map
         out << YAML::BeginMap;
         out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
@@ -259,7 +259,7 @@ namespace Redflag {
             auto& tag = entity.GetComponent<TagComponent>().Tag;
             out << YAML::Key << "Tag" << YAML::Value << tag;
 
-            out << YAML::EndMap; // ���� TagComponent Map
+            out << YAML::EndMap; // 结束 TagComponent Map
         }
 
         if (entity.HasComponent<TransformComponent>())
@@ -272,7 +272,7 @@ namespace Redflag {
             out << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
             out << YAML::Key << "Scale" << YAML::Value << tc.Scale;
 
-            out << YAML::EndMap; // ���� TransformComponent Map
+            out << YAML::EndMap; // 结束 TransformComponent Map
         }
 
         if (entity.HasComponent<CameraComponent>())
@@ -292,12 +292,12 @@ namespace Redflag {
             out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
             out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
             out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetPerspectiveFarClip();
-            out << YAML::EndMap; // ���� Camera Map
+            out << YAML::EndMap; // 结束 Camera Map
 
             out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
-            out << YAML::EndMap; // ���� CameraComponent Map
+            out << YAML::EndMap; // 结束 CameraComponent Map
         }
 
         if (entity.HasComponent<ScriptComponent>())
@@ -521,7 +521,7 @@ namespace Redflag {
 
             out << YAML::EndMap;
         }
-        // ����ʵ��� Map
+        // 结束实体的 Map
         out << YAML::EndMap;
     }
 
@@ -531,7 +531,7 @@ namespace Redflag {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unamed Scene";
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
-		// ʹ�� view �� storage ������ʵ��
+		// 使用 view 或 storage 来遍历实体
 		auto view = m_Scene->m_Registry.view<entt::entity>();
 		for (auto entityID : view)
 		{

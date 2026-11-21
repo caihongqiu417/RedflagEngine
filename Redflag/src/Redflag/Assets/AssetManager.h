@@ -13,9 +13,9 @@ namespace Redflag
 {
 
 	/*
-	 * 运行时资源缓存：按资源类型和稳定 ID 复用 Ref<T>。
-	 * 资源库只登记文件，首次 Load 才调用 T::Load 创建对象；缓存与调用方共享所有权。
-	 * 涉及 GPU 对象的加载和最后一次释放必须发生在有效图形上下文中。
+	 * 同一个模型被多个实体使用时，只加载一次。
+	 * Add 记下文件的位置和 ID。Load 第一次读文件，以后返回已经加载的对象。
+	 * 模型的顶点和贴图要交给显卡，创建和释放都要在图形上下文关闭前完成。
 	 */
 	class AssetManager
 	{
@@ -47,7 +47,7 @@ namespace Redflag
 			if (it != assets.end())
 				return it->second;
 
-			// 只缓存成功结果；返回给组件的 Ref 与缓存指向同一个对象。
+			// 加载失败时不记进缓存。修好文件后，下次 Load 还会再试。
 			auto asset = T::Load(info->Path.generic_string());
 			if (asset)
 				assets.emplace(id, asset);
@@ -62,7 +62,6 @@ namespace Redflag
 		}
 
 		// ---- 查询与卸载 ----
-		// 卸载仅移除缓存引用；组件仍持有 Ref 时，对象继续存活。
 		template<typename T>
 		static bool IsLoaded(AssetID id)
 		{
@@ -70,6 +69,7 @@ namespace Redflag
 			return cache && cache->Assets.count(id) != 0;
 		}
 
+		// 移出缓存后，场景里还在用这个模型的实体可以继续画它。
 		template<typename T>
 		static void Unload(AssetID id)
 		{

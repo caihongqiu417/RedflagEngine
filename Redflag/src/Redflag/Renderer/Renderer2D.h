@@ -46,7 +46,7 @@ namespace Redflag {
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
 		static void SetLineWidth(float width);
 
-		//rotation��Ҫת���ɻ��ȣ�����DrawRotatedQuad(..., glm::radians(45.0f), ...);	
+		//rotation需要转换成弧度，例如DrawRotatedQuad(..., glm::radians(45.0f), ...);
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f,const glm::vec4 & tintColor = glm::vec4(1.0f));

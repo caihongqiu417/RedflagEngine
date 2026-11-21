@@ -34,7 +34,7 @@ namespace Redflag {
 
 		void OnDuplicateEntity();
 
-		//UI���
+		//UI面板
 		void UI_Toolbar();
 
 	private:
@@ -53,8 +53,8 @@ namespace Redflag {
 		glm::vec2 m_ViewportBounds[2];
 		
 
-		Ref<Scene> m_EditorScene;   // ԭʼ����
-		Ref<Scene> m_ActiveScene;   // ��ǰ��Ծ���༭ʱָ�� m_EditorScene��Play ʱָ�򸱱���
+		Ref<Scene> m_EditorScene;   // 原始数据
+		Ref<Scene> m_ActiveScene;   // 当前活跃（编辑时指向 m_EditorScene，Play 时指向副本）
 
 		Entity m_SquareEntity;
 		Entity m_SecondSquareEntity;

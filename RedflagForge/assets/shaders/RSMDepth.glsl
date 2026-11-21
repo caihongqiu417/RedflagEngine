@@ -1,21 +1,16 @@
 /*
- * 为计算一次反射光，记录灯光照到的表面信息。
- * 除了阴影所需的深度，还记录表面位置、朝向和反射光的颜色强度。
- * 后续把这些受光表面当作许多小光源，估算它们能照亮周围多少区域。
- * 这里使用第一盏方向光。颜色贴图决定反射的颜色，只记录朝向灯光的一面。
- * 镂空表面沿用主画面的透明度裁剪，不让透明区域成为反射光源。
+ * 从方向光看场景，记录它照到的表面位置、法线和反射光颜色。
+ * 例如红墙受光的部分会成为红色的间接光源，树叶贴图中的孔洞则不参与反射。
  */
 
-// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
-// 顶点属性（与 MeshVertex 布局一致）
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
 
-// ---- Camera UBO (binding = 0) ----
+// 与主画面共用相机参数，这次用光源矩阵决定顶点画在哪里。
 layout(std140, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;
@@ -26,13 +21,11 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_View;
 };
 
-// ---- Transform UBO (binding = 1) ----
 layout(std140, binding = 1) uniform Transform
 {
     mat4 u_Transform;
 };
 
-// 传给片元着色器
 layout(location = 0) out vec3 v_WorldPos;
 layout(location = 1) out vec3 v_WorldNormal;
 layout(location = 2) out vec2 v_TexCoord;
@@ -42,7 +35,7 @@ void main()
     vec4 worldPos = u_Transform * vec4(a_Position, 1.0);
     v_WorldPos    = worldPos.xyz;
 
-    // 用法线矩阵处理非均匀缩放，和主 shader 一致
+    // 模型沿各轴缩放的比例可能不同，逆转置能让法线仍然垂直于表面。
     mat3 normalMatrix = mat3(transpose(inverse(u_Transform)));
     v_WorldNormal     = normalize(normalMatrix * a_Normal);
 
@@ -50,7 +43,6 @@ void main()
     gl_Position   = u_LightSpaceMatrix * worldPos;
 }
 
-// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -58,8 +50,7 @@ layout(location = 0) in vec3 v_WorldPos;
 layout(location = 1) in vec3 v_WorldNormal;
 layout(location = 2) in vec2 v_TexCoord;
 
-// ---- Material UBO (binding = 2) ----
-// 字段顺序必须与 C++ 端 Renderer3DData::MaterialData 一致。
+// Renderer3D 同时把底色、金属度和透明度参数写在这组数据里。
 layout(std140, binding = 2) uniform Material
 {
     vec4  u_BaseColor;
@@ -77,7 +68,6 @@ layout(std140, binding = 2) uniform Material
     int   _matPad0;
 };
 
-// ---- Lights UBO (binding = 3) ----
 struct LightData
 {
     vec4 Direction;
@@ -99,19 +89,17 @@ layout(std140, binding = 3) uniform Lights
     LightData u_PointLights[16];
 };
 
-// 主 shader 约定槽位：BaseColorMap = slot 3
 layout(binding = 3) uniform sampler2D u_BaseColorMap;
 layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;
 layout(binding = 10) uniform sampler2D u_AlphaMap;
 
-// MRT 输出
-layout(location = 0) out vec4 o_Flux;      // 每单位光源投影面积的反射通量
+layout(location = 0) out vec4 o_Flux;      /* 每单位光源投影面积的反射通量，RGB 保留反射光颜色。 */
 layout(location = 1) out vec4 o_WorldPos;  // 世界坐标
 layout(location = 2) out vec4 o_Normal;    // 世界法线（压到 [0,1]）
 
 void main()
 {
-    // albedo（与主 shader 保持一致：sRGB → Linear）
+    // 底色贴图用 sRGB 存储，先转成线性颜色再计算反射光。
     vec4 baseColor = u_BaseColor;
     if (u_UseBaseColorMap == 1)
     {
@@ -120,7 +108,7 @@ void main()
         baseColor *= texColor;
     }
 
-    // 覆盖率与主画面一致；Opaque 忽略 alpha，Mask 才裁剪。
+    // 叶片等镂空材质只让实际留下的部分反光。
     if (u_AlphaMode == 1)
     {
         float alpha = baseColor.a;

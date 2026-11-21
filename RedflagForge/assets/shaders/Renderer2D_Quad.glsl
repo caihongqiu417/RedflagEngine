@@ -1,4 +1,4 @@
-// Basic Texture Shader
+/* 将同一批精灵画出来，每个精灵可以使用不同的贴图、颜色和平铺次数。 */
 
 #type vertex
 #version 450 core
@@ -7,12 +7,10 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 layout(location = 2) in vec2 a_TexCoord;
 layout(location = 3) in float a_TexIndex;
-layout(location = 4) in float a_TilingFactor;
+layout(location = 4) in float a_TilingFactor;  /* 每个方向重复贴图的次数，1 表示铺满一次 */
 layout(location = 5) in int a_EntityID;
 
-// [修改] 使用 Uniform Block (UBO)
-// std140: 标准内存布局
-// binding = 0: 对应 C++ 代码中 UniformBuffer::Create(..., 0)
+// 这一批精灵使用同一台相机。
 layout(std140, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;
@@ -32,7 +30,6 @@ void main()
     v_TilingFactor = a_TilingFactor;
     v_EntityID = a_EntityID;
     
-    // 直接使用 Block 中的变量名 u_ViewProjection
     gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
 }
 
@@ -48,7 +45,7 @@ layout(location = 2) in flat float v_TexIndex;
 layout(location = 3) in float v_TilingFactor;
 layout(location = 4) in flat int v_EntityID;
 
-// 纹理采样器保持原样，暂时不需要改动
+// 每个精灵用自己的 v_TexIndex 从这一批贴图中选一张。
 uniform sampler2D u_Textures[32];
 
 void main()
@@ -90,8 +87,7 @@ void main()
         case 31: texColor *= texture(u_Textures[31], v_TexCoord * v_TilingFactor); break;
     }
 
-    // sRGB → 线性空间：顶点色和纹理均为 sRGB 编码，写入 HDR 线性 FBO 前需转换，
-    // 使 Composite pass 的 Gamma 校正能正确还原感知颜色。
+    // 转成线性颜色，最后由后处理统一校正屏幕亮度。
     texColor.rgb = pow(texColor.rgb, vec3(2.2));
     color = texColor;
 

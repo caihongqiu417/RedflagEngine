@@ -9,15 +9,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 //==============================================================================
-// 2D��������Ⱦ��ʵ��
-// ���ܣ�֧�����������ı��Σ��������򲻴����������Ż���Ⱦ����
-// ���Ļ��ƣ�CPU���ۻ��������ݣ�һ���ϴ�GPU��һ�λ��Ƶ�����Ⱦ����ı���
+// 2D批处理渲染器实现
+// 功能：支持批量绘制四边形（带纹理或不带纹理），优化渲染性能
+// 核心机制：CPU端累积顶点数据，一次上传GPU，一次绘制调用渲染多个四边形
 //==============================================================================
 
 namespace Redflag
 {
     //--------------------------------------------------------------------------
-    // ����ṹ�壺���������������������
+    // 顶点结构体：描述单个顶点的所有属性
     //--------------------------------------------------------------------------
     struct QuadVertex
     {
@@ -47,41 +47,41 @@ namespace Redflag
     };
 
     //--------------------------------------------------------------------------
-    // ��Ⱦ���ڲ����ݣ��洢������Ⱦ״̬����Դ������ģʽ��
+    // 渲染器内部数据：存储所有渲染状态和资源（单例模式）
     //--------------------------------------------------------------------------
     struct Renderer2DData
     {
-        //========== �������� ==========
-        static const uint32_t MaxQuads =10000;                    // ����������ı�������
-        static const uint32_t MaxVertices = MaxQuads * 4;          // ��󶥵�����4����/�ı��Σ�
-        static const uint32_t MaxIndices = MaxQuads * 6;           // �����������6����/�ı��Σ�
-        static const uint32_t MaxTextureSlots = 32;         // ���������������Ӳ�����ƣ�
+        //========== 容量限制 ==========
+        static const uint32_t MaxQuads =10000;                    // 单批次最大四边形数量
+        static const uint32_t MaxVertices = MaxQuads * 4;          // 最大顶点数（4顶点/四边形）
+        static const uint32_t MaxIndices = MaxQuads * 6;           // 最大索引数（6索引/四边形）
+        static const uint32_t MaxTextureSlots = 32;         // 最大纹理槽数量（硬件限制）
 
-        //========== GPU��Դ ==========
-        Ref<VertexArray> QuadVertexArray;                    // �����������VAO��
-        Ref<VertexBuffer> QuadVertexBuffer;                  // ���㻺������VBO��
-        Ref<Shader> QuadShader;                            // ������ɫ��
+        //========== GPU资源 ==========
+        Ref<VertexArray> QuadVertexArray;                    // 顶点数组对象（VAO）
+        Ref<VertexBuffer> QuadVertexBuffer;                  // 顶点缓冲区（VBO）
+        Ref<Shader> QuadShader;                            // 纹理着色器
         Ref<Texture2D> WhiteTexture;                      
 
         Ref<VertexArray> CircleVertexArray;
         Ref<VertexBuffer> CircleVertexBuffer;
         Ref<Shader> CircleShader;
 
-        //========== ������״̬ ==========
-        uint32_t QuadIndexCount = 0;                          // ��ǰ������ʹ�õ���������
-        QuadVertex* QuadVertexBufferBase = nullptr;           // CPU�˶��㻺������ַ
-        QuadVertex* QuadVertexBufferPtr = nullptr;            // CPU�˶��㻺������ǰд��ָ��
+        //========== 批处理状态 ==========
+        uint32_t QuadIndexCount = 0;                          // 当前批次已使用的索引数量
+        QuadVertex* QuadVertexBufferBase = nullptr;           // CPU端顶点缓冲区基址
+        QuadVertex* QuadVertexBufferPtr = nullptr;            // CPU端顶点缓冲区当前写入指针
 
         uint32_t CircleIndexCount = 0;
         CircleVertex* CircleVertexBufferBase = nullptr;
         CircleVertex* CircleVertexBufferPtr = nullptr;
 
-        //========== �������� ==========
-        std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;   // ��ǰ����ʹ�õ���������
-        uint32_t TextureSlotIndex = 1;                               // ��һ������������������0Ԥ������ɫ������
+        //========== 纹理管理 ==========
+        std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;   // 当前批次使用的纹理数组
+        uint32_t TextureSlotIndex = 1;                               // 下一个可用纹理槽索引（0预留给白色纹理）
 
-        //========== �������� ==========
-        glm::vec4 QuadVertexPositions[4];                    // �ı��α�׼����λ�ã�����Ϊԭ�㣬��Χ-0.5~0.5��
+        //========== 几何数据 ==========
+        glm::vec4 QuadVertexPositions[4];                    // 四边形标准顶点位置（中心为原点，范围-0.5~0.5）
 
         Ref<UniformBuffer> CameraUniformBuffer;
 
@@ -100,29 +100,29 @@ namespace Redflag
 
     
 
-    // ȫ�־�̬��Ⱦ����ʵ��
+    // 全局静态渲染数据实例
     static Renderer2DData s_Data;
 
     //==========================================================================
-    // ��ʼ������������ʱ����һ�Σ���������GPU��Դ�ͳ�ʼ״̬
+    // 初始化：程序启动时调用一次，设置所有GPU资源和初始状态
     //==========================================================================
     void Renderer2D::Init()
     {
         RF_PROFILE_FUNCTION();
 
-        //---------- 1. ��������������� ----------
+        //---------- 1. 创建顶点数组对象 ----------
         s_Data.QuadVertexArray = Redflag::VertexArray::Create();
 
-        //---------- 2. �������㻺���� ----------
-        // Ԥ����󶥵������ڴ�ռ�
+        //---------- 2. 创建顶点缓冲区 ----------
+        // 预留最大顶点数的内存空间
         s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 
-        //---------- 3. ���ö��㲼�� ----------
-        // ����GPUÿ�����Եĺ��塢���ͺ�λ��
+        //---------- 3. 设置顶点布局 ----------
+        // 告诉GPU每个属性的含义、类型和位置
         Redflag::BufferLayout squareLayout = {
-            {Redflag::ShaderDataType::Float3, "a_Position"},  // λ�ã�3��float
-            {Redflag::ShaderDataType::Float4, "a_Color"},     // ��ɫ��4��float
-            {Redflag::ShaderDataType::Float2, "a_TexCoord"},  // �������꣺2��float
+            {Redflag::ShaderDataType::Float3, "a_Position"},  // 位置：3个float
+            {Redflag::ShaderDataType::Float4, "a_Color"},     // 颜色：4个float
+            {Redflag::ShaderDataType::Float2, "a_TexCoord"},  // 纹理坐标：2个float
             {Redflag::ShaderDataType::Float, "a_TexIndex"},
             {Redflag::ShaderDataType::Float, "a_TilingFactor"} ,
             {Redflag::ShaderDataType::Int, "a_EntityID"} ,
@@ -130,21 +130,21 @@ namespace Redflag
         s_Data.QuadVertexBuffer->SetLayout(squareLayout);
         s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
-        //---------- 4. ����CPU�˶��㻺�����ڴ� ----------
-        // ������ʱ�洢ÿ֡�Ķ�������
+        //---------- 4. 分配CPU端顶点缓冲区内存 ----------
+        // 用于临时存储每帧的顶点数据
         s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 
-        //---------- 5. �������������� ----------
+        //---------- 5. 创建索引缓冲区 ----------
         uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
         for (uint32_t i = 0; i < s_Data.MaxQuads; i++)
         {
-            // ÿ���ı�����2����������ɣ�����˳��0-1-2-2-3-0
-            quadIndices[i * 6 + 0] = i * 4 + 0;  // ������1: ����0
-            quadIndices[i * 6 + 1] = i * 4 + 1;  // ������1: ����1
-            quadIndices[i * 6 + 2] = i * 4 + 2;  // ������1: ����2
-            quadIndices[i * 6 + 3] = i * 4 + 2;  // ������2: ����2
-            quadIndices[i * 6 + 4] = i * 4 + 3;  // ������2: ����3
-            quadIndices[i * 6 + 5] = i * 4 + 0;  // ������2: ����0
+            // 每个四边形由2个三角形组成，索引顺序：0-1-2-2-3-0
+            quadIndices[i * 6 + 0] = i * 4 + 0;  // 三角形1: 顶点0
+            quadIndices[i * 6 + 1] = i * 4 + 1;  // 三角形1: 顶点1
+            quadIndices[i * 6 + 2] = i * 4 + 2;  // 三角形1: 顶点2
+            quadIndices[i * 6 + 3] = i * 4 + 2;  // 三角形2: 顶点2
+            quadIndices[i * 6 + 4] = i * 4 + 3;  // 三角形2: 顶点3
+            quadIndices[i * 6 + 5] = i * 4 + 0;  // 三角形2: 顶点0
         }
         Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
         s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
@@ -165,39 +165,39 @@ namespace Redflag
         s_Data.CircleVertexArray->SetIndexBuffer(quadIB); //use quad IB
         s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
-        //---------- 6. ������ɫ���� ----------
-        // ���ڻ��ƴ�ɫ�ı��Σ�ͨ��������ɫ��ɫ��
+        //---------- 6. 创建白色纹理 ----------
+        // 用于绘制纯色四边形（通过顶点颜色着色）
         s_Data.WhiteTexture = Redflag::Texture2D::Create(1, 1);
-        uint32_t whiteTextureData = 0xffffffff;  // RGBA��ɫ����͸����
+        uint32_t whiteTextureData = 0xffffffff;  // RGBA白色（不透明）
         s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(whiteTextureData));
 
-        //---------- 7. ׼���������������� ----------
-        // ������ɫ��ÿ����������Ӧ��������Ԫ���
+        //---------- 7. 准备纹理采样器数组 ----------
+        // 告诉着色器每个采样器对应的纹理单元编号
         int32_t samplers[s_Data.MaxTextureSlots];
         for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
-            samplers[i] = i;  // ������i��Ӧ������Ԫi
+            samplers[i] = i;  // 采样器i对应纹理单元i
 
-        //---------- 8. ����������������ɫ�� ----------
+        //---------- 8. 创建并配置纹理着色器 ----------
         s_Data.QuadShader = Redflag::Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
         s_Data.CircleShader = Redflag::Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
 
         s_Data.QuadShader->Bind();
         s_Data.QuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
-        //---------- 9. ��ʼ�������� ----------
-        // 0�Ų����ð󶨰�ɫ����
+        //---------- 9. 初始化纹理槽 ----------
+        // 0号槽永久绑定白色纹理
         s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
-        //---------- 10. ��ʼ����׼�ı��ζ���λ�� ----------
-        // ������Ϊԭ�㣬��Χ-0.5~0.5�����ڱ任
-        s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };  // ����
-        s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };   // ����
-        s_Data.QuadVertexPositions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };    // ����
-        s_Data.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };   // ����
+        //---------- 10. 初始化标准四边形顶点位置 ----------
+        // 以中心为原点，范围-0.5~0.5，便于变换
+        s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };  // 左下
+        s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };   // 右下
+        s_Data.QuadVertexPositions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };    // 右上
+        s_Data.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };   // 左上
 
-        // [����] ���� Camera Uniform Buffer
-        // ��С�� sizeof(mat4) = 64�ֽ�
-        // Binding Point = 0 (����Լ�� 0 �Ų�λ�� Camera)
+        // [新增] 创建 Camera Uniform Buffer
+        // 大小是 sizeof(mat4) = 64字节
+        // Binding Point = 0 (我们约定 0 号槽位给 Camera)
         s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 
         // ── 初始化线段缓冲 ──
@@ -213,7 +213,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // �رգ��������ʱ���ã��ͷ���Դ
+    // 关闭：程序结束时调用，释放资源
     //==========================================================================
     void Renderer2D::Shutdown()
     {
@@ -225,7 +225,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ��ʼ�����Σ��༭�����
+    // 开始新批次：编辑器相机
     //==========================================================================
     void Renderer2D::BeginScene(const EditorCamera& camera)
     {
@@ -233,8 +233,8 @@ namespace Redflag
 
         glm::mat4 viewProj =camera.GetViewProjection();
 
-        // [�޸ĺ�]
-        // ֻ��Ҫ���� UBO������Ҫ Bind Shader (��Ϊ UBO ��ȫ�ְ󶨵�)
+        // [修改后]
+        // 只需要更新 UBO，不需要 Bind Shader (因为 UBO 是全局绑定的)
         s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
 
 
@@ -251,7 +251,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ��ʼ�����Σ�ÿ֡��ʼʱ���ã�����������״̬
+    // 开始新批次：每帧开始时调用，重置批处理状态
     //==========================================================================
     void Renderer2D::BeginScene(const glm::mat4 projection, const glm::mat4& transform)
     {
@@ -259,8 +259,8 @@ namespace Redflag
 
         glm::mat4 viewProj = projection * glm::inverse(transform);
 
-        // [�޸ĺ�]
-         // ֻ��Ҫ���� UBO������Ҫ Bind Shader (��Ϊ UBO ��ȫ�ְ󶨵�)
+        // [修改后]
+         // 只需要更新 UBO，不需要 Bind Shader (因为 UBO 是全局绑定的)
         s_Data.CameraUniformBuffer->SetData(&viewProj, sizeof(glm::mat4));
 
 
@@ -276,24 +276,24 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ��ʼ�����Σ�ÿ֡��ʼʱ���ã�����������״̬(To Remove)
+    // 开始新批次：每帧开始时调用，重置批处理状态(To Remove)
     //==========================================================================
     void Renderer2D::BeginScene(const OrthographicCamera& camera)
     {
         RF_PROFILE_FUNCTION();
 
-        // ����ɫ����������ͼͶӰ����
+        // 绑定着色器并设置视图投影矩阵
         s_Data.QuadShader->Bind();
         s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-        // ����������״̬
-        s_Data.QuadIndexCount = 0;                           // �����������
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // ����д��ָ�뵽��������ͷ
-        s_Data.TextureSlotIndex = 1;                          // ����������������0���ã�
+        // 重置批处理状态
+        s_Data.QuadIndexCount = 0;                           // 清空索引计数
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // 重置写入指针到缓冲区开头
+        s_Data.TextureSlotIndex = 1;                          // 重置纹理槽索引（0已用）
     }
 
     //==========================================================================
-    // ������ǰ���Σ��ϴ��������ݵ�GPU��ִ�л���
+    // 结束当前批次：上传顶点数据到GPU并执行绘制
     //==========================================================================
     void Renderer2D::EndScene()
     {
@@ -335,32 +335,32 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ˢ�£�������������ִ��һ�λ��Ƶ���
+    // 刷新：绑定所有纹理并执行一次绘制调用
     //==========================================================================
     void Renderer2D::Flush()
     {
         s_Data.QuadShader->Bind();
         s_Data.QuadVertexArray->Bind();
 
-        // ���������õ������������󶨵���Ӧ��������Ԫ
+        // 将本批次用到的所有纹理绑定到对应的纹理单元
         for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
         {
-            s_Data.TextureSlots[i]->Bind(i);  // ����i�󶨵�������Ԫi
+            s_Data.TextureSlots[i]->Bind(i);  // 纹理i绑定到纹理单元i
         }
 
-        // һ�λ��Ƶ�����Ⱦ�����ۻ����ı���
+        // 一次绘制调用渲染所有累积的四边形
         RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 
-		s_Data.Stas.DrawCalls++;  // ����ͳ�����ݣ����Ƶ��ô�������
+		s_Data.Stas.DrawCalls++;  // 更新统计数据：绘制调用次数增加
     }
 
     void Renderer2D::FlushAndReset()
     {
-		EndScene();  // ������ǰ���Σ��ϴ����ݲ����ƣ�
+		EndScene();  // 结束当前批次（上传数据并绘制）
 
-        s_Data.QuadIndexCount = 0;                           // �����������
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // ����д��ָ�뵽��������ͷ
-        s_Data.TextureSlotIndex = 1;                          // ����������������0���ã�
+        s_Data.QuadIndexCount = 0;                           // 清空索引计数
+        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;  // 重置写入指针到缓冲区开头
+        s_Data.TextureSlotIndex = 1;                          // 重置纹理槽索引（0已用）
 	}
 
 
@@ -368,7 +368,7 @@ namespace Redflag
 
 
     //==========================================================================
-    // ���ƴ�ɫ�ı��Σ�2D����汾��
+    // 绘制纯色四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
     {
@@ -377,13 +377,13 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ���ƴ�ɫ�ı��Σ�3D����汾��
+    // 绘制纯色四边形（3D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
     {
         RF_PROFILE_FUNCTION();
 
-        // ����任����ƽ�� + ����
+        // 计算变换矩阵：平移 + 缩放
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
             glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
@@ -391,7 +391,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ���������ı��Σ�2D����汾��
+    // 绘制纹理四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size,
         const Ref<Texture2D>& texture, float tilingFactor,
@@ -402,7 +402,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ���������ı��Σ�3D����汾��
+    // 绘制纹理四边形（3D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size,
         const Ref<Texture2D>& texture, float tilingFactor,
@@ -417,7 +417,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // �����������ı��Σ�2D����汾��
+    // 绘制子纹理四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size,
         const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
@@ -427,7 +427,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // �����������ı��Σ�3D����汾��
+    // 绘制子纹理四边形（3D坐标版本）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size,
         const Ref<SubTexture2D>& subTexture, float tilingFactor, const glm::vec4& tintColor)
@@ -435,42 +435,42 @@ namespace Redflag
         RF_PROFILE_FUNCTION();
 
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-            FlushAndReset();  // �����ǰ������������ʼ������
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
-        // ������ɫ��Ϊ��ɫ��������ɫ = ��ɫ �� ������ɫ �� tintColor
+        // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		// ��SubTexture2D��ȡ���������������Դ
+		// 从SubTexture2D获取纹理坐标和纹理资源
 		const glm::vec2* texCoords = subTexture->GetTexCoords(); 
 		const Ref<Texture2D>& texture = subTexture->GetTexture();  
 
-        // ����任����ƽ�� + ����
+        // 计算变换矩阵：平移 + 缩放
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
             glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-        //----- ������������ -----
-        float textureIndex = 0.0f;  // ��ʱ��������¼��ǰ�ı���ʹ�õ�������
+        //----- 纹理索引管理 -----
+        float textureIndex = 0.0f;  // 临时变量：记录当前四边形使用的纹理槽
 
-        // ����1����������Ƿ����ڱ�������ʹ�ù�
+        // 步骤1：检查纹理是否已在本批次中使用过
         for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
         {
-            // ͨ������ID�Ƚϣ�operator==���أ�
+            // 通过纹理ID比较（operator==重载）
             if (*s_Data.TextureSlots[i].get() == *texture.get())
             {
-                textureIndex = (float)i;  // ��������������
+                textureIndex = (float)i;  // 复用已有纹理槽
                 break;
             }
         }
 
-        // ����2���������������������������
+        // 步骤2：如果是新纹理，分配新纹理槽
         if (textureIndex == 0.0f)
         {
-            textureIndex = (float)s_Data.TextureSlotIndex;           // ������ = ��ǰ���ò�
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // ������������
-            s_Data.TextureSlotIndex++;                                // ������һ�����ò�
+            textureIndex = (float)s_Data.TextureSlotIndex;           // 新索引 = 当前可用槽
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // 存入纹理数组
+            s_Data.TextureSlotIndex++;                                // 更新下一个可用槽
         }
 
-        //----- д��4����������ݵ������� -----
+        //----- 写入4个顶点的数据到缓冲区 -----
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Color = color;
@@ -480,13 +480,13 @@ namespace Redflag
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // ������������
+        // 更新索引计数
         s_Data.QuadIndexCount += 6;
 
-        s_Data.Stas.QuadCount++;  // ����ͳ�����ݣ��ı�����������
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
 	}
     //==========================================================================
-// ���ƴ�ɫ�ı��Σ�ECS��- ʹ�ñ任��������Transform�����
+// 绘制纯色四边形（ECS）- 使用变换矩阵（来自Transform组件）
 //==========================================================================
     void Renderer2D::DrawQuad(const glm::mat4& transform,
         const glm::vec4& color,
@@ -520,54 +520,54 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ���������ı��Σ�ECS��- ʹ�ñ任��������Transform�����
+    // 绘制纹理四边形（ECS）- 使用变换矩阵（来自Transform组件）
     //==========================================================================
     void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture,
         float tilingFactor, const glm::vec4& tintColor,int entityID)
     {
         RF_PROFILE_FUNCTION();
 
-        // ��������Ƿ����������������ˢ�²���ʼ������
+        // 检查批次是否已满，如果满了则刷新并开始新批次
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
             FlushAndReset();
 
-        // ������ɫ��Ϊ��ɫ��������ɫ = ��ɫ �� ������ɫ �� tintColor
+        // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        //----- ������������ -----
+        //----- 纹理索引管理 -----
         float textureIndex = 0.0f;
 
-        // ��������Ƿ����ڱ�������ʹ�ù�
+        // 检查纹理是否已在本批次中使用过
         for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
         {
             if (*s_Data.TextureSlots[i].get() == *texture.get())
             {
-                textureIndex = (float)i;  // ��������������
+                textureIndex = (float)i;  // 复用已有纹理槽
                 break;
             }
         }
 
-        // �������������������������
+        // 如果是新纹理，分配新纹理槽
         if (textureIndex == 0.0f)
         {
-            // ����������Ƿ�����
+            // 检查纹理槽是否已满
             if (s_Data.TextureSlotIndex >= s_Data.MaxTextureSlots)
-                FlushAndReset();  // ������������ˢ������
+                FlushAndReset();  // 纹理槽已满，刷新批次
 
             textureIndex = (float)s_Data.TextureSlotIndex;
             s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
             s_Data.TextureSlotIndex++;
         }
 
-        // ��׼��������
+        // 标准纹理坐标
         const glm::vec2 texCoords[4] = {
-            {0.0f, 0.0f},  // ����
-            {1.0f, 0.0f},  // ����
-            {1.0f, 1.0f},  // ����
-            {0.0f, 1.0f}   // ����
+            {0.0f, 0.0f},  // 左下
+            {1.0f, 0.0f},  // 右下
+            {1.0f, 1.0f},  // 右上
+            {0.0f, 1.0f}   // 左上
         };
 
-        // д��4����������ݵ�������
+        // 写入4个顶点的数据到缓冲区
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
@@ -579,10 +579,10 @@ namespace Redflag
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // ������������
+        // 更新索引计数
         s_Data.QuadIndexCount += 6;
 
-        // ����ͳ������
+        // 更新统计数据
         s_Data.Stas.QuadCount++;
     }
 
@@ -639,7 +639,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ������ת��ɫ�ı��Σ�2D����汾��
+    // 绘制旋转纯色四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
         float rotation, const glm::vec4& color)
@@ -649,7 +649,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ������ת��ɫ�ı��Σ�3D����汾��
+    // 绘制旋转纯色四边形（3D坐标版本）
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
         float rotation, const glm::vec4& color)
@@ -657,22 +657,22 @@ namespace Redflag
         RF_PROFILE_FUNCTION();
 
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-            FlushAndReset();  // �����ǰ������������ʼ������
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
-        // ����任����ƽ�� + ��ת
+        // 计算变换矩阵：平移 + 旋转
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-        //----- д��4����������ݵ������� -----
+        //----- 写入4个顶点的数据到缓冲区 -----
         const glm::vec2 texCoords[4] = {
-            {0.0f, 0.0f},  // ����
-            {1.0f, 0.0f},  // ����
-            {1.0f, 1.0f},  // ����
-            {0.0f, 1.0f}   // ����
+            {0.0f, 0.0f},  // 左下
+            {1.0f, 0.0f},  // 右下
+            {1.0f, 1.0f},  // 右上
+            {0.0f, 1.0f}   // 左上
         };
 
-        // ʹ�� for ѭ��д��4������
+        // 使用 for 循环写入4个顶点
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Color = color;
@@ -682,14 +682,14 @@ namespace Redflag
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // ������������
+        // 更新索引计数
         s_Data.QuadIndexCount += 6;
 
-        s_Data.Stas.QuadCount++;  // ����ͳ�����ݣ��ı�����������
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
 
     //==========================================================================
-    // ������ת�����ı��Σ�2D����汾��
+    // 绘制旋转纹理四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
         float rotation, const Ref<Texture2D>& texture,
@@ -700,7 +700,7 @@ namespace Redflag
     }
 
     //==========================================================================
-    // ������ת�����ı��Σ�3D����汾��
+    // 绘制旋转纹理四边形（3D坐标版本）
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
         float rotation, const Ref<Texture2D>& texture,
@@ -709,46 +709,46 @@ namespace Redflag
         RF_PROFILE_FUNCTION();
 
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-            FlushAndReset();  // �����ǰ������������ʼ������
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
-        // ������ɫ��Ϊ��ɫ��������ɫ = ��ɫ �� ������ɫ �� tintColor
+        // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        //----- ������������ -----
-        float textureIndex = 0.0f;  // ��ʱ��������¼��ǰ�ı���ʹ�õ�������
+        //----- 纹理索引管理 -----
+        float textureIndex = 0.0f;  // 临时变量：记录当前四边形使用的纹理槽
 
-        // ����1����������Ƿ����ڱ�������ʹ�ù�
+        // 步骤1：检查纹理是否已在本批次中使用过
         for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
         {
             if (*s_Data.TextureSlots[i].get() == *texture.get())
             {
-                textureIndex = (float)i;  // ��������������
+                textureIndex = (float)i;  // 复用已有纹理槽
                 break;
             }
         }
 
-        // ����2���������������������������
+        // 步骤2：如果是新纹理，分配新纹理槽
         if (textureIndex == 0.0f)
         {
-            textureIndex = (float)s_Data.TextureSlotIndex;           // ������ = ��ǰ���ò�
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // ������������
-            s_Data.TextureSlotIndex++;                                // ������һ�����ò�
+            textureIndex = (float)s_Data.TextureSlotIndex;           // 新索引 = 当前可用槽
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // 存入纹理数组
+            s_Data.TextureSlotIndex++;                                // 更新下一个可用槽
         }
 
-        // ����任����ƽ�� + ��ת + ����
+        // 计算变换矩阵：平移 + 旋转 + 缩放
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-        //----- д��4����������ݵ������� -----
+        //----- 写入4个顶点的数据到缓冲区 -----
         const glm::vec2 texCoords[4] = {
-            {0.0f, 0.0f},  // ����
-            {1.0f, 0.0f},  // ����
-            {1.0f, 1.0f},  // ����
-            {0.0f, 1.0f}   // ����
+            {0.0f, 0.0f},  // 左下
+            {1.0f, 0.0f},  // 右下
+            {1.0f, 1.0f},  // 右上
+            {0.0f, 1.0f}   // 左上
         };
 
-        // ʹ�� for ѭ��д��4������
+        // 使用 for 循环写入4个顶点
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Color = color;
@@ -758,14 +758,14 @@ namespace Redflag
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // ������������
+        // 更新索引计数
         s_Data.QuadIndexCount += 6;
 
-		s_Data.Stas.QuadCount++;  // ����ͳ�����ݣ��ı�����������
+		s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
     }
 
     //==========================================================================
-    // ������ת�������ı��Σ�2D����汾��
+    // 绘制旋转子纹理四边形（2D坐标版本）
     //==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
         float rotation, const Ref<SubTexture2D>& subTexture,
@@ -776,7 +776,7 @@ namespace Redflag
 	}
 
 	//==========================================================================
-	// ������ת�������ı��Σ�3D����汾��
+	// 绘制旋转子纹理四边形（3D坐标版本）
 	//==========================================================================
     void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
         float rotation, const Ref<SubTexture2D>& subTexture,
@@ -784,43 +784,43 @@ namespace Redflag
     {
         RF_PROFILE_FUNCTION();
         
-        // ��SubTexture2D��ȡ���������������Դ
+        // 从SubTexture2D获取纹理坐标和纹理资源
         const glm::vec2* texCoords = subTexture->GetTexCoords();
         const Ref<Texture2D>& texture = subTexture->GetTexture();
 
         if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-            FlushAndReset();  // �����ǰ������������ʼ������
+            FlushAndReset();  // 如果当前批次已满，开始新批次
 
-        // ������ɫ��Ϊ��ɫ��������ɫ = ��ɫ �� ������ɫ �� tintColor
+        // 顶点颜色设为白色，最终颜色 = 白色 × 纹理颜色 × tintColor
         constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        //----- ������������ -----
-        float textureIndex = 0.0f;  // ��ʱ��������¼��ǰ�ı���ʹ�õ�������
+        //----- 纹理索引管理 -----
+        float textureIndex = 0.0f;  // 临时变量：记录当前四边形使用的纹理槽
 
-        // ����1����������Ƿ����ڱ�������ʹ�ù�
+        // 步骤1：检查纹理是否已在本批次中使用过
         for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
         {
             if (*s_Data.TextureSlots[i].get() == *texture.get())
             {
-                textureIndex = (float)i;  // ��������������
+                textureIndex = (float)i;  // 复用已有纹理槽
                 break;
             }
         }
 
-        // ����2���������������������������
+        // 步骤2：如果是新纹理，分配新纹理槽
         if (textureIndex == 0.0f)
         {
-            textureIndex = (float)s_Data.TextureSlotIndex;           // ������ = ��ǰ���ò�
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // ������������
-            s_Data.TextureSlotIndex++;                                // ������һ�����ò�
+            textureIndex = (float)s_Data.TextureSlotIndex;           // 新索引 = 当前可用槽
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;  // 存入纹理数组
+            s_Data.TextureSlotIndex++;                                // 更新下一个可用槽
         }
 
-        // ����任����ƽ�� + ��ת + ����
+        // 计算变换矩阵：平移 + 旋转 + 缩放
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-        //----- д��4����������ݵ������� -----
+        //----- 写入4个顶点的数据到缓冲区 -----
         for (uint32_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Color = color;
@@ -830,10 +830,10 @@ namespace Redflag
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // ������������
+        // 更新索引计数
         s_Data.QuadIndexCount += 6;
 
-        s_Data.Stas.QuadCount++;  // ����ͳ�����ݣ��ı�����������
+        s_Data.Stas.QuadCount++;  // 更新统计数据：四边形数量增加
 	}
 
     //Circle

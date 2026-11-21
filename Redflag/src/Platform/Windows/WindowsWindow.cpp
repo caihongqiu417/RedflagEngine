@@ -74,77 +74,77 @@ namespace Redflag {
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
-		//----------------------------------------------------------����opengl�ص�-----------------------------------------------//
+		//----------------------------------------------------------设置opengl回调-----------------------------------------------//
 
-		// ���û���ק�������ڴ�Сʱ��GLFW����ô˺���
+		// 当用户拖拽调整窗口大小时，GLFW会调用此函数
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
-				// glfwGetWindowUserPointer�õ�data������void*����Ҫת��ΪWindowData*����
+				// glfwGetWindowUserPointer得到data，返回void*，需要转换为WindowData*类型
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-				// ���´��������еĿ��Ⱥ͸߶���Ϣ
+				// 更新窗口数据中的宽度和高度信息
 				data.Width = width;
 				data.Height = height;
 
 
-				// ��GLFW��ԭʼ������װ�������WindowResizeEvent�¼�
+				// 将GLFW的原始参数封装成引擎的WindowResizeEvent事件
 				WindowResizeEvent event(width, height);
 
 				RF_CORE_WARN("{0},{1}", width, height);
 
-				// �ᴥ��data�д洢��Application::OnEvent���������ݴ��ڴ�С�ı��¼�
+				// 会触发data中存储的Application::OnEvent函数，传递窗口大小改变事件
 				data.EventCallback(event);
 			});
 
-		// ���ڹرջص�
+		// 窗口关闭回调
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 			{
-				// glfwGetWindowUserPointer�õ�data������void*����Ҫת��ΪWindowData*����
+				// glfwGetWindowUserPointer得到data，返回void*，需要转换为WindowData*类型
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 				WindowCloseEvent event;
 
-				// �ᴥ��data�д洢��Application::OnEvent���������ݴ��ڹر��¼�
+				// 会触发data中存储的Application::OnEvent函数，传递窗口关闭事件
 				data.EventCallback(event);
 			});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int modes)
 			{
-				// glfwGetWindowUserPointer�õ�data������void*����Ҫת��ΪWindowData*����
+				// glfwGetWindowUserPointer得到data，返回void*，需要转换为WindowData*类型
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 				switch (action)
 				{
 				case GLFW_PRESS:
 				{
-					//��װ�¼�
+					//封装事件
 					KeyPressedEvent event(key, 0);
-					//application�ص����ַ��¼�
+					//application回调，分发事件
 					data.EventCallback(event);
 					break;
 				}
 
 				case GLFW_RELEASE:
 				{
-					//��װ�¼�
+					//封装事件
 					KeyReleasedEvent event(key);
-					//application�ص����ַ��¼�
+					//application回调，分发事件
 					data.EventCallback(event);
 					break;
 				}
 
 				case GLFW_REPEAT:
 				{
-					//��װ�¼�
+					//封装事件
 					KeyPressedEvent event(key, 1);
-					//application�ص����ַ��¼�
+					//application回调，分发事件
 					data.EventCallback(event);
 					break;
 				}
 				}
 			});
 
-		//�ַ��ص�
+		//字符回调
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int codepoint) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			KeyTypedEvent event(codepoint);
@@ -201,7 +201,7 @@ namespace Redflag {
 
 
 	}
-	//----------------------------------------------------------����opengl�ص�-----------------------------------------------//
+	//----------------------------------------------------------设置opengl回调-----------------------------------------------//
 	void WindowsWindow::SetVSync(bool enable) {
 		if (enable)
 			glfwSwapInterval(1);
