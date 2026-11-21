@@ -1,33 +1,45 @@
+% 上两行是请求的去向；最下一行沿图像的读写顺序排。
 \begin{tikzpicture}[x=1mm,y=1mm,
-  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont},
-  arrow/.style={draw=Teal,line width=.75pt,-{Stealth[length=1.7mm]}},
-  branch/.style={draw=Teal,line width=.65pt,line cap=round},
-  heading/.style={anchor=west,text=Muted,font=\sffamily\fontsize{10}{12}\selectfont}]
-  \node[heading] at (0,61) {调用方};
-  \node[heading] at (37,61) {公共接口};
-  \node[heading] at (93,61) {后端实现};
-  \draw[Rule] (0,57.5)--(141,57.5);
+  every node/.style={font=\sffamily\fontsize{10.5}{13}\selectfont,text=Ink,inner sep=0pt,outer sep=0pt},
+  linehead/.style={anchor=west,font=\sffamily\bfseries\fontsize{11}{14}\selectfont,text=Teal},
+  sub/.style={text=Muted,font=\sffamily\fontsize{10.1}{13}\selectfont},
+  call/.style={draw=Teal,line width=.8pt,-{Stealth[length=1.8mm]}},
+  imageflow/.style={draw=Rust,line width=.85pt,-{Stealth[length=1.8mm]}}]
+  \node[linehead] at (0,72) {加载模型};
+  \node[anchor=west] at (21,72) {材质保存设备创建的砖墙贴图};
+  \draw[Rule] (0,68.7)--(142,68.7);
+  \node at (20,62) {\texttt{AssetManager}};
+  \node[sub] at (20,55.5) {按编号加载立方体};
+  \node at (70,62) {模型加载器};
+  \node[sub] at (70,55.5) {读出网格与材质};
+  \node at (121.5,62) {\texttt{RenderDevice}};
+  \node[sub] at (121.5,55.5) {创建贴图和顶点缓冲};
+  \draw[call] (38,62)--(50,62);
+  \draw[call] (88,62)--(100,62);
 
-  \foreach \y in {45,16}{
-    \draw[draw=Teal!45,fill=Soft,rounded corners=1.5pt]
-      (36,\y-8) rectangle (76,\y+8);
-    \draw[arrow] (28,\y)--(35,\y);
-    \draw[branch] (76,\y)--(82,\y);
-    \draw[branch] (82,\y-5)--(82,\y+5);
-    \draw[arrow] (82,\y+5)--(90,\y+5);
-    \draw[arrow] (82,\y-5)--(90,\y-5);
-  }
-  \node[anchor=west] at (0,48) {模型加载器};
-  \node[heading] at (0,41.5) {创建材质贴图};
-  \node[anchor=west] at (0,19) {场景渲染器};
-  \node[heading] at (0,12.5) {绘制可见模型};
-  \node[text=Teal] at (56,48) {\texttt{RenderDevice}};
-  \node at (56,41.5) {创建纹理和缓冲区};
-  \node[text=Teal] at (56,19) {\texttt{CommandList}};
-  \node at (56,12.5) {设置目标并绘制};
-  \node[anchor=west] at (93,50) {\texttt{OpenGL}\quad 创建纹理对象};
-  \node[anchor=west] at (93,40) {\texttt{Vulkan}\quad 创建图像和视图};
-  \node[anchor=west] at (93,21) {\texttt{OpenGL}\quad 调用驱动绘制};
-  \node[anchor=west] at (93,11) {\texttt{Vulkan}\quad 录制绘制命令};
-  \draw[Rule] (0,30.5)--(141,30.5);
+  \node[linehead] at (0,46) {绘制模型};
+  \node[anchor=west] at (21,46) {\texttt{SceneRenderer} 把模型交给 3D 渲染器};
+  \draw[Rule] (0,42.7)--(142,42.7);
+  \node at (20,36) {\texttt{Renderer3D}};
+  \node[sub] at (20,29.5) {选定网格和材质};
+  \node at (70,36) {\texttt{CommandList}};
+  \node[sub] at (70,29.5) {指定目标并请求绘制};
+  \node at (121.5,36) {OpenGL 或 Vulkan 后端};
+  \node[sub] at (121.5,29.5) {把模型画入场景颜色图};
+  \draw[call] (38,36)--(50,36);
+  \draw[call] (88,36)--(100,36);
+
+  \node[linehead,text=Rust] at (0,20) {显示结果};
+  \node[anchor=west] at (21,20) {后处理写出面板需要的那张图};
+  \draw[Rule] (0,16.7)--(142,16.7);
+  \node at (11,9) {场景颜色图};
+  \node at (49,9) {后处理};
+  \node at (89,9) {面板输出图};
+  \node at (128,9) {编辑器 ImGui};
+  \draw[imageflow] (23,9)--(40,9);
+  \draw[imageflow] (57,9)--(77,9);
+  \draw[imageflow] (101,9)--(115,9);
+  \node[sub] at (31.5,3.3) {读取};
+  \node[sub] at (67,3.3) {写入};
+  \node[sub] at (108,3.3) {显示};
 \end{tikzpicture}

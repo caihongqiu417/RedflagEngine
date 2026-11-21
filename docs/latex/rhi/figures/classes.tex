@@ -1,0 +1,37 @@
+% 拟议接口与后端类。虚线和空心三角表示 UML 的接口实现关系。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={inner sep=0pt,outer sep=0pt,text=Ink,font=\sffamily\fontsize{10.5}{13}\selectfont},
+  interface/.style={draw=Teal,line width=.7pt},
+  backend/.style={draw=Rule,line width=.65pt},
+  method/.style={anchor=west,font=\ttfamily\fontsize{10.5}{13}\selectfont},
+  hint/.style={text=Muted,font=\sffamily\fontsize{10.2}{13}\selectfont},
+  implements/.style={draw=Teal,dash pattern=on 1.3mm off .8mm,line width=.75pt},
+  tointerface/.style={implements,-{Triangle[open,length=2.4mm,width=3.1mm]}}]
+  % 左侧两个类各有一个名称栏和一个方法栏。
+  \foreach \base/\api/\role/\first/\second in {
+    52/RenderDevice/创建资源/{CreateTexture(spec)}/{CreateBuffer(spec)},
+    14/CommandList/记录绘制/{Draw(vertexCount)}/{DrawIndexed(indexCount)}}{
+    \begin{scope}[shift={(0,\base)}]
+      \fill[Soft] (0,15) rectangle (67,26);
+      \draw[interface] (0,0) rectangle (67,26);
+      \draw[Teal!50] (0,15)--(67,15);
+      \node[anchor=west,text=Teal] at (2.5,20.5) {\texttt{\api}};
+      \node[hint,anchor=east] at (64.5,20.5) {\role};
+      \node[method] at (2.5,10.5) {\first};
+      \node[method] at (2.5,4.5) {\second};
+      \draw[implements] (87,22)--(77,22)--(77,1)--(87,1);
+      \draw[tointerface] (77,13)--(67,13);
+    \end{scope}
+  }
+  \foreach \mid/\name/\detail in {
+    74/OpenGLDevice/创建纹理和缓冲区,
+    53/VulkanDevice/为图像和缓冲区绑定内存,
+    36/OpenGLCommandList/调用 OpenGL 绘制,
+    15/VulkanCommandList/把绘制写入命令缓冲区}{
+    \draw[backend] (87,\mid-7) rectangle (142,\mid+7);
+    \node at (114.5,\mid+2.8) {\texttt{\name}};
+    \node[hint] at (114.5,\mid-3.1) {\detail};
+  }
+  \draw[tointerface] (13,2)--(1,2);
+  \node[hint,anchor=west] at (16,2) {空心三角指向公共接口，右侧两个后端分别实现它的方法。};
+\end{tikzpicture}

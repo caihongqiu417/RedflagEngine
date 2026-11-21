@@ -1,0 +1,19 @@
+\begin{tikzpicture}[x=1mm,y=1mm,
+  cls/.style={draw=Teal!55,fill=Soft,rounded corners=1pt,minimum width=24mm,
+    minimum height=8mm,inner sep=1pt,font=\ttfamily\fontsize{10.8}{13}\selectfont,text=Ink},
+  rel/.style={draw=Muted,line width=.8pt},
+  ref/.style={rel,-{Stealth[length=1.7mm]}},
+  tag/.style={font=\sffamily\fontsize{10}{12}\selectfont,text=Muted,inner sep=1pt}]
+  \node[cls] (model) at (12,13) {Model};
+  \node[cls] (sub) at (53,13) {SubMesh};
+  \node[cls] (mesh) at (94,22) {Mesh};
+  \node[cls] (mat) at (94,4) {Material};
+  \node[cls] (tex) at (133,4) {Texture2D};
+  \fill[Muted] (24,13)--(26,14.2)--(28,13)--(26,11.8)--cycle;
+  \draw[rel] (28,13)--(sub.west);
+  \node[tag] at (32,18) {包含};
+  \draw[ref] (sub.east)--(71,13)|-(mesh.west);
+  \draw[ref] (71,13)|-(mat.west);
+  \draw[ref] (mat.east)--(tex.west);
+  \node[tag] at (114,10) {底色图};
+\end{tikzpicture}

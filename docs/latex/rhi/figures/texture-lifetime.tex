@@ -1,27 +1,51 @@
-% 同一机位。两个内容矩形严格按 640:960 的比例绘制。
+% 同一立方体的两张面板输出图，示意窗的宽高按 2:3 排列。
 \begin{tikzpicture}[x=1mm,y=1mm,
-  every node/.style={font=\sffamily\fontsize{10.6}{13}\selectfont,text=Ink,inner sep=0pt},
-  pics/room/.style={code={
-    % 16:9 视口中的房间和方块。坐标按同一比例缩放。
-    \fill[black!4] (0,0) rectangle (32,18);
-    \fill[Rust!32] (0,0)--(5,4)--(5,14)--(0,18)--cycle;
-    \fill[Teal!22] (32,0)--(27,4)--(27,14)--(32,18)--cycle;
-    \fill[Ink!10] (0,0)--(32,0)--(27,4)--(5,4)--cycle;
-    \fill[Ink!5] (0,18)--(5,14)--(27,14)--(32,18)--cycle;
-    \fill[Ink!14] (10,2.8)--(18,1.5)--(24,3.1)--(16,4.4)--cycle;
-    \fill[Teal!65] (11,5)--(16,3.3)--(16,9.3)--(11,11)--cycle;
-    \fill[Teal] (16,3.3)--(20,5.4)--(20,11.4)--(16,9.3)--cycle;
-    \fill[Teal!32] (11,11)--(15,13.1)--(20,11.4)--(16,9.3)--cycle;
-    \draw[Ink!65,line width=.6pt] (0,0) rectangle (32,18);
+  every node/.style={font=\sffamily\fontsize{10.5}{13}\selectfont,text=Ink,outer sep=0pt,inner sep=0pt},
+  title/.style={font=\sffamily\bfseries\fontsize{10.8}{13}\selectfont},
+  phase label/.style={align=center,font=\sffamily\fontsize{10.3}{13}\selectfont},
+  guide/.style={draw=Rule,densely dashed},
+  pics/viewport/.style={code={
+    \filldraw[fill=Soft,draw=Muted,line width=.45pt] (0,0) rectangle (24,13.5);
+    % 砖缝随立方体两个可见面的投影方向倾斜。
+    \begin{scope}[shift={(11.5,1.8)},x={(-.87mm,.32mm)},y={(0mm,1mm)}]
+      \fill[Rust!85] (0,0)--(5.5,0)--(5.5,6)--(0,6)--cycle;
+      \draw[Paper!85!Rust,line width=.38pt] (0,2)--(5.5,2) (0,4)--(5.5,4)
+        (2.5,0)--(2.5,2) (4,2)--(4,4) (2.5,4)--(2.5,6);
+    \end{scope}
+    \begin{scope}[shift={(11.5,1.8)},x={(.87mm,.32mm)},y={(0mm,1mm)}]
+      \fill[Rust!85!Ink] (0,0)--(6.5,0)--(6.5,6)--(0,6)--cycle;
+      \draw[Paper!80!Rust,line width=.38pt] (0,2)--(6.5,2) (0,4)--(6.5,4)
+        (3.5,0)--(3.5,2) (1.8,2)--(1.8,4) (3.5,4)--(3.5,6);
+    \end{scope}
+    \fill[Rust!53] (6.715,9.56)--(11.5,7.8)--(17.155,9.88)--(12.37,11.64)--cycle;
   }}]
-  \node[font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont] at (27,54) {拖动前的场景面板};
-  \node[font=\sffamily\bfseries\fontsize{11.5}{14}\selectfont] at (106,54) {拖大后的场景面板};
-  \pic[scale=1.25] at (7,15) {room};
-  \pic[scale=1.875] at (76,15) {room};
-  \draw[Teal,line width=.9pt,-{Stealth[length=2mm]}] (49,25)--(73,25);
-  \node[text=Muted] at (61,29.5) {拖大面板};
-  \node[font=\sffamily\bfseries] at (27,10) {$640 \times 360$ 像素};
-  \node[font=\sffamily\bfseries] at (106,10) {$960 \times 540$ 像素};
-  \node[text=Rust] at (27,3.5) {上一帧的界面命令读取小图};
-  \node[text=Teal] at (106,3.5) {下一帧把场景画进大图};
+  \pic at (1,59) {viewport};
+  \node[anchor=west,title,text=Rust] at (29,68) {旧图};
+  \node[anchor=west] at (29,62) {$640 \times 360$};
+  \pic[scale=1.5] at (73,56.3) {viewport};
+  \node[anchor=west,title,text=Teal] at (113,68) {新图};
+  \node[anchor=west] at (113,62) {$960 \times 540$};
+
+  \draw[Muted,line width=.55pt,-{Stealth[length=1.8mm]}] (17,51.5)--(140.5,51.5);
+  \node[anchor=east,text=Muted] at (141,55) {时间};
+  \node[anchor=west,title] at (0,39) {CPU};
+  \node[anchor=west,title] at (0,16) {GPU};
+  \draw[guide] (31,32)--(31,24);
+  \draw[guide] (64,50)--(64,45) (64,32)--(64,24);
+  \draw[guide] (98,50)--(98,45) (98,32)--(98,6);
+
+  \node[phase label] at (31,39) {提交 17\\界面使用旧图};
+  \node[phase label] at (74.5,39) {拖大面板\\提交 18 改用新图};
+  \node[phase label] at (119,39) {查到完成值 17\\可释放旧图};
+  \draw[Muted,-{Stealth[length=1.4mm]}] (47.5,39)--(56.5,39);
+  \draw[Muted,-{Stealth[length=1.4mm]}] (92,39)--(101,39);
+
+  \fill[Rust!12] (31,9) rectangle (98,24);
+  \draw[Rust,line width=.85pt] (31,9)--(98,9);
+  \node[phase label,text=Rust] at (64.5,16.5) {执行提交 17，界面仍在读取旧图};
+  \fill[Soft] (99,9) rectangle (141,24);
+  \draw[Teal,line width=.85pt,-{Stealth[length=1.8mm]}] (99,9)--(141,9);
+  \node[phase label,text=Teal] at (120,16.5) {执行提交 18\\使用新图};
+  \draw[Ink,line width=.8pt] (98,9)--(98,24);
+  \node[text=Muted] at (98,3.3) {GPU 完成提交 17};
 \end{tikzpicture}

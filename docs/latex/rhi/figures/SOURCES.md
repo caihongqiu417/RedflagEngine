@@ -1,12 +1,14 @@
 # RHI 方案的插图
 
-正文三幅图用 TikZ 绘制，中文与数字在 PDF 中均可选取、放大。每幅图的调用、时间或坐标都在正文相应段落解释。
+五幅图均用 TikZ 绘制，PDF 中的名称、箭头和数字可直接放大。类图中的关系分别对应现有源码与拟议接口。
 
 | 图 | 源码 | 图中内容 |
 | --- | --- | --- |
-| 1 | [interfaces.tex](interfaces.tex) | Redflag 拟议的纹理创建与模型绘制接口，以及各自选中的后端实现。 |
-| 2 | [texture-lifetime.tex](texture-lifetime.tex) | 同一机位下的方块和场景面板均为原创示意。面板由 640 × 360 拖大至 960 × 540，两张图的宽高按实际示例比例绘制。上一帧仍可能读取小图，下一帧绘制到大图。 |
-| 3 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度直接由正文公式计算。 |
+| 1 | [interfaces.tex](interfaces.tex) | 立方体从加载到编辑器显示。上两行是调用方向，末行沿后处理的图像流向阅读。 |
+| 2 | [model-classes.tex](model-classes.tex) | 现有 Model 包含 SubMesh，子网格分别持有网格与材质，材质可以引用底色图。依据为项目的 Model.h 与 Material.h。 |
+| 3 | [classes.tex](classes.tex) | 拟议的 RenderDevice 和 CommandList。空心三角指向 OpenGL 与 Vulkan 两套实现共同遵循的接口。 |
+| 4 | [texture-lifetime.tex](texture-lifetime.tex) | 面板从 640 × 360 拖到 960 × 540。CPU 与 GPU 两条时间线说明最后一次读小图的提交 17 何时完成。 |
+| 5 | [clip-depth.tex](clip-depth.tex) | 同一顶点在 OpenGL 与 Vulkan 约定下的深度。三个刻度由附录 A 的公式计算。 |
 
 ## Khronos 的参考原图
 

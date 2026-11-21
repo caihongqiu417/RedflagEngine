@@ -10,7 +10,7 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 第一次读项目，可以先看 Cornell Box 的两张对照图。红墙旁边的地板本来是白色，打开间接光后却带上了红色。[经典场景实测](output/pdf/Redflag-Classic-Scenes.pdf) 保存了画面和相机设置，[渲染公式与实现](output/pdf/Redflag-Rendering-Math.pdf) 顺着同一块地面解释公式、着色器和读回的颜色值。
 
-要顺着代码看一个模型怎样加载和绘制，可以接着读[引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)。[RHI 与 Vulkan 方案](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 用一张场景颜色图说明哪些调用可以共用，OpenGL 和 Vulkan 分别怎样执行。目前编辑器仍使用 OpenGL。
+要顺着代码看一个模型怎样加载和绘制，可以接着读[引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)。[RHI 与 Vulkan 方案](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 通过类图讲解模型、材质、设备和命令列表的分工，并用阴影和后处理说明如何设计绘制接口。目前编辑器使用 OpenGL，文中的 Vulkan 后端是拟议设计。
 
 遇到错图时，[排错记录](output/pdf/Redflag-Debugging-Notes.pdf) 可以从现象追到当时的源码与 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions.pdf) 解释当时为什么选择这种实现。[渲染性能实测](output/pdf/Redflag-Rendering-Performance.pdf) 用实际帧和计时对照深度预写、2D 批渲染和 3D 实例化。各册的 LaTeX 源码与编译命令收在[文档目录](docs/latex/README.md)。
 

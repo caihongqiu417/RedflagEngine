@@ -1,248 +1,161 @@
 % !TeX program = xelatex
 \input{preamble}
 \input{layout}
-
+\geometry{paperwidth=210mm,paperheight=285mm,left=24mm,right=24mm,top=22mm,bottom=22mm}
+\setlength{\headwidth}{\textwidth}
+\newcommand{\sample}[1]{\par\smallskip{\sffamily\fontsize{10.4}{14}\selectfont\bfseries\color{Teal}#1\par}\nobreak}
 \begin{document}
 \bodytype
 \section{RHI 与 Vulkan 接入设计}
-Redflag 目前通过 OpenGL 把贴图传给显卡、绘制模型，并把结果显示在编辑器中。接入 Vulkan 后，场景渲染器仍负责选择可见模型和安排绘制顺序，着色器仍按相同的公式计算光照。两个后端需要共同约定的是怎样创建显卡资源、怎样把一次绘制交给显卡。这组接口通常称为渲染硬件接口（RHI）。
+假设编辑器打开一个场景，要把带砖墙贴图的立方体显示在场景面板里。场景文件保存了模型编号和立方体的位置。第一次绘制时，场景渲染器发现组件里还没有模型，就把编号交给 \code{AssetManager}。它查到文件路径，调用模型加载器读取顶点、索引和材质。材质保存砖墙贴图，加载好的模型回到组件里，后续帧可以继续使用。
 
-\subsection{资源创建与绘制命令}
-材质上的底色贴图，通常在模型加载时创建一次，可以连续使用许多帧。同一模型每次出现在哪个视口、用哪份相机数据、画进哪张图，则要在绘制时决定。方案把前一件事交给 \code{RenderDevice}，把后一件事交给 \code{CommandList}。这两个名字都表示准备实现的接口。
+每帧绘制开始时，\code{SceneRenderer} 从实体取出模型、变换和编号，交给 \code{Renderer3D}。后者检查网格是否在相机视野里，并为主绘制选择材质和网格。现在这些绘制最终通过 OpenGL 执行。接入 Vulkan 时，计划用 \code{RenderDevice} 创建网格和贴图所需的显卡资源，用 \code{CommandList} 记录这次使用的相机、模型和绘制目标。后端拿到的是已经选好的内容。
 
-\figpanel{interfaces}{纹理创建与模型绘制。启动时选定一个后端，两行都使用它。}
+\figpanel{interfaces}{从加载到显示。砖墙贴图是画立方体时的输入；场景颜色图是画好的结果，经过后处理才成为面板要显示的图。}
 
-场景渲染器可以先用同一个接口在 OpenGL 中画出原来的画面。等 Vulkan 也能执行这次绘制，就可以用同一份顶点、材质和相机逐项比较结果。首版从一个窗口、一条绘制命令做起。
+编辑器最后把面板输出图与工具栏一起画进窗口。此时一次完整绘制才走完。Redflag 当前运行的是 OpenGL；下文的设备接口、命令列表和 Vulkan 代码均为接入方案。已有资源类见第~\pageref{sec:model}~页，两个拟议接口的类图见第~\pageref{sec:classes}~页。
 
-\newpage
-\section{模型的加载与绘制}
-\subsection{从资源编号到一张贴图}
-场景文件用资源编号引用模型。\code{AssetManager} 根据编号找到模型，加载器读出网格与材质，材质再保存绘制所需的贴图。现有材质类中的底色贴图声明如下。下面摘出创建函数中与它对应的 OpenGL 分支。
+\clearpage
+\section{模型、网格与材质}\label{sec:model}
+\code{AssetManager::Load<Model>(id)} 接收场景里保存的模型编号。模型已经加载过时，它直接返回缓存的模型。第一次加载则调用 \code{Model::Load(path)}，由 Assimp 读取文件里的形状和材质。加载器把顶点和索引交给 \code{Mesh::Create}，再根据底色贴图的路径创建纹理，交给材质保存。存入场景的模型编号可以跨次运行使用，显卡上的纹理编号则可能改变。
+
+\figpanel{model-classes}{现有 C++ 类。实心菱形表示模型内部存有一组子网格。箭头表示持有引用，一个子网格用网格描述形状，用材质描述表面；底色图是材质可引用的贴图之一。}
+
+例如，给墙面单独调暗颜色时，\code{Material::Clone} 可以复制一份材质。新旧材质各自保存底色和粗糙度，仍指向同一张砖墙贴图。这样既能只改一面墙，也能省去一次图片加载。类图里从材质指向纹理的箭头，正是这层关系。
+
+\subsection{从文件到显卡纹理}
+现在 \code{Texture2D::Create(path)} 在函数内部选择 \code{OpenGLTexture2D}，由具体类读出像素并创建纹理。材质只保存 \code{Ref<Texture2D>}。调用者由同一个入口取得对象，具体选哪种实现留给创建函数，这种写法通常叫\textbf{静态工厂}。Hazel 的公开版本也在纹理创建函数内选择后端。
+
+计划保留这个入口，把图片解码得到的尺寸、格式和像素交给当前设备。这样模型加载器仍能按路径取得贴图，Vulkan 后端也能直接接收像素。下例中显存的选择和上传命令均由设备处理，材质得到的是含图像视图的纹理对象。
+\sample{Vulkan 伪代码　创建一张可采样的底色图}
 \begin{lstlisting}
-Ref<Texture2D> BaseColorMap;
+vkCreateImage(device, imageInfo, ..., &image)
+vkBindImageMemory(device, image, AllocateFor(image), 0)
+RecordUpload(cmd, pixels, image)
+vkCreateImageView(device, ViewOf(image), ..., &view)
 \end{lstlisting}
+\code{RecordUpload} 概括三个动作：把图像切换到可复制的状态，从中转缓冲区拷入像素，再使它可供着色器读取。设备负责让绘制等到上传可见，并把中转内存保留到复制完成。
+\readings{\refitem{https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/Texture.cpp}{Hazel · Texture.cpp}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCreateImage.html}{Khronos · 创建图像}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/6aa49452ab19a40fbf0d8b2be84a8e825ec405e8/Redflag/src/Redflag/Renderer/Model.h}{Redflag · Model.h}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/6aa49452ab19a40fbf0d8b2be84a8e825ec405e8/Redflag/src/Redflag/Renderer/Material.h}{Material.h}}
+
+\clearpage
+\section{设备与命令列表}\label{sec:classes}
+加载器知道砖墙贴图有多大、有哪些像素。场景渲染器知道这一帧用哪台相机、画进哪张图。贴图创建一次就能反复使用，相机和绘制目标却会随视口改变。这两种工作可以分别交给设备和命令列表。它们构成 Redflag 渲染硬件接口（RHI）的基础。
+
+\figpanel{classes}{拟议的后端类。启动时选定一种后端，此后使用配套的设备和命令列表。上层传入公共的纹理和缓冲区对象。}
+
+\textbf{创建资源。} \code{RenderDevice} 根据格式、用途和初始数据创建纹理或缓冲区，返回可以跨帧持有的引用。选用 Vulkan 时，同一个设备创建的顶点缓冲和贴图都能交给它的命令列表。这是\textbf{抽象工厂}的用法。以后增加一种资源，需要为两个后端各写一份创建逻辑。材质只保存返回的资源，加载器也只需传一次规格。
+
+\textbf{记录绘制。} \code{CommandList} 接收渲染器已经选好的绘制目标、网格和材质。OpenGL 实现可以当场发出驱动调用。Vulkan 实现把操作写入命令缓冲区，等本帧的命令录好后再提交。当前的 \code{RenderCommand::DrawIndexed} 已能把绘制转给 OpenGL。接入时可以沿用这个调用入口，逐步把内部的绘制转给当前命令列表。场景遍历和可见性判断仍由渲染器负责。
+\readings{\refitem{https://www.informit.com/articles/article.aspx?p=1398599}{《设计模式》抽象工厂}\quad
+\refitem{https://github.com/BoomingTech/Piccolo/blob/f5053707fed4d3f94d270a436fb0d3a8ae54e3e5/engine/source/runtime/function/render/interface/rhi.h}{Piccolo 的 RHI}\quad
+\refitem{https://www.gamedeveloper.com/programming/book-excerpt-game-engine-architecture}{Gregory · 网格实例与统一绘制}}
+
+\clearpage
+\section{从一次绘制确定接口}
+设计公共接口时，可以先看一个已经能画出来的效果。以阴影为例，场景渲染器先从灯光的位置绘制一张深度图，记录每个位置离光源最近的表面。随后着色器给模型上色，要读取这张图才能判断表面是否落在阴影里。两种后端都要完成这两步，因此调用者需要说清本次写哪张图、保留什么结果，以及下次绘制要读它的哪一部分。
+
+\sample{拟议的公共调用　先画阴影，再用阴影给模型上色}
 \begin{lstlisting}
-case RendererAPI::API::OpenGL:
-    return CreateRef<OpenGLTexture2D>(path);
+commands.BeginPass(DepthTarget(shadowMap, Clear, Store));
+renderer.DrawShadowCasters(commands, light);
+commands.EndPass();
+
+scene = SceneTargets(view);
+scene.Read(shadowMap);
+commands.BeginPass(scene);
+commands.BindSampledTexture(shadowMap);
+renderer.DrawVisibleMeshes(commands, camera);
+commands.EndPass();
 \end{lstlisting}
-这里用到了\textbf{静态工厂}。加载器只要调用 \code{Texture2D::Create(path)} 就能得到一张纹理，材质可以一直用 \code{Ref<Texture2D>} 保存它。知道具体类名的是创建函数。Hazel 的公开实现也把这项选择放在 \code{Texture2D::Create} 里。
+\code{BeginPass} 指定一组绘制共用的目标。第一组只写深度，开始时清空，结束时保留结果。渲染器选出会投下阴影的网格，再发出绘制命令。第二组把场景颜色和深度作为目标。\code{scene.Read} 提前声明要读阴影图，\code{BindSampledTexture} 才是把这张图交给着色器。OpenGL 后端负责绑定帧缓冲和贴图。Vulkan 后端则能在第二组绘制开始前安排等待并切换图像布局。
 
-\subsection{同一个设备创建一组资源}
-方案保留现有的 \code{Create} 入口，让启动时选好的设备创建配套的纹理、缓冲区和绘制管线。这是\textbf{抽象工厂}的用法。代价是每增加一种公共资源，都要决定两个后端怎样实现它。
+\subsection{一条命令由谁持有}
+上例的两个绘制函数从调用者借用同一份 \code{CommandList}。函数返回后，帧末代码通过设备提交本帧工作；命令引用的资源随工作帧保留到显卡用完。这种把请求留到稍后执行的思路与\textbf{命令模式}相通。实现时，Vulkan 直接用自身的命令缓冲记录操作，每次画网格都能复用这条路径。
 
-\noindent\begin{minipage}[t]{.37\linewidth}\vspace{0pt}
-以底色贴图为例，Vulkan 设备先创建图像，再按它的内存要求分配显存。材质通过图像视图采样。右边用伪代码写出创建过程，省略传入的结构体字段和像素上传。
-\end{minipage}\hfill\begin{minipage}[t]{.59\linewidth}\vspace{0pt}
-\begin{lstlisting}[style=besidetext]
-usage = CopyDst | Sampled
-spec = ColorTexture(size, SRGB, usage)
-vkCreateImage(device, spec, ..., &image)
-memory = AllocateFor(image)
-vkBindImageMemory(device, image, memory, 0)
-view = CreateColorView(device, image)
+首版可按现有顺序绘制阴影、场景和后处理。以后若需要根据效果自动重排这些步骤，再用每个阶段已经声明的输入图与输出图建立依赖。Unity URP 的自定义渲染阶段也显式声明要读写的纹理，这里借鉴的是这项约定。
+\readings{\refitem{https://docs.unity3d.com/6000.0/Documentation/Manual/urp/render-graph-write-render-pass.html}{Unity URP · 渲染阶段的输入与输出}\quad
+\refitem{https://gameprogrammingpatterns.com/command.html}{Nystrom · 命令模式}}
+
+\clearpage
+\section{场景颜色与面板输出}
+主绘制把光照结果写进场景颜色图，其中的亮度可以超过显示器能表示的范围。\code{SceneRenderer} 随后调用后处理。后处理在开启泛光时取出亮部、生成光晕，把它加回场景颜色，再用曝光和色调映射生成面板要显示的图。整个过程由 \code{PostProcess::Render} 提供一个入口，调用者不必逐级管理泛光的中间图。这是一种\textbf{外观模式}的用法。
+
+\sample{现有 OpenGL 调用　后处理拿到整数编号，编辑器再查询结果}
+\begin{lstlisting}
+s_PostProcess->Render(s_MainSceneColorTex,
+                      s_MainSceneWidth, s_MainSceneHeight);
+uint32_t textureID = SceneRenderer::GetFinalColorTextureID();
 \end{lstlisting}
-\end{minipage}
-
-\subsection{主画面与阴影的可见模型}
-\code{SceneRenderer} 从相机挑选主画面里的模型，还要从光源再挑一次投影物。相机外的物体仍可能在画面里投下阴影。这项选择留在场景渲染器里，两个后端只接收挑好的网格、材质和目标图像。
-\readings{\refitem{https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/Texture.cpp}{Hazel 的 Texture.cpp}\quad
-\refitem{https://www.informit.com/articles/article.aspx?p=1398599}{《设计模式》抽象工厂}\quad
-\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCreateImage.html}{vkCreateImage}\quad
-\refitem{https://cdn.boomingtech.com/games104_static/upload/GAMES104_lecture02Layered\%20Architecture\%20of\%20Game\%20Engine.pdf\#page=26}{GAMES104 第 2 讲}}
-
-\newpage
-\section{场景颜色与后处理}
-场景渲染器只需调用一次 \code{PostProcess::Render}。后处理在内部提取亮部、逐级缩小和放大，再把光晕加回场景。将这些步骤藏在一个入口后面，就是\textbf{外观模式}的一种用法。各级泛光图由后处理对象持有。
-
-现有调用要传入 OpenGL 纹理编号、宽和高。拟议接口改为传入视口持有的两张图，一张用来读取场景颜色，另一张用来写合成结果，尺寸可以直接从图像取得。
+这两行分属场景渲染器和编辑器面板。问题出在第二个交接处：整数可以作为当前 OpenGL 纹理的名字，而 ImGui 的 Vulkan 实现要登记图像视图和采样器。拟议接口改由每个视口持有自己的场景颜色图和输出图。这样后处理可以从图像取得尺寸，面板也只需传入它要显示的对象。
 \begin{lstlisting}
 postProcess.Render(commands, view.SceneColor(), view.Output());
 editor.DrawImage(view.Output());
 \end{lstlisting}
-编辑器调用 \code{DrawImage} 显示结果。OpenGL 界面实现取出纹理编号，Vulkan 界面实现向 ImGui 登记图像视图和采样器。
 
-\subsection{面板放大后，旧画面何时释放}
-假设场景面板原来是 $640\times360$ 像素。上一帧已交给显卡，里面有一条界面绘制命令，要读取这张小图，画出面板里的方块。此时把面板拖大，下一帧就要准备一张 $960\times540$ 的图。
-\figpanel{texture-lifetime}{同一台相机看到的方块。两个矩形表示显存中两张不同尺寸的场景图，按尺寸比例示意。}
-新图建好就能安排下一帧。上一帧的命令里写的仍是小图，等显卡读完它，才能注销小图在 ImGui 里的记录，释放它占用的显存。
-
-\newpage
-\section{合成画面的绘制命令}
-现有的 \code{PostProcess::Composite} 绑定场景颜色和泛光图，用一个覆盖整幅画面的三角形运行合成着色器。迁移后，同一次合成可以写成下面几行。这里的 \code{inputs} 包含两张输入图和曝光值。
+\subsection{一次合成怎样交给后端}
+一次合成使用两张输入图、曝光值和一个覆盖屏幕的三角形。\code{Pipeline} 是可以复用的绘制规则，保存着色器、目标格式和混合方式。具体的输入图与曝光则在每次绘制时指定。下面的辅助调用省略 Vulkan 结构体字段；图像的读写顺序仍需要由后端安排。
+\sample{Vulkan 伪代码　把三角形的颜色写入面板输出图}
 \begin{lstlisting}
-commands.BeginRendering(output);
-commands.BindPipeline(m_CompositePipeline);
-commands.BindVertexBuffer(m_FullscreenVertices);
-commands.BindResources(inputs);
-commands.Draw(3);
-commands.EndRendering();
-\end{lstlisting}
-
-\subsection{绘制目标、管线与输入}
-\code{output} 指明写入哪张图、哪一层，以及原来的颜色是否要保留。最后合成会覆盖所有像素，可以舍弃原来的颜色。把较小一级的泛光加回上一层时，却要保留上一层已有的亮度。如果接口漏掉这个区别，画面上可能只剩最后加进去的光。
-
-\code{Pipeline} 保存可重复使用的规则，包括着色器、目标格式、深度测试和混合方式。\code{BindResources} 选择这次实际读取的数据。两个视口可以共用一条合成管线，同时保留各自的颜色图和曝光值。只有需要挑选纹理的某一级或立方体的某一面时，接口才额外传入图像视图。
-
-\subsection{OpenGL 调用与 Vulkan 录制}
-当前 \code{RenderCommand::DrawIndexed} 直接转交给 OpenGL。Vulkan 则把目标、管线、输入和顶点数记入命令缓冲区 \code{cmd}，稍后一起提交。经典的\textbf{命令模式}会把每次请求做成独立对象，这里的命令列表直接使用后端提供的记录能力。
-
-\noindent\begin{minipage}[t]{.37\linewidth}\vspace{0pt}
-右边是上面六行在 Vulkan 端的伪代码。先让输出图可写，再画三角形，最后让界面能采样写好的颜色。两次转换都由后端记录图像屏障；输入贴图已准备好，管线的颜色格式与输出一致。
-\end{minipage}\hfill\begin{minipage}[t]{.59\linewidth}\vspace{0pt}
-\begin{lstlisting}[style=besidetext]
-ToColorAttachment(cmd, output)
-target = ColorTarget(output, Discard, Store)
-vkCmdBeginRendering(cmd, target)
-BindComposite(cmd, pipeline, vertices, inputs)
+PrepareColorWrite(cmd, output)
+vkCmdBeginRendering(cmd, ColorTarget(output, Discard, Store))
+vkCmdBindPipeline(cmd, Graphics, pipeline)
+BindVertices(cmd, triangle)
+BindShaderInputs(cmd, sceneColor, bloom, exposure)
 vkCmdDraw(cmd, 3, 1, 0, 0)
 vkCmdEndRendering(cmd)
-ToShaderRead(cmd, output)
+PrepareShaderRead(cmd, output)
 \end{lstlisting}
-\end{minipage}
-\readings{\refitem{https://docs.vulkan.org/samples/latest/samples/extensions/dynamic_rendering/README.html}{Khronos 动态渲染示例}\quad
-\refitem{https://gameprogrammingpatterns.com/command.html}{《Game Programming Patterns》命令模式}}
+最后合成会覆盖整幅图，可以丢弃旧颜色。把一级光晕加回上一层时，则必须保留原来的亮度。因此是否保留旧颜色由当次绘制指明。末行让接下来绘制界面的命令能读到刚写好的结果。
+\readings{\refitem{https://learnopengl.com/Advanced-OpenGL/Framebuffers}{LearnOpenGL · 画入纹理}\quad
+\refitem{https://docs.vulkan.org/samples/latest/samples/extensions/dynamic_rendering/README.html}{Khronos · 动态渲染}}
 
-\newpage
-\section{窗口与第一个三角形}
-现在 \code{WindowsWindow::Init} 创建 OpenGL 上下文，\code{RenderCommand} 的实现也在启动时固定为 OpenGL。迁移的第一步是在创建窗口前选一次后端，默认沿用 OpenGL。选 Vulkan 时，让 GLFW 创建不带 OpenGL 上下文的窗口，按它提供的扩展列表创建 Vulkan 实例，再为这个窗口创建显示表面。
+\clearpage
+\section{相机与每个物体的数据}
+移动相机后，砖墙贴图的像素、立方体的顶点都没有变化。变化的是从哪个位置看它，以及哪些网格还在视野里。现有 \code{Renderer3D::BeginScene} 更新本次相机矩阵和位置；收集网格时进行视野检查，主绘制跳过被剔除的网格。阴影从光源的位置看，仍可能用到相机看不到的物体。这个判断属于场景渲染代码，后端只执行送到它手上的绘制。
 
-\subsection{本机设备与工程设置}
-项目已有的设备查询记录显示，RTX 5070 Ti Laptop GPU 报告 Vulkan 1.4.351，并提供能同时绘制和呈现的队列。首版按 Vulkan 1.3、C++17 和 GLSL 开发。创建设备时查询并启用三项功能。动态渲染让程序在开始绘制时指定目标图像。同步 2 用来安排前一次写入和后一次读取。时间线信号量用一个递增数值表示显卡执行到了哪一次提交。
+\subsection{共享网格，各自保留位置}
+再放一个立方体，就能看出为什么接口还要规定数据保留多久。两者可以共享网格和砖墙材质，一个放在左边，另一个放在右边。每个物体都有自己的模型矩阵和拾取编号。若两次绘制都指向同一块可改写的内存，CPU 录完右边的命令，显卡才开始处理左边的命令，它就可能两次都读到右边的位置和编号。
 
-前两项通过 Vulkan 1.3 的 \code{dynamicRendering} 和 \code{synchronization2} 启用，后一项通过 1.2 的 \code{timelineSemaphore} 启用，窗口还需要交换链扩展。本机记录的 SDK 为 1.3.275.0。若生成工程的终端尚未配置它，可按以下方式指定位置。
+\sample{拟议接口　用两次普通绘制说明数据的寿命}
 \begin{lstlisting}
-$env:VULKAN_SDK = 'C:\VulkanSDK\1.3.275.0'
-.\GenerateProjects.bat
+cameraData = frame.Write(camera)
+commands.BindCamera(cameraData)
+commands.BindMesh(cube.mesh)
+commands.BindMaterial(brickMaterial)
+for object in [leftCube, rightCube]:
+    objectData = frame.Write(object.transform, object.entityID)
+    commands.BindObject(objectData)
+    commands.DrawIndexed(cube.indexCount)
 \end{lstlisting}
-Premake 还需要为 Vulkan 后端链接 \code{vulkan-1.lib}。工程已有的 shaderc 用于编译着色器。
+这里的 \code{frame.Write} 每次将数据复制到当前帧上传区的一段新空间，返回这段空间的位置。相机只写一次，两个物体则各写一次。设备要求起点按 256 字节对齐时，若从 0 开始放一个占 64 字节的矩阵，下一份便从 256 开始；实际间隔要向设备查询。等显卡处理完本帧才能复用这些位置。
 
-\subsection{首帧的验证}
-测试程序和 Forge 共用同一套开窗与设备创建代码。先画一个三个角颜色不同的三角形，在 RenderDoc 中找到对应的绘制，检查顶点和窗口图像。再测试拖动、最小化、恢复和退出。窗口按 GLFW 报告的实际像素大小取图，宽或高为零时继续处理事件，恢复后再绘制。OpenGL 在帧末交换缓冲区，Vulkan 在帧末提交窗口图像供显示。首帧通过仍需这项运行测试。
-\readings{\refitem{https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html}{Khronos Vulkan Tutorial · Instance}}
+已有 OpenGL 主绘制也能把适合的物体合成一次实例化绘制。那时模型矩阵和编号排列在实例数据里，两个立方体仍各读自己的值。检查时除了看左右位置，还要分别点击它们：纹理相同，读回的实体编号应不同。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/6aa49452ab19a40fbf0d8b2be84a8e825ec405e8/Redflag/src/Redflag/Renderer/Renderer3D.cpp}{Redflag · Renderer3D}\quad
+两种坐标约定与拾取示例见第~\pageref{app:coordinates}~页。}
 
-\newpage
-\section{模型矩阵与材质贴图}
-画出三角形后，把同一份网格画两次，两次使用不同的位置、颜色和实体编号。CPU 可能在 GPU 开始绘制第一个模型之前，就已准备好第二个模型。如果两次都写进同一处内存，显卡最后可能把两个模型画在一起。
+\clearpage
+\section{面板缩放与图像回收}
+将场景面板从 $640\times360$ 拖到 $960\times540$ 时，视口为下一帧准备大图。假设最后一次使用小图的绘制提交编号是 17，里面有一条界面命令，需要读取小图，画到窗口。CPU 可以在显卡执行到这条命令之前便处理拖动事件。即使面板已改用大图，提交 17 仍然需要小图及其在 ImGui 中的登记。
 
-\subsection{每次绘制保留一份矩阵}
-首版轮流使用两份帧记录，每份保存命令、待上传数据和用到的资源。每画一个模型，就从当前帧的上传区取一段新空间并复制矩阵。假设设备要求起始位置按 256 字节对齐，矩阵占 64 字节，第一份放在偏移 0，第二份便从 256 开始。实际间隔要查询设备。只有显卡的完成值达到本次提交编号，程序才会复用这份空间。已经录制但尚未提交的命令也持有资源，若放弃录制便释放这些引用。
+\figpanel{texture-lifetime}{横向表示时间。CPU 换图后，GPU 还可能在读小图。确认最后一次使用小图的提交已执行完，才可以解除登记并回收显存。}
 
-\subsection{灯光数据与材质贴图}
-模型片元着色器的灯光和底色图都用到了数字 3。下面摘出资源声明，省略了灯光块的成员。OpenGL 给数据块和纹理分别编号。Vulkan 按组查找资源，直接沿用这两处声明会把它们放到同一组的同一项。
+\subsection{用提交编号判断显卡是否用完}
+首版计划轮流使用两份工作帧，每份保管自己的命令、上传数据和本次用到的资源引用。命令开始录制时就持有这些引用。成功提交后，显卡完成工作会将时间线信号量的数值推进到该提交编号；若放弃录制，便直接放下这份工作帧的引用。
+\sample{Vulkan 伪代码　提交、呈现，再查询已经完成的编号}
 \begin{lstlisting}
-layout(std140, binding = 3) uniform Lights { /* ... */ };
-layout(binding = 3) uniform sampler2D u_BaseColorMap;
-\end{lstlisting}
-方案将灯光归入各模型共用的帧数据，底色图归入材质，每次变化的矩阵和编号归入对象。编译后要读取资源类型、所在组和位置，对照 CPU 与各着色阶段，再实际画出两个模型。即使单个阶段通过编译，材质也可能读错图。
-
-\subsection{已有的着色器检查}
-此前将 15 个文件拆成 30 个阶段，以默认的非实例化版本运行 \code{glslc} 和 \code{spirv-val}。17 个通过，13 个在编译时被拒绝。其中 10 个缺少跨阶段输入输出的位置，\code{FlatColor} 的两个阶段使用了 Vulkan 不接受的独立数值参数，2D 精灵片元阶段缺少贴图数组的位置。迁移先覆盖测试模型，再验证实例化版本。两个后端分别缓存编译结果，区分源码及其包含文件、编译选项和编译器版本。
-
-\newpage
-\section{深度换算与鼠标拾取}
-现有相机矩阵按 OpenGL 约定计算。顶点的裁剪坐标是 $(x,y,z,w)$，透视除法后，深度 $z/w$ 从近裁面的 $-1$ 变化到远裁面的 $1$。Vulkan 需要同两个端点落在 $0$ 和 $1$。要让左端移到零并保持右端不动，只需把原来的数加一，再除以二。
-\figpanel{clip-depth}{上下两行是同一顶点在两套约定下的数值。中间刻度表示数值区间的中点，透视相机下它对应的视距取决于投影。}
-顶点着色器输出时还没除以 $w$。把下式两边乘以 $w$，便得到可以直接写入顶点位置的那一行代码。
-\[
-  \frac{z_{\mathrm{vk}}}{w}=\frac{1}{2}\left(\frac{z_{\mathrm{gl}}}{w}+1\right)
-  \qquad\Longrightarrow\qquad z_{\mathrm{vk}}=\frac{z_{\mathrm{gl}}+w}{2}.
-\]
-\begin{lstlisting}
-gl_Position.z = 0.5 * (gl_Position.z + gl_Position.w);
-\end{lstlisting}
-只在 Vulkan 最终输出顶点时换算一次。CPU 的剔除和光源投影仍使用原矩阵。在默认深度范围下，从深度图读回 $d$ 后，用 $2d-1$ 配合原逆投影矩阵，可还原 SSAO 与 RSM 所需的位置。
-
-\subsection{像素从哪一行开始}
-Vulkan 视口取 $y=H$、高度 $-H$，其中 $H$ 是图像的像素高度。用原投影得到的纵坐标 $v$ 采样屏幕图像时换成 $1-v$，模型自带的贴图坐标沿用原值。拾取先将鼠标换到视口像素。顶行向下数的第 $y$ 行，在 OpenGL 左下原点的坐标下为 $H-1-y$。项目的 $32\times32$ 测试在底行起算的 $(8,16)$ 读到实体 71，在顶行起算的同一位置应读 $(8,15)$。第二个点 $(24,15)$ 在实例化绘制时为 72，单体绘制时为背景 $-1$。
-\readings{\refitem{https://docs.vulkan.org/guide/latest/depth.html}{Khronos · Depth}\quad
-\refitem{https://www.realtimerendering.com/Real-Time_Rendering_4th-Appendices.pdf\#page=19}{RTR4 · 附录 A.4}}
-
-\newpage
-\section{编辑器视口与窗口显示}
-场景先画进一张可以保存高亮度值的彩图。后处理提取亮部做泛光，再调曝光，把结果写进视口的最终颜色图。ImGui 读取这张图，将它和工具栏、其他面板一起画进窗口。窗口用来轮流显示的图像称为交换链图像。拖动场景面板只影响视口尺寸，只有窗口本身发生变化才需要考虑重建交换链。
-
-\subsection{显卡画完与窗口显示}
-当前随库的 ImGui Vulkan 实现接受 \code{VkRenderPass}。计划将它留在界面代码内，场景绘制使用动态渲染。先接主窗口中的停靠面板，统一登记视口图和工具栏图标。若表面格式或最小图像数改变，重新配置界面后端与相关登记。可拖出主窗口的独立窗口以后各自管理交换链。
-
-显卡完成一次绘制后，工作帧就能复用其命令空间，窗口系统却可能仍在显示那张图。获取新图像所用的信号随工作帧保存，供呈现等待的信号随交换链图像保存。重新取得同一张图并等到获取完成，才可复用其呈现信号。若取得图像时报告交换链过期，按新尺寸重建，未提交的工作不记完成值。旧交换链的回收还要确认呈现完成，可用呈现完成扩展或 Khronos 给出的延迟回收办法。
-\readings{\refitem{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{Khronos · Swapchain Semaphore Reuse}}
-
-\subsection{连续两次读写的顺序}
-阴影阶段先写深度图，随后模型着色器采样它。每个阶段写明读哪张图、写哪张图及其哪一层，后端才知道何时等写入完成、何时切换到可采样的布局。实体编号图只需复制鼠标所在的一个像素，等复制完成再读整数。鼠标在视口外或图像已经更换，便忽略这次读回。RSM 的两张历史图轮流读写，前一次读取结束后才能覆盖，相机切换或尺寸变化时清除旧历史。
-
-目前合成着色器已经为显示编码一次。首版优先使用 UNORM 窗口格式与 sRGB 显示色彩空间。若窗口只支持自动编码的 sRGB 图像，先在 UNORM 图中合成界面，再解码并写入最终目标，让硬件完成最后一次编码。检查相同曝光下的灰块和工具栏，可发现重复编码造成的发白。
-\readings{\refitem{https://docs.vulkan.org/guide/latest/synchronization_examples.html}{Khronos 同步示例}\quad
-\refitem{https://learnopengl.com/Advanced-OpenGL/Framebuffers}{LearnOpenGL · Framebuffers}}
-
-\newpage
-\section{一帧的提交与资源回收}
-首版计划把场景与主窗口界面一起交给同一条图形队列。下面取成功获取图像的一帧说明。伪代码保留主要 Vulkan 函数名，省略结构体字段。
-
-\subsection{取得窗口图像}
-工作帧先等它的上一次提交结束，再复用命令空间。\code{vkAcquireNextImageKHR} 取得的序号 \code{i} 决定界面画进哪张窗口图。录制时工作帧持有视口输出图和界面登记。界面画完后，再把窗口图切换到可呈现的布局。
-\begin{lstlisting}
-WaitForPreviousUse(frame)
-i = AcquireWindowImage(swapchain, frame.imageAvailable)
-BeginCommands(frame.cmd)
-RecordSceneAndPostProcess(frame, viewport)
-RecordEditor(frame, viewport.output, swapchain.images[i])
-EndCommands(frame.cmd)
-\end{lstlisting}
-
-\subsection{绘制队列与呈现队列}
-本次提交等待取图成功，画完后发出两个信号。二值信号通知窗口可以显示第 \code{i} 张图，时间线信号让 CPU 知道编号 \code{serial} 对应的整次提交已完成。示例取保守的等待和发信范围，涵盖全部命令。
-\begin{lstlisting}
-serial = NextSubmissionNumber()
-work = Submit(frame.cmd, wait = frame.imageAvailable,
-    signal = [presentReady[i], timeline.At(serial)])
+work = SubmitInfo(cmd, wait = imageAvailable,
+                  signal = [presentReady[i], timeline.At(17)])
 vkQueueSubmit2(graphicsQueue, 1, &work, nullFence)
-frame.lastSubmit = serial
 vkQueuePresentKHR(presentQueue, Present(i, presentReady[i]))
+vkGetSemaphoreCounterValue(device, timeline, &completed)
+if completed >= 17: frame17.ReleaseReferences()
 \end{lstlisting}
+这里假定已成功取得第 \code{i} 张窗口图像并提交了绘制。完成信号覆盖整份提交（\code{ALL\_COMMANDS}）。放下最后一个引用后，后端注销小图的界面登记、销毁视图和图像，再归还显存。窗口系统仍可能在显示交换链图像，回收那张图还要确认呈现完成，见第~\pageref{app:window}~页。
+\readings{\refitem{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{Khronos · 绘制完成与窗口呈现}\quad
+\refitem{https://docs.vulkan.org/samples/latest/samples/extensions/timeline_semaphore/README.html}{时间线信号量}}
 
-\subsection{释放上一帧用过的资源}
-只有提交成功才更新编号。CPU 用 \code{vkGetSemaphoreCounterValue} 查询完成值。达到 \code{frame.lastSubmit} 后，工作帧放下它持有的引用。若换下的视口图已没有其他使用者，就可以注销界面登记、销毁视图和图像，再归还显存。窗口图像的回收还要等呈现系统用完。
-\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkQueueSubmit2.html}{Khronos · vkQueueSubmit2}\quad
-\refitem{https://docs.vulkan.org/samples/latest/samples/extensions/timeline_semaphore/README.html}{Timeline semaphore}}
-
-\newpage
-\section{迁移顺序与验收场景}
-\subsection{窗口与模型}
-公共声明计划放在 \code{Renderer/RHI}，具体实现放在 \code{Platform/OpenGL} 和 \code{Platform/Vulkan}。第一步合并启动时的后端选择，确认 Forge 能用 OpenGL 正常打开，再让同一个窗口入口在两端各画一个三角形，保存 RenderDoc 帧。已有设备查询和离线着色器检查，Vulkan 首帧仍待实施。
-
-第二步接入 \code{Buffer}、\code{Texture2D} 和 \code{Shader} 的创建与绘制。先画无光照的底色贴图，再画两个材质、位置不同的模型。复用已有深度预写与拾取测试，测四角、近裁面、启用背面剔除后的正面，以及被透明贴图裁掉的叶片。两个后端导出同格式的像素数据。
-
-\subsection{编辑器与渲染效果}
-第三步让视口持有尺寸和输出，面板直接接收图像对象。开两个曝光不同的视口，连续拖动尺寸、点击上边缘，在提交后删除刚绘制的模型并退出。开启 Vulkan 验证层和同步验证，检查最后一次提交何时用完旧纹理。
-
-第四步依次接回深度预写、阴影、环境遮蔽、环境光预计算、RSM、泛光以及 2D 的精灵、圆、线和粒子。Vulkan 首版拟用 16 个 2D 贴图位置，包含一张白图。填齐数组后，越过容量便拆批，检查下一批的贴图与实体编号。OpenGL 保留原批容量，是否扩大 Vulkan 容量待测。
-
-\subsection{用同一帧比较结果}
-Cornell Box 固定相机、灯光和曝光，分辨率取 $1024\times768$，在第 12 帧检查相同位置的编号、深度和线性颜色。RSM 的采样方向依赖像素中心，两端先统一坐标，再比较同一块墙的反光。红墙用例沿用 $\Delta R>1.5\Delta G$，绿墙用例沿用 $\Delta G>\Delta R$，差值取同一白表面开关间接光前后的变化。Sponza 另测多材质与透明裁剪。
-
-\path{tests/run_depth_tests.cmd} 测深度和拾取，\path{tests/run_scene_tests.cmd} 测整帧，\path{tests/run_rsm_scene_tests.ps1} 测彩色反光。保留版本、配置、驱动、读回值与捕获帧。性能在同一配置下另行预热和采样。
-
-\newpage
-\section{设计所依据的资料}
-\subsection{Hazel 与 Piccolo 的源码}
-在 Hazel 的 \code{Texture.cpp} 中，两个 \code{Texture2D::Create} 分别接受规格与路径，内部按当前 API 创建具体纹理。\code{RenderCommand.h} 则展示了如何把绘制转交给已有后端。Redflag 沿用了这种简洁入口。对于 Vulkan 录制命令和保留在途资源，这两处公开代码还需要配合其他资料。
-\readings{\refitem{https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/Texture.cpp}{Hazel · Texture.cpp}\quad
-\refitem{https://github.com/TheCherno/Hazel/blob/1feb70572fa87fa1c4ba784a2cfeada5b4a500db/Hazel/src/Hazel/Renderer/RenderCommand.h}{RenderCommand.h}}
-
-Piccolo 的 \code{RenderSystem::initialize} 组装 Vulkan RHI 和渲染资源，资源对象负责上传环境光等数据。它的 RHI 还提供创建缓冲区、分配描述符集合等细粒度调用。对 Redflag 有用的是这处分工。模型与场景决定需要什么，设备处理怎样在显卡上创建它。首版只公开合成和模型绘制实际用到的操作。
-\readings{\refitem{https://github.com/BoomingTech/Piccolo/blob/f5053707fed4d3f94d270a436fb0d3a8ae54e3e5/engine/source/runtime/function/render/render_system.cpp}{Piccolo · RenderSystem}\quad
-\refitem{https://github.com/BoomingTech/Piccolo/blob/f5053707fed4d3f94d270a436fb0d3a8ae54e3e5/engine/source/runtime/function/render/interface/rhi.h}{RHI 声明}}
-
-\subsection{渲染流程与图像读写}
-Khronos 的教程把场景剔除、安排绘制阶段、生成命令与设备执行分开。Unity 6 的 URP 示例在一个阶段分别声明输入纹理和输出图像，再提供实际绘制函数。Redflag 可以先将固定顺序中的阴影、主绘制、后处理各自读写哪张图写清楚。这样就能处理图像之间的依赖，等确有动态排程的需求时再考虑完整的渲染图。
-\readings{\refitem{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{Khronos · Rendering Pipeline}\quad
-\refitem{https://docs.unity.com/en-us/engine/6000.0/manual/render-pipelines/universal-render-pipeline/customizing-urp/render-graph/write-render-pass}{Unity URP · 自定义渲染阶段}\quad
-\refitem{https://docs.vulkan.org/tutorial/latest/_images/images/rendering_pipeline_flowchart.png}{教程原图}}
-
-\subsection{场景对象与渲染器的分工}
-Gregory 在《游戏引擎架构》首版第 14.6.2 节用网格实例说明，对象只更新自己的变换和可见性，渲染系统可以收集这些实例，等对象更新结束后统一绘制。Redflag 将模型选择保留在场景渲染器中，就可以同时考虑相机和光源。第四版另核对了卷二的目录，第 11、12 章分别讨论渲染、光照与后处理。这里引用的网格例子出自首版原文。
-\readings{\refitem{https://www.gamedeveloper.com/programming/book-excerpt-game-engine-architecture}{Gregory · 首版第 14 章书摘}\quad
-\refitem{https://www.routledge.com/Game-Engine-Architecture-Volume-II-Graphics-Motion-and-Sound/Gregory/p/book/9781041162575}{第四版卷二目录}}
-
-GAMES104 第 2 讲第 12–14 页讲资源导入与寿命，第 26、30 页讲 RHI 与上层的依赖。GAMES101 的投影和 RTR4 的齐次坐标附录用于核对深度公式。其他教材、课件以及具体核对的代码文件，见项目的图形学资料索引。
+\input{appendix}
 \end{document}
