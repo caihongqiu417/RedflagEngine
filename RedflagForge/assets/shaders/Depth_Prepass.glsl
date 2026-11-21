@@ -1,25 +1,12 @@
-// =====================================================================
-// Depth_Prepass.glsl — 主相机深度预传递 (Z-Prepass)
-//
-// 作用：
-//   在正式彩色渲染之前，用主相机视角把全部不透明/Mask几何的深度
-//   写入主帧缓冲的深度缓冲。正式着色 Pass 启用的 Early-Z 可以据此
-//   在片元着色器运行之前直接跳过被遮挡的像素，减少 PBR 着色浪费。
-//
-// UBO 约定（与 Renderer3D_Mesh.glsl 完全一致）：
-//   binding 0 — Camera    : u_ViewProjection（主相机）
-//   binding 1 — Transform : 逐物体模型矩阵
-//   binding 2 — Material  : PBR 参数（此处只用 AlphaCutoff / AlphaMode / UseAlphaMap）
-//
-// 纹理槽位：
-//   slot 10 — AlphaMap（AlphaMode=Mask 时采样，其余不用）
-//
-// 注意：
-//   - 片元着色器不写任何颜色（调用方已用 glColorMask 关闭颜色写入）
-//   - Opaque / Mask 材质正常写深度；Blend 材质由调用方过滤，不进入此 Pass
-// =====================================================================
+/*
+ * 正式计算光照前，先记录相机能看到的表面深度。
+ * 这样主绘制可以借助深度测试跳过被挡住的表面，减少重复的光照计算。
+ * 这里同时记录表面的朝向，也就是法线，供环境遮蔽和间接光计算使用。
+ * 树叶等镂空材质仍要按透明度丢弃像素，保证预先写入的深度与主绘制轮廓一致。
+ * 半透明物体由调用方另行处理，不参加这次深度绘制。
+ */
 
-// =========================== 顶点着色器 =============================
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -49,7 +36,7 @@ void main()
 {
     v_TexCoord = a_TexCoord;
 
-    // ⚠️ 顺序必须和 Renderer3D_Mesh.glsl 完全一致：
+    // 顺序必须和 Renderer3D_Mesh.glsl 完全一致：
     //    先算 worldPos，再乘 ViewProjection。
     //    GPU 浮点乘法不满足结合律，(A*B)*v 与 A*(B*v) 会有微小差异，
     //    导致 prepass 与主 pass 的 gl_Position.z 不一致 → Z-fighting。
@@ -57,14 +44,14 @@ void main()
     gl_Position   = u_ViewProjection * worldPos;
 
     // 把世界法线变换到 view space：normalMatrix 用 transpose(inverse) 处理
-    // 非均匀缩放；再用 mat3(u_View) 变到 view space。写入 RGBA16F 法线 RT
+    // 非均匀缩放，再用 mat3(u_View) 变到 view space。写入 RGBA16F 法线 RT
     // 供 SSAO Pass 重建 TBN。
     mat3 normalMatrix = mat3(transpose(inverse(u_Transform)));
     vec3 Nworld  = normalize(normalMatrix * a_Normal);
     v_ViewNormal = mat3(u_View) * Nworld;
 }
 
-// =========================== 片元着色器 =============================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -91,21 +78,26 @@ layout(std140, binding = 2) uniform Material
     int   _pad0;
 };
 
-uniform sampler2D u_AlphaMap;   // slot 10
+layout(binding = 3) uniform sampler2D u_BaseColorMap;
+layout(binding = 10) uniform sampler2D u_AlphaMap;
 
 void main()
 {
-    // AlphaMode == 1 (Mask)：根据 alpha 贴图 + cutoff 裁剪，保持与主 Pass 一致
+    // ---- Mask 裁剪 ----
+    // alpha = 材质因子 * BaseColorMap.a * AlphaMap.r，未启用的贴图项取 1。
     if (u_AlphaMode == 1)
     {
-        float alpha = u_UseAlphaMap == 1
-            ? texture(u_AlphaMap, v_TexCoord).r
-            : u_BaseColor.a;
+        float alpha = u_BaseColor.a;
+        if (u_UseBaseColorMap == 1)
+            alpha *= texture(u_BaseColorMap, v_TexCoord).a;
+        if (u_UseAlphaMap == 1)
+            alpha *= texture(u_AlphaMap, v_TexCoord).r;
         if (alpha < u_AlphaCutoff)
             discard;
     }
 
-    // 输出 view-space 法线（RGBA16F 直接存原始值，无需 [0,1] 打包）
+    // ---- 输出法线 ----
+    // RGBA16F 直接保存归一化的观察空间法线，不编码到 [0,1]。
     // 调用方会在 ColorMask 层面关闭 attachment0/1 的写入，不会污染颜色。
     o_ViewNormal = vec4(normalize(v_ViewNormal), 1.0);
 }

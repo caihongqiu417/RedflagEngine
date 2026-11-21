@@ -3,9 +3,7 @@
 
 namespace Redflag {
 
-	std::unordered_map<std::string, Ref<Material>> MaterialLibrary::s_Materials;
-
-	// --------------- Material -----------------------------------------------
+	// ---- 材质创建与复制 ----
 
 	Ref<Material> Material::Create(const glm::vec4& color)
 	{
@@ -26,6 +24,7 @@ namespace Redflag {
 	{
 		Ref<Material> mat = Ref<Material>(new Material());
 		mat->BaseColor             = BaseColor;
+		// 复制共享引用，不重新创建纹理或上传像素。
 		mat->BaseColorMap          = BaseColorMap;
 		mat->NormalMap             = NormalMap;
 		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
@@ -38,41 +37,6 @@ namespace Redflag {
 		mat->AlphaCutoff           = AlphaCutoff;
 		mat->DoubleSided           = DoubleSided;
 		return mat;
-	}
-
-	// --------------- MaterialLibrary ----------------------------------------
-
-	Ref<Material> MaterialLibrary::GetOrCreate(const std::string& name, const Ref<Texture2D>& texture, const glm::vec4& tint)
-	{
-		auto it = s_Materials.find(name);
-		if (it != s_Materials.end())
-			return it->second;
-
-		auto mat = Material::Create(texture, tint);
-		s_Materials[name] = mat;
-		return mat;
-	}
-
-	Ref<Material> MaterialLibrary::GetOrCreate(const std::string& name, const glm::vec4& color)
-	{
-		auto it = s_Materials.find(name);
-		if (it != s_Materials.end())
-			return it->second;
-
-		auto mat = Material::Create(color);
-		s_Materials[name] = mat;
-		return mat;
-	}
-
-	bool MaterialLibrary::Exists(const std::string& name)
-	{
-		return s_Materials.find(name) != s_Materials.end();
-	}
-
-	Ref<Material> MaterialLibrary::Get(const std::string& name)
-	{
-		RF_CORE_ASSERT(Exists(name), "Material '{0}' not found in MaterialLibrary", name);
-		return s_Materials.at(name);
 	}
 
 }

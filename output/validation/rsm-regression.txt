@@ -1,0 +1,56 @@
+Redflag · RSM 专项回归 · Debug/x64 · 2026-11-21
+GPU: GeForce RTX 5070 Ti Laptop · OpenGL 4.6 · NVIDIA 616.56
+
+修复前，实际输出节选
+FAIL editor to runtime transition resets RSM history
+FAIL projection changes reset RSM history
+FAIL RSM intensity changes discard old lighting
+FAIL RSM radius changes discard old lighting
+FAIL RSM sample count changes reset history
+FAIL RSM sample count preserves uniform disk coverage
+FAIL RSM receives the full light projection width in world units
+FAIL RSM sample count changes reset history
+FAIL RSM sample count preserves uniform disk coverage
+FAIL RSM receives the full light projection width in world units
+FAIL RSM sample count changes reset history
+FAIL RSM receives the full light projection width in world units
+FAIL directional color changes discard old lighting
+FAIL directional intensity changes discard old lighting
+FAIL directional orientation changes discard old lighting
+FAIL light coverage changes reset RSM history
+FAIL RSM receives the full light projection width in world units
+FAIL another scene does not inherit RSM history
+Previous clip offset: 3,0,0 resolved=0.25
+Previous clip offset: 0,3,0 resolved=0.25
+Previous clip offset: 0,0,3 resolved=0.699707
+FAIL temporal resolve rejects all previous clip boundaries
+Previous clip offset: 0,0,-3 resolved=0.699707
+FAIL temporal resolve rejects all previous clip boundaries
+
+修复后，实际输出节选
+PASS editor/runtime RSM accepts depth-only attachment
+PASS RSM temporal output exists
+PASS RSM intensity changes discard old lighting
+PASS RSM radius changes discard old lighting
+PASS RSM sample count changes reset history
+PASS RSM sample count preserves uniform disk coverage
+PASS RSM receives the full light projection width in world units
+PASS RSM history and sampling fixtures produce no GL errors
+PASS temporal resolve blends valid reprojected history
+PASS temporal reset uses only the current frame
+Previous clip offset: 3,0,0 resolved=0.25
+PASS temporal resolve rejects all previous clip boundaries
+Previous clip offset: 0,3,0 resolved=0.25
+Previous clip offset: 0,0,3 resolved=0.25
+Previous clip offset: 0,0,-3 resolved=0.25
+PASS temporal resolve rejects points behind the previous camera
+PASS temporal projection fixtures produce no GL errors
+RSM analytic checks passed: projected disk, distance, RGB
+Renderer3D tests passed: offscreen light casters, Mask/Opaque/Blend coverage, counts and bounds
+Single and instanced indirect light and picking passed
+Depth prepass and main pass alpha coverage tests passed
+
+场景取样文件 output/scenes/rsm/measurements.csv
+固定相机和光源方向，所有数字均取自主颜色附件的线性 HDR 增量。
+Cornell-Red 同强度 5、同一白地板像素 (307,651)：红色增量由 0.07715 变为 0.48218。
+最终 Cornell-Display 强度 1：同像素增加 RGB (0.09644, 0.02710, 0.02710)。

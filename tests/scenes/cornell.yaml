@@ -1,0 +1,22 @@
+Name: CornellBox
+Model: ../../RedflagForge/assets/models/reference/CornellBox/CornellBox.obj
+Size: [1024, 768]
+ModelSize: 4
+ModelRotation: [0, 0, 0]
+Eye: [0, 0, 7.8]
+Target: [0, 0, 0]
+Fov: 45
+Near: 0.05
+Far: 100
+Direction: [-0.6, -0.6, -1]
+LightIntensity: 3
+PointPosition: [0, 1.4, 0]
+PointIntensity: 1
+PointRadius: 6
+ShadowHalfSize: 4
+SSAO: true
+RSM: true
+RSMIntensity: 1
+RSMRadius: 0.4
+Exposure: 1
+Frames: 12

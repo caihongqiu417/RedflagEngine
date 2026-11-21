@@ -1,0 +1,218 @@
+[21:15:30] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer2D_Quad.glsl
+[21:15:30] REDFLAG :     1 uniform buffers
+[21:15:30] REDFLAG :     0 resources
+[21:15:30] REDFLAG : Uniform Buffers:
+[21:15:30] REDFLAG :   _41_43
+[21:15:30] REDFLAG :     Size = 64, Binding = 0, Members = 1
+[21:15:30] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer2D_Quad.glsl
+[21:15:30] REDFLAG :     0 uniform buffers
+[21:15:30] REDFLAG :     1 resources
+[21:15:31] REDFLAG : Shader 'Renderer2D_Quad' created in 422.40842 ms
+[21:15:31] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer2D_Circle.glsl
+[21:15:31] REDFLAG :     1 uniform buffers
+[21:15:31] REDFLAG :     0 resources
+[21:15:31] REDFLAG : Uniform Buffers:
+[21:15:31] REDFLAG :   _43_45
+[21:15:31] REDFLAG :     Size = 64, Binding = 0, Members = 1
+[21:15:31] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer2D_Circle.glsl
+[21:15:31] REDFLAG :     0 uniform buffers
+[21:15:31] REDFLAG :     0 resources
+[21:15:31] REDFLAG : Shader 'Renderer2D_Circle' created in 404.53064 ms
+[21:15:31] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Line.glsl
+[21:15:31] REDFLAG :     1 uniform buffers
+[21:15:31] REDFLAG :     0 resources
+[21:15:31] REDFLAG : Uniform Buffers:
+[21:15:31] REDFLAG :   _22_24
+[21:15:31] REDFLAG :     Size = 64, Binding = 0, Members = 1
+[21:15:31] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Line.glsl
+[21:15:31] REDFLAG :     0 uniform buffers
+[21:15:31] REDFLAG :     0 resources
+[21:15:32] REDFLAG : Shader 'Line' created in 459.36267 ms
+[21:15:32] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[21:15:32] REDFLAG :     2 uniform buffers
+[21:15:32] REDFLAG :     0 resources
+[21:15:32] REDFLAG : Uniform Buffers:
+[21:15:32] REDFLAG :   _11_13
+[21:15:32] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[21:15:32] REDFLAG :   _100_102
+[21:15:32] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:32] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[21:15:32] REDFLAG :     3 uniform buffers
+[21:15:32] REDFLAG :     11 resources
+[21:15:32] REDFLAG : Uniform Buffers:
+[21:15:32] REDFLAG :   _384_386
+[21:15:32] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:32] REDFLAG :   _781_783
+[21:15:32] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[21:15:32] REDFLAG :   _976_978
+[21:15:32] REDFLAG :     Size = 1104, Binding = 3, Members = 6
+[21:15:32] REDFLAG : Shader 'Renderer3D_Mesh' created in 484.73776 ms
+[21:15:32] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[21:15:32] REDFLAG :     1 uniform buffers
+[21:15:32] REDFLAG :     0 resources
+[21:15:32] REDFLAG : Uniform Buffers:
+[21:15:32] REDFLAG :   _108_110
+[21:15:32] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:32] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[21:15:32] REDFLAG :     3 uniform buffers
+[21:15:32] REDFLAG :     11 resources
+[21:15:32] REDFLAG : Uniform Buffers:
+[21:15:32] REDFLAG :   _384_386
+[21:15:32] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:32] REDFLAG :   _799_801
+[21:15:32] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[21:15:32] REDFLAG :   _978_980
+[21:15:32] REDFLAG :     Size = 1104, Binding = 3, Members = 6
+[21:15:33] REDFLAG : Shader 'Renderer3D_Mesh_INSTANCED' created in 493.97937 ms
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/ShadowDepth.glsl
+[21:15:33] REDFLAG :     2 uniform buffers
+[21:15:33] REDFLAG :     0 resources
+[21:15:33] REDFLAG : Uniform Buffers:
+[21:15:33] REDFLAG :   _17_19
+[21:15:33] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:33] REDFLAG :   _24_26
+[21:15:33] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/ShadowDepth.glsl
+[21:15:33] REDFLAG :     1 uniform buffers
+[21:15:33] REDFLAG :     2 resources
+[21:15:33] REDFLAG : Uniform Buffers:
+[21:15:33] REDFLAG :   _9_11
+[21:15:33] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[21:15:33] REDFLAG : Shader 'ShadowDepth' created in 468.9066 ms
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Depth_Prepass.glsl
+[21:15:33] REDFLAG :     2 uniform buffers
+[21:15:33] REDFLAG :     0 resources
+[21:15:33] REDFLAG : Uniform Buffers:
+[21:15:33] REDFLAG :   _17_19
+[21:15:33] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[21:15:33] REDFLAG :   _41_43
+[21:15:33] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Depth_Prepass.glsl
+[21:15:33] REDFLAG :     1 uniform buffers
+[21:15:33] REDFLAG :     2 resources
+[21:15:33] REDFLAG : Uniform Buffers:
+[21:15:33] REDFLAG :   _9_11
+[21:15:33] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[21:15:33] REDFLAG : Shader 'Depth_Prepass' created in 425.33044 ms
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/SSAO.glsl
+[21:15:33] REDFLAG :     0 uniform buffers
+[21:15:33] REDFLAG :     0 resources
+[21:15:33] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/SSAO.glsl
+[21:15:33] REDFLAG :     1 uniform buffers
+[21:15:33] REDFLAG :     3 resources
+[21:15:33] REDFLAG : Uniform Buffers:
+[21:15:33] REDFLAG :   _36_38
+[21:15:33] REDFLAG :     Size = 1184, Binding = 4, Members = 5
+[21:15:34] REDFLAG : Shader 'SSAO' created in 443.54895 ms
+[21:15:34] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Bloom_Brightness.glsl
+[21:15:34] REDFLAG :     0 uniform buffers
+[21:15:34] REDFLAG :     0 resources
+[21:15:34] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Bloom_Brightness.glsl
+[21:15:34] REDFLAG :     1 uniform buffers
+[21:15:34] REDFLAG :     1 resources
+[21:15:34] REDFLAG : Uniform Buffers:
+[21:15:34] REDFLAG :   _123_125
+[21:15:34] REDFLAG :     Size = 32, Binding = 5, Members = 2
+[21:15:34] REDFLAG : Shader 'Bloom_Brightness' created in 447.50797 ms
+[21:15:34] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Bloom_Upsample.glsl
+[21:15:34] REDFLAG :     0 uniform buffers
+[21:15:34] REDFLAG :     0 resources
+[21:15:34] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Bloom_Upsample.glsl
+[21:15:34] REDFLAG :     1 uniform buffers
+[21:15:34] REDFLAG :     1 resources
+[21:15:34] REDFLAG : Uniform Buffers:
+[21:15:34] REDFLAG :   _11_13
+[21:15:34] REDFLAG :     Size = 32, Binding = 5, Members = 2
+[21:15:35] REDFLAG : Shader 'Bloom_Upsample' created in 426.96353 ms
+[21:15:35] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/PostProcess_Composite.glsl
+[21:15:35] REDFLAG :     0 uniform buffers
+[21:15:35] REDFLAG :     0 resources
+[21:15:35] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/PostProcess_Composite.glsl
+[21:15:35] REDFLAG :     1 uniform buffers
+[21:15:35] REDFLAG :     2 resources
+[21:15:35] REDFLAG : Uniform Buffers:
+[21:15:35] REDFLAG :   _163_165
+[21:15:35] REDFLAG :     Size = 32, Binding = 5, Members = 2
+[21:15:35] REDFLAG : Shader 'PostProcess_Composite' created in 460.01358 ms
+[21:15:35] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/RSMDepth.glsl
+[21:15:35] REDFLAG :     2 uniform buffers
+[21:15:35] REDFLAG :     0 resources
+[21:15:35] REDFLAG : Uniform Buffers:
+[21:15:35] REDFLAG :   _11_13
+[21:15:35] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[21:15:35] REDFLAG :   _65_67
+[21:15:35] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:35] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/RSMDepth.glsl
+[21:15:35] REDFLAG :     2 uniform buffers
+[21:15:35] REDFLAG :     3 resources
+[21:15:35] REDFLAG : Uniform Buffers:
+[21:15:35] REDFLAG :   _11_13
+[21:15:35] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[21:15:35] REDFLAG :   _126_128
+[21:15:35] REDFLAG :     Size = 1104, Binding = 3, Members = 6
+[21:15:36] REDFLAG : Shader 'RSMDepth' created in 407.43695 ms
+[21:15:36] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/RSMIndirect.glsl
+[21:15:36] REDFLAG :     0 uniform buffers
+[21:15:36] REDFLAG :     0 resources
+[21:15:36] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/RSMIndirect.glsl
+[21:15:36] REDFLAG :     3 uniform buffers
+[21:15:36] REDFLAG :     6 resources
+[21:15:36] REDFLAG : Uniform Buffers:
+[21:15:36] REDFLAG :   _88_90
+[21:15:36] REDFLAG :     Size = 80, Binding = 7, Members = 5
+[21:15:36] REDFLAG :   _171_173
+[21:15:36] REDFLAG :     Size = 2064, Binding = 6, Members = 2
+[21:15:36] REDFLAG :   _424_426
+[21:15:36] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[21:15:36] REDFLAG : Shader 'RSMIndirect' created in 448.55927 ms
+[21:15:36] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/RSMTemporalResolve.glsl
+[21:15:36] REDFLAG :     0 uniform buffers
+[21:15:36] REDFLAG :     0 resources
+[21:15:36] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/RSMTemporalResolve.glsl
+[21:15:36] REDFLAG :     1 uniform buffers
+[21:15:36] REDFLAG :     3 resources
+[21:15:36] REDFLAG : Uniform Buffers:
+[21:15:36] REDFLAG :   _34_36
+[21:15:36] REDFLAG :     Size = 144, Binding = 8, Members = 6
+[21:15:37] REDFLAG : Shader 'RSMTemporalResolve' created in 407.82013 ms
+[21:15:37] REDFLAG : [Model] Material 'White' (mesh 'CornellBox-Original')
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model]   Maps: base=false nor=false mr=false ao=false alpha=false
+[21:15:37] REDFLAG : [Model] Material 'Green' (mesh 'Green')
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model]   Maps: base=false nor=false mr=false ao=false alpha=false
+[21:15:37] REDFLAG : [Model] Material 'Red' (mesh 'Red')
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model]   Maps: base=false nor=false mr=false ao=false alpha=false
+[21:15:37] REDFLAG : [Model] Material 'White' (mesh 'White')
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model]   Maps: base=false nor=false mr=false ao=false alpha=false
+[21:15:37] REDFLAG : [Model] Material 'CeilingLight' (mesh 'CeilingLight')
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model] FindTextureBySuffix: no match for suffixes in dir 'D:/Cdev/Redflag/RedflagForge/assets/models/reference/CornellBox'
+[21:15:37] REDFLAG : [Model]   Maps: base=false nor=false mr=false ao=false alpha=false
+[21:15:37] REDFLAG : Deserializing Scene'Unamed Scene
+RenderDoc DLL: D:/ProgramFiles/JetBrains/JetBrains Rider 2025.3.1/plugins/rider-plugins-renderdoc/runtime/windows-x86_64/renderdoc.dll
+Capture API: 1.6.0
+RenderDoc captures: 1 (EndFrameCapture/GetCapture succeeded)
+RenderDoc capture: D:\Cdev\Redflag\output\scenes\CornellBox_capture.rdc
+Rendered CornellBox: 397212 geometry pixels, 22 draws; output "D:\\Cdev\\Redflag\\output\\scenes\\CornellBox.png"

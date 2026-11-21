@@ -1,0 +1,46 @@
+\documentclass[UTF8,fontset=fandol,10pt,a4paper]{ctexart}
+\usepackage[left=22mm,right=22mm,top=23mm,bottom=22mm,headheight=14pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{Latin Modern Mono}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[table]{xcolor}
+\usepackage{graphicx,tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
+\usepackage{booktabs,tabularx,array,enumitem,float,caption,fancyhdr,hyperref}
+\definecolor{blue}{HTML}{2869A9}
+\definecolor{ink}{HTML}{293340}
+\definecolor{muted}{HTML}{647181}
+\definecolor{line}{HTML}{C5D4E2}
+\definecolor{pale}{HTML}{F0F5FA}
+\definecolor{warm}{HTML}{FFF7E9}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue,pdftitle={Redflag RHI 与 Vulkan 接入设计},pdfauthor={Redflag}}
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\linespread{1.16}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=3pt,topsep=3pt}
+\renewcommand{\arraystretch}{1.38}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\ctexset{section={format=\Large\bfseries\color{blue},beforeskip=16pt,afterskip=8pt},subsection={format=\large\bfseries\color{blue},beforeskip=11pt,afterskip=5pt}}
+\captionsetup{font=small,labelfont=bf,textfont={color=muted},skip=7pt}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{muted}Redflag · RHI / Vulkan · 设计方案}
+\fancyhead[R]{\small\color{muted}2026-11-21}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\newcommand{\note}[1]{{\small\color{muted}#1\par}}
+\newcommand{\code}[1]{{\small\texttt{#1}}}
+\newcommand{\ruleline}{\par\vspace{4pt}{\color{line}\hrule}\vspace{8pt}}
+\newcommand{\source}[2]{{\small\href{#1}{[#2]}}}
+\tikzset{
+ module/.style={draw=line,fill=pale,rounded corners=2pt,align=center,inner sep=7pt,text width=3.8cm,minimum height=1.15cm,font=\small},
+ smallbox/.style={module,text width=2.55cm,minimum height=.95cm,font=\footnotesize},
+ wide/.style={module,text width=9.5cm},
+ planned/.style={module,fill=warm,dashed},
+ flow/.style={-{Stealth[length=2mm]},draw=muted,line width=.65pt},
+ own/.style={flow,dashed},
+ label/.style={font=\scriptsize,fill=white,inner sep=2pt,text=muted}}

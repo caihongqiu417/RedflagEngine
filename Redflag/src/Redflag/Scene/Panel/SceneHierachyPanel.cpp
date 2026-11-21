@@ -1411,7 +1411,7 @@ namespace Redflag {
                 // ƽ������
                 ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.f);
 
-                // ========== ������ק���� ==========
+                // ������ק����
                 ImGui::Separator();
                 ImGui::Text("Texture");
 
@@ -1453,7 +1453,7 @@ namespace Redflag {
                         component.Texture = nullptr;
                     }
                 }
-                // =================================
+                // ----------
             });
 
 

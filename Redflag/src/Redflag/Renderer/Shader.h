@@ -6,7 +6,7 @@
 
 namespace Redflag
 {
-	// [新增] 1. 描述单个变量 (如 float u_Roughness)
+	// 1. 描述单个变量 (如 float u_Roughness)
 	struct ShaderUniform
 	{
 		std::string Name;
@@ -15,7 +15,7 @@ namespace Redflag
 		uint32_t Offset;
 	};
 
-	// [新增] 2. 描述资源 (如 sampler2D u_Texture)
+	// 2. 描述资源 (如 sampler2D u_Texture)
 	struct ShaderResourceDeclaration
 	{
 		std::string Name;
@@ -23,7 +23,7 @@ namespace Redflag
 		uint32_t Count;
 	};
 
-	// [新增] 3. 描述 Uniform Block (如 layout(std140) uniform Camera { ... })
+	// 3. 描述 Uniform Block (如 layout(std140) uniform Camera { ... })
 	struct ShaderUniformBuffer
 	{
 		std::string Name;
@@ -52,7 +52,7 @@ namespace Redflag
 		virtual const std::unordered_map<std::string, ShaderUniformBuffer>& GetShaderUniformBuffers() const = 0;
 		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
-		static Ref<Shader> Create(const std::string& filepath);
+		static Ref<Shader> Create(const std::string& filepath, const std::string& define = {});
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 
 	private:

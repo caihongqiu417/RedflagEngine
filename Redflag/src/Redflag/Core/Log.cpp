@@ -9,27 +9,27 @@ namespace Redflag
 	void Log::Init()
 	{
 
-        // ==================== 1. 优美的格式 ====================
+        // 1. 日志格式
 // 简洁格式：时间 + 模块名 + 消息（带颜色）
         spdlog::set_pattern("%^[%T] %-8n: %v%$");
         // %-8n 让模块名对齐到8字符宽度，更美观
 
-        // ==================== 2. 创建 Logger ====================
+        // 2. 创建 Logger
         s_CoreLogger = spdlog::stdout_color_mt("REDFLAG");
         s_ClientLogger = spdlog::stdout_color_mt("APP");
 
-        // ==================== 3. 设置日志级别 ====================
+        // 3. 设置日志级别
         s_CoreLogger->set_level(spdlog::level::trace);
         s_ClientLogger->set_level(spdlog::level::trace);
 
-        // ==================== 4. 精美的颜色配置 ====================
+        // 4. 颜色配置
         // 获取 sink 进行颜色定制
         auto core_sink = static_cast<spdlog::sinks::stdout_color_sink_mt*>(
             s_CoreLogger->sinks()[0].get());
         auto client_sink = static_cast<spdlog::sinks::stdout_color_sink_mt*>(
             s_ClientLogger->sinks()[0].get());
 
-        // ===== 核心端颜色（专业深色系）=====
+        // 核心端颜色（深色系）
         // TRACE: 深青色 - 用于详细调试
         core_sink->set_color(spdlog::level::trace,
             FOREGROUND_BLUE | FOREGROUND_GREEN);
@@ -54,7 +54,7 @@ namespace Redflag
         core_sink->set_color(spdlog::level::critical,
             FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
-        // ===== 客户端颜色（清新亮色系）=====
+        // 客户端颜色（亮色系）
         // TRACE: 青色 - 客户端详细日志
         client_sink->set_color(spdlog::level::trace,
             FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);

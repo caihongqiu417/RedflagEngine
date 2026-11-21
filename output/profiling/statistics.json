@@ -1,0 +1,40 @@
+{
+  "trace": "redflag-cpu-trace.json",
+  "sha256": "933589fce76d4f91e0724d9728166f54ff256257180fed242d5724b0629d28ef",
+  "unit": "microseconds",
+  "timing": "CPU elapsed intervals, including driver calls and instrumented logging overhead",
+  "event_count": 300,
+  "thread_count": 1,
+  "groups": {
+    "void __cdecl Redflag::Renderer3D::ExecuteDepthPrepass(const class std::shared_ptr<class Redflag::Shader> &)": {
+      "samples": 60,
+      "median": 199.0,
+      "min": 188,
+      "max": 666
+    },
+    "void __cdecl Redflag::Renderer3D::EndScene(void)": {
+      "samples": 60,
+      "median": 19.5,
+      "min": 16,
+      "max": 52
+    },
+    "CPU submission - 64 opaque quads": {
+      "samples": 60,
+      "median": 347.0,
+      "min": 303,
+      "max": 842
+    },
+    "CPU wait - glFinish": {
+      "samples": 60,
+      "median": 66.5,
+      "min": 33,
+      "max": 1810
+    },
+    "Frame": {
+      "samples": 60,
+      "median": 467.0,
+      "min": 359,
+      "max": 2196
+    }
+  }
+}

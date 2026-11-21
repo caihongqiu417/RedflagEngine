@@ -1,0 +1,9 @@
+newmtl Receiver
+Kd 0.8 0.8 0.8
+Pm 0
+Pr 0.8
+
+newmtl Reflector
+Kd 0.8 0.02 0.02
+Pm 0
+Pr 0.8

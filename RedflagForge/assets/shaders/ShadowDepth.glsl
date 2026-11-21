@@ -1,31 +1,20 @@
-// =====================================================================
-// ShadowDepth.glsl — 方向光 Shadow Map 深度预渲染
-//
-// 作用：
-//   从光源视角渲染场景几何，把深度写入 Shadow Map 的 DEPTH32F 附件。
-//   主 Pass 再把这张深度纹理作为比较基准，实现硬阴影 / PCF / PCSS。
-//
-// UBO 约定（与 Renderer3D_Mesh.glsl / Renderer3D.cpp 保持一致）：
-//   binding 0 — Camera    : ViewProjection + ViewPosition +
-//                           LightSpaceMatrix + ShadowParams
-//   binding 1 — Transform : 逐物体模型矩阵
-//
-// 关键点：
-//   - 只需要顶点阶段；片元阶段空转，由固定管线自动写 gl_FragDepth。
-//   - 所有几何都走同一个 Transform UBO（与主 Pass 逐 draw 更新的流程相同）。
-//   - 不采样任何贴图，不关心材质；Alpha Mask 的裁剪需求暂未处理
-//     （后续如果要让玻璃 / 植物叶片正确投影，可把 alpha cutoff 逻辑
-//      移到片元阶段，但当前场景不需要）。
-// =====================================================================
+/*
+ * 从灯光方向看场景，记录光线最先遇到的表面深度，得到阴影贴图。
+ * 正式绘制时，也把当前表面换算到灯光视角：若它比贴图记录的深度更远，就被前面的表面挡住。
+ * 本次只写深度，不计算颜色。相机矩阵改用灯光的矩阵，顶点仍先经过模型变换。
+ * 镂空表面沿用主画面的透明度裁剪，只有可见部分写入阴影深度。
+ */
 
-// =========================== 顶点着色器 =============================
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
-layout(location = 0) in vec3 a_Position;   // 仅需要位置；法线 / UV 不参与深度
+layout(location = 0) in vec3 a_Position;
+layout(location = 2) in vec2 a_TexCoord;
+layout(location = 0) out vec2 v_TexCoord;
 
 // ---- Camera UBO (binding = 0) ----
-// 和主 Mesh shader 共享同一个绑定点；shaderc 会自动忽略本 shader
+// 和主 Mesh shader 共享同一个绑定点。shaderc 会自动忽略本 shader
 // 没有使用到的字段。我们只需要 u_LightSpaceMatrix。
 layout(std140, binding = 0) uniform Camera
 {
@@ -47,13 +36,47 @@ void main()
 {
     // 把顶点变换到光源裁剪空间：世界 → 光源 View → 光源 Ortho
     gl_Position = u_LightSpaceMatrix * u_Transform * vec4(a_Position, 1.0);
+    v_TexCoord = a_TexCoord;
 }
 
-// =========================== 片元着色器 =============================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
-// 无输出；深度由固定管线写入绑定的 DEPTH32F 附件
+layout(location = 0) in vec2 v_TexCoord;
+
+// 字段顺序与 C++ 材质数据一致，共 64 字节；这里仅使用透明度相关字段。
+layout(std140, binding = 2) uniform Material
+{
+    vec4  u_BaseColor;
+    float u_Metallic;
+    float u_Roughness;
+    float u_AO;
+    int   u_UseBaseColorMap;
+    int   u_UseNormalMap;
+    int   u_UseMetallicRoughnessMap;
+    int   u_UseAOMap;
+    int   u_EntityID;
+    int   u_UseAlphaMap;
+    float u_AlphaCutoff;
+    int   u_AlphaMode;
+    int   _matPad0;
+};
+
+layout(binding = 3) uniform sampler2D u_BaseColorMap;
+layout(binding = 10) uniform sampler2D u_AlphaMap;
+
+// 无颜色输出；通过覆盖率测试后，固定管线写入深度附件。
 void main()
 {
+    if (u_AlphaMode == 1)
+    {
+        float alpha = u_BaseColor.a;
+        if (u_UseBaseColorMap == 1)
+            alpha *= texture(u_BaseColorMap, v_TexCoord).a;
+        if (u_UseAlphaMap == 1)
+            alpha *= texture(u_AlphaMap, v_TexCoord).r;
+        if (alpha < u_AlphaCutoff)
+            discard;
+    }
 }

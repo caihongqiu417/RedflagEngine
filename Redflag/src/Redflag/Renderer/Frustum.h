@@ -1,6 +1,6 @@
 #pragma once
 
-// =====================================================================
+// ----------
 // Frustum.h — 视锥体 / AABB 剔除工具 (header-only)
 //
 // 用法：
@@ -11,7 +11,7 @@
 //   - 从 ViewProjection 矩阵提取 6 个世界空间裁剪平面（Gribb-Hartmann 法）
 //   - AABB 测试用 "center/extent + abs(normal)·extent" 公式，
 //     每平面 ~10 次乘加，完全避免 8 角点变换，比保守法更快。
-// =====================================================================
+// ----------
 
 #include <glm/glm.hpp>
 #include <array>
@@ -25,10 +25,10 @@ namespace Redflag
 		// 每个平面用 vec4(nx, ny, nz, d) 表示，满足 n·p + d = 0
 		std::array<glm::vec4, 6> Planes{};
 
-		// -------------------------------------------------------------
-		// Gribb-Hartmann：从 ViewProjection 矩阵（行主序视角）直接取平面
+		// ----------
+		// OpenGL 裁剪范围为 -w ≤ x,y,z ≤ w；从 ViewProjection 矩阵行提取平面
 		// GLM 矩阵是列主序，m[col][row]，所以取 "行 i" 的表达是 vec4(m[0][i], m[1][i], m[2][i], m[3][i])
-		// -------------------------------------------------------------
+		// ----------
 		static Frustum FromViewProjection(const glm::mat4& vp)
 		{
 			// 把矩阵转置成"行视角"更直观
@@ -54,16 +54,16 @@ namespace Redflag
 			return f;
 		}
 
-		// -------------------------------------------------------------
+		// ----------
 		// AABB 测试：世界空间包围盒 [min, max] 是否与视锥相交
 		//   返回 true  = 至少部分在视锥内（需要渲染）
 		//   返回 false = 完全在视锥外（可剔除）
 		//
 		// 用 center/extent 方法：对每个平面
-		//   r = |n·extent|（包围盒在平面法线方向上的投影半径）
+		//   r = |n|·extent（包围盒在平面法线方向上的投影半径）
 		//   d = n·center + plane.w（中心到平面的带符号距离）
 		//   若 d + r < 0 → 盒完全在平面负侧 → 完全在外
-		// -------------------------------------------------------------
+		// ----------
 		bool IntersectsAABB(const glm::vec3& minP, const glm::vec3& maxP) const
 		{
 			glm::vec3 center = 0.5f * (minP + maxP);

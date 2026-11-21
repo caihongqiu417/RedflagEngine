@@ -368,7 +368,7 @@ TextureSlots[2] = texture_B
 TextureSlots[31] = texture_Z
 ```
 
-每个四边形的 `textureIndex` 记录它使用哪个 slot。如果某纹理已在数组中，直接复用；否则追加到数组末尾。当 slot 用尽或索引数量达上限时，触发 `FlushAndReset()` —— 先提交当前批次，再开始新一批。
+每个四边形的 `textureIndex` 记录它使用哪个 slot。如果某纹理已在数组中，直接复用；否则追加到数组末尾。当 slot 用尽或索引数量达上限时，触发 `FlushAndReset()`，先提交当前批次，再开始新一批。
 
 ### 5.4 BeginScene / EndScene 流程
 

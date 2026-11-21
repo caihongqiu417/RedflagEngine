@@ -18,14 +18,17 @@ namespace Redflag
 		glm::vec3 Tangent;   // 切线向量，用于法线贴图的 TBN 矩阵构建
 	};
 
+	/* 网格几何：上传顶点和索引，由 VAO 持有缓冲引用；包围盒保留在网格局部空间。 */
 	class Mesh
 	{
 	public:
+		// ---- 创建与绑定 ----
 		Mesh(const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
 
 		void Bind() const;
 		void Unbind() const;
 
+		// ---- 几何查询 ----
 		uint32_t GetVertexCount() const { return m_VertexCount; }
 		uint32_t GetIndexCount() const { return m_IndexCount; }
 		const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }

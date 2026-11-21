@@ -37,6 +37,12 @@ namespace Redflag {
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
+	// 在有效的 OpenGL 上下文中释放。
+	OpenGLVertexArray::~OpenGLVertexArray()
+	{
+		glDeleteVertexArrays(1, &m_RendererID);
+	}
+
 	void OpenGLVertexArray::Bind() const
 	{
 		glBindVertexArray(m_RendererID);
@@ -69,6 +75,7 @@ namespace Redflag {
 		{
 			glEnableVertexAttribArray(index);
 
+			// 整型属性保留整数值（如 EntityID），不能走浮点属性的转换路径。
 			if (element.Type == ShaderDataType::Int ||
 				element.Type == ShaderDataType::Int2 ||
 				element.Type == ShaderDataType::Int3 ||
@@ -101,7 +108,7 @@ namespace Redflag {
 	}
 
 
-	// "设置"（通常只做一次!）
+	// 索引缓冲绑定记录在当前 VAO 中，先绑定 VAO 再切换 IBO。
 	void OpenGLVertexArray::SetIndexBuffer(const Redflag::Ref<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);

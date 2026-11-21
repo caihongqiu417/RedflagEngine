@@ -1,0 +1,16 @@
+{
+  "source": "actual SceneGallery direct readbacks; not image generation or RenderDoc GUI screenshots",
+  "before": "tmp\\rsm-diagnostics\\baseline",
+  "after": "tmp\\rsm-diagnostics\\after",
+  "display_case": "Cornell-Display",
+  "display_indirect_multiplier": 4,
+  "display_gamma": 2.2,
+  "display_intensity": 1,
+  "same_camera_lights": true,
+  "fixed_parameter_comparison_intensity": {
+    "Cornell-Original": 5,
+    "Cornell-Red": 5,
+    "Bounce": 1
+  },
+  "raw_format": "little-endian float32, top-left origin; files kept in diagnostic output folder"
+}

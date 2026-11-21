@@ -1,0 +1,213 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\usepackage{amsmath}
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Code}{Verbatim}{fontsize=\small,breaklines=true,breakanywhere=true,frame=single,rulecolor=\color{line},framesep=6pt}
+\hypersetup{pdftitle={Redflag 排错与 RenderDoc 截帧记录}}
+\fancyhead[L]{\small\color{muted}Redflag · 排错与截帧}
+\newcommand{\loc}[1]{\par{\footnotesize\color{muted}源码：\path{#1}}\par}
+\renewcommand{\note}[1]{\par{\small\color{muted}#1\par}}
+\setlength{\emergencystretch}{1em}
+\begin{document}
+\zihao{5}
+\raggedright
+{\Huge\bfseries Redflag 排错记录}\par\vspace{5pt}
+{\Large\color{muted}问题、修改过程与 RenderDoc 截帧}\par
+\ruleline
+
+记录日期：2026-11-21。本文保存资源和渲染清理中确认的问题，也整理旧开发日志中的故障。每项都说明证据来自源码、自动测试还是历史记录。没有原资产和原现场的历史问题，不列为本轮复现成功。
+
+本轮完成 Debug/x64 构建与下列基础回归，后续 3D 与 IBL 复查见第 \ref{sec:3d-review} 节。它们覆盖指定输入，还没有完成全部资产、整编辑器交互、长时间内存及 Release/Dist 回归。技术方案为什么这样选择、付出什么代价，另见《技术选型与工程取舍》。
+
+另有一个 CPU 时间线采样用例，实际 Chrome 截图与采集条件放在选型文档。它不替代功能回归，也不是优化前后的性能对比。
+
+\section{本轮验证范围}
+\begin{tabularx}{\textwidth}{L{3.2cm}YL{2cm}}
+\toprule
+测试 & 检查的行为 & 结果 \\
+\midrule
+资产身份与缓存 & ID 持久化、移动、元数据错误、类型与外部引用。 & 通过 \\
+Shader 与 GPU 对象 & 内容缓存、资源库查询，以及 VAO 的最后引用释放。 & 通过 \\
+深度与主绘制 & 透明裁剪轮廓、实体 ID、关闭贴图后的状态更新。 & 六组通过 \\
+模型导入 & 合并贴图尺寸、通道默认值，以及几何与法线保留。 & 十例通过 \\
+后处理隔离 & 两实例曝光、交替绘制、尺寸变化、Bloom 与销毁。 & 通过 \\
+\bottomrule
+\end{tabularx}
+
+GPU 测试通过 GLFW 创建隐藏的 OpenGL 4.6 上下文，在真实驱动上绘制并读回结果。修改生产代码后要先构建 Debug/x64，再从仓库根目录顺序运行测试，避免同时写入同一 Shader 缓存目录。
+
+\begin{verbatim}
+tests\run_asset_tests.cmd
+tests\run_shader_tests.cmd
+tests\run_depth_tests.cmd
+tests\run_model_tests.cmd
+tests\run_render_tests.cmd
+\end{verbatim}
+
+测试源码都在 \path{tests/}，对应文件为 AssetManagerTests、ShaderCacheTests、DepthPrepassTests、ModelImportTests 和 PostProcessTests。本机日志在 \path{tmp/comment-clarity/}，该目录不保证随仓库分发，复现应以测试源码与脚本为准。
+
+构建日志 \path{build-final.log} 记录 Redflag 与 RedflagForge 编译链接成功。第三方 PDB 缺失、重复导入描述符和测试链接的增量调试选项警告仍在，构建成功不表示零警告。
+
+\subsection{阅读与复查}
+先看故障在什么输入下出现，再核对相关代码和测试。RenderDoc 截帧用于观察某次绘制真正拿到的数据与输出。自动测试负责把预期结果变成可重复的断言。旧日志只能提供排查线索，不能替代同一资产、同一设置下的复现。
+
+\newpage
+\section{Shader 编译与缓存}
+\subsection{源码修改未使缓存失效}
+\textbf{现象与定位。}原缓存按文件名区分 Shader，再用修改时间判断是否过期。不同目录的 \code{shared.glsl} 会指向同一份缓存。源码变了但时间戳不变，也可能继续执行旧代码。排错时即使改对了公式，画面仍可能不变。
+
+\textbf{修改。}缓存改用阶段源码和编译配置的内容哈希，顶点与片元阶段分别保存。文件和字符串创建共用这条路径。读取时检查长度、完整读取结果及 SPIR-V 标记，截断文件会重新编译。同时删除没有读取方的第二阶段缓存写入，以及一处创建后未使用、未释放的 Program。
+
+\textbf{验证。}测试实际绘制三角形。两个同名、同时间戳文件分别输出红色和绿色。修改源码但保持时间戳后输出蓝色。还检查字符串 Shader、三字节坏缓存，以及重复加载和只改时间戳时的缓存复用。所有断言通过。
+
+\textbf{保留限制。}GLSL 450 路径只缓存第一阶段结果，后续反编译、再次编译和链接仍执行。配置键中的 \code{v1} 要随编译器或选项变化更新，尚未自动纳入版本与外部 include 依赖，也没有旧缓存清理。长度与标记检查不等于完整 SPIR-V 校验。这条中间代码路径服务于 OpenGL，Vulkan 后端尚未实现。
+\loc{Redflag/src/Platform/OpenGL/OpenGLShader.cpp}
+
+\subsection{GLSL 330 示例的普通 uniform 编译失败}
+额外冷编译扫描最初有 15 个着色器成功，旧 FlatColor 示例失败。它用普通 uniform 传入矩阵和颜色，第二次中间代码编译却按 Vulkan 规则检查，拒绝了这些声明。修改编译目标还不足以证明按名称设置参数的旧接口仍正确。
+
+GLSL 330 示例现交给 OpenGL 直接编译源码，保留 uniform 名称。GLSL 450 继续使用 SPIR-V，两条路径共用程序链接。合并主 Shader 之前，全部 16 个 .glsl 文件链接成功。FlatColor 按名称上传两个单位矩阵与颜色后，实际像素为 $(255,0,255,255)$。这检查了旧接口的使用结果，范围仍限于工程现有着色器与该绘制用例。
+
+\newpage
+\section{资源库查询与 GPU 对象释放}
+\subsection{查找 Shader 意外插入空条目}
+\textbf{现象与原因。}原 Get 对 Exists 的断言方向写反，会拒绝已经存在的名称。随后又通过下标查询，不存在的名称会被插入库中，留下一个空对象。
+
+\textbf{修改与验证。}Get 改为 \code{m\_Shaders.at(name)}。测试确认 Add 后取得同一个对象。缺失名称抛出\allowbreak\ \code{std::out\_of\_range}，随后 Exists 仍为 false。调用方必须遵守先登记再查询的约定，查询本身不创建资源。
+\loc{Redflag/src/Redflag/Renderer/Shader.cpp}
+
+\subsection{VAO 对象泄漏}
+\textbf{现象与原因。}OpenGLVertexArray 构造时创建了顶点数组对象（VAO），析构函数却为空。缓冲引用虽然释放，VAO 没有对应删除调用，这是源码可以确认的 GPU 对象泄漏。
+
+\textbf{修改与验证。}析构调用 \code{glDeleteVertexArrays}。测试取得真实对象 ID，释放一个共享引用时对象仍存在，最后一个引用释放后 \code{glIsVertexArray} 返回 false，且没有 GL 错误。释放仍必须发生在有效上下文内。本轮验证了删除行为，没有测量长期显存变化。
+\loc{Redflag/src/Platform/OpenGL/OpenGLVertexArray.cpp}
+\note{API 依据：\source{https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteVertexArrays.xhtml}{Khronos：glDeleteVertexArrays}。}
+
+\newpage
+\section{材质透明裁剪不一致}
+树叶、围栏这类裁剪材质，会用贴图透明度丢弃部分像素。原深度预传递只读取独立透明度图或底色因子，主绘制还会读取底色贴图的透明通道。主绘制丢弃的像素可能已经写入深度和法线，继续影响后续遮挡计算。
+
+\subsection{统一材质输入与裁剪规则}
+Mask 表示按阈值保留或丢弃像素。深度预传递现在复用主绘制的材质上传，取得相同的底色与独立透明度贴图，按下式计算透明度：
+\[
+\alpha=\alpha_{\text{底色因子}}
+       \times\alpha_{\text{底色贴图}}
+       \times r_{\text{透明度贴图}}.
+\]
+没有对应贴图时，该项按 1 处理。低于材质阈值的像素丢弃，Opaque 材质不做这项裁剪。两次绘制必须读取相同的材质透明度，仅检查纹理已经传入还不够。
+
+\subsection{独立绘制与覆盖率验证}
+测试把 32×32 目标分成四条纹，逐项启用底色 alpha、独立 AlphaMap 和二者相乘。其他输入检查仅底色因子、Opaque 不裁剪，以及复用队列后关闭贴图。
+
+深度预传递和主绘制各自清屏、独立绘制，再逐像素比较深度覆盖与实体 ID。这样预传递留下的深度不会遮住主绘制本身的错误。六组输入全部通过。
+
+\textbf{验证边界。}这组测试覆盖深度预传递和普通主绘制。阴影与 RSM 的新增测试见第 \ref{sec:3d-review} 节，仍未覆盖完整场景中的全部透明路径。RenderDoc 的实际截帧见后文，不能把这一个最小场景扩大为所有效果都已回归。
+
+\loc{RedflagForge/assets/shaders/Depth_Prepass.glsl}
+\loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}
+\loc{tests/DepthPrepassTests.cpp}
+
+\subsection{排查顺序}
+画面出现多余遮挡时，先比较颜色输出与深度覆盖。轮廓不同，再检查这两次绘制使用的裁剪公式、贴图内容和材质开关。将错误缩小到四条纹输入后，就能区分是贴图未传入、状态没有刷新，还是透明度计算不同。修复后的断言保留每种输入，避免只凭最终画面判断。
+\note{参考：\source{https://learnopengl.com/Advanced-OpenGL/Blending}{LearnOpenGL：丢弃透明像素与混合}。该教程解释 Mask 与半透明混合的区别，本项目的三项乘积由实际材质约定决定。}
+
+\newpage
+\section{模型导入与材质误判}
+\subsection{金属度和粗糙度贴图尺寸不同}
+\textbf{现象与原因。}原合并函数发现尺寸不一致后只打印警告，随后仍按金属度图的尺寸遍历两张图。粗糙度图更小时可能越界。即使像素总数一样，长宽不同也不能认为同一数组下标代表相同纹理位置。
+
+\textbf{修改。}尺寸不一致就拒绝合并，释放临时像素并返回空纹理，材质继续使用标量参数。本次没有加入重采样，也不猜测两张贴图该怎样对齐。
+
+\textbf{验证。}测试生成 OBJ、MTL 和 TGA 后真实导入，覆盖尺寸一致、任一图更小、总像素相同但形状不同，以及缺一张或两张图的输入。合并成功时读回 GPU 纹理，检查通道为 R=0、G=粗糙度、B=金属度、A=255。缺粗糙度时为 128/255，缺金属度时为 0。三种尺寸错误均不生成合并纹理。
+
+这些断言证明测试输入在合并前被拒绝，没有进行地址消毒器或随机损坏文件测试。
+
+\subsection{默认透射色被当成玻璃证据}
+\textbf{实际发现过程。}最初七例只检查贴图合并，全部通过，日志里却出现了不该有的玻璃判断。继续检查发现，未声明透明的最小 OBJ 已被清空 MeshData。贴图生成正确，掩盖了模型几何被删除的问题。
+
+\textbf{原因。}项目携带的 Assimp 把 OBJ 透射颜色默认设为 $(1,1,1)$，并写入透明色属性。原 Model 将非零透射色视为透明度证据，直接清空子网格。同一段代码还根据材质名、网格名或路径里的 glass、window、mirror 猜测材质，附带修改金属度/粗糙度或移除法线图。这些字符串不能代替材质声明。
+
+\textbf{修改。}删除整段名字、路径和透射色猜测，以及删除几何、改参数、清法线的副作用。普通材质保持 Opaque，显式加载独立 AlphaMap 时进入 Mask。没有补做 Blend 导入或半透明排序。
+
+\textbf{验证。}测试当时扩为九例，每例都检查 MeshData 非空。新增 glass 材质名与 mirror 路径，确认法线仍在，底色为白色，金属度为 0，粗糙度为 0.5。九例通过，后续显式材质因子用例再扩为十例。导入测试应同时核对几何与材质，避免单项结果掩盖其他损坏。
+\loc{Redflag/src/Redflag/Renderer/Model.cpp}
+\loc{tests/ModelImportTests.cpp}
+\note{依赖依据：当前 Assimp 副本 \path{code/ObjFileData.h:193} 与 \path{code/ObjFileImporter.cpp:601}。这说明当前依赖的行为，不推广到所有版本和格式。}
+
+\newpage
+\section{资源重构中已经修正的问题}
+以下变化可在提交 \source{https://github.com/caihongqiu417/RedflagEngine/commit/1a168c380fbf3942cb7028000d0fef92c3848a1b}{1a168c3} 中追踪。本轮再次运行资产和后处理测试，其他生命周期修改仍以源码核对为主。
+
+\subsection{移动文件后丢引用，卸载后又自动加载}
+模型曾只按路径保存身份，移动后旧路径无法表达它仍是同一份资产。现在模型旁的 .rfmeta 保存稳定 ID，AssetLibrary 记录 ID 到路径的对应，AssetManager 按 ID 缓存。源文件和元数据一起移动，重新扫描后仍可按原 ID 找到。旧场景的 FilePath 在读取时转换为 ID。
+
+卸载模型除了移除缓存，还清空组件的 ID、路径和覆盖材质。只删缓存、留下加载来源，会使后续渲染再次加载。外部仍持有 Ref 时资源继续有效，Unload 或 ClearAll 只释放缓存自己的引用。
+
+资产测试覆盖持久化、移动与路径别名，也包含 Windows 大小写路径、坏元数据、重复 ID、类型错误和加载失败重试。失败扫描不会替换有效库。本轮通过的是测试资产，尚未替代完整场景交互。任意移动 assets 外文件也不能保证自动找回。
+\loc{Redflag/src/Redflag/Assets/AssetLibrary.cpp}
+\loc{Redflag/src/Redflag/Assets/AssetManager.h}
+
+\subsection{GPU 资源释放与退出顺序}
+退出顺序现在明确为停止并销毁 Layer、关闭脚本、清空资产缓存和资源库、关闭 Renderer，最后销毁窗口。LayerStack::Clear 执行 OnDetach。移除 Overlay 不再错误减少普通 Layer 插入索引。
+
+GPU 删除依赖有效上下文，仅让对象最终析构还不够，必须控制最终引用释放的时机。本轮核对了源码和构建，还没有对所有 Play/Simulate 退出路径做交互压力测试。
+\loc{Redflag/src/Redflag/Core/Application.cpp}
+\loc{Redflag/src/Redflag/Core/LayerStack.cpp}
+
+\subsection{后处理实例状态隔离}
+Bloom 与最终颜色处理原本混在静态场景流程中。PostProcess 现在自己持有设置与目标，Shader、参数缓冲和绘制资源也随对象创建与销毁。两个视口交替绘制时，还要让着色器读取当前视口的曝光值。只更新 GPU 内存，可能仍读到另一个视口的数据。
+
+测试给两个实例不同曝光，交替绘制后第一个结果保持不变。调整其中一个的尺寸不影响另一个，Bloom 开关、输出和销毁检查也通过。这只证明后处理实例隔离，整个 SceneRenderer 的阴影、SSAO 与 RSM 仍有静态状态。
+\loc{Redflag/src/Redflag/Renderer/PostProcess.cpp}
+\loc{tests/PostProcessTests.cpp}
+
+\newpage
+\input{review3d}
+
+\newpage
+\input{rsm}
+
+\newpage
+\input{history}
+
+\newpage
+\input{capture}
+
+\newpage
+\section{尚需单独验证的画面行为}
+\subsection{SSAO 在屏幕边缘会减弱}
+SSAO 遇到屏幕外样本时跳过累加，最后仍除以全部样本数。屏幕边缘遮蔽会减弱。本轮没有改成按有效样本数归一化，也没有做边缘场景的图像对比。
+\loc{RedflagForge/assets/shaders/SSAO.glsl}
+
+\subsection{RSM 历史仍可能混入旧表面}
+当前深度用于还原世界位置，再投影到上一帧，历史颜色限制到当前邻域范围。这里没有运动矢量，也没有上一帧深度拒绝。移动物体和新露出的表面仍可能混入错误历史，应称为 RSM 历史混合，不能写成完整 TAA 或已解决拖影。
+本次另修正上一帧位置超出近远裁剪面却仍采历史的问题。测试中本帧为 0.25，错误历史曾把结果混成约 0.7。现在裁剪范围外保留 0.25，合法位置仍正常混合。它检查投影范围，没有比较前帧实际表面的深度。
+固定 128 点取前 N 个而缩小半径的问题已在第 \ref{sec:rsm-energy} 节修正。这项修改与历史是否来自同一表面是两个问题，不能把采样范围修正当作消除了拖影。
+\loc{RedflagForge/assets/shaders/RSMTemporalResolve.glsl}
+
+\subsection{玻璃保留几何，不等于半透明已经实现}
+删除猜测代码后，曾被隐藏的玻璃几何会保留。当前导入仍只有 Opaque 和独立 AlphaMap 的 Mask 约定。正确半透明显示需要明确导入规则，以及排序和绘制设计，不能靠名称判断代替。
+
+\section{复查入口}
+\begin{tabularx}{\textwidth}{L{4.3cm}Y}
+\toprule
+资料 & 用于核对什么 \\
+\midrule
+\source{https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteVertexArrays.xhtml}{Khronos OpenGL：对象删除} & VAO 删除 API 的语义。 \\
+\source{https://learnopengl.com/Advanced-OpenGL/Blending}{LearnOpenGL：Blending} & 像素裁剪与半透明混合的区别。 \\
+\source{https://github.com/baldurk/renderdoc/blob/v1.x/docs/window/pipeline_state.rst}{RenderDoc：Pipeline State} & 在选定绘制之后检查使用中的状态和资源。 \\
+\source{https://github.com/baldurk/renderdoc/blob/v1.x/docs/how/how_inspect_pixel.rst}{RenderDoc：像素检查} & 对照正确的附件、层级和实际像素值。 \\
+项目测试与旧开发日志 & 本文具体故障、实现及验证范围的证据。 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{工具核查边界}
+RenderDoc MCP 0.3.0 通过 stdio 读取到相同的两次绘制，事件编号与官方回放一致。但它的 get\_log 返回空列表，并未覆盖原捕获中的驱动诊断，因此仍以 replay-results.json 保存的消息为准。
+
+另一次离屏 Qt 抓图漏掉原生 GPU 视图区，得到黑块，已作为截图失败记录，未收入文档。这不表示渲染输出为黑。最终采用实际窗口截图，数值由独立回放核对。两次工具核查分别记录在 \path{output/captures/mcp-check.json} 与 \path{gui-capture.json}。
+
+更新本文时保留出错输入、定位过程、修复代码和复测结果。没有复现的旧问题继续保留证据限制。新截图须记录捕获文件、事件和附件，不能只留下没有上下文的画面。
+
+\newpage
+\input{code-cases}
+\end{document}

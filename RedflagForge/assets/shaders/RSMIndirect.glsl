@@ -1,28 +1,12 @@
-// =====================================================================
-// RSMIndirect.glsl — 屏幕空间 RSM 间接光延迟 Pass
-//
-// 从 Z-Prepass 产出的深度和 view-space 法线重建世界坐标/法线，
-// 计算 RSM 间接光（同 Renderer3D_Mesh.glsl 的物理公式），
-// 但旋转角加入帧号驱动的 jitter，使相邻帧采不同的 VPL 子集，
-// 配合 RSMTemporalResolve 跨帧累积后等效样本密度 × 历史帧数。
-//
-// 输入纹理槽：
-//   slot 13 — u_RSMFlux     (VPL 出射通量)
-//   slot 14 — u_RSMWorldPos (VPL 世界坐标)
-//   slot 15 — u_RSMNormal   (VPL 世界法线，打包到 [0,1])
-//   slot 16 — u_RSMDepth    (RSM 深度，用于跳过天空 VPL)
-//   slot 18 — u_SceneDepth  (主 FBO 深度，重建接收点世界坐标)
-//   slot 19 — u_ViewNormal  (主 FBO attachment2，view-space 法线)
-//
-// UBO：
-//   binding 0 — Camera (u_LightSpaceMatrix, u_View)
-//   binding 6 — RSMData (u_RSMHeader, u_RSMSamples)
-//
-// 额外 Uniforms：
-//   u_InvViewProj  — inv(ViewProjection)，深度 → 世界坐标
-//   u_FrameIndex   — 帧计数，驱动旋转 jitter
-// =====================================================================
+/*
+ * 估算当前表面收到的反射光，例如红墙把附近物体照出一点红色。
+ * 先从屏幕深度还原表面的场景位置，再去反射阴影图中选取周围的受光点。
+ * 这些点相当于小光源：距离越近、彼此越相向，给当前表面的光就越多。
+ * 每帧转动采样方向，再由下一步把多帧结果混合，减轻少量采样产生的噪点。
+ * 输出白色漫反射表面应有的间接亮度，主绘制再乘接收面的漫反射颜色。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -36,6 +20,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -57,7 +42,7 @@ layout(std140, binding = 0) uniform Camera
 // ---- RSM Params UBO (binding = 6) ----
 layout(std140, binding = 6) uniform RSMData
 {
-    vec4 u_RSMHeader;           // x=numSamples y=intensity z=sampleRadius w=enabled
+    vec4 u_RSMHeader;           // x=样本数，y=强度，z=UV 半径，w=方向光投影宽度（世界单位）
     vec4 u_RSMSamples[128];     // xy=单位圆盘偏移 z=样本权重
 };
 
@@ -75,7 +60,6 @@ layout(std140, binding = 7) uniform RSMIndirectParams
     int  _rsmIPad0, _rsmIPad1, _rsmIPad2;
 };
 
-const float PI = 3.14159265359;
 
 float Hash12(vec2 p)
 {
@@ -84,17 +68,18 @@ float Hash12(vec2 p)
     return fract((p3.x + p3.y) * p3.z);
 }
 
-vec3 ReconstructWorldPos(vec2 uv, float depth)
+/* 当前深度按 OpenGL 约定从 [0,1] 还原到 NDC [-1,1]，再做齐次除法。 */
+vec3 ReconstructWorldPos(vec2 uv /* 屏幕 [0,1] */, float depth /* 深度附件值 */)
 {
     vec4 ndc    = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 worldH = u_InvViewProj * ndc;
     return worldH.xyz / worldH.w;
 }
 
-bool SampleRSMPoint(vec2 uv, out vec3 flux, out vec3 vplPos, out vec3 normal)
+/* 四张 RSM 附件使用同一整数纹素，避免过滤后的位置、法线与通量不对应。 */
+bool SampleRSMPoint(vec2 uv /* 光源纹理坐标 */, out vec3 flux, out vec3 vplPos, out vec3 normal)
 {
     ivec2 texSize = textureSize(u_RSMDepth, 0);
-    if (texSize.x <= 0 || texSize.y <= 0) return false;
 
     ivec2 coord = clamp(ivec2(floor(uv * vec2(texSize))), ivec2(0), texSize - 1);
 
@@ -107,6 +92,10 @@ bool SampleRSMPoint(vec2 uv, out vec3 flux, out vec3 vplPos, out vec3 normal)
     return true;
 }
 
+/*
+ * 返回接收点的间接光权重，接收表面的 albedo 在主绘制中相乘。
+ * N 是世界空间单位法线，shadowUV 是接收点在 RSM 中的投影位置。
+ */
 vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
 {
     int numSamples = int(u_RSMHeader.x);
@@ -114,6 +103,8 @@ vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
 
     float intensity    = u_RSMHeader.y;
     float sampleRadius = u_RSMHeader.z;
+    float lightWidth = u_RSMHeader.w;
+    float texelWidth = lightWidth / float(textureSize(u_RSMDepth, 0).x);
 
     // 空间 per-pixel hash + 帧间黄金比例偏移
     // 使每帧在相同像素位置旋转到不同角度，跨帧采不同 VPL 子集
@@ -145,20 +136,23 @@ vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
 
         vec3  dir   = fragWorldPos - vplPos;
         float dist2 = dot(dir, dir);
-        if (dist2 < 1e-4) continue;
+        if (dist2 == 0.0) continue;
 
         vec3  dirN       = dir * inversesqrt(dist2);
         float vplFacing  = max(0.0, dot(vplNormal, dirN));
         float fragFacing = max(0.0, dot(N, -dirN));
 
-        const float DIST_BIAS = 0.05;
-        float geom   = vplFacing * fragFacing / (dist2 + DIST_BIAS);
-        float contrib = min(geom, 4.0) * sampleWeight;
-
-        indirect += vplFlux * contrib;
+        // 两端余弦除以距离平方。把最小距离限为一个光源纹素的宽度，
+        // 避免精度误差把相邻点当作无限亮的点光源。
+        float geometry = vplFacing * fragFacing / max(dist2, texelWidth * texelWidth);
+        indirect += vplFlux * geometry * sampleWeight;
     }
 
-    return indirect * (intensity / float(numSamples));
+    // 圆盘均匀采样：平均值乘世界空间投影面积。源面和接收面的
+    // Lambert 漫反射各含 1/π，故 πr² / π² = r² / π。
+    const float PI = 3.14159265;
+    float radius = sampleRadius * lightWidth;
+    return indirect * (intensity * radius * radius / (PI * float(numSamples)));
 }
 
 void main()

@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-21",
+  "build": "Debug/x64",
+  "chrome": "157.0.8103.79",
+  "os": "Windows 11 10.0.26200",
+  "cpu": "AMD Ryzen 9 8945HX",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "opengl": "4.6.0 NVIDIA 616.56",
+  "test": "tests/ProfileTraceTests.cpp",
+  "command": "tests/run_profile_tests.cmd",
+  "warmup_frames": 10,
+  "measured_frames": 60,
+  "target_size": [
+    256,
+    256
+  ],
+  "instances": 64,
+  "clock": "std::chrono::high_resolution_clock, microseconds",
+  "instrumentor_flush_per_event": true,
+  "gpu_timestamp_queries": false,
+  "swap_buffers": false,
+  "glFinish_each_frame": true,
+  "capture_mode": "Chrome DevTools Performance imports unchanged Instrumentor trace; isolated headless Chrome; browser screenshots via CDP",
+  "events": [
+    {
+      "screenshot": "chrome-cpu-prepass.png",
+      "raw_event_index": 100,
+      "duration_us": 192
+    },
+    {
+      "screenshot": "chrome-cpu-wait.png",
+      "raw_event_index": 103,
+      "duration_us": 94
+    }
+  ],
+  "files": {
+    "chrome-cpu-prepass.png": {
+      "bytes": 64454,
+      "sha256": "f1037ac198b712341e726038344840617ba708ff1d3fbd2b39dcb8c2ba863ac9"
+    },
+    "chrome-cpu-wait.png": {
+      "bytes": 58824,
+      "sha256": "f9a067d3e565710eda9f6de20bdf2ea56026f8347a6353d7aace7b57e79133ee"
+    },
+    "redflag-cpu-trace.json": {
+      "bytes": 39599,
+      "sha256": "933589fce76d4f91e0724d9728166f54ff256257180fed242d5724b0629d28ef"
+    },
+    "statistics.json": {
+      "bytes": 1030,
+      "sha256": "b877771fc4ffe37bb87436d76a75ccddbe8990dc80542e4c36b5197e99231f8b"
+    }
+  }
+}

@@ -1,0 +1,1818 @@
+{
+  "capture": "CornellBox_capture.rdc",
+  "tool": "RenderDoc 1.47",
+  "api_validation": true,
+  "timing": "not measured",
+  "status": "passed",
+  "sha256": "52a4be8aab0b42fa59e66a519221d5e2350b0faff6c3ae66f68945492f3599d4",
+  "capture_messages": [
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 16 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 17 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 19 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 20 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 21 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 22 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 23 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 24 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 25 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 26 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 27 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 28 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 29 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 30 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 31 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 32 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 33 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 34 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 35 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 35 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 36 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 36 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 37 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 37 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 38 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 38 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 39 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 39 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 40 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 40 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 41 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 41 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 42 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 42 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 43 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 43 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 44 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 44 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) has been mapped in HOST memory."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 126 is being recompiled based on GL state."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 13 (bound to GL_UNIFORM_BUFFER (0), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_UNIFORM_BUFFER (0), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 17 (bound to GL_UNIFORM_BUFFER (3), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 17 (bound to GL_UNIFORM_BUFFER (3), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 14 (bound to GL_UNIFORM_BUFFER (0), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 28,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_UNIFORM_BUFFER (0), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 37,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 15 (bound to GL_UNIFORM_BUFFER (1), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 37,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_UNIFORM_BUFFER (1), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 37,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 16 (bound to GL_UNIFORM_BUFFER (2), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 37,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 16 (bound to GL_UNIFORM_BUFFER (2), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_UNIFORM_BUFFER (0), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_UNIFORM_BUFFER (0), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_UNIFORM_BUFFER (1), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_UNIFORM_BUFFER (1), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 16 (bound to GL_UNIFORM_BUFFER (2), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 44,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 16 (bound to GL_UNIFORM_BUFFER (2), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 88,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 17 (bound to GL_UNIFORM_BUFFER (3), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 88,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 17 (bound to GL_UNIFORM_BUFFER (3), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 170,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 18 (bound to GL_UNIFORM_BUFFER (4), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 170,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_UNIFORM_BUFFER (4), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 177,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 120 is being recompiled based on GL state."
+    },
+    {
+      "event": 194,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_UNIFORM_BUFFER (4), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 194,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_UNIFORM_BUFFER (4), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 194,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 22 (bound to GL_UNIFORM_BUFFER (6), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 194,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 22 (bound to GL_UNIFORM_BUFFER (6), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 200,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 123 is being recompiled based on GL state."
+    },
+    {
+      "event": 200,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 23 (bound to GL_UNIFORM_BUFFER (7), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 200,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 23 (bound to GL_UNIFORM_BUFFER (7), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 206,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 23 (bound to GL_UNIFORM_BUFFER (7), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 206,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 23 (bound to GL_UNIFORM_BUFFER (7), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 206,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 22 (bound to GL_UNIFORM_BUFFER (6), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 206,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 22 (bound to GL_UNIFORM_BUFFER (6), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 215,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 132 is being recompiled based on GL state."
+    },
+    {
+      "event": 215,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Buffer performance warning: Buffer object 24 (bound to GL_UNIFORM_BUFFER (8), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory."
+    },
+    {
+      "event": 215,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 24 (bound to GL_UNIFORM_BUFFER (8), GL_UNIFORM_BUFFER_EXT, and GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 228,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 24 (bound to GL_UNIFORM_BUFFER (8), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 228,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 24 (bound to GL_UNIFORM_BUFFER (8), and GL_UNIFORM_BUFFER_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 235,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "description": "Program/shader state performance warning: Vertex shader in program 126 is being recompiled based on GL state."
+    }
+  ],
+  "draws": [
+    {
+      "event": 37,
+      "name": "glDrawElements()",
+      "indices": 18,
+      "instances": 1,
+      "vertex_shader": "ResourceId::78",
+      "fragment_shader": "ResourceId::79",
+      "colors": [
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::76",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 44,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::78",
+      "fragment_shader": "ResourceId::79",
+      "colors": [
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::76",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 51,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::78",
+      "fragment_shader": "ResourceId::79",
+      "colors": [
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::76",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 58,
+      "name": "glDrawElements()",
+      "indices": 60,
+      "instances": 1,
+      "vertex_shader": "ResourceId::78",
+      "fragment_shader": "ResourceId::79",
+      "colors": [
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::76",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 65,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::78",
+      "fragment_shader": "ResourceId::79",
+      "colors": [
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::76",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 81,
+      "name": "glDrawElements()",
+      "indices": 18,
+      "instances": 1,
+      "vertex_shader": "ResourceId::126",
+      "fragment_shader": "ResourceId::127",
+      "colors": [
+        "ResourceId::121",
+        "ResourceId::122",
+        "ResourceId::123",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::124",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 88,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::126",
+      "fragment_shader": "ResourceId::127",
+      "colors": [
+        "ResourceId::121",
+        "ResourceId::122",
+        "ResourceId::123",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::124",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 95,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::126",
+      "fragment_shader": "ResourceId::127",
+      "colors": [
+        "ResourceId::121",
+        "ResourceId::122",
+        "ResourceId::123",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::124",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 102,
+      "name": "glDrawElements()",
+      "indices": 60,
+      "instances": 1,
+      "vertex_shader": "ResourceId::126",
+      "fragment_shader": "ResourceId::127",
+      "colors": [
+        "ResourceId::121",
+        "ResourceId::122",
+        "ResourceId::123",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::124",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 109,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::126",
+      "fragment_shader": "ResourceId::127",
+      "colors": [
+        "ResourceId::121",
+        "ResourceId::122",
+        "ResourceId::123",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::124",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 125,
+      "name": "glDrawElements()",
+      "indices": 18,
+      "instances": 1,
+      "vertex_shader": "ResourceId::81",
+      "fragment_shader": "ResourceId::82",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 132,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::81",
+      "fragment_shader": "ResourceId::82",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 139,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::81",
+      "fragment_shader": "ResourceId::82",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 146,
+      "name": "glDrawElements()",
+      "indices": 60,
+      "instances": 1,
+      "vertex_shader": "ResourceId::81",
+      "fragment_shader": "ResourceId::82",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 153,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::81",
+      "fragment_shader": "ResourceId::82",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 177,
+      "name": "glDrawArrays()",
+      "indices": 3,
+      "instances": 1,
+      "vertex_shader": "ResourceId::86",
+      "fragment_shader": "ResourceId::87",
+      "colors": [
+        "ResourceId::160",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R8G8B8A8_UNORM",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::0",
+      "depth_test": false,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 200,
+      "name": "glDrawArrays()",
+      "indices": 3,
+      "instances": 1,
+      "vertex_shader": "ResourceId::129",
+      "fragment_shader": "ResourceId::130",
+      "colors": [
+        "ResourceId::162",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::0",
+      "depth_test": false,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 215,
+      "name": "glDrawArrays()",
+      "indices": 3,
+      "instances": 1,
+      "vertex_shader": "ResourceId::132",
+      "fragment_shader": "ResourceId::133",
+      "colors": [
+        "ResourceId::166",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::0",
+      "depth_test": false,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 228,
+      "name": "glDrawElements()",
+      "indices": 60,
+      "instances": 1,
+      "vertex_shader": "ResourceId::65",
+      "fragment_shader": "ResourceId::66",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 235,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::65",
+      "fragment_shader": "ResourceId::66",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 242,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::65",
+      "fragment_shader": "ResourceId::66",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 249,
+      "name": "glDrawElements()",
+      "indices": 6,
+      "instances": 1,
+      "vertex_shader": "ResourceId::65",
+      "fragment_shader": "ResourceId::66",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 256,
+      "name": "glDrawElements()",
+      "indices": 18,
+      "instances": 1,
+      "vertex_shader": "ResourceId::65",
+      "fragment_shader": "ResourceId::66",
+      "colors": [
+        "ResourceId::139",
+        "ResourceId::140",
+        "ResourceId::141",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::142",
+      "depth_test": true,
+      "depth_write": false,
+      "depth_function": "CompareFunction.LessEqual",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    },
+    {
+      "event": 273,
+      "name": "glDrawArrays()",
+      "indices": 3,
+      "instances": 1,
+      "vertex_shader": "ResourceId::114",
+      "fragment_shader": "ResourceId::115",
+      "colors": [
+        "ResourceId::168",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "formats": [
+        "R8G8B8A8_UNORM",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "depth": "ResourceId::0",
+      "depth_test": false,
+      "depth_write": true,
+      "depth_function": "CompareFunction.Less",
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "first_event": 37,
+      "last_event": 65,
+      "draws": 5,
+      "indices": 96,
+      "formats": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::76"
+    },
+    {
+      "first_event": 81,
+      "last_event": 109,
+      "draws": 5,
+      "indices": 96,
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::124"
+    },
+    {
+      "first_event": 125,
+      "last_event": 153,
+      "draws": 5,
+      "indices": 96,
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        0,
+        0,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::142"
+    },
+    {
+      "first_event": 177,
+      "last_event": 177,
+      "draws": 1,
+      "indices": 3,
+      "formats": [
+        "R8G8B8A8_UNORM",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::0"
+    },
+    {
+      "first_event": 200,
+      "last_event": 200,
+      "draws": 1,
+      "indices": 3,
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::0"
+    },
+    {
+      "first_event": 215,
+      "last_event": 215,
+      "draws": 1,
+      "indices": 3,
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::0"
+    },
+    {
+      "first_event": 228,
+      "last_event": 256,
+      "draws": 5,
+      "indices": 96,
+      "formats": [
+        "R16G16B16A16_FLOAT",
+        "R32_SINT",
+        "R16G16B16A16_FLOAT",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::142"
+    },
+    {
+      "first_event": 273,
+      "last_event": 273,
+      "draws": 1,
+      "indices": 3,
+      "formats": [
+        "R8G8B8A8_UNORM",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_masks": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "depth": "ResourceId::0"
+    }
+  ],
+  "geometry_groups_verified": 4,
+  "geometry_pixels": 397212,
+  "entity_values": [
+    -1,
+    3
+  ],
+  "final_texture": {
+    "event": 273,
+    "resource": "ResourceId::168",
+    "width": 1024,
+    "height": 768,
+    "format": "R8G8B8A8_UNORM"
+  },
+  "replay_messages": [
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 35 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 36 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 37 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 38 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 40 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 39 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 41 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 42 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 43 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 0,
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "description": "Buffer detailed info: Buffer object 44 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    }
+  ],
+  "fatal_error_status": "<Result: 'Success'>"
+}

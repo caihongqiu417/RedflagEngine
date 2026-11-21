@@ -11,7 +11,7 @@ namespace Redflag {
 		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW); // 预留空间，数据稍后更新
 	}
 
-	// =================================== VBO 实现 ===================================
+	// VBO 实现
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
 		RF_PROFILE_FUNCTION();
@@ -58,7 +58,7 @@ namespace Redflag {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); //用subdata，因为之前已经用glBufferData分配了足够的空间，这里只是更新数据，不需要重新分配
 	}
 
-	// =================================== IBO 实现 ===================================
+	// IBO 实现
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
 		: m_Count(count)
 	{

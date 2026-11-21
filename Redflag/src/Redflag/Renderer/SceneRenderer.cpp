@@ -23,18 +23,11 @@
 
 namespace Redflag {
 
-	// =================================================================
-	// 静态资源：Light UBO
-	// =================================================================
+	// ---- 灯光资源 ----
 	static Ref<UniformBuffer> s_LightUBO;
 
-	// =================================================================
-	// Shadow Pass 资源
-	//
-	// 当前实现：单方向光 + 单张 2048×2048 DEPTH32F Shadow Map。
-	// 覆盖范围由固定正交视锥控制（见 BuildLightSpaceMatrix），
-	// 对"沙盒/展示"尺度场景够用；后续可接入场景包围盒或 CSM。
-	// =================================================================
+	// ---- 阴影资源 ----
+	// 单张 2048×2048 深度图，使用主绘制的第一盏有效方向光（须允许投影），正交半宽由面板设置。
 	static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
 	static constexpr uint32_t SHADOW_MAP_SLOT = 11; // 与主 Mesh shader 里的 binding = 11 对应
 
@@ -57,15 +50,8 @@ namespace Redflag {
 	bool& SceneRenderer::GetZPrepassEnabled()            { return s_ZPrepassEnabled; }
 	bool& SceneRenderer::GetSSAOEnabled()                { return s_SSAOEnabled; }
 
-	// =================================================================
-	// SSAO 资源
-	//
-	// 策略 C：Z-Prepass 顺带把 view-space 法线写到主 FBO attachment2
-	//   （RGBA16F）。SSAO Pass 再采样主 FBO 的深度 + 法线 RT，做半球采
-	//   样输出 AO 到一张单独的 RGBA8 FBO。主 Mesh shader 在 ambient
-	//   合成处乘上 AO。为保持简单，没有额外的模糊 Pass —— 直接把 64
-	//   个样本的结果输出，接受一点噪点。
-	// =================================================================
+	// ---- SSAO 资源 ----
+	// 输入主目标深度与观察空间法线，输出独立 AO 纹理，在主 Pass 的环境光部分使用。
 	static constexpr uint32_t SSAO_KERNEL_SIZE = 64;
 	static constexpr uint32_t SSAO_UBO_BINDING  = 4;
 	static constexpr uint32_t SSAO_MAP_SLOT     = 12; // 主 Mesh shader 读 AO 的槽
@@ -93,10 +79,10 @@ namespace Redflag {
 	static glm::vec4         s_SSAOKernel[SSAO_KERNEL_SIZE]{};
 	// SSAO Pass 中从主 FBO 查到的 view-normal 纹理 id，留给 ImGui 面板预览
 	static uint32_t          s_LastViewNormalTex    = 0;
-	// Z-Prepass 深度可视化纹理 id（RGBA8，线性化后），留给 ImGui 面板预览
+	// Z-Prepass 的 R8 深度预览，按当帧深度范围拉伸，供 ImGui 显示
 	static uint32_t          s_LastPrepassDepthTex  = 0;
 
-	// 深度可视化 pass 资源：CPU 读回 depth → 线性化 → 上传到 RGBA8 纹理
+	// 深度预览：CPU 读回原始深度 → 拉伸对比度 → 上传 R8 纹理
 	static uint32_t          s_DepthVizTex      = 0;
 	static uint32_t          s_DepthVizTexW     = 0;
 	static uint32_t          s_DepthVizTexH     = 0;
@@ -119,7 +105,8 @@ namespace Redflag {
 		return s_LastPrepassDepthTex;
 	}
 
-	// 后处理拥有独立的输出与绘制资源。
+	// ---- 后处理资源 ----
+	// PostProcess 拥有输出，主场景颜色 ID 只借用到本帧后处理结束。
 	static Scope<PostProcess> s_PostProcess;
 	static uint32_t s_MainSceneColorTex = 0;
 	static int s_MainSceneWidth = 0;
@@ -128,18 +115,19 @@ namespace Redflag {
 	BloomSettings& SceneRenderer::GetBloomSettings() { return s_PostProcess->GetBloomSettings(); }
 	ToneMapSettings& SceneRenderer::GetToneMapSettings() { return s_PostProcess->GetToneMapSettings(); }
 
-	// RSM：512 × 512 的 VPL 容器。
+	// ---- RSM 光源视角资源 ----
+	// 用 512×512 图像记录受光表面的反射通量密度、位置与朝向，供间接光计算读取。
 	static constexpr uint32_t RSM_MAP_SIZE        = 512;
 	static constexpr uint32_t RSM_FLUX_SLOT       = 13;
 	static constexpr uint32_t RSM_WORLDPOS_SLOT   = 14;
 	static constexpr uint32_t RSM_NORMAL_SLOT     = 15;
 	static constexpr uint32_t RSM_DEPTH_SLOT      = 16;
-	static constexpr uint32_t RSM_UBO_BINDING     = 6;   // 已用：0~5
+	static constexpr uint32_t RSM_UBO_BINDING     = 6;
 	static constexpr uint32_t RSM_MAX_SAMPLES     = 128;
 
-	// RSM Params UBO 布局（std140）：
-	//   vec4 Header  : x = numSamples, y = intensity, z = sampleRadius, w = enabled
-	//   vec4 Samples[RSM_MAX_SAMPLES] : xy = 单位圆盘偏移, z = 样本权重, w = unused
+	// 提供给间接光计算的采样参数，字段顺序与 RSMIndirect.glsl 对应。
+	// Header：点数、光照倍率、相对光源图宽度的半径、光源投影边长（世界单位）。
+	// Samples：xy 是单位圆盘内的位置，z 是权重，w 不使用。
 	struct GPURSMParams
 	{
 		glm::vec4 Header;
@@ -150,23 +138,28 @@ namespace Redflag {
 	static Ref<Framebuffer>   s_RSMFBO;
 	static Ref<Shader>        s_RSMDepthShader;
 	static Ref<UniformBuffer> s_RSMParamsUBO;
-	static glm::vec4          s_RSMSamples[RSM_MAX_SAMPLES]{};
 
-	// 关闭 RSM 时绑到 slot 13/14/15/17 的 1×1 黑纹理
+	// 关闭 RSM 时让主绘制读取黑图，间接光贡献为零。
 	static uint32_t           s_RSMBlackTex = 0;
 
-	// ---- RSM TAA 资源 ----
+	// ---- RSM 时域累积 ----
 	static constexpr uint32_t RSM_INDIRECT_SCENE_DEPTH_SLOT = 18;
 	static constexpr uint32_t RSM_INDIRECT_VIEW_NORMAL_SLOT = 19;
 	static constexpr uint32_t RSM_RESOLVED_SLOT             = 17;
 
-	static Ref<Framebuffer>   s_RSMIndirectFBO;       // 屏幕分辨率 RGBA16F：本帧 RSM 计算结果
-	static Ref<Framebuffer>   s_RSMHistoryFBO[2];     // ping-pong 历史，各屏幕分辨率 RGBA16F
+	static Ref<Framebuffer>   s_RSMIndirectFBO;       // 本帧单独算出的间接光，与屏幕同尺寸
+	static Ref<Framebuffer>   s_RSMHistoryFBO[2];     // 两张图交替读写，保留上次混合结果
 	static int                s_RSMHistoryIndex = 0;  // 当前写入目标索引（0 或 1）
-	static uint32_t           s_FrameIndex      = 0;  // 全局帧计数，驱动旋转 jitter
+	static uint32_t           s_FrameIndex      = 0;  // 每帧转动采样点，避免总取到相同位置
 	static glm::mat4          s_PrevViewProj    = glm::mat4(1.0f);
-	static bool               s_RSMHistoryValid = false; // 历史 buffer 是否有有效内容
-	static float              s_RSMBlendAlpha   = 0.9f;  // 时域融合权重
+	static bool               s_RSMHistoryValid = false; // 能否继续使用上次结果
+	static float              s_RSMBlendAlpha   = 0.9f;  // 混合时旧结果所占比例
+	// 记录上次使用的场景、相机与光照，避免把另一幅画面的颜色混进来。
+	static const Scene*       s_RSMScene = nullptr;
+	static const EditorCamera* s_RSMEditorCamera = nullptr; // nullptr 表示运行时入口
+	static glm::mat4          s_RSMProjection{ 1.0f };
+	static glm::vec4          s_RSMLightDirection{}, s_RSMLightColor{};
+	static GPURSMParams       s_RSMParameters{};
 
 	static Ref<Shader>        s_RSMIndirectShader;
 	static Ref<Shader>        s_RSMTemporalResolveShader;
@@ -206,12 +199,12 @@ namespace Redflag {
 	}
 	uint32_t SceneRenderer::GetRSMDistanceTextureID()
 	{
-		// RSM FBO 自身的深度附件（正交投影下线性 = 离光源 near 平面的距离）
+		// 光源图的深度值，表示近远裁剪面之间的位置，不是世界单位的距离。
 		return s_RSMFBO ? s_RSMFBO->GetDepthAttachmentRendererID() : 0;
 	}
 	uint32_t SceneRenderer::GetRSMResolvedTextureID()
 	{
-		// 上一帧写入完成的 resolved buffer（历史 ping-pong 中另一侧）
+		// 写完后索引已翻转，另一张图才是最近一次完成的混合结果。
 		int readIdx = 1 - s_RSMHistoryIndex;
 		return (s_RSMHistoryValid && s_RSMHistoryFBO[readIdx])
 			? s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0) : 0;
@@ -237,13 +230,10 @@ namespace Redflag {
 		sizeof(GPULightUBO) +
 		(MAX_DIRECTIONAL_LIGHTS + MAX_POINT_LIGHTS) * sizeof(GPULightData);
 
+	// ---- 初始化与销毁 ----
 	void SceneRenderer::Init()
 	{
 		s_LightUBO = UniformBuffer::Create(LIGHT_UBO_SIZE, LIGHT_UBO_BINDING);
-
-		// IBL 预计算：不自动加载，等用户在 Draw Calls 面板点击 "Load HDR..." 手动选择。
-		// （自动加载会在文件不存在时打印错误，且无法运行时切换环境贴图）
-		IBLPrecompute::InitEmpty();
 
 		// ---- Shadow Pass 资源 ----
 		// DEPTH32F depth-only FBO：无颜色附件，viewport 会绑为 ShadowMap 尺寸
@@ -333,10 +323,9 @@ namespace Redflag {
 		s_PostProcess = CreateScope<PostProcess>();
 
 		// ---- RSM 资源 ----
-		// 3 颜色 MRT + 1 深度，OpenGLFramebuffer 自动调用 glDrawBuffers。
-		// 注意 RSM 的 Flux / WorldPos / Normal 本质上是 G-buffer 数据，不是可平滑插值
-		// 的最终颜色；如果对它们做 LINEAR，会把不同表面混成一个"假 VPL"，直接
-		// 表现成漏光和沿几何边缘的结构条纹。因此这里创建后显式改成 NEAREST。
+		// 同时记录反射通量密度、世界位置、法线和深度。
+		// 相邻像素可能来自不同物体；把它们的位置、法线插值混合，会算出不存在的反射点。
+		// 因此每次取一个实际像素，避免边缘漏光或条纹。
 		{
 			FramebufferSpecification rsmSpec;
 			rsmSpec.Width  = RSM_MAP_SIZE;
@@ -367,26 +356,7 @@ namespace Redflag {
 		s_RSMIndirectParamsUBO       = UniformBuffer::Create(sizeof(GPURSMIndirectParams), RSM_INDIRECT_PARAMS_BINDING);
 		s_RSMTemporalParamsUBO       = UniformBuffer::Create(sizeof(GPURSMTemporalParams), RSM_TEMPORAL_PARAMS_BINDING);
 
-		// 预生成 128 个低差异单位圆盘采样点。
-		// 纯随机极坐标 + 每像素旋转很容易在平坦表面上形成粉末状白噪声；
-		// Vogel disk 能更均匀地覆盖圆盘，shader 端再按有效样本数归一化，
-		// 让 NumSamples 主要影响平滑度而不是整体亮度。
-		{
-			constexpr float GOLDEN_ANGLE = 2.39996322973f;
-			for (uint32_t i = 0; i < RSM_MAX_SAMPLES; ++i)
-			{
-				float t      = (static_cast<float>(i) + 0.5f) / static_cast<float>(RSM_MAX_SAMPLES);
-				float radius = glm::sqrt(t);
-				float theta  = GOLDEN_ANGLE * static_cast<float>(i);
-				s_RSMSamples[i] = glm::vec4(
-					radius * glm::cos(theta),
-					radius * glm::sin(theta),
-					1.0f,
-					0.0f);
-			}
-		}
-
-		// 1×1 黑纹理：RSM 关闭时绑到 13/14/15 槽位
+		// 关闭间接光时供主绘制读取的黑图。
 		{
 			glCreateTextures(GL_TEXTURE_2D, 1, &s_RSMBlackTex);
 			glTextureStorage2D(s_RSMBlackTex, 1, GL_RGBA16F, 1, 1);
@@ -399,6 +369,7 @@ namespace Redflag {
 
 	void SceneRenderer::Shutdown()
 	{
+		// 先释放此处持有的 GPU 对象，调用方随后才能销毁窗口和图形上下文。
 		s_LightUBO.reset();
 		s_ShadowFBO.reset();
 		s_ShadowDepthShader.reset();
@@ -412,6 +383,8 @@ namespace Redflag {
 		if (s_SSAOQuadVBO)  { glDeleteBuffers (1, &s_SSAOQuadVBO);  s_SSAOQuadVBO  = 0; }
 		if (s_SSAOQuadVAO)  { glDeleteVertexArrays(1, &s_SSAOQuadVAO); s_SSAOQuadVAO = 0; }
 		s_PostProcess.reset();
+		s_LastViewNormalTex = 0;
+		s_LastPrepassDepthTex = 0;
 		s_MainSceneColorTex = 0;
 		s_MainSceneWidth = 0;
 		s_MainSceneHeight = 0;
@@ -427,15 +400,18 @@ namespace Redflag {
 		s_RSMHistoryFBO[0].reset();
 		s_RSMHistoryFBO[1].reset();
 		s_RSMHistoryValid = false;
+		s_RSMParameters = {};
+		s_RSMScene = nullptr;
+		s_RSMEditorCamera = nullptr;
 		s_FrameIndex      = 0;
 		if (s_RSMBlackTex) { glDeleteTextures(1, &s_RSMBlackTex); s_RSMBlackTex = 0; }
 		IBLPrecompute::Shutdown();
 	}
 
-	// ==================================================================
+	// ----------
 	// 全屏三角辅助：绑定 VAO 绘制 3 个顶点，覆盖整个 NDC
 	// SSAO 与 RSM 使用同一套全屏三角。
-	// ==================================================================
+	// ----------
 	static void DrawFullscreenTriangle()
 	{
 		glBindVertexArray(s_SSAOQuadVAO);
@@ -443,19 +419,21 @@ namespace Redflag {
 		glBindVertexArray(0);
 	}
 
-	// ==================================================================
-	// TryBuildLightSpaceMatrix — 从场景里找到第一盏开启 CastShadow 的方向光
-	//
-	// 成功：outLight 记录光源方向（世界空间，已归一化），
-	//       outMatrix 填入 Ortho × View，返回 true。
-	// 失败：返回 false，调用方应当跳过 Shadow Pass。
-	//
-	// 当前实现选择固定视锥：以原点为中心的 40×40×100 正交盒，
-	// near/far = -50/50，可完整覆盖 [-25,25] 的主要摆放区域。
-	// 以后接入场景包围盒或级联阴影（CSM）再替换这个函数即可。
-	// ==================================================================
-	static bool TryBuildLightSpaceMatrix(Scene& scene,
-		glm::vec3& outLightDir, glm::mat4& outMatrix)
+	static void UpdateRSMView(const Scene& scene, const glm::mat4& projection,
+	                          const EditorCamera* editorCamera = nullptr)
+	{
+		if (s_RSMScene != &scene || s_RSMEditorCamera != editorCamera || s_RSMProjection != projection)
+			s_RSMHistoryValid = false;
+		s_RSMScene = &scene;
+		s_RSMEditorCamera = editorCamera;
+		s_RSMProjection = projection;
+		// 相机移动时仍寻找表面在前帧的位置。运行时没有相机身份，无法区分普通移动与同投影的切镜。
+	}
+
+	// ---- 光源矩阵 ----
+	// 用主绘制的第一盏有效方向光生成投影，不能为阴影另选一盏灯，否则明暗方向会不一致。
+	// 输出把世界位置映射到光源画面的矩阵。覆盖范围围绕原点，深度范围为 -50 到 50。
+	static bool TryBuildLightSpaceMatrix(Scene& scene, glm::mat4& outMatrix)
 	{
 		entt::registry& registry = scene.GetRegistry();
 
@@ -467,40 +445,30 @@ namespace Redflag {
 		{
 			auto& tc = view.get<TransformComponent>(e);
 			auto& dl = view.get<DirectionalLightComponent>(e);
-			if (!dl.CastShadow) continue;
-			dir = glm::normalize(glm::mat3(tc.GetTransform()) * dl.Direction);
-			// 防御：全零方向会让 lookAt 退化
+			dir = glm::mat3(tc.GetTransform()) * dl.Direction;
 			if (glm::dot(dir, dir) < 1e-6f) continue;
+			if (!dl.CastShadow) return false;
+			dir = glm::normalize(dir);
 			found = true;
 			break;
 		}
 		if (!found) return false;
 
-		// 构造光源 view：从 "光源所在虚拟位置" 看向原点（沿光线前进方向）
-		// up 取 (0,1,0)；若光几乎平行 Y 轴，用 (0,0,1) 规避退化
+		// 沿光线方向看向原点；若光线接近竖直，改用 Z 轴确定画面的上方。
 		glm::vec3 up = glm::abs(dir.y) > 0.95f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
-		glm::vec3 lightPos = -dir * 30.0f; // 退后 30 单位，保证 far=50 时场景在视锥内
+		glm::vec3 lightPos = -dir * 30.0f; // 沿光线反向偏移 30 个世界单位
 		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), up);
 
-		// 覆盖范围：由 ImGui 调整（增大半宽会让 shadow map 精度下降）
+		// 覆盖范围增大后，每个像素对应更大的表面，阴影细节会减少。
 		const float half = s_ShadowSettings.OrthoHalfSize;
 		glm::mat4 lightProj = glm::ortho(-half, half, -half, half, -50.0f, 50.0f);
 
-		outLightDir = dir;
 		outMatrix   = lightProj * lightView;
 		return true;
 	}
 
-	// ==================================================================
-	// RunShadowPass — 把当前队列里的几何画进 Shadow Map
-	//
-	// 调用时机：在 Renderer3D 完成"提交"但尚未 EndScene 之前。
-	// 流程：
-	//   1. 保存现在绑定的 draw framebuffer + viewport，pass 后还原。
-	//   2. 绑定 Shadow FBO，清深度，使用光源空间矩阵做深度预渲染。
-	//   3. 正面剔除 (optional)：部分消除 shadow acne；对薄片几何会让
-	//      正面丢阴影，这里选择保留 BACK 剔除，依赖 bias + PCF。
-	// ==================================================================
+	// ---- 阴影 Pass ----
+	// 在提交队列之后、EndScene 之前重绘深度；完成后恢复调用方的 FBO 和视口。
 	static void RunShadowPass(const glm::mat4& lightSpaceMatrix)
 	{
 		// --- 保存当前 FBO / viewport ---
@@ -513,8 +481,7 @@ namespace Redflag {
 		s_ShadowFBO->Bind();                 // 内部已 glViewport 到 ShadowMap 尺寸
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		// 先把 LightSpaceMatrix 写入 Camera UBO，ShadowDepth.glsl 从这里读
-		// （ShadowParams 也顺便设成 disable，确保 Shadow Pass 自身不触发阴影采样）
+		// 这次从光源方向绘制深度，提供光源投影矩阵；不读取已有阴影图。
 		Renderer3D::SetShadowData(lightSpaceMatrix, glm::vec4(0.0f));
 
 		// --- 深度预渲染 ---
@@ -525,19 +492,9 @@ namespace Redflag {
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 	}
 
-	// ==================================================================
-	// RunRSMPass — 把场景从光源视角再渲染一次，输出 Flux/WorldPos/Normal
-	// 三张 MRT 颜色附件到 s_RSMFBO，主 Pass 之后随机采样这些 VPL 算间接光。
-	//
-	// 与 RunShadowPass 的区别：
-	//   - 目标 FBO 不同（独立的 s_RSMFBO，不影响 s_ShadowFBO）
-	//   - 用 s_RSMDepthShader（写 3 个颜色附件）而不是空 fragment 的 shadow 深度 shader
-	//   - 调用 ExecuteRSMPass 而不是 ExecuteShadowPass（多上传 Material UBO）
-	//
-	// 注意：会复用 Camera UBO 中由 RunShadowPass 写入的 LightSpaceMatrix，
-	//   所以本函数必须在 RunShadowPass 之后、Renderer3D::SetShadowData
-	//   被主 Pass 阴影参数覆盖之前调用。当前调用顺序确保了这一点。
-	// ==================================================================
+	// ---- RSM 光源 Pass ----
+	// 从灯光方向重画几何，记录受光表面；即使关闭阴影，也要单独提供光源矩阵。
+	// 画完后回到主画面的绘制目标，后续用这些表面估算反射光。
 	static void RunRSMPass(const glm::mat4& lightSpaceMatrix)
 	{
 		if (!s_RSMFBO || !s_RSMDepthShader)
@@ -552,22 +509,18 @@ namespace Redflag {
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// 写 LightSpaceMatrix（如果上一步 RunShadowPass 没跑，这里也兜底写入）
+		// RSM 使用自己的光源矩阵输入，不依赖 Shadow Pass 是否执行。
 		Renderer3D::SetShadowData(lightSpaceMatrix, glm::vec4(0.0f));
 
-		// 用 RSM shader 重绘几何（带 Material UBO + BaseColorMap）
+		// 材质参数和底色贴图决定表面能反射多少光，透明裁剪也在这次绘制中执行。
 		Renderer3D::ExecuteRSMPass(s_RSMDepthShader);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 	}
 
-	// ==================================================================
-	// RunRSMIndirectPass — 屏幕空间 RSM 间接光延迟 pass
-	//
-	// 从 Z-Prepass 的深度 + view-normal 重建每像素世界坐标和法线，
-	// 计算 RSM 间接光并写入 s_RSMIndirectFBO（屏幕分辨率 RGBA16F）。
-	// ==================================================================
+	// ---- 本帧间接光 ----
+	// 用预写的深度和法线还原当前表面，再从光源图中选取反射点，计算它收到的反射光。
 	static void RunRSMIndirectPass(int w, int h,
 	                               const glm::mat4& viewProj,
 	                               GLint sceneDepthTex,
@@ -595,21 +548,32 @@ namespace Redflag {
 		}
 		if (!s_RSMIndirectFBO) return;
 
-		// 上传 RSM Params UBO（RSMIndirect shader 读取）
+		// 提供这次的点数、半径和光照倍率；参数改变后不再混入按旧参数算出的颜色。
 		const int numSamples = glm::clamp(s_RSMSettings.NumSamples, 0, (int)RSM_MAX_SAMPLES);
-		GPURSMParams params{};
-		params.Header = glm::vec4(float(numSamples), s_RSMSettings.Intensity,
-		                          s_RSMSettings.SampleRadius, 1.0f);
-		for (uint32_t i = 0; i < RSM_MAX_SAMPLES; ++i)
-			params.Samples[i] = s_RSMSamples[i];
-		s_RSMParamsUBO->SetData(&params, sizeof(GPURSMParams));
+		const glm::vec4 header(float(numSamples), s_RSMSettings.Intensity,
+		                       s_RSMSettings.SampleRadius, 2.0f * s_ShadowSettings.OrthoHalfSize);
+		if (s_RSMParameters.Header != header)
+		{
+			s_RSMHistoryValid = false;
+			s_RSMParameters.Header = header;
+			// r²=(i+0.5)/N 让每个样本代表相同盘面积；减少 N 时仍覆盖整个采样半径。
+			// 参数不变时复用这组点，每帧的旋转由 shader 完成。
+			constexpr float GOLDEN_ANGLE = 2.39996322973f;
+			for (int i = 0; i < numSamples; ++i)
+			{
+				const float radius = glm::sqrt((float(i) + 0.5f) / float(numSamples));
+				const float theta = GOLDEN_ANGLE * float(i);
+				s_RSMParameters.Samples[i] = glm::vec4(radius * glm::cos(theta), radius * glm::sin(theta), 1.0f, 0.0f);
+			}
+		}
+		s_RSMParamsUBO->SetData(&s_RSMParameters, sizeof(s_RSMParameters));
 
-		// 绑定 RSM map 纹理（VPL 数据）
+		// 选择光源看到的表面数据，位置、朝向和反射通量必须来自同一次绘制。
 		glBindTextureUnit(RSM_FLUX_SLOT,     s_RSMFBO->GetColorAttachmentRendererID(0));
 		glBindTextureUnit(RSM_WORLDPOS_SLOT, s_RSMFBO->GetColorAttachmentRendererID(1));
 		glBindTextureUnit(RSM_NORMAL_SLOT,   s_RSMFBO->GetColorAttachmentRendererID(2));
 		glBindTextureUnit(RSM_DEPTH_SLOT,    s_RSMFBO->GetDepthAttachmentRendererID());
-		// 主 FBO 深度和 view-normal（接收点重建用）
+		// 选择主相机的深度与法线，用来找接收反射光的表面。
 		glBindTextureUnit(RSM_INDIRECT_SCENE_DEPTH_SLOT, (GLuint)sceneDepthTex);
 		glBindTextureUnit(RSM_INDIRECT_VIEW_NORMAL_SLOT, (GLuint)viewNormalTex);
 
@@ -630,19 +594,15 @@ namespace Redflag {
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	// ==================================================================
-	// RunRSMTemporalResolvePass — 时域累积 RSMIndirect 结果
-	//
-	// 将本帧 s_RSMIndirectFBO 与历史 ping-pong buffer 融合，
-	// 输出到 s_RSMHistoryFBO[s_RSMHistoryIndex]，然后翻转索引。
-	// ==================================================================
+	// ---- 跨帧混合 ----
+	// 把本帧间接光与上次结果混合以减轻噪点。两张结果图轮换，读旧图时只写另一张。
 	static void RunRSMTemporalResolvePass(int w, int h,
 	                                      const glm::mat4& viewProj,
 	                                      GLint sceneDepthTex)
 	{
 		if (!s_RSMTemporalResolveShader || !s_RSMTemporalParamsUBO || !s_RSMIndirectFBO) return;
 
-		// 创建 / 同步 history FBO 尺寸
+		// 两张历史图都使用当前视口尺寸。
 		for (int i = 0; i < 2; ++i)
 		{
 			if (!s_RSMHistoryFBO[i])
@@ -662,6 +622,7 @@ namespace Redflag {
 		}
 		if (!s_RSMHistoryFBO[0] || !s_RSMHistoryFBO[1]) return;
 
+		// 本帧只写 writeIdx、采样另一张历史，避免同一纹理同时作为输入和输出。
 		int writeIdx = s_RSMHistoryIndex;
 		int readIdx  = 1 - s_RSMHistoryIndex;
 
@@ -672,11 +633,10 @@ namespace Redflag {
 
 		s_RSMTemporalResolveShader->Bind();
 
-		// slot 0 = 本帧 RSMIndirect
+		// 本帧独立算出的间接光，与上一帧已经混合过的结果。
 		glBindTextureUnit(0, s_RSMIndirectFBO->GetColorAttachmentRendererID(0));
-		// slot 1 = 上一帧 resolved history
 		glBindTextureUnit(1, s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0));
-		// slot 2 = 场景深度（反投影用）
+		// 当前深度用于还原表面位置，再找它上一帧出现在哪个像素。
 		glBindTextureUnit(2, (GLuint)sceneDepthTex);
 
 		GPURSMTemporalParams tParams{};
@@ -690,20 +650,16 @@ namespace Redflag {
 
 		glEnable(GL_DEPTH_TEST);
 
-		// 翻转 ping-pong 索引，更新历史矩阵
+		// 翻转后索引指向下次写入目标；本帧结果位于 1-s_RSMHistoryIndex。
 		s_RSMHistoryIndex = 1 - s_RSMHistoryIndex;
 		s_PrevViewProj    = viewProj;
 		s_RSMHistoryValid = true;
 	}
 
-	// ==================================================================
-	// BindRSMResources — 在主 Pass 之前绑 RSM resolved 纹理到 slot 17
-	//
-	// 关闭时绑 1×1 黑纹理，Lo += 0 × albedo = 无贡献。
-	// ==================================================================
+	// ---- 主画面读取间接光 ----
+	// 开启时选最近一次混合结果；关闭或尚无结果时选黑图，避免沿用上次的光照。
 	static void BindRSMResources()
 	{
-		// 主 Pass 需要的 resolved 纹理
 		const bool active = s_RSMSettings.Enabled && s_RSMHistoryValid
 			&& s_RSMHistoryFBO[0] && s_RSMHistoryFBO[1];
 
@@ -719,15 +675,17 @@ namespace Redflag {
 		}
 	}
 
-	// ==================================================================
-	// RunDepthVizPass — 当前绑定 FBO 的 depth 读回 CPU，线性化后上传到
-	// RGBA8 纹理供 ImGui 预览。比直接用 sampler 采 DEPTH24STENCIL8 更可靠。
-	// ==================================================================
-	static void RunDepthVizPass(uint32_t /*depthTex*/, int w, int h, float nearP, float farP)
+	// ---- 深度预览 ----
+	// 同步读回当前 DRAW FBO 的原始深度，按当帧几何深度范围拉伸成 R8 灰度纹理。
+	// 仅供调试，不做透视深度线性化。输入来自当前绑定目标及其视口。
+	static void RunDepthVizPass()
 	{
+		GLint viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+		const int w = viewport[2], h = viewport[3];
 		if (w <= 0 || h <= 0) return;
 
-		// 为了不阻塞 GPU，限制回读分辨率（最大 512 宽）
+		// 只限制预览输出宽度；下面仍读取整个深度缓冲，glReadPixels 可能等待 GPU。
 		int maxW = 512;
 		int vw = std::min(w, maxW);
 		int vh = std::max(1, h * vw / w);
@@ -752,18 +710,15 @@ namespace Redflag {
 			if (d < dMin) dMin = d;
 			if (d > dMax) dMax = d;
 		}
-		bool hasGeo = dMax > dMin;
-		float range = hasGeo ? (dMax - dMin) : 1.0f;
+		bool hasGeo = dMin <= dMax;
+		float range = std::max(dMax - dMin, 0.000001f);
 
-		// 降采样 + 翻转 Y + 归一化到 [dMin, dMax]
-		(void)nearP; (void)farP;
+		// 按最近邻降采样，将 [dMin,dMax] 映射到 [0,1]，保持原始行方向。
 		static std::vector<uint8_t> pixels;
 		pixels.resize(size_t(vw) * vh);
 		for (int y = 0; y < vh; ++y)
 		{
 			int srcY = y * h / vh;
-			if (srcY < 0) srcY = 0;
-			if (srcY >= h) srcY = h - 1;
 			for (int x = 0; x < vw; ++x)
 			{
 				int srcX = x * w / vw;
@@ -794,15 +749,18 @@ namespace Redflag {
 			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTextureParameteri(s_DepthVizTex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			// R8 单通道，ImGui 采样会只看 .r——通过 swizzle 把 .r 广播到 .rgb
+			// R8 单通道，ImGui 采样会只看 .r，通过 swizzle 把 .r 广播到 .rgb
 			GLint swizzle[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
 			glTextureParameteriv(s_DepthVizTex, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
 			s_DepthVizTexW = (uint32_t)vw;
 			s_DepthVizTexH = (uint32_t)vh;
 		}
 
+		GLint unpackAlignment;
+		glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignment);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTextureSubImage2D(s_DepthVizTex, 0, 0, 0, vw, vh, GL_RED, GL_UNSIGNED_BYTE, pixels.data());
+		glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment);
 
 		// 还原 READ FBO
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, readFBO);
@@ -811,7 +769,7 @@ namespace Redflag {
 		s_LastPrepassDepthTex = s_DepthVizTex;
 	}
 
-	// ==================================================================
+	// ----------
 	// RunSSAOPass — 在主 FBO 当前绑定时调用
 	//
 	// 前置条件：
@@ -824,7 +782,7 @@ namespace Redflag {
 	//   3. 上传 SSAOParams UBO（Projection / InvProjection / Radius / Kernel...）。
 	//   4. 绑定 SSAO FBO，全屏三角形渲染，关深度测试。
 	//   5. 还原主 FBO，把 SSAO 结果纹理绑到 slot 12 给主 Mesh shader 读取。
-	// ==================================================================
+	// ----------
 	static void RunSSAOPass(const glm::mat4& projection)
 	{
 		if (!s_SSAOShader || !s_SSAOFBO) return;
@@ -839,14 +797,10 @@ namespace Redflag {
 
 		// --- 查询主 FBO 的 depth / normal 附件纹理 ---
 		GLint depthTex = 0, normalTex = 0;
-		// 主 FBO 深度可能是 DEPTH_STENCIL 或纯 DEPTH，两种都查
+		// 深度或深度模板纹理都通过 DEPTH_ATTACHMENT 查询。
 		glGetNamedFramebufferAttachmentParameteriv(prevFBO,
-			GL_DEPTH_STENCIL_ATTACHMENT,
+			GL_DEPTH_ATTACHMENT,
 			GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
-		if (depthTex == 0)
-			glGetNamedFramebufferAttachmentParameteriv(prevFBO,
-				GL_DEPTH_ATTACHMENT,
-				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
 		glGetNamedFramebufferAttachmentParameteriv(prevFBO,
 			GL_COLOR_ATTACHMENT2,
 			GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
@@ -855,7 +809,7 @@ namespace Redflag {
 
 		s_LastViewNormalTex   = (uint32_t)normalTex;
 		// 注意：不要把原始 DEPTH 附件覆盖到 s_LastPrepassDepthTex；
-		// Pre-Z 预览用的是 RunDepthVizPass 生成的线性化 R8 纹理。
+		// Pre-Z 预览用的是 RunDepthVizPass 生成的对比拉伸 R8 纹理。
 
 		// --- 视口变化则同步 SSAO FBO 尺寸 ---
 		const auto& spec = s_SSAOFBO->GetSpecifictaion();
@@ -914,27 +868,20 @@ namespace Redflag {
 			glBindTextureUnit(SSAO_MAP_SLOT, s_SSAOWhiteTex);
 	}
 
-	// ==================================================================
-	// RenderScene — 编辑器模式渲染
-	//
-	// 逻辑完全等价于原来 Scene::OnUpdateEditor 中的渲染部分。
-	// 只是调用方从 Scene 内部变成了 SceneRenderer。
-	//
-	// 步骤：
-	//   1. Renderer2D 画所有 2D Sprite 和 Circle
-	//   2. Renderer3D 画所有 3D Mesh 和 Model
-	//
-	// 为什么 registry 要用引用：
-	//   SceneRenderer 不拥有 Scene，也不复制 registry。
-	//   它只在一帧内读取数据、发出绘制命令，帧结束后不持有任何状态。
-	// ==================================================================
+	// ---- 编辑器帧 ----
+	// 顺序：2D → 提交3D/灯光 → Shadow/RSM → 深度法线 → SSAO/间接光累积 → 主3D → 天空/调试 → 后处理。
+	// Scene 不归渲染器所有；模型首次加载会回填组件，Pass 资源与时域历史跨帧保留。
 	void SceneRenderer::RenderScene(Scene& scene, const EditorCamera& camera)
 	{
+		UpdateRSMView(scene, camera.GetProjection(), &camera);
 		entt::registry& registry = scene.GetRegistry();
-		const bool hasMainHDRTarget =
-			s_MainSceneColorTex != 0 && s_MainSceneWidth > 0 && s_MainSceneHeight > 0;
 
-		// ======================== 2D 渲染 ========================
+		// 2D 颜色含透明度；上一帧后处理会关闭混合，这里重新设置。
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// 2D 渲染
 		// 使用编辑器相机的 ViewProjection 初始化 2D 批处理
 		Renderer2D::BeginScene(camera);
 
@@ -976,10 +923,13 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
-		// ======================== 灯光收集 ========================
+		// 后续阶段写入完整的几何和光照数据，不与旧附件内容混合。
+		glDisable(GL_BLEND);
+
+		// 灯光收集
 		CollectAndUploadLights(scene);
 
-		// ======================== 3D 渲染 ========================
+		// 3D 渲染
 		Renderer3D::BeginScene(camera);
 		if (!s_IBLEnabled)
 			Renderer3D::OverrideIBLFlag(false);
@@ -1017,16 +967,12 @@ namespace Redflag {
 			});
 		}
 
-		// ======================== Shadow / RSM Pass ========================
+		// Shadow / RSM Pass
 		// 必须在提交全部几何 (DrawMesh/DrawModel) 后、主 Pass EndScene 前。
 		//
-		// 关键：RSM **不能** 被 s_ShadowEnabled 关掉。
-		// 主 shader 用 v_LightSpacePos.xy 当作 RSM 采样 UV，所以只要场景里有
-		// 方向光，就必须把 LightSpaceMatrix 上传到 Camera UBO；否则 UV 退化为
-		// identity，RSM 直接采到错位/未定义数据。Shadow 和 RSM 各自独立判断。
-		glm::vec3 lightDir;
+		// Shadow 与 RSM 共用光源方向，但各自决定是否执行；RSM 不受阴影开关控制。
 		glm::mat4 lightSpaceMatrix(1.0f);
-		bool hasDirLight = TryBuildLightSpaceMatrix(scene, lightDir, lightSpaceMatrix);
+		bool hasDirLight = TryBuildLightSpaceMatrix(scene, lightSpaceMatrix);
 		bool runShadow   = s_ShadowEnabled && hasDirLight;
 		bool runRSM      = s_RSMSettings.Enabled && hasDirLight;
 
@@ -1038,9 +984,7 @@ namespace Redflag {
 
 		if (hasDirLight)
 		{
-			// 必须无条件上传 LightSpaceMatrix —— RSM 在主 shader 里也依赖它来
-			// 计算采样 UV。Shadow 关闭时把 mode 写 0，shader 跳过 shadow map 查询，
-			// 但 LightSpaceMatrix 仍然有效。
+			// 更新主 Pass 的阴影参数；关闭 Shadow 时 mode=0，保留已求出的光源矩阵。
 			glm::vec4 shadowParams(
 				s_ShadowSettings.DepthBias,
 				s_ShadowSettings.NormalBias,
@@ -1059,31 +1003,23 @@ namespace Redflag {
 			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 		}
 
-		// ======================== Z-Prepass ========================
+		// Z-Prepass
 		// SSAO 和 RSMIndirect 都依赖 prepass 生成的深度和 view-space 法线。
 		bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled || runRSM;
 		if (runPrepass)
 		{
 			Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
 
-			// 深度可视化：线性化后写入 RGBA8 FBO 供 ImGui 预览
-			{
-				GLint curFBO = 0, dt = 0;
-				glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
-				glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-				if (dt == 0)
-					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-				GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
-				RunDepthVizPass((uint32_t)dt, vp[2], vp[3], camera.GetNearClip(), camera.GetFarClip());
-			}
+			// 深度预览：读回深度并拉伸成 R8 灰度图，供 ImGui 显示。
+			RunDepthVizPass();
 
-			// Prepass 已将深度写满；主 Pass 只测试深度不再写入，
-			// 避免两次浮点计算的微小差异导致 Z-fighting
+			// 使用预写深度筛选主 Pass，LEQUAL 允许同一表面的等深度片元通过。
+			// 深度写入在本帧结束后恢复。
 			glDepthFunc(GL_LEQUAL);
 			glDepthMask(GL_FALSE);
 		}
 
-		// ======================== SSAO Pass ========================
+		// SSAO Pass
 		// 必须在 Z-Prepass 之后、主 Pass 之前。主 Mesh shader 会在 ambient
 		// 合成点读 slot 12 的 AO。
 		if (s_SSAOEnabled)
@@ -1091,10 +1027,8 @@ namespace Redflag {
 		else
 			BindSSAOWhiteFallback();
 
-		// ======================== RSM Indirect + Temporal Resolve ========================
-		// 从当前绑定的主 FBO 查询深度和 view-normal 纹理，运行延迟 RSM 屏幕空间 pass
-		// 和时域累积 pass，将结果写入 ping-pong history buffer。
-		// 必须在 Z-Prepass 之后（有 depth + view-normal），在主 Pass 之前（写 resolved）。
+		// 间接光与跨帧混合
+		// 先取得预写的深度和法线，计算本帧反射光，再与前帧混合；主绘制随后读取结果。
 		if (runRSM && runPrepass)
 		{
 			GLint mainFBO = 0;
@@ -1106,12 +1040,8 @@ namespace Redflag {
 			// 查询主 FBO 附件
 			GLint depthTex = 0, normalTex = 0;
 			glGetNamedFramebufferAttachmentParameteriv(mainFBO,
-				GL_DEPTH_STENCIL_ATTACHMENT,
+				GL_DEPTH_ATTACHMENT,
 				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
-			if (depthTex == 0)
-				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
-					GL_DEPTH_ATTACHMENT,
-					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
 			glGetNamedFramebufferAttachmentParameteriv(mainFBO,
 				GL_COLOR_ATTACHMENT2,
 				GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
@@ -1133,9 +1063,7 @@ namespace Redflag {
 			s_RSMHistoryValid = false;
 		}
 
-		// ======================== RSM 绑定 ========================
-		// 把 TAA resolved 结果绑到 slot 17，主 shader 采样。
-		// 关闭时绑黑纹理，间接光贡献为 0。
+		// 为主绘制选好间接光图；关闭时改用黑图。
 		BindRSMResources();
 
 		Renderer3D::EndScene();
@@ -1149,12 +1077,12 @@ namespace Redflag {
 			glDepthFunc(GL_LESS);
 		}
 
-		// ======================== 天空盒 ========================
+		// 天空盒
 		// 放在不透明几何之后、UI/调试线之前
 		if (s_IBLEnabled)
 			IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
 
-		// ======================== 剪裁可视化调试 ========================
+		// 剪裁可视化调试
 		// 用 Renderer2D 线段绘制所有提交物体的世界空间 AABB：
 		//   绿色 = 通过剪裁；红色 = 被剪掉
 		if (Renderer3D::GetDebugCullingVizEnabled())
@@ -1168,16 +1096,21 @@ namespace Redflag {
 		s_PostProcess->Render(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
 	}
 
-	// ==================================================================
-	// RenderRuntime — 运行时模式渲染
-	// ==================================================================
+	// ----------
+	// ---- 运行时帧 ----
+	// 与编辑器使用相同 Pass 顺序，view 由相机世界变换求逆得到。
+	// ----------
 	void SceneRenderer::RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform)
 	{
+		UpdateRSMView(scene, projection);
 		entt::registry& registry = scene.GetRegistry();
-		const bool hasMainHDRTarget =
-			s_MainSceneColorTex != 0 && s_MainSceneWidth > 0 && s_MainSceneHeight > 0;
 
-		// ======================== 2D 渲染 ========================
+		// 2D 颜色含透明度；上一帧后处理会关闭混合，这里重新设置。
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// 2D 渲染
 		Renderer2D::BeginScene(projection, cameraTransform);
 
 		{
@@ -1214,7 +1147,7 @@ namespace Redflag {
 			});
 		}
 
-		// ======================== 2D 粒子渲染 ========================
+		// 2D 粒子渲染
 		{
 			auto view = registry.view<ParticleEmitterComponent>();
 			for (auto e : view)
@@ -1229,10 +1162,13 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
-		// ======================== 灯光收集 ========================
+		// 后续阶段写入完整的几何和光照数据，不与旧附件内容混合。
+		glDisable(GL_BLEND);
+
+		// 灯光收集
 		CollectAndUploadLights(scene);
 
-		// ======================== 3D 渲染 ========================
+		// 3D 渲染
 		glm::mat4 viewProj3D = projection * glm::inverse(cameraTransform);
 		glm::vec3 cameraPos  = glm::vec3(cameraTransform[3]); // 从变换矩阵提取位移列
 		Renderer3D::BeginScene(viewProj3D, cameraPos, glm::inverse(cameraTransform));
@@ -1267,10 +1203,9 @@ namespace Redflag {
 			});
 		}
 
-		// ======================== Shadow / RSM Pass（Runtime）========================
-		glm::vec3 lightDir_rt;
+		// Shadow / RSM Pass（Runtime）
 		glm::mat4 lightSpaceMatrix_rt(1.0f);
-		bool hasDirLight_rt = TryBuildLightSpaceMatrix(scene, lightDir_rt, lightSpaceMatrix_rt);
+		bool hasDirLight_rt = TryBuildLightSpaceMatrix(scene, lightSpaceMatrix_rt);
 		bool runShadow_rt   = s_ShadowEnabled && hasDirLight_rt;
 		bool runRSM_rt      = s_RSMSettings.Enabled && hasDirLight_rt;
 
@@ -1297,7 +1232,7 @@ namespace Redflag {
 		if (runShadow_rt)
 			glBindTextureUnit(SHADOW_MAP_SLOT, s_ShadowFBO->GetDepthAttachmentRendererID());
 
-		// ======================== Z-Prepass ========================
+		// Z-Prepass
 		// SSAO 和 RSMIndirect 都依赖 prepass 生成的深度和 view-space 法线。
 		{
 			bool runPrepass = s_ZPrepassEnabled || s_SSAOEnabled || runRSM_rt;
@@ -1306,29 +1241,19 @@ namespace Redflag {
 				Renderer3D::ExecuteDepthPrepass(s_DepthPrepassShader);
 
 				// 深度可视化
-				{
-					GLint curFBO = 0, dt = 0;
-					glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &curFBO);
-					glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-					if (dt == 0)
-						glGetNamedFramebufferAttachmentParameteriv(curFBO, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &dt);
-					float n = projection[3][2] / (projection[2][2] - 1.0f);
-					float f = projection[3][2] / (projection[2][2] + 1.0f);
-					GLint vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
-					RunDepthVizPass((uint32_t)dt, vp[2], vp[3], n, f);
-				}
+				RunDepthVizPass();
 
 				glDepthFunc(GL_LEQUAL);
 				glDepthMask(GL_FALSE);
 			}
 
-			// ======================== SSAO Pass ========================
+			// SSAO Pass
 			if (s_SSAOEnabled)
 				RunSSAOPass(projection);
 			else
 				BindSSAOWhiteFallback();
 
-			// ======================== RSM Indirect + Temporal Resolve ========================
+			// RSM Indirect + Temporal Resolve
 			if (runRSM_rt && runPrepass)
 			{
 				GLint mainFBO = 0;
@@ -1339,12 +1264,8 @@ namespace Redflag {
 
 				GLint depthTex = 0, normalTex = 0;
 				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
-					GL_DEPTH_STENCIL_ATTACHMENT,
+					GL_DEPTH_ATTACHMENT,
 					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
-				if (depthTex == 0)
-					glGetNamedFramebufferAttachmentParameteriv(mainFBO,
-						GL_DEPTH_ATTACHMENT,
-						GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTex);
 				glGetNamedFramebufferAttachmentParameteriv(mainFBO,
 					GL_COLOR_ATTACHMENT2,
 					GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &normalTex);
@@ -1362,7 +1283,7 @@ namespace Redflag {
 			if (!runRSM_rt)
 				s_RSMHistoryValid = false;
 
-			// ======================== RSM 绑定 ========================
+			// RSM 绑定
 			BindRSMResources();
 
 			Renderer3D::EndScene();
@@ -1375,14 +1296,14 @@ namespace Redflag {
 			}
 		}
 
-		// ======================== 天空盒 ========================
+		// 天空盒
 		if (s_IBLEnabled)
 		{
 			glm::mat4 viewMat3D = glm::inverse(cameraTransform);
 			IBLPrecompute::RenderSkybox(viewMat3D, projection);
 		}
 
-		// ======================== 剪裁可视化调试 ========================
+		// 剪裁可视化调试
 		if (Renderer3D::GetDebugCullingVizEnabled())
 		{
 			Renderer2D::BeginScene(projection, cameraTransform);
@@ -1394,7 +1315,7 @@ namespace Redflag {
 		s_PostProcess->Render(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
 	}
 
-	// ==================================================================
+	// ----------
 	// CollectAndUploadLights — 遍历场景灯光实体，填充 Light UBO
 	//
 	// UBO 内存布局 (std140, binding = 3)：
@@ -1406,7 +1327,7 @@ namespace Redflag {
 	//   offset 16 + MAX_DIR*64 : GPULightData[0..MAX_POINT-1] 点光数组
 	//
 	// 每帧在 3D 渲染开始前调用，确保 shader 读到最新灯光。
-	// ==================================================================
+	// ----------
 	void SceneRenderer::CollectAndUploadLights(Scene& scene)
 	{
 		entt::registry& registry = scene.GetRegistry();
@@ -1422,7 +1343,9 @@ namespace Redflag {
 			{
 				if (header.NumDirectionalLights >= (int)MAX_DIRECTIONAL_LIGHTS) return;
 				auto& light = dirLights[header.NumDirectionalLights];
-				glm::vec3 dir = glm::normalize(glm::mat3(tc.GetTransform()) * dl.Direction);
+				glm::vec3 dir = glm::mat3(tc.GetTransform()) * dl.Direction;
+				if (glm::dot(dir, dir) < 1e-6f) return;
+				dir = glm::normalize(dir);
 				light.Direction = glm::vec4(dir, 0.0f);           // w=0 表示方向光
 				light.Color     = glm::vec4(dl.Color, dl.Intensity);
 				light.Position  = glm::vec4(0.0f);                // 方向光无位置
@@ -1430,6 +1353,12 @@ namespace Redflag {
 				header.NumDirectionalLights++;
 			});
 		}
+
+		// RSM 使用第一盏方向光。颜色、强度或方向改变时不能继续混入旧光照。
+		if (s_RSMLightDirection != dirLights[0].Direction || s_RSMLightColor != dirLights[0].Color)
+			s_RSMHistoryValid = false;
+		s_RSMLightDirection = dirLights[0].Direction;
+		s_RSMLightColor = dirLights[0].Color;
 
 		// --- 收集点光源 ---
 		{

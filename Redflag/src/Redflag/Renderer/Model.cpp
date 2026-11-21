@@ -14,8 +14,10 @@
 #include <cctype>
 namespace Redflag {
 
+	// ---- 模型导入 ----
 	Ref<Model> Model::Load(const std::string& filepath)
 	{
+		// importer 销毁时会释放 aiScene，下面递归复制顶点、材质和节点变换。
 		Assimp::Importer importer;
 
 		const aiScene* scene = importer.ReadFile(filepath,
@@ -42,9 +44,10 @@ namespace Redflag {
 		return model;
 	}
 
+	// ---- 节点与几何 ----
 	void Model::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform)
 	{
-		// Assimp 使用行主序矩阵，glm 使用列主序，需要转置
+		// 按列传入 glm 构造函数，保留 Assimp 矩阵的数学含义，不反转节点变换。
 		const aiMatrix4x4& am = node->mTransformation;
 		glm::mat4 localMat(
 			am.a1, am.b1, am.c1, am.d1,
@@ -70,6 +73,7 @@ namespace Redflag {
 
 	SubMesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform)
 	{
+		// 顶点保留网格局部坐标；节点变换单独存储，绘制时与实体变换组合。
 		std::vector<MeshVertex> vertices;
 		std::vector<uint32_t>   indices;
 
@@ -115,7 +119,8 @@ namespace Redflag {
 		subMesh.MeshData       = Mesh::Create(vertices, indices);
 		subMesh.LocalTransform = nodeTransform;
 
-		// 加载 PBR 材质贴图
+		// ---- 材质导入 ----
+		// 先读取材质槽，再按文件名补缺失贴图，最后确定标量与透明度模式。
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
@@ -126,9 +131,9 @@ namespace Redflag {
 			RF_CORE_INFO("[Model] Material '{0}' (mesh '{1}')", aiMatName.C_Str(), mesh->mName.C_Str());
 
 			// ---- 1. Assimp 材质槽优先 ----
-			mat->BaseColorMap = LoadMaterialTexture(aiMat, scene, aiTextureType_DIFFUSE);
+			mat->BaseColorMap = LoadMaterialTexture(aiMat, aiTextureType_DIFFUSE);
 
-			mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_NORMALS);
+			mat->NormalMap = LoadMaterialTexture(aiMat, aiTextureType_NORMALS);
 			if (!mat->NormalMap)
 			{
 				// aiTextureType_NORMALS 未命中时打印 assimp 给的原始路径，便于排查
@@ -137,17 +142,17 @@ namespace Redflag {
 					aiString p; aiMat->GetTexture(aiTextureType_NORMALS, 0, &p);
 					RF_CORE_WARN("[Model]   NORMALS slot path not resolved: '{0}'", p.C_Str());
 				}
-				mat->NormalMap = LoadMaterialTexture(aiMat, scene, aiTextureType_HEIGHT);
+				mat->NormalMap = LoadMaterialTexture(aiMat, aiTextureType_HEIGHT);
 			}
 
-			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, scene, aiTextureType_UNKNOWN);
+			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, aiTextureType_UNKNOWN);
 			if (!mat->MetallicRoughnessMap)
 				mat->MetallicRoughnessMap = MergeMetallicRoughnessTextures(aiMat);
 
-			mat->AOMap = LoadMaterialTexture(aiMat, scene, aiTextureType_LIGHTMAP);
+			mat->AOMap = LoadMaterialTexture(aiMat, aiTextureType_LIGHTMAP);
 
-			// OPACITY 槽（Assimp 4.x FBX 导入器通常使用此槽存 alpha）
-			Ref<Texture2D> opacityTex = LoadMaterialTexture(aiMat, scene, aiTextureType_OPACITY);
+			// 只读取材质显式声明的 OPACITY，不按文件名给共用材质套透明度掩膜。
+			Ref<Texture2D> opacityTex = LoadMaterialTexture(aiMat, aiTextureType_OPACITY);
 			if (opacityTex)
 				mat->AlphaMap = opacityTex;
 
@@ -181,14 +186,6 @@ namespace Redflag {
 					mat->AOMap = Texture2D::Create(p);
 				}
 			}
-			if (!mat->AlphaMap)
-			{
-				// 注意：故意不对 _alpha / _opacity 文件名做目录扫描回退。
-				// Polyhaven 的 *_alpha.png 通常只是"玻璃/钟面"区域的掩膜，
-				// 但 FBX 里钟体/指针/玻璃可能共用同一个材质，此时套 Mask 会把
-				// 所有子网格里 UV 落在透明区域的片元全部 discard，导致整个钟消失。
-				// 只有在 Assimp 材质里明确声明 OPACITY 槽（AlphaMap 已在上面赋值）时才启用。
-			}
 			if (!mat->MetallicRoughnessMap)
 			{
 				// 分别找 metal / rough，合并为 MR 贴图
@@ -204,39 +201,18 @@ namespace Redflag {
 
 			// ---- 3. 从 Assimp 材质读取标量参数 ----
 			aiColor4D baseColor;
-			bool hasBaseColor = false;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColor) == AI_SUCCESS)
 			{
 				mat->BaseColor = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
-				hasBaseColor = true;
 			}
 			else if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == AI_SUCCESS)
 			{
 				mat->BaseColor = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
-				hasBaseColor = true;
 			}
 
-			// 保留原始 alpha 以便后续识别"玻璃"材质
-			float origAlpha = mat->BaseColor.a;
-
-			// 读取 opacity 标量（FBX Standard Surface 玻璃常把 COLOR_DIFFUSE 保持 1.0
-			// 但通过 OPACITY 控制透明度）。Assimp 4.x 没有 TRANSPARENCYFACTOR。
-			float opacity = 1.0f;
-			if (aiMat->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS)
-				origAlpha = std::min(origAlpha, opacity);
-
-			// 如果读到的颜色接近纯黑，但有漫反射贴图，则保持白色让贴图正常显示
-			// （FBX PBR 材质经常将传统 diffuse color 设为 (0,0,0)）
-			if (hasBaseColor && mat->BaseColorMap)
-			{
-				float luminance = mat->BaseColor.r * 0.299f + mat->BaseColor.g * 0.587f + mat->BaseColor.b * 0.114f;
-				if (luminance < 0.01f)
-					mat->BaseColor = glm::vec4(1.0f);
-			}
-
-			// 所有材质最终统一 alpha=1 参与 PBR 计算；真正的透明信息已保存在 origAlpha 中
-			mat->BaseColor.a = 1.0f;
-
+			// 有贴图但未提供因子时用 1，让贴图直接控制；显式的 0 和黑色必须保留。
+			mat->Metallic = mat->MetallicRoughnessMap ? 1.0f : 0.0f;
+			mat->Roughness = mat->MetallicRoughnessMap ? 1.0f : 0.5f;
 			float metallic = 0.0f;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallic) == AI_SUCCESS)
 				mat->Metallic = metallic;
@@ -245,100 +221,14 @@ namespace Redflag {
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
 				mat->Roughness = roughness;
 
-			// FBX 通常不显式写 metallic/roughness 标量——它们被存在 MR 贴图里。
-			// 保持默认 0 会让 shader 的 "metallic *= mr.b" 永远归零；
-			// 只要有 MR 贴图就把标量设为 1（中性乘数，让贴图完全控制）。
-			if (mat->MetallicRoughnessMap)
-			{
-				if (mat->Metallic  < 0.001f) mat->Metallic  = 1.0f;
-				if (mat->Roughness < 0.001f) mat->Roughness = 1.0f;
-			}
-
 			// ---- 4. 只有在加载到真正的 alpha 贴图时才切 Mask 模式 ----
 			// 注意：盲目切 Mask 会导致阈值裁剪误伤模型（例如 FBX 的 BaseColor.a 为脏值时）。
-			// 我们在上面已经将 BaseColor.a 强制为 1，所以 AlphaMap 存在才是可靠信号。
+			// AlphaMap 明确提供逐像素覆盖率，其余导入材质保持 Opaque。
 			if (mat->AlphaMap)
 			{
 				mat->Alpha = AlphaMode::Mask;
 				mat->AlphaCutoff = 0.5f;
 				mat->DoubleSided = true; // 玻璃/镂空物通常两面都可见
-			}
-
-			// ---- 5. "玻璃"子网格检测 ----
-			// FBX Standard Surface 玻璃材质的判定信号（任一满足都按玻璃处理）：
-			//   a) origAlpha < 0.5 （COLOR_DIFFUSE.a 或 OPACITY 明确声明透明）
-			//   b) COLOR_TRANSPARENT 非零
-			//   c) "玻璃"材质名包含 glass/window/clear/transparent 关键字
-			// 当前引擎没有半透明渲染管线，统一跳过渲染；否则玻璃会被当 Opaque
-			// 画成实心黑盘遮住内部钟针。
-			aiColor4D transparent;
-			bool hasTransparentColor = (aiMat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparent) == AI_SUCCESS)
-				&& (transparent.r > 0.01f || transparent.g > 0.01f || transparent.b > 0.01f);
-
-			std::string matNameLower = aiMatName.C_Str();
-			std::transform(matNameLower.begin(), matNameLower.end(), matNameLower.begin(),
-				[](unsigned char c) { return (char)std::tolower(c); });
-			bool hasGlassName = matNameLower.find("glass") != std::string::npos
-				|| matNameLower.find("window") != std::string::npos
-				|| matNameLower.find("clear") != std::string::npos
-				|| matNameLower.find("transparent") != std::string::npos;
-
-			// "镜子"特殊处理：mirror = 玻璃+背镀银，物理上应作为高反射
-			// 不透明物渲染，而不是按普通玻璃跳过。
-			//
-			// Polyhaven 的 ornate_mirror FBX 里镜面子网格的材质名是 "glass"，
-			// "mirror" 字样出现在 mesh 名或模型文件路径中，所以同时检查这三处。
-			std::string meshNameLower = mesh->mName.C_Str();
-			std::transform(meshNameLower.begin(), meshNameLower.end(), meshNameLower.begin(),
-				[](unsigned char c) { return (char)std::tolower(c); });
-			std::string filePathLower = m_FilePath;
-			std::transform(filePathLower.begin(), filePathLower.end(), filePathLower.begin(),
-				[](unsigned char c) { return (char)std::tolower(c); });
-
-			bool isMirrorAsset = matNameLower.find("mirror") != std::string::npos
-				|| meshNameLower.find("mirror") != std::string::npos
-				|| filePathLower.find("mirror") != std::string::npos;
-
-			bool isLikelyGlass = !isMirrorAsset &&
-				((origAlpha < 0.5f) || hasTransparentColor || hasGlassName);
-
-			RF_CORE_INFO("[Model]   mat='{0}' mesh='{1}' origAlpha={2:.3f} transparent={3} glass={4} mirrorAsset={5} => isGlass={6}",
-				aiMatName.C_Str(), mesh->mName.C_Str(), origAlpha,
-				hasTransparentColor, hasGlassName, isMirrorAsset, isLikelyGlass);
-
-			if (isLikelyGlass)
-			{
-				RF_CORE_WARN("[Model]   Glass-like submesh detected, skip render (mat '{0}')",
-					aiMatName.C_Str());
-				subMesh.MeshData = nullptr; // DrawModel 中 if (!MeshData) continue 会跳过
-			}
-			else if (isMirrorAsset && (hasGlassName || origAlpha < 0.5f || hasTransparentColor))
-			{
-				// 这个 FBX 属于镜子资产，而且当前子网格的材质信号指向"玻璃"
-				// (material 叫 glass / 或 alpha 很低)，说明这就是镜面那一片。
-				// 强制渲染为高反射金属，让 IBL 环境光反射能出现。
-				mat->Metallic  = 1.0f;
-				mat->Roughness = 0.05f;
-				mat->BaseColor = glm::vec4(1.0f);
-				mat->Alpha     = AlphaMode::Opaque;
-				mat->AlphaMap.reset();   // 丢弃 FBX 的玻璃 alpha 掩膜，避免被 Mask discard
-				// 丢弃法线贴图：完美镜面下，法线贴图里木板/背板的细微凹凸会
-				// 把反射向量扰动到天空盒完全不同的位置，放大成可见条纹。
-				mat->NormalMap.reset();
-				RF_CORE_WARN("[Model]   Mirror reflective submesh detected, force metallic=1 roughness=0.05 (mat '{0}')",
-					aiMatName.C_Str());
-			}
-			else if (isMirrorAsset)
-			{
-				// 整块镜子只有一个材质（镜框+镜面共用）的情况：
-				// MR 贴图的 metallic=1 区域就是镜面；镜面部分 roughness 在贴图里已是 0。
-				// 问题：Polyhaven 的 normal map 在整张贴图（包括镜面 UV 区域）都保留了
-				// 木板/背板的细微凹凸，镜面区域一旦用这些扰动的法线，反射就全是条纹。
-				// 最稳妥的办法是整块 mesh 不用法线贴图——镜框失去一点细节，
-				// 但镜面不会出条纹。
-				mat->NormalMap.reset();
-				RF_CORE_WARN("[Model]   Mirror asset detected, drop normal map to avoid banding on reflective surface (mat '{0}')",
-					aiMatName.C_Str());
 			}
 
 			RF_CORE_INFO("[Model]   Maps: base={0} nor={1} mr={2} ao={3} alpha={4}",
@@ -351,7 +241,8 @@ namespace Redflag {
 		return subMesh;
 	}
 
-	Ref<Texture2D> Model::LoadMaterialTexture(aiMaterial* material, const aiScene* scene, int textureType)
+	// ---- 贴图路径与加载 ----
+	Ref<Texture2D> Model::LoadMaterialTexture(aiMaterial* material, int textureType)
 	{
 		std::string fullPath = ResolveTexturePath(material, textureType);
 		if (fullPath.empty())
@@ -453,7 +344,7 @@ namespace Redflag {
 		return fullPath;
 	}
 
-	// ---------------------------------------------------------------------
+	// ----------
 	// 文件名后缀扫描回退
 	//
 	// Polyhaven / Quixel 等站点的材质包遵循严格命名约定：
@@ -467,7 +358,7 @@ namespace Redflag {
 	// Assimp 4.x 的 FBX 导入器对 Blender Principled BSDF 导出的 PBR 材质
 	// 支持不完整（metal/rough/alpha 经常丢失）。这里根据文件名二次扫描模型目录
 	// 作为回退，命中率高于 Assimp 的材质槽。
-	// ---------------------------------------------------------------------
+	// ----------
 	std::string Model::FindTextureBySuffix(const std::vector<std::string>& suffixes) const
 	{
 		namespace fs = std::filesystem;
@@ -535,6 +426,7 @@ namespace Redflag {
 		return "";
 	}
 
+	// ---- 金属粗糙度通道合并 ----
 	Ref<Texture2D> Model::MergeMetallicRoughnessTextures(aiMaterial* material)
 	{
 		// Assimp 4.x 没有 METALNESS(0x15) / DIFFUSE_ROUGHNESS(0x16) 枚举，
@@ -571,7 +463,7 @@ namespace Redflag {
 		int mw = 0, mh = 0, rw = 0, rh = 0;
 		const stbi_uc* metalData = nullptr;
 		const stbi_uc* roughData = nullptr;
-		// stbi buffers that need stbi_image_free; EXR data is owned by vectors below
+		// stb 像素用 stbi_image_free 释放，EXR 转换结果由下面的 vector 持有。
 		stbi_uc* metalStbi = nullptr;
 		stbi_uc* roughStbi = nullptr;
 		std::vector<uint8_t> metalEXR, roughEXR;
@@ -619,17 +511,21 @@ namespace Redflag {
 			return nullptr;
 		}
 
+		// 使用现有输入的尺寸。两张图尺寸不同时拒绝合并，避免按同一索引越界读取。
 		int width  = metalData ? mw : rw;
 		int height = metalData ? mh : rh;
 
 		if (metalData && roughData && (mw != rw || mh != rh))
 		{
-			RF_CORE_WARN("MergeMetallicRoughness: size mismatch (metal {0}x{1}, rough {2}x{3}), using metal size",
+			RF_CORE_WARN("MergeMetallicRoughness: size mismatch (metal {0}x{1}, rough {2}x{3}), skipping texture",
 				mw, mh, rw, rh);
-			width = mw; height = mh;
+			if (metalStbi) stbi_image_free(metalStbi);
+			if (roughStbi) stbi_image_free(roughStbi);
+			return nullptr;
 		}
 
-		// 合并: R=unused, G=roughness, B=metallic, A=255 (glTF 规范)
+		// 打包为 RGBA8：R=0，G=粗糙度，B=金属度，A=255。
+		// 缺粗糙度图用 128/255，缺金属图用 0；SetData 复制后即可释放 CPU 像素。
 		uint32_t pixelCount = (uint32_t)(width * height);
 		std::vector<uint8_t> merged(pixelCount * 4);
 

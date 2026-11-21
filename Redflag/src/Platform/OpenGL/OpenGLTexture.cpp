@@ -9,6 +9,17 @@
 
 
 namespace Redflag {
+	// 文件解码与 SetData 都提供紧密排列的像素，不含行末填充字节。
+	static void UploadPixels(uint32_t texture, uint32_t width, uint32_t height,
+		GLenum format, GLenum type, const void* pixels)
+	{
+		GLint alignment;
+		glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTextureSubImage2D(texture, 0, 0, 0, width, height, format, type, pixels);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+	}
+
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
 		:m_Width(width), m_Height(height)
 	{
@@ -32,7 +43,7 @@ namespace Redflag {
 	{
 		RF_PROFILE_FUNCTION();
 
-		// ---- EXR path (tinyexr) ----
+		// ---- EXR 浮点像素 ----
 		bool isEXR = path.size() > 4 &&
 			(path.compare(path.size() - 4, 4, ".exr") == 0 ||
 			 path.compare(path.size() - 4, 4, ".EXR") == 0);
@@ -52,7 +63,7 @@ namespace Redflag {
 				return;
 			}
 
-			// Flip vertically: EXR top-to-bottom → OpenGL bottom-to-top
+			// 将文件从上到下的行序翻转，与本项目纹理 UV 的下方起点一致。
 			for (int y = 0; y < exrHeight / 2; ++y)
 			{
 				int opp = exrHeight - 1 - y;
@@ -60,11 +71,8 @@ namespace Redflag {
 					std::swap(exrData[y * exrWidth * 4 + x], exrData[opp * exrWidth * 4 + x]);
 			}
 
-			// Auto-detect [-1,1] normal map encoding vs standard [0,1].
-			// Some DCC tools (Blender render etc.) export tangent-space normals
-			// directly as floats in [-1,1].  The shader expects [0,1] (same as PNG
-			// normal maps) and decodes with * 2.0 - 1.0.  If any R/G value is
-			// negative we remap the whole image: v = v * 0.5 + 0.5.
+			// 兼容部分法线 EXR：前 2048 像素的 R/G 存在负值时，按 [-1,1]→[0,1] 映射。
+			// 这是数据启发式判断，当前作用于所有通道，不能识别贴图的真实用途。
 			{
 				bool needsRemap = false;
 				int samplePx = std::min(exrWidth * exrHeight, 2048);
@@ -93,14 +101,13 @@ namespace Redflag {
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,
-				GL_RGBA, GL_FLOAT, exrData);
+			UploadPixels(m_RendererID, m_Width, m_Height, GL_RGBA, GL_FLOAT, exrData);
 
 			free(exrData);
 			return;
 		}
 
-		// ---- Standard path (stb_image) ----
+		// ---- 灰度、灰度透明度、RGB、RGBA 8 位像素 ----
 		int width, height, channels;
 		stbi_uc* data = nullptr;
 
@@ -114,38 +121,32 @@ namespace Redflag {
 		m_Width = width;
 		m_Height = height;
 
-		// internalFormat：我们怎么存储这个图像    dataFormat：告诉显存提交给它的格式
-		GLenum internalFormat = 0, dataFormat = 0;
-		if(channels==4)
-		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_RGBA;
-		}
-		else if(channels==3)
-		{
-			internalFormat = GL_RGB8;
-			dataFormat = GL_RGB;
-		}
-		m_InternalFormat = internalFormat;
-		m_DataFormat = dataFormat;
-
-		RF_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+		// stb 的通道数固定为 1~4；灰度保留单通道存储。
+		const GLenum internalFormats[] = { GL_R8, GL_RG8, GL_RGB8, GL_RGBA8 };
+		const GLenum dataFormats[] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
+		m_InternalFormat = internalFormats[channels - 1];
+		m_DataFormat = dataFormats[channels - 1];
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
 
-		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		// 设置纹理wrap模式，避免NPOT纹理的边缘问题
+		// UV 超出 [0,1] 时重复纹理，支持材质平铺。
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,
-			dataFormat, GL_UNSIGNED_BYTE, data);
+		// 灰度作为颜色采样时复制到 RGB；双通道的第二分量保留为 alpha。
+		if (channels <= 2)
+		{
+			const GLint swizzle[] = { GL_RED, GL_RED, GL_RED, channels == 2 ? GL_GREEN : GL_ONE };
+			glTextureParameteriv(m_RendererID, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+		}
+		UploadPixels(m_RendererID, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 
 
 		stbi_image_free(data);
@@ -160,13 +161,15 @@ namespace Redflag {
 	}
 
 
+	// ---- 全图更新 ----
+	// 此入口固定按 unsigned byte 上传；EXR 的 float 上传在文件构造中完成。
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
 		RF_PROFILE_FUNCTION();
 
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : m_DataFormat == GL_RGB ? 3 : m_DataFormat == GL_RG ? 2 : 1;
 		RF_CORE_ASSERT(size==m_Width*m_Height*bpp,"Data must be entire texture!");
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,m_DataFormat, GL_UNSIGNED_BYTE, data);
+		UploadPixels(m_RendererID, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const

@@ -1,28 +1,30 @@
-\section{渲染阶段与视图资源}\ruleline
-编辑器与运行时分别进入 RenderScene 和 RenderRuntime。以下是当前主要阶段的顺序；各阶段受效果开关、灯光和有效附件条件控制。
+\section{渲染流程与输出}\ruleline
+\code{DrawModel} 先把子网格、位置变换和材质记入绘制队列。\code{SceneRenderer} 再按下面的顺序使用这些记录。一次完成某项计算的绘制步骤叫一个 \textbf{Pass}，例如先画阴影，再画主画面。目前顺序直接写在函数中。主绘制会把相同材质排在一起。使用同一网格和同一组贴图的多个不透明物体，还可合并为一次实例化绘制。
 \begin{figure}[H]\centering
-\begin{tikzpicture}
-\node[module] (a) at (0,0) {\textbf{1 二维绘制与收集}\\Sprite / Circle\\灯光与 3D 绘制队列};
-\node[module] (b) at (7.8,0) {\textbf{2 光源阶段}\\Shadow / RSM\\光源空间数据};
-\node[module] (c) at (0,-2.5) {\textbf{3 深度阶段}\\Depth / Normal\\主视图附件};
-\node[module] (d) at (7.8,-2.5) {\textbf{4 屏幕空间计算}\\SSAO / RSM Indirect\\遮蔽与间接光};
-\node[module] (e) at (0,-5) {\textbf{5 时域解析}\\RSM History\\前帧与当前帧结果};
-\node[module] (f) at (7.8,-5) {\textbf{6 主绘制}\\Renderer3D::EndScene\\排序、实例化与提交};
-\node[module] (g) at (0,-7.5) {\textbf{7 天空盒与调试}\\Skybox / Debug AABB\\HDR 目标};
-\node[module] (h) at (7.8,-7.5) {\textbf{8 PostProcess}\\Bloom / Composite\\Tonemap 与最终输出};
+\begin{tikzpicture}[module/.append style={text width=5.6cm,minimum height=1.35cm,inner sep=6pt}]
+\node[module] (a) at (0,0) {\textbf{1 画二维物体，收集三维物体}\\同时取出这一帧的灯光数据};
+\node[module] (b) at (7.8,0) {\textbf{2 从灯光位置看场景}\\Shadow 记遮挡；RSM 记表面反射信息};
+\node[module] (c) at (0,-2.25) {\textbf{3 从相机位置记录表面}\\深度记远近；法线记表面朝向};
+\node[module] (d) at (7.8,-2.25) {\textbf{4 用辅助图估算光照}\\SSAO 算局部遮蔽；RSM 算间接光};
+\node[module] (e) at (0,-4.5) {\textbf{5 混合本帧与前帧间接光}\\RSM History 减少采样结果的闪动};
+\node[module] (f) at (7.8,-4.5) {\textbf{6 绘制模型的表面颜色}\\Renderer3D::EndScene 使用材质和光照};
+\node[module] (g) at (0,-6.75) {\textbf{7 补上天空盒与调试线框}\\结果仍保存到场景的颜色图中};
+\node[module] (h) at (7.8,-6.75) {\textbf{8 调整亮度，加入泛光}\\PostProcess 输出供编辑器显示的图像};
 \draw[flow](a)--(b);\draw[flow](c)--(d);\draw[flow](e)--(f);\draw[flow](g)--(h);
 \draw[flow](b.south)--++(0,-.35)-|(c.north);
 \draw[flow](d.south)--++(0,-.35)-|(e.north);
 \draw[flow](f.south)--++(0,-.35)-|(g.north);
-\end{tikzpicture}\caption{当前主要渲染阶段}\end{figure}
-\subsection{资源归属}
-主场景 HDR 目标由 ForgeLayer 提供。SceneRenderer 当前持有一个 PostProcess 对象，RenderScene / RenderRuntime 在末尾调用它的 Render。Bloom 与 Tonemap 的参数、六级金字塔、输出 FBO、Shader、UBO 和全屏三角均归该对象所有。
+\end{tikzpicture}\caption{当前主要顺序。是否执行某项效果，还取决于开关、灯光与所需图像是否可用。}\end{figure}
+\subsection{中间图像与光照计算}
+深度图记录哪个表面离相机更近。法线图记录该处表面朝向。这些图让后续计算知道“像素对应哪里”。SSAO 根据附近深度估算局部遮蔽，例如墙角应当暗一些。RSM 则利用灯光视角的信息估算间接光，也就是光照到别处后再反射过来的贡献。两者都使用近似计算。
 
-\begin{figure}[H]\centering
-\begin{tikzpicture}
-\node[module] (owner) at (0,0) {\textbf{SceneRenderer}\\Scope<PostProcess>\\传入 HDR、宽、高};
-\node[module] (post) at (5.2,0) {\textbf{PostProcess}\\RenderBloom / Composite\\构造与析构资源};
-\node[module] (output) at (10.4,0) {\textbf{输出}\\独立 LDR 目标\\GetColorTextureID};
-\draw[flow](owner)--(post);\draw[flow](post)--(output);
-\end{tikzpicture}\caption{本轮拆出的后处理对象}\end{figure}
-\note{阴影、SSAO、RSM 历史和 Renderer3D 仍有静态共享状态。当前尚未完成多视口隔离，也没有 RenderGraph。}
+保存颜色、深度等图像的绘制目标，在代码中叫 \code{Framebuffer}。\code{ForgeLayer} 提供主场景目标。颜色先用浮点值保存，保留超过普通显示范围的亮度，这就是这里的 \textbf{HDR} 画面。
+
+\subsection{后处理与视口显示}
+\code{PostProcess} 从主画面提取较亮的部分，用六层不同尺寸图像生成光晕，这一步叫 \textbf{Bloom}。它随后把场景亮度映射到显示范围，也就是 \textbf{Tonemap}，输出一张可显示的颜色图。编辑器取得这张图的编号，放到视口面板里。
+
+SceneRenderer 当前持有一个 PostProcess 实例，管理泛光与亮度设置、计算用图像和最终输出。其他效果仍有静态共享数据，多视口之间尚未完全隔离。
+
+间接光按当前深度还原表面位置，再寻找上一帧的对应位置。上一帧屏幕外、相机后方或近远裁剪范围外的点不参与混合；切换场景、投影、光照或采样参数也会清掉旧结果。但目前没有前帧深度来检查遮挡变化，也没有记录物体运动，仍可能留下拖影。同投影的运行时相机切换尚不能单独识别。
+
+\note{Mask 材质的预写、阴影、RSM 与主绘制都按底色因子、底色贴图 alpha、透明度图红通道相乘后裁剪。新增回归用例另行检查阴影与 RSM；既有 RenderDoc 捕获只记录预写和主绘制。深度预览仍同步读回整张深度并拉伸成灰度，不是线性距离图。}

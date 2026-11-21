@@ -1,0 +1,117 @@
+{
+  "capture": "DepthPrepass_capture.rdc",
+  "size": 59936,
+  "sha256": "3dcc81ca9eb3ba441bf2af84715d4ec99df3961f444a5aedc302b3eb18a7cb3d",
+  "renderdoc_dll": "D:/ProgramFiles/JetBrains/JetBrains Rider 2025.3.1/plugins/rider-plugins-renderdoc/runtime/windows-x86_64/renderdoc.dll",
+  "renderdoc_dll_version": "1.33.0.0",
+  "api_version": "1.6.0",
+  "get_num_captures": 1,
+  "end_frame_capture": 1,
+  "get_capture": 1,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2",
+  "vendor": "NVIDIA Corporation",
+  "opengl": "4.6.0 NVIDIA 616.56",
+  "target_pixels": [
+    32,
+    32
+  ],
+  "test": "DepthPrepassTests: BaseColor alpha * AlphaMap R * 0.75, Mask cutoff 0.5",
+  "pixel_assertions": "passed",
+  "default_mode_test": "passed without loading RenderDoc",
+  "replay": "passed: RenderDoc 1.47, API validation enabled",
+  "gpu_timing": "not measured",
+  "official_header_source": "https://github.com/baldurk/renderdoc/blob/v1.33/renderdoc/api/app/renderdoc_app.h",
+  "official_header_sha256": "0ab27bfa81235ebfc8f4c48111399ea81477eb4f77665e6209c9247daee91b94",
+  "replay_command": "tmp/tools/renderdoc/RenderDoc_1.47_64/qrenderdoc.exe --python tests/replay_depth_capture.py",
+  "replay_tool_source": "https://renderdoc.org/stable/1.47/RenderDoc_1.47_64.zip",
+  "replay_report": "replay-results.json",
+  "draw_events": {
+    "depth_prepass": 28,
+    "main_pass": 52
+  },
+  "whole_image_checks": "1024 pixels per event passed; depth attachments byte-identical",
+  "debug_messages": {
+    "capture": {
+      "info": 14,
+      "medium_performance": 1,
+      "performance_message_id": 131218,
+      "performance_event": 28
+    },
+    "replay": {
+      "info": 3,
+      "warnings_or_errors": 0
+    },
+    "fatal_error_status": "Success"
+  },
+  "gui_screenshots": [
+    {
+      "file": "renderdoc-eid28-depth.jpg",
+      "tool": "RenderDoc 1.47 GUI",
+      "event": 28,
+      "resource": "ResourceId::60",
+      "description": "Actual RenderDoc window, depth texture at the prepass draw"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "capture.log",
+      "size": 3357,
+      "sha256": "6905d3924177d4a6ff2680eced4e8e97be27faf69866465f2b9bc211f16e2915"
+    },
+    {
+      "file": "replay-results.json",
+      "size": 15419,
+      "sha256": "63f86f0abfc31d275654f7760aef39f6c9e7aa3ccd024e1614d31a15b9856352"
+    },
+    {
+      "file": "renderdoc-eid28-depth.jpg",
+      "size": 201642,
+      "sha256": "42a5e46625a625e912d9e18c27d20abced40956392d63737229ce33a7e79a4c9"
+    },
+    {
+      "file": "prepass-depth.png",
+      "size": 122,
+      "sha256": "29f16d681fe68c2b21a2adbd61af6b1d11886cbe21505075b407fe1d66bd6f2b"
+    },
+    {
+      "file": "main-depth.png",
+      "size": 122,
+      "sha256": "29f16d681fe68c2b21a2adbd61af6b1d11886cbe21505075b407fe1d66bd6f2b"
+    },
+    {
+      "file": "prepass-entity.png",
+      "size": 113,
+      "sha256": "0d8881198ac4da4d5bc6a9f74ad66ad546263b12db5a5518e3d13aa00d11541c"
+    },
+    {
+      "file": "main-entity.png",
+      "size": 126,
+      "sha256": "3f3ea8d023ca4e3ec4a2e59007471706fe2dcbacc2e45e293266cbd3f317dbbe"
+    },
+    {
+      "file": "prepass-entity.dds",
+      "size": 4244,
+      "sha256": "c533a414ff95a71240ec529f9c614bf06f353aaa2a6082679c9605e9bfa4378a"
+    },
+    {
+      "file": "main-entity.dds",
+      "size": 4244,
+      "sha256": "9f02edb58edee48db462bdb5035c3432d5266e1538efd18da54a55c3ad0e4a9b"
+    },
+    {
+      "file": "mcp-check.json",
+      "size": 960,
+      "sha256": "a6b324787a93465f2c2a907be984be0c477b0b920994db8d829c570495d2422f"
+    },
+    {
+      "file": "gui-capture.json",
+      "size": 460,
+      "sha256": "ce75a4ae904efc9a7ea395a69bd158ee6e5d8de7f7e8ab3d22307b9de6fd361b"
+    }
+  ],
+  "mcp_check": "mcp-check.json",
+  "additional_gui_attempt": {
+    "report": "gui-capture.json",
+    "status": "failed visual verification; no additional screenshot published"
+  }
+}

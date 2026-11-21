@@ -2,6 +2,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 
 #include <fstream>
+#include <sstream>
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
@@ -46,40 +47,78 @@ namespace Redflag {
             return nullptr;
         }
 
+        // #version 前允许有空白和注释；只读取第一个有效指令。
+        static size_t FirstDirective(const std::string& source)
+        {
+            size_t pos = source.find_first_not_of(" \t\r\n");
+            while (pos != std::string::npos)
+            {
+                size_t end;
+                if (source.compare(pos, 2, "//") == 0)
+                    end = source.find_first_of("\r\n", pos + 2);
+                else if (source.compare(pos, 2, "/*") == 0)
+                {
+                    end = source.find("*/", pos + 2);
+                    if (end != std::string::npos) end += 2;
+                }
+                else break;
+                pos = source.find_first_not_of(" \t\r\n", end);
+            }
+            return pos;
+        }
+
+        static bool UsesGLSL330(const std::string& source)
+        {
+            const size_t pos = FirstDirective(source);
+            if (pos == std::string::npos || source[pos] != '#') return false;
+            std::istringstream line(source.substr(pos + 1, source.find('\n', pos) - pos - 1));
+            std::string directive;
+            int version = 0;
+            line >> directive >> version;
+            return directive == "version" && version == 330;
+        }
+
         static const char* GetCacheDirectory()
         {
             return "assets/cache/shader/opengl";
         }
 
-        static void CreateCacheDirectoryIfNeeded()
+        static std::filesystem::path GetCachePath(GLenum stage, const std::string& source)
         {
-            std::string cacheDirectory = GetCacheDirectory();
-            if (!std::filesystem::exists(cacheDirectory))
-                std::filesystem::create_directories(cacheDirectory);
+            // FNV-1a；配置或编译器变化时更新版本，源码构造也使用同一缓存规则。
+            const std::string key = "opengl45-performance-auto-locations-auto-bind-v1\n" + source;
+            uint64_t hash = 14695981039346656037ull;
+            for (unsigned char value : key)
+            {
+                hash ^= value;
+                hash *= 1099511628211ull;
+            }
+            return std::filesystem::path(GetCacheDirectory()) /
+                (std::to_string(hash) + "." + GLShaderStageToString(stage) + ".spv");
         }
     }
 
-    OpenGLShader::OpenGLShader(const std::string& filepath)
+    // ---- 创建与销毁 ----
+    OpenGLShader::OpenGLShader(const std::string& filepath, const std::string& define)
         : m_FilePath(filepath)
     {
-        Utils::CreateCacheDirectoryIfNeeded();
-
-        std::string source = ReadFile(filepath);
-        auto shaderSources = PreProcess(source);
-
+        m_Name = std::filesystem::path(filepath).stem().string();
+        auto sources = PreProcess(ReadFile(filepath));
+        if (!define.empty())
         {
-            Timer timer;
-            CompileOrGetVulkanBinaries(shaderSources);
-            CompileOrGetOpenGLBinaries();
-            CreateProgram();
-            RF_CORE_WARN("Shader creation took {0} ms", timer.ElapsedMillis());
+            m_Name += "_" + define;
+            // GLSL 要求 #version 位于首行有效指令。宏参与源码哈希，两个版本分别缓存。
+            for (auto& [stage, source] : sources)
+            {
+                const size_t lineEnd = source.find('\n', Utils::FirstDirective(source));
+                if (lineEnd != std::string::npos)
+                    source.insert(lineEnd + 1, "#define " + define + "\n");
+            }
         }
 
-        auto lastSlash = filepath.find_last_of("/\\");
-        lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-        auto lastDot = filepath.rfind('.');
-        auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
-        m_Name = filepath.substr(lastSlash, count);
+        Timer timer;
+        CreateProgram(sources);
+        RF_CORE_TRACE("Shader '{}' created in {} ms", m_Name, timer.ElapsedMillis());
     }
 
     OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -89,9 +128,7 @@ namespace Redflag {
         sources[GL_VERTEX_SHADER] = vertexSrc;
         sources[GL_FRAGMENT_SHADER] = fragmentSrc;
 
-        CompileOrGetVulkanBinaries(sources);
-        CompileOrGetOpenGLBinaries();
-        CreateProgram();
+        CreateProgram(sources);
     }
 
     OpenGLShader::~OpenGLShader()
@@ -125,6 +162,8 @@ namespace Redflag {
         return result;
     }
 
+    // ---- 阶段拆分 ----
+    // #type 行只用于划分源码，不传入各阶段编译器。
     std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
     {
         std::unordered_map<GLenum, std::string> shaderSources;
@@ -150,105 +189,83 @@ namespace Redflag {
         return shaderSources;
     }
 
-    void OpenGLShader::CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
+    // ---- 中间 SPIR-V 与反射 ----
+    // 相同源码和编译配置可复用同一阶段的中间代码。
+    OpenGLShader::ShaderBinaries OpenGLShader::LoadBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
     {
-        GLuint program = glCreateProgram();
+        std::filesystem::create_directories(Utils::GetCacheDirectory());
 
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-        const bool optimize = true;
-        if (optimize)
-            options.SetOptimizationLevel(shaderc_optimization_level_performance);
+        options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
         options.SetAutoMapLocations(true);
         options.SetAutoBindUniforms(true);
 
-        std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
-
-        auto& shaderData = m_VulkanSPIRV;
-        shaderData.clear();
+        ShaderBinaries shaderData;
 
         for (auto&& [stage, source] : shaderSources)
         {
-            std::filesystem::path shaderFilePath = m_FilePath;
-            std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageToString(stage) + ".vulkan.spv");
-
-            bool cacheValid = false;
-            if (std::filesystem::exists(cachedPath) && std::filesystem::exists(shaderFilePath))
+            const auto cachedPath = Utils::GetCachePath(stage, source);
+            std::ifstream in(cachedPath, std::ios::binary | std::ios::ate);
+            auto& data = shaderData[stage];
+            if (in)
             {
-                auto cacheWriteTime = std::filesystem::last_write_time(cachedPath);
-                auto sourceWriteTime = std::filesystem::last_write_time(shaderFilePath);
-                // Windows 上快速连续编辑 shader 时，源码和缓存可能落在同一个时间戳粒度内。
-                // 这里必须用严格大于，避免“源码已变但缓存时间刚好相等”时继续复用旧 SPIR-V。
-                cacheValid = cacheWriteTime > sourceWriteTime;
-            }
-
-            std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
-            if (cacheValid && in.is_open())
-            {
-                in.seekg(0, std::ios::end);
-                auto size = in.tellg();
-                in.seekg(0, std::ios::beg);
-
-                auto& data = shaderData[stage];
-                data.resize(size / sizeof(uint32_t));
-                in.read((char*)data.data(), size);
-            }
-            else
-            {
-                shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
-                if (module.GetCompilationStatus() != shaderc_compilation_status_success)
+                const std::streamsize size = in.tellg();
+                // 磁盘缓存可能被截断；无效数据重新编译。
+                if (size > 0 && size % sizeof(uint32_t) == 0)
                 {
-                    RF_CORE_ERROR(module.GetErrorMessage());
-                    RF_CORE_ASSERT(false);
-                }
-
-                shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
-
-                std::ofstream out(cachedPath, std::ios::out | std::ios::binary);
-                if (out.is_open())
-                {
-                    auto& data = shaderData[stage];
-                    out.write((char*)data.data(), data.size() * sizeof(uint32_t));
-                    out.flush();
-                    out.close();
+                    data.resize(static_cast<size_t>(size) / sizeof(uint32_t));
+                    in.seekg(0);
+                    if (in.read(reinterpret_cast<char*>(data.data()), size) && data[0] == 0x07230203)
+                        continue;
                 }
             }
+            in.close();
+
+            shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+            if (module.GetCompilationStatus() != shaderc_compilation_status_success)
+            {
+                RF_CORE_ERROR(module.GetErrorMessage());
+                RF_CORE_ASSERT(false);
+            }
+            data.assign(module.cbegin(), module.cend());
+
+            std::ofstream out(cachedPath, std::ios::binary);
+            out.write(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(uint32_t));
         }
 
         for (auto&& [stage, data] : shaderData)
             Reflect(stage, data);
+        return shaderData;
     }
 
-    void OpenGLShader::CompileOrGetOpenGLBinaries()
+    // ---- OpenGL SPIR-V ----
+    // 从中间数据反编译 GLSL，统一跨阶段变量名后重新编译；此阶段每次执行。
+    void OpenGLShader::CompileBinaries(ShaderBinaries& binaries)
     {
-        auto& shaderData = m_OpenGLSPIRV;
-        auto& glShaderSource = m_OpenGLSourceCode;
-
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
-        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5); // �޸�ö��
-        const bool optimize = false;
-        if (optimize)
-            options.SetOptimizationLevel(shaderc_optimization_level_performance);
+        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
 
-        std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
-
-        shaderData.clear();
-        m_OpenGLSourceCode.clear();
-
-        for (auto&& [stage, spirv] : m_VulkanSPIRV)
+        for (auto& [stage, spirv] : binaries)
         {
             spirv_cross::CompilerGLSL glslCompiler(spirv);
 
-            // spirv-cross assigns different SPIR-V IDs (and thus different variable names
-            // like "_26" vs "_69") for the same varying in the vertex and fragment stage.
-            // Some OpenGL drivers match inter-stage varyings by OpName rather than only by
-            // Location, causing program link failure. Rename all inter-stage varyings to
-            // a consistent "v_loc_N" scheme so both stages produce matching names.
+            // 顶点输出与片元输入按 location 统一命名，避免跨阶段 SPIR-V ID 不同而名称不一致。
+            // 只处理阶段间变量，不改顶点属性或片元输出。
             {
                 spirv_cross::ShaderResources resources = glslCompiler.get_shader_resources();
+                // 两个阶段独立编译时可能生成相同的临时名。参数块按数据所在位置命名，
+                // 让链接器区分顶点阶段的模型矩阵与片元阶段的材质。
+                for (const auto& block : resources.uniform_buffers)
+                {
+                    std::string binding = std::to_string(glslCompiler.get_decoration(block.id, spv::DecorationBinding));
+                    glslCompiler.set_name(block.base_type_id, "Block" + binding);
+                    glslCompiler.set_name(block.id, "params" + binding);
+                }
+
                 auto renameByLocation = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& vars)
                 {
                     for (const auto& r : vars)
@@ -264,42 +281,63 @@ namespace Redflag {
                 if (stage == GL_FRAGMENT_SHADER) renameByLocation(resources.stage_inputs);
             }
 
-            m_OpenGLSourceCode[stage] = glslCompiler.compile();
-            auto& source = m_OpenGLSourceCode[stage];
+            const std::string source = glslCompiler.compile();
 
-            shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str());
+            shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
             if (module.GetCompilationStatus() != shaderc_compilation_status_success)
             {
                 RF_CORE_ERROR(module.GetErrorMessage());
                 RF_CORE_ASSERT(false);
             }
 
-            shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
-
-            std::filesystem::path shaderFilePath = m_FilePath;
-            std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageToString(stage) + ".opengl.spv");
-
-            std::ofstream out(cachedPath, std::ios::out | std::ios::binary);
-            if (out.is_open())
-            {
-                auto& data = shaderData[stage];
-                out.write((char*)data.data(), data.size() * sizeof(uint32_t));
-                out.flush();
-                out.close();
-            }
+            spirv.assign(module.cbegin(), module.cend());
         }
     }
 
-    void OpenGLShader::CreateProgram()
+    // ---- 程序链接 ----
+    // 旧版 GLSL 使用具名 uniform，交给 OpenGL 编译以保留按名称设置参数的接口。
+    void OpenGLShader::CreateProgram(const std::unordered_map<GLenum, std::string>& sources)
     {
-        GLuint program = glCreateProgram();
-
-        std::vector<GLuint> shaderIDs;
-        for (auto&& [stage, spirv] : m_OpenGLSPIRV)
+        // 工程的 GLSL 330 示例直接上传矩阵和颜色。GLSL 450 渲染阶段使用缓存的中间代码。
+        const bool useSource = Utils::UsesGLSL330(sources.at(GL_VERTEX_SHADER));
+        ShaderBinaries binaries;
+        if (!useSource)
         {
-            GLuint shaderID = shaderIDs.emplace_back(glCreateShader(stage));
-            glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), (GLsizei)(spirv.size() * sizeof(uint32_t))); // ���� cast
-            glSpecializeShader(shaderID, "main", 0, nullptr, nullptr);
+            binaries = LoadBinaries(sources);
+            CompileBinaries(binaries);
+        }
+
+        GLuint program = glCreateProgram();
+        std::vector<GLuint> shaderIDs;
+        for (const auto& [stage, source] : sources)
+        {
+            GLuint shaderID = glCreateShader(stage);
+            shaderIDs.push_back(shaderID);
+            if (useSource)
+            {
+                const char* glsl = source.c_str();
+                glShaderSource(shaderID, 1, &glsl, nullptr);
+                glCompileShader(shaderID);
+
+                GLint compiled;
+                glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compiled);
+                if (!compiled)
+                {
+                    GLint length;
+                    glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &length);
+                    std::string message(length, '\0');
+                    glGetShaderInfoLog(shaderID, length, nullptr, message.data());
+                    RF_CORE_ERROR("{0} ({1}): {2}", m_FilePath.empty() ? m_Name : m_FilePath,
+                        Utils::GLShaderStageToString(stage), message.c_str());
+                }
+            }
+            else
+            {
+                const auto& spirv = binaries.at(stage);
+                glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(),
+                    static_cast<GLsizei>(spirv.size() * sizeof(uint32_t)));
+                glSpecializeShader(shaderID, "main", 0, nullptr, nullptr);
+            }
             glAttachShader(program, shaderID);
         }
 
@@ -349,9 +387,9 @@ namespace Redflag {
             for (const auto& resource : resources.uniform_buffers)
             {
                 const auto& bufferType = compiler.get_type(resource.base_type_id);
-                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType); // ���� cast
+                uint32_t bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType); // 反射结构体总字节数
                 uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-                int memberCount = (int)bufferType.member_types.size(); // ���� cast
+                int memberCount = (int)bufferType.member_types.size(); // 参数块成员数量
 
                 RF_CORE_TRACE("  {0}", resource.name);
                 RF_CORE_TRACE("    Size = {0}, Binding = {1}, Members = {2}", bufferSize, binding, memberCount);
@@ -359,6 +397,7 @@ namespace Redflag {
         }
     }
 
+    // ---- 绑定与 Uniform ----
     void OpenGLShader::Bind() const
     {
         glUseProgram(m_RendererID);

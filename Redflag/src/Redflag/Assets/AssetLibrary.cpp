@@ -6,14 +6,17 @@
 
 namespace Redflag
 {
+	// ---- 登记 ----
 	AssetID AssetLibrary::Add(const std::filesystem::path& path, AssetType type)
 	{
 		if (path.empty() || !std::filesystem::is_regular_file(path))
 			return 0;
 
+		// 先消除相对段和路径别名，同一源文件共用一份旁置元数据。
 		const auto source = std::filesystem::weakly_canonical(std::filesystem::absolute(path));
 		const auto meta = MetaPath(source);
 		AssetInfo info;
+		// 已有文件沿用 ID，首次登记才生成 ID 并落盘。
 		if (std::filesystem::exists(meta))
 		{
 			info = Read(meta);
@@ -35,6 +38,7 @@ namespace Redflag
 
 	void AssetLibrary::Scan(const std::filesystem::path& directory)
 	{
+		// 先在临时库完成读取和重复 ID 检查，成功后整体替换，避免留下半张表。
 		AssetLibrary scanned;
 		if (std::filesystem::exists(directory))
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
@@ -47,12 +51,14 @@ namespace Redflag
 		m_Assets.swap(scanned.m_Assets);
 	}
 
+	// ---- 查询 ----
 	const AssetInfo* AssetLibrary::Get(AssetID id) const
 	{
 		auto it = m_Assets.find(id);
 		return it == m_Assets.end() ? nullptr : &it->second;
 	}
 
+	// ---- 元数据读写 ----
 	std::filesystem::path AssetLibrary::MetaPath(const std::filesystem::path& source)
 	{
 		auto path = source;
@@ -70,6 +76,7 @@ namespace Redflag
 		if (!in || magic != "RedflagAsset" || version != 1 || !info.ID ||
 			type < static_cast<int>(AssetType::Model) || type > static_cast<int>(AssetType::Texture))
 			throw std::runtime_error("Invalid asset metadata: " + path.string());
+		// 路径从 .rfmeta 所在位置推导，不写进文件，允许源文件与元数据一起移动。
 		info.Type = static_cast<AssetType>(type);
 		info.Path = std::filesystem::weakly_canonical(std::filesystem::absolute(path));
 		info.Path.replace_extension(); // 仅去掉 .rfmeta，保留源文件扩展名。
@@ -86,6 +93,7 @@ namespace Redflag
 
 	void AssetLibrary::Add(const AssetInfo& info)
 	{
+		// 同一物理文件的路径别名允许重复登记，不同文件共用 ID 则拒绝。
 		const auto* old = Get(info.ID);
 		if (old && std::filesystem::exists(old->Path) && !std::filesystem::equivalent(old->Path, info.Path))
 			throw std::runtime_error("Duplicate asset ID: " + info.Path.string());

@@ -1,0 +1,390 @@
+% !TeX program = xelatex
+\input{preamble}
+\begin{document}
+\zihao{-5}
+{\Huge\bfseries Redflag RHI}\par\vspace{5pt}
+{\Large\color{muted}图形接口设计与 Vulkan 接入计划}\par
+\ruleline
+
+\textbf{这是一份接入计划。}Redflag 目前仍用 OpenGL 绘制。下面提出的新类和 Vulkan 后端还没有实现；已完成的结构见《Redflag 引擎架构》。
+
+先看一个具体任务：把导入的模型画到编辑器窗口里。场景提供模型的位置和材质，渲染器决定先画阴影、再画主画面，最后由 OpenGL 创建显卡资源并执行绘制。接入 Vulkan 后，前两步的含义仍然相同，变化集中在最后一步。
+
+因此需要一层共同接口，让上层说清“用哪些数据、怎样画、画到哪里”，再分别交给 OpenGL 或 Vulkan 实现。这一层称为 RHI，即渲染硬件接口。它不负责找模型文件，也不决定美术效果的先后顺序。
+
+\section{现状与迁移边界}
+\textbf{上层仍在操作 OpenGL。}例如后处理接收的是 OpenGL 纹理编号，场景渲染中也有直接的图形调用。即使增加一个 Vulkan 设备类，这些调用仍然不能在 Vulkan 上工作。需要先把它们改为共同的资源对象和绘制请求。
+
+\textbf{一次函数调用结束，不等于 GPU 已经画完。}目前不少代码按 OpenGL 的使用方式更新或销毁资源。Vulkan 中必须保留绘制正在使用的数据，并在确认完成后复用内存。这关系到模型能否画对，也关系到退出和调整窗口大小时能否安全释放资源。
+
+\textbf{资源身份可以沿用。}模型的稳定 ID 和缓存已经落地，不必随图形后端一起重做。要分开的是“从文件读出顶点、像素”和“把这些数据交给显卡”。同一个资产 ID 在不同后端可以对应不同的 GPU 对象。
+
+\subsection{首版范围}
+先保留现有的绘制顺序，让一个线程整理命令，再交给 GPU 的一个图形队列执行。先画出与 OpenGL 一致的模型、阴影和后处理，再考虑多线程提交、自动安排效果顺序和后台加载。下文把一次有明确输入和输出的绘制阶段称为 Pass，把运行在 GPU 上的绘制程序称为着色器（Shader）。
+
+Redflag 保持 C++17/GLSL。Vulkan 首版\textbf{建议目标}为 1.3，并验证动态渲染、显式同步和递增完成信号所需的设备特性。教程的当前基线为 Vulkan 1.4、C++20、Vulkan-Hpp RAII 和 Slang，与项目目标分开记录。尚未运行本机能力探测，不能认定用户设备已满足要求。
+\source{https://docs.vulkan.org/tutorial/latest/00_Introduction.html}{教程基线}
+\source{https://docs.vulkan.org/refpages/latest/refpages/source/VkPhysicalDeviceVulkan13Features.html}{1.3 features}
+
+\note{对应特性名为 dynamicRendering、synchronization2、timelineSemaphore。实施前记录 SDK、驱动、设备特性和 shaderc 版本；只有验证通过后才提高 API 基线。}
+
+\newpage
+\section{参考图与采用范围}
+下面两张是下载的官方例图，保持原始像素，仅缩放排版。Redflag 的目标图从下一页开始，均为针对本项目绘制的 TikZ 示意图。
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{.45\textwidth}
+\vspace{0pt}\centering
+\includegraphics[width=\linewidth]{figures/khronos-layers.png}
+\caption{参考图：教程的分层结构}
+\small\raggedright
+本项目采用分清职责和平台实现的思路。资产系统向 Renderer 供给资源，不作为 RHI 必须依赖的下层；图中的双向箭头不直接作为 Redflag 的编译依赖。
+\end{minipage}\hfill
+\begin{minipage}[t]{.50\textwidth}
+\vspace{0pt}\centering
+\includegraphics[width=\linewidth]{figures/khronos-rendering.png}
+\caption{参考图：教程的渲染流程}
+\end{minipage}
+\end{figure}
+\note{图 1：Khronos Vulkan Tutorial，Engine Architecture: Architectural Patterns。
+图 2：同系列 Rendering Pipeline。© 2023–2026 The Khronos Group, Inc.，CC BY 4.0。来源与文件级许可见 figures/SOURCES.md。教程也明确说明其 RenderGraph 属于设计讨论，示例程序仍直接编排 Pass。}
+\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/02_architectural_patterns.html}{图 1 原页}
+\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{图 2 原页}
+\source{https://github.com/KhronosGroup/Vulkan-Tutorial/blob/main/REUSE.toml}{图片许可}
+
+\subsection{各资料解决不同问题}
+\begin{tabularx}{\textwidth}{L{3.2cm}Y}
+\toprule
+来源 & 用于本项目的部分 \\
+\midrule
+Hazel 公开源码 & 延续 Create、Ref 和 Library 的简洁接口，分离接口与 OpenGL 实现。新 RHI 类型不是对 Hazel 现有 API 的复述。 \\
+GAMES104 / Piccolo & 第 2 讲把 RHI 与平台相关实现放在一起，另讲资源导入和运行时生命周期；借鉴边界，不复制全部细粒度类型包装。 \\
+Game Engine Architecture & 结合平台、资源管线、渲染和工具的职责讨论整体组织。本轮只核实作者网站及版次介绍，未获得对应版次全文。 \\
+GAMES101 / GAMES202 & 前者核对坐标与管线基础，后者核对实时效果的输入输出和历史状态。它们不代替 Vulkan API 规范。 \\
+\bottomrule
+\end{tabularx}
+
+\newpage
+\section{目标分层与职责}
+例如模型在相机外，应由场景渲染器决定不提交它；需要阴影时，也由场景渲染器安排先生成阴影图。下面的图形接口只接收已经决定好的绘制任务。这样更换后端时，不用把场景判断和效果算法再写一遍。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[module] (scene) at (0,0) {\textbf{Scene / Entity}\\场景状态与组件};
+\node[module] (assets) at (5.5,0) {\textbf{Assets}\\Library / Manager\\ID、解码结果与共享引用};
+\node[module] (renderer) at (0,-1.9) {\textbf{SceneRenderer}\\提取、剔除、排序\\RenderSceneData};
+\node[module] (view) at (5.5,-1.9) {\textbf{RenderView}\\尺寸、目标与历史\\拥有 PostProcess};
+\node[wide] (pass) at (2.75,-3.8) {\textbf{按顺序执行绘制阶段}\\阴影、深度、遮挡与间接光、主画面、后处理};
+\node[wide,fill=warm] (cmd) at (2.75,-5.5) {\textbf{说明怎么画、用什么数据、画到哪里}\\命令、绘制状态、资源组与目标图像};
+\node[wide,fill=warm] (device) at (2.75,-7.2) {\textbf{RenderDevice}\\创建与上传、提交、完成值、资源回收};
+\node[module] (gl) at (0,-9) {\textbf{OpenGL 后端}\\context / GL 资源与命令};
+\node[planned] (vk) at (5.5,-9) {\textbf{Vulkan 后端（计划）}\\device / queue / Vk 资源};
+\draw[flow] (scene)--(renderer);
+\draw[flow] (assets.south west)--node[label,sloped,above]{资源供给}(renderer.north east);
+\draw[own] (renderer)--node[label,above]{持有视口}(view);
+\draw[flow] (renderer)--(pass);
+\draw[flow] (view)--(pass);
+\draw[flow] (pass)--(cmd);
+\draw[flow] (cmd)--(device);
+\draw[flow] (device)--(gl);
+\draw[flow] (device)--(vk);
+\end{tikzpicture}
+\caption{Redflag 建议结构；实线为调用或数据，虚线为持有/计划模块}
+\end{figure}
+
+场景渲染器从场景里取出这一帧需要的相机、灯光和模型，整理成绘制数据（RenderSceneData）。它可以复用已有的 Renderer3D 队列，不需要再建一套管理实体的系统，也不必重复收集同一批模型。
+
+编辑视口和运行视口可能大小不同、相机不同，因此各自保存输出图像和上一帧的结果。计划中的 RenderView 负责这组资源。光晕的中间图仍由 PostProcess 自己管理，避免两个类都保存一份尺寸和输出状态。
+
+\note{Renderer 独占 Scope<RenderDevice>。资源工厂在 cpp 中转交当前设备，保留 Texture2D::Create 的用法。RendererAPI / RenderCommand 仅作过渡适配，迁完删除，不再添加只转发的 RHIManager。}
+
+\newpage
+\section{图形接口与后端映射}
+画一个模型时，先取得顶点和贴图，再选择着色器与深度测试规则，提供相机和模型位置，指定输出图像，最后发出绘制。下面的类分别接住这些步骤；类名用于对照未来代码，先理解右栏的用途即可。
+
+\begin{tabularx}{\textwidth}{L{2.85cm}Y}
+\toprule
+建议类型 & 职责与最小接口 \\
+\midrule
+RenderDevice & 管理当前使用的显卡。创建资源，接收绘制任务，并告诉调用方哪些任务已经完成。 \\
+CommandList & 保存一次任务要执行的操作，例如清图、画模型和复制结果。上层按规定顺序写入，后端负责执行。 \\
+Buffer & 保存顶点、索引和绘制参数等数据。创建时说明大小、用途，以及 CPU 是否需要写入或读回。 \\
+Texture / Texture2D & 保存图像，说明宽高、像素格式和用途。它可能来自模型贴图，也可能是这一帧新画出的阴影图。 \\
+TextureView / Sampler & 前者选定纹理的哪些部分可供使用；后者规定取样方法，例如放大时怎样插值、越过边缘时怎样处理。 \\
+Shader / ShaderLibrary & 前者保存编译好的着色器，后者按名称查找和复用。集合接口沿用 Add / Load / Get / Exists。 \\
+Pipeline & 把“怎样画”组合起来：使用哪个着色器、如何读取顶点、怎样做深度测试和颜色混合。 \\
+BindingSet & 把“这次用哪些数据”组合起来，例如相机参数和模型贴图。GPU 用完之前，这一组数据不能被下一次绘制覆盖。 \\
+RenderTarget & 指定“画到哪里”：颜色图、深度图，以及开始前是否清空、结束后是否保留结果。它引用图像，不重复拥有图像。 \\
+Swapchain & 管理交给窗口显示的图像。编辑器内部用于阴影和后处理的图像仍归渲染器管理。 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{OpenGL 与 Vulkan 实现}
+\begin{tabularx}{\textwidth}{L{2.7cm}YY}
+\toprule
+契约 & OpenGL & Vulkan \\
+\midrule
+CommandList & 可以立即发出 GL 调用。 & 录制 VkCommandBuffer。 \\
+Pipeline & 显式应用完整状态，内部管理 VAO。 & 创建/缓存 VkPipeline。 \\
+RenderTarget & 内部组织或缓存 FBO。 & dynamic rendering 使用附件视图，无须对应 VkFramebuffer。 \\
+BindingSet & 设置参数缓冲和纹理单元。 & 管理 descriptor（资源描述表），更新不能覆盖在途引用。 \\
+Swapchain & 统一入口调用 SwapBuffers。 & 管理 surface、图像获取、提交依赖和 Present。 \\
+\bottomrule
+\end{tabularx}
+
+\textbf{保留约定：}实体 ID 使用 R32\_SINT 附件，按整数清为 -1，禁止混合。顶点布局归 Pipeline，VertexArray 仅留作 GL 实现细节。颜色与深度格式按使用需求列举，不提前映射 Vulkan 的全部枚举。
+
+\note{公共头不包含 glad、vulkan.h；类和函数保持 PascalCase，资源用 Ref，非模板实现放 cpp。OpenGL 不额外把每条调用存成 lambda，上层只依赖顺序和提交契约。新接口不暴露原生句柄。}
+
+\newpage
+\section{资源上传与生命周期}
+保存场景时，只需记录它引用了哪个模型，用稳定的 AssetID 表示。加载时再读出模型文件，得到顶点和像素，随后上传到当前显卡。换后端不会改变模型身份，但显卡中的对象需要重新创建。
+
+阴影、环境遮挡和光晕的中间图，是渲染器画出来的临时结果，不是用户导入的资产，因此不登记进 AssetLibrary。资产缓存也不负责分配 Vulkan 的命令或资源描述表。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[smallbox] (id) at (0,0) {\textbf{资产身份}\\AssetID / .rfmeta};
+\node[smallbox] (cpu) at (3.75,0) {\textbf{CPU 解码}\\顶点 / 像素 / 材质};
+\node[smallbox] (up) at (7.5,0) {\textbf{上传区}\\复制输入字节};
+\node[smallbox] (gpu) at (7.5,-1.7) {\textbf{GPU 对象}\\Buffer / Texture};
+\node[smallbox] (ref) at (3.75,-1.7) {\textbf{资源引用}\\Model / Material / View};
+\node[smallbox] (draw) at (0,-1.7) {\textbf{命令引用}\\录制到提交完成};
+\draw[flow] (id)--(cpu);\draw[flow] (cpu)--(up);\draw[flow] (up)--(gpu);
+\draw[flow] (gpu)--(ref);\draw[flow] (ref)--(draw);
+\end{tikzpicture}
+\caption{身份与 GPU 对象分开，上传在返回前接管输入字节}
+\end{figure}
+
+\subsection{共享引用与延迟回收}
+假设场景刚删掉一个模型，但 GPU 还在绘制它。CPU 上的场景已经不需要模型，GPU 却仍需要它的顶点和贴图。命令列表因此要持有这些资源的共享引用（Ref），提交后再交给这一帧的工作记录保管，等 GPU 确认完成才释放。
+
+AssetManager::Unload 只放弃缓存自己的引用，其他使用者仍可继续用资源。共享引用解决的是“CPU 上还有谁持有它”，GPU 的完成信号解决的是“显卡是否已经用完它”，两件事都满足后才能回收。
+
+\begin{tabularx}{\textwidth}{L{3.1cm}Y}
+\toprule
+持有者 & 生命周期 \\
+\midrule
+Model / Material & 持有网格与贴图资源，资产引用可跨场景共享。 \\
+RenderView / PostProcess & 持有视口附件、历史和后处理链；Resize 后旧图像等使用完成再回收。 \\
+Pass & 持有 Shader / Pipeline，固定编排输入输出，不持有资产路径。 \\
+FrameContext & 持有命令池、上传区、临时绑定和提交资源引用；等待本槽完成后重用。 \\
+RenderDevice & 持有帧上下文、分配器与回收队列，存活至所有 GPU 资源结束。 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{每次绘制的参数存储}
+先记录模型 A 的绘制，再把同一块内存改成模型 B 的位置。如果 GPU 之后才执行这两条命令，A 也可能读到 B 的位置。解决办法是在这一帧的上传区域中给两次绘制分配不同位置，并保留到执行完成。
+
+接口返回的 BufferSlice 表示“哪个缓冲区、从哪里开始、有多大”。相机和灯光通常每帧写一次；各模型的位置和材质按实际绘制分配。这样既说明了数据归属，也避免为了每个小参数单独创建 GPU 对象。
+
+参数缓冲的偏移遵守设备对齐要求。CPU 与 GPU 缓存不自动保持一致的内存，还要按设备要求刷新写入、使读回缓存失效。上传函数返回前复制调用者数据，不保存栈指针。第一版维持同步加载约定，后台读取与独立传输队列留待实际需要。
+
+\note{VMA 可作为 Vulkan 后端的内存分配实现，不进入 Assets 接口。退出时停止提交，等待并释放帧引用、场景/缓存/视口与 GUI 资源，再完成呈现资源回收，最后销毁设备/context 和窗口。}
+
+\newpage
+\section{帧复用与资源同步}
+画一个模型时，先从光源视角把深度写入阴影图，再在主绘制中读取它判断遮挡。两步之间要让写入结果对读取可见。同时，CPU 可能已经准备下一帧；模型变换和材质数据要保留到 GPU 用完，提交完成后才能覆盖。窗口呈现另等对应图像的信号。
+
+首版用两个帧上下文（FrameContext）轮换，分别保存命令、上传数据和资源引用。每次复用前，先等这个工作槽的上次提交完成。
+
+frameIndex 是工作槽索引，imageIndex 是窗口图像索引，两者不能互换。递增的 GPU 完成值表示某次提交已结束，但不表示窗口呈现系统已消费其等待信号。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[smallbox] (wait) at (0,0) {\textbf{1 等待可重用帧}\\完成值达到再重置};
+\node[smallbox] (acq) at (3.75,0) {\textbf{2 获取窗口图像}\\取得 imageIndex};
+\node[smallbox] (rec) at (7.5,0) {\textbf{3 录制命令}\\上传、绘制与界面};
+\node[smallbox] (sub) at (7.5,-1.8) {\textbf{4 提交命令}\\等待图像可用信号};
+\node[smallbox] (done) at (3.75,-1.8) {\textbf{GPU 绘制完成}\\发出完成与呈现信号};
+\node[smallbox] (reuse) at (0,-1.8) {\textbf{帧数据可复用}\\解除帧资源引用};
+\node[smallbox] (present) at (7.5,-3.6) {\textbf{5 排队呈现}\\等待该图像完成信号};
+\draw[flow] (wait)--(acq);\draw[flow] (acq)--(rec);\draw[flow] (rec)--(sub);
+\draw[flow] (sub)--(done);
+\draw[flow] (done)--node[label,above]{完成值}(reuse);
+\draw[own] (reuse)--(wait);
+\draw[flow] (sub)--node[label,right]{CPU 排队}(present);
+\draw[flow] (done.south)--(3.75,-3.6)--node[label,above]{图像就绪信号}(present.west);
+\end{tikzpicture}
+\caption{CPU 可先排队 Present；GPU 信号满足呈现等待，完成值另用于帧槽复用}
+\end{figure}
+
+\textbf{帧内存：}命令池、上传区和临时资源描述表按工作槽管理。\textbf{呈现信号：}供 Present 等待的信号按窗口图像管理，避免工作槽已复用、呈现等待却尚未结束。普通工作用 timeline semaphore（递增完成信号），窗口系统交互（WSI）使用 binary semaphore（二值信号量）。
+\source{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{Swapchain Semaphore Reuse}
+
+\subsection{Pass 声明访问，后端转换为 API 同步}
+Pass 声明读取或写入哪些图像。ResourceAccess 记录访问类别，Barrier（资源屏障）记录前后访问与子资源范围；后端据此处理执行时序、内存可见性和图像布局。布局不变时也可能需要同步，不能只比较布局。
+
+\begin{tabularx}{\textwidth}{L{3.5cm}YY}
+\toprule
+资源 & 前一访问 & 下一访问 \\
+\midrule
+阴影图深度 & 写入深度 & 着色器采样 \\
+SSAO / RSM 输出 & 写入颜色 & 着色器采样 \\
+HDR / Bloom 链 & 写入颜色 & 着色器采样 \\
+最终 LDR & 写入颜色 & GUI 着色器采样 \\
+实体 ID & 写入颜色附件 & 复制到读回缓冲 \\
+交换链图像 & 写入颜色 & 窗口呈现 \\
+\bottomrule
+\end{tabularx}
+
+Vulkan 的动态渲染不会自动补齐传统渲染通道的隐式依赖。资源转换在开始/结束渲染之外明确记录，状态跨帧保留。只有新建或确定丢弃内容时才使用 Undefined（不保留原内容）。
+\source{https://docs.vulkan.org/guide/latest/synchronization_examples.html}{同步示例}
+
+\textbf{历史资源：}普通中间目标可按帧槽分配。RSM 历史按渲染帧序号选择读写图像，并追踪跨帧访问；两张交替读写的图不自动保证安全。调整尺寸、相机突变或切换场景时明确作废历史。当前实现会丢弃投影到上一帧画面或近远裁剪面以外的点。判断上一帧是否有别的物体挡在前面还需保留当时的深度；运动物体也缺少自身的运动信息。
+
+\newpage
+\section{着色器与资源绑定}
+画一棵树时，相机矩阵决定它投影到画面的什么位置，树叶贴图决定哪些像素有叶片、哪些位置是空隙。渲染器在绘制前指定着色器该从哪里读取这份矩阵、使用哪张贴图，这一步叫资源绑定。同一台相机可以画整片树林，每种树的贴图则可以不同。
+
+当前后端在 OpenGL 上运行。GLSL 330 示例由驱动直接编译，保留代码按名称设置的矩阵和颜色。GLSL 450 以 OpenGL 4.5 为目标生成 SPIR-V（着色器中间代码），按阶段和源码内容缓存。转换后再次编译也明确指定 OpenGL 目标，跨阶段的数据块用相同位置识别。模型着色器共用光照计算，实例化版本在编译时切换顶点输入。接入 Vulkan 时要为它单独编译并验证。
+
+\subsection{编译与缓存}
+一个着色器文件可以包含顶点和片元两个阶段，编译器先按 \code{\#type} 分开，再生成目标后端能够使用的程序。编译后还要读出程序要求的参数和贴图，这一步叫反射，用于核对 CPU 提供的数据是否匹配。
+
+为了避免每次启动都重复编译，可以保存编译结果。但只有输入相同才能复用：源码、包含文件、编译目标、选项和编译器版本改变，都可能使旧结果失效。Vulkan 与 OpenGL 的产物应分别缓存，不能因为同叫 SPIR-V 就互相混用。
+
+两个模型使用同一着色器、同一深度测试规则时，可以复用一份绘制配置（Pipeline）；不同的位置和材质参数仍分别提供。切换配置时，OpenGL 后端要完整设置这次需要的状态，避免上一阶段留下的混合或剔除设置影响当前画面。
+
+\subsection{资源按使用频率分组}
+例如相机参数通常整帧不变，石头和木头使用不同材质贴图，每个模型又有自己的位置。把它们分开，画下一个模型时只更新确实变化的数据。
+
+\begin{tabularx}{\textwidth}{L{2.9cm}YL{3.1cm}}
+\toprule
+资源组 & 数据 & 更新频率 \\
+\midrule
+相机与效果 & 相机、灯光、效果参数，以及阴影、环境光和间接光图像。 & 每帧或渲染阶段。 \\
+材质 & 材质参数，以及基础颜色、法线、金属度/粗糙度、遮蔽和透明度贴图。 & 材质变化或切片更新。 \\
+对象 & 模型变换、拾取用的实体 ID、实例数据。 & 每次绘制或批次。 \\
+\bottomrule
+\end{tabularx}
+
+Vulkan 用资源描述表（descriptor set）告诉着色器数据在哪里，OpenGL 则通过参数缓冲和纹理单元提供数据。上层按表中的三组组织，具体编号由后端处理。现有 OpenGL 中两种不同资源可以使用相同数字编号，迁到 Vulkan 的同一资源集合时要重新分配，不能照抄数字。
+
+CPU 和着色器还必须同意每个字段放在哪个字节位置，否则上传的粗糙度可能被当成另一项参数。首版沿用 std140 这套缓冲布局规则，逐项核对 C++ 结构体中的大小和偏移；各模型的数据分别保存，不覆盖仍在使用的内容。
+
+\subsection{把坐标与颜色约定写成验收条件}
+\begin{tabularx}{\textwidth}{L{3.25cm}Y}
+\toprule
+约定 & 核对方式 \\
+\midrule
+世界/视图与矩阵 & 保持坐标系左右手约定、乘法顺序和内存布局，使用已知变换物体验证。 \\
+裁剪空间深度与重建 & 保留当前 GL 深度语义作为基线，集中适配 Vulkan；阴影和 SSAO 重建一起验证。 \\
+屏幕与纹理方向 & 明确视口、投影、UV 和拾取坐标转换；避免投影与视口同时翻 Y。 \\
+正面定义与剔除 & 验证双面材质、镜像变换和三角形绕序。 \\
+sRGB 与线性数据 & 颜色贴图和非颜色贴图区分，HDR→Tonemap→显示输出只做约定的编码。 \\
+\bottomrule
+\end{tabularx}
+
+\newpage
+\section{窗口呈现与读回}
+编辑器里的场景画面先画到一张纹理上，再像一张图片那样放进界面。它与操作系统最终显示的窗口图像不是同一个对象：场景纹理可以有自己的尺寸，窗口还要同时显示菜单和面板。
+
+场景颜色允许暂时超过显示范围，后处理再把它压到适合屏幕显示的范围。界面把这张最终图和其他控件一起画入窗口，最后统一交给系统显示。Swapchain 管理的是这一组窗口图像。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[smallbox] (hdr) at (0,0) {\textbf{场景绘制}\\颜色、深度、实体编号};
+\node[smallbox] (ldr) at (3.75,0) {\textbf{后处理}\\得到适合显示的颜色图};
+\node[smallbox] (gui) at (7.5,0) {\textbf{界面绘制}\\把场景图放入编辑器};
+\node[module] (swap) at (7.5,-1.75) {\textbf{Swapchain}\\窗口呈现目标};
+\node[module] (read) at (1.3,-1.75) {\textbf{读回区域}\\完成后读取实体编号};
+\draw[flow] (hdr)--(ldr);\draw[flow] (ldr)--(gui);\draw[flow] (gui)--(swap);
+\draw[flow] (hdr.south)--node[label,right]{copy}(read.north);
+\end{tikzpicture}
+\caption{离屏视口与窗口呈现分开，拾取走独立读回路径}
+\end{figure}
+
+\subsection{界面纹理接入}
+界面库 ImGui 需要自己的纹理标识。转换应集中在 ImGuiRenderer 中：OpenGL 和 Vulkan 分别提供实现，面板只提交想显示的图像。图像还在被界面使用时，这层也负责保留所需引用，避免面板里到处出现后端专用编号。
+
+仓库当前的 ImGui Vulkan 实现仍要求旧式渲染阶段对象 VkRenderPass，没有动态渲染的配置项。因此要先验证兼容的 ImGui/ImGuizmo 版本；如果暂时保留旧方式，也把它封装在界面后端中。只改一个初始化函数名不能完成接入。
+
+先支持主窗口 docking。多个 Scene RenderView 与 ImGui 独立 OS 窗口是两种能力，后者需要分别管理、测试各窗口 Swapchain。
+
+\subsection{窗口调整与资源重建}
+窗口尺寸变化后，原来的窗口图像可能不再适用。最小化到零尺寸时先暂停获取和显示图像；恢复后再按实际尺寸重建。Vulkan 返回 OUT\_OF\_DATE 表示旧交换链不能继续使用，SUBOPTIMAL 则提示安排重建。
+
+只有真正提交过任务，才记录它对应的完成值。获取图像失败而未提交时，不能让下一帧等待一个永远不会出现的完成信号。
+
+旧窗口图像要等显示系统用完才能回收，绘制完成和显示完成需要分别确认。实现时先检查设备是否支持跟踪显示完成的扩展信号；不支持时按 Khronos 的图像获取与延迟回收方案处理。不能笼统地把 \code{vkDeviceWaitIdle} 当作所有显示路径都已结束的证明。
+\source{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{呈现资源复用规则}
+
+\subsection{实体拾取与调试预览}
+绘制时为每个可见像素写入实体编号。鼠标点击后，把对应像素复制到 CPU 可读的区域，等复制完成再读出编号。如果等待期间场景或视口已经重建，编辑器应丢弃旧结果，避免选中错误对象。
+
+迁移初期可以保留需要等待的同步拾取，便于核对结果。深度预览则适合直接用着色器转换成可见颜色，减少把整张图读回 CPU 后再上传的往返；这项改进仍待实现和测量。截图与其他读回操作也要确认 GPU 已经完成写入。
+
+\newpage
+\section{迁移阶段与验收}
+每阶段都维持 OpenGL 可运行，先迁真实调用，再删旧入口。阶段顺序表达依赖，不承诺未经验证的工期。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[smallbox] (a) at (0,0) {\textbf{基线与能力核查}\\固定场景 / Shader};
+\node[smallbox] (b) at (3.75,0) {\textbf{OpenGL 接口迁移}\\资源 / 状态 / 视口};
+\node[smallbox] (c) at (7.5,0) {\textbf{Vulkan 最小路径}\\mesh / ID / GUI};
+\node[smallbox] (d) at (7.5,-1.6) {\textbf{效果逐项接入}\\同步与图像核对};
+\node[smallbox] (e) at (3.75,-1.6) {\textbf{移除旧适配}\\双后端回归};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);\draw[flow] (c)--(d);\draw[flow] (d)--(e);
+\end{tikzpicture}
+\caption{按可验证的依赖推进，不把目标模块当成已完成代码}
+\end{figure}
+
+\begin{tabularx}{\textwidth}{L{2.2cm}YY}
+\toprule
+阶段 & 要解决的具体问题 & 检查结果 \\
+\midrule
+0 留下基准 & 保存固定场景的颜色、深度、法线和实体编号，核查工具与设备。 & 相同输入能重复得到相同结果，清空与复用缓存均可运行。 \\
+1 统一提交 & 让设备和命令接口接住当前 OpenGL 的绘制任务。 & 创建窗口前完成后端选择，提交与显示各有统一入口，退出正常。 \\
+2 包装资源 & 用共同资源对象替换上层直接使用的 OpenGL 编号。 & 图像创建、取样、调整尺寸、上传和读回仍正常。 \\
+3 整理绘制配置 & 分开固定绘制规则与每个模型的数据。 & 两个模型使用不同位置和材质时互不覆盖，输出符合基准。 \\
+4 拆开视口 & 每个视口分别管理图像，界面统一接收输出纹理。 & 两个不同尺寸的视口互不影响，上层不再直接调用 OpenGL。 \\
+5 画通 Vulkan & 从清屏、带贴图模型到鼠标拾取、编辑器显示，完成一条最小路径。 & 与基准逐项比较，启用 Vulkan 的错误检查后没有验证错误。 \\
+6 接回效果 & 依次加入阴影、环境遮挡、环境光、间接光、光晕、2D 和粒子。 & 每项检查画面、前后读写顺序、多帧并行、调整尺寸和卸载。环境光预计算另测。 \\
+7 删除旧入口 & 删除迁移后已无调用的接口，收回公开的后端专用类型。 & 两种后端通过同一场景测试，公共接口不依赖各自的原生类型。 \\
+\bottomrule
+\end{tabularx}
+
+\note{建议目录为 Renderer/RHI、Platform/OpenGL、Platform/Vulkan。这代表职责边界，不要求先机械搬动所有文件。RenderGraph 只在固定 Pass 的同步和资源契约稳定后再评估。}
+
+\newpage
+\section{验收记录与阅读入口}
+Vulkan 开始接入前，先把当前清理后的 OpenGL 行为固定下来。旧问题与后端迁移分别记录，避免把已有的 AlphaMask、SSAO 边缘或 RSM 历史误差归到 Vulkan。
+
+\begin{tabularx}{\textwidth}{L{3cm}Y}
+\toprule
+检查项 & 通过标准 \\
+\midrule
+布局与多对象 & 至少两个对象使用不同 Transform/Material；冷/热 Shader 缓存一致，反射 offset 与 CPU 数据一致。 \\
+图像与拾取 & 几何、可见性与整数 ID 正确。颜色按预先约定的容差比较，记录各 API 的格式和色彩空间。 \\
+效果路径 & 阴影、AlphaMask、透明、SSAO、Bloom 开关和 RSM 历史重置分别有测试场景。 \\
+多帧与资源寿命 & 两帧飞行、卸载后外部引用、未提交命令引用、Resize 旧目标回收均通过验证层检查。 \\
+窗口与 GUI & 连续 Resize、最小化、恢复、高 DPI、关闭无错误；呈现资源具备明确完成条件。 \\
+模块边界 & 公共 RHI 头不包含原生 API；场景/资产不依赖 VkDevice，GL 专用烘焙工具明确隔离。 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{已核实的阅读入口}
+\begin{tabularx}{\textwidth}{L{3.25cm}Y}
+\toprule
+资料 & 入口与阅读目的 \\
+\midrule
+Game Engine Architecture & \href{https://gameenginebook.com/}{Jason Gregory 作者站}；当前介绍第四版两卷本，增加/扩充 GPU、渲染与光照等内容。用户未指定版次，书中页码须有相应原文才能引用。 \\
+GAMES104 & \href{https://games104.boomingtech.com/sc/course-list/}{官方课件}；第 2 讲 PDF 第 12–14 页讲资源，第 26 页讲 RHI，第 30 页讲依赖方向；继续读第 4、7 讲。 \\
+GAMES101 / 202 & \href{https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html}{GAMES101 课程页}：变换、光栅化、着色；\href{https://sites.cs.ucsb.edu/~lingqi/teaching/games202.html}{GAMES202 课程页}：阴影、RSM、SSAO、时域与降噪。 \\
+Hazel / Piccolo & \href{https://github.com/TheCherno/Hazel/tree/master/Hazel/src/Hazel/Renderer}{Hazel Renderer}：命名和对象封装；\href{https://github.com/BoomingTech/Piccolo/tree/main/engine/source/runtime/function/render}{Piccolo Render}：RenderSystem、资源、场景和 RHI 的分工。 \\
+Khronos Simple Engine & \href{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/introduction.html}{Introduction}、\href{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/01_introduction.html}{Engine Architecture}。先做基础 Vulkan 示例，再读资源、管线和 GUI。 \\
+同步与呈现 & \href{https://docs.vulkan.org/guide/latest/synchronization_examples.html}{Synchronization Examples}、\href{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{Swapchain Semaphore Reuse}、\href{https://docs.vulkan.org/refpages/latest/refpages/source/VkPresentInfoKHR.html}{VkPresentInfoKHR}；以规范和 Guide 核对 API 契约。 \\
+Shader 编译 & \href{https://github.com/google/shaderc/blob/main/libshaderc/include/shaderc/shaderc.hpp}{shaderc CompileOptions}；核对实际目标与重载参数，不能只依赖函数名或缓存后缀。 \\
+\bottomrule
+\end{tabularx}
+
+\note{核查日期：2026-11-21。资料库完整入口与讲解约定见 docs/Graphics-References.md。外部原图只用于比较设计，未下载书籍全文，未宣称拥有课程中所有图片的再分发授权。本文架构与生命周期图为 Redflag 原创示意，结合当前源码和已列参考资料设计。}
+\end{document}

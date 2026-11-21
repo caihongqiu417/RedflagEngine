@@ -1,0 +1,43 @@
+{
+  "source": "DepthPrepass_capture.rdc",
+  "release": "JiaboLi-GitHub/renderdoc-mcp v0.3.0",
+  "transport": "stdio",
+  "api": "OpenGL",
+  "passes": [
+    {
+      "dispatchCount": 0,
+      "drawCount": 1,
+      "eventId": 16,
+      "name": "Depth prepass: alpha coverage"
+    },
+    {
+      "dispatchCount": 0,
+      "drawCount": 1,
+      "eventId": 42,
+      "name": "Main pass: independent alpha coverage"
+    }
+  ],
+  "draws": [
+    {
+      "drawIndex": 0,
+      "eventId": 28,
+      "flags": "Drawcall|Indexed",
+      "name": "",
+      "numIndices": 6,
+      "numInstances": 1
+    },
+    {
+      "drawIndex": 0,
+      "eventId": 52,
+      "flags": "Drawcall|Indexed",
+      "name": "",
+      "numIndices": 6,
+      "numInstances": 1
+    }
+  ],
+  "mcp_get_log": {
+    "count": 0,
+    "messages": []
+  },
+  "message_scope": "get_log returned no messages. For captured driver diagnostics see replay-results.json."
+}

@@ -1,24 +1,24 @@
-// =====================================================================
+// ----------
 // IBLPrecompute.cpp — IBL 预计算实现
 //
-// ────────────────────────────────────────────────────────────────────
+// ----------
 //  为什么全部用原生 OpenGL，不经过引擎的 Shader/Framebuffer 抽象？
-// ────────────────────────────────────────────────────────────────────
+// ----------
 //    1) 预计算需要渲染到 Cubemap 的 6 个面和各 mip 层级，
 //       引擎现有的 OpenGLFramebuffer 只支持 2D 颜色附件，改造成本高。
 //    2) 预计算 shader 只在 Init 时编译运行一次，生命周期极短，
 //       不需要走 shaderc/SPIR-V 缓存管线。
 //    3) 内嵌 shader 源码避免了文件路径依赖和额外的资源管理。
 //
-// ────────────────────────────────────────────────────────────────────
+// ----------
 //  五步流水线（Init 中顺序执行）：
-// ────────────────────────────────────────────────────────────────────
+// ----------
 //    Step 1: 读 HDR → GL_TEXTURE_2D (RGB16F)
-//    Step 2: 等距柱状 → Environment Cubemap (512×512)
+//    Step 2: 等距柱状 → Environment Cubemap (2048×2048)
 //    Step 3: Environment → Irradiance Map (32×32, 漫反射半球积分)
 //    Step 4: Environment → Pre-filtered Map (128×128, 5 mip, GGX)
 //    Step 5: BRDF LUT (512×512, RG16F, 与环境无关)
-// =====================================================================
+// ----------
 
 #include "rfpch.h"
 #include "IBLPrecompute.h"
@@ -32,9 +32,9 @@
 
 namespace Redflag {
 
-	// =================================================================
+	// ----------
 	// 文件级静态数据
-	// =================================================================
+	// ----------
 	static IBLTextures s_IBL;         // 四张输出纹理
 	static bool        s_Ready = false;
 
@@ -49,11 +49,11 @@ namespace Redflag {
 	static int      s_SkyboxLocView = -1;
 	static int      s_SkyboxLocProj = -1;
 
-	// =================================================================
+	// ----------
 	// 单位立方体顶点数据（36 顶点 = 12 三角形 = 6 面）
 	// 只含位置属性；从立方体中心向外看时，顶点局部坐标本身
 	// 就是对应 cubemap 面上那个 texel 的采样方向。
-	// =================================================================
+	// ----------
 	static float s_CubeVerts[] = {
 		// back
 		-1, -1, -1,  -1,  1, -1,   1,  1, -1,
@@ -84,11 +84,11 @@ namespace Redflag {
 		 1, -1,   1, 0,
 	};
 
-	// =================================================================
+	// ----------
 	// 从原点向 ±X / ±Y / ±Z 看的 6 个 view 矩阵
 	// 注意 up 向量的选择要匹配 OpenGL cubemap 规范：
 	//   +Y / -Y 面的 up 必须是 ±Z（不是常规的 Y 轴！）
-	// =================================================================
+	// ----------
 	static glm::mat4 s_Proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	static glm::mat4 s_Views[] = {
 		glm::lookAt(glm::vec3(0), glm::vec3( 1, 0, 0), glm::vec3(0,-1, 0)), // +X
@@ -99,9 +99,9 @@ namespace Redflag {
 		glm::lookAt(glm::vec3(0), glm::vec3( 0, 0,-1), glm::vec3(0,-1, 0)), // -Z
 	};
 
-	// =====================================================================
+	// ----------
 	// 内嵌 Shader 源码
-	// =====================================================================
+	// ----------
 
 	// ---- 共用立方体顶点着色器：把局部坐标原样输出作为 cubemap 采样方向 ----
 	static const char* s_CubeVS = R"(
@@ -116,13 +116,13 @@ void main(){
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// Step 2 片元着色器：等距柱状投影 → Cubemap
 	//
 	//   每个 cubemap texel 对应一个 3D 方向 v
 	//   → 转换成球面坐标 (经度 φ, 纬度 θ)
 	//   → 映射到 HDR 等距柱状图的 UV 进行采样
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	static const char* s_EquirectFS = R"(
 #version 450 core
 in vec3 v_LocalPos;
@@ -146,7 +146,7 @@ void main(){
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// Step 3 片元着色器：辐照度卷积 (Irradiance Convolution)
 	//
 	//   对应课上"平均入射光强度"（漫反射部分）
@@ -156,7 +156,7 @@ void main(){
 	//
 	//   离散化：用均匀步长遍历 (φ, θ)，每次采样 cubemap 后
 	//   乘 cos(θ)·sin(θ) 再累加（sin(θ) 是球面面积微元雅可比校正）
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	static const char* s_IrradianceFS = R"(
 #version 450 core
 in vec3 v_LocalPos;
@@ -173,7 +173,7 @@ void main(){
     vec3 right = normalize(cross(up, N));
     up         = normalize(cross(N, right));
 
-    float delta = 0.025;                      // 步长越小越准，0.025 ≈ 2500 样本
+    float delta = 0.025;                      // 步长越小越准，0.025 对应约 1.6 万样本
     float count = 0.0;
 
     // φ ∈ [0, 2π)：绕 N 旋转一圈
@@ -193,13 +193,13 @@ void main(){
             count++;
         }
     }
-    // 归一化：π 来自 Lambert BRDF 的 1/π 与积分 2π 相消后的余项
+    // (φ,θ) 区域面积为 π²，再乘 Lambert 的 1/π；贴图存 E/π，主绘制不再除 π。
     irr = PI * irr / count;
     FragColor = vec4(irr, 1.0);
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// Step 4 片元着色器：预滤波环境贴图 (Pre-filter, GGX)
 	//
 	//   对应课上"借鉴 MipMap 思想对 pre-filtering 图像的采样"
@@ -211,7 +211,7 @@ void main(){
 	//
 	//   关键简化：假设 V = R = N
 	//     这样预计算只依赖 roughness，不依赖观察方向
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	static const char* s_PrefilterFS = R"(
 #version 450 core
 in vec3 v_LocalPos;
@@ -310,7 +310,7 @@ void main(){
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// Step 5 片元着色器：BRDF 积分 LUT
 	//
 	//   对应课上右侧 Schlick 近似展开后的两项积分
@@ -328,8 +328,8 @@ void main(){
 	//
 	//   注意几何项：用的是 IBL 版 k = α²/2，
 	//   区别于直接光照的 k = (α+1)²/8
-	//   原因：IBL 入射光来自整个半球，需要更强的几何遮蔽
-	// ─────────────────────────────────────────────────────────────────
+	//   IBL 入射光来自整个半球，需要更强的几何遮蔽
+	// ----------
 	static const char* s_BRDFFS = R"(
 #version 450 core
 in vec2 v_UV;
@@ -408,15 +408,15 @@ void main(){
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// 天空盒顶点着色器
 	//   · 用立方体顶点的局部坐标作为采样方向 v_LocalPos
-	//   · 从 view 矩阵里"去掉平移"——让天空盒永远跟着相机走，
+	//   · 从 view 矩阵里"去掉平移"，让天空盒永远跟着相机走，
 	//     这样无论相机怎么移动，天空背景保持不动
 	//   · gl_Position.z = gl_Position.w 让透视除法后深度 = 1.0
 	//     (配合 glDepthFunc(GL_LEQUAL)) 让天空盒恰好落在"最远处"，
 	//     只填充没有被不透明几何覆盖的像素，不会挡住前景
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	static const char* s_SkyboxVS = R"(
 #version 450 core
 layout(location=0) in vec3 a_Pos;
@@ -430,13 +430,13 @@ void main(){
 }
 )";
 
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	// 天空盒片元着色器
 	//   · 直接对 EnvCubemap 采样
 	//   · 主 FBO 现在是 RGBA16F HDR，tonemap + gamma 已统一迁移到
 	//     PostProcess_Composite.glsl。这里必须输出原始线性 HDR 值，
 	//     否则天空盒会被 tonemap 两次（自己一次 + Composite 一次）导致整屏发白。
-	// ─────────────────────────────────────────────────────────────────
+	// ----------
 	static const char* s_SkyboxFS = R"(
 #version 450 core
 in  vec3 v_LocalPos;
@@ -451,9 +451,9 @@ void main(){
 }
 )";
 
-	// =====================================================================
+	// ----------
 	// 工具函数
-	// =====================================================================
+	// ----------
 
 	// 原生 OpenGL 编译并链接一个 program（简化版，不做缓存）
 	static uint32_t Compile(const char* vs, const char* fs)
@@ -546,69 +546,57 @@ void main(){
 		}
 	}
 
-	// =====================================================================
-	// InitEmpty — 不加载 HDR，只建辅助几何体和 FBO
-	// =====================================================================
-	void IBLPrecompute::InitEmpty()
-	{
-		MakeCubeVAO();
-		MakeQuadVAO();
-
-		glGenFramebuffers(1, &s_CaptureFBO);
-		glGenRenderbuffers(1, &s_CaptureRBO);
-		// s_Ready 保持 false，不设置任何纹理 ID
-	}
-
-	// =====================================================================
+	// ----------
 	// Init — 执行全部预计算
-	// =====================================================================
+	// ----------
 	void IBLPrecompute::Init(const std::string& hdrPath)
 	{
-		// ---- 保存当前 GL 状态（结束时恢复）----
-		// 因为预计算会切换 FBO / Viewport，必须不能影响外部流程
-		GLint prevFBO = 0, prevVP[4] = { 0, 0, 0, 0 };
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-		glGetIntegerv(GL_VIEWPORT, prevVP);
+		// 先读取文件；失败时不分配 GPU 资源，也不改变绘制状态。
+		stbi_set_flip_vertically_on_load(true);
+		int w = 0, h = 0, ch = 0;
+		float* pixels = stbi_loadf(hdrPath.c_str(), &w, &h, &ch, STBI_rgb);
+		if (!pixels)
+		{
+			RF_CORE_ERROR("IBL: Failed to load HDR: {0}", hdrPath);
+			return;
+		}
 
-		// ---- 创建辅助几何体 ----
+		// 预计算从立方体内部绘制，不能继承主画面的剔除、混合或裁剪状态。
+		GLint prevFBO, prevReadFBO, prevVP[4], prevDepthFunc;
+		GLboolean prevDepthMask;
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
+		glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFBO);
+		glGetIntegerv(GL_VIEWPORT, prevVP);
+		glGetIntegerv(GL_DEPTH_FUNC, &prevDepthFunc);
+		glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
+		const GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+		const GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+		const GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+		const GLboolean scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glDepthMask(GL_TRUE);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_SCISSOR_TEST);
+
 		MakeCubeVAO();
 		MakeQuadVAO();
-
-		// EnvCubemap 单面分辨率：提高此值可获得更清晰的天空盒（预计算耗时同步增加）
 		constexpr int ENV_SIZE = 2048;
-
-		// ---- 创建离屏 FBO + 深度 RBO ----
 		glGenFramebuffers(1, &s_CaptureFBO);
 		glGenRenderbuffers(1, &s_CaptureRBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, s_CaptureFBO);
 		glBindRenderbuffer(GL_RENDERBUFFER, s_CaptureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, ENV_SIZE, ENV_SIZE);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 			GL_RENDERBUFFER, s_CaptureRBO);
 
-		// ==============================================================
-		// Step 1: 加载 HDR 等距柱状投影图
-		// ==============================================================
-		stbi_set_flip_vertically_on_load(true);
-		int w = 0, h = 0, ch = 0;
-		float* pixels = stbi_loadf(hdrPath.c_str(), &w, &h, &ch, 0);
-		if (!pixels)
-		{
-			RF_CORE_ERROR("IBL: Failed to load HDR: {0}", hdrPath);
-			// 失败也要恢复状态
-			glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-			glViewport(prevVP[0], prevVP[1], prevVP[2], prevVP[3]);
-			return;
-		}
 		RF_CORE_INFO("IBL: Loaded HDR {0}x{1} from {2}", w, h, hdrPath);
 
 		// ─── 钳制 HDR 像素到有限范围 ───
-		// 真实 HDR（如 Poly Haven）太阳位置的亮度可能是 +Inf 或极大值。
-		// 这些像素经过 mipmap 下采样 → 生成 NaN；再被 irradiance/prefilter
-		// 卷积后整张贴图都变成 NaN → 最终模型表面全是 NaN 污染（显示为黑 / 乱色）。
-		// 标准做法：预先钳制到一个合理上限（这里用 50.0，与 UE4/Filament 一致）
-		const int pixelCount = w * h * ch;
-		for (int i = 0; i < pixelCount; ++i)
+		// 非有限输入会影响后续环境光卷积，这里先将它们清零。
+		// 有限 HDR 值限制到 [0,50]，减少极亮样本的影响；削顶会改变环境光能量。
+		const size_t pixelCount = size_t(w) * h * 3;
+		for (size_t i = 0; i < pixelCount; ++i)
 		{
 			float v = pixels[i];
 			if (!std::isfinite(v))       v = 0.0f;   // inf/NaN 清零
@@ -628,9 +616,9 @@ void main(){
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		stbi_image_free(pixels);
 
-		// ==============================================================
+		// ----------
 		// Step 2: 等距柱状 → Environment Cubemap
-		// ==============================================================
+		// ----------
 		glGenTextures(1, &s_IBL.EnvCubemap);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.EnvCubemap);
 		for (int i = 0; i < 6; ++i)
@@ -669,13 +657,13 @@ void main(){
 
 		RF_CORE_INFO("IBL: Environment cubemap generated ({0}, mipmapped)", ENV_SIZE);
 
-		// ==============================================================
+		// ----------
 		// Step 3: Irradiance Map (32×32)
 		//
 		// 为什么尺寸这么小？
 		//   辐照度是整个半球的积分结果，变化极其平滑，
 		//   32×32 足以表示所有方向的漫反射环境光。
-		// ==============================================================
+		// ----------
 		glGenTextures(1, &s_IBL.IrradianceMap);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.IrradianceMap);
 		for (int i = 0; i < 6; ++i)
@@ -702,7 +690,7 @@ void main(){
 		glDeleteProgram(prog);
 		RF_CORE_INFO("IBL: Irradiance map generated (32)");
 
-		// ==============================================================
+		// ----------
 		// Step 4: Pre-filtered Map (128×128, 5 mip levels)
 		//
 		//   mip 0 (128³)  → roughness = 0.00  （镜面反射）
@@ -712,7 +700,7 @@ void main(){
 		//   mip 4 (8³)    → roughness = 1.00  （完全粗糙）
 		//
 		//   对应课上："对不同 glossy 程度采样不同滤波层级的 EnvMap"
-		// ==============================================================
+		// ----------
 		const int PF_SIZE  = 128;
 		const int MIP_CNT  = 5;
 
@@ -760,12 +748,12 @@ void main(){
 		glDeleteProgram(prog);
 		RF_CORE_INFO("IBL: Pre-filter map generated (128, 5 mips)");
 
-		// ==============================================================
+		// ----------
 		// Step 5: BRDF LUT (512×512, RG16F)
 		//
 		//   这张 LUT 与具体环境无关，只取决于 BRDF 模型（GGX）。
 		//   所有场景可以共享同一张 BRDF LUT。
-		// ==============================================================
+		// ----------
 		glGenTextures(1, &s_IBL.BRDFLUT);
 		glBindTexture(GL_TEXTURE_2D, s_IBL.BRDFLUT);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, nullptr);
@@ -799,14 +787,21 @@ void main(){
 		// ---- 清理所有临时 GL 对象 ----
 		glDeleteFramebuffers(1, &s_CaptureFBO);
 		glDeleteRenderbuffers(1, &s_CaptureRBO);
-		// 注意：s_CubeVAO / s_CubeVBO **不** 在这里删除 —— 天空盒每帧还要用
+		// 注意：s_CubeVAO / s_CubeVBO **不** 在这里删除，天空盒每帧还要用
 		glDeleteVertexArrays(1, &s_QuadVAO);  glDeleteBuffers(1, &s_QuadVBO);
 		s_CaptureFBO = s_CaptureRBO = 0;
 		s_QuadVAO = s_QuadVBO = 0;
 
 		// ---- 恢复外部 GL 状态 ----
-		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prevFBO);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, prevReadFBO);
 		glViewport(prevVP[0], prevVP[1], prevVP[2], prevVP[3]);
+		glDepthFunc(prevDepthFunc);
+		glDepthMask(prevDepthMask);
+		if (!depthEnabled) glDisable(GL_DEPTH_TEST);
+		if (cullEnabled) glEnable(GL_CULL_FACE);
+		if (blendEnabled) glEnable(GL_BLEND);
+		if (scissorEnabled) glEnable(GL_SCISSOR_TEST);
 
 		s_Ready = true;
 		RF_CORE_INFO("IBL: All pre-computation complete!");
@@ -828,6 +823,9 @@ void main(){
 		if (s_CaptureFBO) { glDeleteFramebuffers(1, &s_CaptureFBO);   s_CaptureFBO = 0; }
 		if (s_CaptureRBO) { glDeleteRenderbuffers(1, &s_CaptureRBO);  s_CaptureRBO = 0; }
 
+		if (s_QuadVAO) { glDeleteVertexArrays(1, &s_QuadVAO); s_QuadVAO = 0; }
+		if (s_QuadVBO) { glDeleteBuffers(1, &s_QuadVBO); s_QuadVBO = 0; }
+
 		// 释放天空盒专用资源
 		if (s_SkyboxProgram) { glDeleteProgram(s_SkyboxProgram); s_SkyboxProgram = 0; }
 		if (s_CubeVAO)       { glDeleteVertexArrays(1, &s_CubeVAO); s_CubeVAO = 0; }
@@ -848,9 +846,9 @@ void main(){
 		if (s_IBL.BRDFLUT)       glBindTextureUnit(9, s_IBL.BRDFLUT);
 	}
 
-	// =====================================================================
+	// ----------
 	// RenderSkybox
-	// ---------------------------------------------------------------------
+	// ----------
 	// 作为"背景"绘制 EnvCubemap，调用时机：
 	//   SceneRenderer 在所有不透明 3D 几何渲染完之后调用
 	//
@@ -865,7 +863,7 @@ void main(){
 	//
 	// view 矩阵必须去掉平移：mat4(mat3(view))。
 	// 这样相机移动时天空盒不会被"穿过"，永远居中。
-	// =====================================================================
+	// ----------
 	void IBLPrecompute::RenderSkybox(const glm::mat4& view, const glm::mat4& projection)
 	{
 		if (!s_Ready || !s_SkyboxProgram || !s_CubeVAO || !s_IBL.EnvCubemap)
@@ -878,10 +876,17 @@ void main(){
 			return;
 
 		// --- 保存外部 GL 状态，结束时恢复 ---
+		GLboolean prevEntityMask[4], prevNormalMask[4];
+		glGetBooleani_v(GL_COLOR_WRITEMASK, 1, prevEntityMask);
+		glGetBooleani_v(GL_COLOR_WRITEMASK, 2, prevNormalMask);
 		GLboolean prevDepthMask;        glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
 		GLint     prevDepthFunc;        glGetIntegerv(GL_DEPTH_FUNC, &prevDepthFunc);
 		GLboolean prevCullEnabled   = glIsEnabled(GL_CULL_FACE);
 		GLboolean prevDepthEnabled  = glIsEnabled(GL_DEPTH_TEST);
+
+		// 天空盒只写颜色；未声明的片元输出不能覆盖实体 ID 和法线。
+		glColorMaski(1, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMaski(2, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 		// --- 设置天空盒绘制所需状态 ---
 		glEnable(GL_DEPTH_TEST);
@@ -905,6 +910,8 @@ void main(){
 		glUseProgram(0);
 
 		// --- 恢复外部 GL 状态 ---
+		glColorMaski(1, prevEntityMask[0], prevEntityMask[1], prevEntityMask[2], prevEntityMask[3]);
+		glColorMaski(2, prevNormalMask[0], prevNormalMask[1], prevNormalMask[2], prevNormalMask[3]);
 		glDepthMask(prevDepthMask);
 		glDepthFunc(prevDepthFunc);
 		if (prevCullEnabled)  glEnable(GL_CULL_FACE);   else glDisable(GL_CULL_FACE);

@@ -1,0 +1,55 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 4
+    TagComponent:
+      Tag: Main Camera
+    TransformComponent:
+      Translation: [0, 0, 7.80000019]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.785398185
+        PerspectiveNear: 0.0500000007
+        PerspectiveFar: 100
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 100
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: Point Light
+    TransformComponent:
+      Translation: [0, 1.39999998, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 1
+      Radius: 6
+      CastShadow: false
+  - Entity: 2
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [-0.600000024, -0.600000024, -1]
+      Color: [1, 1, 1]
+      Intensity: 3
+      CastShadow: true
+  - Entity: 1
+    TagComponent:
+      Tag: CornellBox
+    TransformComponent:
+      Translation: [0.0197044145, -1.9605912, 0.0492610373]
+      Rotation: [0, 0, 0]
+      Scale: [1.97044337, 1.97044337, 1.97044337]
+    ModelRendererComponent:
+      ModelID: 14804261086960446472
+      FilePath: assets/models/reference/CornellBox/CornellBox.obj
+      Color: [1, 1, 1, 1]

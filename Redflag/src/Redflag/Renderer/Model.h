@@ -27,34 +27,31 @@ namespace Redflag {
 		glm::mat4     LocalTransform{ 1.0f };
 	};
 
-	// -----------------------------------------------------------------------
-	// Model
-	//
-	// 使用 Assimp 从文件加载一个 3D 模型，支持多子网格。
-	// 获取漫反射贴图时会在模型文件所在目录下查找。
-	//
-	// 推荐通过 AssetManager 获取，避免重复加载：
-	//   auto model = AssetManager::Load<Model>("assets/models/gun.obj");
-	//
-	// 也可以直接调用：
-	//   auto model = Model::Load("assets/models/gun.obj");
-	// -----------------------------------------------------------------------
+	/*
+	 * 把模型文件转换成可绘制的子网格和材质，并持有这些对象及其贴图。
+	 * 顶点保留网格局部坐标，节点累积变换存入 SubMesh，绘制时再乘实体世界变换。
+	 * Load 用 Assimp 读取文件并创建 GPU 缓冲和纹理，应在图形线程调用；AssetManager 按 ID 复用结果。
+	 */
 	class Model
 	{
 	public:
+		// ---- 资源查询 ----
 		const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		const std::string& GetFilePath() const { return m_FilePath; }
 
-		// 从文件路径加载并构建 Model（AssetManager 约定接口）
+		// ---- 模型导入 ----
+		// 导入失败返回空引用，返回对象不保留 Assimp 场景指针。
 		static Ref<Model> Load(const std::string& filepath);
 
 	private:
 		Model() = default;
 
-		void ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform);
+		// ---- 节点与几何 ----
+		void ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform /* 父节点到模型空间 */);
 		SubMesh ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform);
+		// ---- 材质贴图 ----
 		std::string ResolveTexturePath(aiMaterial* material, int textureType);
-		Ref<Texture2D> LoadMaterialTexture(aiMaterial* material, const aiScene* scene, int textureType);
+		Ref<Texture2D> LoadMaterialTexture(aiMaterial* material, int textureType);
 		Ref<Texture2D> MergeMetallicRoughnessTextures(aiMaterial* material);
 		Ref<Texture2D> MergeMetallicRoughnessFromPaths(const std::string& metalPath, const std::string& roughPath);
 
@@ -63,6 +60,7 @@ namespace Redflag {
 		std::string FindTextureBySuffix(const std::vector<std::string>& suffixes) const;
 
 	private:
+		// ---- 模型数据 ----
 		std::vector<SubMesh> m_SubMeshes;
 		std::string          m_FilePath;
 		std::string          m_Directory; // 模型文件所在目录，用于拼接贴图路径

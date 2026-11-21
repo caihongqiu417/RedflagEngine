@@ -10,7 +10,7 @@
 
 namespace Redflag
 {
-	//===============随机数生成器================
+	// 随机数生成器
 	static std::mt19937 s_RandomEngine;
 	static std::uniform_int_distribution<std::mt19937::result_type> s_Distribution;
 
@@ -22,7 +22,7 @@ namespace Redflag
 	static float RandomFloat() {
 		return (float)s_Distribution(s_RandomEngine) / (float)std::numeric_limits<uint32_t>::max();
 	}
-	//========================================================
+	// ----------
 
 	ParticleSystem::ParticleSystem(uint32_t maxParticles)
 		:m_MaxParticles(maxParticles - 1)

@@ -1,0 +1,63 @@
+DepthPrepassTests.cpp
+Redflag.lib(Log.obj) : warning LNK4075: 忽略“/EDITANDCONTINUE”(由于“/OPT:ICF”规范)
+  正在创建库 bin-int\Tests\DepthPrepassTests.lib 和对象 bin-int\Tests\DepthPrepassTests.exp
+[20:09:47] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[20:09:47] REDFLAG :     2 uniform buffers
+[20:09:47] REDFLAG :     0 resources
+[20:09:47] REDFLAG : Uniform Buffers:
+[20:09:47] REDFLAG :   _11_13
+[20:09:47] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[20:09:47] REDFLAG :   _101_103
+[20:09:47] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[20:09:47] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer3D_Mesh.glsl
+[20:09:47] REDFLAG :     3 uniform buffers
+[20:09:47] REDFLAG :     11 resources
+[20:09:47] REDFLAG : Uniform Buffers:
+[20:09:47] REDFLAG :   _384_386
+[20:09:47] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[20:09:47] REDFLAG :   _781_783
+[20:09:47] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[20:09:47] REDFLAG :   _972_974
+[20:09:47] REDFLAG :     Size = 1104, Binding = 3, Members = 6
+[20:09:47] REDFLAG : Shader creation took 478.52878 ms
+[20:09:47] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Renderer3D_Mesh_Instanced.glsl
+[20:09:47] REDFLAG :     1 uniform buffers
+[20:09:47] REDFLAG :     0 resources
+[20:09:47] REDFLAG : Uniform Buffers:
+[20:09:47] REDFLAG :   _95_97
+[20:09:47] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[20:09:47] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Renderer3D_Mesh_Instanced.glsl
+[20:09:47] REDFLAG :     3 uniform buffers
+[20:09:47] REDFLAG :     9 resources
+[20:09:47] REDFLAG : Uniform Buffers:
+[20:09:47] REDFLAG :   _378_380
+[20:09:47] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[20:09:47] REDFLAG :   _763_765
+[20:09:47] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[20:09:47] REDFLAG :   _914_916
+[20:09:47] REDFLAG :     Size = 1104, Binding = 3, Members = 6
+[20:09:48] REDFLAG : Shader creation took 464.15118 ms
+[20:09:48] REDFLAG : OpenGLShader::Reflect - GL_VERTEX_SHADER assets/shaders/Depth_Prepass.glsl
+[20:09:48] REDFLAG :     2 uniform buffers
+[20:09:48] REDFLAG :     0 resources
+[20:09:48] REDFLAG : Uniform Buffers:
+[20:09:48] REDFLAG :   _17_19
+[20:09:48] REDFLAG :     Size = 64, Binding = 1, Members = 1
+[20:09:48] REDFLAG :   _41_43
+[20:09:48] REDFLAG :     Size = 240, Binding = 0, Members = 6
+[20:09:48] REDFLAG : OpenGLShader::Reflect - GL_FRAGMENT_SHADER assets/shaders/Depth_Prepass.glsl
+[20:09:48] REDFLAG :     1 uniform buffers
+[20:09:48] REDFLAG :     2 resources
+[20:09:48] REDFLAG : Uniform Buffers:
+[20:09:48] REDFLAG :   _9_11
+[20:09:48] REDFLAG :     Size = 64, Binding = 2, Members = 13
+[20:09:48] REDFLAG : Shader creation took 405.84195 ms
+RenderDoc DLL: D:/ProgramFiles/JetBrains/JetBrains Rider 2025.3.1/plugins/rider-plugins-renderdoc/runtime/windows-x86_64/renderdoc.dll
+Capture API: 1.6.0
+GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2
+Vendor: NVIDIA Corporation
+OpenGL: 4.6.0 NVIDIA 616.56
+Test target: 32x32
+RenderDoc captures: 1 (EndFrameCapture/GetCapture succeeded)
+RenderDoc capture: D:\Cdev\Redflag\output\captures\DepthPrepass_capture.rdc
+Depth prepass and main pass alpha coverage tests passed

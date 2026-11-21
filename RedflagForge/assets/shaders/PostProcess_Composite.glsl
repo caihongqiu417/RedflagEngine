@@ -1,30 +1,11 @@
-// =====================================================================
-// PostProcess_Composite.glsl — 后处理合成 Pass
-//
-// 用途：将 HDR 渲染结果与 Bloom 效果合并，执行色调映射和 Gamma 校正，
-//       输出最终 LDR 颜色到 s_PostFBO（RGBA8），供 ForgeLayer 显示。
-//
-// 流程：
-//   1. 采样 HDR 原图（主 FBO attachment0）
-//   2. 采样 Bloom 结果（Bloom 金字塔第 0 层，多频段叠加）
-//   3. 叠加：finalHDR = hdrColor + bloomColor * u_BloomIntensity
-//   4. ACES 色调映射（Hill 近似）：HDR [0,∞) → LDR [0,1]
-//   5. Gamma 2.2 校正：线性空间 → sRGB 显示空间
-//
-// 槽位：
-//   binding = 0  u_HDR    — 主 FBO attachment0（RGBA16F HDR）
-//   binding = 1  u_Bloom  — Bloom 第 0 层（RGBA16F，多频段叠加结果）
-//
-// Uniforms：
-//   u_BloomIntensity — Bloom 叠加强度（默认 1.0，ImGui 可调）
-//
-// 关于 ACES：
-//   ACES（Academy Color Encoding System）是电影行业标准的色调曲线。
-//   相比 Reinhard（color/(color+1)），ACES 能更好地保留中间调对比度，
-//   同时对高光区域有更自然的压缩效果（肩部更宽，颜色不会死白）。
-//   这里使用 Stephen Hill 的多项式近似（5 次方），无需 LUT 贴图。
-// =====================================================================
+/*
+ * 把光晕与场景颜色合成，转换为屏幕显示的图像。
+ * 场景颜色使用 HDR 保存，数值可以大于 1，这样强光的信息不会提前丢失。
+ * 先把模糊后的亮部图加回场景，再乘曝光值调整整体明暗。
+ * 随后用色调映射压缩强光，把颜色放进显示范围，最后做 Gamma 编码供屏幕显示。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -37,7 +18,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
-// ========================== 片元着色器 ==========================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -49,12 +30,12 @@ layout(location = 0) in vec2 v_TexCoord;
 layout(binding = 0) uniform sampler2D u_HDR;
 
 // Bloom 叠加图（Bloom 金字塔第 0 层）
-// 若 Bloom 关闭，CPU 端绑 GL 纹理 0（采样返回黑色），加法无效果
+// Bloom 关闭时 PostProcess 绑定 1x1 黑纹理，叠加项为零。
 layout(binding = 1) uniform sampler2D u_Bloom;
 
-// Bloom 参数 UBO（shaderc/Vulkan 不允许块外非 opaque uniform）
+// CPU 把 Bloom 参数一起上传，下面的字段顺序与 PostProcess 保持一致
 // u_BloomA.x = Threshold, y = Intensity, z = Radius, w = unused
-// u_BloomB.xy = TexelSize,           zw = unused
+// u_BloomB.xy = TexelSize, z = Exposure, w = unused
 layout(std140, binding = 5) uniform BloomParams
 {
     vec4 u_BloomA;
@@ -63,10 +44,11 @@ layout(std140, binding = 5) uniform BloomParams
 #define u_BloomIntensity (u_BloomA.y)
 #define u_Exposure       (u_BloomB.z)
 
-vec3 SanitizeHDR(vec3 color)
+/* 过滤 NaN 与极大值，再限制到 [0,64]，避免异常分量扩散到整张后处理纹理。 */
+vec3 SanitizeHDR(vec3 color /* 线性 RGB */)
 {
     // 避开 isnan/isinf 在当前 shaderc -> SPIR-V -> OpenGL 链上的兼容性风险。
-    // NaN 满足 x != x，Inf 会满足 abs(x) >= 1e20；两者都归零，正常值再做范围钳制。
+    // NaN 满足 x != x，Inf 会满足 abs(x) >= 1e20。两者都归零，正常值再做范围钳制。
     bvec3 invalid = bvec3((color.x != color.x) || abs(color.x) >= 1e20,
                           (color.y != color.y) || abs(color.y) >= 1e20,
                           (color.z != color.z) || abs(color.z) >= 1e20);
@@ -76,8 +58,11 @@ vec3 SanitizeHDR(vec3 color)
     return clamp(color, vec3(0.0), vec3(64.0));
 }
 
-// ---- ACES Filmic 近似（Narkowicz）----
-// 相比矩阵版 Hill 近似，这个版本更短、更稳，也更适合先把显示链路跑通。
+/*
+ * 色调映射把很大的亮度压进 [0,1]，让强光保留层次，而不是全部截成白色。
+ * x 是乘过曝光的颜色；这里用 Narkowicz 拟合曲线 x(ax+b)/(x(cx+d)+e) 逐通道计算。
+ * 来源：https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
 vec3 ACESTonemap(vec3 x)
 {
     const float a = 2.51;
@@ -88,8 +73,7 @@ vec3 ACESTonemap(vec3 x)
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
-// Bloom 上采样链已在 CPU 侧把所有 mip 层叠加到 mip[0]，
-// 这里直接采样即可，无需二次模糊（再模糊会让边缘变硬且引入能量误差）。
+// PostProcess 已调度 GPU 上采样，把各层合并到第 0 层，此处直接读取结果。
 vec3 SampleBloom(vec2 uv)
 {
     return SanitizeHDR(texture(u_Bloom, uv).rgb);
@@ -115,7 +99,7 @@ void main()
     // 4. ACES 色调映射：HDR [0, ∞) → LDR [0, 1]
     vec3 tonemapped = ACESTonemap(combined);
 
-    // 5. Gamma 2.2 校正：线性空间 → sRGB 显示空间
+    // 5. 用幂函数近似 Gamma 2.2 编码，输出到普通 RGBA8 目标。
     vec3 gammaCorrected = pow(tonemapped, vec3(1.0 / 2.2));
 
     o_Color = vec4(gammaCorrected, 1.0);

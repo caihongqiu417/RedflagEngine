@@ -1,0 +1,89 @@
+Redflag · Debug / x64 · 2026-11-21
+OpenGL 4.6 · NVIDIA GeForce RTX 5070 Ti Laptop GPU · driver 616.56
+
+修复前的输出节选
+
+FlatColor, GLSL 330
+[20:29:15] REDFLAG : RedflagForge\assets\shaders\FlatColor.glsl:3: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+RedflagForge\assets\shaders\FlatColor.glsl:4: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+
+RSMDepth
+error: binding mismatch between shaders for UBO (named _11_13._13)
+error: struct type mismatch between shaders for uniform (named _11_13._13)
+FAILED: light-pass depth coverage
+
+IBL
+FAIL IBL helper vertex arrays and buffers released
+FAIL all six cube faces preserve constant environment color
+FAIL BRDF integration is finite and populated
+
+Skybox
+Skybox first entity=1073741824 normal=2
+FAIL skybox leaves entity and normal attachments untouched
+
+修复后的输出节选
+
+tests/run_asset_tests.cmd · exit 0
+AssetManagerTests.cpp
+
+tests/run_model_tests.cmd · exit 0
+Model import tests passed (10 cases)
+
+tests/run_shader_tests.cmd · exit 0
+Shader GPU tests passed: VAO lifetime, content cache, warm reuse, collisions, timestamps, recovery and library lookup
+
+tests/run_depth_tests.cmd · exit 0
+Single and instanced indirect light and picking passed
+Depth prepass and main pass alpha coverage tests passed
+
+tests/run_renderer3d_tests.cmd · exit 0
+Renderer3D tests passed: offscreen light casters, Mask/Opaque/Blend coverage, counts and bounds
+
+tests/run_render_tests.cmd · exit 0
+PASS 3x2 texture channels=3: file upload, SetData and row alignment
+PASS 3x2 texture channels=4: file upload, SetData and row alignment
+PASS 3x2 texture channels=1: file upload, SetData and row alignment
+PASS 3x2 texture channels=2: file upload, SetData and row alignment
+PostProcess GPU tests passed
+
+tests/run_ibl_tests.cmd · exit 0
+PASS missing file leaves IBL unavailable
+PASS IBL helper vertex arrays and buffers released
+PASS constant HDR precomputation completes
+PASS all six cube faces preserve constant environment color
+PASS BRDF integration is finite and populated
+PASS precomputation restores viewport
+PASS precomputation restores caller draw state
+PASS skybox leaves entity and normal attachments untouched
+PASS IBL output textures released before context destruction
+PASS no OpenGL error
+
+tests/run_scene_tests.cmd · exit 0
+PASS editor/runtime SSAO accepts depth-only attachment
+PASS depth preview preserves upload row alignment
+PASS sprite alpha blending survives consecutive scene frames
+PASS 2D sprites do not supply undefined normals to SSAO
+PASS single-depth geometry remains visible in depth preview
+PASS zero direction does not upload NaN light data
+PASS shadow selection matches the uploaded directional light
+PASS editor/runtime RSM accepts depth-only attachment
+PASS RSM temporal output exists
+PASS shutdown clears borrowed preview texture names
+PASS scene GPU resources released without GL errors
+
+编辑器着色器文件独立链接（15/15）
+Bloom_Brightness.glsl
+Bloom_Upsample.glsl
+Depth_Prepass.glsl
+DepthViz.glsl
+FlatColor.glsl
+Line.glsl
+PostProcess_Composite.glsl
+Renderer2D_Circle.glsl
+Renderer2D_Quad.glsl
+Renderer3D_Mesh.glsl
+RSMDepth.glsl
+RSMIndirect.glsl
+RSMTemporalResolve.glsl
+ShadowDepth.glsl
+SSAO.glsl

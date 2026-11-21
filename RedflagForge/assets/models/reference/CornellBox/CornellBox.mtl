@@ -1,0 +1,9 @@
+# Diffuse test colors, chosen for the Redflag realtime scene.
+newmtl White
+Kd 0.73 0.73 0.73
+newmtl Green
+Kd 0.12 0.45 0.15
+newmtl Red
+Kd 0.65 0.05 0.05
+newmtl CeilingLight
+Kd 1 1 1

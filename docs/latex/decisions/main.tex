@@ -1,0 +1,167 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\hypersetup{pdftitle={Redflag 技术选型与工程取舍}}
+\fancyhead[L]{\small\color{muted}Redflag · 技术选型与取舍}
+\newcommand{\loc}[1]{\par{\footnotesize\color{muted}源码：\path{#1}}\par}
+\renewcommand{\note}[1]{\par{\small\color{muted}#1\par}}
+\begin{document}
+\zihao{5}
+\raggedright
+{\Huge\bfseries Redflag 技术选型}\par\vspace{5pt}
+{\Large\color{muted}当前选择、替代方案与实际代价}\par
+\ruleline
+
+本文对应 2026-11-21 的 OpenGL 实现。已有代码、回归测试和 RenderDoc 截帧分别说明不同范围的事实，后续 RHI 方案单独标注。没有固定场景的前后基准，本文不宣称帧率或编译速度提升。
+
+\section{资产身份与缓存}
+场景曾保存模型路径，文件移动后引用就失效。需要保存的是资产身份，路径只表示它目前在哪里。
+
+\begin{tabularx}{\textwidth}{L{3.2cm}YY}
+\toprule
+候选 & 能解决什么 & 本项目的取舍 \\
+\midrule
+路径作为身份 & 可直接打开文件，结构简单。 & 路径改变会改变引用，无法满足移动后的恢复。 \\
+内容哈希作为身份 & 相同内容可归为同一版本。 & 编辑模型会改变哈希，不适合作为本次场景引用身份。 \\
+独立 ID 与元数据 & 身份保留，路径和内容可以变化。 & 当前模型采用 .rfmeta，移动时须携带元数据。 \\
+\bottomrule
+\end{tabularx}
+
+AssetLibrary 保存 ID 到路径的对应，AssetManager 按 ID 共享已加载对象。场景保存 ModelID，旧 FilePath 在读取时迁移。资源移动后重新扫描，资产测试验证原 ID 仍指向同一份资源。
+
+这种元数据跟随文件的做法可与 Unity 的资产元数据设计对照。Redflag 只完成模型身份与同步缓存，尚未实现 Unity 那样的完整导入数据库、产物管理或自动监测。命名参考 Hazel 的 ShaderLibrary，稳定 ID 是本项目扩展。
+\note{参考：\source{https://docs.unity3d.com/6000.0/Documentation/Manual/AssetMetadata.html}{Unity 6.0：Asset metadata}；\source{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Shader.h}{Hazel：ShaderLibrary}。}
+
+\subsection{同步加载与共享所有权}
+当前加载入口在调用线程完成读取和 GPU 创建。命中缓存可直接复用资源，清空缓存只释放缓存的引用，外部仍使用的对象继续存活。这个约定直接，也便于验证最终引用与图形上下文的关系。
+
+代价是首次加载会占用调用线程，没有预算、后台流式加载或热重载。异步化还需要划分 CPU 解码与 GPU 上传，并处理取消、失败和退出时的等待。它应由实际加载尖峰推动，而不是先增加一套未使用的任务系统。
+
+讲述这部分时，可以从一次移动模型的失败说起，再解释为什么 ID 与路径分开，以及元数据丢失、assets 外任意移动仍有哪些边界。能证明的是身份和共享所有权，不能把它描述成完整资产管线。
+\loc{Redflag/src/Redflag/Assets/AssetLibrary.cpp}
+\loc{Redflag/src/Redflag/Assets/AssetManager.h}
+
+\newpage
+\section{材质透明裁剪与导入策略}
+同一片树叶不能在主绘制中有空洞，在深度里却仍是一张完整矩形。本轮先让深度预传递和主绘制使用相同的透明度输入与阈值，避免错误遮挡进入后续效果。
+
+\begin{tabularx}{\textwidth}{L{2.4cm}YY}
+\toprule
+方式 & 像素怎样处理 & 当前范围与成本 \\
+\midrule
+Opaque & 保留不透明表面。 & 当前普通材质路径。 \\
+Mask & 低于阈值的像素直接丢弃。 & 当前支持独立 AlphaMap 的约定；相关阶段要保持同一轮廓。 \\
+Blend & 将当前表面与背景颜色混合。 & 尚未实现完整导入和排序，不能用 Mask 或删除网格替代。 \\
+\bottomrule
+\end{tabularx}
+
+底色因子的 alpha、底色贴图的 alpha 和透明度图红通道相乘。没有贴图的那一项取 1，关闭贴图后也要刷新使用标记。测试把两次绘制分别清屏，确认保留的像素与实体 ID 一致。
+
+\subsection{材质分类依据}
+导入器曾把 glass、window、mirror 等名字，以及非零透射色当作材质结论，甚至删除网格。真实 OBJ 测试发现默认透射色也会触发该路径，因此整段猜测被删除。
+
+删除后，原先被藏起来的玻璃几何可能以不透明方式出现。当前选择先保留用户几何与实际导入参数，把半透明作为明确的后续能力。正确显示玻璃还需要导入规则、排序和绘制设计。保留几何只是修正破坏性行为。
+
+\subsection{贴图尺寸不一致的处理}
+可以把其中一张图重采样后合并，也可以要求一致尺寸后再合并。当前选择后者。尺寸不一致时释放临时像素，继续使用材质标量，消除越界与错位读取。
+
+这会缺少预期的贴图细节，不能称为外观完全保真。以后加入重采样，应让导入设置明确选择目标尺寸与过滤方式。它是新增功能，不是遇到错误时偷偷改变素材。
+
+面试中可围绕一次具体失败解释验证如何变完整：最初七例贴图测试通过，日志却暴露几何被删。新增 MeshData 与法线断言后，九例同时约束几何和材质。随后再加入显式零材质因子，扩为十例。这样能说明测试设计发生了什么变化。
+\note{参考：\source{https://learnopengl.com/Advanced-OpenGL/Blending}{LearnOpenGL：透明像素丢弃、混合与排序}。三项透明度乘积和合并拒绝规则属于 Redflag 的实现约定。}
+\loc{Redflag/src/Redflag/Renderer/Model.cpp}
+\loc{tests/DepthPrepassTests.cpp}
+\loc{tests/ModelImportTests.cpp}
+
+\newpage
+\section{渲染资源归属与后端迁移}
+两个后处理实例交替绘制时，曝光和尺寸不应互相影响。PostProcess 现在自己持有 Bloom 金字塔、最终输出和参数，Shader 与绘制对象也随实例释放。测试验证了曝光不同、交替绘制和单独 Resize 的结果。
+
+\begin{tabularx}{\textwidth}{L{3.2cm}YY}
+\toprule
+候选 & 用途 & 当前决定 \\
+\midrule
+继续全部静态管理 & 单场景调用方便。 & 后处理需要独立状态，已拆为对象；其他静态资源尚未迁完。 \\
+效果对象与固定顺序 & 先明确资源归属及每阶段输入输出。 & 当前逐步采用，减少一次改动的范围。 \\
+RenderGraph 自动编排 & 根据资源依赖调度并管理转换。 & 属于后续选择，当前尚无完整依赖声明，未实现。 \\
+\bottomrule
+\end{tabularx}
+
+例如两个视口的曝光分别为 1 和 2，切换视口时要让着色器改读对应的曝光值。仅把数值写进 GPU 内存，不能保证这次绘制已经选中它。后处理双实例测试验证了交替绘制的结果，不能扩大成整个引擎已支持独立多视口。
+
+\subsection{RHI 迁移顺序}
+场景渲染仍直接调用 GL，纹理和帧缓冲接口也暴露整数对象 ID。若在原结构上同时加入 Vulkan，每种效果都可能同时维护两套调用。计划先用设备、命令和资源接口承接现有 OpenGL，再接入 Vulkan，让场景层保留同一套绘制含义。
+
+Redflag 暂留 C++17 与 GLSL。Vulkan 建议目标为 1.3，启用前探测所需设备特性。Khronos 当前教程采用 1.4、C++20 和 Slang，不能直接当作本项目已具备的条件。两后端的一致性要通过相同测试场景验证，尚无 Vulkan 运行结果。
+
+这条路线多维护一段过渡接口，也需要逐处迁走直接 GL 调用。完成条件是原有 OpenGL 路径仍正确、资源生命周期可追踪，随后才逐步迁移效果。完整的接口、同步和验收方案见独立 RHI 文档。
+
+\subsection{设计参考}
+Hazel 的资源接口和工厂命名用于保持轻量封装，GAMES104 第 2 讲用于对照平台、资源与渲染职责。Khronos 简单引擎教程提供分层及渲染组织的参考，其示意 RenderGraph 不能当成本项目或教程示例已完成的调度系统。
+\note{参考：\source{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Texture.h}{Hazel：Texture}；\source{https://games-cn.org/games104-slides/}{GAMES104 官方课件}；\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{Khronos：Rendering Pipeline}。}
+\loc{Redflag/src/Redflag/Renderer/PostProcess.cpp}
+
+\subsection{效果精度与参数代价}
+IBL 将有限 HDR 输入限制到 $[0,50]$，会改变环境能量。Bloom 多层累加和最终贡献限制服务当前外观，不能称为能量守恒。
+
+RSM 已修正投影通量、圆盘面积和漫反射系数，降低样本数仍覆盖同一圆盘。推导与 GPU 数值检查见《渲染公式与实现》。它仍省略两点遮挡，有限半径会舍弃远处反射，近距离限制仍非精确积分。尚无同条件 GPU 计时，不能把减少样本写成无损优化。
+
+\newpage
+\section{性能代价与测量范围}
+日志中的一次 Shader 创建计时包含多段工作。不同场景和缓存状态下的两次读数，不能当成稳定加速比例。本轮验证功能和资源行为，并留下一份 CPU 采样，没有固定场景的前后 CPU/GPU 基准。
+
+\subsection{深度预览与读回}
+现有预览同步读回整张视口的 float 深度，在 CPU 上扫描范围、拉伸对比度并降采样，再上传 R8 图片。输出宽度限制到 512，并没有减少读取整张深度的工作量。读回可能等待 GPU，这段 CPU 处理与再次上传也有成本。
+
+可以改成在 GPU 上采样深度并输出预览，也可以异步读回必要区域。前者适合只显示结果，后者适合需要 CPU 数值但允许延迟的工具。当前保留原行为，仅去掉无效参数和查询。尚未实施或测量这两种替代方案。
+
+预览目前只是每帧对比度拉伸，不是线性深度。不同帧的灰度不能直接比较距离。RenderDoc 则可以在选定事件查看附件与实际像素值，两种工具的用途需要分开。
+\note{参考：\source{https://registry.khronos.org/OpenGL-Refpages/gl4/html/glReadPixels.xhtml}{Khronos：glReadPixels}；\source{https://github.com/baldurk/renderdoc/blob/v1.x/docs/how/how_inspect_pixel.rst}{RenderDoc：像素值检查}。}
+
+\subsection{实例化与批次整理}
+当前普通主绘制只把 Opaque、相同网格且全部贴图组合相同的对象分为一组，组内至少两个才实例化，每批最多 2048 个。变换、颜色、材质标量和实体 ID 按实例上传。阴影和深度预传递仍逐个绘制。普通与实例化主绘制现共用一份片元光照源码，固定红色 RSM 输入下两条路径的红通道均增加 0.5，绿蓝不变。
+
+分组依赖资源指针，排序、打包和上传均有成本。同一批内容用一次实例绘制替代多次普通绘制，是源码可以确认的变化。是否更快还与对象数量、绘制复杂度和驱动有关，当前没有测量结论。
+\note{参考：\source{https://learnopengl.com/Advanced-OpenGL/Instancing}{LearnOpenGL：Instancing}。教程说明实例化的调用方式，项目实际阈值与性能必须单独验证。}
+
+\subsection{Shader 缓存范围}
+按文件名与时间戳判断缓存，成本简单，但会串用同名文件，也会漏掉保留时间戳的修改。当前内容哈希让源码与编译配置决定缓存身份，优先解决这两类错误。
+
+GLSL 450 路径命中只省去第一阶段编译，后续编译与链接仍执行，旧内容也会留在磁盘。GLSL 330 示例直接由 OpenGL 编译源码，以保留按名称上传矩阵和颜色的接口。测试证明输出正确，不证明完整程序创建已被缓存。普通材质路径也只是减少相邻纹理重复绑定，实体 ID 与材质共享的参数块仍逐次更新，不能沿用旧日志中的假设上传次数。
+\loc{Redflag/src/Redflag/Renderer/SceneRenderer.cpp}
+\loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}
+\loc{Redflag/src/Platform/OpenGL/OpenGLShader.cpp}
+
+\newpage
+\input{capture}
+
+\newpage
+\input{profiling}
+
+\newpage
+\section{实现证据与讲述边界}
+可以选一个实际问题，从输入走到输出。例如先展示深度与颜色轮廓不同，说明两条材质路径为什么不一致，再用最小测试和 RenderDoc 选定绘制核对真正使用的贴图、参数与附件。最后说明旧截帧只覆盖这个输入。六组深度用例与后来加入的阴影、RSM 逐像素检查是独立证据，不能互相替代。
+
+资源管理则从移动模型后场景丢引用开始，解释 ID、路径和缓存引用分别负责什么。模型测试中的玻璃误判适合说明排错如何发现测试盲区。贴图断言成功后仍看日志，再补几何与法线检查。这些过程都有源码和测试可追踪。
+
+\begin{tabularx}{\textwidth}{L{4cm}Y}
+\toprule
+目前可以说明 & 需要保留的限制 \\
+\midrule
+模型稳定 ID 与共享缓存已接通。 & 纹理未接入 ID，无完整导入产物、热重载或预算系统。 \\
+后处理实例的资源与参数独立。 & SceneRenderer 其余效果仍有静态状态，不是完整多视口。 \\
+Mask 的相机路径与光源路径各有覆盖检查。 & 旧截帧仅含相机路径，半透明排序仍未实现。 \\
+Shader 缓存按内容复用。 & 只缓存第一阶段，未给出速度提升数据。 \\
+基础回归及新增阴影、IBL 检查通过。 & 未完成全部资产、编辑器交互与长期压力测试。 \\
+RHI 已形成分阶段设计。 & Vulkan 后端、提交同步与回收方案尚未实现。 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{性能比较条件}
+保持资产、分辨率、相机和功能开关一致，注明深度预览是否开启。先预热，再重复记录 CPU 提交时间与 GPU 执行时间，保存分布和采样方法，不只挑最快一次。比较实例化时还要记录对象数、批次数和实际 Draw 数，比较缓存时区分冷缓存与命中路径。
+
+RenderDoc 截帧用于解释当帧的资源与绘制状态。若后续获取 GPU 计时，需说明工具、重复次数和捕获条件。本文没有这类测量，不能由截图中的事件数推出整体性能提升。
+
+\subsection{书籍与课程的使用边界}
+《游戏引擎架构》的分层讨论、GAMES104 的引擎职责划分，以及 GAMES101/202 的图形学内容都可作为进一步阅读。具体版本和入口保存在资料库。本文没有下载整本书，也没有拿未核对的页码替项目结论背书。
+\note{资料索引：\path{docs/Graphics-References.md}。当前架构、RHI 目标设计和排错记录分别维护，避免把计划、实现和验证混在一起。}
+\end{document}

@@ -1,26 +1,12 @@
-// =====================================================================
-// SSAO.glsl — Screen-Space Ambient Occlusion（无滤波，采样更密）
-//
-// 输入：
-//   slot 13 — 主 FBO 深度（sampler2D，直接采 .r）
-//   slot 14 — 主 FBO view-space 法线（RGBA16F，Depth_Prepass 写入）
-//   slot 15 — 4×4 随机切线纹理（GL_REPEAT）
-//
-// UBO (binding = 4, std140)：
-//   mat4 u_Projection
-//   mat4 u_InvProjection
-//   vec4 u_Params       : x=radius, y=bias, z=power, w=kernelSize
-//   vec4 u_NoiseScale   : xy = viewportSize/4
-//   vec4 u_Kernel[64]   : .xyz 半球样本，w 未用
-//
-// 输出：
-//   o_Color.r = AO（1=完全亮，0=完全遮蔽）
-//
-// 说明：
-//   为了"简单"放弃模糊 Pass，改为在一次 SSAO 运算里取更多样本（默认 64）。
-//   输出会在主 Mesh shader 里直接乘到 ambient，有轻微噪点但可接受。
-// =====================================================================
+/*
+ * 估算表面附近有多少方向被其他物体挡住，让墙角和接触处更暗。
+ * 先从深度还原表面位置，再沿表面朝向，在周围半球中放置一组测试点。
+ * 把测试点投回屏幕并查询深度：若那里真实的表面更靠近相机，就记一次遮挡。
+ * 最后把遮挡次数换成明亮程度：1 表示未遮挡，0 表示完全遮挡，用来减弱环境光。
+ * 这里只能利用屏幕里已有的深度信息，屏幕外的物体不会参与计算。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -35,6 +21,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -56,7 +43,7 @@ layout(binding = 14) uniform sampler2D u_ViewNormal;
 layout(binding = 15) uniform sampler2D u_Noise;
 
 // 从窗口 UV + [0,1] depth 反投影回 view space
-vec3 ReconstructViewPos(vec2 uv, float depth01)
+vec3 ReconstructViewPos(vec2 uv /* 屏幕 [0,1] */, float depth01 /* OpenGL 深度 */)
 {
     vec4 ndc   = vec4(uv * 2.0 - 1.0, depth01 * 2.0 - 1.0, 1.0);
     vec4 viewH = u_InvProjection * ndc;
@@ -65,7 +52,7 @@ vec3 ReconstructViewPos(vec2 uv, float depth01)
 
 void main()
 {
-    // --- 1. 深度 → view pos ---
+    // 1. 深度 → view pos
     float depth = texture(u_Depth, v_TexCoord).r;
     // 远平面或未被几何覆盖：直接输出全亮（天空）
     if (depth >= 0.9999)
@@ -76,7 +63,7 @@ void main()
 
     vec3 viewPos = ReconstructViewPos(v_TexCoord, depth);
 
-    // --- 2. view-space 法线 ---
+    // 2. view-space 法线
     vec3 N = texture(u_ViewNormal, v_TexCoord).xyz;
     // 法线 RT 清为 0 → 当作未覆盖像素，不产生 AO
     if (dot(N, N) < 0.01)
@@ -86,9 +73,10 @@ void main()
     }
     N = normalize(N);
 
-    // --- 3. 随机切线（打散带状纹） ---
+    // 3. 随机切线（打散带状纹）
     vec3 randomVec = texture(u_Noise, v_TexCoord * u_NoiseScale.xy).xyz;
-    // Gram-Schmidt 构造 TBN（N 为 Z 轴），把半球样本变到 view space
+    // 从随机方向中减去沿法线的部分，得到贴着表面的切线 T；再叉乘得到另一条切线 B。
+    // T、B、N 组成表面上的局部坐标轴，用它把半球中的样本转到当前表面朝向。
     vec3 T = normalize(randomVec - N * dot(randomVec, N));
     vec3 B = cross(N, T);
     mat3 TBN = mat3(T, B, N);
@@ -97,7 +85,7 @@ void main()
     float bias       = u_Params.y;
     int   kernelSize = int(u_Params.w);
 
-    // --- 4. 半球采样累加遮蔽 ---
+    // 4. 半球采样累加遮蔽
     float occlusion = 0.0;
     for (int i = 0; i < kernelSize; ++i)
     {
@@ -110,7 +98,7 @@ void main()
         offset.xyz /= offset.w;
         offset.xy  = offset.xy * 0.5 + 0.5;
 
-        // 屏幕外样本跳过（不贡献遮蔽，也不算"可见"）
+        // 屏幕外样本不累加遮蔽，但最终仍除以 kernelSize，屏幕边缘的遮蔽会减弱。
         if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0)
             continue;
 
@@ -118,8 +106,8 @@ void main()
         float sampleDepth01 = texture(u_Depth, offset.xy).r;
         float sceneZ = ReconstructViewPos(offset.xy, sampleDepth01).z;
 
-        // 深度超出半径范围就不算（防止远处几何产生 halo）
-        // view space 中"靠近相机" = Z 更大（负值更接近 0）
+        // 屏幕上相邻的像素，实际可能相距很远；用距离减弱这类遮挡，避免物体边缘出现黑圈。
+        // 相机朝向负 Z，所以 Z 越大（越接近 0），表面离相机越近。
         float rangeCheck = smoothstep(0.0, 1.0, radius / max(abs(viewPos.z - sceneZ), 0.0001));
 
         // 真实表面比样本点更近 → 样本被遮蔽

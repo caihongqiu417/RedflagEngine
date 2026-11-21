@@ -2,21 +2,28 @@
 
 #include "Redflag/Renderer/Shader.h"
 #include <glm/glm.hpp>
-#include <vector> // 修复 vector 报错
+#include <vector> // SPIR-V 字数组
 #include <string>
 
-// 解决 GLenum 报错
+// 仅声明 GL 枚举类型，避免在公共头中引入 glad。
 typedef unsigned int GLenum;
 
 namespace Redflag {
 
+    /*
+     * 持有链接后的 OpenGL 程序，将分阶段 GLSL 编译为 SPIR-V 并交给驱动。
+     * 磁盘缓存保存中间二进制；创建、绑定与销毁均依赖有效 OpenGL 上下文。
+     */
     class OpenGLShader : public Shader
     {
     public:
-        OpenGLShader(const std::string& filepath);
+        // ---- 创建与销毁 ----
+        OpenGLShader(const std::string& filepath, const std::string& define);
         OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
         virtual ~OpenGLShader();
 
+        // ---- 程序与参数 ----
+        // Set 系列写入当前绑定程序的 uniform，调用前先 Bind 此对象。
         virtual void Bind() const override;
         virtual void Unbind() const override;
 
@@ -32,7 +39,7 @@ namespace Redflag {
         virtual const std::unordered_map<std::string, ShaderUniformBuffer>& GetShaderUniformBuffers() const override { return m_ShaderUniformBuffers; }
         virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const override { return m_Resources; }
 
-        // [新增] 声明 UploadUniform 系列函数
+        // ---- Uniform 上传 ----
         void UploadUniformInt(const std::string& name, int value);
         void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
         void UploadUniformFloat(const std::string& name, float value);
@@ -43,23 +50,22 @@ namespace Redflag {
         void UploadUniformMat4(const std::string& name, const glm::mat4& value);
 
     private:
+        // ---- 编译阶段 ----
         std::string ReadFile(const std::string& filepath);
         std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 
-        void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
-        void CompileOrGetOpenGLBinaries();
-        void CreateProgram();
+        using ShaderBinaries = std::unordered_map<GLenum, std::vector<uint32_t>>;
+        ShaderBinaries LoadBinaries(const std::unordered_map<GLenum, std::string>& sources);
+        void CompileBinaries(ShaderBinaries& binaries);
+        void CreateProgram(const std::unordered_map<GLenum, std::string>& sources);
         void Reflect(GLenum stage, const std::vector<uint32_t>& shaderData);
 
     private:
-        uint32_t m_RendererID;
-        std::string m_FilePath; // [修复] 添加缺失的成员变量
+        uint32_t m_RendererID = 0;
+        std::string m_FilePath; // 源文件路径，用于定位编译错误
         std::string m_Name;
 
-        std::unordered_map<GLenum, std::vector<uint32_t>> m_VulkanSPIRV;
-        std::unordered_map<GLenum, std::vector<uint32_t>> m_OpenGLSPIRV;
-        std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
-
+        // 当前 Reflect 仅记录日志，以下查询表尚未填充。
         std::unordered_map<std::string, ShaderUniformBuffer> m_ShaderUniformBuffers;
         std::unordered_map<std::string, ShaderResourceDeclaration> m_Resources;
     };

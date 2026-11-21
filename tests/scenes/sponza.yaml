@@ -1,0 +1,22 @@
+Name: Sponza
+Model: ../../RedflagForge/assets/models/reference/Sponza/Sponza.gltf
+Size: [1280, 720]
+ModelSize: 20
+ModelRotation: [0, 0, 0]
+Eye: [-5.5, -2.2, 0]
+Target: [6, -1.8, 0]
+Fov: 65
+Near: 0.05
+Far: 100
+Direction: [0.25, -1, 0.3]
+LightIntensity: 4
+PointPosition: [-2, -1, 0]
+PointIntensity: 2
+PointRadius: 20
+ShadowHalfSize: 13
+SSAO: true
+RSM: true
+RSMIntensity: 1
+RSMRadius: 0.2
+Exposure: 1.4
+Frames: 12

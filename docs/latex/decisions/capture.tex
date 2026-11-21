@@ -1,0 +1,30 @@
+\section{RenderDoc 材质与附件核对}
+裁剪规则在源码里一致，还需要确认选定绘制真正使用了这些输入。下面采用与排错文档相同的捕获，从输出检查当前选择的结果，避免把接口名称当作实现证据。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.94\linewidth]{../../../output/captures/renderdoc-eid28-depth.jpg}
+\caption{RenderDoc 1.47 实际回放界面：EID 28 的 D32 深度输出。事件列表同时保留后续主绘制分组与中间清屏}
+\end{figure}
+
+\subsection{实际材质输入}
+回放读取了两次绘制正在使用的材质数据。它们的底色 alpha 都为 0.75，底色与透明度贴图开关均开启，Mask 阈值为 0.5。四条纹的输入如下，低值精确为 $64/255$。
+
+\begin{tabularx}{\textwidth}{L{4.3cm}YYYY}
+\toprule
+输入与结果 & 左 & 中左 & 中右 & 右 \\
+\midrule
+底色贴图 alpha & 1 & $64/255$ & 1 & 1 \\
+透明度贴图红通道 & 1 & 1 & $64/255$ & 1 \\
+相乘后的 alpha & 0.75 & $\approx0.188$ & $\approx0.188$ & 0.75 \\
+深度覆盖 & 保留 & 丢弃 & 丢弃 & 保留 \\
+\bottomrule
+\end{tabularx}
+
+全部 1024 个像素通过回放核对。EID 28 和 EID 52 的深度逐字节一致，两侧为 0.5，中间为清屏值 1.0。主绘制的实体 ID 对应为 42 和 -1。
+
+这支持本轮统一材质规则的修改，不证明半透明排序、阴影或 RSM 已经正确。资产身份与缓存由各自测试验证，不能从这张深度图推出。
+
+\textbf{性能边界。}捕获使用 RenderDoc 1.33 应用接口，1.47 成功回放，设备为 RTX 5070 Ti Laptop GPU。驱动在 EID 28 提示顶点着色器因 GL 状态重新编译，但没有其持续时间和重复频率。两次六索引绘制与这条提示均不足以推导完整场景帧率，尚未获取 GPU 计时。
+
+\note{原始捕获及回放数值见 \path{output/captures/}，详细坐标和工具范围记录在排错文档。}

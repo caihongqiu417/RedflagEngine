@@ -133,7 +133,7 @@ int main()
 	ExpectError([&] { AssetManager::Add<TestAsset>(duplicate.string()); });
 	fs::remove(duplicate.string() + ".rfmeta");
 
-	// 类型不匹配不调用加载器；加载失败不写缓存，可以再次尝试。
+	// 类型不匹配不调用加载器。加载失败不写缓存，可以再次尝试。
 	assert(!AssetManager::Load<FailedAsset>(id));
 	assert(FailedAsset::Attempts == 0);
 	ExpectError([&] { AssetManager::Add<FailedAsset>(moved.string()); });

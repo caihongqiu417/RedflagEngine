@@ -1,0 +1,41 @@
+Name: CornellBox
+Model: ../../RedflagForge/assets/models/reference/CornellBox/CornellBox.obj
+Size: [1024, 768]
+ModelSize: 4
+ModelRotation: [0, 0, 0]
+Eye: [0, 0, 7.8]
+Target: [0, 0, 0]
+Fov: 45
+Near: 0.05
+Far: 100
+Direction: [-0.6, -0.6, -1]
+LightIntensity: 3
+PointPosition: [0, 1.4, 0]
+PointIntensity: 1
+PointRadius: 6
+ShadowHalfSize: 4
+SSAO: true
+RSM: true
+RSMIntensity: 1
+RSMRadius: 0.4
+Exposure: 1
+Frames: 12
+Result:
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2
+  OpenGL: 4.6.0 NVIDIA 616.56
+  Submeshes: 5
+  Vertices: 64
+  Indices: 96
+  DrawCalls: 22
+  Culled: 0
+  VisiblePixels: 397212
+  HDRFinite: true
+  Scene: assets/scenes/Reference-CornellBox.redflag
+  ReopenedSceneRendered: true
+  ModelID: 14804261086960446472
+  Scale: 1.97044337
+  Translation:
+    - 0.0197044145
+    - -1.9605912
+    - 0.0492610373
+  ImageSource: SceneRenderer final LDR texture, direct readback

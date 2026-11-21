@@ -1,0 +1,7 @@
+Renderer3DTests 用真实 OpenGL 绘制固定通量密度 $(1,0.25,0)$。距离为 1、投影边长为 4、UV 半径为 0.2，两端正对时，红通道读回符合 $0.8^2/\pi\approx0.20372$，误差小于 0.001。保持世界采样半径、改变投影宽度和 UV 半径，结果一致。距离变为 2 后贡献降为四分之一。
+
+RSMDepth 的独立绘制还比较正照和斜照，投影通量密度相同，背面与纯金属为零。DepthPrepassTests 则检查接收材质，纯金属在有、无红色 RSM 输入时结果一致。这些输入检查公式、面积与材质约定，不证明复杂场景没有漏光或时域噪声。
+
+SceneRenderTests 的 61 项检查通过，其中包含 16、32、128 样本的实际圆盘参数，以及模式、投影、光源、RSM 参数和场景切换后的历史重置。普通相机移动保留历史。独立 Shader 输入还验证上一帧裁剪范围外的点不会混入历史颜色。物体运动与前帧表面深度仍未参与判定。
+
+\note{源码：\path{tests/Renderer3DTests.cpp}、\path{tests/DepthPrepassTests.cpp}、\path{tests/SceneRenderTests.cpp}。持久记录：\path{output/validation/rsm-regression.txt}；场景对照目录：\path{output/scenes/rsm/}。}

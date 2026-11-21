@@ -1,7 +1,7 @@
 #pragma once
 
 
-//-------------Core----------------
+// Core
 #include "Redflag/Core/Application.h"
 
 #include"Redflag/Core/Layer.h"
@@ -14,10 +14,10 @@
 #include"Redflag/Core/KeyCode.h"
 #include"Redflag/Core/MouseButtonCode.h"
 #include"Redflag/Core/Input.h"
-//-------------Core----------------
+// Core
 
 
-//-------------Renderer----------------
+// Renderer
 #include"Redflag/Renderer/Renderer.h"
 #include"Redflag/Renderer/Renderer2D.h"
 #include"Redflag/Renderer/Renderer3D.h"
@@ -38,18 +38,18 @@
 #include"Redflag/Renderer/OrthographicCameraController.h"
 
 #include"Redflag/Renderer/Framebuffer.h"
-//-------------------------------------
+// ----------
 
-//-------------Particle----------------
+// Particle
 #include"Redflag/ParticleSystem/ParticleSystem.h"
-//-------------------------------------
+// ----------
 
 
-//----------------ECS------------------
+// ECS
 #include"Redflag/Scene/Entity.h"           // 1. �������Entity
 #include"Redflag/Scene/ScriptableEntity.h"  // 2. ����Entity
 #include"Redflag/Scene/Components.h"        // 3. ����Entity��ScriptableEntity
 #include"Redflag/Scene/Scene.h"             // 4. ������������
-//-------------------------------------
+// ----------
 
 

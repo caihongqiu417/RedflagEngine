@@ -6,12 +6,12 @@
 
 namespace Redflag{
 	
-	Ref<Shader> Shader::Create(const std::string& filepath)
+	Ref<Shader> Shader::Create(const std::string& filepath, const std::string& define)
 	{
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: RF_CORE_ASSERT(false, "RendererAPI::None is currently not supported!!");
-			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(filepath);
+			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(filepath, define);
 		}
 		RF_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
@@ -60,9 +60,8 @@ namespace Redflag{
 	}
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		//检查是否存在，如果存在就返回这个shader对象，否则断言失败
-		RF_CORE_ASSERT(!Exists(name), "Shader not found!!");
-		return m_Shaders[name];
+		// 按名获取；缺失时抛出 out_of_range，不向库中插入空项。
+		return m_Shaders.at(name);
 	}
 
 	bool ShaderLibrary::Exists(const std::string& name) const

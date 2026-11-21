@@ -207,7 +207,7 @@ namespace Redflag {
 		ModelRendererComponent(const ModelRendererComponent&) = default;
 	};
 
-	// ---------------------------------------------------------------
+	// ----------
 	// 方向光组件 — 模拟无限远的平行光源（太阳光）
 	//
 	// Direction 是光线射出的方向（世界空间），shader 中通常取反
@@ -215,7 +215,7 @@ namespace Redflag {
 	//
 	// CastShadow 标记该灯是否参与 Shadow Map 生成，
 	// 阶段 5 实现 Shadow Pass 时会读取这个标志。
-	// ---------------------------------------------------------------
+	// ----------
 	struct DirectionalLightComponent
 	{
 		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f }; // 默认从正上方往下照
@@ -227,7 +227,7 @@ namespace Redflag {
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
 	};
 
-	// ---------------------------------------------------------------
+	// ----------
 	// 点光源组件 — 从一个点向四周均匀辐射
 	//
 	// 位置由实体的 TransformComponent 决定，这里不重复存储。
@@ -237,7 +237,7 @@ namespace Redflag {
 	// 衰减公式（后续 shader 中使用）：
 	//   attenuation = clamp(1.0 - (distance / Radius)^2, 0, 1)^2
 	// 这是 UE4 风格的平滑衰减，避免硬截断。
-	// ---------------------------------------------------------------
+	// ----------
 	struct PointLightComponent
 	{
 		glm::vec3 Color     = { 1.0f, 1.0f, 1.0f };
@@ -249,12 +249,12 @@ namespace Redflag {
 		PointLightComponent(const PointLightComponent&) = default;
 	};
 
-	// ---------------------------------------------------------------
+	// ----------
 	// 2D 粒子发射器组件
 	//
 	// 将 ParticleSystem 的粒子属性包装为 ECS 组件，附加到实体后
 	// 以 EmissionRate 速率从实体 Transform 位置持续发射粒子。
-	// ---------------------------------------------------------------
+	// ----------
 	struct ParticleEmitterComponent
 	{
 		// --- 粒子外观 ---
@@ -286,12 +286,12 @@ namespace Redflag {
 		ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
 	};
 
-	// ---------------------------------------------------------------
+	// ----------
 	// 2D 纹理动画组件（精灵表帧动画）
 	//
 	// 配合 SpriteRendererComponent 使用：Sprite 上的纹理作为精灵表，
 	// 此组件控制每帧显示哪一帧子纹理。
-	// ---------------------------------------------------------------
+	// ----------
 	struct TextureAnimationComponent
 	{
 		int   Columns        = 1;       // 精灵表列数

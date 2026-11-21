@@ -1,0 +1,116 @@
+{
+  "opengl": "4.6.0 NVIDIA 616.56",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "gpu_timing": "not measured",
+  "png_source": "SceneRenderer final LDR direct readback; CornellBox-replay.png is RenderDoc SaveTexture output, byte-identical",
+  "replay_version": "1.47",
+  "capture_dll_version": "1.33.0.0",
+  "files": [
+    {
+      "file": "CornellBox_capture.rdc",
+      "bytes": 19269445,
+      "sha256": "52a4be8aab0b42fa59e66a519221d5e2350b0faff6c3ae66f68945492f3599d4"
+    },
+    {
+      "file": "CornellBox-render.log",
+      "bytes": 14486,
+      "sha256": "31552b07c9dffe4807a73552594a7d81bde7124784beabbd7ee0622d76b67863"
+    },
+    {
+      "file": "CornellBox-replay.json",
+      "bytes": 57851,
+      "sha256": "b34956567d13bdedc0ea1b0753703065e6818a52ecea920f613ce47cf82201e3"
+    },
+    {
+      "file": "CornellBox-replay.png",
+      "bytes": 531038,
+      "sha256": "b2dc2380f566563d6379c92de2b94edb97e4d7ebe5e24475ff3ebc764639fbd8"
+    },
+    {
+      "file": "CornellBox.png",
+      "bytes": 531038,
+      "sha256": "b2dc2380f566563d6379c92de2b94edb97e4d7ebe5e24475ff3ebc764639fbd8"
+    },
+    {
+      "file": "CornellBox.yaml",
+      "bytes": 925,
+      "sha256": "3e22b0060ad45b6a2a664f6e8aee6afbe43781ace1cddba3a05162295e0fa779"
+    },
+    {
+      "file": "README.md",
+      "bytes": 4233,
+      "sha256": "35d532aa64b67a62f250c22684dd620e104cb7a151b56a17cba165c6c4eb6e45"
+    },
+    {
+      "file": "rsm/after-analysis.json",
+      "bytes": 11714,
+      "sha256": "d829d7ee3afe5687a97413f34b7c8fc5774e28801db9dca2179aa58c0ac06da0"
+    },
+    {
+      "file": "rsm/before-analysis.json",
+      "bytes": 8861,
+      "sha256": "74870fe804de18df38c97a83bc8c92c75106df4f38d21224be1ebdee28534f3f"
+    },
+    {
+      "file": "rsm/before-CornellBox.png",
+      "bytes": 450084,
+      "sha256": "ed1e5888719edfeb1896bbe52cfb1ca9b7db89b3899d80f23973a56596baf89b"
+    },
+    {
+      "file": "rsm/before-CornellBox.yaml",
+      "bytes": 925,
+      "sha256": "45b33eed7bc32206f2ae668d74406f69c0a0275dad283c4ea82944a1878a56be"
+    },
+    {
+      "file": "rsm/before-Sponza.png",
+      "bytes": 2930915,
+      "sha256": "05ff8b76eebe1cf0574ada18bbf52eed375e30fd454530901306e8e762b870da"
+    },
+    {
+      "file": "rsm/before-Sponza.yaml",
+      "bytes": 933,
+      "sha256": "0c36de2f3626ec662a007b63c8103cda0ace15e6a7758b5ed60709f2dffea177"
+    },
+    {
+      "file": "rsm/Cornell-RSM.png",
+      "bytes": 801114,
+      "sha256": "6d4fe31b0c84a74b458837ce31db8bae6a9abec123618b1d402f6de1c0cccb96"
+    },
+    {
+      "file": "rsm/figure-source.json",
+      "bytes": 573,
+      "sha256": "3b1facbd3d7b51150e98d25b32cf1072de9b89d183b345aa35ee2e71807be2f9"
+    },
+    {
+      "file": "rsm/measurements.csv",
+      "bytes": 3095,
+      "sha256": "697e1de170476685b120d8e36809ee74a0ac10a6da4513def17635adcc4eae6f"
+    },
+    {
+      "file": "rsm/README.md",
+      "bytes": 3815,
+      "sha256": "515c067ce66614119d82b939df9a156d527fbd08500f96e0f370929353622e12"
+    },
+    {
+      "file": "scene-stability.json",
+      "bytes": 401,
+      "sha256": "d239ae1b00a01aff35ef9500855f27748a4f792de4ea3e05c51bf1a960005e16"
+    },
+    {
+      "file": "Sponza-render.log",
+      "bytes": 545028,
+      "sha256": "3a63a0e538599b345304d55dfa0e6cdafdf0d5975b034964fb58021b4b7dc37b"
+    },
+    {
+      "file": "Sponza.png",
+      "bytes": 2934857,
+      "sha256": "7935c18322db1f519278dfe6c6de08d2c86000cdda62ff414f6cc922885833bb"
+    },
+    {
+      "file": "Sponza.yaml",
+      "bytes": 933,
+      "sha256": "515cb1357dab7f6208202c3385cd71d32d1a2f14804eb5c97a70477565d8289f"
+    }
+  ],
+  "rsm_comparison": "See rsm/README.md for fixed-parameter before/after and x4 diagnostic display"
+}

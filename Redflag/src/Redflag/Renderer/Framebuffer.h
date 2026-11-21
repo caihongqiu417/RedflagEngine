@@ -8,7 +8,7 @@ namespace Redflag {
 	{
 		None = 0,
 
-		// ==================== 颜色格式 ====================
+		// 颜色格式
 
 		// 8-bit RGBA，每通道 0~255，适合 LDR 颜色（Albedo、UI 等）
 		RGBA8,
@@ -23,7 +23,7 @@ namespace Redflag {
 		// 32-bit 整数单通道，用于存储 Entity ID（编辑器拾取）
 		RED_INTEGER,
 
-		// ==================== 深度格式 ====================
+		// 深度格式
 
 		// 24-bit 深度 + 8-bit 模板，最常用的深度附件格式
 		DEPTH24STENCIL8,
@@ -32,7 +32,7 @@ namespace Redflag {
 		// shader 采样（用于 Shadow Map、SSAO 等需要读取深度的场景）
 		DEPTH32F,
 
-		// ==================== 别名 ====================
+		// 别名
 		Depth = DEPTH24STENCIL8
 	};
 
@@ -67,22 +67,31 @@ namespace Redflag {
 
 		uint32_t Samples = 1; //不开启MSAA
 		
-		bool SwapChainTarget = false; // false: 用户自己创建的帧缓冲区（内容需手动拷贝到交换链才能显示) true:  直接使用交换链的后缓冲区（调用Present后自动显示到屏幕）
+		bool SwapChainTarget = false; // 当前 OpenGLFramebuffer 未使用此标志，仍创建离屏 FBO。
 	};
 
+	/*
+	 * 离屏渲染目标，按规格创建并持有颜色/深度附件。Bind 同时设置目标像素尺寸的视口。
+	 * 当前接口返回 OpenGL 对象名；这些 ID 只供借用，Resize 重建附件后须重新查询。
+	 */
 	class Framebuffer
 	{
 	public:
 		virtual ~Framebuffer() = default;
 
+		// ---- 目标与尺寸 ----
 		virtual void Bind() = 0;
 		virtual void Unbind() = 0;
 
 		virtual void Resize(uint32_t width,uint32_t height)=0;
+		// ---- CPU 读写 ----
+		// 仅支持 RED_INTEGER；调用前绑定此 FBO 为读取目标，x/y 以左下角为原点且须在附件范围内。
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
 
+		// 整数附件写入 value，浮点/归一化附件把 value 数值转换为 float 并填充各通道。
 		virtual void ClearAttachment(uint32_t attachmentIndex,int value)=0;
 		
+		// ---- 后端资源查询 ----
 		virtual uint32_t GetColorAttachmentRendererID(uint32_t index=0) const = 0;
 
 		// 返回 FBO 自身的 GL 对象 ID（不是纹理 ID）

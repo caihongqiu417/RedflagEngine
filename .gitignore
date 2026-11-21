@@ -418,6 +418,9 @@ RedflagForge/**/*.json
 # Redflag Profiling
 RedflagProfile-*.json
 
+# OpenGL Shader 编译结果由当前源码在本机生成。
+/RedflagForge/assets/cache/shader/opengl/*.spv
+
 # Large asset packs (models, textures, fonts etc. — managed outside git)
 RedflagForge/assets/models/
 RedflagForge/assets/textures/

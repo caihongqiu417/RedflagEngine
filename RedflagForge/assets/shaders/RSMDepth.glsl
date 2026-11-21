@@ -1,33 +1,16 @@
-// =====================================================================
-// RSMDepth.glsl — Reflective Shadow Map 生成（间接光一次弹射）
-//
-// 作用：
-//   从光源视角渲染场景，把每个表面看做一个"虚拟点光源 (VPL)"，
-//   把它的出射光通量、世界坐标、世界法线分别写到 3 张 MRT 颜色附件，
-//   主 Pass 再随机采样这些 VPL 计算 1-bounce 间接漫反射。
-//
-//   颜色附件：
-//     0 — Flux     (RGBA16F)  rgb = albedo × lightColor × lightIntensity × NdotL
-//     1 — WorldPos (RGBA16F)  rgb = 世界空间位置
-//     2 — Normal   (RGBA16F)  rgb = 世界空间法线压缩到 [0,1]
-//   深度附件：
-//     DEPTH32F      gl_FragDepth 由固定管线写入；本 shader 不直接采样
-//
-// UBO 约定（与主 shader / ShadowDepth 完全一致）：
-//   binding 0 — Camera    : 主要用 LightSpaceMatrix
-//   binding 1 — Transform : 逐物体模型矩阵
-//   binding 2 — Material  : BaseColor + texture flags（取 albedo）
-//   binding 3 — Lights    : 取第一盏方向光的 Direction / Color
-//
-// 纹理槽位（与主 shader 保持一致，UploadMaterial 会绑好）：
-//   slot 3 — BaseColorMap
-// =====================================================================
+/*
+ * 为计算一次反射光，记录灯光照到的表面信息。
+ * 除了阴影所需的深度，还记录表面位置、朝向和反射光的颜色强度。
+ * 后续把这些受光表面当作许多小光源，估算它们能照亮周围多少区域。
+ * 这里使用第一盏方向光。颜色贴图决定反射的颜色，只记录朝向灯光的一面。
+ * 镂空表面沿用主画面的透明度裁剪，不让透明区域成为反射光源。
+ */
 
-// =========================== 顶点着色器 =============================
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
-// ---- 顶点属性（与 MeshVertex 布局一致）----
+// 顶点属性（与 MeshVertex 布局一致）
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
@@ -59,7 +42,7 @@ void main()
     vec4 worldPos = u_Transform * vec4(a_Position, 1.0);
     v_WorldPos    = worldPos.xyz;
 
-    // 用法线矩阵处理非均匀缩放；和主 shader 一致
+    // 用法线矩阵处理非均匀缩放，和主 shader 一致
     mat3 normalMatrix = mat3(transpose(inverse(u_Transform)));
     v_WorldNormal     = normalize(normalMatrix * a_Normal);
 
@@ -67,7 +50,7 @@ void main()
     gl_Position   = u_LightSpaceMatrix * worldPos;
 }
 
-// =========================== 片元着色器 =============================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -118,40 +101,48 @@ layout(std140, binding = 3) uniform Lights
 
 // 主 shader 约定槽位：BaseColorMap = slot 3
 layout(binding = 3) uniform sampler2D u_BaseColorMap;
+layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;
+layout(binding = 10) uniform sampler2D u_AlphaMap;
 
 // MRT 输出
-layout(location = 0) out vec4 o_Flux;      // 出射光通量
+layout(location = 0) out vec4 o_Flux;      // 每单位光源投影面积的反射通量
 layout(location = 1) out vec4 o_WorldPos;  // 世界坐标
 layout(location = 2) out vec4 o_Normal;    // 世界法线（压到 [0,1]）
 
 void main()
 {
-    // ---- albedo（与主 shader 保持一致：sRGB → Linear）----
-    vec3 albedo = u_BaseColor.rgb;
+    // albedo（与主 shader 保持一致：sRGB → Linear）
+    vec4 baseColor = u_BaseColor;
     if (u_UseBaseColorMap == 1)
     {
         vec4 texColor = texture(u_BaseColorMap, v_TexCoord);
         texColor.rgb  = pow(texColor.rgb, vec3(2.2));
-        albedo       *= texColor.rgb;
+        baseColor *= texColor;
     }
 
-    // ---- 取第一盏方向光（无方向光时输出全 0，主 Pass 自然得到 0 间接光）----
-    vec3 lightDir   = vec3(0.0, -1.0, 0.0);
-    vec3 lightColor = vec3(0.0);
-    if (u_NumDirectionalLights > 0)
+    // 覆盖率与主画面一致；Opaque 忽略 alpha，Mask 才裁剪。
+    if (u_AlphaMode == 1)
     {
-        lightDir   = u_DirLights[0].Direction.xyz;
-        lightColor = u_DirLights[0].Color.xyz * u_DirLights[0].Color.w;
+        float alpha = baseColor.a;
+        if (u_UseAlphaMap == 1)
+            alpha *= texture(u_AlphaMap, v_TexCoord).r;
+        if (alpha < u_AlphaCutoff)
+            discard;
     }
 
-    // L = 表面 → 光源
-    vec3 L     = normalize(-lightDir);
-    vec3 N     = normalize(v_WorldNormal);
-    float NdL  = max(dot(N, L), 0.0);
+    float metallic = u_Metallic;
+    if (u_UseMetallicRoughnessMap == 1)
+        metallic *= texture(u_MetallicRoughnessMap, v_TexCoord).b;
+    vec3 diffuse = baseColor.rgb * (1.0 - metallic);
 
-    // 简化：用 Lambert 漫反射近似出射光通量
-    // Flux = albedo × lightColor × NdotL
-    o_Flux     = vec4(albedo * lightColor * NdL, 1.0);
+    // 方向光下每个纹素覆盖相同的投影面积。斜面的实际面积增加，
+    // 恰好抵消入射余弦；这里用朝向排除背面，圆盘面积在收集时计入。
+    vec3 N = normalize(v_WorldNormal);
+    vec3 fluxDensity = vec3(0.0);
+    if (u_NumDirectionalLights > 0 && dot(N, -u_DirLights[0].Direction.xyz) > 0.0)
+        fluxDensity = diffuse * u_DirLights[0].Color.rgb * u_DirLights[0].Color.w;
+
+    o_Flux     = vec4(fluxDensity, 1.0);
     o_WorldPos = vec4(v_WorldPos, 1.0);
     o_Normal   = vec4(N * 0.5 + 0.5, 1.0);
 }

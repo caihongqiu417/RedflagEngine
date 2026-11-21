@@ -1,0 +1,15 @@
+{
+  "method": "qrenderdoc --ui-python; QScreen.grabWindow",
+  "event": 52,
+  "status": "failed visual verification",
+  "selected_event": 52,
+  "current_event": 52,
+  "resource": "ResourceId::58",
+  "histogram_range": "(-1.0, 42.0)",
+  "picked_location": "(4, 16)",
+  "size": [
+    1440,
+    960
+  ],
+  "failure": "Offscreen QWidget.grab omitted the native GPU texture pane; QScreen.grabWindow returned a black image. No screenshot published."
+}

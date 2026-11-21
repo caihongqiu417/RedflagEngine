@@ -1,22 +1,11 @@
-// =====================================================================
-// Bloom_Brightness.glsl — 亮度提取 Pass
-//
-// 用途：从 HDR 渲染结果中提取亮度超过阈值的片元，
-//       作为 Bloom 效果的输入（下采样金字塔的第 0 层）。
-//
-// 算法：
-//   1. 采样 HDR 纹理
-//   2. 计算感知亮度（Luminance）：加权 RGB，符合人眼对各通道敏感度
-//   3. 软截断：brightness = c * max(0, lum - threshold) / max(lum, ε)
-//      效果：亮度恰好等于 threshold 时输出为零，超出越多保留越多，平滑过渡
-//
-// 槽位：
-//   layout(binding=0) u_HDR — 主 FBO attachment0（RGBA16F HDR）
-//
-// Uniforms：
-//   u_Threshold — 亮度阈值，ImGui 可调（默认 1.0）
-// =====================================================================
+/*
+ * 光晕的第一步：从场景图像中提取亮的部分。
+ * 后续会把亮部图缩小并模糊，再加回原图，让灯光和高光向周围扩散。
+ * 这里用 RGB 的加权值判断亮度。阈值附近逐渐增加贡献，避免亮部边缘突然截断。
+ * 提取后的颜色还会压低，控制后续多次叠加产生的亮度。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -35,7 +24,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
-// ========================== 片元着色器 ==========================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -46,9 +35,9 @@ layout(location = 0) in vec2 v_TexCoord;
 // HDR 输入纹理（主 FBO attachment0，RGBA16F）
 layout(binding = 0) uniform sampler2D u_HDR;
 
-// Bloom 参数 UBO（shaderc/Vulkan 不允许块外非 opaque uniform）
+// CPU 把 Bloom 参数一起上传，下面的字段顺序与 PostProcess 保持一致
 // u_BloomA.x = Threshold, y = Intensity, z = Radius, w = unused
-// u_BloomB.xy = TexelSize,           zw = unused
+// u_BloomB.xy = TexelSize, z = Exposure, w = unused
 layout(std140, binding = 5) uniform BloomParams
 {
     vec4 u_BloomA;
@@ -56,7 +45,8 @@ layout(std140, binding = 5) uniform BloomParams
 };
 #define u_Threshold (u_BloomA.x)
 
-vec3 SanitizeHDR(vec3 color)
+/* 过滤 NaN 与极大值，再限制到 [0,64]，避免异常分量扩散到整张后处理纹理。 */
+vec3 SanitizeHDR(vec3 color /* 线性 RGB */)
 {
     // 某些驱动在当前 shader 缓存链里对 isnan/isinf 不够稳定。
     // 这里改成：NaN 用 x != x 检出，Inf 用大值阈值拦截。
@@ -73,14 +63,13 @@ void main()
 {
     vec3 c = SanitizeHDR(texture(u_HDR, v_TexCoord).rgb);
 
-    // ---- 感知亮度（ITU-R BT.601）----
-    // 绿色权重最高（人眼最敏感），蓝色最低
+    // ---- 线性 RGB 加权亮度 ----
+    // 人眼对绿色更敏感，因此绿色的权重最高。lum 是用来比较阈值的单个亮度值。
     float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
 
-    // ---- 软阈值 + Knee ----
-    // 直接用 max(lum-threshold, 0) 在 HDR 场景里容易保留过多能量，
-    // 导致稍微亮一些的大片区域也被当作 Bloom 光源，最后整屏发白。
-    // 这里使用 soft knee，让阈值附近平滑进入 Bloom。
+    // ---- 亮度阈值附近逐渐过渡 ----
+    // hard 是超过阈值的亮度；soft 在阈值前后各 knee 的范围内平滑接入。
+    // 取较大值后除以原亮度，得到应保留的颜色比例，RGB 三个通道一起缩放。
     float knee = max(u_Threshold * 0.5, 0.0001);
     float soft = lum - u_Threshold + knee;
     soft = clamp(soft, 0.0, 2.0 * knee);
@@ -90,8 +79,7 @@ void main()
 
     vec3 bloom = c * contribution;
 
-    // 再做一次能量压缩，把提取结果压进 [0,1)。
-    // 这样 Bloom 图本身就不会携带过高 HDR 值，后面即使模糊叠加也不容易把整屏冲白。
+    // 用 c/(1+c) 压低过亮的颜色。例如 1 变为 0.5，9 变为 0.9，避免光晕叠加后整片发白。
     bloom = bloom / (vec3(1.0) + bloom);
 
     o_Color = vec4(clamp(bloom, 0.0, 1.0), 1.0);

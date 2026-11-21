@@ -22,10 +22,10 @@
 
 namespace Redflag {
 
-    // =================================================================
+    // ----------
     // 编辑器 Gizmo 绘制辅助函数
     // 在 Renderer2D::BeginScene / EndScene 之间调用
-    // =================================================================
+    // ----------
 
     static void DrawCameraGizmo(const TransformComponent& tc, const glm::vec4& color)
     {
@@ -86,7 +86,7 @@ namespace Redflag {
         Renderer2D::DrawLine(pos, pos + dir * rayLen, color);
     }
 
-    // ---------------------------------------------------------------
+    // ----------
     // DrawPointLightGizmo — 点光源可视化
     //
     // 设计目标：一眼能看懂"哪里是灯"以及"照多远"，但不要抢主视觉。
@@ -95,7 +95,7 @@ namespace Redflag {
     //   2. 四周短光线：8 条从 bulb 表面往外射的小段，指示"发光感"
     //   3. 影响范围：单个 XZ 平面的虚线环 + 8 条细立柱，用更暗的 alpha
     //      → 半径大时不会被线填满画面；关心时仍能读到范围
-    // ---------------------------------------------------------------
+    // ----------
     static void DrawPointLightGizmo(const glm::vec3& pos, float radius, const glm::vec4& color)
     {
         // ---- bulb：固定半径的小线框球 ----
@@ -658,7 +658,7 @@ namespace Redflag {
             ImGui::PopStyleVar(2);
         }
 
-        // Draw Call 明细面板 —— 每帧把 Renderer3D 提交执行的每次 draw 都列出
+        // Draw Call 明细面板：每帧把 Renderer3D 提交执行的每次 draw 都列出
         {
             ImGui::Begin("Draw Calls");
             const auto& log = Renderer3D::GetDrawCallLog();
@@ -1216,7 +1216,7 @@ namespace Redflag {
         return false;
     }
 
-    // ==================================================================
+    // ----------
     // 场景状态切换
     //
     //  Edit ──[Play 按钮]──────► Play
@@ -1227,7 +1227,7 @@ namespace Redflag {
     //  Play     : 复制副本 → OnRuntimeStart（脚本+物理）→ 场景主相机渲染
     //  Simulate : 复制副本 → OnSimulationStart（仅物理）→ EditorCamera 渲染
     //  Stop     : 停止物理/脚本，丢弃副本，恢复 m_EditorScene
-    // ==================================================================
+    // ----------
 
     void ForgeLayer::OnScenePlay()
     {

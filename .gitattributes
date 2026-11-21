@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Frame captures and measurement reports keep the exact bytes in their SHA-256 manifests.
+output/captures/** -text whitespace=cr-at-eol
+output/profiling/** -text whitespace=cr-at-eol
+output/scenes/** -text whitespace=cr-at-eol

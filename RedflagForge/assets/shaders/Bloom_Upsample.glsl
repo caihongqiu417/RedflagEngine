@@ -1,26 +1,11 @@
-// =====================================================================
-// Bloom_Upsample.glsl — 泊松圆盘上采样 Pass
-//
-// 用途：在 Bloom 上采样链中，把更低分辨率（更大半径）的模糊结果
-//       采样后以加法叠加到上一层（更高分辨率层）。
-//
-// 算法：泊松圆盘采样（12 点）
-//   泊松分布的采样点相比均匀网格更随机，能避免方格状的规律纹理，
-//   获得更自然的圆形散射效果。
-//
-//   所有 12 个采样点等权重（1/12），采样后求和得到上采样颜色。
-//   调用方使用 GL_ONE/GL_ONE 加法 blend，本 shader 直接输出采样颜色，
-//   由 OpenGL 混合单元完成与已有内容的叠加。
-//
-// 槽位：
-//   layout(binding=0) u_Src — 当前层（更低分辨率 / 更大半径）纹理
-//
-// Uniforms：
-//   u_TexelSize — 输入纹理的单纹素大小（= 1.0 / textureSize），
-//                 用于将采样半径从"纹素数"换算到 UV 偏移
-//   u_Radius    — 泊松圆盘的采样半径（纹素单位，默认 1.0）
-// =====================================================================
+/*
+ * 把较小的亮部图放大，逐层加回较大的图，形成光晕。
+ * 每个像素读取周围 12 个位置的颜色并取平均，亮点就会扩散到附近像素。
+ * 小图上的一个像素覆盖原图更大的区域，因此小图提供较宽的光晕，大图保留细节。
+ * 每层结果再乘 0.35，避免逐层相加后过亮；加法混合由 PostProcess 设置。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -33,7 +18,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
-// ========================== 片元着色器 ==========================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -46,7 +31,7 @@ layout(binding = 0) uniform sampler2D u_Src;
 
 // Bloom 参数 UBO（与 Bloom_Brightness / PostProcess_Composite 共享 binding=5）
 // A.x=Threshold, A.y=Intensity, A.z=Radius, A.w=unused
-// B.xy=TexelSize, B.zw=unused
+// B.xy=TexelSize, B.z=Exposure（此阶段未用）, B.w=unused
 layout(std140, binding = 5) uniform BloomParams
 {
     vec4 u_BloomA;
@@ -57,12 +42,8 @@ layout(std140, binding = 5) uniform BloomParams
 
 void main()
 {
-    // ---- 泊松圆盘采样点（12 点，单位圆内均匀分布）----
-    //
-    // 这 12 个向量分布在单位圆内，覆盖不同方向和距离，
-    // 避免均匀网格的重复/规律性，采样出来的模糊更圆润自然。
-    //
-    // 坐标来源：Poisson disk with min distance ~0.37，12 points
+    // ---- 固定圆盘采样核 ----
+    // 12 个偏移覆盖不同方向和距离；每个目标像素使用相同采样核。
     const vec2 poissonDisk[12] = vec2[12](
         vec2(-0.326,  0.406),
         vec2(-0.840, -0.074),
@@ -81,12 +62,12 @@ void main()
     // 每个采样点的等权重（等权重平均）
     const float weight = 1.0 / 12.0;
 
-    // 这一层上采样的增益。
-    // 旧实现把低频结果 1:1 加回上一层，容易让能量在多级链里快速膨胀。
-    // 这里给一个更保守的系数，先把“整屏发白”压住，再继续微调观感。
+    // 每层乘 0.35，控制多层加法叠加的增益。
     const float upsampleGain = 0.35;
 
-    // 采样偏移量 = 圆盘点坐标 × 纹素大小 × 半径
+    // ---- 找到周围的采样位置 ----
+    // UV 从 0 到 1 覆盖整张纹理，所以一个纹理像素对应的偏移是 1/纹理尺寸。
+    // 把以像素计的半径换成 UV 偏移，再用圆盘中的方向分散到周围 12 个位置。
     vec2 scale = u_TexelSize * u_Radius;
 
     vec3 result = vec3(0.0);
@@ -97,6 +78,6 @@ void main()
     }
     result *= weight * upsampleGain;
 
-    // 直接输出采样结果；调用方使用 GL_ONE/GL_ONE 加法 blend 叠加到目标层
+    // 直接输出采样结果，调用方使用 GL_ONE/GL_ONE 加法 blend 叠加到目标层
     o_Color = vec4(result, 1.0);
 }

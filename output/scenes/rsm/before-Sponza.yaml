@@ -1,0 +1,41 @@
+Name: Sponza
+Model: ../../RedflagForge/assets/models/reference/Sponza/Sponza.gltf
+Size: [1280, 720]
+ModelSize: 20
+ModelRotation: [0, 0, 0]
+Eye: [-5.5, -2.2, 0]
+Target: [6, -1.8, 0]
+Fov: 65
+Near: 0.05
+Far: 100
+Direction: [0.25, -1, 0.3]
+LightIntensity: 4
+PointPosition: [-2, -1, 0]
+PointIntensity: 2
+PointRadius: 20
+ShadowHalfSize: 13
+SSAO: true
+RSM: true
+RSMIntensity: 6
+RSMRadius: 0.2
+Exposure: 1.4
+Frames: 12
+Result:
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2
+  OpenGL: 4.6.0 NVIDIA 616.56
+  Submeshes: 103
+  Vertices: 752280
+  Indices: 752280
+  DrawCalls: 372
+  Culled: 21
+  VisiblePixels: 912256
+  HDRFinite: true
+  Scene: assets/scenes/Reference-Sponza.redflag
+  ReopenedSceneRendered: true
+  ModelID: 14269338671407101124
+  Scale: 0.671888709
+  Translation:
+    - 0.325295836
+    - -3.50185919
+    - 0.207966045
+  ImageSource: SceneRenderer final LDR texture, direct readback

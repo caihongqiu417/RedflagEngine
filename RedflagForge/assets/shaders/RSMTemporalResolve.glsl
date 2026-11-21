@@ -1,22 +1,12 @@
-// =====================================================================
-// RSMTemporalResolve.glsl — RSM 间接光时域累积 Pass
-//
-// 将本帧 RSMIndirect 结果与上一帧 resolved history 做时域融合，
-// 通过反投影找到当前像素在上一帧中的屏幕位置，
-// 越界或第一帧时完全使用当前帧，否则按 alpha 混合历史。
-//
-// 输入纹理槽：
-//   slot 0 — u_Current   (本帧 RSMIndirect 结果, RGBA16F)
-//   slot 1 — u_History   (上一帧 resolved 结果, RGBA16F)
-//   slot 2 — u_Depth     (主 FBO 深度，重建世界坐标用于反投影)
-//
-// Uniforms：
-//   u_InvViewProj  — inv(当前帧 ViewProjection)
-//   u_PrevViewProj — 上一帧 ViewProjection
-//   u_BlendAlpha   — 历史混合权重，0.9 = 90% history + 10% current
-//   u_ResetHistory — 1 = 第一帧或 viewport resize，强制使用 current
-// =====================================================================
+/*
+ * 把当前帧与上一帧的间接光混合，减轻随机采样的噪点。
+ * 相机移动后，同一个表面会出现在不同像素，所以先找出它上一帧对应的屏幕位置。
+ * 找不到有效位置，或者视口刚改变尺寸时，就直接使用当前帧。
+ * 历史颜色先限制在当前像素周围的颜色范围内，再按权重混合，避免旧颜色拖得太远。
+ * 这里只补偿了相机变化，没有记录物体自身的运动，因此移动物体仍可能出现拖影。
+ */
 
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
@@ -30,6 +20,7 @@ void main()
     gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
@@ -50,7 +41,8 @@ layout(std140, binding = 8) uniform RSMTemporalResolveParams
     float _taaP0, _taaP1;  // std140 padding to vec4 boundary
 };
 
-vec3 ReconstructWorldPos(vec2 uv, float depth)
+/* 当前深度按 OpenGL 约定从 [0,1] 还原到 NDC [-1,1]，再做齐次除法。 */
+vec3 ReconstructWorldPos(vec2 uv /* 屏幕 [0,1] */, float depth /* 深度附件值 */)
 {
     vec4 ndc    = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 worldH = u_InvViewProj * ndc;
@@ -61,7 +53,7 @@ void main()
 {
     vec3 current = texture(u_Current, v_TexCoord).rgb;
 
-    // 第一帧或 viewport resize 时直接输出当前帧
+    // 第一帧、视口变化或场景/光照参数改变后，直接输出当前帧。
     if (u_ResetHistory != 0)
     {
         o_Resolved = vec4(current, 1.0);
@@ -77,24 +69,23 @@ void main()
         return;
     }
 
-    // 重建世界坐标，反投影到上一帧屏幕空间
+    // ---- 重投影到上一帧 ----
+    // 只补偿相机变化；没有运动矢量时，移动表面的历史位置可能不准确。
     vec3 worldPos  = ReconstructWorldPos(v_TexCoord, depth);
     vec4 prevClip  = u_PrevViewProj * vec4(worldPos, 1.0);
-    vec2 prevNDCxy = prevClip.xy / max(prevClip.w, 1e-6);
-    vec2 prevUV    = prevNDCxy * 0.5 + 0.5;
-
-    // 反投影超出上一帧视锥或在相机后方 — 拒绝历史
-    if (prevClip.w <= 0.0 ||
-        prevUV.x < 0.0 || prevUV.x > 1.0 ||
-        prevUV.y < 0.0 || prevUV.y > 1.0)
+    // OpenGL 裁剪范围为 -w≤x,y,z≤w；屏幕外、相机后方及近远平面外都没有有效历史。
+    if (prevClip.w <= 0.0 || any(greaterThan(abs(prevClip.xyz), vec3(prevClip.w))))
     {
         o_Resolved = vec4(current, 1.0);
         return;
     }
 
+    vec2 prevUV = (prevClip.xy / prevClip.w) * 0.5 + 0.5;
     vec3 history = texture(u_History, prevUV).rgb;
 
-    // 邻域 clamp：把 history 限制在当前帧 3×3 邻域的 AABB 内，防止 ghosting
+    // ---- 限制上一帧的颜色 ----
+    // 先找当前像素周围 3x3 区域的最暗和最亮颜色。
+    // 如果历史颜色已经超出这个范围，就把它拉回范围内，减轻旧画面留下的拖影。
     vec3 cMin = current, cMax = current;
     ivec2 sz = textureSize(u_Current, 0);
     vec2 texel = 1.0 / vec2(sz);
@@ -107,6 +98,7 @@ void main()
     }
     history = clamp(history, cMin, cMax);
 
-    // 时域混合：90% history + 10% current（默认）
+    // ---- 历史混合 ----
+    // BlendAlpha 是历史权重；0.9 表示 90% history + 10% current。
     o_Resolved = vec4(mix(current, history, u_BlendAlpha), 1.0);
 }

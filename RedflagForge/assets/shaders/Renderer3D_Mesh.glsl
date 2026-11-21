@@ -1,43 +1,26 @@
-// =====================================================================
-// Renderer3D_Mesh.glsl — 前向 PBR 着色器 (Cook-Torrance BRDF)
-//
-// 渲染流程概览：
-//   1. 顶点阶段：把模型空间顶点变换到世界空间，构造 TBN 矩阵
-//   2. 片元阶段：采样 PBR 贴图 → 构造表面属性 → 逐光源累加
-//                Cook-Torrance 镜面 + Lambert 漫反射 → 输出 HDR 颜色
-//
-// UBO 绑定约定：
-//   binding 0 — Camera    : ViewProjection + 相机世界坐标
-//   binding 1 — Transform : 逐物体模型矩阵
-//   binding 2 — Material  : PBR 参数 + 贴图开关 + EntityID
-//   binding 3 — Lights    : 方向光 × 1 + 点光源 × 16
-//
-// 纹理槽位约定：
-//   slot 3 — BaseColorMap          (sRGB 漫反射)
-//   slot 4 — NormalMap             (切线空间法线)
-//   slot 5 — MetallicRoughnessMap  (G=粗糙度, B=金属度, glTF 规范)
-//   slot 6 — AOMap                 (R 通道, 环境遮蔽)
-//
-// 输出：
-//   location 0 — o_Color    : RGBA 颜色（含临时 tonemap + gamma）
-//   location 1 — o_EntityID : 用于编辑器鼠标拾取的实体 ID
-// =====================================================================
+/*
+ * 计算一个模型表面的颜色，包括灯光、阴影和环境反射。
+ * 顶点阶段把模型上的点和法线换到场景坐标中；片元阶段为屏幕上的每个像素计算光照。
+ * 先读取颜色、粗糙度等材质信息，再累加各盏灯的光，最后加入环境光与表面之间的反射光。
+ * 结果保留 HDR 亮度供后处理使用，同时写入实体编号，让编辑器能知道鼠标点中了哪个物体。
+ * 下面按材质采样、表面朝向、直接光照、间接光照和输出分段。
+ */
 
-// =========================== 顶点着色器 =============================
+// ---- 顶点阶段 ----
 #type vertex
 #version 450 core
 
-// ---- 顶点属性（与 MeshVertex / Mesh.cpp 布局一一对应）----
+// 顶点属性（与 MeshVertex / Mesh.cpp 布局一一对应）
 layout(location = 0) in vec3 a_Position;   // 模型空间位置
 layout(location = 1) in vec3 a_Normal;     // 模型空间法线
 layout(location = 2) in vec2 a_TexCoord;   // 第 0 组 UV
 layout(location = 3) in vec3 a_Tangent;    // 模型空间切线（用于法线贴图）
 
-// ---- Camera UBO (binding = 0) ----
+// ---- 相机与阴影 ----
 // 由 Renderer3D::BeginScene() 每帧上传
 layout(std140, binding = 0) uniform Camera
 {
-    mat4 u_ViewProjection;      // 观察 × 投影矩阵
+    mat4 u_ViewProjection;      // 投影 × 观察矩阵，先把点变到相机坐标，再投影
     vec4 u_ViewPosition;        // xyz = 相机世界坐标（PBR 镜面反射需要视线方向）
     mat4 u_LightSpaceMatrix;    // 方向光的 Ortho × View；Shadow Pass 和主 Pass 共用
     vec4 u_ShadowParams;        // x=depthBias y=normalBias z=invMapSize w=mode(0=off,1=PCF,2=PCSS)
@@ -45,14 +28,20 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_View;                // 主相机 view 矩阵（SSAO 用，主 shader 未用到）
 };
 
-// ---- Transform UBO (binding = 1) ----
-// 由 Renderer3D::EndScene 在每次 DrawCall 前上传当前物体的模型矩阵
+// 逐个绘制从 Transform 取模型矩阵。合批时每个物体的数据随实例传入。
+#ifdef INSTANCED
+layout(location = 4) in mat4 a_Transform;
+layout(location = 8) in vec4 a_BaseColor;
+layout(location = 9) in vec4 a_MatParams;   // 金属度、粗糙度、环境遮蔽
+layout(location = 10) in int a_EntityID;
+#else
 layout(std140, binding = 1) uniform Transform
 {
     mat4 u_Transform;
 };
+#endif
 
-// ---- 传递给片元着色器的插值变量 ----
+// 传递给片元着色器的插值变量
 layout(location = 0) out vec3  v_WorldPos;  // 世界空间位置（用于光照距离计算）
 layout(location = 1) out vec2  v_TexCoord;  // UV 坐标
 layout(location = 2) out vec3  v_Normal;    // 世界空间法线（无法线贴图时的后备）
@@ -60,55 +49,59 @@ layout(location = 3) out mat3  v_TBN;       // 切线空间 → 世界空间 的
                                             // mat3 占用 location 3, 4, 5
 layout(location = 6) out vec4  v_LightSpacePos; // 光源裁剪空间位置（主 Pass 用来查 Shadow Map）
 
+#ifdef INSTANCED
+layout(location = 7) flat out vec4 v_BaseColor;
+layout(location = 8) flat out vec4 v_MatParams;
+layout(location = 9) flat out int v_EntityID;
+#endif
+
 void main()
 {
-    // 1. 把顶点从模型空间变换到世界空间
-    vec4 worldPos = u_Transform * vec4(a_Position, 1.0);
+#ifdef INSTANCED
+    mat4 model = a_Transform;
+    v_BaseColor = a_BaseColor;
+    v_MatParams = a_MatParams;
+    v_EntityID = a_EntityID;
+#else
+    mat4 model = u_Transform;
+#endif
+    vec4 worldPos = model * vec4(a_Position, 1.0);
     v_WorldPos = worldPos.xyz;
     v_TexCoord = a_TexCoord;
 
-    // 2. 构造法线矩阵：transpose(inverse(Model))
-    //    用于正确变换法线（非均匀缩放时不能直接乘模型矩阵）
-    mat3 normalMatrix = mat3(transpose(inverse(u_Transform)));
-
-    // 3. 变换法线和切线到世界空间
-    vec3 N = normalize(normalMatrix * a_Normal);
-    vec3 T = normalize(normalMatrix * a_Tangent);
-
-    // 4. Gram-Schmidt 正交化：确保 T ⊥ N（插值或变换可能破坏正交性）
+    // 切线沿表面伸缩。法线用逆转置变换，才能在非均匀缩放后仍垂直于表面。
+    mat3 axes = mat3(model);
+    vec3 N = normalize(transpose(inverse(axes)) * a_Normal);
+    vec3 T = axes * a_Tangent;
     T = normalize(T - dot(T, N) * N);
-
-    // 5. 副切线 B = N × T（构成右手坐标系）
-    vec3 B = cross(N, T);
-
     v_Normal = N;
-    v_TBN    = mat3(T, B, N);  // 列向量分别是 T, B, N
+    v_TBN = mat3(T, cross(N, T), N);
 
-    // 7. 光源裁剪空间坐标（主 Pass 做 Shadow Map 查询时使用）
-    //    注意：我们不做 perspective divide，留给片元阶段处理，
-    //    这样可以利用硬件对 w 分量的透视正确插值。
     v_LightSpacePos = u_LightSpaceMatrix * worldPos;
-
-    // 8. 最终裁剪空间位置
     gl_Position = u_ViewProjection * worldPos;
 }
 
-// =========================== 片元着色器 =============================
+// ---- 片元阶段 ----
 #type fragment
 #version 450 core
 
-// ---- 输出 ----
+// 输出
 layout(location = 0) out vec4 o_Color;     // RGBA 颜色
 layout(location = 1) out int  o_EntityID;  // 编辑器鼠标拾取用的实体 ID（RED_INTEGER 附件）
 
-// ---- 从顶点着色器插值而来 ----
+// 从顶点着色器插值而来
 layout(location = 0) in vec3  v_WorldPos;
 layout(location = 1) in vec2  v_TexCoord;
 layout(location = 2) in vec3  v_Normal;
 layout(location = 3) in mat3  v_TBN;
 layout(location = 6) in vec4  v_LightSpacePos;
+#ifdef INSTANCED
+layout(location = 7) flat in vec4 v_BaseColor;
+layout(location = 8) flat in vec4 v_MatParams;
+layout(location = 9) flat in int v_EntityID;
+#endif
 
-// ---- Camera UBO (binding = 0) ----
+// ---- 相机与阴影 ----
 layout(std140, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;
@@ -119,7 +112,7 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_View;
 };
 
-// ---- Material UBO (binding = 2, 48 bytes, std140) ----
+// ---- Material UBO (binding = 2, 64 bytes, std140) ----
 // 由 Renderer3D::UploadMaterial() 在材质切换时上传
 layout(std140, binding = 2) uniform Material
 {
@@ -167,26 +160,26 @@ layout(std140, binding = 3) uniform Lights
     LightData u_PointLights[16];      // 点光源数组
 };
 
-// ---- 纹理采样器（槽位与 C++ 端 Bind(slot) 对应）----
+// 纹理采样器（槽位与 C++ 端 Bind(slot) 对应）
 layout(binding = 3) uniform sampler2D u_BaseColorMap;          // slot 3: 漫反射贴图
 layout(binding = 4) uniform sampler2D u_NormalMap;             // slot 4: 切线空间法线贴图
 layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;  // slot 5: G=粗糙度 B=金属度
 layout(binding = 6) uniform sampler2D u_AOMap;                 // slot 6: R=环境遮蔽
 layout(binding = 10) uniform sampler2D u_AlphaMap;             // slot 10: R=alpha / opacity
 
-// ---- Shadow Map（方向光，slot 11）----
-// 由 SceneRenderer 在 Shadow Pass 之后绑定；DEPTH32F 单通道纹理。
+// Shadow Map（方向光，slot 11）
+// 由 SceneRenderer 在 Shadow Pass 之后绑定。DEPTH32F 单通道纹理。
 // 过滤设成 NEAREST（见 OpenGLFramebuffer::AttachDepthTexture），
 // PCF 采样手动在 shader 里做，避免硬件插值把不连续深度拉扯出错误阴影。
 layout(binding = 11) uniform sampler2D u_ShadowMap;
 
-// ---- SSAO Map（slot 12）----
+// SSAO Map（slot 12）
 // 由 SceneRenderer::RunSSAOPass 生成，单通道（读 .r）。屏幕空间纹理，
 // 需要用 gl_FragCoord / viewportSize 做 UV。关闭 SSAO 时 SceneRenderer
 // 会绑定 1×1 全白纹理，读到 ao=1（无衰减）。
 layout(binding = 12) uniform sampler2D u_SSAOMap;
 
-// ======================= IBL 纹理（Split Sum 预计算）=======================
+// IBL 纹理（Split Sum 预计算）
 // 这三张纹理由 IBLPrecompute::Init() 在程序启动时生成，运行时只需采样。
 // 对应课上讲义里 Split Sum 的两个积分项：
 //   u_IrradianceMap → 漫反射半球积分（"平均入射光强度"）
@@ -196,11 +189,10 @@ layout(binding = 7) uniform samplerCube u_IrradianceMap;   // slot 7
 layout(binding = 8) uniform samplerCube u_PrefilterMap;    // slot 8 （含 mip chain）
 layout(binding = 9) uniform sampler2D   u_BRDFLUT;         // slot 9 （RG16F）
 
-// ---- RSM 间接光 resolved 纹理（slot 17）----
+// RSM 间接光 resolved 纹理（slot 17）
 // 由 RSMIndirect + RSMTemporalResolve 两个 pass 预计算并时域累积后绑定。
 // 关闭 RSM 时绑 1×1 黑纹理，Lo += 0 × albedo = 无贡献。
 layout(binding = 17) uniform sampler2D u_RSMResolved;   // slot 17
-// =====================================================================
 // PBR 核心：Cook-Torrance 微面元 BRDF
 //
 // 完整公式：
@@ -219,32 +211,14 @@ layout(binding = 17) uniform sampler2D u_RSMResolved;   // slot 17
 //   kD = (1 - F) × (1 - metallic)
 //       → 能量守恒：被反射的光不参与漫反射
 //       → 纯金属 metallic=1 时 kD=0，没有漫反射
-// =====================================================================
 
 const float PI = 3.14159265359;
 
-float Hash12(vec2 p)
-{
-    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-}
 
-float ValueNoise2D(vec2 p)
-{
-    vec2 cell = floor(p);
-    vec2 fracPart = fract(p);
-    vec2 blend = fracPart * fracPart * (3.0 - 2.0 * fracPart);
 
-    float v00 = Hash12(cell);
-    float v10 = Hash12(cell + vec2(1.0, 0.0));
-    float v01 = Hash12(cell + vec2(0.0, 1.0));
-    float v11 = Hash12(cell + vec2(1.0, 1.0));
 
-    return mix(mix(v00, v10, blend.x), mix(v01, v11, blend.x), blend.y);
-}
 
-// ----- D: GGX / Trowbridge-Reitz 法线分布 -----
+// D: GGX / Trowbridge-Reitz 法线分布
 // 返回微面元法线朝向 H 的概率密度
 // α = roughness²（迪士尼重映射，让滑条手感线性）
 // 公式：D = α² / (π · ((N·H)²·(α²-1) + 1)²)
@@ -260,7 +234,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     return a2 / max(denom, 0.0001);     // 防止除零
 }
 
-// ----- G₁: Schlick-GGX 单方向几何遮蔽 -----
+// G₁: Schlick-GGX 单方向几何遮蔽
 // k = (roughness+1)² / 8  （直接光照的 k 映射）
 // G₁(n,v) = (N·V) / ((N·V)·(1-k) + k)
 float GeometrySchlickGGX(float NdotV, float roughness)
@@ -270,7 +244,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
-// ----- G: Smith 几何遮蔽（视线 + 光线两个方向）-----
+// G: Smith 几何遮蔽（视线 + 光线两个方向）
 // G(N,V,L) = G₁(N,V) × G₁(N,L)
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
@@ -279,7 +253,7 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
 }
 
-// ----- F: Fresnel-Schlick 近似 -----
+// F: Fresnel-Schlick 近似
 // F(θ) = F0 + (1 - F0) · (1 - cosθ)⁵
 // F0 = 垂直入射时的基础反射率
 //   非金属：固定 0.04（塑料/石头等）
@@ -289,7 +263,7 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// ----- IBL 专用 Fresnel：考虑粗糙度对掠射角反射的抑制 -----
+// IBL 专用 Fresnel：考虑粗糙度对掠射角反射的抑制
 //
 // 为什么需要这个变体？
 //   标准 FresnelSchlick 在掠射角时会趋向 vec3(1.0)（全反射），
@@ -302,11 +276,8 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
              * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// =====================================================================
 // 光照计算：对每个光源执行一次完整的 Cook-Torrance BRDF
-// =====================================================================
 
-// =====================================================================
 // Shadow Map 采样
 //
 // 约定：
@@ -319,9 +290,9 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 //   2  PCSS：先做 blocker search 估算平均遮挡深度，
 //            再按 (receiver - blocker)/blocker × lightSize 动态
 //            扩大 PCF 核半径，实现越远越软的接触硬化阴影
-// =====================================================================
 
 // 单次比较采样：1 = 可见，0 = 遮挡
+// 返回可见比例：1 为受光，0 为被遮挡；refDepth 已扣除 bias。
 float SampleShadow(vec2 uv, float refDepth)
 {
     float occ = texture(u_ShadowMap, uv).r;
@@ -340,7 +311,7 @@ float PCF3x3(vec2 baseUV, float refDepth, float texel)
 
 // 任意核半径 PCF（radius 单位为纹素；供 PCSS 动态调整 kernel 用）
 // 固定采 5×5 = 25 taps，视觉上对半影过渡更平滑。
-float PCFVariable(vec2 baseUV, float refDepth, float radius, float texel)
+float PCFVariable(vec2 baseUV, float refDepth, float radius /* 纹素 */, float texel /* 1/阴影尺寸 */)
 {
     float sum = 0.0;
     float samples = 0.0;
@@ -359,7 +330,8 @@ float PCFVariable(vec2 baseUV, float refDepth, float radius, float texel)
 // Blocker search（PCSS 第一步）
 //   在固定半径里找比接收点更近的样本，计算它们的平均深度。
 //   若没有任何遮挡者，返回 -1，调用方直接判定全亮。
-float FindBlockerDepth(vec2 baseUV, float refDepth, float searchRadius, float texel)
+// PCSS 第一步：仅统计接收点前方的遮挡深度，没有遮挡时返回 -1。
+float FindBlockerDepth(vec2 baseUV, float refDepth, float searchRadius /* 纹素 */, float texel)
 {
     float blockerSum = 0.0;
     float blockers   = 0.0;
@@ -384,12 +356,16 @@ float FindBlockerDepth(vec2 baseUV, float refDepth, float searchRadius, float te
 // 计算方向光的可见度 (1 = 完全可见, 0 = 完全遮挡)
 //   lightSpacePos 已经做了 u_LightSpaceMatrix × worldPos，但还没除 w
 //   N / L 用来做斜率相关的 normal bias，避免 shadow acne
+/*
+ * lightSpacePos 尚未做透视除法；N/L 是世界空间单位向量，L 指向光源。
+ * 先转到阴影 UV/深度并加 bias，再按模式执行 PCF 或 PCSS。
+ */
 float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
 {
     int mode = int(u_ShadowParams.w);
     if (mode == 0) return 1.0;   // 阴影关闭
 
-    // --- 透视除法 → NDC → [0,1] ---
+    // 透视除法 → NDC → [0,1]
     vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
     proj = proj * 0.5 + 0.5;
 
@@ -410,7 +386,7 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
 
     if (mode == 2)
     {
-        // ---- PCSS ----
+        // PCSS
         // 由 ImGui 调节：虚拟光源尺寸（纹素单位）越大半影越宽
         float LIGHT_SIZE   = max(u_ShadowParams2.y, 0.0);
         const float SEARCH_RADIUS = 4.0; // blocker search 固定半径
@@ -424,7 +400,7 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
         return PCFVariable(proj.xy, refDepth, radius, texel);
     }
 
-    // ---- 默认 PCF ----
+    // 默认 PCF
     // 用 u_ShadowParams2.x 作为可调核半径（纹素）。过小时退化为固定 3×3。
     float pcfRadius = u_ShadowParams2.x;
     if (pcfRadius <= 1.001)
@@ -432,7 +408,7 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
     return PCFVariable(proj.xy, refDepth, pcfRadius, texel);
 }
 
-// ---------- 方向光（平行光，无衰减）----------
+// 方向光（平行光，无衰减）
 // 太阳光等无限远光源，所有片元的光线方向相同
 // shadow 传入 [0,1]：1=完全照亮，0=完全遮挡。只对直接光部分衰减，
 // 环境光 / IBL 不受影响（物理上 shadow map 不能约束半球环境贡献）。
@@ -470,7 +446,7 @@ vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
     return (kD * albedo / PI + specular) * radiance * NdotL * shadow;
 }
 
-// ---------- 点光源（有位置、有半径衰减）----------
+// 点光源（有位置、有半径衰减）
 vec3 CalcPointLight(LightData light, vec3 N, vec3 V, vec3 worldPos,
                     vec3 albedo, float metallic, float roughness, vec3 F0)
 {
@@ -510,18 +486,26 @@ vec3 CalcPointLight(LightData light, vec3 N, vec3 V, vec3 worldPos,
     return (kD * albedo / PI + specular) * radiance * NdotL;
 }
 
-// =====================================================================
 // 主函数 — 逐像素执行
 //
-// 流程：采样贴图 → 构造表面属性 → 逐光源累加 → 加环境光 → tonemap
-// =====================================================================
+// 流程：采样贴图 → 构造表面属性 → 累加直接光与 RSM → 加环境光 → 写 HDR
 
 void main()
 {
-    // ==================== 1. 采样材质贴图 ====================
-
-    // 基础颜色 = BaseColor因子 × BaseColorMap（如有）
+    // ---- 材质 ----
+#ifdef INSTANCED
+    vec4 albedo4 = v_BaseColor;
+    float metallic = v_MatParams.x;
+    float roughness = v_MatParams.y;
+    float ao = v_MatParams.z;
+    int entityID = v_EntityID;
+#else
     vec4 albedo4 = u_BaseColor;
+    float metallic = u_Metallic;
+    float roughness = u_Roughness;
+    float ao = u_AO;
+    int entityID = u_EntityID;
+#endif
     if (u_UseBaseColorMap == 1)
     {
         vec4 texColor = texture(u_BaseColorMap, v_TexCoord);
@@ -531,22 +515,18 @@ void main()
     }
     vec3 albedo = albedo4.rgb;
 
-    // ==================== 1.5 Alpha 裁剪 ====================
-    // 独立 AlphaMap 或 BaseColorMap 的 alpha 通道 → 可能用于钟面玻璃 / 植物叶片等裁剪
+    // Mask 的轮廓同时受材质颜色、底色贴图和独立透明贴图影响。
     float alphaValue = albedo4.a;
     if (u_UseAlphaMap == 1)
         alphaValue *= texture(u_AlphaMap, v_TexCoord).r;
     if (u_AlphaMode == 1 && alphaValue < u_AlphaCutoff)
-        discard; // Mask 模式：低于阈值直接丢弃片元，让钟面玻璃镂空
+        discard;
 
-    // 非 Blend 模式下，输出 alpha 强制为 1.0，避免 FBX 脏 BaseColor.a 或
-    // Renderer2D 启用的 alpha 混合把模型整体擦成透明。
+    // 只有半透明材质需要将 alpha 留给后续混合。
     float outAlpha = (u_AlphaMode == 2) ? alphaValue : 1.0;
 
     // 金属度 & 粗糙度：标量 × 贴图（如有）
     // glTF 规范: MetallicRoughnessMap 的 G 通道=粗糙度, B 通道=金属度
-    float metallic  = u_Metallic;
-    float roughness = u_Roughness;
     if (u_UseMetallicRoughnessMap == 1)
     {
         vec4 mrSample = texture(u_MetallicRoughnessMap, v_TexCoord);
@@ -559,18 +539,17 @@ void main()
     roughness = clamp(roughness, 0.089, 1.0);
 
     // 环境遮蔽：标量 × AOMap 的 R 通道（如有）
-    float ao = u_AO;
     if (u_UseAOMap == 1)
         ao *= texture(u_AOMap, v_TexCoord).r;
 
     // 屏幕空间 AO：把 SSAO Pass 的结果乘到材质 AO 上，只影响 ambient。
     // 关闭时 SceneRenderer 绑定的是 1×1 白纹理，ssao=1 没有副作用。
     // ShadowParams2.zw = viewport 尺寸（像素），用于把 gl_FragCoord 转 UV。
-    vec2 vpSize = max(u_ShadowParams2.zw, vec2(1.0));
-    float ssao  = texture(u_SSAOMap, gl_FragCoord.xy / vpSize).r;
+    vec2 screenUV = gl_FragCoord.xy / max(u_ShadowParams2.zw, vec2(1.0));
+    float ssao = texture(u_SSAOMap, screenUV).r;
     ao *= ssao;
 
-    // ==================== 2. 构造世界空间法线 ====================
+    // 2. 构造世界空间法线
 
     vec3 N;
     if (u_UseNormalMap == 1)
@@ -586,21 +565,21 @@ void main()
         N = normalize(v_Normal);
     }
 
-    // ==================== 3. 视线方向 ====================
+    // 3. 视线方向
 
     // V = 从当前片元指向相机的单位向量
     vec3 V = normalize(u_ViewPosition.xyz - v_WorldPos);
 
-    // ==================== 4. 基础反射率 F0 ====================
+    // 4. 基础反射率 F0
 
     // 非金属（塑料等）：F0 = 0.04（经验值，大多数介电质的垂直反射率）
     // 金属：F0 = albedo 颜色（金属的反射带有自身颜色）
     // metallic 作为插值权重在两者之间混合
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    // ==================== 5. 逐光源累加直接光照 ====================
+    // 5. 逐光源累加直接光照
 
-    vec3 Lo = vec3(0.0);  // Lo = 所有光源的出射辐射度总和
+    vec3 Lo = vec3(0.0);  // 直接光与 RSM 间接光的累计值
 
     // 遍历方向光（当前最多 1 盏）
     //   对唯一的 "主方向光" 做 Shadow Map 查询；多方向光场景这里
@@ -628,22 +607,16 @@ void main()
         Lo += CalcDirectionalLight(fallback, N, V, albedo, metallic, roughness, F0, 1.0);
     }
 
-    // ==================== 5.5 RSM 间接光（TAA 时域累积，延迟 pass 预计算）====================
-    // RSMIndirect pass 已将间接光时域累积写入 u_RSMResolved（slot 17）。
-    // 关闭 RSM 时该 slot 绑定 1×1 黑纹理，Lo += 0 × albedo 无贡献。
-    {
-        vec2 vpSize   = max(u_ShadowParams2.zw, vec2(1.0));
-        vec2 screenUV = gl_FragCoord.xy / vpSize;
-        Lo += texture(u_RSMResolved, screenUV).rgb * albedo;
-    }
+    // RSM 保存白色漫反射面应有的亮度；纯金属没有这一项。关闭时采到黑色。
+    Lo += texture(u_RSMResolved, screenUV).rgb * albedo * (1.0 - metallic);
 
-    // ==================== 6. IBL 环境光（Split Sum 近似）====================
+    // 6. IBL 环境光（Split Sum 近似）
     //
     // 对应课上讲义：
     //   原始环境光积分不可实时计算，Split Sum 把它拆成两个可预计算的部分：
     //     (1) 漫反射 = irradiance(N) × albedo
     //     (2) 镜面   = prefilteredEnv(R, roughness) × BRDF_LUT(NdotV, roughness)
-    //   运行时只需 3 次纹理采样 + 乘加即可还原完整环境光积分。
+    //   运行时用 3 次纹理采样与乘加近似环境光积分。
     //
     // u_ViewPosition.w 被复用为 IBL 就绪标志：
     //   1.0 = IBL 已预计算完成 → 使用 IBL 环境光
@@ -653,19 +626,19 @@ void main()
 
     if (u_ViewPosition.w > 0.5)
     {
-        // ------- Fresnel（IBL 专用版，考虑 roughness）-------
+        // Fresnel（IBL 专用版，考虑 roughness）
         // 表面镜面反射与漫反射的能量分配系数
         vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
         // 金属没有漫反射：metallic=1 → kD=0
         vec3 kD = (1.0 - kS) * (1.0 - metallic);
 
-        // ------- 漫反射 IBL -------
+        // 漫反射 IBL
         // 用法线 N 采样辐照度图，得到 N 方向上整个半球的积分辐照度
         // 对应课上讲义："平均入射光强度"
         vec3 irradiance = texture(u_IrradianceMap, N).rgb;
         vec3 diffuseIBL = irradiance * albedo;
 
-        // ------- 镜面 IBL（Split Sum 核心）-------
+        // 镜面 IBL（Split Sum 核心）
         // 反射方向 R 决定采样环境图的哪个方向
         vec3 R = reflect(-V, N);
 
@@ -680,7 +653,7 @@ void main()
         //   brdf.x = ∫ (f_r/F)[1-(1-cosθ)⁵] cosθ dω  → scale
         //   brdf.y = ∫ (f_r/F)  (1-cosθ)⁵   cosθ dω  → bias
         vec2 brdf = texture(u_BRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-        // 最终镜面 IBL = 预滤波颜色 × (F0 × scale + bias)
+        // 本实现镜面 IBL = 预滤波颜色 × (kS × scale + bias)，kS 使用粗糙度修正的 Fresnel。
         vec3 specularIBL = prefilteredColor * (kS * brdf.x + brdf.y);
 
         // 合成环境光 = (漫反射 + 镜面) × AO
@@ -695,13 +668,13 @@ void main()
     // 最终颜色 = 环境光 + 直接光照
     vec3 color = ambient + Lo;
 
-    // ==================== 7. 输出（HDR，不做 tonemap）====================
+    // 7. 输出（HDR，不做 tonemap）
     //
     // Tonemap（ACES）和 Gamma 校正已迁移到后处理阶段（PostProcess_Composite.glsl）。
-    // 原因：Bloom 需要先从 HDR buffer 提取高光（亮度 > threshold），
+    // Bloom 需要先从 HDR buffer 提取高光（亮度 > threshold），
     //       如果在这里就做 tonemap，高光信息被压缩到 [0,1] 就无法准确提取了。
     // 主 FBO attachment0 现在是 RGBA16F，可存储超过 1.0 的 HDR 值。
 
     o_Color    = vec4(color, outAlpha);   // HDR RGBA，Bloom / Tonemap 后处理会消费这张纹理
-    o_EntityID = u_EntityID;              // 编辑器拾取 ID，写入 RED_INTEGER 附件（不受影响）
+    o_EntityID = entityID;
 }

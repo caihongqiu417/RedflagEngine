@@ -1,0 +1,474 @@
+{
+  "source": "DepthPrepass_capture.rdc",
+  "coordinate_origin": "top-left",
+  "method": "RenderDoc ReplayController.SetFrameEvent / SaveTexture / PickPixel",
+  "tool_version": "1.47",
+  "api_validation": true,
+  "gpu_timing": "not measured",
+  "status": "passed",
+  "open_file": "<Result: 'Success'>",
+  "open_capture": "<Result: 'Success'>",
+  "capture_messages": [
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 16 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 17 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 13 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 19 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 14 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 20 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 15 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 21 (bound to GL_COPY_WRITE_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_UNIFORM_BUFFER (3), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 8,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Info",
+      "category": "MessageCategory.Miscellaneous",
+      "id": 131185,
+      "description": "Buffer detailed info: Buffer object 18 (bound to GL_UNIFORM_BUFFER (3), usage hint is GL_DYNAMIC_DRAW) will use VIDEO memory as the source for buffer object operations."
+    },
+    {
+      "event": 28,
+      "source": "MessageSource.API",
+      "severity": "MessageSeverity.Medium",
+      "category": "MessageCategory.Performance",
+      "id": 131218,
+      "description": "Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state."
+    }
+  ],
+  "replay_messages": [
+    {
+      "step": "open_capture",
+      "messages": []
+    },
+    {
+      "step": "set_event_28",
+      "messages": [
+        {
+          "event": 0,
+          "source": "MessageSource.API",
+          "severity": "MessageSeverity.Info",
+          "category": "MessageCategory.Miscellaneous",
+          "id": 131185,
+          "description": "Buffer detailed info: Buffer object 19 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+        },
+        {
+          "event": 0,
+          "source": "MessageSource.API",
+          "severity": "MessageSeverity.Info",
+          "category": "MessageCategory.Miscellaneous",
+          "id": 131185,
+          "description": "Buffer detailed info: Buffer object 20 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+        },
+        {
+          "event": 0,
+          "source": "MessageSource.API",
+          "severity": "MessageSeverity.Info",
+          "category": "MessageCategory.Miscellaneous",
+          "id": 131185,
+          "description": "Buffer detailed info: Buffer object 21 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_STATIC_READ) will use DMA CACHED memory as the source for buffer object operations."
+        }
+      ]
+    },
+    {
+      "step": "inspect_event_28",
+      "messages": []
+    },
+    {
+      "step": "set_event_52",
+      "messages": []
+    },
+    {
+      "step": "inspect_event_52",
+      "messages": []
+    }
+  ],
+  "events": [
+    {
+      "pass": "prepass",
+      "event": 28,
+      "index_count": 6,
+      "depth_state": {
+        "test": true,
+        "write": true,
+        "function": "CompareFunction.LessEqual"
+      },
+      "color_write_masks": [
+        0,
+        0,
+        15
+      ],
+      "blending": false,
+      "shader_color_outputs": [
+        2
+      ],
+      "material": {
+        "read_only_bindings": [
+          {
+            "binding": 3,
+            "resource": "ResourceId::67"
+          },
+          {
+            "binding": 10,
+            "resource": "ResourceId::68"
+          }
+        ],
+        "alpha_textures": [
+          {
+            "binding": 3,
+            "resource": "ResourceId::67",
+            "channel": "A",
+            "values_u8": [
+              255,
+              64,
+              255,
+              255
+            ]
+          },
+          {
+            "binding": 10,
+            "resource": "ResourceId::68",
+            "channel": "R",
+            "values_u8": [
+              255,
+              255,
+              64,
+              255
+            ]
+          }
+        ],
+        "material_buffer": {
+          "binding": 2,
+          "resource": "ResourceId::55",
+          "bytes": 64,
+          "values": {
+            "base_color": [
+              1.0,
+              1.0,
+              1.0,
+              0.75
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "ao": 1.0,
+            "use_base_color_map": 1,
+            "use_normal_map": 0,
+            "use_metallic_roughness_map": 0,
+            "use_ao_map": 0,
+            "entity_id": 42,
+            "use_alpha_map": 1,
+            "alpha_cutoff": 0.5,
+            "alpha_mode": 1
+          }
+        }
+      },
+      "depth": {
+        "file": "prepass-depth.png",
+        "resource": "ResourceId::60",
+        "mapping": "Depth [0, 1]: 0.5 -> gray 127; 1.0 -> gray 255",
+        "export_result": "<Result: 'Success'>"
+      },
+      "entity": {
+        "file": "prepass-entity.png",
+        "resource": "ResourceId::58",
+        "mapping": "SInt PNG conversion: entity 42 -> gray 42; clear -1 -> gray 255",
+        "export_result": "<Result: 'Success'>"
+      },
+      "entity_lossless": {
+        "file": "prepass-entity.dds",
+        "resource": "ResourceId::58",
+        "mapping": "R32_SINT preserved",
+        "export_result": "<Result: 'Success'>"
+      },
+      "pixels": [
+        {
+          "x": 4,
+          "y": 16,
+          "depth": 0.5,
+          "entity_id": -1
+        },
+        {
+          "x": 12,
+          "y": 16,
+          "depth": 1.0,
+          "entity_id": -1
+        },
+        {
+          "x": 28,
+          "y": 16,
+          "depth": 0.5,
+          "entity_id": -1
+        }
+      ],
+      "whole_image": {
+        "pixels_checked": 1024,
+        "visible_depth_pixels": 512,
+        "clear_depth_pixels": 512,
+        "entity_42_pixels": 0,
+        "entity_minus_1_pixels": 1024,
+        "depth_sha256": "e68ac6e2363a4c4a689f5f1e687d3938812d644d08e946ff45ff74d8ea74ed8f",
+        "entity_sha256": "f47a8ec3e9aff2318d896942282ad4fe37d6391c82914f54a5da8a37de1300c6"
+      }
+    },
+    {
+      "pass": "main",
+      "event": 52,
+      "index_count": 6,
+      "depth_state": {
+        "test": true,
+        "write": true,
+        "function": "CompareFunction.LessEqual"
+      },
+      "color_write_masks": [
+        15,
+        15,
+        15
+      ],
+      "blending": false,
+      "shader_color_outputs": [
+        0,
+        1
+      ],
+      "material": {
+        "read_only_bindings": [
+          {
+            "binding": 3,
+            "resource": "ResourceId::67"
+          },
+          {
+            "binding": 4,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 5,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 6,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 7,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 8,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 9,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 10,
+            "resource": "ResourceId::68"
+          },
+          {
+            "binding": 11,
+            "resource": "ResourceId::0"
+          },
+          {
+            "binding": 12,
+            "resource": "ResourceId::69"
+          },
+          {
+            "binding": 17,
+            "resource": "ResourceId::70"
+          }
+        ],
+        "alpha_textures": [
+          {
+            "binding": 3,
+            "resource": "ResourceId::67",
+            "channel": "A",
+            "values_u8": [
+              255,
+              64,
+              255,
+              255
+            ]
+          },
+          {
+            "binding": 10,
+            "resource": "ResourceId::68",
+            "channel": "R",
+            "values_u8": [
+              255,
+              255,
+              64,
+              255
+            ]
+          }
+        ],
+        "material_buffer": {
+          "binding": 2,
+          "resource": "ResourceId::55",
+          "bytes": 64,
+          "values": {
+            "base_color": [
+              1.0,
+              1.0,
+              1.0,
+              0.75
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "ao": 1.0,
+            "use_base_color_map": 1,
+            "use_normal_map": 0,
+            "use_metallic_roughness_map": 0,
+            "use_ao_map": 0,
+            "entity_id": 42,
+            "use_alpha_map": 1,
+            "alpha_cutoff": 0.5,
+            "alpha_mode": 1
+          }
+        }
+      },
+      "depth": {
+        "file": "main-depth.png",
+        "resource": "ResourceId::60",
+        "mapping": "Depth [0, 1]: 0.5 -> gray 127; 1.0 -> gray 255",
+        "export_result": "<Result: 'Success'>"
+      },
+      "entity": {
+        "file": "main-entity.png",
+        "resource": "ResourceId::58",
+        "mapping": "SInt PNG conversion: entity 42 -> gray 42; clear -1 -> gray 255",
+        "export_result": "<Result: 'Success'>"
+      },
+      "entity_lossless": {
+        "file": "main-entity.dds",
+        "resource": "ResourceId::58",
+        "mapping": "R32_SINT preserved",
+        "export_result": "<Result: 'Success'>"
+      },
+      "pixels": [
+        {
+          "x": 4,
+          "y": 16,
+          "depth": 0.5,
+          "entity_id": 42
+        },
+        {
+          "x": 12,
+          "y": 16,
+          "depth": 1.0,
+          "entity_id": -1
+        },
+        {
+          "x": 28,
+          "y": 16,
+          "depth": 0.5,
+          "entity_id": 42
+        }
+      ],
+      "whole_image": {
+        "pixels_checked": 1024,
+        "visible_depth_pixels": 512,
+        "clear_depth_pixels": 512,
+        "entity_42_pixels": 512,
+        "entity_minus_1_pixels": 512,
+        "depth_sha256": "e68ac6e2363a4c4a689f5f1e687d3938812d644d08e946ff45ff74d8ea74ed8f",
+        "entity_sha256": "63e758f00dbd2126377b3a5cd95dbcf9ac09aa44dc789d789f59be435d3a2537"
+      }
+    }
+  ],
+  "whole_image_checks": "passed: 1024 pixels per event; depth attachments byte-identical",
+  "pixel_checks": "passed",
+  "fatal_error_status": "<Result: 'Success'>"
+}

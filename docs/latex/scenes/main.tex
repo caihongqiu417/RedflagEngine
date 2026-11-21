@@ -1,0 +1,79 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\hypersetup{pdftitle={Redflag 经典场景实测}}
+\fancyhead[L]{\small\color{muted}Redflag · OpenGL 场景实测}
+\graphicspath{{../../../output/scenes/}}
+\begin{document}
+\zihao{5}\raggedright
+{\Huge\bfseries 经典场景实测}\par
+{\large\color{muted}Cornell Box 与 Sponza}\par
+\ruleline
+
+\section{Cornell Box}
+从开口正面观察白色方块和地面，两侧分别是红墙和绿墙。在红墙旁的白地板和高块侧面可以看到浅红色。左后高块和右前矮块的轮廓分得开，方块背光面比朝光面暗。顶面有一处亮斑，后墙与顶面接缝处也能看到细亮线。换后端后可以从同一相机位置检查这些位置有没有变化。
+\begin{center}
+\includegraphics[width=.90\linewidth]{CornellBox.png}
+\end{center}
+\textbf{灯光。}方向光从前方斜照红墙，方向为 $(-0.6,-0.6,-1)$，RSM 强度为 1。另有一盏点光源参与直接光照。天花板上的白色矩形是模型几何，编辑器中的点光源单独放置。因此这幅图适合检查空间关系和遮挡。要与 Cornell 的实测照片比较，还需要对应面光源和测量过的反射率。
+
+\textbf{取图条件。}模型最长边缩放到 4 个场景单位。相机位于 $(0,0,7.8)$，看向原点，垂直视场角 $45^\circ$。分辨率 $1024\times768$，曝光为 1，开启屏幕空间环境遮蔽与反射阴影图，取连续绘制的第 12 帧。5 个子网格共 32 个三角形，397,212 个像素写入了模型的实体编号。
+
+\source{https://bowers.cornell.edu/cornell-box}{Cornell University 原实验}
+\quad\source{https://github.com/nvpro-samples/vk_mini_path_tracer/blob/9d6a0e4242790ddac52a0d8ee02eb7670bf10965/scenes/readme.txt}{Cardenas 与 McGuire 的几何数据，CC BY 3.0}
+\note{项目保留原顶点、法线和面，为两侧墙体、白色物体和顶灯片补了实时渲染用的 RGB 材质。图像取自 Redflag 的最终颜色纹理。}
+
+\newpage
+\section{Sponza}
+沿中庭长轴观察，两排石柱、拱券和红、蓝、绿织物都能辨认。近处垂布可以看到褶皱和金色纹样，远端石墙仍有层次。画面中个别织物和墙面有较亮的斑点。这次记录了现象，成因需要用固定相机分别关闭法线贴图、间接光等效果再检查。
+\begin{center}
+\includegraphics[width=\linewidth]{Sponza.png}
+\end{center}
+\textbf{取景与布光。}第一遍只用方向光，入口拱下的布料偏暗。最终相机移到 $(-5.5,-2.2,0)$，朝向 $(6,-1.8,0)$，垂直视场角 $65^\circ$。在 $(-2,-1,0)$ 补一盏强度 2、半径 20 的点光，把曝光设为 1.4。这个构图用来观察凹槽和织物细节。
+
+\textbf{导入结果。}分辨率 $1280\times720$，开启屏幕空间环境遮蔽和反射阴影图。103 个子网格中，主相机剔除了 21 个。本帧 Renderer3D 统计到 372 次绘制，912,256 个像素写有模型编号。最终颜色取第 12 帧，主颜色附件读回的 HDR 值均为有限数。
+
+\textbf{资源来源。}本例采用 Khronos 发布的 Crytek Sponza glTF 版本。原始建筑模型由 Marko Dabrović 制作，Crytek 版本由 Frank Meinl 重制。下载脚本固定上游版本，读取模型文件列出的几何数据和 69 张图像。完整模型与贴图保存在本机，仓库附场景、采集配置、实测图和下载入口。
+
+\source{https://github.com/KhronosGroup/glTF-Sample-Assets/blob/e124e8d8d7330a5372bc2b4d00d39a4a9d7997ea/Models/Sponza/README.md}{模型来源与版本说明}
+\quad\source{https://github.com/KhronosGroup/glTF-Sample-Assets/blob/e124e8d8d7330a5372bc2b4d00d39a4a9d7997ea/Models/Sponza/LICENSE.md}{资产许可}
+
+\newpage
+\section{白地板上的反射光}
+从同一相机、同一盏灯连续绘制 12 帧。左图关闭 RSM，中图单独显示反射光，右图恢复最终合成。中图的显示倍率见图内标注。下表直接比较线性 HDR 颜色，数值不经过曝光、色调映射或截图取色。
+\begin{center}
+\includegraphics[width=\linewidth]{rsm/Cornell-RSM.png}
+\end{center}
+
+对照点在白色地板上。按图像左上角为原点，它位于 $(307,651)$，靠近红墙。设 $\Delta C=C_{\rm on}-C_{\rm off}$。同一灯光与强度下，$\Delta R$ 大于 $\Delta G$ 和 $\Delta B$，表示地面因反射光变红。
+\begin{center}
+\begin{tabular}{lrrr}\toprule
+斜照红墙 & $\Delta R$ & $\Delta G$ & $\Delta B$ \\ \midrule
+修正前，强度 5 & 0.07715 & 0.03076 & 0.03076 \\
+修正后，强度 5 & 0.48218 & 0.13550 & 0.13550 \\
+最终场景，强度 1 & 0.09644 & 0.02710 & 0.02710 \\ \bottomrule
+\end{tabular}
+\end{center}
+前两行只比较算法。第三行记录本册所用的正常强度。旧版原场景方向光朝向绿墙时，光源看到的红墙没有收到这盏灯的正面照明，红墙反射通量为零；增加强度也无法把这些采样点变红。点光源只参与直接光照。
+
+独立的两面片场景只留下红色反射面和白色接收面，消除了其他白墙的影响。在相同强度 1 下，白面上选点的红色增量从 0.05371 变为 0.15186。数学推导和源码对照见《渲染公式与实现》。本例估算一次漫反射，没有测量真实房间的反射率，也没有计算从反射点到接收点之间的逐点遮挡。
+
+\newpage
+\section{重现与对照}
+\textbf{在编辑器里看。}从 Forge 打开 \path{assets/scenes/Reference-CornellBox.redflag} 或 \path{assets/scenes/Reference-Sponza.redflag}，运行场景后使用保存的主相机。Cornell Box 的几何随仓库提供；Sponza 首次运行前在仓库根目录执行下载脚本。灯光与模型保存在场景文件里，实测用的后处理开关和尺寸见对应 YAML。
+
+\begin{verbatim}
+python tests/fetch_sponza.py
+tests\run_scene_gallery.cmd tests\scenes\cornell.yaml
+tests\run_scene_gallery.cmd tests\scenes\sponza.yaml
+\end{verbatim}
+
+\textbf{这两张图从哪里来。}测试通过 AssetManager 加载模型，把模型、灯光和相机保存为可编辑场景，再重新打开并调用 SceneRenderer 的运行时绘制。每帧先写主渲染目标，后处理得到最终颜色。程序从该纹理读回像素，按 PNG 的图像方向翻转行。两张图均在 Debug/x64、GeForce RTX 5070 Ti Laptop GPU、OpenGL 4.6、NVIDIA 616.56 上生成。
+
+\textbf{如何核对。}先检查实体编号，确认画面中的像素确实来自模型，再检查浮点颜色中是否出现无效数值。这两项能发现空画面和部分计算错误。材质色差、法线方向、阴影边缘仍需结合可见画面检查。每次实测的设备、像素数和绘制统计保存在 \path{output/scenes/} 中与图像同名的 YAML。
+
+\textbf{RenderDoc 回放。}Cornell Box 的第 12 帧保存在 \path{output/scenes/CornellBox_capture.rdc}。RenderDoc 1.47 在回放中以附件格式、颜色写入开关和索引数核对了阴影、反射阴影图、深度预写与主绘制。每个阶段绘制 5 个子网格，共 96 个索引。整帧有 24 次绘制，包含全屏处理；它与 Renderer3D 自身统计的 22 次口径不同。
+
+最后一次绘制为事件 273。导出的 $1024\times768$ 颜色图与运行时读回图逐像素比较，三个 RGB 通道完全一致。捕获时驱动报告了 9 条缓冲性能提示和 6 条着色器状态重编译提示。开启验证后的回放新增 12 条信息，最终状态为 Success。本例没有采 GPU 时间，这些提示没有对应的耗时结论。事件和消息可在 \path{output/scenes/CornellBox-replay.json} 查到。
+
+\note{渲染公式与关键源码见《渲染公式与实现》。排查透明裁剪和着色器链接错误的旧代码、修改与验证见《排错记录》。}
+\end{document}

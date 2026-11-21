@@ -1,0 +1,238 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\usepackage{amsmath,amssymb,listings}
+\hypersetup{pdftitle={Redflag 渲染公式与实现}}
+\fancyhead[L]{\small\color{muted}Redflag · 渲染公式与实现}
+\lstset{language=C++,basicstyle=\small\ttfamily,keywordstyle=\color{blue},
+  commentstyle=\color{muted},backgroundcolor=\color{pale},frame=single,
+  rulecolor=\color{line},framesep=6pt,breaklines=true,columns=fullflexible,
+  keepspaces=true,showstringspaces=false,aboveskip=7pt,belowskip=7pt}
+\newcommand{\loc}[2]{\par{\footnotesize\color{muted}源码：\path{#1}；\code{#2}。}\par}
+\newcommand{\unit}[1]{\,\mathrm{#1}}
+\begin{document}
+\zihao{5}\raggedright
+{\Huge\bfseries 渲染公式与实现}\par\vspace{5pt}
+{\Large\color{muted}坐标、材质与间接光的计算过程}\par
+\ruleline
+本文对应当前 OpenGL 实现。代码摘自项目，示意图和数值例为本文编制。先说明每段计算的输入与目的，再把公式对应到语句。矩阵使用列向量，乘积从右向左作用；项目没有固定米制，位置、相机远近面和光源半径须使用同一种场景长度单位。
+
+\section{模型位置与屏幕位置}
+模型文件中的点只说明它相对于模型原点的位置。要把它画到屏幕，还需知道模型放在场景哪里、相机在哪里，以及相机如何投影。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=10mm]
+\node[smallbox] (m) {模型点 $p_m$\\相对模型原点};
+\node[smallbox,right=of m] (w) {世界点 $p_w$\\整个场景的坐标};
+\node[smallbox,right=of w] (v) {观察点 $p_v$\\相机前方为负 $Z$};
+\draw[flow] (m)--node[label]{$M$}(w);
+\draw[flow] (w)--node[label]{$V$}(v);
+\node[smallbox,below=of v] (c) {裁剪坐标 $p_c$\\保留四个分量};
+\node[smallbox,left=of c] (n) {标准化设备坐标\\NDC，无长度单位};
+\draw[flow] (v)--node[label,right]{$P$}(c);
+\draw[flow] (c)--node[label]{除以 $p_c.w$}(n);
+\end{tikzpicture}
+\caption{位置变换示意。视口随后把 NDC 的横纵坐标映射成像素位置。}
+\end{figure}
+
+$M$ 是模型到世界的矩阵，$V$ 是世界到相机的矩阵，$P$ 是投影矩阵。用第四分量为 1 的点表示位置，平移就能写进矩阵乘法：
+\[
+ p_w=M(p_m,1)^{\mathsf T},\qquad p_v=Vp_w,\qquad
+ p_c=Pp_v=PVM(p_m,1)^{\mathsf T}.
+\]
+GLSL 中 \code{worldPos} 对应 $p_w$；\code{u\_ViewProjection} 已在 CPU 上合成 $PV$。最后一行交给 OpenGL 的仍是裁剪坐标，透视除法由后续管线完成。
+\begin{lstlisting}
+vec4 worldPos = model * vec4(a_Position, 1.0);
+v_WorldPos = worldPos.xyz;
+\end{lstlisting}
+\begin{lstlisting}
+gl_Position = u_ViewProjection * worldPos;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（顶点阶段）}
+\note{依据：\source{https://learnopengl.com/Getting-started/Coordinate-Systems}{LearnOpenGL：Coordinate Systems}。模型节点的局部矩阵还会先乘到实体矩阵右侧，见下一页。}
+
+\newpage
+\subsection{变换顺序与数值核对}
+Redflag 的模型可以包含多个节点。导入时累积父子节点变换，提交时再乘实体在场景中的变换；否则模型零件会失去相对位置。
+\begin{lstlisting}
+glm::mat4 finalTransform = transform * subMesh.LocalTransform;
+\end{lstlisting}
+\loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}{DrawModel}
+这里 \code{LocalTransform} 是导入时积累到子网格的变换；\code{transform} 来自实体。一般有 $TS\ne ST$：先把物体缩放，再移动到场景位置，与先移动再把位移一起缩放，结果不同。
+
+取模型点 $(0.5,1,-2)$，先沿 $X$ 放大两倍，再沿世界 $X$ 移动 3。相机在 $(0,0,3)$，朝负 $Z$，不旋转。
+\[
+ M=T(3,0,0)S(2,1,1),\quad
+ p_w=(4,1,-2,1)^{\mathsf T},\quad p_v=(4,1,-5,1)^{\mathsf T}.
+\]
+再取垂直视角 $90^\circ$、宽高比 1、近面 $n=1$、远面 $f=9$。本项目采用 OpenGL 默认深度约定，投影矩阵为
+\[
+ P=\begin{pmatrix}
+ 1&0&0&0\\0&1&0&0\\
+ 0&0&-\frac{f+n}{f-n}&-\frac{2fn}{f-n}\\
+ 0&0&-1&0
+ \end{pmatrix}
+ =\begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&-1.25&-2.25\\0&0&-1&0\end{pmatrix}.
+\]
+于是 $p_c=(4,1,4,5)^{\mathsf T}$，除以 5 得到 NDC $(0.8,0.2,0.8)$。在左下为原点、原点偏移为零的 $100\times100$ 视口里：
+\[
+ x=\frac{0.8+1}{2}\,100=90,\quad
+ y=\frac{0.2+1}{2}\,100=60,\quad d=\frac{0.8+1}{2}=0.9.
+\]
+这些是连续的窗口坐标；光栅化再决定哪些像素被三角形覆盖。深度 $0.9$ 不是距离 $0.9$，也不是 90\% 的相机远平面距离。
+
+\subsection{实现前提}
+模型矩阵是仿射变换，所以 \code{worldPos.w} 为 1，读取 \code{worldPos.xyz} 合理。投影矩阵不能当作模型矩阵放到这里。投影后的点还必须先通过裁剪，不能把任意 $w=0$ 或相机后方的点直接换成屏幕坐标。
+
+\textbf{验证。}本例的矩阵乘法由随文 \path{verify.py} 复算，深度恢复部分会把同一点还原回来。项目的实体 ID 回读测试用于验证实际绘制覆盖，它不代替任意模型节点层级的完整导入验证。
+
+\note{依据：\source{https://pbr-book.org/4ed/Geometry_and_Transformations/Applying_Transformations}{PBRT 第四版 §3.10：Applying Transformations}；投影约定同前页 LearnOpenGL。数值为本文自行设定。}
+
+\newpage
+\section{非均匀缩放后的法线与切线}
+表面被拉长后，光照使用的法线仍应垂直于表面。切线沿着表面延伸，跟着几何变换；法线需要由这个垂直关系反推。
+
+令 $A$ 为模型矩阵左上角的 $3\times3$ 线性部分。原切线 $t$ 与原法线 $n$ 满足 $n^{\mathsf T}t=0$，变换后 $t'=At$。要保持垂直，就需要
+\[
+ {n'}^{\mathsf T}At=0.
+ \quad\text{取 }n'=A^{-\mathsf T}n,\quad
+ (A^{-\mathsf T}n)^{\mathsf T}At=n^{\mathsf T}A^{-1}At=0.
+\]
+因此代码先对法线用逆转置，再单位化。切线用 $A$ 变换，并减去它沿法线的分量；这样两条轴重新垂直。
+\begin{lstlisting}
+mat3 axes = mat3(model);
+vec3 N = normalize(transpose(inverse(axes)) * a_Normal);
+vec3 T = axes * a_Tangent;
+T = normalize(T - dot(T, N) * N);
+v_Normal = N;
+v_TBN = mat3(T, cross(N, T), N);
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（顶点阶段）}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[scale=1.05]
+\draw[thick,color=muted] (-2,-1)--(2,1) node[right] {$t'\parallel(2,1)$};
+\draw[flow,blue,line width=1pt] (0,0)--(.7,-1.4) node[below] {正确 $n'\parallel(0.5,-1)$};
+\draw[flow,draw=orange] (0,0)--(1.4,-.7) node[right] {直接缩放 $An$};
+\fill (0,0) circle(1.5pt);
+\end{tikzpicture}
+\caption{$X$ 放大两倍后的局部截面。橙色方向已经不垂直于表面。}
+\end{figure}
+
+\textbf{数值例。}取 $t=(1,1,0)/\sqrt2$、$n=(1,-1,0)/\sqrt2$、$A=\operatorname{diag}(2,1,1)$。错误做法的点积 $(An)\cdot(At)=1.5$；逆转置的点积为 0。单位化后 $N\approx(0.4472,-0.8944,0)$，$T\approx(0.8944,0.4472,0)$。
+
+\textbf{前提与边界。}法线和切线是无长度单位的方向；$A$ 必须可逆，零缩放不满足条件。法线贴图中的方向经 $[T,B,N]$ 转到世界空间。当前网格只保存三分量切线，没有单独保存镜像 UV 的朝向符号；\code{cross(N,T)} 不能覆盖所有镜像 UV 情况。缺失或退化的切线也需要正确的导入约定。
+
+\note{依据：\source{https://pbr-book.org/4ed/Geometry_and_Transformations/Applying_Transformations}{PBRT 第四版 §3.10.3：Normals}；\source{https://learnopengl.com/Lighting/Basic-Lighting}{LearnOpenGL：Basic Lighting / normal matrix}。垂直性和数值由 \path{verify.py} 检查；不把这个算例描述为所有模型法线贴图已通过视觉回归。}
+
+\newpage
+\section{直接光照的 GGX 与 Schlick 近似}
+一盏灯照到表面后，只有一部分光会朝相机反射。代码分别计算照来的光，以及材质怎样分配反射光。后者用双向反射分布函数（BRDF）描述，它的理论单位是 $\mathrm{sr}^{-1}$；RGB 反射率本身没有单位。
+
+\begin{tabularx}{\textwidth}{L{2.8cm}Y}
+\toprule
+符号 & 本文与代码的约定 \\
+\midrule
+$N,V,L$ & 世界空间单位方向：法线、表面指向相机、表面指向光源。\\
+$H$ & 半程方向，$H=(V+L)/\lVert V+L\rVert$；满足该朝向的微小镜面能把 $L$ 反射到 $V$。\\
+$c,m,r$ & 线性 RGB 底色、金属度、粗糙度；标量 $m,r$ 通常在 $[0,1]$。\\
+$F_0$ & 正入射时的 RGB 反射率；代码按 $m$ 在 $0.04$ 和底色 $c$ 之间插值。\\
+\bottomrule
+\end{tabularx}
+
+\subsection{从反射积分到一盏灯}
+理论上，出射辐亮度为半球内各个入射方向贡献的积分：
+\[
+ L_o(V)=\int_\Omega f_r(L,V)L_i(L)\max(N\cdot L,0)\,\mathrm d\omega.
+\]
+$L_i,L_o$ 的物理单位为 $\mathrm{W\,m^{-2}\,sr^{-1}}$，$\mathrm d\omega$ 是立体角。项目的离散灯光把颜色乘强度放进 \code{radiance}，但没有把这些数值标定成上述物理单位。这里只能把输出理解为线性 HDR 相对亮度。
+
+对一盏灯，当前代码使用
+\[
+ f_r=\underbrace{(1-F)(1-m)\frac{c}{\pi}}_{\text{漫反射}}
+ +\underbrace{\frac{DGF}{4(N\cdot V)(N\cdot L)}}_{\text{镜面反射}},
+ \qquad L_o^{\rm light}=f_r\,q\,\max(N\cdot L,0)\,s.
+\]
+$q$ 是代码中的灯光颜色与强度，$s\in[0,1]$ 是阴影可见度。背向表面的点积在代码中截为 0。离散光源的贡献已包含在 $q$ 中，不应再随手乘一个任意的立体角步长。
+
+\subsection{三个因子的职责}
+$D$ 决定微小表面朝向 $H$ 的集中程度，控制高光形状；$G$ 估算微小表面互相遮挡后还可见多少；$F$ 估算该入射角的反射比例。三者相乘后还需要分母中的方向变换因子，不能只把 $D$ 当作最终高光亮度。
+
+\note{依据：\source{https://learnopengl.com/PBR/Theory}{LearnOpenGL：PBR Theory / reflectance equation}；\source{https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory}{PBRT 第四版 §9.6：微表面模型}。PBRT 的完整分布与遮蔽实现不等同于下一页的实时近似。}
+
+\newpage
+\subsection{公式对应到当前实现}
+Redflag 使用各向同性 GGX 分布，取 $\alpha=r^2$：
+\[
+ D=\frac{\alpha^2}{\pi\bigl((N\cdot H)^2(\alpha^2-1)+1\bigr)^2},\quad
+ F=F_0+(1-F_0)(1-H\cdot V)^5.
+\]
+$D$ 不是直接以立体角为测度的单位概率密度；微表面朝向分布满足 $\int D(h)(N\cdot h)\,\mathrm d\omega_h=1$。平方粗糙度是本实现的参数映射。Schlick 的五次幂是近似式，并非从当前几行代码推导出的精确 Fresnel 方程。
+\begin{lstlisting}
+float a  = roughness * roughness;
+float a2 = a * a;
+\end{lstlisting}
+\begin{lstlisting}
+return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+\end{lstlisting}
+直接光的遮蔽采用 Schlick-GGX：
+\[
+ k=\frac{(r+1)^2}{8},\qquad
+ G_1(x)=\frac{x}{x(1-k)+k},\qquad
+ G=G_1(\max(N\cdot V,0))G_1(\max(N\cdot L,0)).
+\]
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{DistributionGGX / GeometrySchlickGGX / GeometrySmith / FresnelSchlick}
+\begin{lstlisting}
+vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
+\end{lstlisting}
+\begin{lstlisting}
+return (kD * albedo / PI + specular) * radiance * NdotL * shadow;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{CalcDirectionalLight}
+
+\textbf{数值例。}令 $N=V=L=(0,0,1)$、$r=0.5$、$m=0$、$c=0.5$、$q=3$、$s=1$。则 $D=16/\pi\approx5.093$，$G=1$，$F=0.04$。按代码分母额外加 $10^{-4}$，镜面项约 $0.05093$，漫反射项约 $0.15279$，单通道输出约 $0.61115$。此时尚未加入环境光、RSM 或后处理。
+
+\textbf{工程近似。}当前粗糙度被限制为 $[0.089,1]$，GGX 分母另有下限，镜面项上限为 80；这些限制改变了高光能量，不等于严格能量守恒。点光源还使用 $(1-(d/R)^2)^2$ 的有限半径窗口，没有物理上的 $1/d^2$ 项。IBL 的 BRDF 查表使用另一种 $k=r^2/2$，不能与这里的直接光 $k$ 混用。
+
+\note{依据：\source{https://learnopengl.com/PBR/Lighting}{LearnOpenGL：PBR Lighting}；GGX 的定义对照前页 PBRT。这里只摘项目表达式，分母下限与高光限制是本项目实现，不归于教材。数值由 \path{verify.py} 复算，未进行光度标定或完整场景的物理精度评估。}
+
+\newpage
+\section{从屏幕深度恢复表面位置}
+SSAO 需要知道表面附近的采样点是否被挡住。主场景已经存下深度，就可以逆着投影过程找回表面位置，不必再给每个像素存一份三维坐标。
+
+输入 $(u,v)$ 是纹理坐标，范围 $[0,1]$；$d$ 是深度附件中的无量纲值。Redflag 当前没有使用 Vulkan 的 $[0,1]$ 裁剪深度约定，也没有反向深度。先还原 OpenGL 的 NDC：
+\[
+ p_n=(2u-1,\;2v-1,\;2d-1,\;1)^{\mathsf T}.
+\]
+由于原来执行过透视除法，逆矩阵得到的仍是一个齐次表示；最后必须再除以其第四分量。
+\[
+ q=P^{-1}p_n,\qquad p_v=q.xyz/q.w.
+\]
+\begin{lstlisting}
+vec4 ndc   = vec4(uv * 2.0 - 1.0, depth01 * 2.0 - 1.0, 1.0);
+vec4 viewH = u_InvProjection * ndc;
+return viewH.xyz / viewH.w;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/SSAO.glsl}{ReconstructViewPos}
+
+若需要世界位置，把 $P^{-1}$ 换成 $(PV)^{-1}$；RSM 间接光正是这样读取相机深度，避免把相机坐标与灯光世界坐标混在一起。
+\begin{lstlisting}
+vec4 ndc    = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+vec4 worldH = u_InvViewProj * ndc;
+return worldH.xyz / worldH.w;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/RSMIndirect.glsl}{ReconstructWorldPos}
+
+\subsection{正向与逆向计算闭合}
+沿用第 2 页的点，$(u,v,d)=(0.9,0.6,0.9)$。逆投影得到 $q=(0.8,0.2,-1,0.2)$，除以 $0.2$ 后是 $(4,1,-5)$，与正向计算的观察坐标一致。再还原相机平移，世界位置是 $(4,1,-2)$。
+
+只看深度时，本例透视投影还能写成
+\[
+ z_v=-\frac{nf}{f-d(f-n)}.
+\]
+代入 $n=1,f=9,d=0.9$ 得 $z_v=-5$，而 $d=0$、$d=1$ 分别恢复到 $-1$ 和 $-9$。因此深度预览中对 $d$ 直接拉伸得到的是对比灰度，不能读作真实距离。
+
+\textbf{使用边界。}逆投影须对应写入深度的同一相机和深度约定。SSAO 将 $d\ge0.9999$ 视为背景；屏幕外的物体没有记录。RSM 历史还原静态世界点后投向上一帧，只补偿相机变化，不包含物体自身运动或前帧深度拒绝。
+
+\note{依据：\source{https://learnopengl.com/Getting-started/Coordinate-Systems}{LearnOpenGL：投影与透视除法}、\source{https://learnopengl.com/Advanced-Lighting/SSAO}{LearnOpenGL：SSAO}。上式由本文所列投影矩阵求逆得到；\path{verify.py} 检查位置闭合与远近面，不把它当作 SSAO 或 RSM 画质验证。}
+\input{rsm}
+\end{document}

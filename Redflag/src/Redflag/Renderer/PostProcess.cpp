@@ -8,15 +8,17 @@
 namespace Redflag
 {
 
-	// std140，与三个后处理 Shader 的 binding 5 一致。
+	// 三个后处理着色器共用这些参数；字段顺序与着色器声明保持一致。
 	struct BloomParams
 	{
-		glm::vec4 A; // Threshold, Intensity, Radius
-		glm::vec4 B; // TexelSize.xy, Exposure
+		glm::vec4 A; // 亮区阈值、泛光强度、光晕半径
+		glm::vec4 B; // 一个像素占图像宽高的比例、曝光倍率
 	};
 
+	// ---- 初始化与销毁 ----
 	PostProcess::PostProcess()
 	{
+		// 先分配最小目标，首次 Render 再按视口尺寸调整。
 		FramebufferSpecification spec;
 		spec.Width = spec.Height = 1;
 		spec.Attachments = { FramebufferTextureFormat::RGBA16F };
@@ -30,7 +32,7 @@ namespace Redflag
 		m_CompositeShader = Shader::Create("assets/shaders/PostProcess_Composite.glsl");
 		m_Params = UniformBuffer::Create(sizeof(BloomParams), 5);
 
-		// Bloom 关闭时仍绑定有效纹理，间接贡献为零。
+		// Bloom 关闭时采样黑纹理，合成 Shader 读到的泛光贡献为零。
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_BlackTexture);
 		glTextureStorage2D(m_BlackTexture, 1, GL_RGBA8, 1, 1);
 		uint32_t black = 0;
@@ -38,6 +40,7 @@ namespace Redflag
 		glTextureParameteri(m_BlackTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTextureParameteri(m_BlackTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+		// 一个三角形覆盖整张输出图，不需要拼接两个三角形。
 		const float vertices[] = { -1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f };
 		glCreateVertexArrays(1, &m_VertexArray);
 		glCreateBuffers(1, &m_VertexBuffer);
@@ -55,23 +58,32 @@ namespace Redflag
 		glDeleteVertexArrays(1, &m_VertexArray);
 	}
 
+	// ---- 帧执行 ----
 	void PostProcess::Render(uint32_t color, int width, int height)
 	{
 		m_OutputValid = false;
 		if (!color || width <= 0 || height <= 0)
 			return;
 
+		const GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+		const GLboolean scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_SCISSOR_TEST);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		if (m_BloomSettings.Enabled)
 			RenderBloom(color, width, height);
 		Composite(color, width, height);
 		glEnable(GL_DEPTH_TEST);
+		if (cullEnabled) glEnable(GL_CULL_FACE);
+		if (scissorEnabled) glEnable(GL_SCISSOR_TEST);
 		m_OutputValid = true;
 	}
 
+	// ---- Bloom ----
 	void PostProcess::RenderBloom(uint32_t color, int width, int height)
 	{
+		// 每层有自己的图像，宽高逐层减半，最小保留一个像素。
 		const int levels = std::clamp(m_BloomSettings.MipLevels, 1, MaxMips);
 		for (int i = 0; i < levels; ++i)
 		{
@@ -82,18 +94,19 @@ namespace Redflag
 				m_BloomMips[i]->Resize(w, h);
 		}
 
-		// 高光提取：完整覆盖 mip 0，不需要预清空所有层。
+		// 从场景颜色中提取亮区，结果写满第一层图像。
 		m_BloomMips[0]->Bind();
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		m_BrightnessShader->Bind();
 		BloomParams params{};
 		params.A.x = std::max(m_BloomSettings.Threshold, 0.5f);
+		// 让这次绘制使用当前亮度阈值，并从场景颜色图读取像素。
 		m_Params->SetData(&params, sizeof(params));
 		glBindTextureUnit(0, color);
 		DrawTriangle();
 		Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::BloomBright, 3);
 
-		// 下采样：每层写入独立目标，避免同一纹理读写。
+		// 逐层缩小亮区图：读取本层，写入下一层，不能边读边覆盖同一张图。
 		for (int i = 0; i + 1 < levels; ++i)
 		{
 			const auto& source = m_BloomMips[i]->GetSpecifictaion();
@@ -106,7 +119,7 @@ namespace Redflag
 				GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		}
 
-		// 上采样：将较小层加到上一层。
+		// 上采样：从最小层向上累加，保留目标层原有高光，形成多个尺度的光晕。
 		m_UpsampleShader->Bind();
 		glEnable(GL_BLEND);
 		glBlendEquation(GL_FUNC_ADD);
@@ -117,6 +130,7 @@ namespace Redflag
 			params.A = glm::vec4(m_BloomSettings.Threshold, m_BloomSettings.Intensity,
 				std::max(m_BloomSettings.Radius, 0.1f), 0.0f);
 			params.B = glm::vec4(1.0f / source.Width, 1.0f / source.Height, 0.0f, 0.0f);
+			// 用较小层的像素间距计算模糊范围，再把光晕累加到上一层。
 			m_Params->SetData(&params, sizeof(params));
 			glBindTextureUnit(0, m_BloomMips[i]->GetColorAttachmentRendererID());
 			m_BloomMips[i - 1]->Bind();
@@ -128,6 +142,8 @@ namespace Redflag
 		glDisable(GL_BLEND);
 	}
 
+	// ---- HDR 合成与色调映射 ----
+	// 把原场景与最大一层光晕合在一起，再把亮度压到显示器能显示的范围。
 	void PostProcess::Composite(uint32_t color, int width, int height)
 	{
 		const auto& spec = m_Output->GetSpecifictaion();
@@ -136,6 +152,7 @@ namespace Redflag
 		m_Output->Bind();
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		m_CompositeShader->Bind();
+		// 合成读取原场景和光晕；关闭泛光时选黑图，避免读到上次留下的亮区。
 		glBindTextureUnit(0, color);
 		glBindTextureUnit(1, m_BloomSettings.Enabled
 			? m_BloomMips[0]->GetColorAttachmentRendererID() : m_BlackTexture);
@@ -159,6 +176,7 @@ namespace Redflag
 		glBindVertexArray(0);
 	}
 
+	// ---- 输出查询 ----
 	uint32_t PostProcess::GetColorTextureID() const
 	{
 		return m_OutputValid ? m_Output->GetColorAttachmentRendererID() : 0;

@@ -1,0 +1,80 @@
+\section{代表性源码对照}
+下面只节选决定行为的真实代码，省略无关上下文。修改前来自注明的提交，修改后来自本轮工作树或历史修复提交。短片段用于解释错误，完整生命周期仍应回到函数中核对。
+
+\subsection{Mask：选择一项不等于三项相乘}
+位置为 \path{RedflagForge/assets/shaders/Depth_Prepass.glsl} 的片元 main。修改前取自 \rev{1a168c3}，有透明度图时完全不使用底色因子的 alpha，也不读取底色贴图 alpha。
+
+\textbf{修改前}
+\begin{Code}
+float alpha = u_UseAlphaMap == 1
+    ? texture(u_AlphaMap, v_TexCoord).r
+    : u_BaseColor.a;
+if (alpha < u_AlphaCutoff)
+    discard;
+\end{Code}
+
+\textbf{本轮修正}
+\begin{Code}
+float alpha = u_BaseColor.a;
+if (u_UseBaseColorMap == 1)
+    alpha *= texture(u_BaseColorMap, v_TexCoord).a;
+if (u_UseAlphaMap == 1)
+    alpha *= texture(u_AlphaMap, v_TexCoord).r;
+if (alpha < u_AlphaCutoff)
+    discard;
+\end{Code}
+
+修改还包括 C++ 上传底色图及使用开关，不能只改公式而不提供输入。DepthPrepassTests 独立清屏比较两次绘制。RenderDoc 的 EID 28 与 EID 52 进一步确认当次数据和 1024 个像素覆盖一致。Shadow 与 RSM 的覆盖由另一个测试验证，不由这张旧捕获推断。
+
+\subsection{视锥剔除：保留光源仍需要的命令}
+修改前取自同一提交的 Renderer3D::DrawMesh 材质重载。相机剔除后直接返回，Shadow 和 RSM 再也取不到这条命令。
+\begin{Code}
+if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
+s_Data.DrawCommands.push_back({ mesh, transform, material, entityID });
+\end{Code}
+
+本轮统一在 SubmitMesh 记录主相机可见性，先保留命令。
+\begin{Code}
+bool culled = CullMesh(*mesh, transform);
+if (culled)
+    s_Data.Stats.CulledCount++;
+s_Data.DrawCommands.push_back({ mesh, transform, material, entityID, culled });
+\end{Code}
+
+随后只有相机预传递和主绘制筛掉 CameraCulled，光源阶段仍使用完整队列。Renderer3DTests 用相机外、光源内的四边形核对这一区别。
+\loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}
+
+\newpage
+\section{历史源码对照：空批次重画旧数据}
+提交 \rev{e80839c} 前，Renderer2D::EndScene 即使索引数量为零，也计算上传大小后调用 Flush。下段取自该提交的父版本，保留实际调用。
+
+\textbf{修改前：EndScene 无条件提交}
+\begin{Code}
+uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
+    (uint8_t*)s_Data.QuadVertexBufferBase);
+s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+Flush();
+\end{Code}
+
+空批次为什么仍会画出内容，还要继续查到当时 OpenGLRendererAPI::DrawIndexed。这里零数量表示使用整个索引缓冲，并不表示零次绘制。
+\begin{Code}
+uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+glDrawElements(GL_TRIANGLES, count,GL_UNSIGNED_INT,nullptr);
+\end{Code}
+
+\textbf{历史修正：有本批次索引才提交}
+\begin{Code}
+if (s_Data.QuadIndexCount > 0)
+{
+    uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
+        (uint8_t*)s_Data.QuadVertexBufferBase);
+    s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+    Flush();
+}
+\end{Code}
+
+这条判断放在拥有本批次计数的 2D 提交处，避免把空批次交给“零表示全部”的底层接口。它解释了旧缓冲为何有机会再次被读取，比只说“浮点误差”或“清屏有问题”更具体。
+
+本轮核对了修复前后的完整调用链，原提交没有保存失败截图，也没有当时的自动测试日志。当前代码仍保留按有效数量提交的处理，但未补这项专门的空帧切换回归，不能把源码解释写成已重新复现。
+\loc{Redflag/src/Redflag/Renderer/Renderer2D.cpp}
+\loc{Redflag/src/Platform/OpenGL/OpenGLRendererAPI.cpp}

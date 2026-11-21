@@ -9,9 +9,8 @@ namespace Redflag {
         : m_Binding(binding)
     {
         glCreateBuffers(1, &m_RendererID);
-        // ʹ�� GL_DYNAMIC_DRAW ��Ϊ���ǻ�Ƶ�������� (ÿһ֡)
+        // 空间一次分配好，之后每帧可以直接改相机矩阵、曝光等参数。
         glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW);
-        // �󶨵�ָ���� binding point (���� binding=0 ��Ӧ Camera)
         glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_RendererID);
     }
 
@@ -22,9 +21,8 @@ namespace Redflag {
 
     void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
     {
-        // ȷ�� binding point ָ��������ĵ�ǰ buffer
+        // 让着色器用这份参数。比如画第二个视口时，用它自己的曝光值。
         glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
-        // ���� Buffer ����
         glNamedBufferSubData(m_RendererID, offset, size, data);
     }
 

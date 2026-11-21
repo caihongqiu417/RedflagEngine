@@ -113,7 +113,7 @@ Model::Load(filepath)
 
 实际上 OBJ 格式的 UV 已经是 OpenGL 约定（V=0 在底部），stb_image 翻转图像后两者完全匹配。若再加 `aiProcess_FlipUVs` 会导致 UV 被翻转两次，对于 Kenney 这类 colormap atlas 贴图，采样会落到颜色块以外的黑色边缘，造成模型全黑。
 
-**结论：只用 stb_image 翻转，不加 `aiProcess_FlipUVs`。**
+**只用 stb_image 翻转，不加 `aiProcess_FlipUVs`。**
 
 ---
 
