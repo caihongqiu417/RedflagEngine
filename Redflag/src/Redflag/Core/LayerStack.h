@@ -13,8 +13,10 @@ namespace Redflag
 		LayerStack();
 		~LayerStack();
 
+		void Clear();
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
+		// Pop 只移除并 OnDetach，调用方接管对象所有权。
 		void PopLayer(Layer* layer);
 		void PopOverlay(Layer* overlay);
 

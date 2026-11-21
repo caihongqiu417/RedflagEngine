@@ -205,6 +205,10 @@ namespace Redflag {
     void ForgeLayer::OnDetach()
     {
         RF_PROFILE_FUNCTION();
+        if (m_SceneState == SceneState::Play)
+            OnSceneStop();
+        else if (m_SceneState == SceneState::Simulate)
+            OnSceneSimulateStop();
     }
 
     void ForgeLayer::OnUpdate(Timestep ts)

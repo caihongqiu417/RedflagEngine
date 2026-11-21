@@ -221,6 +221,7 @@ namespace Redflag
         delete[] s_Data.QuadVertexBufferBase;
         delete[] s_Data.LineVertexBufferBase;
         delete[] s_Data.CircleVertexBufferBase;
+        s_Data = Renderer2DData{};
     }
 
     //==========================================================================

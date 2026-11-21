@@ -34,7 +34,7 @@ namespace Redflag {
 	// 获取漫反射贴图时会在模型文件所在目录下查找。
 	//
 	// 推荐通过 AssetManager 获取，避免重复加载：
-	//   auto model = AssetManager::GetOrLoad<Model>("assets/models/gun.obj");
+	//   auto model = AssetManager::Load<Model>("assets/models/gun.obj");
 	//
 	// 也可以直接调用：
 	//   auto model = Model::Load("assets/models/gun.obj");

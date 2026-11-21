@@ -120,9 +120,6 @@
     <ClInclude Include="src\Redflag\Core\Application.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Core\AssetManager.h">
-      <Filter>src\Redflag\Core</Filter>
-    </ClInclude>
     <ClInclude Include="src\Redflag\Core\Core.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>

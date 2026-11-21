@@ -187,6 +187,8 @@ namespace Redflag {
 	void WindowsWindow::ShutDown() 
 	{
 		RF_PROFILE_FUNCTION();
+		delete m_Context;
+		m_Context = nullptr;
 		glfwDestroyWindow(m_Window);
 	}
 	void WindowsWindow::OnUpdate()

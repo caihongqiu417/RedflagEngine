@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #include"rfpch.h"
 #include"Redflag/Core/Core.h"

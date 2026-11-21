@@ -184,7 +184,10 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Redflag.h" />
     <ClInclude Include="src\Redflag\Core\Application.h" />
-    <ClInclude Include="src\Redflag\Core\AssetManager.h" />
+    <ClInclude Include="src\Redflag\Assets\AssetManager.h" />
+    <ClInclude Include="src\Redflag\Assets\Asset.h" />
+    <ClInclude Include="src\Redflag\Assets\AssetLibrary.h" />
+    <ClInclude Include="src\Redflag\Renderer\PostProcess.h" />
     <ClInclude Include="src\Redflag\Core\Core.h" />
     <ClInclude Include="src\Redflag\Core\EntryPoint.h" />
     <ClInclude Include="src\Redflag\Core\Input.h" />
@@ -700,6 +703,8 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Renderer\Renderer3D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\RendererAPI.cpp" />
     <ClCompile Include="src\Redflag\Renderer\SceneRenderer.cpp" />
+    <ClCompile Include="src\Redflag\Assets\AssetLibrary.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\PostProcess.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />

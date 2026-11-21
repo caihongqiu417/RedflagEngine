@@ -1,0 +1,28 @@
+\section{渲染阶段与视图资源}\ruleline
+编辑器与运行时分别进入 RenderScene 和 RenderRuntime。以下是当前主要阶段的顺序；各阶段受效果开关、灯光和有效附件条件控制。
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\node[module] (a) at (0,0) {\textbf{1 二维绘制与收集}\\Sprite / Circle\\灯光与 3D 绘制队列};
+\node[module] (b) at (7.8,0) {\textbf{2 光源阶段}\\Shadow / RSM\\光源空间数据};
+\node[module] (c) at (0,-2.5) {\textbf{3 深度阶段}\\Depth / Normal\\主视图附件};
+\node[module] (d) at (7.8,-2.5) {\textbf{4 屏幕空间计算}\\SSAO / RSM Indirect\\遮蔽与间接光};
+\node[module] (e) at (0,-5) {\textbf{5 时域解析}\\RSM History\\前帧与当前帧结果};
+\node[module] (f) at (7.8,-5) {\textbf{6 主绘制}\\Renderer3D::EndScene\\排序、实例化与提交};
+\node[module] (g) at (0,-7.5) {\textbf{7 天空盒与调试}\\Skybox / Debug AABB\\HDR 目标};
+\node[module] (h) at (7.8,-7.5) {\textbf{8 PostProcess}\\Bloom / Composite\\Tonemap 与最终输出};
+\draw[flow](a)--(b);\draw[flow](c)--(d);\draw[flow](e)--(f);\draw[flow](g)--(h);
+\draw[flow](b.south)--++(0,-.35)-|(c.north);
+\draw[flow](d.south)--++(0,-.35)-|(e.north);
+\draw[flow](f.south)--++(0,-.35)-|(g.north);
+\end{tikzpicture}\caption{当前主要渲染阶段}\end{figure}
+\subsection{资源归属}
+主场景 HDR 目标由 ForgeLayer 提供。SceneRenderer 当前持有一个 PostProcess 对象，RenderScene / RenderRuntime 在末尾调用它的 Render。Bloom 与 Tonemap 的参数、六级金字塔、输出 FBO、Shader、UBO 和全屏三角均归该对象所有。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\node[module] (owner) at (0,0) {\textbf{SceneRenderer}\\Scope<PostProcess>\\传入 HDR、宽、高};
+\node[module] (post) at (5.2,0) {\textbf{PostProcess}\\RenderBloom / Composite\\构造与析构资源};
+\node[module] (output) at (10.4,0) {\textbf{输出}\\独立 LDR 目标\\GetColorTextureID};
+\draw[flow](owner)--(post);\draw[flow](post)--(output);
+\end{tikzpicture}\caption{本轮拆出的后处理对象}\end{figure}
+\note{阴影、SSAO、RSM 历史和 Renderer3D 仍有静态共享状态。当前尚未完成多视口隔离，也没有 RenderGraph。}

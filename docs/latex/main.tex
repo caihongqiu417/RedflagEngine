@@ -1,0 +1,195 @@
+% !TeX program = xelatex
+\documentclass[UTF8,fontset=fandol,10pt,a4paper]{ctexart}
+\usepackage[left=22mm,right=22mm,top=23mm,bottom=22mm,headheight=14pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{Latin Modern Mono}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
+\usepackage{booktabs,tabularx,array,enumitem,float,caption,fancyhdr,hyperref}
+\definecolor{blue}{HTML}{2869A9}
+\definecolor{ink}{HTML}{293340}
+\definecolor{muted}{HTML}{647181}
+\definecolor{line}{HTML}{C5D4E2}
+\definecolor{pale}{HTML}{F0F5FA}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue,pdftitle={Redflag 引擎架构},pdfauthor={Redflag}}
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\linespread{1.18}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\renewcommand{\arraystretch}{1.45}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\ctexset{section={format=\Large\bfseries\color{blue},beforeskip=18pt,afterskip=8pt},subsection={format=\large\bfseries\color{blue},beforeskip=12pt,afterskip=5pt}}
+\captionsetup{font=small,labelfont=bf,textfont={color=muted},skip=7pt}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{muted}Redflag · C++ / OpenGL · 技术架构}
+\fancyhead[R]{\small\color{muted}2026-11-21}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\newcommand{\note}[1]{{\small\color{muted}#1\par}}
+\newcommand{\code}[1]{{\small\texttt{#1}}}
+\newcommand{\ruleline}{\par\vspace{-4pt}{\color{line}\hrule}\vspace{8pt}}
+\tikzset{
+ module/.style={draw=line,fill=pale,rounded corners=2pt,align=center,inner sep=8pt,text width=3.9cm,minimum height=1.6cm,font=\small},
+ wide/.style={module,text width=10.2cm,minimum height=1.2cm},
+ flow/.style={-{Stealth[length=2mm]},draw=muted,line width=.65pt},
+ label/.style={font=\scriptsize,fill=white,inner sep=2pt,text=muted}}
+
+\begin{document}
+\zihao{-5}
+{\Huge\bfseries Redflag 引擎架构}\par\vspace{5pt}
+{\large\color{muted}模块、资产身份、渲染资源与生命周期}\par
+{\color{blue}\hrule height 1pt}\vspace{10pt}
+Redflag 是面向 Windows 的 C++ 游戏引擎，使用 OpenGL 绘制，RedflagForge 提供场景编辑、运行预览和渲染调参。本文从模块关系进入资源加载与逐帧渲染，再说明对象的归属和退出顺序。
+
+文档以当前源码为依据；最后一节单列尚未完成的迁移。资源管理保持同步加载，渲染保持显式阶段编排，暂不引入异步调度和完整 RenderGraph。
+
+\section{术语}\ruleline
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.2cm}Y@{}}\toprule
+Scene / ECS & Scene 持有 EnTT registry，实体由变换、模型、灯光、脚本和物理等组件组合而成。\\
+AssetID & 可持久化的资产身份。文件路径描述位置，ID 描述是哪一份资产。\\
+AssetLibrary & 记录资产 ID、类型与路径；元数据随源文件保存。\\
+Ref & 引擎对 \code{std::shared\_ptr} 的别名。缓存与调用方可以共同持有资源。\\
+DrawCommand & 一次待执行的绘制记录，包含网格、变换、材质和实体 ID。\\
+Pass & 一个渲染阶段，如阴影、SSAO、Bloom。当前仍由显式函数组织。\\
+Framebuffer & 保存颜色、法线和深度等渲染附件，与磁盘资产分开管理。\\
+RSM / History & RSM 记录光源视角下的反射信息；History 保存前帧间接光以做时域累积。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\subsection*{阅读路径}
+第 2 节看模块边界；第 3 节看一帧如何执行；第 4、5 节分别说明资产与渲染；第 6 节说明核心类；第 7 节说明生命周期；第 8 节列出下一步改造和验收。
+
+\clearpage
+\section{系统总览}\ruleline
+编辑器操作 Scene，Scene 进入 SceneRenderer。资源通过资产层解析，绘制交给 Renderer2D / Renderer3D 和 OpenGL 后端。实线表示调用或数据传递，虚线表示资源查询。
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\node[module] (forge) at (0,0) {\textbf{RedflagForge}\\ForgeLayer / Panels\\编辑、播放、视口};
+\node[module] (scene) at (5.2,0) {\textbf{Scene}\\Entity / Components\\脚本与物理更新};
+\node[module] (sr) at (10.4,0) {\textbf{SceneRenderer}\\灯光与绘制收集\\阶段编排};
+\node[module] (app) at (0,-3.0) {\textbf{Application}\\Window / LayerStack\\主循环与事件};
+\node[module] (assets) at (5.2,-3.0) {\textbf{Assets}\\Library / Manager\\身份、路径与共享缓存};
+\node[module] (draw) at (10.4,-3.0) {\textbf{Renderer2D / 3D}\\批次与绘制队列\\排序和 GPU 提交};
+\node[wide] (gl) at (5.2,-5.8) {\textbf{Platform / OpenGL}\\GLFW 窗口与输入；Buffer / Shader / Texture / Framebuffer 实现};
+\draw[flow](app)--(forge);\draw[flow](forge)--(scene);\draw[flow](scene)--(sr);\draw[flow](sr)--(draw);
+\draw[flow,dashed](scene)--node[label,right]{资产查询}(assets);
+\draw[flow](app.south)|-(gl.west);\draw[flow](draw.south)|-(gl.east);
+\end{tikzpicture}\caption{当前系统组成}\end{figure}
+\subsection{职责边界}
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.5cm}Y@{}}\toprule
+模块 & 负责的决定\\\midrule
+ForgeLayer & 当前编辑场景、运行模式、选中实体、视口显示与交互。\\
+Scene & 实体组件数据，以及脚本和物理的更新。\\
+资产层 & ID 与路径的对应关系、加载和共享缓存。\\
+SceneRenderer & 当前帧的绘制组织、效果开关与输出。\\
+OpenGL 后端 & 图形资源创建、绑定与具体绘制命令。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\note{当前边界仍不完全：Scene 的 OnUpdate 会触发绘制；部分 Panel 仍位于引擎 Scene/Panel；高层渲染代码仍有直接 OpenGL 调用。}
+
+\clearpage
+\section{一帧与场景状态}\ruleline
+应用更新 Layer；ForgeLayer 根据 Edit、Play、Simulate 选择场景更新入口。主场景绘制完成后，编辑器界面显示最终纹理并处理面板交互。
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=8mm]
+\node[wide] (a) {\textbf{1 Application::Run}\\计算帧时间，更新 Layer};
+\node[wide,below=of a] (b) {\textbf{2 ForgeLayer::OnUpdate}\\绑定目标，选择场景状态与相机};
+\node[wide,below=of b] (c) {\textbf{3 Scene::OnUpdate*}\\更新相应脚本、物理或编辑状态};
+\node[wide,below=of c] (d) {\textbf{4 SceneRenderer}\\收集灯光与几何，执行渲染阶段};
+\node[wide,below=of d] (e) {\textbf{5 ForgeLayer / ImGui}\\最终纹理、拾取、Gizmo 与调试面板};
+\draw[flow](a)--(b);\draw[flow](b)--(c);\draw[flow](c)--(d);\draw[flow](d)--(e);
+\end{tikzpicture}\caption{主循环中的场景处理链路}\end{figure}
+\subsection{编辑数据与运行副本}
+\par
+\begin{tabularx}{\linewidth}{@{}L{2cm}Y Y@{}}\toprule
+状态 & 场景与相机 & 更新范围\\\midrule
+Edit & 编辑场景；EditorCamera & 编辑与绘制。\\
+Play & 复制编辑场景；场景主相机 & 脚本、物理、粒子与绘制。\\
+Simulate & 复制编辑场景；EditorCamera & 物理模拟与绘制。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+停止运行时，先结束对应的脚本或物理状态，再丢弃副本并恢复编辑场景。悬停实体引用需要同时清除，避免继续指向旧场景。
+
+\clearpage\input{assets.tex}
+\clearpage\input{rendering.tex}
+
+\clearpage
+\section{核心类与外部组件}\ruleline
+只列关键入口和归属，完整接口以同名头文件为准。
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.7cm}Y@{}}\toprule
+核心类 & 关键接口与职责\\\midrule
+Application & Run / PushLayer / OnEvent；持有窗口和 LayerStack，调度启动与退出。\\
+LayerStack & Push / Pop / Clear；Clear 结束并销毁 Layer，Pop 将对象所有权交还调用方。\\
+Scene & CreateEntity / Copy / OnRuntimeStart / OnRuntimeStop / OnUpdate*；持有 registry 与物理世界。\\
+SceneSerializer & Serialize / Deserialize；恢复实体组件，处理资源引用。\\
+ScriptEngine & 管理 Mono、程序集与脚本实例；ScriptGlue 提供 C\# 到 C++ 的桥接。\\
+SceneRenderer & RenderScene / RenderRuntime；收集场景并编排渲染阶段。\\
+PostProcess & Render / GetColorTextureID；独立拥有 Bloom 与 Tonemap 参数、附件和绘制资源。\\
+Renderer3D & DrawMesh / DrawModel 提交；EndScene 排序和绘制；其他几何 Pass 复用队列。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\subsection{内部模块与外部组件}
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.0cm}L{4.1cm}Y@{}}\toprule
+内部模块 & 外部组件 & 用途\\\midrule
+窗口与编辑器 & GLFW / ImGui / ImGuizmo & 窗口输入、面板与变换工具。\\
+场景与物理 & EnTT / Box2D & 实体组件存储与二维物理。\\
+模型与图像 & Assimp / stb\_image / tinyexr & 模型导入和图像解码。\\
+脚本与序列化 & Mono / yaml-cpp & 托管脚本与场景文本读写。\\
+数学与日志 & GLM / spdlog & 向量矩阵和日志输出。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\note{工程并未把所有外部库完全封装起来。下一步优先收拢资源加载和 OpenGL 调用，再根据需要抽取接口。}
+
+\clearpage
+\section{生命周期与资源所有权}\ruleline
+GPU 对象释放时必须有有效图形上下文。应用退出按下列顺序进行，窗口最后销毁。
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=7mm]
+\node[wide] (a) {\textbf{1 LayerStack::Clear}\\ForgeLayer 退出 Play / Simulate；销毁场景引用与界面};
+\node[wide,below=of a] (b) {\textbf{2 ScriptEngine::Shutdown}\\结束托管运行环境并释放脚本数据};
+\node[wide,below=of b] (c) {\textbf{3 AssetManager::ClearAll}\\释放缓存持有的资源引用};
+\node[wide,below=of c] (d) {\textbf{4 Renderer::Shutdown}\\场景渲染销毁 PostProcess；释放 3D 和 2D 资源};
+\node[wide,below=of d] (e) {\textbf{5 Window 销毁}\\释放 GraphicsContext，销毁 GLFW 窗口};
+\draw[flow](a)--(b);\draw[flow](b)--(c);\draw[flow](c)--(d);\draw[flow](d)--(e);
+\end{tikzpicture}\caption{应用退出顺序}\end{figure}
+\subsection{所有权约定}
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.7cm}Y@{}}\toprule
+对象 & 生命周期约定\\\midrule
+Layer & 在栈中时由 LayerStack 管理。Pop 调用 OnDetach 后移除，不负责 delete。\\
+共享资产 & 缓存和外部 Ref 共同持有。Unload 只移除缓存引用，不强行销毁仍在使用的对象。\\
+渲染附件 & 由渲染模块管理，不加入磁盘资产缓存。尺寸或历史失效规则由视图状态决定。\\
+图形上下文 & 在所有引擎 GPU 对象释放之后结束。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+
+\clearpage
+\section{后续迁移与验收}\ruleline
+保留目前轻量的 Application、Scene 和 Entity；逐步强化资源身份和绘制边界。下面列出仍需完成的工作，而非已经实现的功能。
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.2cm}Y Y@{}}\toprule
+阶段 & 改造内容 & 验收条件\\\midrule
+独立导入 & 源文件解析与 GPU 上传分开；增加导入设置和产物缓存。 & 改变设置后重新导入，运行时使用确定的产物。\\
+场景数据提取 & Scene 转为 RenderSceneData，不向绘制阶段暴露可修改 registry。 & 绘制不会修改场景组件，模拟与渲染可分别调用。\\
+多视口完整隔离 & 视口尺寸、效果设置和历史不共享；验证其他静态模块。 & 两个不同相机和尺寸的视口连续渲染不串历史。\\
+独立 Pass & 明确输入、输出与状态，先用固定列表执行。 & 任意效果开关、Resize 后输出正确。\\
+轻量 RenderGraph & 从 Pass 资源依赖管理顺序与临时附件。 & 能证明资源复用收益，且输出与固定列表一致。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\subsection{本轮验证范围}
+PostProcess 已通过隐藏 OpenGL 4.6 窗口中的专项测试：两个实例独立输出、单实例 Resize、Bloom 开关、零输入处理、像素读回与析构后的 GL 错误检查。该测试覆盖后处理资源生命周期，不等同于完整编辑器交互回归。构建和资产测试的结果另见项目清理记录。
+\subsection{参考与取舍}
+\par
+\begin{tabularx}{\linewidth}{@{}L{3.2cm}Y@{}}\toprule
+资料 & 采用的组织方式\\\midrule
+Hazel 公开源码 & 轻量 Application / Layer / Scene / Entity 结构。\\
+Unity Asset Database & 资产身份与文件位置分离，元数据伴随源文件。\\
+Unity Render Graph & 将渲染阶段的输入输出显式表达，作为后续演进方向。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\small
+\href{https://github.com/TheCherno/Hazel}{TheCherno/Hazel}\quad
+\href{https://docs.unity.com/en-us/engine/6000.3/manual/assets-and-media/asset-database/contents}{Unity Asset Database}\quad
+\href{https://github.com/Unity-Technologies/Graphics/blob/master/Packages/com.unity.render-pipelines.core/Documentation~/render-graph-system.md}{Unity Render Graph}
+\end{document}

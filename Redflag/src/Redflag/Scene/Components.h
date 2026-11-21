@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Redflag/Assets/Asset.h"
+
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -194,7 +196,8 @@ namespace Redflag {
 	// 3D 模型渲染组件（通过 Assimp 从文件加载，支持多子网格）
 	struct ModelRendererComponent
 	{
-		std::string  FilePath;       // 模型文件路径，场景序列化时保存此字段
+		AssetID ModelID = 0;
+		std::string FilePath; // 旧场景兼容与编辑器显示。
 		Ref<Model>   ModelAsset;     // 运行时句柄，由 AssetManager 管理，不序列化
 
 		glm::vec4    Color = glm::vec4(1.0f); // 无贴图时的备用颜色

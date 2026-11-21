@@ -5,7 +5,7 @@
 
 #include"Entity.h"
 #include"Components.h"
-#include "Redflag/Core/AssetManager.h"
+#include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
 #include <fstream>
@@ -387,6 +387,7 @@ namespace Redflag {
             out << YAML::BeginMap;
 
             auto& mr = entity.GetComponent<ModelRendererComponent>();
+            out << YAML::Key << "ModelID" << YAML::Value << mr.ModelID;
             out << YAML::Key << "FilePath" << YAML::Value << mr.FilePath;
             out << YAML::Key << "Color"    << YAML::Value << mr.Color;
 
@@ -550,7 +551,7 @@ namespace Redflag {
 		RF_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& filepath)
+	bool SceneSerializer::Deserialize(const std::string& filepath) try
 	{
         std::ifstream stream(filepath);
         std::stringstream strStream;
@@ -559,6 +560,8 @@ namespace Redflag {
         YAML::Node data = YAML::Load(strStream.str());
         if (!data["Scene"])
             return false;
+
+        AssetManager::GetLibrary().Scan("assets");
 
         std::string sceneName = data["Scene"].as<std::string>();
         RF_CORE_TRACE("Deserializing Scene'{0}", sceneName);
@@ -719,7 +722,24 @@ namespace Redflag {
                 {
                     auto mrNode = entity["ModelRendererComponent"];
                     auto& mr = deserializedEntity.AddComponent<ModelRendererComponent>();
-                    mr.FilePath = mrNode["FilePath"].as<std::string>();
+                    mr.FilePath = mrNode["FilePath"] ? mrNode["FilePath"].as<std::string>() : "";
+                    mr.ModelID = mrNode["ModelID"] ? mrNode["ModelID"].as<AssetID>() : 0;
+                    if (!mr.ModelID)
+                        mr.ModelID = AssetManager::Add<Model>(mr.FilePath);
+                    else if (!AssetManager::GetLibrary().Get(mr.ModelID))
+                    {
+                        // assets 外的模型按保存路径定位，但不能用不同 ID 的文件替换。
+                        auto meta = std::filesystem::path(mr.FilePath);
+                        meta += ".rfmeta";
+                        if (std::filesystem::exists(meta))
+                        {
+                            auto id = AssetManager::Add<Model>(mr.FilePath);
+                            if (id && id != mr.ModelID)
+                                throw std::runtime_error("Model ID does not match: " + mr.FilePath);
+                        }
+                    }
+                    if (const auto* info = AssetManager::GetLibrary().Get(mr.ModelID))
+                        mr.FilePath = std::filesystem::proximate(info->Path).generic_string();
                     mr.Color    = mrNode["Color"].as<glm::vec4>();
                     // ModelAsset 将在首次渲染时由 AssetManager 懒加载
 
@@ -805,6 +825,12 @@ namespace Redflag {
         }
         return true;
 	}
+
+    catch (const std::exception& error)
+    {
+        RF_CORE_ERROR("Cannot open scene {0}: {1}", filepath, error.what());
+        return false;
+    }
 
 	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
 	{

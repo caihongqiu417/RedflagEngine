@@ -108,6 +108,9 @@ namespace Redflag {
         // 遍历当前目录
         for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
+            if (directoryEntry.path().extension() == ".rfmeta")
+                continue;
+
             // 取得以 assets 为相对基准的显示名称
             auto relativePath = std::filesystem::relative(directoryEntry.path(), s_AssetPath);
             std::string name = relativePath.filename().string();

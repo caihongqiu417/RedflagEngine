@@ -1,15 +1,8 @@
 #include"rfpch.h"
 #include"Scene.h"
 
-// 渲染职责已转移到 SceneRenderer；Scene 不再直接调用 Renderer2D / Renderer3D。
-// 保留 Renderer2D.h 仅用于 ResetStats（ForgeLayer 在 OnUpdate 中调用），
-// 后续这个依赖也会移走。
-#include"Renderer/Renderer2D.h"
-#include"Renderer/Renderer3D.h"
 #include"Redflag/Renderer/SceneRenderer.h"
 
-#include"Redflag/Core/AssetManager.h"
-#include"Redflag/Renderer/Model.h"
 #include"Redflag/ParticleSystem/ParticleSystem.h"
 
 #include"Entity.h"
@@ -213,16 +206,6 @@ namespace Redflag {
 
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
     {
-        // ======================================================================
-        // 渲染职责委托给 SceneRenderer
-        //
-        // 以前这里直接遍历 ECS 并调用 Renderer2D / Renderer3D，
-        // 现在统一由 SceneRenderer::RenderScene 负责。
-        //
-        // Scene 只持有数据（registry），不再决定「怎么画」。
-        // 这样后续加 Shadow / Deferred / PostProcess 等 pass 时，
-        // 只需要修改 SceneRenderer，不用动 Scene。
-        // ======================================================================
         SceneRenderer::RenderScene(*this, camera);
     }
 

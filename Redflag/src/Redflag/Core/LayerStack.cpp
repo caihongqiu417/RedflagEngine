@@ -9,8 +9,18 @@ namespace Redflag
 
 	LayerStack::~LayerStack()
 	{
+		Clear();
+	}
+
+	void LayerStack::Clear()
+	{
 		for (Layer* layer : m_Layers)
+		{
+			layer->OnDetach();
 			delete layer;
+		}
+		m_Layers.clear();
+		m_LayerInsertIndex = 0;
 	}
 
 	void LayerStack::PushLayer(Layer* layer)
@@ -27,9 +37,11 @@ namespace Redflag
 
 	void LayerStack::PopLayer(Layer* layer)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
-		if (it!=m_Layers.end())
+		auto end = m_Layers.begin() + m_LayerInsertIndex;
+		auto it = std::find(m_Layers.begin(), end, layer);
+		if (it != end)
 		{
+			layer->OnDetach();
 			m_Layers.erase(it);
 			m_LayerInsertIndex--;
 		}
@@ -37,11 +49,12 @@ namespace Redflag
 
 	void LayerStack::PopOverlay(Layer* overlay)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), overlay);
+		auto begin = m_Layers.begin() + m_LayerInsertIndex;
+		auto it = std::find(begin, m_Layers.end(), overlay);
 		if (it != m_Layers.end())
 		{
+			overlay->OnDetach();
 			m_Layers.erase(it);
-			m_LayerInsertIndex--;
 		}
 	}
 }

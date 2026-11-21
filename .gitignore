@@ -449,3 +449,9 @@ Redflag/vendor/mono/lib/**/*.pdb
 Redflag/vendor/mono/lib/**/*.exp
 Redflag/vendor/mono/lib/**/*.bat
 Redflag/vendor/mono/lib/**/*.sh
+
+# 模型文件仍在 Git 外管理，资源身份需要跟随项目保存。
+!RedflagForge/assets/models/
+RedflagForge/assets/models/**
+!RedflagForge/assets/models/**/
+!RedflagForge/assets/models/**/*.rfmeta

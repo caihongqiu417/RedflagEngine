@@ -1,0 +1,39 @@
+\section{资产身份与加载}\ruleline
+资产层把身份、位置和缓存分开。AssetID 用于场景持久化，AssetLibrary 维护类型和路径，AssetManager 按 ID 返回共享资源。当前接入稳定 ID 的资源是模型，贴图尚未统一接入。
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\node[module] (source) at (0,0) {\textbf{源文件与元数据}\\模型文件 + .rfmeta\\稳定 ID 随文件保存};
+\node[module] (registry) at (5.2,0) {\textbf{AssetLibrary}\\AssetID / 类型 / 路径\\登记与查询};
+\node[module] (manager) at (10.4,0) {\textbf{AssetManager}\\按资产身份缓存\\成功加载后共享 Ref};
+\node[module] (component) at (0,-3) {\textbf{场景组件}\\模型 AssetID\\保留旧路径迁移信息};
+\node[module] (load) at (5.2,-3) {\textbf{Model::Load}\\Assimp 解析模型\\创建子网格和材质};
+\node[module] (gpu) at (10.4,-3) {\textbf{运行时资源}\\Mesh / Material / Texture\\GPU 对象与共享引用};
+\draw[flow](source)--(registry);\draw[flow](registry)--(manager);
+\draw[flow](component.north east)--node[label,left]{按 ID 查询}(registry.south west);
+\draw[flow](manager.south)--node[label,right]{缓存 Ref}(gpu.north);
+\draw[flow](manager.south west)--node[label,above left]{同步加载}(load.north east);
+\draw[flow](load)--(gpu);
+\end{tikzpicture}\caption{资产身份、加载和运行时引用}\end{figure}
+\subsection{约定}
+\begin{itemize}
+\item AssetID 是 64 位无符号整数，0 表示未指定。源文件旁的 .rfmeta 保存身份。
+\item ContentBrowser 隐藏 .rfmeta，避免把元数据当成可拖入场景的模型。
+\item 移动模型时同时保留元数据；在 assets 目录内移动后，重新打开场景扫描资源库。
+\item 场景保存 ModelID，并兼容旧 FilePath。加载旧场景时将路径登记为资产身份。
+\item 模型进入资产层；ShadowMap、SSAO 和历史纹理属于渲染资源。
+\item 当前加载同步执行，文件解析与 GPU 创建尚未彻底拆分。
+\end{itemize}
+\subsection{缓存与外部引用}
+缓存持有 Ref，场景组件也可以持有 Ref。移除缓存只释放缓存自己的引用，外部使用中的资源继续有效。所有 GPU 创建和最终释放仍需在持有图形上下文的线程执行。
+
+\par
+\begin{tabularx}{\linewidth}{@{}L{4.5cm}Y@{}}\toprule
+接口 & 职责\\\midrule
+AssetLibrary::Add / Get & 登记源文件，按 AssetID 取得 AssetInfo；不创建 GPU 对象。\\
+AssetLibrary::Scan & 扫描已有 .rfmeta，恢复 ID 到新位置的映射。\\
+AssetManager::Load & 按类型与 ID 查缓存；未命中时调用资源类型的 Load。\\
+Unload / ClearAll & 释放一项或全部缓存引用，外部 Ref 继续有效。\\\bottomrule
+\end{tabularx}\par\vspace{4pt}
+\subsection{与 Hazel 的关系}
+AssetLibrary 借鉴 Hazel 中 ShaderLibrary 的命名和资源收集方式；它是 Redflag 自己的资产库，不代表 Hazel 公开版存在同名接口。模型每帧只按已登记的 ModelID 查找，不重复登记路径。
+\note{本轮未加入异步加载、内存预算、资产热重载或独立导入产物缓存。}

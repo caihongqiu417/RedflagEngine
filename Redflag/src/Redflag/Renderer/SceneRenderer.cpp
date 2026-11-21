@@ -1,12 +1,3 @@
-// =====================================================================
-// SceneRenderer.cpp — 场景渲染调度器
-//
-// 职责：
-//   1. 每帧收集灯光数据 → 上传 Light UBO (binding = 3)
-//   2. 遍历 registry → 调用 Renderer2D / Renderer3D 发出绘制命令
-//   3. 后续扩展：Shadow Pass、PostProcess 等多 pass 编排
-// =====================================================================
-
 #include "rfpch.h"
 #include "SceneRenderer.h"
 
@@ -22,7 +13,7 @@
 #include "Redflag/Renderer/SubTexture2D.h"
 #include "Redflag/Renderer/Shader.h"
 
-#include "Redflag/Core/AssetManager.h"
+#include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
 #include <glad/glad.h>
@@ -128,74 +119,16 @@ namespace Redflag {
 		return s_LastPrepassDepthTex;
 	}
 
-	// =================================================================
-	// Bloom 资源
-	//
-	// 算法概述：
-	//   1. Brightness Extract：从主 HDR buffer 提取亮度 > threshold 的片元
-	//      输出到 s_BloomMips[0]（半分辨率）
-	//
-	//   2. Downsample chain：用 glBlitFramebuffer GL_LINEAR 纯硬件双线性下采样
-	//      s_BloomMips[0] → [1] → [2] → … → [N-1]
-	//      优点：零 shader 开销，带宽极低
-	//
-	//   3. Upsample chain：波松圆盘 12 点采样上采样，写入上一层（GL_ONE/GL_ONE 叠加）
-	//      s_BloomMips[N-1] → 叠加到 [N-2] → … → [0]
-	//      写目标 Mips[i-1]、读源 Mips[i]，不同对象，无读写同源问题
-	//
-	//   4. Composite：合并 HDR 原图 + s_BloomMips[0]，进行 ACES tonemap + gamma
-	//      输出到 s_PostFBO（RGBA8 LDR）
-	// =================================================================
-	static constexpr int    MAX_BLOOM_MIPS = 6;
+	// 后处理拥有独立的输出与绘制资源。
+	static Scope<PostProcess> s_PostProcess;
+	static uint32_t s_MainSceneColorTex = 0;
+	static int s_MainSceneWidth = 0;
+	static int s_MainSceneHeight = 0;
 
-	// Bloom 金字塔：每层尺寸为 w>>(i+1) × h>>(i+1)
-	// 第 0 层 = 半分辨率（亮度提取层），每多一层尺对半分
-	static Ref<Framebuffer>  s_BloomMips[MAX_BLOOM_MIPS];
+	BloomSettings& SceneRenderer::GetBloomSettings() { return s_PostProcess->GetBloomSettings(); }
+	ToneMapSettings& SceneRenderer::GetToneMapSettings() { return s_PostProcess->GetToneMapSettings(); }
 
-	// 后处理最终输出 FBO：存储 ACES tonemap + gamma 完成的 LDR 颜色
-	// 不能直接写回主 FBO attachment0（同 FBO 读写不合法）
-	static Ref<Framebuffer>  s_PostFBO;
-
-	static Ref<Shader>       s_BloomBrightShader;    // 亮度提取：输出 lum > threshold 的片元
-	static Ref<Shader>       s_BloomUpsampleShader;   // 波松圆盘 12-tap 上采样
-	static Ref<Shader>       s_PostCompositeShader;   // HDR + bloom → ACES + gamma → LDR
-	static uint32_t          s_BlackFallbackTex = 0;  // Bloom 关闭/未就绪时绑定的 1x1 黑纹理
-	static bool              s_PostColorValid   = false; // 只有 Composite pass 成功执行后才允许 Viewport 使用
-	static uint32_t          s_MainSceneColorTex = 0;    // ForgeLayer 显式登记的主场景 HDR 颜色纹理
-	static int               s_MainSceneWidth    = 0;
-	static int               s_MainSceneHeight   = 0;
-
-	// Bloom 参数 UBO（binding = 5）
-	// shaderc 用 Vulkan 语义编译 GLSL，块外 naked non-opaque uniform（如
-	// `uniform float u_Threshold;`）会被拒绝；必须包进 uniform block。
-	// u_BloomA.x = Threshold, y = Intensity, z = Radius, w = unused
-	// u_BloomB.xy = TexelSize,           zw = unused
-	static constexpr uint32_t BLOOM_UBO_BINDING = 5;
-	struct GPUBloomParams { glm::vec4 A; glm::vec4 B; };
-	static Ref<UniformBuffer> s_BloomParamsUBO;
-
-	static BloomSettings     s_BloomSettings;
-	static ToneMapSettings   s_ToneMapSettings;
-
-	BloomSettings&   SceneRenderer::GetBloomSettings()   { return s_BloomSettings; }
-	ToneMapSettings& SceneRenderer::GetToneMapSettings() { return s_ToneMapSettings; }
-
-	// =================================================================
-	// RSM (Reflective Shadow Maps) 资源
-	//
-	// 设计：完全独立于 Shadow Pass，不修改 s_ShadowFBO / s_ShadowDepthShader。
-	//   - s_RSMFBO：2048×2048，3 颜色附件 (Flux/WorldPos/Normal RGBA16F) + 1 深度
-	//   - 主 Pass 通过 binding=13/14/15 采样这三张图
-	//   - Enabled=false 时本特性完全不参与渲染
-	//
-	// 当前将 RSM 分辨率提升到和 Shadow Map 一样的 2048²，用更高的 VPL 采样
-	// 密度换取更平滑的间接光重建，代价是显存占用显著增加。
-	//   2048² × RGBA16F × 3 + 2048² × DEPTH32F ≈ 112MB。
-	// =================================================================
-	// RSM 只用作 VPL 容器：每像素只采样 128 个 VPL，再高分辨率也利用不到。
-	// 512² 对应单 VPL 半径里 ~25 个采样点，已经远超 Vogel disk 的 128 样本密度。
-	// 之前 2048² 是与 Shadow Map 对齐，但 RSM Pass 光栅化 + 主 Pass texelFetch
-	// 都按这个分辨率付代价，整体卡顿主要来自这里。
+	// RSM：512 × 512 的 VPL 容器。
 	static constexpr uint32_t RSM_MAP_SIZE        = 512;
 	static constexpr uint32_t RSM_FLUX_SLOT       = 13;
 	static constexpr uint32_t RSM_WORLDPOS_SLOT   = 14;
@@ -285,7 +218,7 @@ namespace Redflag {
 	}
 	uint32_t SceneRenderer::GetBloomTextureID()
 	{
-		return s_BloomMips[0] ? s_BloomMips[0]->GetColorAttachmentRendererID(0) : 0;
+		return s_PostProcess->GetBloomTextureID();
 	}
 	void SceneRenderer::SetMainSceneColorTarget(uint32_t colorTex, int width, int height)
 	{
@@ -295,9 +228,7 @@ namespace Redflag {
 	}
 	uint32_t SceneRenderer::GetFinalColorTextureID()
 	{
-		// s_PostFBO 在 Init 时就会创建，但真正可显示要等 Composite pass 至少成功写过一次。
-		// 否则 ImGui 会显示一张未定义内容的纹理，常见表现就是整屏白块。
-		return (s_PostFBO && s_PostColorValid) ? s_PostFBO->GetColorAttachmentRendererID(0) : 0;
+		return s_PostProcess->GetColorTextureID();
 	}
 
 	// CPU 侧灯光缓冲区，每帧填充后一次性上传
@@ -383,17 +314,6 @@ namespace Redflag {
 			glTextureParameteri(s_SSAOWhiteTex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		}
 
-		// Bloom / Composite 的黑色回退纹理。
-		// 不再把 sampler2D 绑定到纹理 0，因为 core profile 下采样未绑定纹理是未定义行为。
-		{
-			glCreateTextures(GL_TEXTURE_2D, 1, &s_BlackFallbackTex);
-			glTextureStorage2D(s_BlackFallbackTex, 1, GL_RGBA8, 1, 1);
-			uint32_t black = 0x00000000u;
-			glTextureSubImage2D(s_BlackFallbackTex, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &black);
-			glTextureParameteri(s_BlackFallbackTex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTextureParameteri(s_BlackFallbackTex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		}
-
 		// 全屏三角形 VBO/VAO（覆盖整个 NDC [-1,1] 的超大三角）
 		{
 			float verts[] = {
@@ -410,39 +330,7 @@ namespace Redflag {
 			glVertexArrayAttribBinding(s_SSAOQuadVAO, 0, 0);
 		}
 
-		// ---- Bloom 资源 ----
-		//
-		// 初始尺寸不重要，每帧在 RunBloomPass 内按当前 viewport 动态 Resize。
-		// 这里只预分配对象。
-		{
-			FramebufferSpecification bloomSpec;
-			bloomSpec.Width  = 640;
-			bloomSpec.Height = 360;
-			bloomSpec.Attachments = { FramebufferTextureFormat::RGBA16F };
-
-			for (int i = 0; i < MAX_BLOOM_MIPS; ++i)
-				s_BloomMips[i] = Framebuffer::Create(bloomSpec);
-		}
-		{
-			// s_PostFBO: 存储 ACES + gamma 完成的 LDR 输出，供 ForgeLayer viewport 显示。
-			// 格式用 RGBA8（LDR 足够）。
-			FramebufferSpecification postSpec;
-			postSpec.Width  = 1280;
-			postSpec.Height = 720;
-			postSpec.Attachments = { FramebufferTextureFormat::RGBA8 };
-			s_PostFBO = Framebuffer::Create(postSpec);
-		}
-
-		// 亮度提取 shader：输入 HDR，输出超过 threshold 的高光片元
-		s_BloomBrightShader   = Shader::Create("assets/shaders/Bloom_Brightness.glsl");
-		// 泊松圆盘 12-tap 上采样 shader：用于 Bloom 上采样叠加链
-		s_BloomUpsampleShader = Shader::Create("assets/shaders/Bloom_Upsample.glsl");
-		// Composite shader：合并 HDR 原图 + Bloom，执行 ACES tonemap + gamma
-		s_PostCompositeShader = Shader::Create("assets/shaders/PostProcess_Composite.glsl");
-		s_PostColorValid = false;
-
-		// Bloom 参数 UBO
-		s_BloomParamsUBO = UniformBuffer::Create(sizeof(GPUBloomParams), BLOOM_UBO_BINDING);
+		s_PostProcess = CreateScope<PostProcess>();
 
 		// ---- RSM 资源 ----
 		// 3 颜色 MRT + 1 深度，OpenGLFramebuffer 自动调用 glDrawBuffers。
@@ -521,18 +409,9 @@ namespace Redflag {
 		if (s_DepthVizTex) { glDeleteTextures(1, &s_DepthVizTex); s_DepthVizTex = 0; }
 		if (s_SSAONoiseTex) { glDeleteTextures(1, &s_SSAONoiseTex); s_SSAONoiseTex = 0; }
 		if (s_SSAOWhiteTex) { glDeleteTextures(1, &s_SSAOWhiteTex); s_SSAOWhiteTex = 0; }
-		if (s_BlackFallbackTex) { glDeleteTextures(1, &s_BlackFallbackTex); s_BlackFallbackTex = 0; }
 		if (s_SSAOQuadVBO)  { glDeleteBuffers (1, &s_SSAOQuadVBO);  s_SSAOQuadVBO  = 0; }
 		if (s_SSAOQuadVAO)  { glDeleteVertexArrays(1, &s_SSAOQuadVAO); s_SSAOQuadVAO = 0; }
-		// Bloom 资源
-		for (int i = 0; i < MAX_BLOOM_MIPS; ++i)
-			s_BloomMips[i].reset();
-		s_PostFBO.reset();
-		s_BloomBrightShader.reset();
-		s_BloomUpsampleShader.reset();
-		s_PostCompositeShader.reset();
-		s_BloomParamsUBO.reset();
-		s_PostColorValid = false;
+		s_PostProcess.reset();
 		s_MainSceneColorTex = 0;
 		s_MainSceneWidth = 0;
 		s_MainSceneHeight = 0;
@@ -553,234 +432,15 @@ namespace Redflag {
 		IBLPrecompute::Shutdown();
 	}
 
-	void SceneRenderer::BeginScene()
-	{
-	}
-
-	void SceneRenderer::EndScene()
-	{
-	}
-
 	// ==================================================================
 	// 全屏三角辅助：绑定 VAO 绘制 3 个顶点，覆盖整个 NDC
-	// s_SSAOQuadVAO 复用给 Bloom pass（节省一个 VAO 对象）
+	// SSAO 与 RSM 使用同一套全屏三角。
 	// ==================================================================
 	static void DrawFullscreenTriangle()
 	{
 		glBindVertexArray(s_SSAOQuadVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
-	}
-
-	// ==================================================================
-	// RunBloomPass — 提取高光 + 下采样金字塔 + 上采样叠加
-	//
-	// 参数：
-	//   hdrTex — 主 FBO attachment0 的 GL 纹理 ID（RGBA16F HDR 原图）
-	//   w, h   — 主 viewport 当前像素尺寸
-	//
-	// 流程：
-	//   1. Brightness Extract（1 draw）：
-	//      把 hdrTex 中亮度超过 threshold 的片元写入 s_BloomMips[0]
-	//      （尺寸 = w/2 × h/2，半分辨率）。
-	//
-	//   2. Downsample chain（MipLevels-1 次 blit）：
-	//      用 glBlitFramebuffer GL_LINEAR 把 [i-1] 层 blit 到 [i] 层，
-	//      每层尺寸减半。blit 由 GPU 硬件执行双线性滤波，无需 shader。
-	//
-	//   3. Upsample chain（MipLevels-1 次 draw + additive blend）：
-	//      从最小层 [N-1] 逐层往上，用泊松圆盘 12-tap 上采样，
-	//      以 GL_ONE/GL_ONE 加法叠加到 [i-1] 层。
-	//      读源 = s_BloomMips[i]，写目标 = s_BloomMips[i-1]，
-	//      两者是不同的 Framebuffer 对象，不存在读写同源问题。
-	//
-	// 调用结束后：s_BloomMips[0] 包含多频段叠加的 bloom 结果。
-	// ==================================================================
-	static void RunBloomPass(uint32_t hdrTex, int w, int h)
-	{
-		if (!s_BloomBrightShader || !s_SSAOQuadVAO)
-			return;
-
-		const int effectiveMips = std::min(s_BloomSettings.MipLevels, MAX_BLOOM_MIPS);
-		if (effectiveMips < 1) return;
-
-		// 先把本帧会用到的所有 Bloom mip 都 Resize 到正确尺寸并清黑。
-		// 这样即使后续某一步 blit / draw 状态异常，也不会采到上一帧残留的亮斑。
-		for (int i = 0; i < effectiveMips; ++i)
-		{
-			int mipW = std::max(w >> (i + 1), 1);
-			int mipH = std::max(h >> (i + 1), 1);
-			const auto& spec = s_BloomMips[i]->GetSpecifictaion();
-			if ((int)spec.Width != mipW || (int)spec.Height != mipH)
-				s_BloomMips[i]->Resize((uint32_t)mipW, (uint32_t)mipH);
-
-			s_BloomMips[i]->Bind();
-			glDrawBuffer(GL_COLOR_ATTACHMENT0);
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-		}
-
-		// ---- Step 1: Brightness Extract ----
-		// 目标尺寸 = 主 viewport 的一半（最小 1×1）
-		int mip0W = std::max(w / 2, 1);
-		int mip0H = std::max(h / 2, 1);
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-
-		// 绑定 MipLevel 0 FBO，渲染亮度提取结果
-		s_BloomMips[0]->Bind();
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		s_BloomBrightShader->Bind();
-
-		// Bloom 参数：threshold 放到 BloomA.x，这一 pass 其他字段不用
-		{
-			float bloomThreshold = std::max(s_BloomSettings.Threshold, 0.5f);
-			GPUBloomParams params{};
-			params.A = glm::vec4(bloomThreshold, 0.0f, 0.0f, 0.0f);
-			params.B = glm::vec4(0.0f);
-			if (s_BloomParamsUBO)
-				s_BloomParamsUBO->SetData(&params, sizeof(params));
-		}
-
-		// 绑定 HDR 纹理到 slot 0
-		glBindTextureUnit(0, hdrTex);
-		DrawFullscreenTriangle();
-		Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::BloomBright, 3);
-
-		// ---- Step 2: Downsample chain ----
-		// glBlitFramebuffer GL_LINEAR 把 mip[i] blit 到 mip[i+1]，每层尺寸减半。
-		for (int i = 0; i + 1 < effectiveMips; ++i)
-		{
-			const auto& srcSpec = s_BloomMips[i]->GetSpecifictaion();
-			const auto& dstSpec = s_BloomMips[i + 1]->GetSpecifictaion();
-
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, s_BloomMips[i]->GetFramebufferID());
-			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, s_BloomMips[i + 1]->GetFramebufferID());
-			glDrawBuffer(GL_COLOR_ATTACHMENT0);
-			glBlitFramebuffer(
-				0, 0, (int)srcSpec.Width, (int)srcSpec.Height,
-				0, 0, (int)dstSpec.Width, (int)dstSpec.Height,
-				GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
-
-		// ---- Step 3: Upsample chain ----
-		// 从最小层 [N-1] 逐层往上，用泊松圆盘 12-tap 加法叠加到 [i-1] 层。
-		if (s_BloomUpsampleShader)
-		{
-			s_BloomUpsampleShader->Bind();
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE);  // 加法叠加
-
-			for (int i = effectiveMips - 1; i >= 1; --i)
-			{
-				// 读源：s_BloomMips[i]（更低分辨率）
-				// 写目标：s_BloomMips[i-1]（更高分辨率）
-				const auto& srcSpec = s_BloomMips[i]->GetSpecifictaion();
-
-				// 上传该层对应的 TexelSize 和 Radius 到 UBO
-				float radius = std::max(s_BloomSettings.Radius, 0.1f);
-				GPUBloomParams params{};
-				params.A = glm::vec4(s_BloomSettings.Threshold, s_BloomSettings.Intensity, radius, 0.0f);
-				params.B = glm::vec4(1.0f / (float)srcSpec.Width, 1.0f / (float)srcSpec.Height, 0.0f, 0.0f);
-				if (s_BloomParamsUBO) s_BloomParamsUBO->SetData(&params, sizeof(params));
-
-				// 绑定源纹理到 slot 0
-				glBindTextureUnit(0, s_BloomMips[i]->GetColorAttachmentRendererID(0));
-
-				// 绑定目标 FBO
-				s_BloomMips[i - 1]->Bind();
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-				DrawFullscreenTriangle();
-				Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::BloomUp, 3);
-			}
-
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // 恢复默认混合
-			glDisable(GL_BLEND);
-		}
-
-		glEnable(GL_DEPTH_TEST);
-	}
-
-	// ==================================================================
-	// RunCompositePass — 合并 HDR 原图 + Bloom，执行 ACES tonemap + gamma
-	//
-	// 参数：
-	//   hdrTex — 主 FBO attachment0 的 GL 纹理 ID（RGBA16F HDR 原图）
-	//   w, h   — 主 viewport 当前像素尺寸
-	//
-	// 输出：s_PostFBO（RGBA8 LDR），ForgeLayer 从中读取显示纹理。
-	//
-	// 注意：即使 Bloom 关闭也会执行此 pass，因为 tonemap 是必须的
-	//       （主 FBO 现在是 HDR 格式，不能直接显示）。
-	// ==================================================================
-	static void RunCompositePass(uint32_t hdrTex, int w, int h)
-	{
-		if (!s_PostCompositeShader || !s_PostFBO || !s_SSAOQuadVAO)
-		{
-			s_PostColorValid = false;
-			return;
-		}
-
-		// 按需 Resize s_PostFBO 与 viewport 同尺寸
-		{
-			const auto& spec = s_PostFBO->GetSpecifictaion();
-			if ((int)spec.Width != w || (int)spec.Height != h)
-			{
-				s_PostColorValid = false;
-				s_PostFBO->Resize((uint32_t)w, (uint32_t)h);
-			}
-		}
-
-		s_PostFBO->Bind();
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
-
-		s_PostCompositeShader->Bind();
-
-		// slot 0 = HDR 原图（主 FBO attachment0，RGBA16F）
-		glBindTextureUnit(0, hdrTex);
-
-		// slot 1 = Bloom 结果（s_BloomMips[0]，包含多频段叠加）
-		// 若 Bloom 关闭或结果未就绪，则绑定 1x1 黑纹理，避免采样未绑定纹理的未定义行为。
-		uint32_t bloomTex = (s_BloomSettings.Enabled && s_BloomMips[0])
-			? s_BloomMips[0]->GetColorAttachmentRendererID(0)
-			: s_BlackFallbackTex;
-		glBindTextureUnit(1, bloomTex);
-
-		// Composite 中直接对半分辨率 bloom mip0 做局部模糊采样，绕开不稳定的金字塔回放大链。
-		float bloomTexelX = 1.0f;
-		float bloomTexelY = 1.0f;
-		if (s_BloomSettings.Enabled && s_BloomMips[0])
-		{
-			const auto& bloomSpec = s_BloomMips[0]->GetSpecifictaion();
-			if (bloomSpec.Width > 0 && bloomSpec.Height > 0)
-			{
-				bloomTexelX = 1.0f / (float)bloomSpec.Width;
-				bloomTexelY = 1.0f / (float)bloomSpec.Height;
-			}
-		}
-		float bloomRadius    = glm::clamp(s_BloomSettings.Radius, 0.1f, 4.0f);
-		float bloomIntensity = glm::clamp(s_BloomSettings.Intensity, 0.0f, 1.0f);
-		float exposure       = glm::max(s_ToneMapSettings.Exposure, 0.001f);
-
-		GPUBloomParams params{};
-		params.A = glm::vec4(s_BloomSettings.Threshold, bloomIntensity, bloomRadius, 0.0f);
-		params.B = glm::vec4(bloomTexelX, bloomTexelY, exposure, 0.0f);
-		if (s_BloomParamsUBO)
-			s_BloomParamsUBO->SetData(&params, sizeof(params));
-
-		DrawFullscreenTriangle();
-		Renderer3D::LogExternalDrawCall(Renderer3D::DrawCallInfo::PassType::BloomTonemap, 3);
-		s_PostColorValid = true;
-
-		glEnable(GL_DEPTH_TEST);
 	}
 
 	// ==================================================================
@@ -1348,9 +1008,9 @@ namespace Redflag {
 			auto view = registry.view<TransformComponent, ModelRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
 			{
-				// 懒加载：路径有效但 ModelAsset 未加载时，通过 AssetManager 加载
-				if (!mr.ModelAsset && !mr.FilePath.empty())
-					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
+				// 资产 ID 在导入或场景加载时登记。
+				if (!mr.ModelAsset && mr.ModelID)
+					mr.ModelAsset = AssetManager::Load<Model>(mr.ModelID);
 
 				if (mr.ModelAsset)
 					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
@@ -1504,25 +1164,8 @@ namespace Redflag {
 			Renderer2D::EndScene();
 		}
 
-		// ======================== Bloom + Composite 后处理 ========================
-		// 必须在所有几何、天空盒、调试覆盖层全部完成后进行，
-		// 确保吸收了全帧的 HDR 内容。
-		{
-			if (hasMainHDRTarget)
-			{
-				// Bloom pass：提取高光 → blit 下采样 → 波松叠加上采样
-				if (s_BloomSettings.Enabled)
-					RunBloomPass(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
-
-				// Composite pass：HDR + bloom → ACES tonemap + gamma → s_PostFBO
-				// 即使 Bloom 关闭，也必须进行 tonemap（主 FBO 是 HDR 格式）
-				RunCompositePass(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
-			}
-			else
-			{
-				s_PostColorValid = false;
-			}
-		}
+		// 后处理在全部 HDR 绘制结束后执行。
+		s_PostProcess->Render(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
 	}
 
 	// ==================================================================
@@ -1616,8 +1259,8 @@ namespace Redflag {
 			auto view = registry.view<TransformComponent, ModelRendererComponent>();
 			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
 			{
-				if (!mr.ModelAsset && !mr.FilePath.empty())
-					mr.ModelAsset = AssetManager::GetOrLoad<Model>(mr.FilePath);
+				if (!mr.ModelAsset && mr.ModelID)
+					mr.ModelAsset = AssetManager::Load<Model>(mr.ModelID);
 
 				if (mr.ModelAsset)
 					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
@@ -1747,19 +1390,8 @@ namespace Redflag {
 			Renderer2D::EndScene();
 		}
 
-		// ======================== Bloom + Composite 后处理 ========================
-		{
-			if (hasMainHDRTarget)
-			{
-				if (s_BloomSettings.Enabled)
-					RunBloomPass(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
-				RunCompositePass(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
-			}
-			else
-			{
-				s_PostColorValid = false;
-			}
-		}
+		// 后处理在全部 HDR 绘制结束后执行。
+		s_PostProcess->Render(s_MainSceneColorTex, s_MainSceneWidth, s_MainSceneHeight);
 	}
 
 	// ==================================================================

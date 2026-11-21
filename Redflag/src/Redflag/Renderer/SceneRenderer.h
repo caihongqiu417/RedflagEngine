@@ -1,33 +1,9 @@
 #pragma once
 
-// =====================================================================
-// SceneRenderer — 场景渲染调度器（第一版：纯转发）
-//
-// 设计思路：
-//   以前 Scene::OnUpdateEditor / OnUpdateRuntime 里既收集实体又直接
-//   调用 Renderer2D / Renderer3D 发 draw。这会导致「场景数据层」和
-//   「帧级渲染编排」耦合在一起，后续加 Shadow Pass、Deferred、
-//   PostProcess 等多 pass 时无处可插。
-//
-//   SceneRenderer 就是专门负责「这一帧怎么画」的中间层，把渲染编排
-//   逻辑从 Scene 中剥离出来。Scene 只负责回答「有哪些东西」，
-//   SceneRenderer 负责回答「这些东西这一帧应该怎样被画出来」。
-//
-// 第一版做法（纯转发 / pass-through）：
-//   1. Scene 把 registry 暴露出来。
-//   2. SceneRenderer 遍历 registry 收集 Renderable，直接调用
-//      Renderer2D / Renderer3D 完成绘制。
-//   3. 视觉输出和改动前完全一致，验证通过后再逐步拆分 pass。
-//
-// 后续演进方向：
-//   - 增加 RenderScene（帧级数据快照）做收集-排序-执行的三阶段
-//   - 增加 ShadowPass / MainPass / PostProcessPass / OverlayPass
-//   - 支持 HDR framebuffer + PBR shader
-// =====================================================================
-
 #include "Redflag/Core/Core.h"
 #include "Redflag/Renderer/EditorCamera.h"
 #include "Redflag/Renderer/UniformBuffer.h"
+#include "Redflag/Renderer/PostProcess.h"
 
 #include <glm/glm.hpp>
 
@@ -93,27 +69,6 @@ namespace Redflag {
 		int   KernelSize = 64;  // 采样数（上限 64，shader 内固定数组）
 	};
 	// =================================================================
-	// Bloom 调参（ImGui 暴露）
-	//
-	// 算法：亮度提取 → blit 下采样金字塔 → 波松圆盘上采样叠加 → Composite
-	// =================================================================
-	struct BloomSettings
-	{
-		bool  Enabled    = true;   // 全局开关
-		float Threshold  = 0.8f;   // 亮度阈值：超过此值的片元才进入 Bloom（0.8 = 较明显，2.0 = 只有极亮处）
-		float Intensity  = 0.6f;   // Bloom 叠加强度（乘法系数）
-		float Radius     = 2.0f;   // 泊松圆盘采样半径（控制上采样层的散布大小）
-		int   MipLevels  = 6;      // 下采样层数（越多层 = 越大的散布形状；2~6）
-	};
-	// =================================================================
-	// Tonemap 调参
-	// =================================================================
-	struct ToneMapSettings
-	{
-		float Exposure = 1.0f;  // 曝光度倍率（乘在 tonemap 前的 HDR 上）
-	};
-
-	// =================================================================
 	// RSM (Reflective Shadow Maps) 调参
 	//
 	// 在 Shadow Pass 之外额外渲染一遍场景到 RSM FBO（Flux/WorldPos/Normal
@@ -140,8 +95,6 @@ namespace Redflag {
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene();
-		static void EndScene();
 
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform);
@@ -184,8 +137,7 @@ namespace Redflag {
 		// TAA 历史混合权重（0=每帧独立, 0.9=强时域平滑），供 ImGui 调节
 		static float& GetRSMBlendAlpha();
 
-		// 返回后处理最终输出纹理 ID（s_PostFBO 的 RGBA8 attachment）
-		// ForgeLayer viewport 应调用此函数而非直接读主 FBO attachment0（主 FBO 已改为 RGBA16F HDR）
+		// 返回后处理的 LDR 输出纹理。
 		static uint32_t GetFinalColorTextureID();
 
 	private:

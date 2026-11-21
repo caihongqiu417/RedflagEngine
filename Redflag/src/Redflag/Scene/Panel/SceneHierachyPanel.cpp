@@ -10,7 +10,7 @@
 #include<glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include "Scene/Components.h"
-#include "Redflag/Core/AssetManager.h"
+#include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 
 namespace Redflag {
@@ -1598,9 +1598,22 @@ namespace Redflag {
                         const char* path = (const char*)payload->Data;
                         if (path)
                         {
-                            component.FilePath    = path;
-                            component.ModelAsset  = AssetManager::GetOrLoad<Model>(component.FilePath);
-                            component.OverrideMaterials.clear(); // 重新加载模型时清除覆盖材质
+                            try
+                            {
+                                auto id = AssetManager::Add<Model>(path);
+                                auto model = AssetManager::Load<Model>(id);
+                                if (model)
+                                {
+                                    component.FilePath = path;
+                                    component.ModelID = id;
+                                    component.ModelAsset = model;
+                                    component.OverrideMaterials.clear();
+                                }
+                            }
+                            catch (const std::exception& error)
+                            {
+                                RF_CORE_ERROR("Cannot load model: {0}", error.what());
+                            }
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -1614,7 +1627,11 @@ namespace Redflag {
                 {
                     if (ImGui::Button("Unload"))
                     {
+                        AssetManager::Unload<Model>(component.ModelID);
                         component.ModelAsset.reset();
+                        component.ModelID = 0;
+                        component.FilePath.clear();
+                        component.OverrideMaterials.clear();
                     }
                 }
 

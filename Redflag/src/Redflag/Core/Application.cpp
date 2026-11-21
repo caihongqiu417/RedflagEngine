@@ -4,7 +4,7 @@
 
 
 #include "Events/ApplicationEvent.h"
-#include"glad/glad.h"
+#include "Redflag/Assets/AssetManager.h"
 
 #include"Input.h"
 #include "Redflag/Renderer/Renderer.h"
@@ -21,34 +21,6 @@ namespace Redflag
 	#define BIND_EVENT_FN(x) std::bind(&Application::x,this,std::placeholders::_1)
 
 	Application* Application::s_Instance = nullptr;
-
-	static GLenum ShaderDataTypeToOpenGLBaseType(Redflag::ShaderDataType type)
-	{
-		switch (type)
-		{
-		case Redflag::ShaderDataType::Float:   return GL_FLOAT;
-		case Redflag::ShaderDataType::Float2:  return GL_FLOAT;
-		case Redflag::ShaderDataType::Float3:  return GL_FLOAT;
-		case Redflag::ShaderDataType::Float4:  return GL_FLOAT;
-
-		case Redflag::ShaderDataType::Mat3:    return GL_FLOAT;
-		case Redflag::ShaderDataType::Mat4:    return GL_FLOAT;
-
-		case Redflag::ShaderDataType::Int:     return GL_INT;
-		case Redflag::ShaderDataType::Int2:    return GL_INT;
-		case Redflag::ShaderDataType::Int3:    return GL_INT;
-		case Redflag::ShaderDataType::Int4:    return GL_INT;
-
-		case Redflag::ShaderDataType::Bool:    return GL_BOOL;
-
-		default:
-			// 错误处理：未知类型
-			RF_CORE_ASSERT(false, "Unknown ShaderDataType!");
-			return 0;
-		}
-	}
-
-
 
     Application::Application(const std::string& name)
     {
@@ -77,7 +49,13 @@ namespace Redflag
 	{
 		RF_PROFILE_FUNCTION();
 		
+		m_LayerStack.Clear();
 		ScriptEngine::Shutdown();
+		AssetManager::ClearAll();
+		AssetManager::GetLibrary().Clear();
+		Renderer::Shutdown();
+		delete m_Window;
+		s_Instance = nullptr;
 	}
 
 	void Application::PushLayer(Layer* layer)
