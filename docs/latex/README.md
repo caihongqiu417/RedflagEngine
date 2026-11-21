@@ -1,33 +1,24 @@
-# Redflag 架构文档
+# Redflag 引擎文档
 
-`main.tex` 是主文件，图由 TikZ 绘制。资源和渲染章节分别位于 `assets.tex`、`rendering.tex`。
+## 从模型到屏幕
 
-使用 XeLaTeX（TeX Live，包含 ctex 和 TikZ）编译：
+想了解一帧怎样画出来，可以先读[经典场景实测](../../output/pdf/Redflag-Classic-Scenes.pdf)。在 Cornell Box 的红墙旁找一小块白地面，比较开启和关闭间接光时它的颜色。接着读[渲染公式与实现](../../output/pdf/Redflag-Rendering-Math.pdf)，同一块地面会再次出现。这次可以顺着光的方向，把读到的红色增量对回公式和着色器。书中配图的[几何与材质来源](math/figures/geometry-sources.md)和[光照与后处理来源](math/figures/effects-sources.md)收在源码旁。
 
-```powershell
-./build.ps1
-```
+[引擎架构](../../output/pdf/Redflag-Architecture-LaTeX.pdf) 讲的是另一件事。模型已经有了顶点和贴图，接下来是谁加载它，谁决定要画哪些物体，编辑器又怎样拿到这张图？读到后处理时，可以翻到 [RHI 与 Vulkan 方案](../../output/pdf/Redflag-RHI-Vulkan-Plan.pdf)，看两个图形后端怎样执行同一条合成命令。方案中的参考架构图有[单独的出处与许可记录](rhi/figures/SOURCES.md)。
 
-脚本执行两轮编译，生成 `output/pdf/Redflag-Architecture-LaTeX.pdf`。中间文件位于当前目录的 `build/`，不纳入版本管理。
+遇到问题时，先从[排错记录](../../output/pdf/Redflag-Debugging-Notes.pdf)找相似的画面。旧错误的代码、修正过程与能回放的帧放在一起。[技术选型](../../output/pdf/Redflag-Technical-Decisions.pdf) 则解释为什么采用这种实现。涉及性能的章节给出采样条件、实际 CPU 时间线，以及当时还能从数据里得出什么结论。
 
-字体采用 TeX Live 自带 Fandol 和 TeX Gyre，不依赖本机安装的商业字体。新增能力应先核对源码，再更新图和文字。未实现的功能只放在后续迁移章节。
+## LaTeX 源码与编译
 
-`rhi/main.tex` 是独立的 RHI 与 Vulkan 接入设计，描述目标接口和迁移验收，当前项目仍使用 OpenGL。运行 `./rhi/build.ps1` 生成 `output/pdf/Redflag-RHI-Vulkan-Plan.pdf`；加 `-BuildOnly` 只编译到 `rhi/build/main.pdf`。
+在本目录用 PowerShell 运行对应的脚本。每个脚本调用两次 XeLaTeX，使交叉引用和图号更新，再将 PDF 放入 `output/pdf/`。中间文件留在各册的 `build/` 目录。TeX Live 需包含 ctex、TikZ、Fandol 和 TeX Gyre 字体。
 
-设计图使用 TikZ。下载的官方例图及逐图来源、许可、校验值在 `rhi/figures/SOURCES.md`。
+| 文档 | 可编辑的主文件 | 编译命令 |
+| --- | --- | --- |
+| 引擎架构 | [main.tex](main.tex) | `./build.ps1` |
+| 渲染公式与实现 | [math/main.tex](math/main.tex) | `./math/build.ps1` |
+| RHI 与 Vulkan | [rhi/main.tex](rhi/main.tex) | `./rhi/build.ps1` |
+| 排错记录 | [debugging/main.tex](debugging/main.tex) | `./debugging/build.ps1` |
+| 技术选型 | [decisions/main.tex](decisions/main.tex) | `./decisions/build.ps1` |
+| 经典场景实测 | [scenes/main.tex](scenes/main.tex) | `./scenes/build.ps1` |
 
-`debugging/main.tex` 维护排错与 RenderDoc 截帧，区分本轮验证、历史修复与当前限制。运行 `./debugging/build.ps1` 生成 `output/pdf/Redflag-Debugging-Notes.pdf`；加 `-BuildOnly` 只编译到 `debugging/build/main.pdf`。每条先写看到的现象，再解释原因、修改和验证。
-
-`decisions/main.tex` 维护技术选型与取舍，说明候选方案、当前选择、成本和证据限制。运行 `./decisions/build.ps1` 生成 `output/pdf/Redflag-Technical-Decisions.pdf`；加 `-BuildOnly` 只编译到 `decisions/build/main.pdf`。没有基准测试时不写性能提升比例。两份文档共用 `rhi/preamble.tex` 的版式，各自的 `capture.tex` 维护真实截帧与观察记录。
-
-`decisions/profiling.tex` 记录 CPU 采样条件与实际 Chrome Performance 截图。图片来自 `output/captures/` 和 `output/profiling/`，编译时应保留这些目录及原图，不能用重绘图替换真实工具截图。
-
-`debugging/history.tex` 保存旧开发日志与 Git 记录中的排错经过，区别实际修复、指南检查项与未闭合问题。新的回归结果不能代替旧现场。
-
-`scenes/main.tex` 用于独立记录 Cornell Box、Sponza 等经典场景的实测设置和截图，输出为 `output/pdf/Redflag-Classic-Scenes.pdf`。它与最小回归用例分开维护。
-
-`math/main.tex` 维护渲染公式与实现推导，运行 `./math/build.ps1` 生成 `output/pdf/Redflag-Rendering-Math.pdf`。公式对应项目实际代码，并注明近似及验证范围。
-
-`math/rsm.tex` 解释方向光 RSM 的投影通量密度、圆盘面积、几何因子和两端 Lambert 系数，包含旧提交与当前源码对照。`math/rsm-validation.tex` 记录专项 GPU 数值结果；`math/verify.py` 复算数值例并核对当前代码摘录。`debugging/rsm.tex` 只保留排错过程与证据范围，避免重复整套推导。
-
-`debugging/review3d.tex` 记录本轮 3D、IBL 和场景状态复查，`debugging/code-cases.tex` 保存代表性错误代码与修正代码。历史片段标注提交来源，不能把当前代码改写成虚构的旧版本。
+架构图可以直接在 LaTeX 中修改。数学册中的[核验脚本](math/verify.py)会复算书中的数值例，并逐段对照引用的着色器或 C++ 源文件。从仓库根目录运行 `python docs/latex/math/verify.py` 即可。实测使用的场景截图、RenderDoc 回放结果和 CPU 采样记录分别保存在 [scenes](../../output/scenes/)、[captures](../../output/captures/) 和 [profiling](../../output/profiling/) 目录。

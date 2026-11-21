@@ -1,83 +1,99 @@
 \newpage
-\section{RSM 的反射通量与面积}
-方向光照亮红墙后，红墙会向地面反射一部分光。RSM（反射阴影图）先保存光源能看到的表面，再把这些表面当作小光源收集贡献。这条路径只有一次间接漫反射，没有继续计算地面把光反射给第三个表面。
+\section{红墙与白地面的间接光}
+
+Cornell Box 左边是一面红墙，墙脚的地板和房间另一侧的地板用的是同一种白色材质。白光照到红墙上，墙把一部分偏红的光反射给地板，靠墙的一小片白地面就带上了红色。反射阴影图（RSM）估算的正是这一路光。它从方向光的位置看场景，把灯能照到的表面记录下来，再估算这些表面给地板送来了多少光。
 
 \begin{figure}[H]\centering
-\begin{tikzpicture}[scale=.95]
-\fill[pale] (1,0) rectangle (1.2,3.3);
-\fill[pale] (1,0) rectangle (8.3,-.2);
-\draw[thick,blue] (1,3.3)--(1,0)--(8.3,0);
-\fill[red!65!black] (1,2.3) circle(2.5pt) node[left=3pt] {$y$};
-\fill[ink] (5.7,0) circle(2.5pt) node[below=3pt] {$x$};
-\draw[flow] (3.1,3.3)--node[label,above] {方向光}(1.05,2.33);
-\draw[flow,draw=red!65!black] (1.08,2.26)--node[label,above] {$\omega=(x-y)/r$}(5.64,.04);
-\draw[flow] (1,2.3)--(2,2.3) node[right] {$n_y$};
-\draw[flow] (5.7,0)--(5.7,1) node[above] {$n_x$};
-\draw[flow] (5.8,.1)--node[label,right] {朝相机反射}(7.2,1.7);
-\node[font=\small] at (2.7,.45) {红墙};
-\node[font=\small] at (7.5,.35) {地面};
-\end{tikzpicture}
-\caption{本文绘制的光路示意。$y$ 是发送点，$x$ 是接收点，两端的位置和法线都使用世界空间。}
+\includegraphics[width=\linewidth]{../../../output/scenes/rsm/Cornell-RSM.png}
+\caption{Redflag 的 Cornell Box 实测。左图关闭 RSM，右图开启。中图用两次绘制的线性 HDR 颜色相减，只显示正差值，乘 4 后截到 $[0,1]$，再作 Gamma 2.2 编码以便观察。左右两图使用相同的相机、灯光和曝光。}
 \end{figure}
 
-\subsection{从表面面积换到光源投影面积}
-设方向光正交范围宽 $w=2h$，覆盖面积 $A=w^2$。光源纹理有 $W\times H$ 个像素，每个像素对应的投影面积为 $\Delta A_\perp=A/(WH)$。这些面积使用场景长度单位的平方，不是屏幕像素面积。
+看图中地板上的 A 点。从原始场景图左上角计数，它的像素坐标是 $(307,651)$。开启 RSM 后，红色通道增加了约 0.096，绿色和蓝色各增加约 0.027。另一侧的 B 点也变亮了，三个通道却几乎增加得一样多。A 点的变化既有亮度也有颜色，用一张调高曝光的图看不出这两者的区别。
 
-令 $q$ 为方向光垂直截面的辐照度，$c_l=\max(n_y\cdot l,0)$，$l$ 从表面指向光源。发送面的实际面积 $\mathrm dA_y$ 投影后变为 $\mathrm dA_\perp=c_l\,\mathrm dA_y$。用 $C_y$ 表示线性底色，当前采用漫反射率 $\rho_y=(1-m_y)C_y$，于是
-\[
- \mathrm d\Phi_y=\rho_y\,q\,c_l\,\mathrm dA_y
-                =\rho_y\,q\,\mathrm dA_\perp.
-\]
-斜面单位实际面积收到的光较少，但一个光源像素覆盖的实际面积更大，两项抵消。因此按投影面积记录反射通量时，不再乘一次 $c_l$。背光面仍需排除。
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+线性 HDR 增量（开启减关闭） & 红 & 绿 & 蓝\\
+\midrule
+A，红墙旁的白地面 $(307,651)$ & 0.09644 & 0.02710 & 0.02710\\
+B，另一侧的白地面 $(716,651)$ & 0.06946 & 0.06836 & 0.06836\\
+\bottomrule
+\end{tabular}
+\end{center}
 
-Redflag 的 RGBA16F 附件存 $D_y=\rho_y q$，即\textbf{每单位光源投影面积的反射通量}。每纹素的通量应为 $\Phi_y=D_y\Delta A_\perp$。存密度后，可以把面积留到收集阶段乘入，避免先存很小的纹素通量、再乘回纹素数量。灯光数值未做物理标定，$q$ 在项目中仍是颜色乘强度。
-
-\note{原算法依据：Dachsbacher、Stamminger，\source{https://users.soe.ucsc.edu/~pang/160/s13/proposal/mijallen/proposal/media/p203-dachsbacher.pdf}{Reflective Shadow Maps，I3D 2005，§3.1--3.2，印刷页 204}。原文以离散纹素通量组织计算。本文的密度定义和面积整理针对 Redflag，不把二者记成同一个量。}
-
-\newpage
-\subsection{几何因子与两个 Lambert 系数}
-距离为 $r=\lVert x-y\rVert$，方向 $\omega=(x-y)/r$。发送面朝接收点的余弦为 $c_y=\max(n_y\cdot\omega,0)$，接收面朝发送点的余弦为 $c_x=\max(n_x\cdot(-\omega),0)$。不考虑两点之间遮挡时，几何因子为
-\[
- G(x,y)=\frac{c_y c_x}{r^2}.
-\]
-原论文式（1）分子用的是未经单位化的位移向量，因而写成距离四次方。两个点积各带一个 $r$，化简后仍是 $c_yc_x/r^2$。项目先得到单位方向 \code{dirN}，原来的距离平方衰减并没有少除一次距离。
-
-Lambert 漫反射的 BRDF 是 $\rho/\pi$。发送面出射辐亮度为 $L_y=\rho_y q c_l/\pi$，再经接收面反射，有
-\begin{align*}
- L_x&=\frac{\rho_x}{\pi}\int L_y\,G(x,y)\,\mathrm dA_y\\
-    &=\frac{\rho_x}{\pi^2}\int D_y\,G(x,y)\,\mathrm dA_\perp.
-\end{align*}
-这里暂取两点可见性为 1，这是当前 RSM 的主要近似。原论文式（1）没有显式列出这里的两个 Lambert 系数，对照时需单独核算通量定义与归一化。本节保留发送、接收两端各一个 $1/\pi$，不能再从别处重复乘除。
-
-\subsection{圆盘采样与归一化}
-接收点投到光源纹理后，在 UV 半径 $R$ 的圆盘内取 $N$ 个样本。当前正交范围是正方形，这个圆盘的世界投影面积为 $A_D=A\pi R^2=\pi(wR)^2$。均匀面积采样的积分估计为
-\[
- \widehat L_x=\rho_x\,\underbrace{\frac{A\pi R^2}{\pi^2N}
-      \sum_{i=0}^{N-1} D_i G_i}_{\text{RSM 输出，等于接收辐照度除以 }\pi}.
-\]
-主绘制再乘接收材质的 $\rho_x=(1-m_x)C_x$，$C_x$ 是接收面线性底色。$\text{Intensity}$ 是额外外观倍率，默认 1。UV 越界或没有表面的样本按零贡献处理，仍除请求的 $N$，不能通过只除有效样本数把边界重新照亮。
-
-Vogel 圆盘使用 $r_i=\sqrt{(i+0.5)/N}$。原实现分母固定为 128，只取前 16 个时，覆盖半径约为原来的 $\sqrt{16/128}\approx0.354$。现在按实际 $N$ 生成，降低质量不会同时大幅缩小覆盖范围。等面积分布使用相同权重，不能照搬原论文另一种采样分布的径向权重。
-
-\note{Lambert 系数依据：\source{https://pbr-book.org/4ed/Reflection_Models/Diffuse_Reflection}{PBRT 第四版 §9.2：Diffuse Reflection}。RSM 几何因子对照原论文式（1）、印刷页 204。本页圆盘估计式由上述密度与等面积采样推得。}
+这对画面固定方向光方向为 $(-0.6,-0.6,-1)$，间接光强度为 1，两次各绘制 12 帧。右图的 A 点汇集了许多表面的光。下面从其中一个落在红墙上的样本讲起，看红色怎样从墙面进入这个像素。图和浮点数来自项目的 \path{output/scenes/rsm/}，原论文图 1 则展示了从灯的位置记录深度、位置、法线和反射光的过程。\source{https://doi.org/10.1145/1053427.1053460}{Dachsbacher 与 Stamminger，Reflective Shadow Maps，I3D 2005}
 
 \newpage
-\subsection{源码修改与数值例}
-\textbf{修改前。}以下两句取自提交 \code{1a168c3}，分别位于 RSMDepth 的片元 \code{main} 与 RSMIndirect 的 \code{ComputeRSMIndirect}。前一句多乘入射余弦，后一句只求平均，缺少圆盘投影面积与本节约定的 Lambert 系数。
-\begin{lstlisting}[title={旧实现，分属两个函数}]
-o_Flux     = vec4(albedo * lightColor * NdL, 1.0);
-return indirect * (intensity / float(numSamples));
-\end{lstlisting}
+\subsection{光源图上的一小块红墙}
 
-\textbf{修改后。}发送端先读取标量或贴图中的金属度。正面输出通量密度，背面输出零。下面摘出实际表达式，省略金属贴图读取和朝向判断。
+在墙上取一点 $y$，在地面 A 取一点 $x$。墙面法线 $n_y$ 指向房间里面，地面法线 $n_x$ 朝上。灯先把光送到 $y$，其中一部分再沿墙到地面的方向到达 $x$。图中的点表示一小块表面，各点的位置和法线都用世界坐标表示。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[scale=.85]
+\fill[red!15] (1,0) rectangle (.78,3.3);
+\fill[pale] (1,0) rectangle (8.3,-.18);
+\draw[thick,blue] (1,3.3)--(1,0)--(8.3,0);
+\fill[red!65!black] (1,2.05) circle(2.5pt) node[left=6pt] {$y$};
+\fill[ink] (5.7,0) circle(2.5pt) node[below=4pt] {$x$};
+\draw[flow] (3,3.2)--node[label,above] {方向光}(1.05,2.09);
+\draw[flow,draw=red!65!black] (1.08,2.02)--node[label,above] {墙反射给地面的光}(5.64,.04);
+\draw[flow] (1,2.05)--(2.05,2.05) node[right] {$n_y$};
+\draw[flow] (5.7,0)--(5.7,1.05) node[above] {$n_x$};
+\draw[flow] (5.8,.1)--node[label,right] {朝相机反射}(7.2,1.62);
+\node[font=\small] at (1.65,.35) {红墙};
+\node[font=\small] at (7.55,.35) {地面};
+\end{tikzpicture}
+\caption{一条可能的光路。红墙上的 $y$ 用来说明单个样本怎样计算。实测记录里保存的是地面 $x$ 的最终颜色。}
+\end{figure}
+
+先看墙上的 $y$。设方向光正交投影的边长为 $w=2h$，光源图大小为 $W\times H$。图上的一个像素覆盖的投影面积为 $w^2/(WH)$。光线斜着照到墙上时，同一像素实际罩住的墙面会变大。若 $l$ 是从墙面指向灯的单位方向，记 $c_l=\max(n_y\cdot l,0)$，一小块墙面 $\mathrm dA_y$ 的投影面积就是 $\mathrm dA_\perp=c_l\,\mathrm dA_y$。设 $q$ 是正对灯时单位面积收到的光，$\rho_y$ 是墙的漫反射率，这块墙反射的光通量为
+\[
+ \mathrm d\Phi_y=\rho_y q\,c_l\,\mathrm dA_y=\rho_y q\,\mathrm dA_\perp.
+\]
+
+所以着色器只在墙面朝灯时写下 $D_y=\rho_y q$。这个 RGB 值表示每单位投影面积反射多少光，乘上一个像素的投影面积才得到该像素的通量。代码里的 $\rho_y$ 是线性底色乘以 $1-\mathrm{metallic}$，$q$ 取灯的颜色乘以强度。项目中的光强尚未做光度标定，背光面的值为零。项目用 RGBA16F 浮点纹理保存 $D_y$，面积留到采样时统一乘入。
+
 \begin{lstlisting}
 vec3 diffuse = baseColor.rgb * (1.0 - metallic);
 fluxDensity = diffuse * u_DirLights[0].Color.rgb * u_DirLights[0].Color.w;
 o_Flux     = vec4(fluxDensity, 1.0);
 \end{lstlisting}
-\loc{RedflagForge/assets/shaders/RSMDepth.glsl}{main（片元阶段）}
+\loc{RedflagForge/assets/shaders/RSMDepth.glsl}{main（片元阶段，节选）}
+原论文按纹素的通量计算，项目按投影面积存密度。对应的量可对照论文第 3.1 至 3.2 节，第 204 页。\source{https://users.soe.ucsc.edu/~pang/160/s13/proposal/mijallen/proposal/media/p203-dachsbacher.pdf}{RSM 原论文}
 
-收集阶段把平均值乘圆盘面积，并计入两个 Lambert 系数。主绘制使用相同的漫反射材质约定，纯金属不再贡献这一项。
+\newpage
+\subsection{墙与地面的朝向和距离}
+
+回到地面 $x$。着色器先用相机深度还原地面的位置，再到光源图里读取墙上样本 $y$ 的位置、法线和反射颜色。三项取自同一个纹素，这样红墙的颜色就能与红墙自己的位置配对。设两点相距 $r=\lVert x-y\rVert$，从墙到地面的单位方向为 $\omega=(x-y)/r$。墙面看到地面的程度为 $c_y=\max(n_y\cdot\omega,0)$，地面看到墙面的程度为 $c_x=\max(n_x\cdot(-\omega),0)$。两面越正对，贡献越大。距离翻倍时，同一小块墙在地面处张开的立体角约缩到四分之一。
+
+\[
+ G(x,y)=\frac{c_y c_x}{r^2}.
+\]
+原论文的式（1）使用未经单位化的位移向量，两个点积各多出一个 $r$，所以它的分母写作 $r^4$。项目里的 \code{dirN} 已经单位化，分母便是 $r^2$。当两点近到不足一个光源纹素时，用纹素宽度 $\delta=w/W$ 给距离设下限。两点重合时直接跳过。
+\begin{lstlisting}
+float vplFacing  = max(0.0, dot(vplNormal, dirN));
+float fragFacing = max(0.0, dot(N, -dirN));
+float geometry = vplFacing * fragFacing / max(dist2, texelWidth * texelWidth);
+indirect += vplFlux * geometry * sampleWeight;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/RSMIndirect.glsl}{ComputeRSMIndirect}
+
+这里采用 Lambert 漫反射。墙向房间散射光时有一个 $1/\pi$，地面把收到的光散向相机时又有一个 $1/\pi$。用 $\rho_x$ 表示地面的漫反射率，暂按两点间没有遮挡计算。墙面 $y$ 的出射辐亮度是 $L_y=\rho_y q c_l/\pi$，把各小块墙面的贡献相加，可得
+\[
+ L_x=\frac{\rho_x}{\pi}\int L_y G(x,y)\,\mathrm dA_y
+    =\frac{\rho_x}{\pi^2}\int D_y G(x,y)\,\mathrm dA_\perp.
+\]
+每个颜色通道分别计算。样本来自红墙时，$D_y$ 的红色分量较大。距离和朝向同时缩放三个通道，于是这份样本送到白地面上仍然偏红。原论文式（1）没有单列两个 Lambert 系数，这里的系数对应项目自己的密度定义。\source{https://pbr-book.org/4ed/Reflection_Models/Diffuse_Reflection}{PBRT 第四版，第 9.2 节，Diffuse Reflection}
+
+\newpage
+\subsection{采样范围与地面的颜色}
+
+要估计整片墙的贡献，着色器把地面点投到光源图上，以投影点为圆心，在纹理坐标半径 $R$ 内取 $N$ 个样本。投影边长为 $w$，所以圆盘半径在场景中为 $wR$，面积为 $A_D=\pi(wR)^2$。样本按面积均匀分布，先取样本贡献的平均，再乘圆盘面积，就能估算上页的积分。取间接光强度为 1，可写成
+\[
+ \widehat L_x=\rho_x\frac{A_D}{\pi^2 N}\sum_{i=0}^{N-1}D_i G_i
+              =\rho_x\frac{(wR)^2}{\pi N}\sum_{i=0}^{N-1}D_i G_i .
+\]
+代码把最后的乘法留到主绘制。先用圆盘面积和样本数算出白色漫反射表面能反射的颜色，再乘具体地面的底色与非金属比例。\code{intensity} 是调节外观的倍率，默认值为 1。落在光源图外或没有表面的样本贡献为零，最后仍除以请求的 $N$，否则光源图边缘会被人为提亮。
 \begin{lstlisting}
 float radius = sampleRadius * lightWidth;
 return indirect * (intensity * radius * radius / (PI * float(numSamples)));
@@ -88,30 +104,13 @@ Lo += texture(u_RSMResolved, screenUV).rgb * albedo * (1.0 - metallic);
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（片元阶段）}
 
-\textbf{数值例。}只看单通道，令 $w=10$、$R=0.2$、$q=2$、$\rho_y=0.5$，则 $D_y=1$。假设整盘的 $G=0.25$，RSM 输出为
-\[
- \frac{(10\times0.2)^2}{\pi}\,(1\times0.25)=\frac1\pi\approx0.31831.
-\]
-接收面 $\rho_x=0.8$ 时，输出约 $0.25465$。若几何及光源覆盖一起放大两倍，面积放大四倍，$G$ 缩为四分之一，亮度保持不变。这个人为常量算例检查系数和尺度，不代表实际场景中各点的 $G$ 相同。
+\textbf{旧实现为什么偏暗。}提交 \code{1a168c3} 的两行代码如下。第一行又乘了入射余弦 \code{NdL}，使斜照红墙上的样本额外变暗。第二行只求样本平均值，漏掉了圆盘面积，也没有按上面的定义计入两次漫反射。
+\begin{lstlisting}[title={旧版 RSMDepth 与 RSMIndirect 中的表达式}]
+o_Flux     = vec4(albedo * lightColor * NdL, 1.0);
+return indirect * (intensity / float(numSamples));
+\end{lstlisting}
+
+采样数以前还会改变墙上的取样范围。现在第 $i$ 个样本在单位圆盘上的半径为 $\sqrt{(i+0.5)/N}$（Vogel 圆盘）。原先分母写死为 128，选 16 个样本时只覆盖约 $\sqrt{16/128}=0.354$ 倍的半径。让半径跟实际 $N$ 走，低采样数也能覆盖圆盘外围。这组等面积样本使用相同权重，原论文另一种分布的径向权重不适用于这里。\source{https://doi.org/10.1145/1053427.1053460}{原论文第 3.3 节，式（3）}
 
 \newpage
-\subsection{近距离处理与验证边界}
-光源像素代表一小块表面，不能在两点靠近时仍把它当成无面积的无限亮点。当前用一个光源纹素的宽度 $\delta=w/W$ 限制分母：
-\[
- G_{\rm used}=\frac{c_yc_x}{\max(r^2,\delta^2)},\qquad r>0.
-\]
-两点重合时方向无定义，代码直接跳过。这个限制替换了固定场景单位下的 \code{DIST\_BIAS=0.05} 和几何因子上限 4。新限制随光源覆盖尺度变化，但仍不是对有限面积光源的精确积分。改变 RSM 分辨率会改变这段近距离近似，不能声称已经完全分辨率无关。
-
-\subsection{算法仍省略的内容}
-两个表面之间没有再做遮挡查询。红墙可能隔着一层挡板照亮地面，这种漏光在原 RSM 中就存在，修正面积和强度不能消除。有限采样半径也会舍弃远处反射面，因此半径改变的是积分范围，不只改变噪点多少。
-
-这里只收集第一盏方向光直接照到的表面。没有继续传播多次反射，也没有处理间接镜面反射。$(1-m)c$ 是当前漫反射近似，没有把直接光的完整 Fresnel 方向分配搬进收集积分。法线贴图细节也未参与发送面法线。不能把纯金属不再收到漫反射，解释成已经实现了金属的间接镜面光。
-
-历史混合只根据相机重投影，没有前帧深度拒绝和物体运动信息。它能平滑一部分噪点，不能修复遮挡缺失或错误能量。调试公式时应先检查当前帧间接光，再检查多帧历史。
-
-\subsection{复算与实测记录}
-随文 \path{verify.py} 检查余弦写法等价、投影面积抵消、圆盘系数以及统一缩放后的结果。它是 CPU 数学复算，不替代实际 Shader 测试。
-
 \input{rsm-validation}
-
-\note{算法边界依据：原论文 §3.3 的间接光遮挡假设，以及 §7 对非漫反射扩展的讨论。实际排错过程见《Redflag 排错记录》，经典场景的图片和采集条件另见《经典场景实测》。本文不借用旧 Mask 截帧证明新的 RSM 能量计算。}

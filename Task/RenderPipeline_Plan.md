@@ -1,12 +1,14 @@
-# Redflag 真实渲染管线实施计划
+# 三维光照与后处理的早期实施计划
 
-## 总体目标
+这是从纯色模型转向材质光照时写下的方案。当时考虑过混合延迟与前向绘制，文末进度也是当时的记录。已落地的场景颜色、阴影和后处理见[架构主册](../output/pdf/Redflag-Architecture-LaTeX.pdf)，下一阶段的后端接入见[RHI 与 Vulkan 方案](../output/pdf/Redflag-RHI-Vulkan-Plan.pdf)。
+
+## 从纯色模型到材质光照
 
 把 Redflag 的 3D 渲染从当前的「单 shader 纯色/贴图前向绘制」升级为
 **混合 Deferred/Forward 真实渲染管线**，支持 PBR 材质、方向光阴影、
 HDR + 后处理、编辑器调试视图。
 
-## 管线选型
+## 前向与延迟绘制的选择
 
 | 决策项 | 选定方案 | 理由 |
 |--------|----------|------|
@@ -18,7 +20,7 @@ HDR + 后处理、编辑器调试视图。
 | 后处理 | HDR → Tonemap → Gamma → Bloom → FXAA | 逐步加入 |
 | 编辑器 Picking | 保留独立 R32I attachment | 已验证稳定 |
 
-## 架构层级
+## 场景、渲染与图形后端
 
 ```
 ForgeLayer（编辑器集成）
@@ -35,7 +37,7 @@ ForgeLayer（编辑器集成）
 
 ---
 
-## 阶段划分
+## 灯光、材质与后处理的开发顺序
 
 ### 阶段 0 — SceneRenderer 骨架 ✅ 已完成
 
@@ -248,7 +250,7 @@ ForgeLayer（编辑器集成）
 
 ---
 
-## 关键约束与注意事项
+## 绘制阶段之间的数据和状态
 
 1. **Entity ID Picking 必须始终可用**  
    每个 pass 和 FBO 变更都要确认 R32I attachment 和 ReadPixel 不受影响。
@@ -269,7 +271,7 @@ ForgeLayer（编辑器集成）
 
 ---
 
-## 当前进度
+## 制定计划时的进度
 
 - **阶段 0 ✅** — SceneRenderer 骨架已搭好
 - **阶段 1 ✅** — Framebuffer 格式扩展完成

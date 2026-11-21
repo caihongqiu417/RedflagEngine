@@ -1,6 +1,8 @@
-# Redflag C# 脚本系统开发待办 (Mono 嵌入)
+# C# 脚本的加载与场景运行计划
 
-## 前置知识（通俗版）
+这份清单记录了把 Mono 接入 Redflag 的开发顺序。从编译 C# 程序集开始，到在编辑器中给物体挂上脚本，相关文件、接口约定和当时的勾选状态均保留在各阶段。
+
+## Mono 运行时与 C# 程序集
 
 ### 为什么需要 Mono？
 
@@ -514,7 +516,7 @@ Scene::OnUpdateRuntime(ts)
 
 ---
 
-## 阶段五：编辑器集成
+## 阶段五：编辑器中的脚本组件
 
 **目标**：在 RedflagForge 编辑器中给实体添加/编辑 ScriptComponent
 
@@ -585,7 +587,7 @@ Scene::OnUpdateRuntime(ts)
 
 ---
 
-## 文件清单汇总
+## 引擎与脚本项目的文件
 
 ### 新建文件
 
@@ -619,7 +621,7 @@ Scene::OnUpdateRuntime(ts)
 
 ---
 
-## 决策记录
+## 脚本运行时的设计选择
 
 - **运行时选择 Mono**：兼容性好，TheCherno Hazel 教程同款，学习资料最多
 - **不含热重载**：第一版修改脚本后需 停止 Play → 重新编译 DLL → 再 Play
@@ -630,7 +632,7 @@ Scene::OnUpdateRuntime(ts)
 
 ---
 
-## 后续扩展（本次不做）
+## 后续的脚本功能
 
 - [ ] 热重载（卸载/重新加载 App Domain）
 - [ ] 编辑器暴露 C# 公共字段（通过 Mono 反射 API + ImGui 自动生成控件）

@@ -1,4 +1,6 @@
-# Redflag 引擎渲染管线完整文档
+# OpenGL 的场景绘制与编辑器拾取
+
+这份笔记保留了 2026 年 4 月渲染器的调用顺序和数据布局，适合查当时的代码为什么这样写。后续增加的阴影、间接光与泛光，以及现在的绘制顺序，见[《Redflag 引擎架构》](../output/pdf/Redflag-Architecture-LaTeX.pdf)。
 
 > **版本**: 2026-04-14  
 > **引擎**: Redflag (Hazel-like 自研游戏引擎)  
@@ -10,25 +12,25 @@
 
 ## 目录
 
-1. [架构总览](#1-架构总览)
-2. [初始化流程](#2-初始化流程)
-3. [帧循环总流程](#3-帧循环总流程)
-4. [SceneRenderer — 场景渲染调度器](#4-scenerenderer--场景渲染调度器)
-5. [Renderer2D — 2D 批处理渲染器](#5-renderer2d--2d-批处理渲染器)
-6. [Renderer3D — 3D PBR 渲染器](#6-renderer3d--3d-pbr-渲染器)
-7. [灯光系统与 UBO 布局](#7-灯光系统与-ubo-布局)
-8. [PBR 着色器详解](#8-pbr-着色器详解)
+1. [场景、渲染器与 OpenGL](#1-场景渲染器与-opengl)
+2. [窗口与渲染器的初始化](#2-窗口与渲染器的初始化)
+3. [编辑器的一帧更新](#3-编辑器的一帧更新)
+4. [场景与相机的选择](#4-场景与相机的选择)
+5. [二维图形的批量绘制](#5-二维图形的批量绘制)
+6. [三维模型的提交与绘制](#6-三维模型的提交与绘制)
+7. [灯光数据与着色器布局](#7-灯光数据与着色器布局)
+8. [材质颜色与直接光照](#8-材质颜色与直接光照)
 9. [材质系统](#9-材质系统)
 10. [模型加载 (Assimp)](#10-模型加载-assimp)
 11. [Shader 编译管线 (SPIR-V)](#11-shader-编译管线-spir-v)
-12. [帧缓冲与 Entity ID 拾取](#12-帧缓冲与-entity-id-拾取)
+12. [场景画面与鼠标拾取](#12-场景画面与鼠标拾取)
 13. [编辑器覆盖层 (Gizmo)](#13-编辑器覆盖层-gizmo)
 14. [ECS 组件一览](#14-ecs-组件一览)
 15. [附录：std140 对齐规则备忘](#15-附录std140-对齐规则备忘)
 
 ---
 
-## 1. 架构总览
+## 1. 场景、渲染器与 OpenGL
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -82,7 +84,7 @@ GPU 资源
 
 ---
 
-## 2. 初始化流程
+## 2. 窗口与渲染器的初始化
 
 引擎启动时，`Renderer::Init()` 按顺序初始化所有子系统：
 
@@ -181,7 +183,7 @@ void SceneRenderer::Init()
 
 ---
 
-## 3. 帧循环总流程
+## 3. 编辑器的一帧更新
 
 每帧由 `ForgeLayer::OnUpdate(Timestep ts)` 驱动：
 
@@ -227,7 +229,7 @@ ForgeLayer::OnUpdate(ts)
 
 ---
 
-## 4. SceneRenderer — 场景渲染调度器
+## 4. 场景与相机的选择
 
 **设计思想**：将「怎么画」从 `Scene` 中剥离。Scene 只持有数据（ECS registry），SceneRenderer 负责遍历实体、收集灯光、调度 Renderer2D/3D。
 
@@ -324,7 +326,7 @@ ForgeLayer         Scene         SceneRenderer       Renderer2D       Renderer3D
 
 ---
 
-## 5. Renderer2D — 2D 批处理渲染器
+## 5. 二维图形的批量绘制
 
 ### 5.1 核心思想
 
@@ -418,7 +420,7 @@ EndScene()
 
 ---
 
-## 6. Renderer3D — 3D PBR 渲染器
+## 6. 三维模型的提交与绘制
 
 ### 6.1 命令队列架构
 
@@ -539,7 +541,7 @@ void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform,
 
 ---
 
-## 7. 灯光系统与 UBO 布局
+## 7. 灯光数据与着色器布局
 
 ### 7.1 C++ 数据结构
 
@@ -660,7 +662,7 @@ void SceneRenderer::CollectAndUploadLights(Scene& scene)
 
 ---
 
-## 8. PBR 着色器详解
+## 8. 材质颜色与直接光照
 
 着色器文件：`RedflagForge/assets/shaders/Renderer3D_Mesh.glsl`
 
@@ -1029,7 +1031,7 @@ assets/cache/shader/opengl/
 
 ---
 
-## 12. 帧缓冲与 Entity ID 拾取
+## 12. 场景画面与鼠标拾取
 
 ### 12.1 FBO 配置
 
@@ -1158,7 +1160,7 @@ C++ sizeof(GPULightData) == 64 ←→  Shader LightData 应占 64 字节
 
 ---
 
-## 总结：一帧 PBR 3D 物体的完整数据流
+## 一个三维物体的绘制顺序
 
 ```
 FBX/OBJ 文件

@@ -1,15 +1,15 @@
-\section{RenderDoc 截帧记录}
-这次捕获使用 32×32 的回归用例，底色贴图 alpha、独立透明度图红通道和 0.75 材质因子相乘，裁剪阈值为 0.5。它先画深度，再清屏独立画主画面，捕获范围只有这个用例。
+\section{在 RenderDoc 里核对透明条纹的深度和编号}
+把四条条纹画到 $32\times32$ 的小图里，能很快回答一个问题：颜色已经透过去的地方，深度有没有把东西挡住？这里给材质透明度设为 0.75，再乘底色贴图的 alpha 和透明度图的红通道。结果低于 0.5 就不画。先单独绘制深度，清屏后再独立绘制主画面。
 
-捕获由 RenderDoc 1.33 的应用接口完成，使用 1.47 回放。设备为 RTX 5070 Ti Laptop GPU，OpenGL 4.6，NVIDIA 驱动 616.56。下图是实际 RenderDoc 界面，不是测试程序另行生成的结果图。
+下图是 RenderDoc 回放界面。捕获使用 1.33 版应用接口，回放用 1.47 版。设备为 RTX 5070 Ti Laptop GPU，OpenGL 4.6，NVIDIA 驱动 616.56。
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{../../../output/captures/renderdoc-eid28-depth.jpg}
-\caption{选中事件编号 EID 28 的深度预传递，Texture 60 为 D32 深度附件；两侧灰色为写入区域，中间白色保留清屏深度}
+\includegraphics[width=.95\linewidth]{../../../output/captures/renderdoc-eid28-depth.jpg}
+\caption{在 RenderDoc 中选中第 28 个事件，查看 Texture 60 的 D32 深度图。两侧灰条的深度为 0.5，中间白条仍是清屏值 1.0。}
 \end{figure}
 
-回放定位到两次六索引绘制：EID 28 为深度预传递，EID 52 为主绘制。两者使用同一深度附件，中间有独立清屏。下表通过 RenderDoc 的 PickPixel 读取，坐标原点为左上，均位于 $y=16$。
+沿事件列表找到两次各使用六个索引的绘制。EID 28 只写深度，EID 52 才画主画面，中间清过同一张深度图。用 PickPixel 在左上角起算的第 $y=16$ 行选三个位置：左、右条纹应该写入深度和实体号，中间缺口应该保留背景。
 
 \begin{tabularx}{\textwidth}{L{4.4cm}YYY}
 \toprule
@@ -22,8 +22,8 @@ EID 52，实体 ID & 42 & -1 & 42 \\
 \bottomrule
 \end{tabularx}
 
-全部 1024 个像素也已核对，两次绘制后的深度数据逐字节相同。512 个像素为 0.5，其余为 1.0。预传递不写实体 ID，因此全部保留 -1。主绘制在保留区域写入 42。六组自动测试另行覆盖更多开关组合。
+逐像素读取整张图，两次绘制的 1024 个深度值完全相同，512 个为 0.5，另外 512 个为 1.0。第一次不写实体号，所以全图是 $-1$；第二次只在两侧写入实体 42。其他五组输入另由自动测试验证。
 
-捕获中还有 14 条信息消息和 1 条 NVIDIA 驱动性能提示：EID 28 的顶点着色器依据 GL 状态重新编译。回放开启 API 验证后只有 3 条信息消息，未报致命错误。尚未测量该重编译的持续时间和重复频率，不能写成零告警或已找到性能瓶颈。
+原捕获含 14 条信息和 1 条 NVIDIA 性能提示，第 28 个事件的顶点着色器按 GL 状态重新编译。启用 API 验证回放时有 3 条信息，无致命错误。这次没有测重新编译要花多久、出现多少次。
 
 \note{原始捕获：\path{output/captures/DepthPrepass_capture.rdc}，59936 字节。SHA-256 前缀为 \code{3dcc81ca9eb3ba44}，完整值与回放记录见同目录 manifest.json、replay-results.json。尚未测量 GPU 耗时。}

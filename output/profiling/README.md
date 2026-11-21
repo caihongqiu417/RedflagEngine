@@ -6,7 +6,7 @@
 
 两张 PNG 来自 Chrome 157.0.8103.79 自带的 DevTools Performance 页面。使用独立的浏览器数据目录，通过 Chrome 的远程调试接口导入原始 JSON，再由浏览器截图；没有使用用户的浏览器 Profile，没有上传记录，也没有重画图表。Chrome 当前默认关闭 `chrome://tracing` 调试页，因此改用 DevTools 的 Performance 导入功能。
 
-## 采集场景
+## 运行环境与采样次数
 
 - Windows 11，系统版本 10.0.26200；AMD Ryzen 9 8945HX。
 - NVIDIA GeForce RTX 5070 Ti Laptop GPU，OpenGL 4.6.0，驱动 616.56。
@@ -18,7 +18,7 @@
 
 每帧依次记录 `CPU submission - 64 opaque quads` 和 `CPU wait - glFinish`。外层 `Frame` 包含这两段，以及嵌套计时记录写入所花的时间。渲染器原有的 `ExecuteDepthPrepass` 与 `EndScene` 计时也进入同一记录。
 
-## 本次观察
+## CPU 时间线中的绘制与等待
 
 完整统计见 `statistics.json`。以下每项都有 60 个样本，单位为微秒。
 
@@ -36,7 +36,7 @@
 
 每帧 glFinish 会让 CPU 和 GPU 串行，采集没有交换窗口缓冲，也没有完整编辑器工作负载。因此不能用这些值换算编辑器帧率，不能推断哪个效果一定是瓶颈，也不能声称这轮改动带来了速度提升。未采集 Release、GPU 时间查询、不同场景、功耗模式或前后对照实验。
 
-## 复现
+## 重新采集时间线
 
 先构建 RedflagForge Debug/x64，然后在仓库根目录执行：
 

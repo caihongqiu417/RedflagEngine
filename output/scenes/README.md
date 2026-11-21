@@ -9,7 +9,7 @@
 
 两图 HDR 附件均无 NaN/Inf，渲染与读回没有 OpenGL 错误。设备为 NVIDIA GeForce RTX 5070 Ti Laptop GPU，OpenGL 4.6.0 NVIDIA 616.56。这里没有 GPU 耗时测量。引擎计数不包括所有全屏绘制，不能直接当作完整 API draw 数量。
 
-## 复现和编辑
+## 在编辑器和测试程序中加载场景
 
 在仓库根目录构建 Debug/x64 引擎后执行：
 
@@ -24,7 +24,7 @@ Forge 可直接打开 `assets/scenes/Reference-CornellBox.redflag` 和 `assets/s
 
 Cornell 使用方向光和点光近似照明，顶板不是实际面积光源；Sponza 加了点光以便观察内廊。两者关闭 IBL 和 Bloom，开启 SSAO 与 RSM，使用修正后的 RSM 强度 1。Cornell 方向光改为 `[-0.6,-0.6,-1]`，使红墙受到直接光照；只有方向光进入当前 RSM，点光不产生这一通道的间接光。它们用于检查导入和当前光栅管线，不是 Cornell 物理参考图。图中亮缝、接触区域和点状噪声是当前实际结果，不能据此认为间接光或材质已经达到参考质量。旧参考图和同参数数值对照保存在 `rsm/`。
 
-## Cornell RenderDoc 证据
+## Cornell Box 的 RenderDoc 帧回放
 
 截帧使用 Rider 自带 RenderDoc 1.33.0.0 DLL，应用接口 1.6.0；DLL 在创建图形上下文前加载。原始命令：
 

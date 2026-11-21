@@ -1,12 +1,13 @@
-\section{模型资源加载}\ruleline
-把椅子模型指定给场景中的物体后，编辑器先登记模型文件。场景保存它的编号，下一次打开场景时，仍用这个编号找模型。在代码中，这个编号叫 \code{AssetID}，它是 64 位无符号整数，0 表示没有指定资源。目前接入这套稳定编号的是模型，贴图还没有统一接入。
+\section{模型编号与文件位置}\ruleline
+把椅子模型拖入属性面板时，编辑器先调用 \code{Add<Model>} 登记这份文件，再调用 \code{Load<Model>}。模型读成功后，组件才记下路径、编号和模型对象，视口可以立刻显示结果。下面的图把这两个动作分开：登记时只记录模型是谁、在哪里，加载时才会读出三角形、材质和贴图。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}
 \node[module] (source) at (0,0) {\textbf{1 文件旁保存编号}\\模型 + .rfmeta\\编号随元数据保留};
 \node[module] (library) at (5.2,0) {\textbf{2 记录编号对应的路径}\\AssetLibrary\\只登记和查询};
 \node[module] (manager) at (10.4,0) {\textbf{3 请求模型}\\AssetManager::Load\\先检查是否已加载};
 \node[module] (component) at (0,-3) {\textbf{场景中的模型组件}\\保存 ModelID\\也保留旧路径迁移信息};
-\node[module] (load) at (5.2,-3) {\textbf{4 首次需要才读文件}\\Model::Load\\解析几何、材质和贴图};
+\node[module] (load) at (5.2,-3) {\textbf{4 首次加载时读文件}\\Model::Load\\解析几何、材质和贴图};
 \node[module] (gpu) at (10.4,-3) {\textbf{5 返回可用的模型}\\创建显卡资源\\缓存与场景共同持有};
 \draw[flow](source)--(library);\draw[flow](library)--(manager);
 \draw[flow](component.north east)--node[label,left]{按编号找位置}(library.south west);
@@ -14,21 +15,12 @@
 \draw[flow](manager.south west)--node[label,above left]{尚未加载}(load.north east);
 \draw[flow](load)--(gpu);
 \end{tikzpicture}\caption{登记只记录文件信息。读取模型和创建显卡资源发生在加载时。}\end{figure}
-\subsection{资源移动与场景恢复}
-例如把 \code{chair.obj} 改名并移到 assets 下的另一个文件夹，只要旁边的 \code{.rfmeta} 一起移动，模型编号就不变。重新打开场景时，\code{AssetLibrary::Scan} 扫描这些元数据，重新建立编号与当前位置的对应关系。场景仍保存原来的编号，因此不必逐个修改物体。
+\subsection{模型改名与场景重开}
+模型旁的 \code{.rfmeta} 文件保留一个 64 位无符号编号，代码中叫 \code{AssetID}，0 表示没有指定资源。场景保存这个编号。假如把 \code{chair.obj} 移到 \code{assets} 里的另一个文件夹，连同它的元数据一起移动，模型就能沿用原编号。编辑器的文件面板隐藏元数据，因此拖入场景时看见的是模型本身。
 
-编辑器的文件面板隐藏 \code{.rfmeta}，避免把它当模型拖入。旧场景只保存路径时，读取场景的代码会先按路径登记模型，补上编号。assets 目录外的已保存路径仍需满足元数据编号一致，不能保证任意移动后都能自动找回。
+重新打开场景走的是另一条路径。\code{SceneSerializer::Deserialize} 先让 \code{AssetLibrary::Scan} 扫描 \code{assets}，从找到的元数据重建编号与路径的对应关系。遇到只有路径的旧场景，读取组件时按原路径登记并补上编号。对于扫描范围外的文件，保存的路径仍须可用，且元数据中的编号要与场景一致。文件移出这个范围后，仅凭原来的编号无法遍历磁盘找回它。
 
-\subsection{缓存复用与首次加载}
-\code{AssetManager::Load} 按模型类型和编号检查缓存。已加载就返回同一个模型；还没有才调用 \code{Model::Load}，用 Assimp 读取文件并创建子网格和材质。子网格是模型里可以分别绘制的一部分，例如椅背和椅腿。场景中的不同物体可以共享它们，再各自提供位置变换。
+\subsection{网格和材质的复用}
+场景重开后，组件记得模型编号，可以等到绘制第一次用到它时再请求加载。\code{AssetLibrary::Get} 回答文件的类型和位置，\code{AssetManager::Load} 按类型和编号查询缓存。缓存里如已有这把椅子，就直接返回同一份模型；首次加载时才通过 Assimp 读取文件并创建子网格和材质。一个子网格能独立绘制，例如椅背与椅腿各自用一种材质。
 
-目前加载同步执行，文件解析和显卡资源创建还在同一条调用链里。解析大文件可能占用当前线程。这里没有异步加载、内存预算或资产热重载。
-
-\begin{tabularx}{\linewidth}{@{}L{4.5cm}Y@{}}\toprule
-代码入口 & 完成的工作\\\midrule
-AssetLibrary::Add / Get & 登记文件或按编号查询类型与路径，不创建显卡对象。\\
-AssetLibrary::Scan & 从已有 .rfmeta 恢复编号与路径的对应关系。\\
-AssetManager::Load & 复用已加载模型，或者首次加载后存入缓存。\\
-Unload / ClearAll & 放开一项或全部缓存引用；仍被场景使用的模型继续存在。\\\bottomrule
-\end{tabularx}\par\vspace{4pt}
-\note{共享引用与最终销毁见第 7 节。阴影图、遮蔽图和前帧图像由绘制过程生成，归渲染代码管理。}
+目前，解析文件和创建显卡资源都在调用加载的线程上完成，因此首次读取大模型可能让这一帧等一会儿。后台加载、内存预算和文件改动后的自动重载均属于后续设计。模型用完后，\code{Unload} 或 \code{ClearAll} 可以撤掉缓存的引用；场景仍持有的模型会继续使用。

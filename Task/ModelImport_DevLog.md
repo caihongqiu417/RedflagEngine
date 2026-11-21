@@ -1,13 +1,15 @@
-# 模型导入系统开发日志
+# 模型导入与子网格绘制开发记录
+
+这份记录从按文件路径复用模型的早期实现写起，末尾记下了子网格错位和二维场景变黑时的修改。现在模型使用稳定编号，重新打开场景和移动文件的行为见[《Redflag 引擎架构》](../output/pdf/Redflag-Architecture-LaTeX.pdf)。
 
 ---
 
-## 一、整体架构思路
+## 一、模型文件与场景组件
 
-### 问题起点
+### 从立方体到外部模型
 阶段一已实现 `Mesh` + `Renderer3D`，可以画出程序化的立方体。阶段二目标是通过 Assimp 加载任意 3D 模型文件（.obj / .fbx / .gltf）。
 
-### 核心设计决策
+### 模型路径与共享缓存
 
 **是否把模型直接放组件里？**
 
@@ -27,7 +29,7 @@ AssetManager::GetOrLoad<Model>(FilePath)  →  命中缓存直接返回 / 否则
 
 ---
 
-## 二、新增文件
+## 二、新增的模型与资源缓存类
 
 ### 1. `Redflag/src/Redflag/Core/AssetManager.h`
 
@@ -117,7 +119,7 @@ Model::Load(filepath)
 
 ---
 
-## 三、修改文件
+## 三、模型接入场景与编辑器的改动
 
 ### 4. `Redflag/src/Redflag/Renderer/Renderer3D.h / .cpp`
 
@@ -296,7 +298,7 @@ if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(Left)) {
 
 ---
 
-## 四、使用方式
+## 四、在编辑器中添加模型
 
 1. 在场景中创建空实体
 2. Inspector → **Add Component → Model Renderer**

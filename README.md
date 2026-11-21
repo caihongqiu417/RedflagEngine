@@ -1,33 +1,22 @@
 # Redflag
-A game engine
 
-Windows / C++17 / OpenGL 游戏引擎，编辑器为 RedflagForge。
+Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可以打开场景、摆放模型和灯光，查看 OpenGL 绘制的画面。
 
-## 工程入口
+## 编辑器与引擎代码
 
-- `Redflag/src`：引擎源码与平台后端。
-- `RedflagForge/src`：编辑器入口和交互层。
-- `Redflag-ScriptCore`：C# 引擎 API；`SandboxProject`：游戏脚本。
-- `premake5.lua`：工程生成配置；`Redflag.sln`：Visual Studio 解决方案。
+用 Visual Studio 打开 `Redflag.sln`。编辑器交互在 `RedflagForge/src`，场景、资源和图形实现位于 `Redflag/src`。C# 的引擎接口放在 `Redflag-ScriptCore`，对应的游戏脚本在 `SandboxProject`。工程由根目录的 `premake5.lua` 生成。
 
-## 架构与约定
+## 从场景到画面
 
-- `AGENTS.md`：代码风格、注释习惯和架构方向。
-- `docs/Graphics-References.md`：图形学与引擎教材、GAMES 课程、公式讲解和图片引用约定。
-- `docs/Cleanup-2026-11-21.md`：本次修改、验证与尚未完成的迁移。
-- [当前架构源码](docs/latex/main.tex)：LaTeX 文档，图使用 TikZ 绘制。
-- `docs/latex/build.ps1`：XeLaTeX 编译脚本。
-- [当前架构 PDF](output/pdf/Redflag-Architecture-LaTeX.pdf)：本轮更新的架构文档。
-- [RHI 与 Vulkan 设计源码](docs/latex/rhi/main.tex)：由 `docs/latex/rhi/build.ps1` 编译。
-- [RHI 与 Vulkan 设计 PDF](output/pdf/Redflag-RHI-Vulkan-Plan.pdf)：目标接口、资源同步和分阶段验收计划，Vulkan 后端尚未实现。
-- [排错记录源码](docs/latex/debugging/main.tex)：由 `docs/latex/debugging/build.ps1` 编译。
-- [排错记录 PDF](output/pdf/Redflag-Debugging-Notes.pdf)：错误现象、原因、修改、验证与 RenderDoc 截帧。
-- [技术选型源码](docs/latex/decisions/main.tex)：由 `docs/latex/decisions/build.ps1` 编译。
-- [技术选型 PDF](output/pdf/Redflag-Technical-Decisions.pdf)：候选方案、实际代价、RenderDoc 核对与讲述范围。
-- [经典场景实测源码](docs/latex/scenes/main.tex)与[PDF](output/pdf/Redflag-Classic-Scenes.pdf)：Cornell Box、Sponza 的素材、设置和实际截图。
-- [渲染公式源码](docs/latex/math/main.tex)与[PDF](output/pdf/Redflag-Rendering-Math.pdf)：坐标、法线、光照与深度重建，另含 RSM 通量和采样面积的推导、修改对照及 GPU 数值验证。
+第一次读项目，可以先看 Cornell Box 的两张对照图。红墙旁边的地板本来是白色，打开间接光后却带上了红色。[经典场景实测](output/pdf/Redflag-Classic-Scenes.pdf) 保存了画面和相机设置，[渲染公式与实现](output/pdf/Redflag-Rendering-Math.pdf) 顺着同一块地面解释公式、着色器和读回的颜色值。
 
-## 验证
+要顺着代码看一个模型怎样加载和绘制，可以接着读[引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)。[RHI 与 Vulkan 方案](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 用一张场景颜色图说明哪些调用可以共用，OpenGL 和 Vulkan 分别怎样执行。目前编辑器仍使用 OpenGL。
+
+遇到错图时，[排错记录](output/pdf/Redflag-Debugging-Notes.pdf) 可以从现象追到当时的源码与 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions.pdf) 解释当时为什么选择这种实现，以及性能记录实际测到了什么。六册的 LaTeX 源码与编译命令收在[文档目录](docs/latex/README.md)。
+
+日常开发使用的[项目记忆](AGENTS.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)也随仓库保存。
+
+## 编译与渲染测试
 
 安装 Visual Studio C++ 工具链，先使用 Debug / x64 构建 Redflag 和 RedflagForge，再从仓库根目录顺序运行：
 

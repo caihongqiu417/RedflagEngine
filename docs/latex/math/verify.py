@@ -74,18 +74,44 @@ for count in [16, 64, 128]:
     close([sum(radii_squared) / count], [.5])
 print(f"RSM: density example={resolved:.8f}; receiver={.8 * resolved:.8f}; area/scale identities pass")
 
+# 光照效果的小例子和正文使用同一组输入。
+shadow_depths = [.70] * 6 + [.55] * 3
+visibility = sum(.60 <= depth for depth in shadow_depths) / len(shadow_depths)
+close([visibility, (1 - 1 / 4) ** 2], [2 / 3, .5625])
+
+luminance, threshold = 2., 1.
+knee = max(threshold / 2, .0001)
+soft = min(max(luminance - threshold + knee, 0), 2 * knee)
+contribution = max(luminance - threshold, soft ** 2 / (4 * knee + .0001), 0) / luminance
+bright = luminance * contribution
+close([bright / (1 + bright)], [.5])
+x = 2.
+tone = (x * (2.51 * x + .03)) / (x * (2.43 * x + .59) + .14)
+assert round(tone, 5) == .91486 and round(255 * tone ** (1 / 2.2)) == 245
+print("Effects: PCF=6/9; ambient visibility=0.5625; bright=0.5; display=245/255")
+
 root = Path(__file__).resolve().parents[3]
-sources = [root / "RedflagForge/assets/shaders" / name for name in
-           ["Renderer3D_Mesh.glsl", "SSAO.glsl", "RSMIndirect.glsl", "RSMDepth.glsl"]]
-sources.append(root / "Redflag/src/Redflag/Renderer/Renderer3D.cpp")
-statements = set()
-for source in sources:
-    for line in source.read_text(encoding="utf-8").splitlines():
-        statements.add(re.sub(r"\s+", "", line.split("//", 1)[0]))
-document = "\n".join(Path(__file__).with_name(name).read_text(encoding="utf-8")
-                     for name in ["main.tex", "rsm.tex"])
-for snippet in re.findall(r"\\begin\{lstlisting\}(?!\[)(.*?)\\end\{lstlisting\}", document, re.S):
-    for line in snippet.splitlines():
-        if line.strip():
-            assert re.sub(r"\s+", "", line) in statements, f"Snippet differs from source: {line}"
-print("Code excerpts: every statement matches current project source (excluding comments/spacing)")
+source_cache = {}
+excerpt_count = 0
+for name in ["main.tex", "effects.tex", "rsm.tex", "rsm-validation.tex"]:
+    document = Path(__file__).with_name(name).read_text(encoding="utf-8")
+    # 保留断开的节选，每一组都只对照紧随其后的源码位置。带标题的旧版片段单独标有年代。
+    pending = []
+    entries = re.finditer(r"\\begin\{lstlisting\}(?!\[)(.*?)\\end\{lstlisting\}|\\loc\{([^}]+)\}", document, re.S)
+    for entry in entries:
+        snippet, source_name = entry.groups()
+        if snippet is not None:
+            pending.append(snippet)
+            continue
+        if source_name not in source_cache:
+            source = (root / source_name).read_text(encoding="utf-8-sig")
+            source_cache[source_name] = {re.sub(r"\s+", "", line.split("//", 1)[0]) for line in source.splitlines()}
+        for snippet in pending:
+            for line in snippet.splitlines():
+                if line.strip():
+                    assert re.sub(r"\s+", "", line) in source_cache[source_name], f"{name}: {source_name} differs: {line}"
+            excerpt_count += 1
+        pending.clear()
+    assert not pending, f"{name}: source location missing after excerpt"
+assert excerpt_count > 0
+print(f"Code excerpts: {excerpt_count} verified against their cited source files")

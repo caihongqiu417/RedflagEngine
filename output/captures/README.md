@@ -1,4 +1,4 @@
-# RenderDoc 截帧证据
+# 深度预写与模型绘制的 RenderDoc 截帧
 
 `DepthPrepass_capture.rdc` 来自真实 OpenGL 调用捕获。对象是 `DepthPrepassTests` 的 32×32 离屏回归用例，不是整个编辑器场景。
 

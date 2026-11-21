@@ -1,9 +1,8 @@
-# 图形学与引擎架构参考资料
+# 图形学与引擎教材
 
-用户指定的长期教材目录。用于图形学概念、公式推导、实现说明与配图引用。
-本目录保存官方入口和使用约定，不是书籍全文镜像。来源核对日期：2026-11-21。
+读公式时，可以先用 LearnOpenGL 的图看清光从哪里来，再对照 PBRT 的推导和 Redflag 的着色器。下面按书、课程和源码列出章节，便于从项目中的一个问题查回原文。网页与版次核对日期为 2026-11-21。
 
-## 教材分工
+## 坐标、光照与渲染教材
 
 | 教材 | 优先用于 | 官方入口与版次 |
 | --- | --- | --- |
@@ -12,7 +11,7 @@
 | Real-Time Rendering, Fourth Edition（RTR4） | 实时渲染管线、着色、阴影、纹理过滤、抗锯齿、全局光照和性能取舍 | [作者网站](https://www.realtimerendering.com/)、[出版社页面](https://www.routledge.com/Real-Time-Rendering/Akenine-Moller-Haines-Hoffman-Pesce-Iwanicki-Hillaire/p/book/9781138627000)；固定第四版 |
 | Khronos Vulkan Tutorial | Vulkan 对象、资源生命周期、管线、命令提交与同步；比较 OpenGL 隐式状态和 Vulkan 显式管理 | [教程入口](https://docs.vulkan.org/tutorial/latest/00_Introduction.html)、[用户指定的 Instance 章节](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html)；latest 会变化，使用时核对版本 |
 | Fundamentals of Computer Graphics（FCG） | 向量矩阵、几何、坐标变换、投影、光栅化与光线追踪的基础概念和推导 | [作者第5版配套网站](https://www.cs.cornell.edu/~srm/fcg5/)、[出版社第5版页面](https://www.routledge.com/Fundamentals-of-Computer-Graphics/Shirley-Marschner/p/book/9780367505035)；用户未指定版次，第5版只是目前核实的入口 |
-| Game Engine Architecture（Jason Gregory，《游戏引擎架构》） | 引擎分层、平台抽象、资源管线、运行时资源生命周期、渲染系统与工具的边界 | [作者网站](https://gameenginebook.com/)、[出版社第四版两卷本](https://www.routledge.com/Game-Engine-Architecture-Two-Volume-Set/Gregory/p/book/9781041162599)；作者站目前介绍第四版。用户未指定版次，引用时写明版本，不将第三版页码套入第四版 |
+| Game Engine Architecture（Jason Gregory，《游戏引擎架构》） | 引擎分层、平台抽象、资源管线、资源何时创建和释放、编辑器怎样调用渲染器 | [作者网站](https://gameenginebook.com/)、[出版社第四版两卷本](https://www.routledge.com/Game-Engine-Architecture-Two-Volume-Set/Gregory/p/book/9781041162599)；作者站目前介绍第四版。用户未指定版次，引用时写明版本，不将第三版页码套入第四版 |
 
 ## 课程与引擎源码
 
@@ -20,7 +19,7 @@
 | --- | --- | --- |
 | GAMES101：现代计算机图形学入门，闫令琪 | 变换、光栅化、着色与采样的基础；理解相机、顶点布局和纹理约定 | [教师课程页（2020）](https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html)、[GAMES 入口](https://games-cn.org/intro-graphics/)；第 3–9 讲对应变换、光栅化和着色。课程讲原理，不是 OpenGL/Vulkan API 教程 |
 | GAMES202：高质量实时渲染，闫令琪 | 阴影、RSM、SSAO、IBL、时域积累及降噪；给 Redflag 的 Pass 输入输出和历史资源约束找依据 | [教师课程页（2021）](https://sites.cs.ucsb.edu/~lingqi/teaching/games202.html)、[GAMES 入口](https://games-cn.org/games202/)；课程列出 RSM、SSAO、SSR 和时域主题，推荐 RTR4 |
-| GAMES104：现代游戏引擎：从入门到实践，王希 | 引擎分层、资源管理、渲染硬件接口及渲染管线；结合项目代码讨论边界 | [课程官网](https://games104.boomingtech.com/sc/)、[官方课件与视频](https://games104.boomingtech.com/sc/course-list/)、[GAMES 课件目录](https://games-cn.org/games104-slides/)；重点第 2 讲分层、第 4 讲渲染基础、第 7 讲管线与后处理 |
+| GAMES104：现代游戏引擎：从入门到实践，王希 | 引擎分层、资源管理、渲染硬件接口及渲染管线；对照项目里的模型加载和绘制调用 | [课程官网](https://games104.boomingtech.com/sc/)、[官方课件与视频](https://games104.boomingtech.com/sc/course-list/)、[GAMES 课件目录](https://games-cn.org/games104-slides/)；重点第 2 讲分层、第 4 讲渲染基础、第 7 讲管线与后处理 |
 | Khronos：Building a Simple Engine | 将单个 Vulkan 示例组织为渲染引擎；资源管理、管线与 ImGui 接入的拆分 | [用户指定目录](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/)、[可直接访问的 Introduction](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/introduction.html)、[Engine Architecture](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/01_introduction.html)；先完成基础 Vulkan 教程再读，不直接移植其 C++20 modules 构建 |
 | TheCherno/Hazel 公开源码 | 轻量接口、工厂和资源对象的命名，接口与平台实现分离 | [RendererAPI.h](https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/RendererAPI.h)、[Shader.h](https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Shader.h)、[Texture.h](https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Texture.h)；只把实际查到的代码归于 Hazel，稳定 AssetID 与 Vulkan RHI 属于 Redflag 的设计 |
 | BoomingTech/Piccolo | 对照 GAMES104 中资源、渲染与 RHI 的实际组织 | [课程配套源码](https://github.com/BoomingTech/Piccolo)；用于比较职责和调用关系，不把其全部类型包装照搬进 Redflag |
@@ -37,29 +36,19 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 - **引擎类名和封装方式**：仍以项目记忆中的 Hazel 源码约定为准。教材用于解释图形学，不自动替代现有工程规范。
 - **资源层、Renderer 与 RHI 如何分工**：读《游戏引擎架构》的相关主题和 GAMES104 第 2 讲，再对照 Hazel 与 Piccolo。资产 ID 指向内容，RHI 对象表示 GPU 资源，帧内临时附件归渲染器管理。
 
-## Redflag 的 RHI 学习与迁移路线
+## 从 OpenGL 场景到 Vulkan 窗口
 
-1. 用 GAMES101 的变换、光栅化和着色部分复核当前坐标与纹理约定。先把 NDC 深度、屏幕方向、矩阵布局和颜色空间写清楚。
-2. 用 GAMES104 第 2 讲和《游戏引擎架构》检查模块依赖。结合 Hazel，把高层代码中的 OpenGL 类型、纹理编号和状态调用收进后端，维持现有 OpenGL 输出。
-3. 用 Khronos 基础教程实现独立 Vulkan 验证程序，逐项验证设备能力、交换链、命令录制、资源上传和同步。SDK 安装成功不等于设备支持方案要求。
-4. 读 Building a Simple Engine 的架构、资源与 GUI 章节，再接入 Redflag 的接口。当前工程是 C++17；教程的 Vulkan 1.4、C++20、Vulkan-Hpp RAII 和 Slang 是参考环境，不构成项目已采纳的依赖。
-5. 用 GAMES202 对照阴影、SSAO/RSM 和时域效果，给每个 Pass 写明读写资源和历史失效条件，再迁移后处理与完整场景。以图像、拾取、Resize 和资源回收结果验收。
+先读 Hazel 的 RendererAPI 和 Texture，再对照 Redflag 中加载一张底色图的代码。两种引擎都给调用者一个可共享的纹理对象。接着翻到 Khronos 的开窗与呈现章节，把一个三角形画到自己的窗口里。这样再读它的引擎章节时，设备、图像和绘制命令都有具体的画面可以对应。
 
-具体接口和阶段验收见 [RHI 与 Vulkan 接入设计](latex/rhi/main.tex)。当前实现仍见 [现有架构文档](latex/main.tex)；计划中的类型不表示已经落地。
+回到 Redflag，下一次替换的是一个带材质、可拾取的模型。先测颜色、深度和编号，再把模型图放进编辑器，最后接回阴影、环境光和后处理。GAMES104 对应引擎的组织，GAMES202 对应各项光照效果的计算。实施步骤和每一步要看到的画面见 [RHI 与 Vulkan 方案](latex/rhi/main.tex)。
 
-## 讲解方式
+## 公式与项目代码
 
-1. 先说明这个概念解决什么问题，配一个能表达空间关系或数据流的图。
-2. 列出变量含义、单位、定义域、坐标空间和前提条件。
-3. 逐步推导关键等式，说明每一步为何成立，不直接堆出最终公式。
-4. 给出一个简单数值例子，或用极端情况检查公式。
-5. 对应到 Redflag 的实际变量、Shader 或函数，指出原理与工程近似的区别。
-6. 引用确实查阅的章节、公式或图，区分教材结论和本次自行推导。
+不同问题适合不同的讲法。解释透视投影时，给一个顶点代入公式，读者就能核对它会落在哪个像素；介绍一张贴图的用途时，说明谁写它、谁读它就够了。两种后端产生不同画面时，可以把同一处像素的读数放在一起比较。
 
-公式用 LaTeX。独立讲义和架构文档用 LaTeX，解释性示意图可用 TikZ。
-不同教材的入射/出射方向、左右手系、矩阵乘法、NDC 深度范围、线性/显示空间、粗糙度参数化与概率密度测度，必须先统一或明确对照。
+需要公式时，写清符号的含义、单位和适用条件，并在附近给出项目里真正执行的语句。来自不同书的式子要先统一入射方向、坐标系、深度范围和颜色空间。文中在推导或教材图旁给出相关章节，让读者可以从当前的问题查回原文。独立讲义采用 LaTeX，项目自己的示意图可用 TikZ 绘制。
 
-## Shader 注释的具体参考
+## 着色器中的阴影、材质与后处理
 
 本轮注释按“效果作用 → 直观步骤 → 变量与公式 → 输入输出”组织。先让读者知道这段着色器在画什么、为什么这样算，再解释坐标空间和实现细节。资源编号只在确实影响调用约定的位置注明，不以 slot/binding 清单开头。
 
@@ -73,7 +62,7 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 
 上述链接用于解释原理和核对公式。项目代码中的近似、采样次数、分支和数据布局仍按实际实现说明，不复制原文长段，也不把项目改法冒称教材结论。
 
-## 排错与技术选型的具体参考
+## 排错与性能测量
 
 | 主题 | 已核对入口 | 对应的项目问题 |
 | --- | --- | --- |
@@ -103,14 +92,14 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 每次引用都记录：**教材/网站、版次、章节、图号或页码（能核实才填）、原始链接、原图或重绘**。
 实际使用时核对图像的授权条件。重绘写“据……重绘”，原创写“示意图”。引用来源不等于把原书整章或整本复制进资料库。
 
-## 补充入口
+## RTR4 的附录与在线章节
 
 - RTR4 [参考文献](https://www.realtimerendering.com/refs.html)。
 - RTR4 [线性代数与三角学附录](https://www.realtimerendering.com/Real-Time_Rendering_4th-Appendices.pdf)。
 - RTR4 [实时光线追踪在线章节](https://www.realtimerendering.com/Real-Time_Rendering_4th-Real-Time_Ray_Tracing.pdf)。
 - RTR4 [碰撞检测在线章节](https://www.realtimerendering.com/Real-Time_Rendering_4th-Collision_Detection.pdf)。
 
-## 版本约定
+## 引用教材的版次
 
 - 引用纸书页码必须先确认版次；没有正文可查时，只给官方入口和能够核实的章节信息。
 - PBRT 第三版和第四版的组织、符号及代码不同，不混用章号、公式编号和页码。

@@ -1,27 +1,25 @@
-\section{CPU 时间线采样}
-这份时间线采于后续 3D 复查之前，保留为测量方法与条件的记录，没有为最终代码重新采集性能结果。
-本次在 Windows 11、AMD Ryzen 9 8945HX 上运行一个 256×256 离屏用例。64 个 Opaque 四边形共用网格，深度预传递逐个绘制，主绘制走实例化。预热 10 轮后采集 60 轮，没有场景灯光与 IBL，SSAO 和 RSM 分别使用白色与黑色输入，不执行阴影或后处理。项目 Instrumentor 输出了 300 个同线程事件，原始 JSON 导入 Chrome 157.0.8103.79 的 Performance 面板。
+\section{64 个四边形的 CPU 时间线}
+主绘制把相同网格合成一批，深度预写却仍要逐个提交。为看清 CPU 时间花在哪里，测试把 64 个共用网格和材质的不透明四边形排进一个 $256\times256$ 的离屏目标。设备是 Windows 11、AMD Ryzen 9 8945HX 和 RTX 5070 Ti Laptop GPU。使用 Debug/x64 构建，预热 10 轮后记录 60 轮。场景没有设置灯光或启用 IBL，SSAO 与 RSM 分别读固定白图和黑图，也没有执行阴影和后处理。
 
-\begin{figure}[H]
-\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\linewidth]{../../../output/profiling/chrome-cpu-prepass.png}
-\caption{Chrome DevTools 实际界面。选中深度预传递的 CPU 区间，原始事件为 192 微秒，界面显示约 0.19 毫秒}
+\caption{将引擎生成的记录导入 Chrome 157.0.8103.79 的 Performance 面板。选中的深度预写耗时 192 微秒，界面四舍五入显示为 0.19 毫秒。}
 \end{figure}
 
-\begin{tabularx}{\textwidth}{L{6.2cm}Y}
+\begin{tabularx}{\textwidth}{Y L{3.4cm} L{3.7cm}}
 \toprule
-CPU 区间 & 60 轮中位数（微秒） \\
+CPU 正在做的事 & 中位数（微秒） & 最短至最长（微秒） \\
 \midrule
-提交 64 个四边形及两次渲染阶段 & 347 \\
-其中：深度预传递 & 199 \\
-其中：主绘制 EndScene & 19.5 \\
-glFinish 等待 & 66.5 \\
-一轮采样 Frame & 467 \\
+提交 64 个四边形并执行两次绘制阶段 & 347 & 303--842 \\
+\quad 其中，执行深度预写 & 199 & 188--666 \\
+\quad 其中，执行主绘制 EndScene & 19.5 & 16--52 \\
+\code{glFinish} 等候显卡完成 & 66.5 & 33--1810 \\
+完成一整轮 & 467 & 359--2196 \\
 \bottomrule
 \end{tabularx}
 
-这些区间有嵌套关系，不能相加。截图同一轮的 glFinish 等待为 94 微秒，另一张实际截图保存在同目录。它表示 CPU 等待 GPU 完成的时间，不是 GPU 自身执行某个 Pass 的时间。
+表格统计的是项目计时器 \code{Instrumentor} 在一个 CPU 线程上记录的 300 个事件。每轮提交已经包含深度预写和主绘制，整轮又包含提交与等待，因而不能把表中各行相加。截图选中的这一轮，CPU 在 \code{glFinish} 里等了 94 微秒。这个数取决于显卡返回时有多少工作尚未完成，无法分摊到某一个绘制阶段。
 
-本次使用 Debug 配置，逐事件写日志并 flush 会干扰采样。每轮 glFinish 又人为串行化了 CPU 与 GPU，没有交换窗口缓冲或完整编辑器工作负载。这里没有优化前后对照，Frame 的倒数不能当作编辑器帧率。后续需要在代表性场景中减少测量干扰并单独获取 GPU 计时。Chrome 的网页专属指标不适用于这份 C++ 时间线。
-
-\note{复现：\path{tests/run_profile_tests.cmd}。原始数据：\path{output/profiling/redflag-cpu-trace.json}，39599 字节；截图和采集说明位于同目录。参考：\source{https://developer.chrome.com/docs/devtools/performance/reference}{Chrome DevTools Performance 功能文档}。}
+这份记录采于后续 3D 复查之前。每个事件都写入并刷新日志，每轮都调用 \code{glFinish} 让 CPU 等显卡；实际编辑器还要运行界面、呈现窗口，也通常会让两者并行工作。所以这里适合比较一次测试里 CPU 在哪里忙、在哪里等。编辑器的帧率以及新旧代码的速度差还要另行测量。
+\note{运行 \path{tests/run_profile_tests.cmd} 可重新采样，原始 39\,599 字节的 \path{redflag-cpu-trace.json}、统计和两张 Chrome 截图均在 \path{output/profiling/}。
+\source{https://developer.chrome.com/docs/devtools/performance/reference}{Chrome DevTools，Performance}。}

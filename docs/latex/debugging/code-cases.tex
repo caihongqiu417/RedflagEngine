@@ -1,10 +1,10 @@
-\section{代表性源码对照}
-下面只节选决定行为的真实代码，省略无关上下文。修改前来自注明的提交，修改后来自本轮工作树或历史修复提交。短片段用于解释错误，完整生命周期仍应回到函数中核对。
+\section{透明裁剪和镜头外模型的阴影}
+条纹、灯下的四边形和空的精灵批次，分别对应三处可以直接对照的代码。摘录保留了影响这三种画面的分支，旧版本用提交链接定位。
 
-\subsection{Mask：选择一项不等于三项相乘}
-位置为 \path{RedflagForge/assets/shaders/Depth_Prepass.glsl} 的片元 main。修改前取自 \rev{1a168c3}，有透明度图时完全不使用底色因子的 alpha，也不读取底色贴图 alpha。
+\subsection{深度绘制在哪里漏读了透明度}
+先看 \path{RedflagForge/assets/shaders/Depth_Prepass.glsl} 的片元 main。在 \rev{1a168c3}，有独立透明度图就只取它的红通道，否则才取材质底色的透明度。无论走哪一边，底色贴图上的孔洞都没参与。
 
-\textbf{修改前}
+旧判断只取一项：
 \begin{Code}
 float alpha = u_UseAlphaMap == 1
     ? texture(u_AlphaMap, v_TexCoord).r
@@ -13,7 +13,7 @@ if (alpha < u_AlphaCutoff)
     discard;
 \end{Code}
 
-\textbf{本轮修正}
+修复后的深度绘制逐项相乘：
 \begin{Code}
 float alpha = u_BaseColor.a;
 if (u_UseBaseColorMap == 1)
@@ -24,16 +24,16 @@ if (alpha < u_AlphaCutoff)
     discard;
 \end{Code}
 
-修改还包括 C++ 上传底色图及使用开关，不能只改公式而不提供输入。DepthPrepassTests 独立清屏比较两次绘制。RenderDoc 的 EID 28 与 EID 52 进一步确认当次数据和 1024 个像素覆盖一致。Shadow 与 RSM 的覆盖由另一个测试验证，不由这张旧捕获推断。
+C++ 也要把底色图和是否使用它的开关交给着色器。改完后，DepthPrepassTests 独立清屏和绘制，RenderDoc 的 EID 28、52 对应 1024 个像素，深度逐字节相同。从灯的位置绘制阴影与 RSM 的结果另由 Renderer3DTests 核对。
 
-\subsection{视锥剔除：保留光源仍需要的命令}
-修改前取自同一提交的 Renderer3D::DrawMesh 材质重载。相机剔除后直接返回，Shadow 和 RSM 再也取不到这条命令。
+\subsection{在相机外提早返回会丢掉阴影}
+同一提交里的 Renderer3D::DrawMesh 按相机视野检查网格，一旦发现它在镜头外就直接返回，后面连画阴影时也找不到它。
 \begin{Code}
 if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
 s_Data.DrawCommands.push_back({ mesh, transform, material, entityID });
 \end{Code}
 
-本轮统一在 SubmitMesh 记录主相机可见性，先保留命令。
+修复把这一步移到 SubmitMesh，只记录相机能否看见，并保留命令：
 \begin{Code}
 bool culled = CullMesh(*mesh, transform);
 if (culled)
@@ -45,10 +45,10 @@ s_Data.DrawCommands.push_back({ mesh, transform, material, entityID, culled });
 \loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}
 
 \newpage
-\section{历史源码对照：空批次重画旧数据}
+\section{这一帧没有精灵，为什么还会画出上一帧}
 提交 \rev{e80839c} 前，Renderer2D::EndScene 即使索引数量为零，也计算上传大小后调用 Flush。下段取自该提交的父版本，保留实际调用。
 
-\textbf{修改前：EndScene 无条件提交}
+旧版在场景结束时总会执行这段上传：
 \begin{Code}
 uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
     (uint8_t*)s_Data.QuadVertexBufferBase);
@@ -62,7 +62,7 @@ uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCou
 glDrawElements(GL_TRIANGLES, count,GL_UNSIGNED_INT,nullptr);
 \end{Code}
 
-\textbf{历史修正：有本批次索引才提交}
+修复后，先看本批次是否有索引：
 \begin{Code}
 if (s_Data.QuadIndexCount > 0)
 {
@@ -75,6 +75,6 @@ if (s_Data.QuadIndexCount > 0)
 
 这条判断放在拥有本批次计数的 2D 提交处，避免把空批次交给“零表示全部”的底层接口。它解释了旧缓冲为何有机会再次被读取，比只说“浮点误差”或“清屏有问题”更具体。
 
-本轮核对了修复前后的完整调用链，原提交没有保存失败截图，也没有当时的自动测试日志。当前代码仍保留按有效数量提交的处理，但未补这项专门的空帧切换回归，不能把源码解释写成已重新复现。
+本轮核对了这条完整调用链。原提交没有失败截图和当年的测试日志，当前实现仍按有效数量提交。连续切换有内容的一帧与空帧，还缺一个专门的回归用例。
 \loc{Redflag/src/Redflag/Renderer/Renderer2D.cpp}
 \loc{Redflag/src/Platform/OpenGL/OpenGLRendererAPI.cpp}

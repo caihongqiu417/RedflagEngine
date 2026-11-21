@@ -41,37 +41,37 @@
  label/.style={font=\scriptsize,fill=white,inner sep=2pt,text=muted}}
 
 \begin{document}
-\zihao{-5}
+\zihao{5}\raggedright
 {\Huge\bfseries Redflag 引擎架构}\par\vspace{5pt}
 {\large\color{muted}从导入一个模型，到在编辑器里看到它}\par
 {\color{blue}\hrule height 1pt}\vspace{10pt}
-Redflag 是面向 Windows 的 C++ 游戏引擎，使用 OpenGL 绘制。RedflagForge 是编辑器：在这里摆放模型、调整灯光，或启动场景查看运行结果。本文沿着一个模型进入画面的过程，解释各部分为什么存在，以及代码从哪里开始读。
+RedflagForge 是 Redflag 的场景编辑器。这里以一把椅子为例，看它怎样从磁盘上的模型变成一个可以摆放、照亮和选中的物体。当前程序在 Windows 上运行，使用 C++ 和 OpenGL。
 
-\section{模型从导入到显示}\ruleline
-假设把一把椅子放进场景。引擎先记住它对应哪个文件，第一次需要绘制时再读出模型。之后每一帧使用已有模型，结合椅子的位置、相机和灯光生成画面。
+\section{模型的加载与绘制}\ruleline
+在文件面板找到椅子模型，把它拖到物体的模型组件上。编辑器登记文件，取得模型编号，再请求加载。成功后，视口里便能看见这把椅子。复制一把放到窗边，第二把椅子沿用相同的三角形和贴图，却有自己的位置和实体编号。用鼠标点它时，编辑器因而能知道点中的是哪一把。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}
 \node[module] (a) at (0,0) {\textbf{1 记住模型身份}\\模型文件旁保存 ID\\场景记录这个 ID};
 \node[module] (b) at (5.2,0) {\textbf{2 取出模型}\\已有就复用\\首次需要时读取文件};
 \node[module] (c) at (10.4,0) {\textbf{3 提交这把椅子}\\模型的三角形\\位置、材质、实体编号};
-\node[module] (d) at (0,-2.7) {\textbf{4 先画辅助图}\\记录遮挡与表面朝向\\供光照计算使用};
+\node[module] (d) at (0,-2.7) {\textbf{4 记录深度和法线}\\记录遮挡与表面朝向\\供光照计算使用};
 \node[module] (e) at (5.2,-2.7) {\textbf{5 计算主画面}\\结合材质和灯光\\画出可见表面};
 \node[module] (f) at (10.4,-2.7) {\textbf{6 显示到编辑器}\\调整亮度与泛光\\把结果放进视口};
 \draw[flow](a)--(b);\draw[flow](b)--(c);
 \draw[flow](c.south)--++(0,-.45)-|(d.north);
 \draw[flow](d)--(e);\draw[flow](e)--(f);
-\end{tikzpicture}\caption{本文的阅读主线。辅助图用于计算，最终画面才交给编辑器显示。}\end{figure}
+\end{tikzpicture}\caption{模型登记一次，位置和灯光每帧读取。中间的深度图、法线图供计算使用，视口显示最后的颜色图。}\end{figure}
 
-\subsection{资产与渲染图像的分工}
-同一把椅子可以在场景里放十次，模型文件只需加载一份，每个物体另存自己的位置。磁盘上可重复使用的模型、贴图等文件，在本文中称为\textbf{资产}。它们的身份和加载由资产代码管理。
+\subsection{模型文件与视口图像}
+保存场景时，两把椅子各自记下位置和模型编号。只要编号仍对应那份模型文件，重新打开场景就能恢复两把椅子。模型文件和贴图可以多次使用，本文把它们称为资产。现有代码已给模型建立稳定编号，贴图仍按各自的加载路径读取。
 
-画面中的阴影、深度等结果会随相机或灯光变化，属于\textbf{渲染生成的图像}。它们由渲染代码创建和更新。这样修改视口大小时，只需重建相关图像，不必重新导入椅子。
-
-\note{第 2、3 节解释谁发起这些操作；第 4 节跟踪模型加载；第 5 节跟踪一帧图像；第 6、7 节用于查代码和理解释放顺序。第 8 节单列尚未实现的工作。}
+拖大视口时，需要变大的是显示画面和供它读取的深度图。椅背上有多少个三角形，与窗口多大无关。Redflag 因此分别管理磁盘上的资产和绘制时生成的图像。
 
 \clearpage
-\section{模块职责}\ruleline
-编辑器保存“场景里有哪些物体”，场景渲染代码把这些物体转成绘制工作，OpenGL 实现再把工作交给显卡。图中先写用途，下面保留对应类名，方便沿着源码查找。
+\section{编辑器与场景}\ruleline
+在视口里拖动椅子，移动工具先算出新位置，编辑器再把它写入椅子的位置组件。下一帧，场景渲染器从组件取出新位置和原来的模型，屏幕上的椅子便跟着鼠标移动。位置变了，已有的网格和材质仍可继续用。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}
 \node[module] (forge) at (0,0) {\textbf{编辑场景与显示结果}\\RedflagForge\\ForgeLayer / Panels};
@@ -82,19 +82,18 @@ Redflag 是面向 Windows 的 C++ 游戏引擎，使用 OpenGL 绘制。RedflagF
 \node[module] (draw) at (10.4,-3.0) {\textbf{组织几何绘制}\\Renderer2D / Renderer3D\\合并或逐次提交};
 \node[wide] (gl) at (5.2,-5.8) {\textbf{在显卡上创建资源并执行绘制}\\Platform / OpenGL：缓冲、贴图、绘制程序和绘制目标的实现};
 \draw[flow](app)--(forge);\draw[flow](forge)--(scene);\draw[flow](scene)--(sr);\draw[flow](sr)--(draw);
-\draw[flow,dashed](scene)--node[label,right]{查找模型}(assets);
+\draw[flow,dashed](sr.south west)--node[label,above left]{按编号取模型}(assets.north east);
 \draw[flow](app.south)|-(gl.west);\draw[flow](draw.south)|-(gl.east);
 \end{tikzpicture}\caption{实线表示主要调用方向，虚线表示资源查询。}\end{figure}
-\subsection{以移动椅子为例}
-在编辑器里拖动椅子，改变的是场景中这个物体的位置。下一帧，场景渲染代码取出新位置，把它与模型一起提交。模型的三角形和贴图仍然可以复用，不需要因为位置变化就重新读文件。
+\subsection{物体的位置与模型}
+\code{Scene} 保存正在编辑的物体。每一个物体都是一个 \code{Entity}，可以分别添加位置、模型、灯光或脚本组件。EnTT 负责存放这些组件。移动操作修改的是这把椅子的变换组件，给它换模型修改的则是模型组件。
 
-这里的“物体”在代码中叫 \code{Entity}。位置、模型和脚本等信息分别放在组件中，由 \code{Scene} 保存。EnTT 是负责存储这些实体与组件的外部库。
-
-\note{图表示目前的主要分工，并不表示代码已经完全分开。Scene 的更新函数仍会触发绘制，一些编辑面板还放在 Scene/Panel 中，高层渲染函数也仍有直接 OpenGL 调用。}
+\code{ForgeLayer} 管编辑操作和视口。它调用场景的更新函数，再由场景渲染器安排灯光与相机各自要画的内容。二维精灵由 \code{Renderer2D} 成批提交，三维模型由 \code{Renderer3D} 按子网格组织绘制。OpenGL 接收顶点和贴图，在显卡上执行这些操作。当前场景更新会直接触发绘制，部分编辑面板也在 \path{Scene/Panel} 下；把渲染调用移到统一图形接口，是后续接入 Vulkan 的工作。
 
 \clearpage
-\section{帧更新与场景状态}\ruleline
-窗口打开后，应用不断更新和绘制。相邻两次更新之间的时间用于推进物体运动。编辑器根据当前模式，选择要更新哪个场景、用哪台相机看它。
+\section{场景的编辑、播放与模拟}\ruleline
+同一把椅子在编辑时可以任意摆放，播放后也许会因脚本或重力而移动。窗口打开期间，\code{Application::Run} 每帧计算距离上次更新经过的时间，再调用各个功能层。编辑器这一层叫 \code{ForgeLayer}，由它按当前模式选择场景和相机。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[node distance=8mm]
 \node[wide] (a) {\textbf{1 开始这一帧}\\Application::Run 计算经过的时间，更新各个 Layer};
@@ -104,52 +103,38 @@ Redflag 是面向 Windows 的 C++ 游戏引擎，使用 OpenGL 绘制。RedflagF
 \node[wide,below=of d] (e) {\textbf{5 显示画面与编辑工具}\\ForgeLayer 把结果交给 ImGui，显示视口和面板};
 \draw[flow](a)--(b);\draw[flow](b)--(c);\draw[flow](c)--(d);\draw[flow](d)--(e);
 \end{tikzpicture}\caption{Layer 是应用更新的功能层，编辑器的主要工作放在 ForgeLayer 中。}\end{figure}
-\subsection{编辑场景与运行副本}
-\par
-\begin{tabularx}{\linewidth}{@{}L{2.2cm}Y Y@{}}\toprule
-模式 & 场景和相机 & 这一帧做什么\\\midrule
-编辑 Edit & 原编辑场景；编辑器相机 & 编辑物体并绘制。\\
-播放 Play & 编辑场景的副本；场景主相机 & 运行脚本、物理和粒子，再绘制。\\
-模拟 Simulate & 编辑场景的副本；编辑器相机 & 推进物理并绘制。\\\bottomrule
-\end{tabularx}\par\vspace{4pt}
-播放和模拟使用副本，因此运行中的位置变化不会直接写回编辑场景。停止时，先结束脚本或物理，再丢弃副本并恢复编辑场景。悬停对象等引用也要清除，否则还可能指向已经销毁的运行副本。
+\subsection{播放时的场景副本}
+编辑时，视口跟着编辑器相机，展示的是你正在保存的场景。点击播放后，编辑器复制这个场景，在副本中运行脚本、二维物理和粒子，再从场景主相机绘制。点击模拟也会创建副本，不过视角仍由编辑器相机控制。这时可以从侧面看刚体怎样落下，脚本不随模拟运行。
+
+点击停止，编辑器先结束副本中的运行或模拟，再切回原场景。这样，测试时落到地上的椅子会回到编辑位置。编辑器也要清掉悬停物体的引用，因为光标先前指向的物体可能属于刚刚释放的副本。
 
 \clearpage\input{assets.tex}
 \clearpage\input{rendering.tex}
 
 \clearpage
-\section{源码入口与数据类型}\ruleline
-按操作找入口，比先记住全部类名更容易。下面保留函数名，说明进入后应当关注什么。
-\par
-\begin{tabularx}{\linewidth}{@{}L{3.0cm}L{4.2cm}Y@{}}\toprule
-功能 & 入口 & 查看内容\\\midrule
-持续更新 & Application::Run & Layer 的更新、事件传递和退出。\\
-场景读写 & SceneSerializer & Serialize / Deserialize 如何读写组件和模型 ID。\\
-播放与停止 & Scene 的运行入口 & 复制场景后怎样启动脚本、物理，以及何时停止。\\
-模型加载 & AssetManager::Load & 先查共享缓存，缺少时调用 Model::Load。\\
-绘制记录 & Renderer3D::DrawModel & 逐个子网格组合变换，记录材质和实体编号。\\
-阶段顺序 & SceneRenderer & RenderScene 用于编辑视图，RenderRuntime 用于运行相机。\\
-后处理 & PostProcess::Render & 读取主画面，生成泛光并调整显示亮度。\\\bottomrule
-\end{tabularx}\par\vspace{4pt}
-\subsection{网格、材质与绘制记录}
-模型里的三角形由 \code{Mesh} 保存。表面颜色、粗糙度和贴图引用由 \code{Material} 保存。\code{DrawCommand} 是本帧要画一次模型的记录，把网格、位置变换、材质和实体编号放在一起。材质可以复用，同一个网格也可以出现在多条绘制记录中。
+\section{网格、材质与绘制记录}\ruleline
+如果视口里摆了十把相同的椅子，可以从 \code{Renderer3D::DrawModel} 跟一次调用。它逐个取出模型的子网格，把网格在模型中的局部变换乘到实体变换右边。于是转动一整把椅子时，椅背和椅腿会一起转，各零件仍在原来的相对位置。用列向量记一个顶点的位置，计算顺序如下：
+\[
+ p_{\mathrm{world}}=M_{\mathrm{entity}}\,M_{\mathrm{submesh}}\,p_{\mathrm{local}} .
+\]
+先用子网格矩阵把顶点放到整把椅子的坐标里，再用实体矩阵把椅子放进房间。
 
-运行在显卡上、负责计算顶点位置和像素颜色的小程序称为\textbf{着色器}，代码对象叫 \code{Shader}。贴图、网格数据和着色器配合起来，才足以完成一次绘制。
+模型的各部分可以共用材质，也可以分别换色。\code{Mesh} 持有顶点和索引，决定几何形状；\code{Material} 保存底色、粗糙度和贴图。每次提交子网格时，\code{DrawCommand} 记下这次要用的网格、材质、变换和实体编号。等主画面开始绘制，再取出适合一起画的记录，交给着色器计算各顶点的位置和各像素的颜色。
 
-\subsection{外部库职责}
-\par
-\begin{tabularx}{\linewidth}{@{}L{4.6cm}Y@{}}\toprule
-库 & 用途\\\midrule
-GLFW / ImGui / ImGuizmo & 建立窗口和输入；绘制编辑面板；提供移动、旋转等操作工具。\\
-Assimp / stb\_image / tinyexr & 读取模型文件；解码普通图像和 EXR 图像。\\
-Mono / yaml-cpp & 执行 C\# 脚本；读写场景文本。ScriptGlue 连接脚本与 C++。\\
-EnTT / Box2D / GLM / spdlog & 存储实体组件；计算二维物理；提供向量矩阵；记录日志。\\\bottomrule
-\end{tabularx}\par\vspace{4pt}
-\note{当前高层代码仍直接调用部分外部库，是否继续封装需要结合具体使用范围决定。}
+带裁剪的材质还需要所有阶段对同一像素作出同样的判断。例如带孔的椅背，底色的透明度、底色贴图的透明度、透明度贴图的红通道三者相乘，低于材质阈值的位置留空。主画面、深度预写、阴影和反射阴影图都用这个条件，孔里才不会凭空出现阴影。已有的 RenderDoc 捕获可以逐像素对照预写和主画面；阴影与反射阴影图的覆盖另由回归测试检查。
+
+\subsection{沿编辑操作查找源码}
+查“保存后椅子去哪了”，可以从 \code{SceneSerializer::Serialize} 和 \code{Deserialize} 读起，看模型编号与组件怎样写入、读出场景。若编号正确但没有几何可画，再沿着 \code{AssetManager::Load} 查到 \code{Model::Load}。若只有播放时看不到椅子，可比较 \code{SceneRenderer::RenderScene} 使用的编辑器相机和 \code{RenderRuntime} 使用的场景主相机。画面已有颜色、唯独亮度不对时，最后再看 \code{PostProcess::Render}。
+
+\subsection{文件、窗口与脚本所用的库}
+导入模型时，Assimp 解析网格与材质；普通贴图由 \code{stb\_image} 解码，EXR 图像由 tinyexr 读取。场景通过 yaml-cpp 读写文本，向量和矩阵使用 GLM，加载和绘制过程里的诊断信息由 spdlog 输出。
+
+日常编辑用到的窗口和输入来自 GLFW，面板由 ImGui 绘制，移动、旋转等操作使用 ImGuizmo。播放后，Mono 执行 C\# 脚本，\code{ScriptGlue} 把相应操作连接到 C++，Box2D 则推进二维物理。这些库服务于不同的操作，查问题时可以从发生异常的那一步找到相应代码。
 
 \clearpage
-\section{生命周期与资源释放}\ruleline
-显卡上的贴图和缓冲需要通过 OpenGL 删除。执行删除时，窗口对应的图形上下文必须仍有效。这里的上下文就是执行 OpenGL 操作所需的环境。因此退出顺序从使用资源的场景开始，最后才关闭窗口。
+\section{模型的卸载与窗口关闭}\ruleline
+在属性面板点“卸载”时，编辑器会清掉当前组件里的模型编号、文件路径和模型引用，并让缓存放开这份模型。如果另一把椅子还在用同一份网格，屏幕上仍能看见它。退出整个编辑器时就不同了，所有场景和缓存都应该先放手，模型以及显卡上的贴图才能在窗口还开着时被销毁。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[node distance=7mm]
 \node[wide] (a) {\textbf{1 停止场景和编辑器}\\LayerStack::Clear；ForgeLayer 退出播放或模拟，释放场景引用};
@@ -159,32 +144,27 @@ EnTT / Box2D / GLM / spdlog & 存储实体组件；计算二维物理；提供�
 \node[wide,below=of d] (e) {\textbf{5 最后关闭窗口}\\释放 GraphicsContext，销毁 GLFW 窗口};
 \draw[flow](a)--(b);\draw[flow](b)--(c);\draw[flow](c)--(d);\draw[flow](d)--(e);
 \end{tikzpicture}\caption{先释放使用者和资源，再结束 OpenGL 的执行环境。}\end{figure}
-\subsection{共享引用与卸载}
-场景和缓存可以同时持有同一个模型。共享引用在代码中写作 \code{Ref<T>}，它是 \code{std::shared\_ptr} 的别名。\code{Unload} 只放开缓存的那份引用。场景还在使用时，模型继续存在。最后一份引用释放后，模型及其持有的资源才有机会销毁。
+\subsection{共享模型与最后一次释放}
+代码中的 \code{Ref<T>} 是 \code{std::shared\_ptr} 的别名。组件和缓存各持有一份引用，所以 \code{Unload} 只能释放缓存这一份。\code{ClearAll} 会清空所有类型的缓存，最后一个持有者放手后，对象才会析构。阴影图、泛光图和上一帧的间接光图像由渲染模块持有，随各自的绘制资源释放。
 
-编辑器的“卸载模型”还会清空组件里的模型 ID 和路径，避免下一帧又按旧记录加载回来。阴影图和上一帧图像由渲染模块持有，不放进模型缓存。
-
-\note{Layer 在栈内时由 LayerStack 管理。Clear 会结束并销毁全部 Layer；Pop 只调用 OnDetach 后移出，调用方接手对象，负责后续释放。}
+应用退出时，\code{LayerStack::Clear} 会对栈里的功能层逐个调用 \code{OnDetach} 并销毁它们。单独调用 \code{PopLayer} 或 \code{PopOverlay} 只执行 \code{OnDetach} 并移出对象，后续释放由取出它的代码负责。之后才关闭脚本、清理缓存和渲染器。窗口的 OpenGL 上下文最后关闭，显卡资源析构所需的 OpenGL 调用才有地方执行。
 
 \clearpage
-\section{后续改造与验收}\ruleline
-前七节说明当前代码。下表是尚未完成的改造，每一步都围绕一个实际问题，并给出完成后可以检查的结果。
-\par
-\begin{tabularx}{\linewidth}{@{}L{3.5cm}Y Y@{}}\toprule
-现在的限制 & 下一步修改 & 验收结果\\\midrule
-读模型与上传显卡混在一起 & 先把文件解析和显卡资源创建分开，再明确导入设置与保存产物。 & 修改设置后重新导入，运行时能使用对应产物。\\
-场景更新里直接触发绘制 & 先收集本帧需要的数据，再交给渲染代码；拟用 RenderSceneData 保存。 & 更新和绘制能分别调用，绘制不改场景组件。\\
-多个视口会共用部分图像 & 让每个视口持有自己的尺寸、效果设置和前帧图像。 & 两台相机使用不同尺寸连续绘制，结果不相互影响。\\
-效果依赖写在大函数中 & 把各步骤的输入图、输出图和绘制状态写清楚，仍按固定顺序执行。 & 开关效果、调整大小后，结果与原流程一致。\\
-临时图像还由各处管理 & 前面步骤稳定后，再评估是否让 RenderGraph 根据图像依赖安排执行和复用。 & 有实测的资源收益，且画面保持一致。\\\bottomrule
-\end{tabularx}\par\vspace{4pt}
-\subsection{目前已经验证的范围}
-资产测试检查稳定 ID、文件移动和共享引用。后处理测试在隐藏 OpenGL 4.6 窗口中绘制，验证两个实例使用不同曝光、交替绘制、调整尺寸和切换泛光。Shader 缓存、模型导入及透明裁剪轮廓另有专项测试。具体输入与结果见《Redflag 调试记录》。这些测试不能代替完整编辑器交互回归。
+\section{OpenGL 与 Vulkan 的接入}\ruleline
+Redflag 当前用 OpenGL 绘制。接入 Vulkan 时，先把同一个三角形画到窗口里：启动时选择后端，确认窗口能接收事件、显示图像，并能在最小化和恢复后继续显示。接着画一个带贴图模型，固定相机，把两种后端输出的颜色、深度和实体编号逐项对照。完成这两步后，再把模型画面放进编辑器视口，接回鼠标拾取和窗口缩放。
 
-图形接口与 Vulkan 的迁移单列于 RHI 文档。RHI 是隔开渲染代码与具体图形 API 的接口，本项目当前仍使用 OpenGL。
+让这一帧经过同一条上层路径，需要把场景更新与绘制分开。目前更新函数中既读组件，也触发绘制。可以先把本帧的相机、灯光、模型和变换整理成一份绘制数据，由后端共用。现有三维绘制队列能保存的内容直接沿用。两个视口则各自保存尺寸、效果设置和上一帧图像。用两台相机同时渲染不同大小的视口，可以检查其中一个改变曝光或调整大小时，另一个是否仍显示自己的结果。
 
-\subsection{参考来源与采用范围}
-\href{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Shader.h}{Hazel 的 ShaderLibrary} 使用 Add / Load / Get / Exists 管理 Shader。Redflag 沿用这种易懂的命名。本项目的 AssetID 和 AssetLibrary 是自己的扩展，不能据此推断 Hazel 公开版有相同的资产设计。
+\subsection{灯光效果与对照场景}
+编辑器能稳定显示和选中模型后，再接回阴影、环境遮蔽、环境光、墙面反射的间接光、泛光以及二维绘制和粒子。每一步先明确从哪几张图读数据、结果写到哪里、保留哪些深度和颜色，再分别开关效果并调整视口大小。固定的执行顺序跑通后，再用实测的显存占用和画面结果判断是否需要 RenderGraph 协助复用临时图像。
 
-\href{https://docs.unity.com/en-us/engine/6000.3/manual/assets-and-media/asset-database/contents}{Unity 6.3 的 Asset Database} 将源文件、元数据和导入结果联系起来，帮助理解为什么身份要与路径分开。\href{https://github.com/Unity-Technologies/Graphics/blob/master/Packages/com.unity.render-pipelines.core/Documentation~/render-graph-system.md}{Unity 的 Render Graph 文档} 用于后续研究图像依赖与资源复用，当前没有照搬完整系统。
+文件导入可以单独推进。现在读模型和创建显卡资源还在同一条调用链。将它们分开后，可以先解析源文件，再按导入设置生成可供运行时读取的数据；改变设置重新导入时，需确认运行时真正使用了新结果。
+
+现有验证以 OpenGL 为准。资产测试覆盖模型编号、文件移动和共享引用。后处理测试在隐藏的 OpenGL 4.6 窗口中比较两个实例交替绘制时的曝光、缩放与泛光。着色器缓存、模型导入和透明裁剪另有专项用例。Vulkan 也要在相同场景上留下自己的读回值和截帧，窗口与编辑操作则需要从编辑器入口回归。具体顺序见《RHI 与 Vulkan 接入设计》。
+
+\subsection{架构参考}
+\href{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Shader.h}{Hazel 的 ShaderLibrary} 用 \code{Add / Load / Get / Exists} 表达加入、加载、取得与查询。Redflag 沿用这套命名习惯，稳定的模型编号 \code{AssetID} 和保存编号与路径的 \code{AssetLibrary} 是本项目自己的扩展。
+
+\href{https://docs.unity.com/en-us/engine/6000.3/manual/assets-and-media/asset-database/contents}{Unity 6.3 的 Asset Database} 用元数据把源文件与导入结果联系起来，可对照理解模型改名后如何保持身份。\href{https://github.com/Unity-Technologies/Graphics/blob/master/Packages/com.unity.render-pipelines.core/Documentation~/render-graph-system.md}{Unity 的 Render Graph} 说明了图像依赖与资源复用，这两点留到固定的绘制顺序能稳定工作后再衡量。
+
 \end{document}
