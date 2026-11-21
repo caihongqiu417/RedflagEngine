@@ -12,23 +12,10 @@
 {\Large\color{muted}Redflag 的模型绘制、后处理与编辑器窗口}\par
 \ruleline
 
-\section*{从盒子里的一面墙开始}
-打开 Cornell Box，把鼠标放在左边的红墙上。屏幕上能看见红色，点击以后还能选中整个房间，因为这个场景是作为一个模型导入的。绘制墙面时，程序同时写下了这个像素的颜色和模型编号。颜色还要调曝光，再把过亮的部分压到显示器能显示的范围。编号则原样保留，点到背景时读到 $-1$。换到 Vulkan 后，我们就用这两个结果检查墙有没有画对。
+\section{渲染接口与后端实现}
+Redflag 目前使用 OpenGL。\code{SceneRenderer} 决定这帧要画哪些模型、阴影和主画面按什么顺序绘制。接入 Vulkan 时，可以继续使用这些判断。需要分别实现的是创建显卡资源、设置绘制目标和执行命令。这组供渲染器调用的公共接口就是渲染硬件接口（RHI）。
 
-\begin{figure}[H]\centering
-\includegraphics[width=.64\linewidth]{../../../output/scenes/CornellBox-replay.png}
-\caption{现有 OpenGL 帧的 RenderDoc 回放。先看红墙旁的白色表面，再沿房间外沿移动鼠标。前者可以观察颜色，后者可以检查鼠标何时离开了模型。模型、灯光和相机见项目的 Cornell Box 场景配置。}
-\end{figure}
-
-现在由场景选好要画的模型，OpenGL 把它画到图上，编辑器再显示这张图。为了让原来的场景也能用 Vulkan 绘制，我们把创建贴图、提交顶点和画三角形这些操作放到一组共同的函数里。这就是本项目的渲染硬件接口（RHI）。先让两个后端都能开窗、画出三角形，再把同一个带贴图模型画进编辑器。等颜色、深度和拾取都对上了，才把阴影和间接光接回来。
-
-若想弄清红墙旁的白地面为什么带红色，可以读配套的《渲染公式与实现》。那册顺着顶点、表面和光照讲公式与着色器。本册接着回答工程问题：同一批顶点、贴图和光照代码，怎样交给两种图形接口绘制。下文的 Vulkan 接口都是拟实施的设计，图中的画面来自已经运行的 OpenGL 版本。
-
-\newpage
-\section{模型的加载与绘制}
-场景文件记着用了哪个模型，以及它在房间里的位置。打开场景时，\code{AssetManager} 通过已有的资源 ID 找到模型，多个实体可以共享同一份网格和材质。换到 Vulkan 后，文件里的 ID 仍指向同一个模型。变化发生在上传这一步：模型解码得到的顶点和像素，要交给当前后端创建的显卡资源。
-
-到了绘制时，场景渲染器从相机的位置挑出主画面可见的模型，再从光源的位置挑选会投下阴影的模型。一把椅子即便在相机外，它的影子也可能落在眼前的墙上。这两批模型分别交给设备绘制。OpenGL 可以立即执行这些命令，Vulkan 则先把它们记下来，随后一起提交。两种后端都按场景渲染器给出的顺序工作，先从灯的位置画阴影图，再从相机的位置画出房间。
+方案将资源创建和绘制命令分开，分别由两个接口承担。\code{RenderDevice} 根据启动时选定的后端创建纹理和缓冲区。一张底色贴图可以被多个模型连续使用许多帧，只需创建一次。\code{CommandList} 表达一次绘制要做的事，包括把结果写到哪里、使用哪份网格和材质、画多少顶点。OpenGL 后端可以在收到请求时发出对应的调用，Vulkan 后端则将这些操作记录到命令缓冲区，再提交给显卡。
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}
@@ -43,19 +30,16 @@
 \draw[flow] (view)--node[label,above]{本次使用的目标}(cmd);
 \draw[flow] (cmd)--(gl);\draw[flow] (cmd)--(vk);
 \end{tikzpicture}
-\caption{从一个模型到两个后端。场景渲染器在同一处决定画什么，每个视口提供自己的图像；启动时选定 OpenGL 或 Vulkan 来执行这些绘制。}
+\caption{拟议的渲染结构。场景渲染器选择模型，视口提供绘制目标，当前后端负责创建显卡资源并执行绘制。}
 \end{figure}
 
-例如，模型读到了墙面的底色图，就调用现有的 \code{Texture2D::Create}。渲染器启动时已创建好代表当前显卡的 \code{RenderDevice}。创建纹理的函数把宽度、格式和像素交给它，模型拿到的仍是可共享的 \code{Ref<Texture2D>}。OpenGL 的纹理编号、Vulkan 的图像及其内存都留在各自的实现文件里。等现有的绘制都改用设备以后，旧的 \code{RenderCommand} 就可以删掉。
-
-这套工厂沿用 Hazel 公开源码的命名。帧的提交、延迟释放和编辑器视口则是 Redflag 自己需要解决的事。关于平台层与渲染层的分工，可对照 GAMES104 第 2 讲和 Khronos 的引擎章节。
-\source{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/RendererAPI.h}{Hazel 的 RendererAPI}
-\source{https://games104.boomingtech.com/sc/course-list/}{GAMES104 课件}
-\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/introduction.html}{Khronos 引擎教程}
+现有的 \code{Texture2D::Create} 已经体现了这种封装。材质保存 \code{Ref<Texture2D>}，创建函数在内部构造 \code{OpenGLTexture2D}。方案保留材质的写法，将实际创建工作交给 \code{RenderDevice}。用 Vulkan 运行时，同一个函数就能返回由 Vulkan 实现的纹理。材质代码始终处理同一种纹理接口，只有后端需要知道显卡怎样表示这张图。
 
 \newpage
-\section{场景与渲染设备的分工}
-Khronos 的引擎教程画了下面两张图。先读左图，游戏状态在上，平台实现在下。右图换了一个角度，顺着一帧往下看，先确定哪些对象要画，最后才把命令交给显卡。把两张图对在一起，就能解释为什么 Redflag 的相机剔除应该留在场景渲染器里。
+\section{模型的加载与绘制}
+场景文件通过资源 ID 引用模型。\code{AssetManager} 按 ID 查找资源，模型加载器从文件读出顶点、索引和材质，再通过图形接口创建绘制所需的缓冲区和贴图。文件路径和模型编号留在资产系统里。这样，同一份场景文件在 OpenGL 和 Vulkan 下都能打开，两个后端也能共用同一套模型导入代码。
+
+绘制时，\code{SceneRenderer} 根据相机挑选主画面可见的模型，并从光源的位置另选一批会投下阴影的模型。两次选择不能合并，因为相机看不到的模型仍可能在画面里投下阴影。渲染器把选好的网格、材质和绘制目标交给 RHI。今后调整剔除算法，只需修改场景渲染器，两个后端就会使用新的结果。
 
 \begin{figure}[H]\centering
 \begin{minipage}[t]{.46\linewidth}\vspace{0pt}\centering
@@ -64,43 +48,34 @@ Khronos 的引擎教程画了下面两张图。先读左图，游戏状态在上
 \end{minipage}\hfill
 \begin{minipage}[t]{.46\linewidth}\vspace{0pt}\centering
 \includegraphics[width=.95\linewidth]{figures/khronos-rendering.png}
-\caption{同一教程的绘制流程。沿箭头看，场景收集、剔除和排序发生在生成命令之前。}
+\caption{同一教程的绘制流程。场景收集、剔除和排序发生在生成命令之前。}
 \end{minipage}
 \end{figure}
 
-以红墙为例，场景渲染器知道它的包围盒、相机和材质，因此可以决定这帧是否提交它。设备只看到“用这份网格和材质绘制”。将来换剔除算法时，两个后端都能得到新的可见模型列表。换 Vulkan 时，也能继续用当前的剔除代码。这比给每个 OpenGL 函数套一层同名接口更容易判断一个类该放在哪里。
-
-两幅原图来自 The Khronos Group 的《Building a Simple Engine》，按 CC BY 4.0 使用，仅按比例缩放。上一页是按项目调用关系另画的架构图。首版保留 Redflag 现在的绘制顺序；当效果之间的读写关系复杂到难以手工维护时，再评估教程中的自动调度设计。
-\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/02_architectural_patterns.html}{左图所在章节}
-\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{右图所在章节}
+公共接口沿用 Hazel 公开代码中的资源工厂写法。Redflag 另外需要管理每帧的命令和资源寿命，这些工作由设备及其后端承担。上图引自 The Khronos Group《Building a Simple Engine》，仅按比例缩放，许可为 CC BY 4.0。
+\source{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/RendererAPI.h}{Hazel 的 RendererAPI}
+\source{https://games104.boomingtech.com/sc/course-list/}{GAMES104 第 2 讲}
+\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/02_architectural_patterns.html}{左图原文}
+\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{右图原文}
 \source{https://creativecommons.org/licenses/by/4.0/}{图像许可}
 
 \newpage
 \section{场景颜色与后处理}
-来看编辑器怎样显示刚画好的房间。现在 \code{PostProcess::Render} 接收一个整数和宽高；这个整数是场景颜色在 OpenGL 里的纹理编号。画完后，\code{SceneRenderer::GetFinalColorTextureID()} 再返回一个整数，编辑器把它交给 ImGui。这个数字在创建它的 OpenGL 上下文里才有意义。看到它，编辑器既不知道图有多大，也不知道调整视口大小后能否继续使用它。Vulkan 绘制同一张图时，还需要知道怎样读取图中的像素。
+当前 \code{PostProcess::Render} 接收场景颜色的 OpenGL 纹理编号，以及图像的宽和高。后处理对象自己持有泛光中间图和最终输出。编辑器向场景渲染器查询结果时，\code{GetFinalColorTextureID()} 返回的仍是 OpenGL 编号。调用者只想使用一张图，却必须了解后端怎样标识纹理。
 
-将这一次调用改写成下面的形式，就能看出需要封装哪些东西。这里是拟议的调用方式，方法名随实现核对。视口拥有场景颜色和最终输出；后处理只保留自己做泛光时用的中间图。宽高从图像本身取得。
+拟议接口让视口持有场景颜色和最终输出，把这两张图直接传给后处理。这样，视口调整尺寸时可以一起替换自己的图像，后处理可以从图像取得实际宽高。各级泛光图只在效果内部使用，继续由后处理对象持有。示例中的 \code{commands} 用来记录这次处理所需的绘制命令。
 \begin{lstlisting}
 postProcess.Render(commands, view.SceneColor(), view.Output());
 editor.DrawImage(view.Output());
 \end{lstlisting}
 
-\code{commands} 是这次绘制的命令列表。合成时，它指定输出图、选择合成用的着色器，告诉它从哪两张图读取原场景和泛光，再画一个铺满视口的三角形。OpenGL 实现把输出图装进帧缓冲，绑定两张输入纹理，然后调用绘制。Vulkan 实现先使上一阶段写好的两张图可读，再把输出图交给动态渲染，录下同一次绘制。两种后端读取相同的输入，所以可以直接对照它们画出的像素。
+这两行说明了使用者与持有者的关系。后处理读取场景颜色，将原场景和泛光合成到指定输出。编辑器显示这份输出时，OpenGL 界面后端取出纹理编号，Vulkan 界面后端向 ImGui 登记图像视图和采样器。这样，面板只需调用 \code{DrawImage}，转换纹理标识的代码集中在界面后端。
 
-这两张输入图为什么要分别传进来？原场景保留了灯原有的亮度，泛光图则记录了灯向周围扩散的光。设某个像素的红色通道在两张图上分别为 $C$ 和 $B$，泛光强度为 $s$，曝光为 $e$。在正常亮度范围内，合成着色器先算
-\[
- x=e\,[C+\min(1,\max(0,sB))].
-\]
-取 $C=2$、$B=0.4$、$s=0.5$、$e=1$，进入色调映射的亮度就是 $2.2$。关闭泛光后它回到 $2$，同一像素的实体编号始终不变。这就是合成函数接收两张颜色图、拾取单独读编号图的原因。教材里提取亮部的例图与这段着色器的完整推导，见配套数学册的泛光一节。
-\source{https://learnopengl.com/Advanced-Lighting/Bloom}{LearnOpenGL 的泛光示例}
-
-从这个例子可以看出哪些设置值得保存。一个是 \code{Pipeline}，保存这次绘制反复使用的规则，包括着色器、目标格式、深度测试和混合方式。另一个是 \code{BindingSet}，记录这次具体读取的相机数据或贴图。换一面墙的底色图时只替换后者；从输出颜色改成写整数编号时，前者也要与目标匹配。实体编号图禁止混合，清空时写整数 $-1$。着色器编译、图像格式和读回都是在这些地方自然需要时才加入接口。
-
-图像的持有者也由调用决定。编辑器拿到图像后，OpenGL 的界面后端可取得对应纹理编号，Vulkan 的界面后端可登记一个供 ImGui 读取的纹理。窗口变大时，视口创建新图。上一帧可能还在显示旧图，所以那一帧的命令仍保留它的引用，等显卡完成后才解除登记并释放。用两个尺寸、曝光不同的视口交替绘制，旧图过早释放和读错曝光这两类问题都容易看出来。
+视口改变大小后，下一帧改用新图。若显卡仍在显示旧图，上一次提交就要继续保留旧图及其界面登记信息，直到显卡用完为止。只看视口手里是否还握着引用，会漏掉这段时间。这是封装图像时也要规定释放时机的原因。
 
 \newpage
 \section{一条绘制命令的两种实现}
-回到刚才的合成三角形。今天在 \code{PostProcess::Composite} 中可以找到绑定输出图、选择着色器和依次绑定原场景与光晕的代码。\code{DrawTriangle} 随后执行 \code{glDrawArrays}。将来迁这段时，先保留它原来的先后次序，把每个动作写成两个后端都能回答的请求。下面只展开合成这一次绘制，\code{inputs} 已经装入原场景、光晕和本视口的曝光值。
+现有的 \code{PostProcess::Composite} 选择合成着色器，绑定原场景和泛光图，再由 \code{DrawTriangle} 调用 OpenGL 画出三个顶点。迁移时可把同一次合成写成下面几条命令。两张输入图和曝光值放在 \code{inputs} 中，\code{output} 指明结果要写到哪张图。
 \begin{lstlisting}
 commands.BeginRendering(output);
 commands.BindPipeline(m_CompositePipeline);
@@ -112,7 +87,7 @@ commands.EndRendering();
 
 第一行决定把颜色写进哪张图。输出目标记录图像、需要写入的那一层，以及是否保留上一次的内容。合成会覆盖整张输出图，可以舍弃旧颜色；将光晕加回上一层时要保留已有的亮度。这一条差别值得放进接口，否则换后端后两步看起来都在“画到一张图”，光晕却可能消失。
 
-中间三行分别选择绘制规则、三个顶点和本次使用的数据。OpenGL 后端在这里绑定已有程序，设置深度和混合状态，并把两张图送到着色器约定的位置。Vulkan 后端在开始绘制前处理图像的读写转换，使用为该输出格式创建的管线和本次的资源描述表。最后的 \code{Draw(3)} 只告诉设备画三个顶点。它在 OpenGL 上立即发出调用，在 Vulkan 上记入稍后提交的命令。泛光的阈值、曝光和采样公式仍在共用的着色器里。
+\code{Pipeline} 保存可以反复使用的绘制规则，包括着色器、目标格式、深度测试和混合方式。\code{BindResources} 接收的 \code{BindingSet} 则记录这次具体使用的图像和数据。两个视口可以共用合成管线，同时各自使用自己的场景图和曝光值。OpenGL 后端在这里绑定已有程序，设置深度和混合状态，并把两张图送到着色器约定的位置。Vulkan 后端在开始绘制前处理图像的读写转换，使用为该输出格式创建的管线和本次的资源描述表。最后的 \code{Draw(3)} 只告诉设备画三个顶点。它在 OpenGL 上立即发出调用，在 Vulkan 上记入稍后提交的命令。泛光的阈值、曝光和采样公式仍在共用的着色器里。
 
 实现时将公共声明放在 \code{Renderer/RHI}，OpenGL 的调用放在 \code{Platform/OpenGL}，Vulkan 的调用放在 \code{Platform/Vulkan}。先让现有 OpenGL 合成走通这六行，再给同一个例子写 Vulkan 实现。已有的纹理类能表达所有权，就沿用它；只有要选择某一级泛光图、某个立方体面等局部内容时，才引入表示这部分图像的视图。把几种调用都用到的规则提出来，接口才有理由长期保留。
 \source{https://docs.vulkan.org/samples/latest/samples/extensions/dynamic_rendering/README.html}{Vulkan 动态渲染示例}
