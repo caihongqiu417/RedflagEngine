@@ -1,0 +1,230 @@
+{
+  "configuration": "Windows Debug|x64, Vulkan validation enabled, no RenderDoc capture",
+  "scene": "Sky-Bunny.redflag",
+  "scene_sha256": "96ffdadbd5f85f0481c7f5e203eac55d573708b8b1df476ce407887bcde3a671",
+  "render_settings": {
+    "Direct": "All point lights",
+    "FastNavigation": false,
+    "GTAO": false,
+    "Indirect": "DDGI",
+    "PreviewWidth": 384,
+    "SSR": false,
+    "Shading": "Lit",
+    "SpecularIBL": false,
+    "TAA": true
+  },
+  "settings_sha256": "5fb95b0557678cb4c52f395bc31807a68009feda091122bffacecf141f0a1214",
+  "hdr_sha256": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45",
+  "executable_sha256": {
+    "first": "e81ddcd35b58370739fa53dff54a6b7a77ae9861a6cd6fdbfe13517bec1af362",
+    "revised": "8ef39d29b012d59934c990c59c49498df9b67219fb87f1f398b0c4a4d78ad679"
+  },
+  "warmup_pairs": 2,
+  "measured_pairs": 10,
+  "runs": [
+    {
+      "pair": -2,
+      "build": "first",
+      "seconds": 1.923058200001833,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": -2,
+      "build": "revised",
+      "seconds": 1.9893177000049036,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": -1,
+      "build": "revised",
+      "seconds": 2.0334399999992456,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": -1,
+      "build": "first",
+      "seconds": 1.950761700005387,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 0,
+      "build": "first",
+      "seconds": 1.9428924000094412,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 0,
+      "build": "revised",
+      "seconds": 1.9712020000006305,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 1,
+      "build": "revised",
+      "seconds": 1.9586718999926234,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 1,
+      "build": "first",
+      "seconds": 2.060473899997305,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 2,
+      "build": "first",
+      "seconds": 1.9499262000026647,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 2,
+      "build": "revised",
+      "seconds": 1.9172388000006322,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 3,
+      "build": "revised",
+      "seconds": 1.9731957000039984,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 3,
+      "build": "first",
+      "seconds": 1.9890274999925168,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 4,
+      "build": "first",
+      "seconds": 1.9424438000132795,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 4,
+      "build": "revised",
+      "seconds": 2.0831290000060108,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 5,
+      "build": "revised",
+      "seconds": 1.9136338999960572,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 5,
+      "build": "first",
+      "seconds": 2.012594900006661,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 6,
+      "build": "first",
+      "seconds": 1.9498674999922514,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 6,
+      "build": "revised",
+      "seconds": 1.9071081000001868,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 7,
+      "build": "revised",
+      "seconds": 1.9611780000122963,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 7,
+      "build": "first",
+      "seconds": 2.046393699987675,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 8,
+      "build": "first",
+      "seconds": 1.9948920000024373,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    },
+    {
+      "pair": 8,
+      "build": "revised",
+      "seconds": 1.9837590999959502,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 9,
+      "build": "revised",
+      "seconds": 1.9069624999974621,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "d517fad7631a7e986cb5b38851e7d2142282736a2f273887c706d14524464c16",
+      "bytes": 96792
+    },
+    {
+      "pair": 9,
+      "build": "first",
+      "seconds": 1.9856801999994786,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "probe_sha256": "29c57c48df10e9c99a4b87c16d0612b84a3b191a4399ce97cae77fb1b5cfbe13",
+      "bytes": 96792
+    }
+  ],
+  "summary": {
+    "first": {
+      "median_seconds": 1.9873538499959977,
+      "p10_seconds": 1.942847540009825,
+      "p90_seconds": 2.0478017199886382
+    },
+    "revised": {
+      "median_seconds": 1.9599249500024598,
+      "p10_seconds": 1.9070935399999143,
+      "p90_seconds": 1.9936960899969562
+    }
+  }
+}
