@@ -1,0 +1,40 @@
+#version 450
+#include "Screen.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 2) readonly buffer Visibility { float visibility[]; };
+layout(std430, binding = 3) readonly buffer Lighting { vec4 colors[]; };
+layout(std430, binding = 4) writeonly buffer Result { vec4 result[]; };
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (!onScreen(p)) return;
+    uint i = indexOf(p);
+    ScreenSurface s = surfaces[i];
+    if (s.position.w == 0.)
+    {
+        result[i] = vec4(colors[i].rgb, 1.);
+        return;
+    }
+
+    // 按法线量相邻表面离本平面多远。超过一个像素的高度，或法线偏转超过约 32° 时，不把它的遮蔽算到脚边。
+    float clipW = (projection * view * vec4(s.position.xyz, 1.)).w;
+    float pixelHeight = 2. * clipW / (abs(projection[1][1]) * float(extent.y));
+    float total = 4., sum = 4. * visibility[i];
+    for (int y = -1; y <= 1; ++y)
+        for (int x = -1; x <= 1; ++x)
+        {
+            if (x == 0 && y == 0) continue;
+            ivec2 q = p + ivec2(x, y);
+            if (!onScreen(q)) continue;
+            uint j = indexOf(q);
+            ScreenSurface neighbor = surfaces[j];
+            if (neighbor.position.w == 0. || dot(s.normal.xyz, neighbor.normal.xyz) < .85 ||
+                abs(dot(s.normal.xyz, neighbor.position.xyz - s.position.xyz)) > pixelHeight) continue;
+            float weight = float((2 - abs(x)) * (2 - abs(y)));
+            sum += visibility[j] * weight;
+            total += weight;
+        }
+    float ao = pow(sum / total, material.y);
+    result[i] = vec4(colors[i].rgb * ao, ao);
+}

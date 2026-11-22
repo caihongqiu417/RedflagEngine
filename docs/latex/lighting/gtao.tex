@@ -30,21 +30,23 @@
 \subsection{在深度图上寻找遮挡}
 \noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/GTAO.comp}{\texttt{GTAO.comp}}}\par\nopagebreak
 \begin{lstlisting}[escapeinside={(*@}{@*)}]
-for slice in fourHalfTurns:
+blocked = 0
+for slice in fourDirectionsAtThisPixel:
     for side in [left, right]:
         h = angleWhereThisSideLeavesNormalHemisphere()
-        for step in eightDistancesWithinRadius:
-            q = project(worldPosition + tangent * step)
-            neighbor = visibleSurfaceAt(q)
-            if neighbor is above surface and inside radius:
-                (*@{\footnotesize\color{quiet}在这一侧留下最能挡住天空的轮廓。}@*)
-                h = min(h, fadedHorizonAngle(neighbor))
-        sum += visibleArc(h, dot(normal, view), dot(normal, tangent))
-ao = pow(clamp(sum / fourSlices, 0, 1), intensity)
+        for distance in eightDistancesWithinRadius:
+            neighbor = nearestSurfaceAt(project(point + tangent * distance))
+            if neighbor is above the surface and inside radius:
+                next = angleBetween(view, neighbor - point)
+                if next < h:
+                    (*@{\footnotesize\color{quiet}只扣掉两条轮廓之间新增的那段遮挡。}@*)
+                    blocked += (I(h) - I(next)) * weight(length(neighbor-point))
+                    h = next
+visibility = clamp(1 - blocked / 4, 0, 1)
 \end{lstlisting}
-沿平面本身遇到的邻居不应遮住天空，所以先看它比当前表面高多少。位于半径最外侧的轮廓逐渐淡出，防止半径边界突然出现一道黑圈。
+箱子前面的地面向四周收光。在同一截面上，近处箱沿已经遮住一段圆弧，远处柱子可能挡住另一段。半径为 $r$ 时，前 $0.6r$ 内的样点保留全部遮挡，之后用平滑曲线减弱，到 $r$ 时权重为零。每次只给新挡住的那段弧乘距离权重。如果让远处的样点把整条轮廓一起淡出，紧贴箱壁的地面也容易过亮。
 
-默认半径 0.65 是归一化走廊中的一个场景长度，换用厘米建模的走廊就需要换算。四个截面乘两侧、每侧最多检查八个距离，合计最多 64 次深度邻居查询。改半径时保持这些数不变，就能先观察影响范围；要查条带是否来自步数不足，再单独增加步数。
+默认 $r=0.65$ 个场景单位，按米建模时就是 65 厘米。一个像素量四个截面，每侧查看八个位置。四个相邻像素稍微转动各自的截面，合在一起能量到十六个方向。\texttt{GTAOFilter.comp} 在周围 $3\times3$ 个像素里按离中心的远近取平均。箱壁和地面的法线相差约 $90^\circ$，两边各自取平均，柱脚的边缘便能留下来。最后再应用面板里的遮蔽强度，将结果乘到环境光上。
 
 % 接口与数据结构
 \begin{fields}
@@ -53,7 +55,6 @@ ao = pow(clamp(sum / fourSlices, 0, 1), intensity)
 \texttt{AOIntensity} & 对可见度施加指数。输出第四通道保留遮蔽系数，可把它只乘在间接漫反射上。\\
 \end{fields}
 
-% 验证标准
-在 Sponza 固定相机处，用正常半径与近乎零的半径比较可见度。缩小半径时，平面上的点应接近 1。墙角和柱脚在正常半径下应变暗。基准只读屏幕可见的第一层表面，所以镜头外的柱子不会投下这种遮蔽。GTAO 原技术报告及 SIGGRAPH 课件未列 DOI，可在材料索引直接阅读。
+在 Sponza 将半径缩到 0.0001，旧版固定方向采样的平均可见度从 \measured{ao_mean} 变为 \measured{ao_negligible_radius_mean}。镜头外的柱子无法出现在这份表面图里，也不能投下屏幕空间遮蔽。移动相机的实测和局部放大图见《渲染性能实测》的“移动相机下的柱脚遮蔽”。
 
-实测可见像素的平均可见度为 \measured{ao_mean}，把半径缩小到 0.0001 后为 \measured{ao_negligible_radius_mean}。
+可见弧积分见 Jimenez 等人的技术报告第 2 节。Intel 的 XeGTAO 实现说明也介绍了半球射线参考与邻域过滤。

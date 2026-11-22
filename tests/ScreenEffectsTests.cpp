@@ -12,6 +12,7 @@ namespace fs=std::filesystem;
 #include "PointMaterialCheck.h"
 #include "CubeMaterialCheck.h"
 #include "DirectionalLightCheck.h"
+#include "GTAOCameraCheck.h"
 
 static std::vector<GILight> ClusterLights()
 {
@@ -213,7 +214,8 @@ int main(int argc,char** argv)
 {
     const bool materials = (argc==4 || argc==5) && std::string(argv[3])=="--point-materials";
     const bool directional = (argc==4 || argc==5) && std::string(argv[3])=="--directional";
-    if (argc!=3 && !materials && !directional && !(argc==5 && std::string(argv[3])=="--capture")) return 2;
+    const bool aoCamera = (argc==4 || argc==5) && std::string(argv[3])=="--gtao-camera";
+    if (argc!=3 && !materials && !directional && !aoCamera && !(argc==5 && std::string(argv[3])=="--capture")) return 2;
     const char* path = "output/profiling/screen-effects/SponzaScreen";
     const char* title = "Sponza / screen effects";
     const char* description = "161x91. GTAO, stochastic SSR, TAA and 49-light clustered culling/shading.";
@@ -226,6 +228,11 @@ int main(int argc,char** argv)
         path = "output/validation/directional/DirectionalLight";
         title = "Directional light and shadows";
         description = "48x16 orthographic. Two receiving depths and one blocker above the left half. Direct, clustered, ReSTIR DI and fog.";
+    }
+    if (aoCamera) {
+        path = "output/profiling/gtao-camera/Contact";
+        title = "GTAO / ground and two standing objects";
+        description = "320x180. Radius 0.65 scene units. Middle view of a 13-frame horizontal camera sweep.";
     }
     RenderDocCapture capture(argc==5?argv[4]:nullptr,path,title,description);
     Log::Init();
@@ -245,7 +252,8 @@ int main(int argc,char** argv)
             context.EndWindowPass();
             context.SwapBuffers();
         }
-        if (!materials && !directional) Run(device,argv[1],argv[2],argc==5?&capture:nullptr);
+        if (aoCamera) CheckGTAOCamera(device,argv[2],capture);
+        if (!materials && !directional && !aoCamera) Run(device,argv[1],argv[2],argc==5?&capture:nullptr);
         if (argc==3 || directional) CheckDirectionalLight(device,argv[2],capture);
         if (argc == 3 || materials)
         {

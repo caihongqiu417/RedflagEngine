@@ -1,13 +1,9 @@
 #version 450
 #include "Screen.glsl"
 layout(local_size_x = 8, local_size_y = 8) in;
-layout(std430, binding = 2) readonly buffer Lighting
+layout(std430, binding = 2) writeonly buffer Visibility
 {
-    vec4 colors[];
-};
-layout(std430, binding = 3) writeonly buffer Result
-{
-    vec4 result[];
+    float visibility[];
 };
 
 // 沿当前截面看，horizon 是从视线转到遮挡轮廓的角度。这段圆弧上的方向能照到表面，越贴着表面入射，贡献越小。
@@ -26,31 +22,39 @@ void main()
     ScreenSurface s = surfaces[i];
     if (s.position.w == 0.)
     {
-        result[i] = vec4(colors[i].rgb, 1);
+        visibility[i] = 1.;
         return;
     }
 
-    vec3 v = normalize(eye.xyz - s.position.xyz), n = s.normal.xyz;
+    // 正交镜头的视线互相平行。透视镜头的视线则从表面指回相机。
+    vec3 v = projection[3][3] == 1. ? vec3(view[0][2], view[1][2], view[2][2]) : normalize(eye.xyz - s.position.xyz);
+    vec3 n = s.normal.xyz;
     vec3 right = normalize(cross(v, vec3(view[0][1], view[1][1], view[2][1])));
     vec3 up = normalize(cross(right, v));
-    float radius = material.x, visibility = 0.;
-    const int directions = 4;
+    const int directions = 4, steps = 8;
+    float radius = material.x;
+    float blocked = 0.;
+    mat4 vp = projection * view;
+    vec4 center = vp * vec4(s.position.xyz, 1.);
+    // 相邻四个像素把截面错开。沿同一片地面合并结果后，细柱周围能覆盖十六个截面方向。
+    float phase = (float((p.x & 1) * 2 + (p.y & 1)) + .5) / 4.;
 
     for (int d = 0; d < directions; ++d)
     {
-        float a = (float(d) + .5) * PI / float(directions);
+        float a = (float(d) + phase) * PI / float(directions);
         vec3 tangent = cos(a) * right + sin(a) * up;
+        vec4 stride = vp * vec4(tangent * (radius / float(steps)), 0.);
         for (int side = -1; side <= 1; side += 2)
         {
             vec3 t = tangent * float(side);
             float nv = max(dot(n, v), 0.), nt = dot(n, t);
             float openAngle = clamp(atan(nt, max(nv, 1e-6)) + .5 * PI, 0., PI);
-            float horizon = openAngle;
+            float horizonCos = cos(openAngle);
+            float arc = visibleArc(openAngle, nv, nt);
 
-            for (int k = 1; k <= 8; ++k)
+            for (int k = 1; k <= steps; ++k)
             {
-                vec3 target = s.position.xyz + t * radius * (float(k) / 8.);
-                vec4 clip = projection * view * vec4(target, 1);
+                vec4 clip = center + stride * float(side * k);
                 if (clip.w <= 0.)
                     break;
                 ivec2 q = ivec2(floor(toPixel(clip)));
@@ -61,12 +65,17 @@ void main()
                 float distance = length(delta);
                 if (other.position.w == 0. || distance >= radius || dot(n, delta) <= .008 * radius)
                     continue;
-                float angle = acos(clamp(dot(delta, v) / distance, -1., 1.));
-                horizon = min(horizon, mix(angle, openAngle, smoothstep(.6 * radius, radius, distance)));
+                float sampleCos = clamp(dot(delta, v) / distance, -1., 1.);
+                if (sampleCos <= horizonCos) continue;
+
+                // 新轮廓只遮住上一段轮廓外的方向。远处物体逐渐淡出，靠近箱脚的遮挡仍然保留。
+                float nextArc = visibleArc(acos(sampleCos), nv, nt);
+                blocked += (arc - nextArc) * (1. - smoothstep(.6 * radius, radius, distance));
+                arc = nextArc;
+                horizonCos = sampleCos;
             }
-            visibility += visibleArc(horizon, nv, nt);
         }
     }
-    float ao = pow(clamp(visibility / float(directions), 0., 1.), material.y);
-    result[i] = vec4(colors[i].rgb * ao, ao);
+    // 空地没有挡住任何方向，整个半球的可见度等于 1。
+    visibility[i] = clamp(1. - blocked / float(directions), 0., 1.);
 }

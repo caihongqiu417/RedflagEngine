@@ -9,6 +9,9 @@ namespace Redflag
         constexpr uint32_t AOShader[] =
 #include "Shaders/GTAO.comp.inc"
             ;
+        constexpr uint32_t AOFilterShader[] =
+#include "Shaders/GTAOFilter.comp.inc"
+            ;
         constexpr uint32_t CullShader[] =
 #include "Shaders/ClusterCull.comp.inc"
             ;
@@ -69,11 +72,11 @@ namespace Redflag
         ComputeDevice& Device;
         uint32_t Width, Height;
         ScreenEffectSettings Settings;
-        Ref<ComputePipeline> AO, Cull, Shade, Reflections, Temporal, Diffuse;
+        Ref<ComputePipeline> AO, AOFilter, Cull, Shade, Reflections, Temporal, Diffuse;
         Ref<ComputePipeline> MaskedShade, AnimatedShade;
         Ref<ComputePipeline> SceneReflections[2][2]; // 依次按是否续追反射、是否有镂空材质选管线。
         Ref<ComputePipeline> ReflectionFilter;
-        Ref<ComputeResource> Environment, DiffuseLight, RawReflections;
+        Ref<ComputeResource> Environment, DiffuseLight, RawReflections, AmbientVisibility;
         Ref<ComputeResource> Frame, Output, Intermediate, Lights, Masks, History[2], Positions[2];
         uint32_t LightCapacity = 0, WordsPerCluster = 0, Previous = 0;
         uint32_t HistoryFrames = 0, StillSamples = 0, LastFrame = 0;
@@ -81,7 +84,6 @@ namespace Redflag
 
         Data(ComputeDevice& device, uint32_t width, uint32_t height) : Device(device), Width(width), Height(height)
         {
-            AO = LoadPass(device, AOShader, 4);
             Cull = LoadPass(device, CullShader, 4);
             Shade = LoadPass(device, ShadeShader, 7);
             Reflections = device.CreatePipeline(ReflectionShader, sizeof(ReflectionShader),
@@ -259,7 +261,16 @@ namespace Redflag
             d.Intermediate = d.Device.CreateBuffer(size_t(d.Width) * d.Height * sizeof(glm::vec4));
         const auto& destination = color == d.Output ? d.Intermediate : d.Output;
         if (effect == ScreenEffect::GTAO)
-            d.Device.Dispatch(d.AO, {d.Frame, surfaces, color, destination}, nullptr, gx, gy);
+        {
+            if (!d.AO)
+            {
+                d.AO = LoadPass(d.Device, AOShader, 3);
+                d.AOFilter = LoadPass(d.Device, AOFilterShader, 5);
+                d.AmbientVisibility = d.Device.CreateBuffer(size_t(d.Width) * d.Height * sizeof(float));
+            }
+            d.Device.Dispatch(d.AO, {d.Frame, surfaces, d.AmbientVisibility}, nullptr, gx, gy);
+            d.Device.Dispatch(d.AOFilter, {d.Frame, surfaces, d.AmbientVisibility, color, destination}, nullptr, gx, gy);
+        }
         else
         {
             const bool material = effect == ScreenEffect::MaterialReflections;

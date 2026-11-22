@@ -151,6 +151,35 @@ def export(frame, directory):
             raise ValueError("Could not trace the panel colors to the TAA output")
     if os.environ.get("RF_MEASURE_REFLECTIONS") == "1":
         report["reflection"] = measure_reflections(frame, dispatches, directory, pixels)
+    if os.environ.get("RF_EXPORT_GTAO") == "1":
+        # 从合成间接光的读取端反查遮蔽图，避免把相同工作组尺寸的 IBL 或反射误作 GTAO。
+        passes = []
+        for event in dispatches:
+            frame.SetFrameEvent(event, True)
+            state = frame.GetPipelineState()
+            shader = state.GetShaderReflection(rd.ShaderStage.Compute)
+            slots = {shader.readWriteResources[r.access.index].fixedBindNumber:r.descriptor.resource
+                     for r in state.GetReadWriteResources(rd.ShaderStage.Compute)}
+            passes.append((event,tuple(shader.dispatchThreadsDimension),[b.byteSize for b in shader.constantBlocks],slots))
+        combine,_,_,inputs = next(p for p in passes if p[1:3]==((64,1,1),[12]) and set(p[3])=={0,1,2,3})
+        event,_,_,slots = next(p for p in reversed(passes) if p[0]<combine and p[1]==(8,8,1)
+                                and len(p[3]) in (4,5) and p[3][len(p[3])-1]==inputs[2])
+        stages = [event]
+        if len(slots)==5:
+            stages.insert(0,next(p[0] for p in reversed(passes) if p[0]<event and p[1]==(8,8,1)
+                                 and len(p[3])==3 and p[3][2]==slots[2]))
+        frame.SetFrameEvent(event,True)
+        for binding, file in ((0,"ao-camera.bin"),(1,"ao-surfaces.f32"),(len(slots)-1,"ao-output.f32")):
+            (directory/file).write_bytes(frame.GetBufferData(slots[binding],0,0))
+        report["gtao"] = {"events":stages, "combine":combine}
+        if os.environ.get("RF_TIME_GTAO") == "1":
+            counter = rd.GPUCounter.EventGPUDuration
+            frame.FetchCounters([counter])
+            times = []
+            for _ in range(11):
+                durations = {v.eventId:v.value.d*1000 for v in frame.FetchCounters([counter])}
+                times.append([durations[e] for e in stages])
+            report["gtao"].update(gpu_ms=times,median_total_ms=median(map(sum,times)))
     return report
 
 

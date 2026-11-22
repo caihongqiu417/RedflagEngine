@@ -1,0 +1,53 @@
+{
+  "frame": 8,
+  "size": [
+    1920,
+    1080
+  ],
+  "shading_size": [
+    1920,
+    1080
+  ],
+  "samples_per_pixel": 1,
+  "tone_mapping": "Reinhard",
+  "exposure_multiplier": 1.0,
+  "dispatches": [
+    11,
+    49,
+    61,
+    73,
+    85,
+    97,
+    109,
+    121,
+    133
+  ],
+  "draws": [
+    27,
+    32,
+    37,
+    153,
+    158,
+    163,
+    174,
+    177,
+    180
+  ],
+  "pack_event": 49,
+  "display_event": 133,
+  "messages": [],
+  "gtao": {
+    "event": 85,
+    "combine": 97
+  },
+  "file": "studio_frame8.rdc",
+  "tool": "1.47",
+  "exe_sha256": "fd5d6530a55fbefcc1b6082bb0f6bb2c71a216429cb75f98772f9c11f76bd8ba",
+  "rdc": "output/captures/local/AO-Contact-0-fd5d6530a55f-480-f8/studio_frame8.rdc",
+  "rdc_sha256": "fae9a16c34a022464eaa11f13db3a4bb227592bba82c49fe79cad3cc5504b2fd",
+  "box_foot_visibility": 0.6181321740150452,
+  "box_foot_pixels": 3761,
+  "post_ring_visible_points": 632,
+  "post_ring_mae": 0.1265583014481871,
+  "post_ring_step_error": 0.009166958157816521
+}

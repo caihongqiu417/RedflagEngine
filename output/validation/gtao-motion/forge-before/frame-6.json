@@ -1,0 +1,91 @@
+{
+  "frame": 8,
+  "size": [
+    1920,
+    1080
+  ],
+  "shading_size": [
+    1920,
+    1080
+  ],
+  "samples_per_pixel": 1,
+  "tone_mapping": "Reinhard",
+  "exposure_multiplier": 1.0,
+  "dispatches": [
+    11,
+    49,
+    61,
+    73,
+    85,
+    97,
+    109,
+    121,
+    133
+  ],
+  "draws": [
+    27,
+    32,
+    37,
+    153,
+    158,
+    163,
+    174,
+    177,
+    180
+  ],
+  "pack_event": 49,
+  "display_event": 133,
+  "messages": [],
+  "gtao": {
+    "events": [
+      85
+    ],
+    "combine": 97,
+    "gpu_ms": [
+      [
+        1.497568
+      ],
+      [
+        2.060288
+      ],
+      [
+        1.72304
+      ],
+      [
+        1.3067840000000002
+      ],
+      [
+        1.312032
+      ],
+      [
+        1.743904
+      ],
+      [
+        1.30624
+      ],
+      [
+        1.29936
+      ],
+      [
+        1.29424
+      ],
+      [
+        1.2923520000000002
+      ],
+      [
+        1.683328
+      ]
+    ],
+    "median_total_ms": 1.312032
+  },
+  "file": "studio_frame8.rdc",
+  "tool": "1.47",
+  "exe_sha256": "fd5d6530a55fbefcc1b6082bb0f6bb2c71a216429cb75f98772f9c11f76bd8ba",
+  "rdc": "output/captures/local/AO-Contact-6-fd5d6530a55f-480-f8/studio_frame8.rdc",
+  "rdc_sha256": "a965abb528ad5fde6c52f2246a36ba5facbb9b9398864ffba31adfcbb9c727ed",
+  "box_foot_visibility": 0.6180216073989868,
+  "box_foot_pixels": 4124,
+  "post_ring_visible_points": 666,
+  "post_ring_mae": 0.12300964646741397,
+  "post_ring_step_error": 0.009264774387029849
+}
