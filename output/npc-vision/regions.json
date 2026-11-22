@@ -1,0 +1,174 @@
+{
+  "model": "redflag-vision",
+  "source_sha256": {
+    "val-00": "2c412c1feb15920b4d6878eff6260743197972debb761a5b4227b28ec953e49f",
+    "val-01": "f909e12ac042f7904e2317983f4069446ea2f36c07a15518537709e806bd6bb2"
+  },
+  "results": {
+    "present": [
+      {
+        "question": "请指出地台右侧的灰色台面。",
+        "answer": {
+          "entity": null,
+          "region": {
+            "camera": "val-00",
+            "id": "right-surface",
+            "label": "地台右侧的灰色台面",
+            "origin": [
+              2.3828873438086835,
+              2.120817025849918,
+              5.506527754103887
+            ],
+            "direction": [
+              -0.10595595066215438,
+              -0.372352287938767,
+              -0.922023378329446
+            ]
+          }
+        }
+      },
+      {
+        "question": "Find the right side of the gray platform.",
+        "answer": {
+          "entity": null,
+          "region": {
+            "camera": "val-00",
+            "id": "right-surface",
+            "label": "地台右侧的灰色台面",
+            "origin": [
+              2.3828873438086835,
+              2.120817025849918,
+              5.506527754103887
+            ],
+            "direction": [
+              -0.10595595066215438,
+              -0.372352287938767,
+              -0.922023378329446
+            ]
+          }
+        }
+      }
+    ],
+    "removed": [
+      {
+        "question": "请指出地台右侧的灰色台面。",
+        "answer": {
+          "entity": null
+        }
+      },
+      {
+        "question": "Find the right side of the gray platform.",
+        "answer": {
+          "entity": null
+        }
+      }
+    ],
+    "object_with_location": [
+      {
+        "question": "右边那个红箱子是哪一个？",
+        "answer": {
+          "entity": "103"
+        }
+      },
+      {
+        "question": "Find the red crate on the right side.",
+        "answer": {
+          "entity": "103"
+        }
+      }
+    ]
+  },
+  "region_found": "2/2",
+  "absent_returned_none": "2/2",
+  "invalid_replies_rejected": 5,
+  "entity_from_unsent_view_rejected": true,
+  "weights_sha256": {
+    "Qwen3VL-2B-Instruct-Q4_K_M.gguf": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae",
+    "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf": "f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82"
+  },
+  "independent_bake": {
+    "model": "redflag-vision",
+    "source_sha256": {
+      "val-00": "e6d3b9fbd1392e49a1ee684331ea563a9518ac66166ca22e2a04fb806a99a3a9",
+      "val-01": "fe256f3fed58d38e62538adc74a1e8f5067703df353d5b5fd5d472026c4ead82"
+    },
+    "results": {
+      "present": [
+        {
+          "question": "请指出地台右侧的灰色台面。",
+          "answer": {
+            "entity": null,
+            "region": {
+              "camera": "val-00",
+              "id": "right-surface",
+              "label": "地台右侧的灰色台面",
+              "origin": [
+                2.3828873438086835,
+                2.120817025849918,
+                5.506527754103887
+              ],
+              "direction": [
+                -0.10595595066215438,
+                -0.372352287938767,
+                -0.922023378329446
+              ]
+            }
+          }
+        },
+        {
+          "question": "Find the right side of the gray platform.",
+          "answer": {
+            "entity": null,
+            "region": {
+              "camera": "val-00",
+              "id": "right-surface",
+              "label": "地台右侧的灰色台面",
+              "origin": [
+                2.3828873438086835,
+                2.120817025849918,
+                5.506527754103887
+              ],
+              "direction": [
+                -0.10595595066215438,
+                -0.372352287938767,
+                -0.922023378329446
+              ]
+            }
+          }
+        }
+      ],
+      "removed": [
+        {
+          "question": "请指出地台右侧的灰色台面。",
+          "answer": {
+            "entity": null
+          }
+        },
+        {
+          "question": "Find the right side of the gray platform.",
+          "answer": {
+            "entity": null
+          }
+        }
+      ],
+      "object_with_location": [
+        {
+          "question": "右边那个红箱子是哪一个？",
+          "answer": {
+            "entity": "103"
+          }
+        },
+        {
+          "question": "Find the red crate on the right side.",
+          "answer": {
+            "entity": "103"
+          }
+        }
+      ]
+    },
+    "region_found": "2/2",
+    "absent_returned_none": "2/2",
+    "invalid_replies_rejected": 5,
+    "entity_from_unsent_view_rejected": true
+  }
+}

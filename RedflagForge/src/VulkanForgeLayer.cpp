@@ -300,7 +300,8 @@ namespace Redflag
 		}
 		ImGui::Separator();
 		if (ImGui::MenuItem(m_EditScene ? "停止模拟" : "模拟物理")) ToggleSimulation();
-		m_NpcVision.Draw(m_Scene, m_ScenePath, bool(m_EditScene), m_Camera.GetPosition());
+		if (m_NpcVision.Draw(m_Scene, m_ScenePath, bool(m_EditScene), m_Camera))
+			m_SelectSceneTab = true;
 		ImGui::TextDisabled("%s   /   Vulkan", m_ScenePath.empty() ? "未命名" : m_ScenePath.stem().u8string().c_str());
 		ImGui::EndMenuBar();
 		if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
@@ -455,7 +456,12 @@ namespace Redflag
 		if (visible && ImGui::BeginTabBar("Cameras"))
 		{
 			const bool previous = m_GameView;
-			if (ImGui::BeginTabItem("场景 Scene")) { m_GameView = false; ImGui::EndTabItem(); }
+			if (ImGui::BeginTabItem("场景 Scene", nullptr, m_SelectSceneTab ? ImGuiTabItemFlags_SetSelected : 0))
+			{
+				m_GameView = false;
+				m_SelectSceneTab = false;
+				ImGui::EndTabItem();
+			}
 			if (ImGui::BeginTabItem("主相机 Game")) { m_GameView = true; ImGui::EndTabItem(); }
 			ImGui::EndTabBar();
 			if (m_GameView != previous) { m_Lighting->ResetHistory(); m_HasSceneImage = false; }

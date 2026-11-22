@@ -1,0 +1,20 @@
+{
+  "scene": "Physics-Workshop",
+  "vulkan_device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "configuration": "Debug x64",
+  "driver": "隐藏的 Application 使用正式 VulkanForgeLayer、NpcVisionPanel 对象。Dear ImGui 测试钩子读出实际控件位置，再向标签、输入框和按钮发送鼠标事件。",
+  "service": "回放 regions.json 内真实 Qwen 查询的第一个区域回答。模型至 C++ 的完整 HTTP 联测另由 tests/check_npc_vision.py 执行。",
+  "verify": "Game 视图没有灯标记控件；点击从拍摄机位看向该处后，同一窗口出现只在 Scene 标签下绘制的灯标记控件。",
+  "clicked": [
+    "click 主相机 Game 632.5 107.5",
+    "click NPC 观察 547.5 20",
+    "click 问题 723 102.5",
+    "click 查询图片 557 194.5",
+    "click 从拍摄机位看向该处 607 274.5"
+  ],
+  "result": "passed",
+  "objects_sha256": {
+    "NpcVisionPanel.obj": "02587141f92347d42ccf0a93f4d7e0a1dacfc61563d91af83bfb054318234a1d",
+    "VulkanForgeLayer.obj": "66dd06cfd7f79d4ec725ccc8c956282c03dc2da4747f8e89d411fcbf14bb694d"
+  }
+}

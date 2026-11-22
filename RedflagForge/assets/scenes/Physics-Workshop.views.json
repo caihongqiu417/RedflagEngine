@@ -1,7 +1,9 @@
 {
   "scene": "Physics-Workshop",
   "views": [
-    {"camera": "val-00", "tags": ["箱子", "红箱子", "box", "crate"], "entities": {"103": "红箱子", "102": "地台"}},
+    {"camera": "val-00", "tags": ["箱子", "红箱子", "box", "crate"], "entities": {"103": "红箱子", "102": "地台"},
+     "regions": {"right-surface": {"label": "地台右侧的灰色台面", "bounds": [108, 96, 136, 112],
+                                   "tags": ["右侧", "右边", "right side", "right-hand"]}}},
     {"camera": "val-01", "tags": ["地台", "平台", "platform", "箱子", "crate"], "entities": {"103": "红箱子", "102": "地台"}}
   ]
 }

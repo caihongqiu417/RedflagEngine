@@ -2,20 +2,48 @@
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
 
 
+def region_directions(view, calibration, frame):
+    if not view.get("regions"):
+        return
+    camera = {**calibration, **frame}
+    if camera.get("camera_model", "PINHOLE") not in ("PINHOLE", "OPENCV") or any(
+            camera.get(key, 0) for key in ("k1", "k2", "k3", "k4", "p1", "p2")):
+        raise ValueError("请先校正镜头畸变，再在校正后的照片上标注区域")
+    width, height = camera["w"], camera["h"]
+    fx, fy = camera["fl_x"], camera["fl_y"]
+    if width <= 0 or height <= 0 or fx <= 0 or fy <= 0:
+        raise ValueError("区域标注需要正的图像尺寸和焦距")
+    view["size"] = [width, height]
+    for region in view["regions"].values():
+        left, top, right, bottom = region["bounds"]
+        if not (0 <= left < right <= width and 0 <= top < bottom <= height):
+            raise ValueError(f"{view['camera']} 的区域 {region['label']} 超出参考图")
+        # 图中向下为正，相机向上为正。矩阵前三列依次给出相机的右、上、后方向。
+        x = ((left + right) / 2 - camera.get("cx", width / 2)) / fx
+        y = (camera.get("cy", height / 2) - (top + bottom) / 2) / fy
+        direction = [row[0] * x + row[1] * y - row[2] for row in frame["transform_matrix"][:3]]
+        length = math.hypot(*direction)
+        region["direction"] = [v / length for v in direction]
+
+
 def bake(brush, dataset, annotations, output, steps, degree):
     project = json.loads(annotations.read_bytes())
-    frames = json.loads((dataset / "transforms_val.json").read_bytes())["frames"]
+    calibration = json.loads((dataset / "transforms_val.json").read_bytes())
+    frames = calibration["frames"]
     cameras = {Path(frame["file_path"]).stem: frame for frame in frames}
     if len(cameras) != len(frames):
         raise ValueError("候选机位的照片须使用不同的文件名")
     if any(view["camera"] not in cameras for view in project["views"]):
         raise ValueError("候选机位必须出现在 transforms_val.json 中")
+    for view in project["views"]:
+        region_directions(view, calibration, cameras[view["camera"]])
 
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output) as name:

@@ -50,6 +50,7 @@ namespace Redflag
 		std::filesystem::path m_ScenePath;
 		std::deque<std::string> m_Messages;
 		bool m_GameView = false;
+		bool m_SelectSceneTab = false;
 		bool m_ResetLayout = false;
 		bool m_Hovered = false;
 		bool m_HasSceneImage = false;
