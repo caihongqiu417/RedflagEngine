@@ -33,3 +33,9 @@ python scripts/bake_surface_maps.py scripts/materials/rusted-wheel-rim.json Redf
 ```
 
 在 Forge 中打开 `Watt-Station.redflag`，从层级选中对应实体，在「模型绘制」查看其材质。外部 Agent 可以使用项目的 `redflag-material-bake` skill，按照同一要求在另一个关卡收集原图、生成候选并提交同机位画面对照。[烘焙代码](../scripts/bake_surface_maps.py) · [Agent 工作方法](../.agents/skills/redflag-material-bake/SKILL.md)
+
+## 站在维修棚里看
+
+开场地面看起来平，先查到的是铺路平面的缩放。它的两个方向放大了一百倍，表示厚度的方向却保留原尺寸，贴图里石面的倾斜也被压平。修正缩放后，正面受光已经能分清碎石。再让相机贴近路肩斜着看，开启视差，石棱后面露出的沟底会变窄。两次调整分开拍，才能看出各自起了多大作用。[出生点原图](../output/validation/station-materials/spawn-original.png) · [同机位调整后](../output/validation/station-materials/spawn-current.png) · [路肩局部对照](../output/validation/station-materials/gravel-normal-current-crop.png)
+
+在工具架前，最值得看的是浅色磨痕的边缘。切换两张 2K 图以后，这个绘制在交错回放里的 GPU 时间中位数为 49.02 微秒，原先是 49.23 微秒。这点差别不足以说明它跑得更快。两张新图按 RGBA8 和完整缩小级别估算，约占 42.67 MiB，远处货架仍使用原先的 1K，因此原图也还要保留。轮毂则只试很小的实际顶点移动，近镜头下最大约半个像素。玩家在正常站位更容易看到的是轮毂边缘落在泥地上、草叶遮住了一部分轮圈。[工具架局部](../output/validation/station-materials/rack-original-current-crop.png) · [轮毂局部](../output/validation/station-materials/rim-original-current-crop.png)

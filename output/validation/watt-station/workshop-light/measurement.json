@@ -1,0 +1,76 @@
+{
+  "scene_sha256": "371db2eccad492573b61a985304e52b53b2ec59e03509583347852df449eb629",
+  "settings_sha256": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+  "build_sha256": "29c89e18e794536fee05cc405c7b123b8dc47d5e74c6ac353cd98c3991bf83eb",
+  "camera": [
+    2.0,
+    1.65,
+    1.9
+  ],
+  "target": [
+    7.2,
+    1.15,
+    1.2
+  ],
+  "lamp": 1223,
+  "intensity": 38,
+  "color": [
+    1,
+    0.62,
+    0.3
+  ],
+  "radius": 5.5,
+  "pose_seconds": 0,
+  "on": {
+    "frame": "output/captures/local/workshop-lamp-on-29c89e18e794-960/studio_frame24.rdc",
+    "sha256": "915b8ef5432734f1c12f020658776c1499fea4d9ea8cb391058a17abb7b00195",
+    "size": [
+      960,
+      616
+    ],
+    "renderdoc": "1.47",
+    "frame_number": 24,
+    "exposure_multiplier": 0.784584105014801,
+    "tone_mapping": "ACES",
+    "display_event": 1215,
+    "pack_event": 1059
+  },
+  "off": {
+    "frame": "output/captures/local/workshop-lamp-off-29c89e18e794-960/studio_frame24.rdc",
+    "sha256": "4290775f8d02d847426168c3f7373ead09365e2fef1244b490250513f758db58",
+    "size": [
+      960,
+      616
+    ],
+    "renderdoc": "1.47",
+    "frame_number": 24,
+    "exposure_multiplier": 0.784584105014801,
+    "tone_mapping": "ACES",
+    "display_event": 1215,
+    "pack_event": 1059
+  },
+  "center": {
+    "x": [
+      240,
+      720
+    ],
+    "y": [
+      154,
+      462
+    ],
+    "pixels": 147840,
+    "on_rgb": [
+      0.1904939928519911,
+      0.13560612285291898,
+      0.09313520246956236
+    ],
+    "on_linear_luminance": 0.14420888356304337,
+    "off_rgb": [
+      0.049574994567575185,
+      0.05017722593412063,
+      0.052840916748885976
+    ],
+    "off_linear_luminance": 0.050241510022419125
+  },
+  "identical_surface_pixels": 591360
+}
