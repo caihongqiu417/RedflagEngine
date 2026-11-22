@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -53,13 +54,20 @@ def main():
     parser.add_argument("archive", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--input-at", type=int, nargs=2, metavar=("X", "Y"))
+    parser.add_argument("--mission", action="store_true", help="通过通讯让瓦特修理发电机，两人撤离后按 R 开新局")
+    parser.add_argument("--defeat", action="store_true", help="撤离后的第二局体验倒地、任务失败和重新开局")
     args = parser.parse_args()
+    if args.mission and not args.input_at:
+        parser.error("--mission 需要 --input-at 指定通讯窗口输入框的位置")
+    if args.defeat and not args.mission:
+        parser.error("--defeat 需要 --mission")
     ctypes.windll.user32.SetProcessDPIAware()
     args.output.mkdir(parents=True, exist_ok=True)
     extraction = tempfile.TemporaryDirectory(prefix="redflag-station-", ignore_cleanup_errors=True)
     project = Path(extraction.name)
     manifest = unpack(args.archive, project)
-    session = playtest.begin(project, manifest["scene"], "在解压后的游戏中找到瓦特，向它要药并核对双方库存。", launch=False)
+    intent = "和瓦特合作修复设备，撤离并重新开局。" if args.mission else "找到瓦特，向它要药并核对双方库存。"
+    session = playtest.begin(project, manifest["scene"], intent, launch=False)
     folder = playtest.run_folder(project, session["session"])
     print(project, flush=True)
 
@@ -86,6 +94,16 @@ def main():
         assert picture.size == (1920, 1080), picture.size
         picture.save(args.output / (name + ".png"))
 
+    def say(message):
+        x, y = args.input_at
+        command("move", x=x, y=y)
+        command("tap", "MouseLeft")
+        advance(3)
+        for char in message:
+            win32gui.PostMessage(hwnd, win32con.WM_CHAR, ord(char), 1)
+        advance(2)
+        command("tap", "Enter")
+
     env = dict(os.environ, REDFLAG_PLAYTEST=str(folder))
     with (project / "launcher.log").open("wb") as log:
         launch = subprocess.Popen(["cmd", "/d", "/c", "Play-With-Companion.cmd"], cwd=project, env=env,
@@ -101,15 +119,12 @@ def main():
         screenshot("companion")
 
         # 这里通过 Windows 的文字输入消息走和输入法相同的窗口入口。玩家实际收到药才通过。
-        if args.input_at:
-            x, y = args.input_at
-            command("move", x=x, y=y)
-            command("tap", "MouseLeft")
-            advance(3)
-            for char in "请把你背包里的一份医疗包送到我手上。":
-                win32gui.PostMessage(hwnd, win32con.WM_CHAR, ord(char), 1)
-            advance(2)
-            command("tap", "Enter")
+        if args.mission:
+            from station_mission import play_station
+            mission = play_station(state, command, say, screenshot, folder, args.output,
+                                   project / manifest["scene"], args.defeat)
+        elif args.input_at:
+            say("请把你背包里的一份医疗包送到我手上。")
 
             def handed_over():
                 actors = team()
@@ -122,18 +137,24 @@ def main():
             archive_sha = hashlib.file_digest(archive, "sha256").hexdigest()
         record = dict(scene=manifest["scene"], verified_files=len(manifest["files"]), client=[1920, 1080],
                       archive_sha256=archive_sha, exe_sha256=hashlib.sha256((project/"RedflagForge.exe").read_bytes()).hexdigest(),
-                      before=before, after=team(), delivered=bool(args.input_at))
-        (args.output / "result.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf8")
+                      before=before, after=team(), delivered=bool(args.input_at and not args.mission))
+        if args.mission:
+            record["mission"] = mission
     finally:
         if hwnd and win32gui.IsWindow(hwnd):
             win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
         launch.wait(timeout=15)
-        for name in ("frames.jsonl", "status.json", "session.json"):
+        for name in ("frames.jsonl", "jobs.jsonl", "status.json", "session.json"):
             if (folder / name).is_file():
                 shutil.copyfile(folder / name, args.output / name)
         shutil.copyfile(project / "launcher.log", args.output / "launcher.log")
         extraction.cleanup()
     assert launch.returncode == 0, args.output / "launcher.log"
+    samples = [json.loads(line)["frame_ms"] for line in (args.output / "frames.jsonl").read_bytes().splitlines()]
+    samples = [ms for ms in samples if ms > 0]
+    record["frame_ms"] = {"samples": len(samples), "p50": statistics.median(samples),
+                          "p95": statistics.quantiles(samples, n=100, method="inclusive")[94]}
+    (args.output / "result.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf8")
     print(args.output, flush=True)
 
 

@@ -42,7 +42,9 @@ async def exercise(work: Path):
         moved = await call("rewire_npc", npc=role.name, source=1, key="reserve", target=5)
         route = next(r for r in moved["routes"] if r["candidate"] == "reserve")
         assert route["action"] == "share" and route["nodes"] == [1, 5]
-        expected = original[1].replace(b"Key: reserve, To: 12", b"Key: reserve, To: 5")
+        old_edge = next(e for e in copied["graph"]["Edges"] if e["From"] == 1 and e.get("Key") == "reserve")
+        root_link = f'From: 1, Key: reserve, To: {old_edge["To"]}'.encode()
+        expected = original[1].replace(root_link, b"From: 1, Key: reserve, To: 5")
         assert expected != original[1] and own_tree.read_bytes() == expected and role.read_bytes() == role_before
         cycle = await session.call_tool("rewire_npc", {"npc": role.name, "source": 1, "key": "reserve", "target": 1})
         assert cycle.is_error and own_tree.read_bytes() == expected
@@ -85,17 +87,17 @@ def check_tables(work: Path):
     tree = work / "医护员.tree.yaml"
     profile = work / name
 
-    def change(table, match, value):
+    def change(table, fields, value):
         with table.open(encoding="utf-8-sig", newline="") as f:
             rows = list(csv.reader(f, dialect="excel-tab"))
-        next(row for row in rows[1:] if match in row[:-2])[-1] = value
+        next(row for row in rows[1:] if row[1:-2] == fields)[-1] = value
         with table.open("w", encoding="utf-8-sig", newline="") as f:
             csv.writer(f, dialect="excel-tab").writerows(rows)
 
     before = tree.read_bytes()
     path = work / "role.tsv"
     npc_table.export(name, "profile", path)
-    change(path, "音色", "table-voice")
+    change(path, ["音色"], "table-voice")
     # 导出表以后有人改了名称，导入音色时应保留最新的名称。
     npc_assets.update(name, {"Name": "护士"})
     readback = npc_table.apply(name, "profile", path)
@@ -104,7 +106,7 @@ def check_tables(work: Path):
     before = profile.read_bytes()
     links = work / "links.tsv"
     npc_table.export(name, "links", links)
-    change(links, "reserve", "12")
+    change(links, ["1", "reserve"], "12")
     readback = npc_table.apply(name, "links", links)
     assert next(r for r in readback["routes"] if r["candidate"] == "reserve")["action"] == "reserve"
     assert before == profile.read_bytes()

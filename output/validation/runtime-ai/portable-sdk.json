@@ -1,7 +1,7 @@
 {
-  "archive_sha256": "8fbab633674ab478c00ac2d6acb0a523e030367b140457c896d2647e37ece041",
+  "archive_sha256": "eda2422139b853140894cb35f9877761307f58574d73b2f410a62e079f901fab",
   "file_count": 23,
-  "release_dll_sha256": "263df32333d5c5da61f38342b317b4abc27e27c4d9bad7f6dff2343ed0b8af3d",
+  "release_dll_sha256": "2f24d28af504515017c769822d82227c0f59b6d113e7a3ac9072f92e79b90723",
   "runtime": "Windows .NET Framework",
   "model": "Qwen3-VL-2B-Instruct",
   "clean_extraction": true,

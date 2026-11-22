@@ -18,6 +18,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $project = Split-Path -Parent $PSScriptRoot
 $cache = Join-Path $project 'tmp/gs'
+$portable = Join-Path $project 'CompanionRuntime'
+if (Test-Path "$project/RedflagForge.exe") { $env:PATH = "$project;$env:PATH" }
 $logs = Join-Path $project 'tmp/npc-services'
 $null = New-Item -ItemType Directory -Force $logs
 
@@ -39,11 +41,18 @@ function Start-LocalProcess([string]$name, [string]$exe, [string[]]$arguments, [
     throw "$name did not start within 90 seconds. See $logs/$name.err"
 }
 
-if (!$SpeechPython) { $SpeechPython = Join-Path $project 'tmp/ai-media-venv/Scripts/python.exe' }
+if (!$SpeechPython) {
+    $SpeechPython = if (Test-Path "$portable/python/python.exe") { "$portable/python/python.exe" }
+                    else { Join-Path $project 'tmp/ai-media-venv/Scripts/python.exe' }
+}
 function Start-Decision {
     # A configured chat endpoint needs no copy of the model on this machine.
     if (!$ModelEndpoint) {
         if (!$ModelName) { $ModelName = 'Qwen3-VL-2B-Instruct' }
+        if (Test-Path "$portable/llama/llama-server.exe") {
+            $cache = Join-Path $portable 'models'
+            if (!$LlamaServer) { $LlamaServer = Join-Path $portable 'llama/llama-server.exe' }
+        }
         if (!$LlamaServer) { $LlamaServer = Join-Path $cache 'llama-b10887/llama-server.exe' }
         if (!$ModelFile) { $ModelFile = Join-Path $cache 'Qwen3VL-2B-Instruct-Q4_K_M.gguf' }
         if (!$VisionProjector) { $VisionProjector = Join-Path $cache 'mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf' }
@@ -67,7 +76,8 @@ function Start-Speech {
     $health = "http://127.0.0.1:$SpeechPort/v1/speech/voices"
     if (Read-Health $health) { Write-Host "speech ready ($health)"; return }
     if (!$SpeechRuntime) {
-        $SpeechRuntime = Join-Path ([IO.Path]::GetPathRoot($project)) 'Udev/Delivery/Saved/DeliverySpeech/runtime'
+        $SpeechRuntime = if (Test-Path "$portable/speech/DeliverySpeechRuntime.dll") { "$portable/speech" }
+                         else { Join-Path ([IO.Path]::GetPathRoot($project)) 'Udev/Delivery/Saved/DeliverySpeech/runtime' }
     }
     if (!(Test-Path -LiteralPath $SpeechPython)) { throw 'Set -SpeechPython or install scripts/requirements-speech.txt in tmp/ai-media-venv.' }
     $speechArgs = @((Join-Path $PSScriptRoot 'speech_service.py'),'--runtime',$SpeechRuntime,'--port',"$SpeechPort")
