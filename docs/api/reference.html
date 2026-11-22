@@ -450,10 +450,10 @@ effects.ResetHistory();  // 切换场景或跳切相机时调用一次。</code>
         <details class="guide">
           <summary>从 NPC 视角找到可拿取的物体</summary>
           <div>
-            <p>物理实验台的候选图片在游戏开始前生成。<code>AskNpcVision</code> 接收场景名称和问题，在工作线程等待图片服务的回答。游戏继续绘制，等结果准备好后回到场景线程，按候选编号调用 <code>CanPickUp</code>。这个函数用当前的可拿取组件、手到物体的距离以及中间的遮挡决定能否拿取。箱子即使仍出现在旧照片里，游戏删除它以后查询也会失败。</p>
-            <p>如果问题是“地台右侧在哪里”，可以用 <code>AskNpcCandidate</code> 同时查询实体和已标注的图片区域。区域的 <code>Origin</code> 是拍摄位置，<code>Direction</code> 指向图片中选中的地方。从那里看过去可以认出目标所在的大致方向。一张照片只能给出这条射线，目标有多远仍需由场景里的几何来确定。</p>
-            <button class="source" data-file="Redflag/src/Redflag/Scene/NpcVision.cpp" data-function="CanPickUp(">查看拿取查询</button>
-            · <button class="source" data-file="Redflag/src/Redflag/Scene/NpcVision.h" data-function="AskNpcCandidate(">查看区域与实体候选</button>
+            <p>玩家说“料架旁边可能有个箱子”，瓦特可以先过去看看。<code>FindCandidates</code> 从角色的记忆中取出照片或队友的转述，按消息编号交给模型选择。这样即使还没有箱子的实体编号，也可以朝记下的位置走。再次看到现场时，可以比较早先的判断和眼前的物体。</p>
+            <p>写实际拿取操作时，可以使用场景的 <code>CanPickUp</code> 查询。调用者给出候选实体、手的位置和够得到的距离。引擎确认物品仍有可拿取组件，再从手的位置发出一条射线，看最先碰到的是否为这件物品。</p>
+            <button class="source" data-file="Redflag/src/Redflag/AI/NpcQuery.cpp" data-function="FindCandidates(">查看照片与转述的候选</button>
+            · <button class="source" data-file="Redflag/src/Redflag/Scene/Pickup.cpp" data-function="CanPickUp(">查看拿取查询</button>
             · <a href="../npc-vision/README.md">图片服务与验证场景</a>
           </div>
         </details>

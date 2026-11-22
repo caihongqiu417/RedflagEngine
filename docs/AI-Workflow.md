@@ -50,6 +50,10 @@ Redflag 的 API 手册有一个搜索框。输入 `AskNpcCandidate`，能找到�
 
 ## 哪些做法值得留下
 
+我会把一项引擎修改记成独立的开发任务。例如改网格创建接口，先让 Agent 查“顶点和索引创建网格”。搜到的同名函数有好几个，点进 `RenderDevice::CreateMesh`，可以看到模型从哪里交出顶点、OpenGL 和 Vulkan 各自在哪里接手。给这次查询附上任务编号，之后无论谁接手，都能查看当时的源码。如果我发现它只跑了 OpenGL，就在这条任务下写“请用同一份网格再跑一次 Vulkan”，下一个人能对着同一版补丁和测试日志复查。[开发资料与操作示例](api/development.md)
+
+当 Agent 说“我想让整个维修站都用 4K 贴图”，我会给一个更容易验证的要求：“先站在玩家进棚时会停的位置。烘一份工具架底色和法线，在同一盏灯下对比锈斑和漆面的高光，给我看原尺寸局部。远处同款架子先沿用原图。” 现在可以直接把这段工作交给项目的材质烘焙 skill，源图、加工方法和替换的位置都有记录。[材质烘焙方法](../.agents/skills/redflag-material-bake/SKILL.md)
+
 让 agent 改关卡时，我会给它一张游戏截图，说清楚站在哪里、希望玩家首先看见什么。比如：“站在西侧入口，我希望一眼看见工棚里的发电机。工具车可以靠近镜头，留出中间那条路。” 这时用 `level-design` 先画出能走的路线，再用 `game-visuals` 看近处的器材是否挡住了门。两份 skill 都可以直接阅读，挑与当前关卡有关的部分用。[关卡设计](https://github.com/mattstruble/skills/tree/ec8c029b9a72f5ed36a683ffcedd046897418116/level-design) · [游戏美术](https://github.com/mattstruble/skills/tree/ec8c029b9a72f5ed36a683ffcedd046897418116/game-visuals)
 
 有时 agent 会拿一张漂亮的概念图回来。我会接着说：“保留这张图作参考。现在请从正式游戏的出生点截一张，把能看到的东西告诉我。转过一个角度，门还能认出来吗？” 这样即使模型还没找到，也能先判断场景布局要不要改。[维修站的场景设计与实机图](../output/pdf/Redflag-Station-Design.pdf)

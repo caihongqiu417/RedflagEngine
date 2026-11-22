@@ -18,6 +18,7 @@ import playtest
 import playtest_agent
 import playtest_metrics
 import playtest_workflow
+import job_timeline
 import asset_changes
 import creation_reviews
 from project import ENGINE, PROJECT
@@ -26,6 +27,8 @@ from project import ENGINE, PROJECT
 ROOT = ENGINE
 sys.path.insert(0,str(ROOT / "scripts"))
 from asset_bundle import AssetBundle
+import dev_context
+import context_review
 FORGE = PROJECT
 SCENES = FORGE / "assets/scenes"
 EDITOR = ROOT / "bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe"
@@ -34,6 +37,42 @@ READ_ONLY = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
 SCENE_EDIT = Lock()
 SHARED_FORMATS = {".gltf", ".glb", ".obj", ".fbx", ".bin", ".ply", ".mtl", ".png", ".jpg",
                   ".jpeg", ".tga", ".bmp", ".hdr", ".ktx2", ".ttf", ".otf", ".dll"}
+
+
+@app.tool()
+def lookup_dev_context(query: str, operation: str = "find", task: str = "", limit: int = 4) -> dict[str, object]:
+    """find 搜索公开接口。show 按完整名称或文件:行号找源码与可能调用处。填写 task 将本次返回留作审查。"""
+    try:
+        return dev_context.lookup(ROOT, FORGE, operation, query, limit, task)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool()
+def begin_dev_task(intent: str, files: list[str]) -> dict[str, object]:
+    """记录指定引擎源码当前的字节，以便和修改后比较。文件名相对于引擎仓库。"""
+    try:
+        return context_review.begin(ROOT, FORGE, intent, files)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool(annotations=READ_ONLY)
+def review_dev_task(task: str = "") -> dict[str, object]:
+    """按任务查引用、改动、测试原始输出和人工意见，留空列出最近任务。"""
+    try:
+        return context_review.review(ROOT, FORGE, task) if task else context_review.tasks(FORGE)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool()
+def comment_dev_task(task: str, text: str) -> dict[str, object]:
+    """给这次开发留下更正，Forge 和命令行都能看到。"""
+    try:
+        return context_review.note(FORGE, task, text)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 @app.tool()
@@ -71,6 +110,15 @@ def comment_playtest(session: str, seq: int, text: str, entity: str = "") -> dic
 def explore_playtest(session: str, profile: str, rounds: int = 4, use_images: bool = True) -> dict[str, object]:
     """用本机模型试玩几步。每步都观察新画面、角色状态和上次位移，交给人操作后立即结束。"""
     return playtest_agent.explore(FORGE,playtest.run_folder(FORGE,session),profile,rounds,see=use_images)
+
+
+@app.tool(annotations=READ_ONLY)
+def read_job_timeline(session: str, seq: int, baseline: str = "", baseline_seq: int | None = None) -> dict[str, object]:
+    """读取选中帧以前最近收集的一批 CPU 任务。返回源码行、等待、依赖及沿依赖的执行时间，可另选一局对照。"""
+    result = {"current": job_timeline.snapshot(playtest.run_folder(FORGE, session), seq)}
+    if baseline:
+        result["baseline"] = job_timeline.snapshot(playtest.run_folder(FORGE, baseline), seq if baseline_seq is None else baseline_seq)
+    return result
 
 
 @app.tool(annotations=READ_ONLY)
@@ -172,8 +220,9 @@ def get_capabilities() -> dict[str, object]:
     return {"source": "saved project files", "project": FORGE.as_posix(), "scene_directory": "assets/scenes",
             "editor": EDITOR.relative_to(ROOT).as_posix(), "editor_exists": EDITOR.is_file(),
             "live_editor": False, "can_edit": True,
+            "dev_context": ["lookup_dev_context", "begin_dev_task", "review_dev_task", "comment_dev_task"],
             "playtest":{"tools":["begin_playtest","read_playtest","control_playtest","explore_playtest","evaluate_playtest",
-                                "comment_playtest","revise_playtest","iterate_playtest"],
+                                "comment_playtest","revise_playtest","iterate_playtest","read_job_timeline"],
                         "profiles": sorted(p.relative_to(FORGE/"assets/playtests").as_posix() for p in (FORGE/"assets/playtests").rglob("*.json")),
                         "human_control":"Forge / F6","native_events":"Redflag.Playtest.Record"},
             "environment": {"source": "saved scene", "tools": ["inspect_environment", "set_zone_description"]},
