@@ -49,3 +49,24 @@ python tests/check_game_hud.py --label current --timing
 \end{lstlisting}
 
 加上 \code{--window 1200 900} 可以检查带黑边的窗口。三版截图、几何覆盖图、事件号、构建和帧文件哈希保存在 \path{output/validation/watt-station/hud/}。上述结果适用于维修站开场时显示的内容。
+
+\clearpage
+\section{维修站的游戏分辨率}
+
+玩家默认看到 $1920\times1080$ 的场景。在帧率较低的电脑上，可以双击
+\code{Play-720p.cmd}，也可以运行 \code{Play.cmd --render-size 1280x720}。
+此时三维场景先画到一张 $1280\times720$ 的图上，显示时铺满原来的窗口。准星、文字和血条仍按窗口的 $1920\times1080$ 像素绘制，两种设置下的按钮位置相同。
+
+在维修站出生点保持主相机不动，用同一份 Windows x64 Release 程序交替运行四次，顺序是 1080p、720p、720p、1080p。每次跳过起初 15 帧，记录第 16 到 60 帧，每个分辨率共得到 90 个帧间隔。位置按毫米核对，四轮均无输入。下表使用实际游玩时记录的相邻帧间隔，单位为毫秒，涵盖游戏逻辑、绘制和显示等待。
+
+\begin{center}
+\begin{tabular}{lrrr}\toprule
+场景分辨率 & 场景像素数 & 中位帧时间 & P95 帧时间\\\midrule
+$1920\times1080$ & 2\,073\,600 & 87.77 & 93.86\\
+$1280\times720$  &   921\,600 & 58.12 & 64.76\\\bottomrule
+\end{tabular}
+\end{center}
+
+这台 RTX 5070 Ti Laptop GPU 在该机位每帧节省了约 29.65 毫秒。720p 仍高于每秒 60 帧所需的 16.67 毫秒。计时结束后，另用 RenderDoc 1.47 捕获两份第 12 帧。两个版本的同一次网格绘制各使用 6144 个索引，默认设置在事件 185 写入两张 $1920\times1080$ 的表面图，720p 在事件 186 将它们写成 $1280\times720$。最后的界面绘制分别位于事件 2473 和 2474，两者写入的窗口图都是 $1920\times1080$。
+
+可从仓库根目录运行 \path{tests/check_player_resolution.py} 并传入游戏压缩包复测。指定 \code{--renderdoc} 和工具目录可回读上述附件。每帧耗时、相机位置、附件格式和捕获文件哈希保存在 \path{output/validation/packaged-watt/resolution*.json}。帧间隔无法单独给出 GPU 的执行时间，其他机位或设备需要另测。

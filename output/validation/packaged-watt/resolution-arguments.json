@@ -1,0 +1,199 @@
+{
+  "launchers": [
+    {
+      "launcher": "Play.cmd",
+      "options": [],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag"
+      ]
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--render-size",
+        "1280x720"
+      ],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "1280x720"
+      ]
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--render-size",
+        "1920x1080"
+      ],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "1920x1080"
+      ]
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--render-size",
+        "800x600"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--render-size"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--quality",
+        "low"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play.cmd",
+      "options": [
+        "--render-size",
+        "1280x720",
+        "extra"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag"
+      ]
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--render-size",
+        "1280x720"
+      ],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "1280x720"
+      ]
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--render-size",
+        "1920x1080"
+      ],
+      "exit": 0,
+      "forwarded": [
+        "--vulkan",
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "1920x1080"
+      ]
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--render-size",
+        "800x600"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--render-size"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--quality",
+        "low"
+      ],
+      "exit": 2,
+      "forwarded": []
+    },
+    {
+      "launcher": "Play-With-Companion.cmd",
+      "options": [
+        "--render-size",
+        "1280x720",
+        "extra"
+      ],
+      "exit": 2,
+      "forwarded": []
+    }
+  ],
+  "exe_rejected": [
+    {
+      "options": [
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size"
+      ],
+      "exit": 2,
+      "output": "[06:11:39] REDFLAG : Use --render-size once with 1280x720 or 1920x1080"
+    },
+    {
+      "options": [
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "800x600"
+      ],
+      "exit": 2,
+      "output": "[06:11:39] REDFLAG : Use --render-size once with 1280x720 or 1920x1080"
+    },
+    {
+      "options": [
+        "--render-size",
+        "1280x720",
+        "--scene",
+        "assets/scenes/Station fixture.redflag"
+      ],
+      "exit": 2,
+      "output": "[06:11:39] REDFLAG : --render-size requires --play"
+    },
+    {
+      "options": [
+        "--play",
+        "assets/scenes/Station fixture.redflag",
+        "--render-size",
+        "1920x1080",
+        "--render-size",
+        "1280x720"
+      ],
+      "exit": 2,
+      "output": "[06:11:39] REDFLAG : Use --render-size once with 1280x720 or 1920x1080"
+    }
+  ]
+}

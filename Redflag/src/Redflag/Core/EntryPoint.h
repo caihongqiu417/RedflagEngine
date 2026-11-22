@@ -12,7 +12,7 @@ extern Redflag::Application* Redflag::CreateApplication();
 namespace Redflag
 {
 	void BakeSceneProbes(const std::filesystem::path& scene);
-	Application* CreateForgeEditor(const std::filesystem::path& scene, bool visible, bool play);
+	Application* CreateForgeEditor(const std::filesystem::path& scene, bool visible, bool play, unsigned renderHeight);
 }
 #endif
 int main(int argc, char** argv)
@@ -24,6 +24,7 @@ int main(int argc, char** argv)
 	std::filesystem::path startupScene;
 	bool visible = true;
 	bool play = false;
+	unsigned renderHeight = 0;
 #endif
 	for (int i = 1; i < argc; ++i)
 	{
@@ -35,6 +36,16 @@ int main(int argc, char** argv)
 			Redflag::RendererAPI::SetAPI(Redflag::RendererAPI::API::Vulkan);
 		else if (option == "--hidden")
 			visible = false;
+		else if (option == "--render-size")
+		{
+			const std::string_view size = ++i < argc ? argv[i] : "";
+			if (renderHeight || (size != "1280x720" && size != "1920x1080"))
+			{
+				RF_CORE_ERROR("Use --render-size once with 1280x720 or 1920x1080");
+				return 2;
+			}
+			renderHeight = size == "1280x720" ? 720 : 1080;
+		}
 		else if (option == "--bake-probes" || option == "--scene" || option == "--play")
 		{
 			if (++i == argc || !*argv[i])
@@ -66,6 +77,11 @@ int main(int argc, char** argv)
 	try
 	{
 #ifdef RF_FORGE
+		if (renderHeight && (!play || !bakeScene.empty()))
+		{
+			RF_CORE_ERROR("--render-size requires --play");
+			return 2;
+		}
 		if (!bakeScene.empty())
 		{
 			Redflag::RendererAPI::SetAPI(Redflag::RendererAPI::API::Vulkan);
@@ -75,7 +91,7 @@ int main(int argc, char** argv)
 #endif
 		RF_PROFILE_BEGIN_SESSION("Startup", "RedflagProfile-Startup.json");
 #ifdef RF_FORGE
-		std::unique_ptr<Redflag::Application> app(Redflag::CreateForgeEditor(startupScene, visible, play));
+		std::unique_ptr<Redflag::Application> app(Redflag::CreateForgeEditor(startupScene, visible, play, renderHeight));
 #else
 		std::unique_ptr<Redflag::Application> app(Redflag::CreateApplication());
 #endif

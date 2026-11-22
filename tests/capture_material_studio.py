@@ -22,6 +22,8 @@ def capture():
     env = dict(os.environ, VK_ADD_LAYER_PATH=str(renderdoc), VK_INSTANCE_LAYERS="VK_LAYER_RENDERDOC_Capture")
     with (work / "editor.log").open("wb") as out, (work / "capture.log").open("wb") as err:
         options = ["--play", os.environ["RF_STUDIO_GAME"]] if os.environ.get("RF_STUDIO_GAME") else ["--vulkan"]
+        if os.environ.get("RF_STUDIO_RENDER_SIZE"):
+            options += ["--render-size", os.environ["RF_STUDIO_RENDER_SIZE"]]
         command = [str(renderdoc / "renderdoccmd.exe"), "capture", "-d", str(work), "-c", str(template),
                    os.environ["RF_STUDIO_EXE"], *options, "--frames", "56"]
         launcher = subprocess.run(command, env=env, stdout=out, stderr=err, timeout=45)

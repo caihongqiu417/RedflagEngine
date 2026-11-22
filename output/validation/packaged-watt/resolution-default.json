@@ -1,0 +1,40 @@
+{
+  "frame": 12,
+  "renderdoc": "1.47",
+  "rdc_sha256": "1a6e5397ded5c7f57618726fa74e71bd309ffaf920e5cbb0e1a5cdc77a34cb2b",
+  "surface": {
+    "event": 185,
+    "indices": 6144,
+    "attachments": [
+      {
+        "size": [
+          1920,
+          1080
+        ],
+        "format": "R32G32B32A32_FLOAT"
+      },
+      {
+        "size": [
+          1920,
+          1080
+        ],
+        "format": "R32G32B32A32_FLOAT"
+      }
+    ]
+  },
+  "hud": {
+    "event": 2473,
+    "indices": 6,
+    "attachments": [
+      {
+        "size": [
+          1920,
+          1080
+        ],
+        "format": "B8G8R8A8_UNORM"
+      }
+    ]
+  },
+  "capture": "output/captures/local/watt-resolution/cc3ad128b9b0/default/studio_frame12.rdc",
+  "exe_sha256": "cc3ad128b9b096d470fdd5aa057ba2b50ef82d11a031b31537bba160de4158ae"
+}

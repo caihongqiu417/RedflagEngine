@@ -143,8 +143,18 @@ class AssetBundle:
                 self.add(cloud, target + "/index.json", target + "/" + cloud.relative_to(index.parent).as_posix())
 
     def runtime(self, executable: Path):
+        repo = Path(__file__).resolve().parents[1]
+        self.add(repo / "LICENSE", "player", "LICENSE")
+        for library in sorted((repo / "Redflag/vendor").iterdir()):
+            for notice in sorted(library.glob("*")):
+                if notice.is_file() and notice.name.lower().startswith(("license", "copying")):
+                    self.add(notice, "player", f"licenses/{library.name}/{notice.name}")
+        physx = repo / "bin-int/dependencies/PhysX/LICENSE.md"
+        if physx.is_file():
+            self.add(physx, "player", "licenses/PhysX/LICENSE.md")
         self.add(executable, "player", "RedflagForge.exe")
         self.add(Path(__file__).with_name("Play-Bundle.cmd"), "player", "Play.cmd")
+        self.add(Path(__file__).with_name("Play-Bundle.ps1"), "player", "scripts/Play-Bundle.ps1")
         for file in executable.parent.glob("*.dll"):
             self.add(file, "player", file.name)
         for library in (self.root / "Resources/Scripts").glob("*.dll"):
@@ -158,6 +168,7 @@ class AssetBundle:
         for name in SCRIPTS:
             self.add(Path(__file__).with_name(name), "companion", "scripts/" + name)
         self.add(Path(__file__).with_name("Play-With-Companion.cmd"), "companion", "Play-With-Companion.cmd")
+        self.add(Path(__file__).with_name("Play-720p.cmd"), "companion", "Play-720p.cmd")
 
     def write(self, output: Path, entry: str):
         output.parent.mkdir(parents=True, exist_ok=True)

@@ -10,6 +10,8 @@ namespace Redflag
     class GameViewport
     {
     public:
+        explicit GameViewport(unsigned renderHeight = 1080) : m_Preset(renderHeight == 720 ? 1 : 0) {}
+
         struct Layout
         {
             glm::uvec2 Pixels;

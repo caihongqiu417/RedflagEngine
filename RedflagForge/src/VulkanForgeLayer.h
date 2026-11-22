@@ -24,6 +24,8 @@ namespace Redflag
 	class VulkanForgeLayer : public Layer
 	{
 	public:
+		explicit VulkanForgeLayer(unsigned renderHeight = 1080) : m_GameViewport(renderHeight) {}
+
 		void OnAttach() override;
 		void OnDetach() override;
 		void OnUpdate(Timestep ts) override;
