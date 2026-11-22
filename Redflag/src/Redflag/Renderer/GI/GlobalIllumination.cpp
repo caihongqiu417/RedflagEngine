@@ -34,6 +34,16 @@ namespace Redflag
         Ref<ComputeResource> DirectOutput, DirectHistory[2];
         Ref<ComputeResource> Empty;
         Ref<ComputeResource> Emitters, Masks;
+        Ref<ComputeResource> Sky;
+        Ref<ComputeResource> VisibleSky;
+        Ref<ComputePipeline> SkyProbes, SkyVisibility;
+        uint64_t SkyKey = 0;
+        static constexpr uint32_t SkyShader[] =
+#include "Shaders/ProbeSky.comp.inc"
+            ;
+        static constexpr uint32_t VisibilityShader[] =
+#include "Shaders/SkyVisibility.comp.inc"
+            ;
         uint32_t DirectFrame = 0;
         uint32_t ProbeFrame = 0;
         bool ProbeFeedback = true;
@@ -156,11 +166,46 @@ namespace Redflag
 
         uint32_t ProbeFaces() const { return Info.GridSize.x * Info.GridSize.y * Info.GridSize.z * 6; }
 
+        void PrepareSky()
+        {
+            if (VisibleSky) return;
+            if (!SkyProbes) {
+                SkyVisibility = Device.CreatePipeline(VisibilityShader, sizeof(VisibilityShader),
+                    std::vector<ComputeBinding>(9, ComputeBinding::Buffer), sizeof(uint32_t));
+                SkyProbes = Device.CreatePipeline(SkyShader, sizeof(SkyShader),
+                    std::vector<ComputeBinding>(16, ComputeBinding::Buffer), sizeof(Work));
+            }
+
+            // 六个探针朝向分别看六张天空面。每张面有 16 × 16 块，每块保存主要入射方向、RGB 和余弦权重。
+            constexpr uint32_t cells = 6 * 6 * 16 * 16;
+            Ref<ComputeResource> directions = Device.CreateBuffer(cells * 2 * sizeof(glm::vec4));
+            Ref<ComputeResource> result = Device.CreateBuffer(ProbeFaces() * sizeof(glm::vec4));
+            std::vector<Ref<ComputeResource>> inputs{Bindings[0], Bindings[1], Bindings[11], Bindings[12],
+                Masks ? Masks : Empty, Sky, Bindings[9], directions, result};
+            uint32_t stage = 0;
+            Device.Dispatch(SkyVisibility, inputs, &stage, (cells + 63) / 64);
+            stage = 1;
+            Device.Dispatch(SkyVisibility, inputs, &stage, ProbeFaces());
+            VisibleSky = std::move(result);
+        }
+
         void UpdateProbes(std::vector<Ref<ComputeResource>>& buffers, uint32_t round, uint32_t samples, bool smooth)
         {
             const uint32_t flags = (ProbeFeedback ? 1u : 0u) | (smooth ? 2u : 0u);
             Work work{9, round, samples, flags, Seed};
-            Device.Dispatch(Pipeline, buffers, &work, (ProbeFaces() + 63) / 64);
+            const uint32_t groups = (ProbeFaces() + 63) / 64;
+            if (Sky) {
+                // 房间和天空不动时，后续反射轮次继续用已经算好的窗外天光。
+                PrepareSky();
+                std::vector<Ref<ComputeResource>> inputs = buffers;
+                inputs.resize(16, Empty);
+                inputs[5] = VisibleSky;
+                inputs[14] = Emitters ? Emitters : Empty;
+                inputs[15] = Masks ? Masks : Empty;
+                Device.Dispatch(SkyProbes, inputs, &work, groups);
+            } else {
+                Device.Dispatch(Pipeline, buffers, &work, groups);
+            }
             // 所有探针都算完这轮，再让下一轮和画面读取它。邻居不会读到一半新、一半旧的光。
             std::swap(buffers[4], buffers[13]);
         }
@@ -181,6 +226,11 @@ namespace Redflag
         uint64_t ProbeKey(const std::vector<GILight>& bakeLights) const
         {
             auto key = ProbeBake::Hash(GeometryKey, &Seed, sizeof(Seed));
+            if (Sky) {
+                key = ProbeBake::Hash(key, &SkyKey, sizeof(SkyKey));
+                key = ProbeBake::Hash(key, SkyShader, sizeof(SkyShader));
+                key = ProbeBake::Hash(key, VisibilityShader, sizeof(VisibilityShader));
+            }
             const uint32_t bake[] = { BakeRays, ProbeFeedback ? BakeRounds : 1u };
             key = ProbeBake::Hash(key, bake, sizeof(bake));
             if (bakeLights.size() > 1) {
@@ -289,6 +339,20 @@ namespace Redflag
                                               lights.empty() ? nullptr : lights.data());
         d.Device.Upload(d.Bindings[9], &d.Info, sizeof(d.Info));
         ResetHistory();
+    }
+
+    bool GlobalIllumination::SetProbeEnvironment(const Ref<ComputeResource>& lighting, uint64_t contentKey)
+    {
+        Data& d = *m_Data;
+        if (lighting == d.Sky && contentKey == d.SkyKey) return false;
+
+        d.Sky = lighting;
+        d.SkyKey = contentKey;
+        d.VisibleSky.reset();
+        d.ProbeFrame = 0;
+        d.BakedProbes.clear();
+        ResetHistory();
+        return true;
     }
 
     void GlobalIllumination::ResetHistory()

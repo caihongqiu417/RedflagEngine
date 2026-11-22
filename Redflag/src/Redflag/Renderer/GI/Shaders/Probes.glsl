@@ -25,6 +25,10 @@ void updateProbe(uint id)
         moments += vec2(t, t * t);
     }
     Probe outP = Probe(vec4(sum / float(samples), 0), vec4(moments / float(samples), 0, 0));
+#ifdef RF_PROBE_SKY
+    // 天光已经按方向检查过遮挡。它与墙面送回来的光相加，供下一轮漫反射和最终画面读取。
+    outP.light.rgb += skyLight[id].rgb;
+#endif
     // 从第二轮起，实时绘制给新算的光照和距离两成权重。调小这个比例，画面闪动更轻，新结果也要更多轮才显出来。
     // 烘焙直接保存当轮结果。
     if (frame > 0u && (base & 2u) != 0u)

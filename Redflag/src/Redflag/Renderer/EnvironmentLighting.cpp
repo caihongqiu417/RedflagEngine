@@ -2,6 +2,7 @@
 #include "EnvironmentLighting.h"
 #include "IBLArchive.h"
 #include "IBLPrecompute.h"
+#include "GI/ProbeBake.h"
 #include <stb_image.h>
 #include <cctype>
 #include <climits>
@@ -61,14 +62,21 @@ namespace Redflag::EnvironmentLighting
         }
     }
 
-    Ref<ComputeResource> Load(ComputeDevice& device, const std::filesystem::path& path)
+    Ref<ComputeResource> Load(ComputeDevice& device, const std::filesystem::path& path,
+        uint64_t* contentKey, const Ref<ComputeResource>& cached)
     {
+        const uint64_t previous = cached && contentKey ? *contentKey : 0;
+        if (contentKey) *contentKey = 0;
         std::string extension = path.extension().u8string();
         std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) { return std::tolower(ch); });
         if (extension == ".rfibl")
         {
             std::vector<glm::vec4> pixels;
             if (!IBLArchive::ReadLighting(path, pixels)) return {};
+            if (contentKey) {
+                *contentKey = ProbeBake::Hash(ProbeBake::HashStart, pixels.data(), pixels.size() * sizeof(pixels[0]));
+                if (cached && *contentKey == previous) return cached;
+            }
             return device.CreateBuffer(pixels.size() * sizeof(glm::vec4), pixels.data());
         }
 
@@ -80,6 +88,12 @@ namespace Redflag::EnvironmentLighting
         static const uint32_t code[] =
 #include "ScreenSpace/Shaders/BakeEnvironment.comp.inc"
         ;
+        if (contentKey) {
+            uint64_t key = ProbeBake::Hash(ProbeBake::HashStart, code, sizeof(code));
+            key = ProbeBake::Hash(key, &size, sizeof(size));
+            *contentKey = ProbeBake::Hash(key, pixels.data(), size_t(size.x) * size.y * sizeof(pixels[0]));
+            if (cached && *contentKey == previous) return cached;
+        }
         auto bake = device.CreatePipeline(code, sizeof(code), {ComputeBinding::Buffer, ComputeBinding::Buffer}, sizeof(size));
         auto panorama = device.CreateBuffer(pixels.size() * sizeof(glm::vec4), pixels.data());
         uint32_t count = 6 * IBLTextures::DiffuseSize * IBLTextures::DiffuseSize + IBLTextures::LutSize * IBLTextures::LutSize;

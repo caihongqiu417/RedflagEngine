@@ -4,7 +4,11 @@ Surface raySurface(vec3 o, vec3 d, inout float distance)
 #else
 Surface raySurface(vec3 o, vec3 d, out float distance)
 {
+#ifdef RF_PROBE_SKY
+    distance = 3.402823466e38; // 连远处的屋顶也要检查，越过所有几何才算到达天空。
+#else
     distance = 1000.; // 查找前方 1000 个场景单位以内的表面。更远的物体不会被这条光线找到。
+#endif
 #endif
     vec2 weights;
     int hit = trace(o, d, distance, false, weights);

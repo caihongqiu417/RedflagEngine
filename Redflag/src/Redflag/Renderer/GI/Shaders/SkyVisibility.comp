@@ -1,0 +1,79 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+layout(local_size_x = 64) in;
+#include "TraceTypes.glsl"
+#include "TextureFace.glsl"
+#include "ProbeAxes.glsl"
+#include "../../ScreenSpace/Shaders/EnvironmentLayout.glsl"
+
+layout(std430, binding = 0) readonly buffer Nodes { Node node[]; };
+layout(std430, binding = 1) readonly buffer Triangles { Triangle tri[]; };
+layout(std430, binding = 2) readonly buffer TextureFaces { TextureFace faces[]; };
+layout(std430, binding = 3) readonly buffer Pixels { uint texels[]; };
+#define RF_ALPHA_MASK
+#define RF_MASK_BINDING 4
+const float EPS = .001;
+#include "Trace.glsl"
+layout(std430, binding = 5) readonly buffer Sky { vec4 environment[]; };
+layout(std430, binding = 6) readonly buffer SceneInfo {
+    mat4 inverseVP; vec4 eye, gridOrigin, gridStep; uvec4 imageSize, gridSize;
+};
+
+struct SkyCell { vec4 direction, light; };
+layout(std430, binding = 7) buffer Cells { SkyCell cells[]; };
+layout(std430, binding = 8) writeonly buffer SkyLight { vec4 skyLight[]; };
+layout(push_constant) uniform Work { uint stage; };
+const uint tiles = 16u; // 每个天空面分为 16 × 16 块，每块包含 8 × 8 个原图像素。
+const uint cellsPerAxis = 6u * tiles * tiles;
+
+void integrateCell(uint id)
+{
+    if (id >= 6u * cellsPerAxis) return;
+    uint cell = id % cellsPerAxis, face = cell / (tiles * tiles);
+    ivec2 first = ivec2(cell % tiles, cell / tiles % tiles) * (reflectionSize / int(tiles));
+    vec3 normal = axes[id / cellsPerAxis], energy = vec3(0), center = vec3(0);
+    float weight = 0.;
+    for (int y = 0; y < reflectionSize / int(tiles); ++y)
+        for (int x = 0; x < reflectionSize / int(tiles); ++x) {
+            ivec2 p = first + ivec2(x,y);
+            vec2 uv = (vec2(p) + .5) / reflectionSize, plane = 2.*uv - 1.;
+            // 立方体面上的等大像素在球面上覆盖的面积不同。共同的像素面积会在最后除以总权重时约去。
+            float invLength = inversesqrt(1. + dot(plane, plane));
+            vec3 direction = cubeDirection(int(face), uv) * invLength;
+            float w = max(dot(normal, direction), 0.) * invLength * invLength * invLength;
+            int index = reflectionOffset(0) + (int(face) * reflectionSize + p.y) * reflectionSize + p.x;
+            vec3 incoming = environment[index].rgb * w;
+            energy += incoming;
+            weight += w;
+            center += direction * dot(incoming, vec3(.2126, .7152, .0722));
+        }
+    // 灯箱只占一两个像素时，朝灯箱查遮挡，仍保留整块天空原有的能量。
+    cells[id] = SkyCell(vec4(length(center) > 0. ? normalize(center) : vec3(0), 0), vec4(energy, weight));
+}
+
+shared vec4 partial[64];
+void main()
+{
+    if (stage == 0u) { integrateCell(gl_GlobalInvocationID.x); return; }
+
+    uint id = gl_WorkGroupID.x, axis = id % 6u, k = id / 6u;
+    uvec3 grid = uvec3(k % gridSize.x, (k / gridSize.x) % gridSize.y, k / (gridSize.x * gridSize.y));
+    vec3 point = gridOrigin.xyz + vec3(grid) * gridStep.xyz;
+    uint lane = gl_LocalInvocationID.x;
+    vec4 sum = vec4(0);
+    for (uint j = lane; j < cellsPerAxis; j += 64u) {
+        SkyCell cell = cells[axis * cellsPerAxis + j];
+        sum.w += cell.light.w;
+        if (all(equal(cell.light.rgb, vec3(0)))) continue;
+        float limit = 3.402823466e38; // 出了整个场景才看得到天空，远处的房顶也会遮光。
+        vec2 uv;
+        if (trace(point, cell.direction.xyz, limit, true, uv) < 0) sum.rgb += cell.light.rgb;
+    }
+    partial[lane] = sum;
+    barrier();
+    for (uint step = 32u; step > 0u; step >>= 1u) {
+        if (lane < step) partial[lane] += partial[lane + step];
+        barrier();
+    }
+    if (lane == 0u) skyLight[id] = vec4(partial[0].rgb / partial[0].w, 0);
+}

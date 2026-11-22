@@ -42,6 +42,9 @@ namespace Redflag
 
 		bool UsesFrameHistory(bool directOnly) const;
 		bool DrawLitOptions();
+		bool RefreshEnvironment(const std::filesystem::path& path, bool readAgain = false);
+		Scope<GlobalIllumination> CreateProbeLighting(const std::vector<GIModel>& models,
+			const std::vector<GILight>& lights, glm::uvec2 size = { 1, 1 });
 		Ref<ComputeResource> RenderLit(const glm::mat4& projection, const glm::mat4& view,
 			const glm::mat4& stableProjection, bool directOnly);
 
@@ -66,6 +69,8 @@ namespace Redflag
 		Ref<ComputeResource> m_CombinedLight;
 		Ref<ComputeResource> m_Environment;
 		std::filesystem::path m_EnvironmentPath;
+		std::filesystem::file_time_type m_EnvironmentTime{};
+		uint64_t m_EnvironmentKey = 0;
 		Ref<ComputeResource> m_Image;
 		VkDescriptorSet m_Texture = VK_NULL_HANDLE;
 		Scope<GlobalIllumination> m_GI;

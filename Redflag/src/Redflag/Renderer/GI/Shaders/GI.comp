@@ -30,10 +30,15 @@ layout(std430, binding = 4) readonly buffer Probes
 {
     Probe probes[];
 };
+#ifdef RF_PROBE_SKY
+// 更新探针不读屏幕上一帧选中的灯，这个位置用来读取每个探针能看到的天光。
+layout(std430, binding = 5) readonly buffer Sky { vec4 skyLight[]; };
+#else
 layout(std430, binding = 5) readonly buffer History
 {
     Reservoir previous[];
 };
+#endif
 layout(std430, binding = 6) buffer Candidates
 {
     Reservoir fresh[];
@@ -223,6 +228,9 @@ void main()
     // 更新探针时，base 记录是否计算下一次反射、是否混入上一轮结果。比较这些选项时，用同一批射线。
     uint sampleOffset = stage == 9u ? 0u : base;
     state = (i + 1u) * 0x9e3779b9u ^ (frame + 1u) * 0x85ebca6bu ^ (sampleOffset + 1u) * 0xc2b2ae35u ^ seed;
+#ifdef RF_PROBE_SKY
+    updateProbe(i);
+#else
     if (stage == 9u)
     {
         updateProbe(i);
@@ -312,4 +320,5 @@ void main()
     if (base > 0u)
         sum += pixels[i].rgb * float(base);
     pixels[i] = vec4(sum / float(base + samples), 0);
+#endif
 }

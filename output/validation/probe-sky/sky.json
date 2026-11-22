@@ -1,0 +1,189 @@
+{
+  "before": {
+    "scene_key": "5ed4aeabe187a046",
+    "sha256": "eef0d00efa0f4a219b87c4589509f007e6e754bbbae6d1e32d153995d9fbd4c1",
+    "probe_faces": 3024,
+    "lit_faces": 0,
+    "mean_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "max_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "open": {
+    "scene_key": "ba3274e7f402930c",
+    "sha256": "3b789cc4baee5d5781b4b698bd2d4b38b805577b5561c0255db036e9a2725db3",
+    "probe_faces": 3024,
+    "lit_faces": 2478,
+    "mean_rgb": [
+      0.23559222563845753,
+      0.11779611281922876,
+      0.05889805640961438
+    ],
+    "max_rgb": [
+      0.9932609796524048,
+      0.4966304898262024,
+      0.2483152449131012
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "closed": {
+    "scene_key": "399a24bfdea77594",
+    "sha256": "c9ecd70799ab94b98c27e1da3278f0de6423be8b8658e0733750be567f34c0cf",
+    "probe_faces": 3024,
+    "lit_faces": 0,
+    "mean_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "max_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "large-closed": {
+    "scene_key": "7380b92ee42f0ccc",
+    "sha256": "899a738d01fc7582a1fb8d8bc68498a6d693207882724eb6a9d491471d5dab19",
+    "probe_faces": 3024,
+    "lit_faces": 0,
+    "mean_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "max_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "archive": {
+    "scene_key": "93346d48906a12b2",
+    "sha256": "763b338dde43896e1564b3207651ded54d91a73c69956077361e623c31767565",
+    "probe_faces": 3024,
+    "lit_faces": 2478,
+    "mean_rgb": [
+      0.23559222563845753,
+      0.11779611281922876,
+      0.05889805640961438
+    ],
+    "max_rgb": [
+      0.9932609796524048,
+      0.4966304898262024,
+      0.2483152449131012
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "white-one-round": {
+    "scene_key": "9da22718e2b9a284",
+    "sha256": "61b47fec7dfce0216c39ab1a4ca6231ed31b10702f661857c001cfd7673d6e9b",
+    "probe_faces": 3024,
+    "lit_faces": 2478,
+    "mean_rgb": [
+      0.23559222563845753,
+      0.11779611281922876,
+      0.05889805640961438
+    ],
+    "max_rgb": [
+      0.9932609796524048,
+      0.4966304898262024,
+      0.2483152449131012
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "white-four-rounds": {
+    "scene_key": "bdb222ffe0186cd1",
+    "sha256": "15a594f111ed049e3569b9daef20610da396bdcf95c1dbf3358db7f63c1ab028",
+    "probe_faces": 3024,
+    "lit_faces": 3024,
+    "mean_rgb": [
+      0.6048758976930191,
+      0.30243794884650954,
+      0.15121897442325477
+    ],
+    "max_rgb": [
+      1.0362046957015991,
+      0.5181023478507996,
+      0.2590511739253998
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "window": [
+    {
+      "x": -1.925,
+      "y": 0.07500000000000001,
+      "z": 0,
+      "reference": 0.35785442127221095,
+      "measured": 0.3379584550857544
+    },
+    {
+      "x": -1.925,
+      "y": 0.775,
+      "z": 0,
+      "reference": 0.44626591354941747,
+      "measured": 0.41965529322624207
+    },
+    {
+      "x": -1.925,
+      "y": 1.825,
+      "z": 0,
+      "reference": 0.6949412234282895,
+      "measured": 0.677690863609314
+    },
+    {
+      "x": -0.17500000000000004,
+      "y": 0.07500000000000001,
+      "z": 0,
+      "reference": 0.5710245659328977,
+      "measured": 0.5701321363449097
+    },
+    {
+      "x": -0.17500000000000004,
+      "y": 0.775,
+      "z": 0,
+      "reference": 0.7649188810036609,
+      "measured": 0.759379506111145
+    },
+    {
+      "x": -0.17500000000000004,
+      "y": 1.825,
+      "z": 0,
+      "reference": 0.9936945324530468,
+      "measured": 0.9905350804328918
+    }
+  ],
+  "downward_red_mean": [
+    0.0,
+    0.4934785068035126
+  ],
+  "same-path-blue": {
+    "scene_key": "86f35b6c57eece46",
+    "sha256": "124d62c4908322274189eb54ba64911f46a0735df5532f03e6e640767dd2e45b",
+    "probe_faces": 3024,
+    "lit_faces": 2478,
+    "mean_rgb": [
+      0.05889805640961438,
+      0.11779611281922876,
+      0.23559222563845753
+    ],
+    "max_rgb": [
+      0.2483152449131012,
+      0.4966304898262024,
+      0.9932609796524048
+    ],
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+  },
+  "editor_rebake_matches_cli": "124d62c4908322274189eb54ba64911f46a0735df5532f03e6e640767dd2e45b",
+  "editor_rejected_old_sky": true,
+  "missing_environment_kept_file": "3b789cc4baee5d5781b4b698bd2d4b38b805577b5561c0255db036e9a2725db3"
+}

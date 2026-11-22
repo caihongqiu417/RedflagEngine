@@ -9,5 +9,7 @@ Compile 'GI' 'GI'
 Compile 'GI' 'GIEmission' @('-DRF_EMISSION')
 Compile 'GI' 'GIAlphaMask' @('-DRF_ALPHA_MASK')
 Compile 'GI' 'GIEmissionAlphaMask' @('-DRF_EMISSION', '-DRF_ALPHA_MASK')
+Compile 'GI' 'ProbeSky' @('-DRF_PROBE_SKY', '-DRF_EMISSION', '-DRF_ALPHA_MASK')
+Compile 'SkyVisibility' 'SkyVisibility'
 Compile 'Fog' 'Fog'
 Compile 'Fog' 'FogAlphaMask' @('-DRF_ALPHA_MASK')

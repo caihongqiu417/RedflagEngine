@@ -188,13 +188,36 @@ namespace Redflag
 			throw std::runtime_error("Cannot bake lighting without model: " + missing->FilePath);
 	}
 
-	static Scope<GlobalIllumination> CreateProbeLighting(ComputeDevice& device, const std::vector<GIModel>& models,
-		const std::vector<GILight>& lights, bool feedback, glm::uvec2 size = { 1, 1 })
+	bool LightingPreview::RefreshEnvironment(const std::filesystem::path& path, bool readAgain)
 	{
+		std::error_code error;
+		const auto time = path.empty() ? std::filesystem::file_time_type{} : std::filesystem::last_write_time(path, error);
+		if (!readAgain && path == m_EnvironmentPath && time == m_EnvironmentTime) return false;
+
+		uint64_t key = path.empty() ? 0 : m_EnvironmentKey;
+		Ref<ComputeResource> lighting = path.empty() ? nullptr : EnvironmentLighting::Load(m_Device, path, &key, m_Environment);
+		const bool changed = path != m_EnvironmentPath || key != m_EnvironmentKey || bool(lighting) != bool(m_Environment);
+		if (!lighting && !path.empty()) RF_CORE_WARN("Cannot load lighting environment: {0}", path.u8string());
+		m_EnvironmentPath = path;
+		m_EnvironmentTime = time;
+		if (changed) {
+			m_Environment = std::move(lighting);
+			m_EnvironmentKey = key;
+			ResetHistory();
+		}
+		return changed;
+	}
+
+	Scope<GlobalIllumination> LightingPreview::CreateProbeLighting(const std::vector<GIModel>& models,
+		const std::vector<GILight>& lights, glm::uvec2 size)
+	{
+		if (!m_EnvironmentPath.empty() && !m_Environment)
+			throw std::runtime_error("烘焙需要的环境图无法读取：" + m_EnvironmentPath.u8string());
 		// 只读写烘焙文件时用 1 × 1 的视口。编辑器还要用这份光照绘制场景，传入实际画幅。
-		Scope<GlobalIllumination> lighting = CreateScope<GlobalIllumination>(device, models, size.x, size.y);
+		Scope<GlobalIllumination> lighting = CreateScope<GlobalIllumination>(m_Device, models, size.x, size.y);
 		lighting->SetLights(lights);
-		lighting->SetProbeFeedback(feedback);
+		lighting->SetProbeFeedback(m_ProbeFeedback);
+		lighting->SetProbeEnvironment(m_Environment, m_EnvironmentKey);
 		return lighting;
 	}
 
@@ -202,7 +225,8 @@ namespace Redflag
 	{
 		const SceneGeometry geometry = CollectModels(scene);
 		CheckModelsForBake(scene);
-		CreateProbeLighting(m_Device, geometry.Models, CollectLights(scene), m_ProbeFeedback)->BakeProbes(m_ProbeFile);
+		RefreshEnvironment(scene.GetEnvironment(), true);
+		CreateProbeLighting(geometry.Models, CollectLights(scene))->BakeProbes(m_ProbeFile);
 	}
 
 	VkDescriptorSet LightingPreview::Render(Scene& scene, const glm::mat4& projection, const glm::mat4& view,
@@ -235,14 +259,7 @@ namespace Redflag
 			}
 			return VK_NULL_HANDLE;
 		}
-		if (Mode == Shading::Lit && scene.GetEnvironment() != m_EnvironmentPath)
-		{
-			m_EnvironmentPath = scene.GetEnvironment();
-			m_Environment = m_EnvironmentPath.empty() ? nullptr : EnvironmentLighting::Load(m_Device, m_EnvironmentPath);
-			if (!m_Environment && !m_EnvironmentPath.empty())
-				RF_CORE_WARN("Cannot load lighting environment: {0}", m_EnvironmentPath.u8string());
-			ResetHistory();
-		}
+		const bool environmentChanged = RefreshEnvironment(scene.GetEnvironment(), m_BakeRequested);
 		const uint32_t panelWidth = m_PreviewWidth == 0 ? viewportWidth : std::min(viewportWidth, uint32_t(m_PreviewWidth));
 		const uint32_t panelHeight = std::max(1u, uint32_t(std::lround(double(viewportHeight) * panelWidth / viewportWidth)));
 		const bool fits = panelWidth <= m_MaxExtent.width / 2 && panelHeight <= m_MaxExtent.height / 2 &&
@@ -301,11 +318,14 @@ namespace Redflag
 		if (!sameLights || Mode != m_PreviousMode)
 			ResetHistory();
 		m_GI->SetLights(lights);
+		const bool probeSkyChanged = m_GI->SetProbeEnvironment(m_Environment, m_EnvironmentKey);
 		const bool feedbackChanged = m_GI->SetProbeFeedback(m_ProbeFeedback);
-		if (!m_ProbeFile.empty() && (geometryChanged || !sameLights || feedbackChanged))
+		if (!m_ProbeFile.empty() && (geometryChanged || !sameLights || feedbackChanged || probeSkyChanged || environmentChanged))
 		{
 			m_ProbeMessage.clear();
-			if (std::filesystem::is_regular_file(m_ProbeFile) && !m_GI->LoadProbes(m_ProbeFile))
+			if (!m_Environment && !m_EnvironmentPath.empty())
+				m_ProbeMessage = "场景指定的环境图无法读取，请检查文件。";
+			else if (std::filesystem::is_regular_file(m_ProbeFile) && !m_GI->LoadProbes(m_ProbeFile))
 				m_ProbeMessage = "烘焙文件与当前场景不符或已损坏，请重新烘焙。";
 		}
 		if (m_BakeRequested)
@@ -315,7 +335,7 @@ namespace Redflag
 			{
 				CheckModelsForBake(scene);
 				// 按下按钮后重新读磁盘上的模型和贴图。文件写好后，场景面板才换用新的光照。
-				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Device, m_Models, lights, m_ProbeFeedback, { width, height });
+				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Models, lights, { width, height });
 				lighting->BakeProbes(m_ProbeFile);
 				m_GI = std::move(lighting);
 				m_ProbeMessage.clear();
@@ -709,6 +729,8 @@ namespace Redflag
 		m_GI.reset();
 		m_EnvironmentPath.clear();
 		m_Environment.reset();
+		m_EnvironmentKey = 0;
+		m_EnvironmentTime = {};
 		m_ProbeFile = scene.empty() ? scene : std::filesystem::path(scene).concat(".rfprobes");
 		m_ProbeMessage.clear();
 		m_BakeRequested = false;
@@ -793,11 +815,12 @@ namespace Redflag
 		auto probeFile = std::filesystem::path(path).concat(".rfprobes");
 		if (probeFile != m_ProbeFile && !m_ProbeFile.empty() && std::filesystem::is_regular_file(m_ProbeFile))
 		{
-			// 基础颜色视图不会更新光照。另存为时按此刻的模型、材质和灯光核对旧文件。
+			// 另存为时重新读取天空，即使同路径的图片保留了原来的修改时间，也要核对新像素。
+			RefreshEnvironment(scene.GetEnvironment(), true);
 			const SceneGeometry geometry = CollectModels(scene);
-			if (!geometry.Models.empty() && !MissingBakeModel(scene))
+			if (!geometry.Models.empty() && !MissingBakeModel(scene) && (m_Environment || m_EnvironmentPath.empty()))
 			{
-				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Device, geometry.Models, CollectLights(scene), m_ProbeFeedback);
+				Scope<GlobalIllumination> lighting = CreateProbeLighting(geometry.Models, CollectLights(scene));
 				if (lighting->LoadProbes(m_ProbeFile))
 					lighting->SaveProbes(probeFile);
 			}

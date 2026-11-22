@@ -115,6 +115,9 @@ namespace Redflag
         // 场景随后会重画相机看到的表面。镜头变化且 resetHistory 为 false 时，ReSTIR 会比较同一像素前后两帧的位置和法线，再决定能否沿用上次选的灯或反射点。
         void SetRasterCamera(const glm::mat4& viewProjection, glm::vec3 eye, bool resetHistory);
         void SetLights(const std::vector<GILight> &lights);
+        /// <summary>探针射线穿过窗口时读取这份环境图。空引用表示场景没有天光。</summary>
+        /// <param name="contentKey">加载环境时由 EnvironmentLighting::Load 算出的像素校验值。</param>
+        bool SetProbeEnvironment(const Ref<ComputeResource>& lighting, uint64_t contentKey);
         void ResetHistory();
         void Render(GIMethod method, uint32_t samples = 1);
 
