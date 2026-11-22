@@ -67,6 +67,7 @@ namespace Redflag
 		bool m_SelectSceneTab = false;
 		bool m_SelectGameTab = false;
 		bool m_Playing = false;
+		bool m_FirstGameTick = false;
 		bool m_Standalone = false;
 		bool m_EditGameView = false;
 		UUID m_EditSelection{0};

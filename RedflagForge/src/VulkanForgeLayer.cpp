@@ -221,8 +221,10 @@ namespace Redflag
 		m_Scene = Scene::Copy(m_EditScene);
 		m_Playing = play;
 		if (play) {
+			m_FirstGameTick = true;
 			m_Playtest = PlaytestSession::Open(m_ScenePath);
 			m_Scene->OnRuntimeStart();
+			m_Photos.Connect(GetWindowContext(), m_Scene, m_ScenePath);
 			m_SelectGameTab = true;
 		} else {
 			m_Scene->OnSimulationStart();
@@ -256,7 +258,12 @@ namespace Redflag
 		if (m_Playing) {
 			if (m_Playtest) m_Playtest->BeginFrame(ts.GetSeconds());
 			auto hud = m_Scene->GetRegistry().view<GameHud>();
-			if (hud.empty() || !hud.get<GameHud>(hud.front()).Finished) m_Scene->UpdateGame(ts);
+			// 首张游戏画面需要上传模型。玩家能看见关卡以后，再开始计算移动和救援时间。
+			if ((!m_Standalone || m_HasSceneImage) && (hud.empty() || !hud.get<GameHud>(hud.front()).Finished))
+			{
+				m_Scene->UpdateGame(m_FirstGameTick ? Timestep(0.0f) : ts);
+				m_FirstGameTick = false;
+			}
 			if (m_Playtest) m_Playtest->RecordScene(*m_Scene);
 		}
 		else if (m_EditScene)
