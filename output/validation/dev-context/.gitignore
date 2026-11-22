@@ -1,0 +1,7 @@
+# 完整逐轮记录收进 transcripts.zip，避免一次运行在 Git 里产生数百个同名文件。
+/preflight/
+/qwen3/
+/coder/
+/*-classic-*/
+/*-context-*/
+/model-config.json

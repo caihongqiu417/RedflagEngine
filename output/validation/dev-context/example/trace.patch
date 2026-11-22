@@ -1,0 +1,36 @@
+diff --git a/Redflag/src/Redflag/Core/JobSystem.cpp b/Redflag/src/Redflag/Core/JobSystem.cpp
+index 9a51a4f..fb4e592 100644
+--- a/Redflag/src/Redflag/Core/JobSystem.cpp
++++ b/Redflag/src/Redflag/Core/JobSystem.cpp
+@@ -226,7 +226,17 @@ namespace Redflag
+-	void JobSystem::Trace(bool enabled)
+-	{
+-		std::lock_guard<std::mutex> lock(m_Queue->Mutex);
+-		m_Queue->Trace = enabled;
+-		++m_Queue->TraceGeneration;
+-		m_Queue->Timings.clear();
+-	}
++void JobSystem::Trace(bool enabled)
++{
++    std::lock_guard<std::mutex> lock(m_Queue->Mutex);
++    if (enabled)
++    {
++        if (!m_Queue->Trace)
++        {
++            m_Queue->Trace = true;
++            ++m_Queue->TraceGeneration;
++            m_Queue->Timings.clear();
++        }
++    }
++    else
++    {
++        m_Queue->Trace = false;
++    }
++}
+diff --git a/Redflag/src/Redflag/Core/JobSystem.h b/Redflag/src/Redflag/Core/JobSystem.h
+index d296ce2..2e31a44 100644
+--- a/Redflag/src/Redflag/Core/JobSystem.h
++++ b/Redflag/src/Redflag/Core/JobSystem.h
+@@ -49 +49 @@ namespace Redflag
+-		void Trace(bool enabled);
++void Trace(bool enabled);
