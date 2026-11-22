@@ -1,6 +1,6 @@
 namespace Redflag
 {
-    public class Entity
+    public partial class Entity
     {
         protected Entity() { ID = 0; }
 

@@ -543,6 +543,9 @@
     <ClInclude Include="src\Redflag\Scripting\AnimatorBindings.h">
       <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\CoroutineBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\GameplayBindings.h">
       <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
@@ -2172,6 +2175,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\AnimatorBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\CoroutineBindings.cpp">
       <Filter>src\Redflag\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\GameplayBindings.cpp">

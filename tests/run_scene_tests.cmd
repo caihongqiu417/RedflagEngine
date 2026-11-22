@@ -73,6 +73,10 @@ if "%~1"=="--playtest-audio" (
     set "RF_TEST_SOURCE=tests\PlaytestAudioTests.cpp"
     set "RF_TEST_NAME=PlaytestAudioTests"
 )
+if "%~1"=="--coroutines" (
+    set "RF_TEST_SOURCE=tests\CoroutineTests.cpp"
+    set "RF_TEST_NAME=CoroutineTests"
+)
 cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE /DYAML_CPP_STATIC_DEFINE ^
  /I Redflag\vendor\entt\include /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
  /I Redflag\vendor\fmt\include /I Redflag\vendor\glm /I Redflag\vendor\Glad\include /I Redflag\vendor\GLFW\include /I Redflag\vendor\yaml-cpp\include ^

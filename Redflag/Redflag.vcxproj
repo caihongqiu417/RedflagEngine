@@ -320,6 +320,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
     <ClInclude Include="src\Redflag\Scripting\AnimatorBindings.h" />
+    <ClInclude Include="src\Redflag\Scripting\CoroutineBindings.h" />
     <ClInclude Include="src\Redflag\Scripting\GameplayBindings.h" />
     <ClInclude Include="src\Redflag\Scripting\NpcBindings.h" />
     <ClInclude Include="src\Redflag\Scripting\NpcMemoryBindings.h" />
@@ -871,6 +872,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp" />
     <ClCompile Include="src\Redflag\Scripting\AnimatorBindings.cpp" />
+    <ClCompile Include="src\Redflag\Scripting\CoroutineBindings.cpp" />
     <ClCompile Include="src\Redflag\Scripting\GameplayBindings.cpp" />
     <ClCompile Include="src\Redflag\Scripting\NpcBindings.cpp" />
     <ClCompile Include="src\Redflag\Scripting\NpcMemoryBindings.cpp" />

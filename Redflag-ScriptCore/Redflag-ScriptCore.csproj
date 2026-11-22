@@ -82,8 +82,13 @@
     <Compile Include="Source\Playtest.cs" />
     <Compile Include="Source\Scene\Animator.cs" />
     <Compile Include="Source\Scene\Component.cs" />
+    <Compile Include="Source\Scene\Coroutine.cs" />
+    <Compile Include="Source\Scene\Entity.Coroutines.cs" />
     <Compile Include="Source\Scene\Entity.cs" />
+    <Compile Include="Source\Scene\GameSignal.cs" />
+    <Compile Include="Source\Scene\GameWait.cs" />
     <Compile Include="Source\Scene\GameWorld.cs" />
+    <Compile Include="Source\Scene\TextAssetRead.cs" />
     <Compile Include="Source\UI\Hud.cs" />
   </ItemGroup>
   <ItemGroup>

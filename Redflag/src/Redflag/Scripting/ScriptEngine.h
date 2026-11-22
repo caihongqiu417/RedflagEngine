@@ -85,6 +85,7 @@ namespace Redflag {
 		bool GetFieldValue(const ScriptField& field, void* buffer) const;
 		bool SetFieldValue(const ScriptField& field, const void* value);
 
+		void SetCoroutinesActive(bool active) { m_HasCoroutines = active; }
 		void InvokeOnCreate();
 		void InvokeOnUpdate(float ts);
 		void InvokeOnDestroy();
@@ -93,6 +94,7 @@ namespace Redflag {
 		Ref<ScriptClass> m_ScriptClass;
 
 		uint32_t m_Handle = 0;
+		bool m_HasCoroutines = false;
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;

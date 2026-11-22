@@ -1,4 +1,5 @@
 #include "rfpch.h"
+#include "CoroutineBindings.h"
 #include "ScriptEngine.h"
 #include "NpcScriptAction.h"
 
@@ -168,6 +169,8 @@ namespace Redflag {
 		ScriptClass EntityClass;
 		MonoClassField* EntityIDField = nullptr;
 		MonoMethod* EntityConstructor = nullptr;
+		MonoMethod* AdvanceCoroutines = nullptr;
+		MonoMethod* StopCoroutines = nullptr;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 
@@ -202,6 +205,7 @@ namespace Redflag {
 
 		static void DestroyAppDomain()
 		{
+			ClearCoroutineReads();
 			s_Data->EntityInstances.clear();
 			if (s_Data->AppDomain)
 			{
@@ -335,6 +339,8 @@ namespace Redflag {
 
 		s_Data->EntityIDField = mono_class_get_field_from_name(s_Data->EntityClass.m_MonoClass, "ID");
 		s_Data->EntityConstructor = s_Data->EntityClass.GetMethod(".ctor", 1);
+		s_Data->AdvanceCoroutines = s_Data->EntityClass.GetMethod("AdvanceCoroutines", 1);
+		s_Data->StopCoroutines = s_Data->EntityClass.GetMethod("StopCoroutines", 0);
 		if (!s_Data->EntityIDField || !s_Data->EntityConstructor)
 		{
 			DestroyAppDomain();
@@ -763,6 +769,8 @@ namespace Redflag {
 	{
 		if (m_OnDestroyMethod)
 			m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_OnDestroyMethod, nullptr);
+		if (m_HasCoroutines)
+			s_Data->EntityClass.InvokeMethod(GetManagedObject(), s_Data->StopCoroutines, nullptr);
 		mono_gchandle_free(m_Handle);
 		m_Handle = 0;
 	}
@@ -833,10 +841,10 @@ namespace Redflag {
 
 	void ScriptInstance::InvokeOnUpdate(float ts)
 	{
-		if (!m_OnUpdateMethod)
-			return;
-
 		void* param = &ts;
+		if (m_HasCoroutines)
+			s_Data->EntityClass.InvokeMethod(GetManagedObject(), s_Data->AdvanceCoroutines, &param);
+		if (!m_Handle || !m_OnUpdateMethod) return;
 
 		m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_OnUpdateMethod, &param);
 	}

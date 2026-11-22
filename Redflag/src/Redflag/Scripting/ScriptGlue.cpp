@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "ScriptGlue.h"
+#include "CoroutineBindings.h"
 #include "GameplayBindings.h"
 #include "NpcBindings.h"
 #include "ScriptEngine.h"
@@ -191,6 +192,7 @@ namespace Redflag {
     void ScriptGlue::RegisterFunctions()
     {
         RegisterGameplayCalls();
+        RegisterCoroutineCalls();
         RF_ADD_INTERNAL_CALL(Playtest_Record);
         RegisterNpcCalls();
         RF_ADD_INTERNAL_CALL(TerrainComponent_GetSurface);
