@@ -1,0 +1,23 @@
+{
+  "executable_sha256": "27c6853cfa4da9b72fc973e6a43c790c631ad634b71ef105a0e8d3f1c6be6e0a",
+  "scene": "Character-Physics.redflag",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "viewport_pixels": [
+    1391,
+    892
+  ],
+  "input": [
+    "F5",
+    "wait 2 seconds",
+    "F5"
+  ],
+  "actor_centroid_x_pixels": {
+    "before": 614.93,
+    "simulated": 812.77,
+    "stopped": 614.93
+  },
+  "validation_errors": [],
+  "exit_code": 0,
+  "walk_enabled": true,
+  "starting_pelvis_height_m": 0.91
+}
