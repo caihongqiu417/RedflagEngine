@@ -50,6 +50,10 @@ Redflag 的 API 手册有一个搜索框。输入 `AskNpcCandidate`，能找到�
 
 ## 哪些做法值得留下
 
+让 agent 改关卡时，我会给它一张游戏截图，说清楚站在哪里、希望玩家首先看见什么。比如：“站在西侧入口，我希望一眼看见工棚里的发电机。工具车可以靠近镜头，留出中间那条路。” 这时用 `level-design` 先画出能走的路线，再用 `game-visuals` 看近处的器材是否挡住了门。两份 skill 都可以直接阅读，挑与当前关卡有关的部分用。[关卡设计](https://github.com/mattstruble/skills/tree/ec8c029b9a72f5ed36a683ffcedd046897418116/level-design) · [游戏美术](https://github.com/mattstruble/skills/tree/ec8c029b9a72f5ed36a683ffcedd046897418116/game-visuals)
+
+有时 agent 会拿一张漂亮的概念图回来。我会接着说：“保留这张图作参考。现在请从正式游戏的出生点截一张，把能看到的东西告诉我。转过一个角度，门还能认出来吗？” 这样即使模型还没找到，也能先判断场景布局要不要改。[维修站的场景设计与实机图](../output/pdf/Redflag-Station-Design.pdf)
+
 我也可以给自己的引擎做工具。例如有人说“我选了天空，场景还是黑的”，先用 Redflag MCP 查这个场景保存的环境图、天空开关和显示模式，再让独立的编辑器打开它。如果对方刚刚改了设置，还没按保存，工具读到的和对方眼前的可能是两个版本。这时我会先对上场景与机位，随后再截帧。仓库里把这两种工作分别写成了 `$redflag-scene` 和 `$redflag-frame-check`，以后换场景也能用。[引擎工具的接入与用法](../scripts/redflag_mcp/README.md)
 
 一次查错时，我会把链接、报错、希望看到的结果直接写在对话里。等到同一个过程反复出现，例如每次改手册都得重新编译、打开成品 PDF、找到改过的图、看箭头有没有压住字，我才会把这套做法写进 **`SKILL.md`**。试用时可以故意把一个图框缩窄，看它能否指出哪行字被遮住了。Redflag 里也有现成的样本可试别的工具。比如用 RenderDoc MCP 打开 2D 精灵的截帧，就能拿它读出的结果和已知的两组绘制次数核对，一组 64 次，一组 1 次。[Codex 的 skill 编写指南](https://learn.chatgpt.com/docs/build-skills) · [手册的编译入口](latex/README.md) · [精灵截帧与绘制记录](../output/profiling/batch2d/README.md)

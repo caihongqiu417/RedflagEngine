@@ -1,0 +1,71 @@
+[
+  {
+    "asset": "portable_generator",
+    "source": "https://polyhaven.com/a/portable_generator",
+    "license": "CC0-1.0",
+    "gltf_md5": "13c2380487daae6726443b9f38dd7e53",
+    "sha256": "5bc360ee19d7f341a489b3139829506c2cc77fa691b86a2295f8b189c0af4c2a"
+  },
+  {
+    "asset": "metal_tool_chest",
+    "source": "https://polyhaven.com/a/metal_tool_chest",
+    "license": "CC0-1.0",
+    "gltf_md5": "21cb18a2e84ed49f23a98578c543e5ad",
+    "sha256": "e1bcd07991c2c01df17bb628c5e621a0da170db2313b025aa2d918b156e27803"
+  },
+  {
+    "asset": "rusted_wheel_rim_01",
+    "source": "https://polyhaven.com/a/rusted_wheel_rim_01",
+    "license": "CC0-1.0",
+    "gltf_md5": "13e65525a3bc47d86dd004882a05ed38",
+    "sha256": "c3251bc65202006c7b9d80c62c9ad82659ac5a0457d16e0d6f11476d285bf98b"
+  },
+  {
+    "asset": "metal_jerrycan",
+    "source": "https://polyhaven.com/a/metal_jerrycan",
+    "license": "CC0-1.0",
+    "gltf_md5": "bd328cec77ebf1c6889abba620abc4b6",
+    "sha256": "ffe840143713ffd7f106c0630f700ed384e56a8b438c32f601a7d1566b15c2f0"
+  },
+  {
+    "asset": "barrel_03",
+    "source": "https://polyhaven.com/a/barrel_03",
+    "license": "CC0-1.0",
+    "gltf_md5": "204eec2159a38a1dc4b826ef255f9468",
+    "sha256": "7db3b6cd60cb66889394516eeed860f2d886982913dfd930989bf97983d45d43"
+  },
+  {
+    "asset": "worn_metal_rack",
+    "source": "https://polyhaven.com/a/worn_metal_rack",
+    "license": "CC0-1.0",
+    "gltf_md5": "1e6ab13765080f11751b2843e2e4c321",
+    "sha256": "2ac279adbc978819aa0ae6d88938b620b3d85ab99fb24e255a40e807b246d670"
+  },
+  {
+    "asset": "overhead_crane",
+    "source": "https://polyhaven.com/a/overhead_crane",
+    "license": "CC0-1.0",
+    "gltf_md5": "b68b869d62ca8797d7060ed2b7b76ac1",
+    "sha256": "ffd457a581d8d6be8a8348b4ef70314580f859561b0a663f25287de933619c4a"
+  },
+  {
+    "asset": "hanging_industrial_lamp",
+    "source": "https://polyhaven.com/a/hanging_industrial_lamp",
+    "license": "CC0-1.0",
+    "gltf_md5": "59baa7ef17a7696ac26bc5bd70fbb3df",
+    "sha256": "4eddf0a56bf760bd8a47c1548eea259818d91f154cafe1e204f400e0ffa7c244"
+  },
+  {
+    "asset": "industrial_storage_cart",
+    "source": "https://polyhaven.com/a/industrial_storage_cart",
+    "license": "CC0-1.0",
+    "gltf_md5": "00a94d9dff97c2c18c7c37764f812d6c",
+    "sha256": "278e3b27f9f533065dadf3fd95934e43302aeb9039a712a78ccb6f5be0203f3a"
+  },
+  {
+    "asset": "industrial_sunset_02",
+    "source": "https://polyhaven.com/a/industrial_sunset_02",
+    "license": "CC0-1.0",
+    "sha256": "79932a707cd0269e289638b181cdcaa13071556e0ec30ceadbf070da8bb457f8"
+  }
+]

@@ -1,0 +1,36 @@
+[
+  {
+    "file": "Operator.glb",
+    "upstream": "player/model/player.glb",
+    "commit": "a82f15448e9b015440d3bbdf5e10801b260c4e9f",
+    "original_sha256": "16b783ec2e19245d034326d401796b9bd2635de75f4e38917854316abeee4f9c",
+    "sha256": "0ab78bc959555a52031bddbf52ad88dedec112a317e4a4324533af48968c4a44",
+    "additional_motion": [
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary2.html",
+        "file": "UAL2_Standard.glb",
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+        "original": "Farm_Harvest",
+        "imported": "Station-Pickup"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "file": "UAL1_Standard.glb",
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+        "original": "Interact",
+        "imported": "Station-Give"
+      }
+    ]
+  },
+  {
+    "file": "Sentinel.glb",
+    "upstream": "enemies/red_robot/model/red_robot.glb",
+    "commit": "a82f15448e9b015440d3bbdf5e10801b260c4e9f",
+    "original_sha256": "f8e52f99e51f11eef0873b09c82c45db663bb9a36c4747a124230b6fbf8e2f0d",
+    "sha256": "1483f83f7fd4ed93ac1cef1a9f39e7712190e89426d7e4ffea1484339dfe3819"
+  }
+]

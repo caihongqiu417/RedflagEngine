@@ -472,6 +472,22 @@ RedflagForge/assets/models/**
 !RedflagForge/assets/models/**/*.rfmeta
 !RedflagForge/assets/models/Primitives/Plane.obj
 !RedflagForge/assets/models/LightPanel/LightPanel.gltf
+!RedflagForge/assets/models/RobotExpressive/RobotExpressive.glb
+!RedflagForge/assets/models/RobotExpressive/README.md
+!RedflagForge/assets/game/station/crew/*.glb
+!RedflagForge/assets/game/station/salvage/*.glb
+!RedflagForge/assets/game/station/salvage/*.hdr
+!RedflagForge/assets/game/station/salvage/ground/*
+!RedflagForge/assets/game/station/salvage-kit/*.glb
+!RedflagForge/assets/terrain/quarry/*.png
+!RedflagForge/assets/terrain/quarry/rocky-terrain.jpg
+!RedflagForge/assets/terrain/quarry/surface-source.json
+!RedflagForge/assets/terrain/quarry/sources.json
+!RedflagForge/assets/game/station/**/sources.json
+!RedflagForge/assets/game/station/yard/*.gltf
+!RedflagForge/assets/game/station/yard/*.bin
+!RedflagForge/assets/game/station/yard/maps/*
+!RedflagForge/assets/ui/station/*.png
 !tests/fixtures/*.obj
 
 # 只发布 Redflag 项目生成的 PDF
@@ -496,3 +512,4 @@ thesis/
 *毕业论文*.docx
 *答辩*.pptx
 /output/captures/local/
+/output/packages/

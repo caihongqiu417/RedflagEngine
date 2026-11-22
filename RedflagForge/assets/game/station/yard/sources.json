@@ -1,0 +1,91 @@
+{
+  "repository": "https://github.com/godotengine/tps-demo",
+  "commit": "a82f15448e9b015440d3bbdf5e10801b260c4e9f",
+  "license": "CC-BY-3.0",
+  "authors": [
+    "Juan Linietsky",
+    "Fernando Miguel Calabr\u00f3"
+  ],
+  "meshes": {
+    "Road": [
+      "structure",
+      87,
+      true
+    ],
+    "Wall": [
+      "structure",
+      27,
+      false
+    ],
+    "Pipework": [
+      "structure",
+      26,
+      false
+    ],
+    "Door": [
+      "structure",
+      79,
+      false
+    ],
+    "Container": [
+      "props",
+      27,
+      false
+    ],
+    "Cargo": [
+      "props",
+      14,
+      false
+    ],
+    "Floodlight": [
+      "props",
+      38,
+      false
+    ],
+    "SteelBeam": [
+      "props",
+      46,
+      false
+    ],
+    "GasBottles": [
+      "props",
+      17,
+      false
+    ],
+    "Hose": [
+      "props",
+      43,
+      false
+    ]
+  },
+  "textures": {
+    "level/textures/props/container3_albedo.png": "maps/container3_albedo.jpg",
+    "level/textures/props/container3_normal.png": "maps/container3_normal.jpg",
+    "level/textures/props/container3_orm.png": "maps/container3_orm.jpg",
+    "level/textures/props/door_albedo.png": "maps/door_albedo.jpg",
+    "level/textures/props/door_emission.png": "maps/door_emission.jpg",
+    "level/textures/props/door_normal.png": "maps/door_normal.jpg",
+    "level/textures/props/door_orm.png": "maps/door_orm.jpg",
+    "level/textures/props/mid_cargo_box_albedo.png": "maps/mid_cargo_box_albedo.jpg",
+    "level/textures/props/mid_cargo_box_normal.png": "maps/mid_cargo_box_normal.jpg",
+    "level/textures/props/mid_cargo_box_orm.png": "maps/mid_cargo_box_orm.jpg",
+    "level/textures/structure/floor_grate_wholes_albedo.png": "maps/floor_grate_wholes_albedo.jpg",
+    "level/textures/structure/floor_grate_wholes_normal.png": "maps/floor_grate_wholes_normal.jpg",
+    "level/textures/structure/floor_grate_wholes_orm.png": "maps/floor_grate_wholes_orm.jpg",
+    "level/textures/structure/set_asphalt_albedo.png": "maps/set_asphalt_albedo.jpg",
+    "level/textures/structure/set_asphalt_normal.png": "maps/set_asphalt_normal.jpg",
+    "level/textures/structure/set_asphalt_orm.png": "maps/set_asphalt_orm.jpg",
+    "level/textures/structure/tile_default_metal_albedo.png": "maps/tile_default_metal_albedo.jpg",
+    "level/textures/structure/tile_default_metal_normal.png": "maps/tile_default_metal_normal.jpg",
+    "level/textures/structure/tile_default_metal_orm.png": "maps/tile_default_metal_orm.jpg",
+    "level/textures/structure/tile_painted_gun_metal_albedo.png": "maps/tile_painted_gun_metal_albedo.jpg",
+    "level/textures/structure/tile_painted_gun_metal_normal.png": "maps/tile_painted_gun_metal_normal.jpg",
+    "level/textures/structure/tile_painted_gun_metal_orm.png": "maps/tile_painted_gun_metal_orm.jpg",
+    "level/textures/structure/trim_misc_1_albedo.png": "maps/trim_misc_1_albedo.jpg",
+    "level/textures/structure/trim_misc_1_normal.png": "maps/trim_misc_1_normal.jpg",
+    "level/textures/structure/trim_misc_1_orm.png": "maps/trim_misc_1_orm.jpg",
+    "level/textures/structure/trim_misc_2_albedo.png": "maps/trim_misc_2_albedo.jpg",
+    "level/textures/structure/trim_misc_2_normal.png": "maps/trim_misc_2_normal.jpg",
+    "level/textures/structure/trim_misc_2_orm.png": "maps/trim_misc_2_orm.jpg"
+  }
+}

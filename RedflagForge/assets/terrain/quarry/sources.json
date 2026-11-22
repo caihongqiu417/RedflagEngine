@@ -1,0 +1,17 @@
+{
+  "source": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/14/3087/6171.png",
+  "provider": "USGS NED, Salt Lake City, 2006; Mapzen Terrain Tiles",
+  "source_header": "ned/ned19_n40x75_w112x25_ut_saltlakecity_2006.tif",
+  "sha256": "7648d45ea33aa35a6627da12872f86b4637887a3a37336061626c197e14b7641",
+  "crop_xywh": [
+    96,
+    16,
+    129,
+    129
+  ],
+  "metres_min": 1412.65625,
+  "metres_max": 2107.67578125,
+  "pixel_metres_at_centre": 7.2626,
+  "normalized_height_sha256": "1be63851de500ed4f7a9b53e714349efcf43591bcc1e45a0bc6a12d54cb1152b",
+  "attribution": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md"
+}

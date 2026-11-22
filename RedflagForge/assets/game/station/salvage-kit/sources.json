@@ -1,0 +1,142 @@
+[
+  {
+    "asset": "ScrapShanty",
+    "source": "https://tevy.dev/models/scrap-shanty/v1/lod0.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "be31326d86981fc7b0297122179dea28efea19c442ac4910981209e3db72d95a",
+    "sha256": "41a34d40b3be77aa21c090011c5da7b6c144021b0f3e429caf5fa9de46741b26",
+    "bytes": 6202000,
+    "bounds": {
+      "min": [
+        -2.838040388798163,
+        0,
+        -2.3239331245422363
+      ],
+      "max": [
+        2.682041443561957,
+        3.3460125993692458,
+        4.461905479431152
+      ]
+    }
+  },
+  {
+    "asset": "Warehouse",
+    "source": "https://tevy.dev/models/warehouse/v2/lod1.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "989912e784a1fc1a822df7ddc4e3b65be53149744cc40a6d66a7e548d9760fc4",
+    "sha256": "3f9f148b97f769d5363314973fecd309f3feb3a0575cf3e4c7fc07c1495d5cf8",
+    "bytes": 2379888,
+    "bounds": {
+      "min": [
+        -21.099998474121094,
+        0,
+        -13.151062211316003
+      ],
+      "max": [
+        21.099998474121094,
+        10.629889885493071,
+        16.50106259278573
+      ]
+    }
+  },
+  {
+    "asset": "Watchtower",
+    "source": "https://tevy.dev/models/watchtower-scrap/v1/lod1.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "bd7330bb914573022d5c908fbee267ba6a66dfc0bc969e24715ab3fb4ddebf6f",
+    "sha256": "97383dbff6da677644c613cdadd76ae83f0c167581ac5035360421702fb1f247",
+    "bytes": 2396660,
+    "bounds": {
+      "min": [
+        -2.1662231567732553,
+        0,
+        -2.898678266782145
+      ],
+      "max": [
+        2.3403314236036996,
+        10.050110638141632,
+        2.1664032576268717
+      ]
+    }
+  },
+  {
+    "asset": "LoadingBay",
+    "source": "https://tevy.dev/models/scaffolding-loading-bay/v1/lod0.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "82b7320be67952c7c309ecabfab648b9dce02b337f08a62526a9990a73860fe3",
+    "sha256": "8d4613e42ba97d94b2ba8d7d149434105076f8fa458302071d3b53f71e79fb6c",
+    "bytes": 1706448,
+    "bounds": {
+      "min": [
+        -1.3700000047683716,
+        0,
+        -1.1500775365327485
+      ],
+      "max": [
+        1.3700000047683716,
+        2.1747239069337354,
+        1.1909466701327425
+      ]
+    }
+  },
+  {
+    "asset": "Rubble",
+    "source": "https://tevy.dev/models/rubble-heap-small/v1/lod0.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "5a4cb1182ba6086d09c885201aeb9fe986b632b25f1186185eda23668dbab479",
+    "sha256": "15a7f6603e125772551c0bdcde9d311f29e15ee9143d146d7f625592fda68ec7",
+    "bytes": 1818120,
+    "bounds": {
+      "min": [
+        -2.1698179244995117,
+        0,
+        -1.7039151290974246
+      ],
+      "max": [
+        1.7574567794799805,
+        0.8941150787381389,
+        1.84509862461897
+      ]
+    }
+  },
+  {
+    "asset": "DryGrass",
+    "source": "https://tevy.dev/models/savanna-grass-patch/v1/lod2.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "efb38391b11d6bc973176282d370c335f2356658f4e59616f14d551f5d43c8e2",
+    "sha256": "48cd7119004c22ea2b00242fc93d63ac1fede93850ee0892ff7568e3cd2467cd",
+    "bytes": 271844,
+    "bounds": {
+      "min": [
+        -2.1071462866924193,
+        0,
+        -2.1571712493896484
+      ],
+      "max": [
+        2.1511085269115355,
+        1.1219754762491547,
+        2.1452009677886963
+      ]
+    }
+  },
+  {
+    "asset": "Thornbush",
+    "source": "https://tevy.dev/models/savanna-thornbush/v1/lod1.glb",
+    "license": "CC0-1.0",
+    "originalSha256": "708954adc0ccef357cd70a97a68dd5dbebed765d25596d1ee81dbc7e8ca5ce0c",
+    "sha256": "dddab1468b2b935139c086e59a46a8b636ee8a33f10dcdb3c0adacc1b24188a7",
+    "bytes": 1150864,
+    "bounds": {
+      "min": [
+        -2.054848367937666,
+        0,
+        -1.9998809099197388
+      ],
+      "max": [
+        2.0762388060175,
+        2.206896351831027,
+        2.1337292194366455
+      ]
+    }
+  }
+]
