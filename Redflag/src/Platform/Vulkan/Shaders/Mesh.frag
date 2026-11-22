@@ -9,12 +9,14 @@
 #endif
 
 layout(location = 0) in vec2 v_TexCoord;
+layout(location = 1) in vec3 v_LocalPosition;
+layout(location = 2) in vec3 v_LocalNormal;
+layout(location = 4) in vec3 v_ViewLocal;
+#include "HeightSurface.glsl"
 layout(set = 0, binding = 0) uniform sampler2D u_BaseColorMap;
 layout(set = 2, binding = 0) uniform sampler2D u_OpacityMap;
 
 #ifdef LIGHTING_SURFACES
-layout(location = 1) in vec3 v_LocalPosition;
-layout(location = 2) in vec3 v_LocalNormal;
 layout(set = 1, binding = 0) uniform sampler2D u_NormalMap;
 layout(location = 0) out vec4 o_Albedo;
 layout(location = 1) out vec4 o_NormalDepth;
@@ -25,7 +27,7 @@ layout(location = 2) out vec4 o_Optics;
 layout(set = 3, binding = 0) uniform sampler2D u_MetallicRoughnessMap;
 #endif
 
-vec3 worldNormal()
+vec3 worldNormal(vec2 uv)
 {
     vec3 n = v_LocalNormal;
     vec3 p = dFdx(v_LocalPosition), q = dFdy(v_LocalPosition);
@@ -39,9 +41,12 @@ vec3 worldNormal()
         vec3 b = (q * u.x - p * v.x) / det;
         t = normalize(t - n * dot(n, t));
         b = sign(dot(cross(n, t), b)) * cross(n, t);
-        vec3 sampled = texture(u_NormalMap, v_TexCoord).xyz * 2. - 1.;
+        vec3 sampled = texture(u_NormalMap, uv).xyz * 2. - 1.;
         n = mat3(t, b, n) * sampled;
     }
+    // 置换用原始高度场的坡度补回三角形之间的明暗细节；有作者法线图时沿用作者的法线。
+    if (heightMode() == 1u || heightMode() == 2u || (heightMode() == 3u && (u_Object.MaterialFlags & 1u) == 0u))
+        n = bumpNormal(u_OpacityMap, uv, textureFrame(v_LocalPosition, v_LocalNormal, v_TexCoord), n, dFdx(v_TexCoord), dFdy(v_TexCoord));
     mat3 normal = mat3(u_Object.NormalMatrix[0], u_Object.NormalMatrix[1], u_Object.NormalMatrix[2],
                        u_Object.NormalMatrix[3], u_Object.NormalMatrix[4], u_Object.NormalMatrix[5],
                        u_Object.NormalMatrix[6], u_Object.NormalMatrix[7], u_Object.NormalMatrix[8]);
@@ -55,9 +60,10 @@ layout(location = 1) out int o_EntityID;
 void main()
 {
     if ((u_Object.MaterialFlags & 2u) != 0u && !gl_FrontFacing) discard;
-    vec4 base = texture(u_BaseColorMap, v_TexCoord);
+    vec2 uv = reliefUV(u_OpacityMap, v_TexCoord, v_LocalPosition, v_LocalNormal, v_ViewLocal);
+    vec4 base = texture(u_BaseColorMap, uv);
 #if defined(LIGHTING_SURFACES) && !defined(TRANSPARENT)
-    vec3 n = worldNormal();
+    vec3 n = worldNormal(uv);
 #endif
 #ifndef TRANSPARENT
     if (u_Object.AlphaCutoff >= 0. && !coversSample(u_BaseColorMap, u_OpacityMap, v_TexCoord, base.a)) discard;
@@ -76,7 +82,7 @@ void main()
         return;
     }
     o_Albedo = vec4(linear * u_Object.Color.rgb, 1.) * weight;
-    o_NormalDepth = vec4(worldNormal(), gl_FragCoord.z) * weight;
+    o_NormalDepth = vec4(worldNormal(uv), gl_FragCoord.z) * weight;
     // 两层玻璃各透过一半背景光，叠在一起就剩四分之一。这里相加的是透过率的对数，合成时用 exp 还原这个乘积。
     o_Optics = vec4(log(max(1. - alpha, 1e-6)), u_Object.RefractionIndex * weight,
                     u_Object.Thickness * weight, 0.);
@@ -84,7 +90,7 @@ void main()
     vec2 material = unpackUnorm2x16(u_Object.MaterialFactors);
     // glTF 的蓝色是金属度，绿色是粗糙度。两者都是数据，不做底色使用的 sRGB 转换。
     if ((u_Object.MaterialFlags & 4u) != 0u)
-        material *= texture(u_MetallicRoughnessMap, v_TexCoord).bg;
+        material *= texture(u_MetallicRoughnessMap, uv).bg;
     float packed = encodeMaterial(material);
     // 负号标出通过深度测试的发光材质。普通墙与灯牌恰好共面时，只让真正画在前面的那一层发光。
     o_Albedo = vec4(linear * u_Object.Color.rgb, (u_Object.MaterialFlags & 8u) != 0u ? -packed : packed);

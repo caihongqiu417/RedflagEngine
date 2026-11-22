@@ -1,0 +1,5 @@
+mode,changed_albedo,changed_normal,changed_depth,changed_picking
+off,0,0,0,0
+bump,0,187854,0,0
+parallax,183935,187825,0,0
+displacement,184223,187767,188020,6018

@@ -156,16 +156,29 @@ namespace Redflag {
 			mat->EmissiveMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_EMISSIVE, textures);
 
 			mat->NormalMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_NORMALS, textures);
-			if (!mat->NormalMap)
+			if (!mat->NormalMap && aiMat->GetTextureCount(aiTextureType_NORMALS) > 0)
 			{
 				// 材质写了法线贴图却没加载成功时，在日志里保留模型文件给的路径。
-				if (aiMat->GetTextureCount(aiTextureType_NORMALS) > 0)
-				{
-					aiString p; aiMat->GetTexture(aiTextureType_NORMALS, 0, &p);
-					RF_CORE_WARN("[Model]   NORMALS slot path not resolved: '{0}'", p.C_Str());
-				}
-				mat->NormalMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_HEIGHT, textures);
+				aiString p; aiMat->GetTexture(aiTextureType_NORMALS, 0, &p);
+				RF_CORE_WARN("[Model]   NORMALS slot path not resolved: '{0}'", p.C_Str());
 			}
+
+			mat->HeightMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_HEIGHT, textures);
+			if (mat->HeightMap)
+			{
+				// 部分旧 OBJ 在 map_Bump 写的是命名为 _normal 或 _nor_gl 的 RGB 法线图。
+				aiString path;
+				aiMat->GetTexture(aiTextureType_HEIGHT, 0, &path);
+				std::string name = std::filesystem::u8path(path.C_Str()).stem().u8string();
+				std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+				if (name.find("_normal") != std::string::npos || name.find("_nor_gl") != std::string::npos)
+				{
+					if (!mat->NormalMap) mat->NormalMap = mat->HeightMap;
+					mat->HeightMap.reset();
+				}
+				else mat->HeightMode = HeightMapping::Bump;
+			}
+			if (!mat->HeightMap) mat->HeightMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_DISPLACEMENT, textures);
 
 			mat->MetallicRoughnessMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_UNKNOWN, textures);
 			mat->AOMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_LIGHTMAP, textures);

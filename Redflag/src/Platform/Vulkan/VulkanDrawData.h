@@ -57,12 +57,17 @@ namespace Redflag::Vulkan {
         ~TexturePool();
     };
 
-    struct MaterialImage
+    struct TextureSet
     {
-        Scope<Image> Pixels;
         Ref<TexturePool> Pool;
         VkDescriptorSet Set{};
-        ~MaterialImage();
+        ~TextureSet();
+    };
+
+    struct MaterialImage : TextureSet
+    {
+        Scope<Image> Pixels;
+        TextureSet VertexAndFragment;
     };
 
     struct Texture : SampledTexture
@@ -104,8 +109,8 @@ namespace Redflag {
         ~Data();
         void CreatePass();
         void CreatePipeline();
-        VkDescriptorSet MaterialTexture(const Ref<SampledTexture>& texture, VkFormat format);
-        void CreateTextureSet(Vulkan::MaterialImage& texture);
+        VkDescriptorSet MaterialTexture(const Ref<SampledTexture>& texture, VkFormat format, bool vertex = false);
+        void CreateTextureSet(Vulkan::TextureSet& binding, VkImageView image, VkDescriptorSetLayout layout);
 
         VulkanContext& Context;
         VkDevice Device;
@@ -117,7 +122,7 @@ namespace Redflag {
         VkCommandBuffer Recording{};
         VkFormat DepthFormat{};
         VkRenderPass Pass{};
-        VkDescriptorSetLayout TextureLayout{};
+        VkDescriptorSetLayout TextureLayout{}, VertexTextureLayout{};
         VkPipelineLayout PipelineLayout{};
         VkPipeline Pipeline{};
         Ref<Vulkan::Sampler> Sampler;

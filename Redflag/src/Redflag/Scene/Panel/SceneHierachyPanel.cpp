@@ -18,6 +18,25 @@
 
 namespace Redflag {
 
+    static void DrawHeightMap(Material& material)
+    {
+        if (ImGui::Button("选择高度贴图"))
+        {
+            const std::string image = FileDialogs::OpenFile("Height image\0*.png;*.jpg;*.jpeg;*.tga\0");
+            if (!image.empty())
+                material.HeightMap = Texture2D::Create(std::filesystem::proximate(std::filesystem::u8path(image)).generic_u8string());
+        }
+        if (!material.HeightMap) return;
+        ImGui::SameLine();
+        if (ImGui::SmallButton("移除高度图")) { material.HeightMap.reset(); return; }
+
+        int mode = int(material.HeightMode);
+        const char* names[] = { "关闭", "凹凸", "视差遮蔽", "顶点置换" };
+        if (ImGui::Combo("高度贴图效果", &mode, names, 4)) material.HeightMode = HeightMapping(mode);
+        ImGui::DragFloat("黑白高度差（模型米）", &material.HeightScale, .001f, 0.f, 10.f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Vulkan 不透明材质使用高度图的红通道，白色最高。顶点置换需要足够密的网格。");
+    }
+
     static void DrawModelLODs(ModelRendererComponent& model)
     {
         ImGui::Text("当前网格  LOD %d", int(model.ActiveLOD));
@@ -1755,6 +1774,7 @@ namespace Redflag {
 
                 TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
                 TextureSlotUI("Normal Map",             mat->NormalMap);
+                DrawHeightMap(*mat);
                 TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
                 TextureSlotUI("AO Map",                 mat->AOMap);
             });
@@ -2076,6 +2096,7 @@ namespace Redflag {
 
                             TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
                             TextureSlotUI("Normal Map",             mat->NormalMap);
+                            DrawHeightMap(*mat);
                             TextureSlotUI("MetallicRoughness Map",  mat->MetallicRoughnessMap);
                             TextureSlotUI("AO Map",                 mat->AOMap);
 

@@ -1,0 +1,30 @@
+Scene: 砂石材质
+Environment: ../textures/sky/daylight.hdr
+SkyVisible: true
+Entities:
+  - Entity: 101
+    TagComponent: {Tag: 主相机}
+    TransformComponent: {Translation: [0, 0.78, 1.55], Rotation: [-0.44, 0, 0], Scale: [1, 1, 1]}
+    CameraComponent:
+      Camera: {ProjectionType: 0, PerspectiveFov: 0.82, PerspectiveNear: 0.05, PerspectiveFar: 30, OrthographicSize: 4, OrthographicNear: 0.05, OrthographicFar: 30}
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 102
+    TagComponent: {Tag: 砂石}
+    TransformComponent: {Translation: [0, 0, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent:
+      FilePath: assets/models/Primitives/ReliefTile.glb
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [1, 1, 1, 1]
+          BaseColorMap: assets/game/station/salvage/ground/gravel_road_diff_2k.jpg
+          MetallicRoughnessMap: assets/game/station/salvage/ground/gravel_road_orm_2k.png
+          HeightMap: assets/game/station/salvage/ground/gravel_road_disp_1k.png
+          HeightMode: Parallax
+          HeightScale: 0.055
+          Roughness: 1.0
+          Metallic: 0.0
+  - Entity: 103
+    TagComponent: {Tag: 日光}
+    TransformComponent: {Translation: [0, 4, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    DirectionalLightComponent: {Direction: [-0.6, -0.65, -0.3], Color: [1, 0.97, 0.89], Intensity: 1.7, CastShadow: false}

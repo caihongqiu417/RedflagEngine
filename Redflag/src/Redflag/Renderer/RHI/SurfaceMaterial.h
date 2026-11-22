@@ -3,6 +3,7 @@
 #include <memory>
 #include "Redflag/Core/Core.h"
 #include <glm/glm.hpp>
+#include "Redflag/Renderer/HeightMapping.h"
 
 namespace Redflag {
     struct SampledTexture;
@@ -20,5 +21,8 @@ namespace Redflag {
         float AlphaCutoff = -1.0f; // 叶片透明度低于此值时，那个像素露出背景。负值表示不裁剪。
         glm::vec3 Emission{0}; // 表面自身发出的线性 RGB，亮灯时可以大于 1。
         Ref<SampledTexture> EmissiveMap;
+        Ref<SampledTexture> Height;
+        HeightMapping HeightMode = HeightMapping::Off;
+        float HeightScale = 0.f;
     };
 }

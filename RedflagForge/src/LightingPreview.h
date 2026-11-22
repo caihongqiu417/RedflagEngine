@@ -77,7 +77,7 @@ namespace Redflag
 		Ref<ComputePipeline> m_CompositeTransparency;
 		Ref<ComputeResource> m_TransparentColor;
 		std::vector<glm::vec4> m_GlassSettings;
-		std::vector<std::pair<Ref<SampledTexture>, bool>> m_SurfaceSettings;
+		std::vector<std::tuple<Ref<SampledTexture>, bool, Ref<SampledTexture>, int, float>> m_SurfaceSettings;
 		std::vector<FoliageState> m_Foliage;
 		std::vector<std::pair<uint64_t, float>> m_LODSettings;
 		std::vector<glm::mat4> m_Bones;

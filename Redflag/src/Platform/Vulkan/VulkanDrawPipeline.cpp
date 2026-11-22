@@ -94,9 +94,13 @@ namespace Redflag {
         set.pBindings = &texture;
         Check(vkCreateDescriptorSetLayout(Device, &set, nullptr, &TextureLayout), "vkCreateDescriptorSetLayout");
 
+        // 普通纹理仍与 ImGui 的片元采样兼容。高度图还要交给顶点着色器移动网格。
+        texture.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+        Check(vkCreateDescriptorSetLayout(Device, &set, nullptr, &VertexTextureLayout), "vkCreateDescriptorSetLayout(height)");
+
         VkPushConstantRange object{VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vulkan::ObjectData)};
         VkPipelineLayoutCreateInfo layout{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-        VkDescriptorSetLayout textureSets[] = {TextureLayout, TextureLayout, TextureLayout, TextureLayout};
+        VkDescriptorSetLayout textureSets[] = {TextureLayout, TextureLayout, VertexTextureLayout, TextureLayout};
         layout.setLayoutCount = Mode == Output::LightingSurfaces ? 4u : 3u;
         layout.pSetLayouts = textureSets;
         layout.pushConstantRangeCount = 1;
@@ -120,7 +124,6 @@ namespace Redflag {
 #include "Shaders/Transparency.frag.inc"
         ;
         const bool transparent = Mode == Output::Transparency;
-        const bool surfaces = Mode == Output::LightingSurfaces || transparent;
         static const uint32_t emissionFragment[] =
 #include "Shaders/Emission.frag.inc"
         ;
@@ -169,12 +172,7 @@ namespace Redflag {
         VkPipelineVertexInputStateCreateInfo vertices{VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
         vertices.vertexBindingDescriptionCount = 2;
         vertices.pVertexBindingDescriptions = bindings;
-        vertices.vertexAttributeDescriptionCount = transparent ? 4 : surfaces ? 3 : 2;
-        if (Mode == Output::Emission)
-        {
-            attributes[2] = attributes[3]; // 灯牌使用自己的贴图坐标，这一遍不读取法线。
-            vertices.vertexAttributeDescriptionCount = 3;
-        }
+        vertices.vertexAttributeDescriptionCount = transparent || Mode == Output::Emission ? 4 : 3;
         for (uint32_t col = 0; col < 4; ++col)
             attributes[vertices.vertexAttributeDescriptionCount++] = {4 + col, 1, VK_FORMAT_R32G32B32A32_SFLOAT, col * 16};
         vertices.pVertexAttributeDescriptions = attributes;

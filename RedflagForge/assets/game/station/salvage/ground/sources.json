@@ -7,5 +7,10 @@
   "roughness_md5": "bbd4f6c7c1b8ceb4c88a41d03e4ba158",
   "geometry": "RedflagForge/assets/models/Primitives/Plane.obj",
   "width_m": 100,
-  "scan_m": 2
+  "scan_m": 2,
+  "height": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/gravel_road/gravel_road_disp_1k.png",
+    "md5": "308be50d20e60c9f1ca3a4a9c741a454",
+    "role": "Poly Haven Displacement 1k (white highest)"
+  }
 }

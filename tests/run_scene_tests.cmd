@@ -30,6 +30,12 @@ if "%~1"=="--decal" (
     set "RF_TEST_EXTRA=bin-int\Debug-windows-x86_64\RedflagForge\LightingPreview.obj"
     if not defined VULKAN_SDK for /f "delims=" %%i in ('dir /b /ad /o-n C:\VulkanSDK 2^>nul') do if not defined VULKAN_SDK set "VULKAN_SDK=C:\VulkanSDK\%%i"
 )
+if "%~1"=="--height-material" (
+    set "RF_TEST_SOURCE=tests\HeightMaterialTests.cpp"
+    set "RF_TEST_NAME=HeightMaterialTests"
+    set "RF_TEST_EXTRA=bin-int\Debug-windows-x86_64\RedflagForge\LightingPreview.obj"
+    if not defined VULKAN_SDK for /f "delims=" %%i in ('dir /b /ad /o-n C:\VulkanSDK 2^>nul') do if not defined VULKAN_SDK set "VULKAN_SDK=C:\VulkanSDK\%%i"
+)
 if "%~1"=="--foliage" (
     set "RF_TEST_SOURCE=tests\FoliageTests.cpp"
     set "RF_TEST_NAME=FoliageTests"

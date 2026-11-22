@@ -250,12 +250,20 @@ namespace Redflag {
     static constexpr MaterialMap s_MaterialMaps[] = {
         { "BaseColorMap", &Material::BaseColorMap }, { "NormalMap", &Material::NormalMap },
         { "MetallicRoughnessMap", &Material::MetallicRoughnessMap }, { "AOMap", &Material::AOMap },
-        { "AlphaMap", &Material::AlphaMap }, { "EmissiveMap", &Material::EmissiveMap }
+        { "AlphaMap", &Material::AlphaMap }, { "EmissiveMap", &Material::EmissiveMap },
+        { "HeightMap", &Material::HeightMap }
     };
+
+    static constexpr const char* HeightModes[] = { "Off", "Bump", "Parallax", "Displacement" };
 
     static void WriteMaterial(YAML::Emitter& out, const Material& material, const Material* original = nullptr)
     {
         out << YAML::Key << "BaseColor" << YAML::Value << material.BaseColor;
+        if (material.HeightMap || material.HeightMode != HeightMapping::Off)
+        {
+            out << YAML::Key << "HeightMode" << YAML::Value << HeightModes[int(material.HeightMode)];
+            out << YAML::Key << "HeightScale" << YAML::Value << material.HeightScale;
+        }
         out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
         out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
         out << YAML::Key << "AO" << YAML::Value << material.AO;
@@ -292,6 +300,13 @@ namespace Redflag {
         material.Metallic = node["Metallic"].as<float>(material.Metallic);
         material.Roughness = node["Roughness"].as<float>(material.Roughness);
         material.AO = node["AO"].as<float>(material.AO);
+        if (node["HeightMode"])
+        {
+            const std::string mode = node["HeightMode"].as<std::string>();
+            for (int i = 0; i < 4; ++i)
+                if (mode == HeightModes[i]) material.HeightMode = HeightMapping(i);
+        }
+        material.HeightScale = node["HeightScale"].as<float>(material.HeightScale);
         if (node["Emission"]) material.Emission = node["Emission"].as<glm::vec3>();
         for (const MaterialMap& map : s_MaterialMaps)
         {

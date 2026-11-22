@@ -2,6 +2,7 @@
 
 #include "Redflag/Core/Core.h"
 #include "Redflag/Renderer/Texture.h"
+#include "Redflag/Renderer/HeightMapping.h"
 
 #include <glm/glm.hpp>
 
@@ -39,6 +40,9 @@ namespace Redflag {
 		// ---- 贴图 ----
 		Ref<Texture2D> BaseColorMap;           // 漫反射贴图
 		Ref<Texture2D> EmissiveMap;            // sRGB 发光图案，乘上 Emission。
+		Ref<Texture2D> HeightMap;
+		HeightMapping HeightMode = HeightMapping::Off;
+		float HeightScale = .02f; // 白处与黑处的高度差，单位为模型局部坐标中的米。
 		Ref<Texture2D> NormalMap;              // 切线空间法线贴图
 		Ref<Texture2D> MetallicRoughnessMap;   // G=粗糙度, B=金属度
 		Ref<Texture2D> AOMap;                  // 环境遮蔽

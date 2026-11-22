@@ -29,6 +29,9 @@ namespace Redflag {
 		mat->BaseColorMap          = BaseColorMap;
 		mat->EmissiveMap           = EmissiveMap;
 		mat->NormalMap             = NormalMap;
+		mat->HeightMap             = HeightMap;
+		mat->HeightMode            = HeightMode;
+		mat->HeightScale           = HeightScale;
 		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
 		mat->AOMap                 = AOMap;
 		mat->AlphaMap              = AlphaMap;

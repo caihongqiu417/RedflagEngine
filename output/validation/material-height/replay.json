@@ -1,0 +1,117 @@
+{
+  "renderdoc": "1.47",
+  "order": [
+    "off",
+    "bump",
+    "parallax",
+    "displacement",
+    "displacement",
+    "parallax",
+    "bump",
+    "off"
+  ],
+  "units": "microseconds",
+  "cases": {
+    "off": {
+      "capture": "output/captures/local/height/off_capture.rdc",
+      "sha256": "8946efd38bbee2737858963871b755de58302e5ee3f14ae4468d3cfbee4c3093",
+      "event": 11,
+      "indices": 24576,
+      "instances": 1,
+      "samples_us": [
+        17.696,
+        17.759999999999998,
+        17.632,
+        17.887999999999998,
+        17.855999999999998,
+        17.6,
+        17.472,
+        17.567999999999998,
+        18.016000000000002,
+        17.728,
+        17.92,
+        17.535999999999998
+      ],
+      "messages": [],
+      "p10": 17.5392,
+      "median": 17.712000000000003,
+      "p90": 17.916800000000002
+    },
+    "bump": {
+      "capture": "output/captures/local/height/bump_capture.rdc",
+      "sha256": "94a50e035cd582f2ae5a4ae427900639dee235828edf9f74d0d738d78696eaf3",
+      "event": 11,
+      "indices": 24576,
+      "instances": 1,
+      "samples_us": [
+        18.784,
+        18.688000000000002,
+        20.288,
+        19.36,
+        19.072,
+        20.032,
+        18.656,
+        18.592000000000002,
+        18.72,
+        18.624,
+        18.72,
+        18.656
+      ],
+      "messages": [],
+      "p10": 18.6272,
+      "median": 18.72,
+      "p90": 19.964800000000004
+    },
+    "parallax": {
+      "capture": "output/captures/local/height/parallax_capture.rdc",
+      "sha256": "4323c9f8130d824c06175dc16b8a1c28f95475058cc68e67f2716c9f287d2302",
+      "event": 11,
+      "indices": 24576,
+      "instances": 1,
+      "samples_us": [
+        45.376,
+        45.536,
+        45.056,
+        45.184,
+        43.968,
+        44.128,
+        45.248,
+        45.408,
+        45.376,
+        45.760000000000005,
+        46.176,
+        45.728
+      ],
+      "messages": [],
+      "p10": 44.2208,
+      "median": 45.376,
+      "p90": 45.756800000000005
+    },
+    "displacement": {
+      "capture": "output/captures/local/height/displacement_capture.rdc",
+      "sha256": "efffd985c8a9f7c6b54832be69c12b2acd7a82b5e33a425adf1a6ea634fb68db",
+      "event": 11,
+      "indices": 24576,
+      "instances": 1,
+      "samples_us": [
+        19.296,
+        18.88,
+        19.136000000000003,
+        19.072,
+        19.232000000000003,
+        19.008000000000003,
+        18.816000000000003,
+        19.168,
+        19.232000000000003,
+        18.976,
+        18.848,
+        18.976
+      ],
+      "messages": [],
+      "p10": 18.8512,
+      "median": 19.04,
+      "p90": 19.232000000000003
+    }
+  },
+  "api": "GraphicsAPI.Vulkan"
+}

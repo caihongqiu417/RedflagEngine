@@ -38,6 +38,7 @@ namespace Redflag {
         Target.reset();
         vkDestroyRenderPass(Device, Pass, nullptr);
         vkDestroyDescriptorSetLayout(Device, TextureLayout, nullptr);
+        vkDestroyDescriptorSetLayout(Device, VertexTextureLayout, nullptr);
     }
 
     VkExtent2D VulkanDraw::GetExtent() const
@@ -189,14 +190,17 @@ namespace Redflag {
         const auto& sampled = texture ? texture : m_Data->White;
         const auto& mesh = static_cast<const Vulkan::Mesh&>(*geometry);
         const auto& normal = surface.Normal ? surface.Normal : m_Data->White;
-        const auto& opacity = surface.Opacity ? surface.Opacity : m_Data->White;
+        const bool heightMapped = surface.Height && surface.HeightMode != HeightMapping::Off &&
+            surface.HeightScale > 0.f && surface.AlphaCutoff < 0.f && !surface.Blend;
+        // 实心表面不需要透明度贴图，这个位置可供同一次绘制读取灰度高度。
+        const auto& opacity = heightMapped ? surface.Height : (surface.Opacity ? surface.Opacity : m_Data->White);
         const auto& materialMap = surface.MetallicRoughnessMap ? surface.MetallicRoughnessMap : m_Data->White;
         const auto& emissionMap = emitting && surface.EmissiveMap ? surface.EmissiveMap : m_Data->White;
         VkDescriptorSet textures[] = {
             m_Data->MaterialTexture(sampled, VK_FORMAT_R8G8B8A8_SRGB),
             emission ? m_Data->MaterialTexture(emissionMap, VK_FORMAT_R8G8B8A8_SRGB)
                      : m_Data->MaterialTexture(normal, VK_FORMAT_R8G8B8A8_UNORM),
-            m_Data->MaterialTexture(opacity, VK_FORMAT_R8G8B8A8_UNORM),
+            m_Data->MaterialTexture(opacity, VK_FORMAT_R8G8B8A8_UNORM, true),
             lighting ? m_Data->MaterialTexture(materialMap, VK_FORMAT_R8G8B8A8_UNORM) : VK_NULL_HANDLE
         };
         auto& frame = m_Data->Frames[context.GetFrameIndex()];
@@ -205,7 +209,7 @@ namespace Redflag {
         if (!emission && surface.Normal) frame.Textures.push_back(normal);
         if ((emission || transparent) && emitting && surface.EmissiveMap)
             frame.Textures.push_back(emissionMap);
-        if (surface.Opacity) frame.Textures.push_back(opacity);
+        if (heightMapped || surface.Opacity) frame.Textures.push_back(opacity);
         if (lighting && surface.MetallicRoughnessMap) frame.Textures.push_back(materialMap);
 
         VkBuffer matrices = m_Data->IdentityInstance->Handle;
@@ -237,6 +241,8 @@ namespace Redflag {
         object.AlphaCutoff = surface.AlphaCutoff;
         object.MaterialFlags = (surface.Normal ? 1u : 0u) | ((surface.Blend || emission) && !surface.DoubleSided ? 2u : 0u);
         if (instances) object.MaterialFlags |= 64u;
+        if (heightMapped)
+            object.MaterialFlags |= (uint32_t(surface.HeightMode) << 7u) | glm::packHalf2x16({0.f, surface.HeightScale});
         if (m_Data->SubpixelMask && (lighting || emission) && color.a > 0.f && surface.AlphaCutoff == .5f * color.a)
         {
             using Channel = Vulkan::Texture::Channel;

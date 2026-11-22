@@ -108,7 +108,7 @@ namespace Redflag::Vulkan {
 
     TexturePool::~TexturePool() { vkDestroyDescriptorPool(Device, Pool, nullptr); }
 
-    MaterialImage::~MaterialImage()
+    TextureSet::~TextureSet()
     {
         if (Set)
         {
@@ -198,7 +198,7 @@ namespace Redflag {
         constexpr TextureUse Unused{VK_IMAGE_LAYOUT_UNDEFINED, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0};
         constexpr TextureUse CopyTo{VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT};
         constexpr TextureUse CopyFrom{VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT};
-        constexpr TextureUse Sample{VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT};
+        constexpr TextureUse Sample{VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT};
 
         void Transition(VkCommandBuffer cmd, VkImage image, uint32_t mip, uint32_t count, TextureUse from, TextureUse to)
         {
@@ -239,12 +239,17 @@ namespace Redflag {
         return m_Data->MaterialTexture(texture, VK_FORMAT_R8G8B8A8_UNORM);
     }
 
-    VkDescriptorSet VulkanDraw::Data::MaterialTexture(const Ref<SampledTexture>& map, VkFormat format)
+    VkDescriptorSet VulkanDraw::Data::MaterialTexture(const Ref<SampledTexture>& map, VkFormat format, bool vertex)
     {
         auto& texture = static_cast<Vulkan::Texture&>(*map);
         bool color = format == VK_FORMAT_R8G8B8A8_SRGB;
         auto& image = color ? texture.Color : texture.Data;
-        if (image.Set) return image.Set;
+        if (image.Set)
+        {
+            if (vertex && !image.VertexAndFragment.Set)
+                CreateTextureSet(image.VertexAndFragment, image.Pixels->View, VertexTextureLayout);
+            return vertex ? image.VertexAndFragment.Set : image.Set;
+        }
 
         uint32_t levels = 1;
         for (auto size = std::max(texture.Extent.width,texture.Extent.height); size > 1; size >>= 1) ++levels;
@@ -275,12 +280,14 @@ namespace Redflag {
             }
             BuildMips(cmd, target, texture.Extent, levels);
         });
-        CreateTextureSet(image);
+        CreateTextureSet(image, image.Pixels->View, TextureLayout);
         texture.Staging.reset();
-        return image.Set;
+        if (!vertex) return image.Set;
+        CreateTextureSet(image.VertexAndFragment, image.Pixels->View, VertexTextureLayout);
+        return image.VertexAndFragment.Set;
     }
 
-    void VulkanDraw::Data::CreateTextureSet(Vulkan::MaterialImage& texture)
+    void VulkanDraw::Data::CreateTextureSet(Vulkan::TextureSet& texture, VkImageView view, VkDescriptorSetLayout layout)
     {
         if (!TexturePool || TexturePool->Used == Vulkan::TexturePool::Capacity)
         {
@@ -300,13 +307,13 @@ namespace Redflag {
         VkDescriptorSetAllocateInfo allocate{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
         allocate.descriptorPool = TexturePool->Pool;
         allocate.descriptorSetCount = 1;
-        allocate.pSetLayouts = &TextureLayout;
+        allocate.pSetLayouts = &layout;
         VkDescriptorSet set{};
         Check(vkAllocateDescriptorSets(Device, &allocate, &set), "vkAllocateDescriptorSets");
         texture.Set = set;
         ++TexturePool->Used;
 
-        VkDescriptorImageInfo image{Sampler->Handle, texture.Pixels->View, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+        VkDescriptorImageInfo image{Sampler->Handle, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
         VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
         write.dstSet = set;
         write.descriptorCount = 1;

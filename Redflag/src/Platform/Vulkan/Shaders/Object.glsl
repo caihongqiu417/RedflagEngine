@@ -19,3 +19,8 @@ layout(push_constant) uniform ObjectData {
     // 16、32 区分镂空图使用的通道。64 表示按每株或每件物体的矩阵变换顶点。
     uint MaterialFlags;
 } u_Object;
+
+
+// 高度图用两个比特选择算法，高 16 位是模型局部坐标中的高度差。
+uint heightMode() { return (u_Object.MaterialFlags >> 7u) & 3u; }
+float heightRange() { return unpackHalf2x16(u_Object.MaterialFlags).y; }

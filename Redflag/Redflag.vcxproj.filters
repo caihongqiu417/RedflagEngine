@@ -417,6 +417,9 @@
     <ClInclude Include="src\Redflag\Renderer\IBLArchive.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\HeightMapping.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\IBLPrecompute.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>

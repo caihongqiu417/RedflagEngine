@@ -278,6 +278,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Renderer\GI\ProbeBake.h" />
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Redflag\Renderer\IBLArchive.h" />
+    <ClInclude Include="src\Redflag\Renderer\HeightMapping.h" />
     <ClInclude Include="src\Redflag\Renderer\IBLPrecompute.h" />
     <ClInclude Include="src\Redflag\Renderer\Material.h" />
     <ClInclude Include="src\Redflag\Renderer\Mesh.h" />

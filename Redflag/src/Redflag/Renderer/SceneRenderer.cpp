@@ -1008,6 +1008,12 @@ namespace Redflag {
 			surface.Blend = material->Alpha == AlphaMode::Blend;
 			surface.DoubleSided = material->DoubleSided;
 			surface.Emission = material->Emission;
+			if (material->Alpha == AlphaMode::Opaque && material->HeightMap && material->HeightMode != HeightMapping::Off)
+			{
+				surface.Height = material->HeightMap->GetSampledTexture();
+				surface.HeightMode = material->HeightMode;
+				surface.HeightScale = material->HeightScale;
+			}
 			surface.EmissiveMap = material->EmissiveMap ? material->EmissiveMap->GetSampledTexture() : nullptr;
 			surface.RefractionIndex = material->RefractionIndex;
 			surface.Thickness = material->Thickness;
