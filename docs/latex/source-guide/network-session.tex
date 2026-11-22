@@ -59,3 +59,20 @@ TCP 会按顺序送达字节。应用另外确认的是“整份实体位置已�
 从 Redflag 根目录运行 \path{tests/run_world_session.cmd} 即可复查。2026 年 11 月 22 日的 Windows Debug 联测中，一台主机让两个方块各走 180 次物理步，每步 $1/60$ 秒。PhysX 方块的中心高度为 $0.4999990$ 米，Box2D 方块为 $0.5149972$ 米。两个观看端的三个位置和三个旋转分量分别与各自主机原值逐位相同。测试故意扣下第一次确认，主机实际发出的序号是 $1,1,2,3$，服务端只接受三次。测试与转发确认的代码分别在
 \src{tests/WorldSessionTests.cpp}{WorldSessionTests.cpp} 和
 \src{tests/check_world_session.py}{check\_world\_session.py}。
+
+\clearpage
+\subsection{在三个进程里看同一个箱子}
+打开四个终端，都进入仓库根目录。第一个终端负责转发实体位置，另三个各有一份独立的游戏场景。依次运行下面四行，每个终端各用一行。两个观看端显示 \texttt{READY} 后，再启动物理主机。
+\begin{lstlisting}
+Open-World-Session.cmd server   (*@场景服务@*)
+Open-World-Session.cmd watch    (*@观看者 A@*)
+Open-World-Session.cmd watch    (*@观看者 B@*)
+Open-World-Session.cmd host     (*@运行 PhysX 的主机@*)
+\end{lstlisting}
+例子在终端打印高度，便于逐行核对某一份位置到了哪一个进程。想连接局域网中的服务，在 \texttt{host} 或 \texttt{watch} 后填它的 IPv4 地址和端口；服务端也要用自己的局域网地址启动。
+
+主机让编号 103 的箱子从三米高处落下。物理每秒走 60 步，每三步尝试发送一次姿态，便于在终端里看清连续变化的高度。打开观看端会看到一行行 \texttt{STATE}，后面的两个数分别是场景版本和箱子中心离地的米数。半米高的读数表示半边长为半米的箱子已经落地。主机退出后，服务端发来空列表，观看端移除显示的箱子。2026 年 11 月 22 日的本机回环测试中，两个独立观看进程收到了 40 份相同版本的位置，最后都停在 $0.4999990$ 米。
+
+实体编号还涉及退出游戏时的一次清理。假设观看者先收到了编号 103 的箱子。游戏随后把这个副本删掉，从存档恢复了另一个同样编号的箱子。旧实现只记 UUID，下一份网络位置会覆盖刚恢复的箱子，断线时还可能把它删除。现在 \code{NetworkScene} 同时保存自己创建的本地实体句柄。EnTT 会区分同一位置先后创建的两个对象，旧句柄失效后，网络层就认得这个箱子已经换了主人。回归测试让存档箱子停在七米高处，再收一次快照并断线，核对箱子仍在原位。\href{https://github.com/skypjack/entt/blob/main/docs/md/entity.md}{EnTT 作者对实体编号与版本的说明}
+
+\readings{\src{examples/Network/WorldWorkshop.cpp}{游戏示例 · 主机、观看者}\quad\src{Open-World-Session.cmd}{启动脚本}}

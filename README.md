@@ -16,7 +16,7 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 双击 [Open-Character-Animation.cmd](Open-Character-Animation.cmd) 可以打开角色动画演示。用同一个 Vulkan 窗口观察骨架姿势、移动角色、改变手要够到的位置，或者让布娃娃开始行走。[角色动画图解](output/pdf/Redflag-Character-Animation.pdf) · [六种模式的实机画面与测量](output/validation/character-animation)
 
-物理状态也可以交给另一台客户端显示。把带有 `world_server.cpp` 的 REDFServer 检出到 Redflag 的同级目录，运行 `tests\run_world_session.cmd` 即可启动服务端并连接三个真实客户端。测试会故意丢弃一次确认，让主机重发，再核对两个观看端的箱子位置。游戏里使用的入口是 `WorldClient` 和 `NetworkScene`。[常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
+要观察箱子怎样从物理主机同步到另一台游戏进程，把含有 `world_server.cpp` 的 REDFServer 放在 Redflag 的同级目录。运行 `Open-World-Session.cmd server`，在另两个终端分别运行 `Open-World-Session.cmd watch`，最后在第四个终端运行 `Open-World-Session.cmd host`。两个观看者会逐行显示箱子的高度。运行 `tests\run_world_session.cmd` 还能检查漏收确认后的重传、超时和实体移除。游戏里使用的入口是 `WorldClient` 和 `NetworkScene`。[游戏示例](examples/Network/WorldWorkshop.cpp) · [常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
 
 用 Visual Studio 打开 `Redflag.sln`。编辑器交互在 `RedflagForge/src`，场景、资源和图形实现位于 `Redflag/src`。C# 的引擎接口放在 `Redflag-ScriptCore`，对应的游戏脚本在 `SandboxProject`。工程由根目录的 `premake5.lua` 生成。
 

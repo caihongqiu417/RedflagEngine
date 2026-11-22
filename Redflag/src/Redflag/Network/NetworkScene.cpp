@@ -26,10 +26,14 @@ namespace Redflag
 
 	bool NetworkScene::Apply(const std::vector<WorldPose>& poses)
 	{
-		std::set<uint64_t> incoming;
+		std::unordered_map<uint64_t, entt::entity> incoming;
 		for (const WorldPose& pose : poses)
 		{
-			if (!incoming.insert(pose.ID).second || (!m_RemoteIDs.count(pose.ID) && m_Scene.GetEntityByUUID(pose.ID)))
+			Entity entity = m_Scene.GetEntityByUUID(pose.ID);
+			const auto replica = m_Replicas.find(pose.ID);
+			if (entity && (replica == m_Replicas.end() || replica->second != static_cast<entt::entity>(entity)))
+				return false;
+			if (!incoming.emplace(pose.ID, static_cast<entt::entity>(entity)).second)
 				return false;
 		}
 
@@ -37,22 +41,22 @@ namespace Redflag
 		{
 			Entity entity = m_Scene.GetEntityByUUID(pose.ID);
 			if (!entity)
+			{
 				entity = m_Scene.CreateEntityWithUUID(pose.ID, "Network Entity");
+				incoming.at(pose.ID) = entity;
+			}
 			TransformComponent& transform = entity.GetComponent<TransformComponent>();
 			transform.Translation = pose.Translation;
 			transform.Rotation = pose.Rotation;
 		}
 
-		for (uint64_t id : m_RemoteIDs)
+		for (const auto& [id, handle] : m_Replicas)
 		{
-			if (!incoming.count(id))
-			{
-				Entity entity = m_Scene.GetEntityByUUID(id);
-				if (entity)
-					m_Scene.DestroyEntity(entity);
-			}
+			// EnTT 句柄会随对象换代。旧副本被游戏删除后，断线也不能删掉后来恢复的物体。
+			if (!incoming.count(id) && m_Scene.GetRegistry().valid(handle))
+				m_Scene.DestroyEntity(Entity(handle, &m_Scene));
 		}
-		m_RemoteIDs = std::move(incoming);
+		m_Replicas = std::move(incoming);
 		return true;
 	}
 }

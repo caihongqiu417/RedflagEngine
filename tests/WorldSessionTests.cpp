@@ -109,6 +109,19 @@ int main(int argc, char** argv)
 			Check(temporary.Apply(a.Poses()), "create transient network entities");
 		}
 		Check(!released.GetEntityByUUID(boxID), "display entity survived its network layer");
+		// 游戏移除一个远端副本后，可能用同一 UUID 从存档恢复本地物体。
+		Scene restored;
+		{
+			NetworkScene remote(restored);
+			Check(remote.Apply(a.Poses()), "populate remote scene before restore");
+			restored.DestroyEntity(restored.GetEntityByUUID(boxID));
+			Entity saved = restored.CreateEntityWithUUID(boxID, "Saved crate");
+			saved.GetComponent<TransformComponent>().Translation.y = 7.f;
+			Check(!remote.Apply(a.Poses()), "snapshot overwrote a restored local object");
+			Check(saved.GetComponent<TransformComponent>().Translation.y == 7.f, "snapshot moved the saved crate");
+		}
+		Check(restored.GetEntityByUUID(boxID) && !restored.GetEntityByUUID(flatID),
+			"disconnect should remove only entities created by the network scene");
 		simulation.OnSimulationStop();
 		std::printf("PASS physics_host=1 viewers=2 PhysX_y=%.7f Box2D_y=%.7f snapshots=3 remote_removed=1\n", physxY, box2dY);
 	}

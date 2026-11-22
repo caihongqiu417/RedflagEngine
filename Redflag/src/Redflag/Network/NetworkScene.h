@@ -1,7 +1,8 @@
 #pragma once
 
 #include "WorldClient.h"
-#include <set>
+#include "entt.hpp"
+#include <unordered_map>
 
 namespace Redflag
 {
@@ -25,6 +26,7 @@ namespace Redflag
 
 	private:
 		Scene& m_Scene;
-		std::set<uint64_t> m_RemoteIDs;
+		// UUID 在网络上传递；本地句柄用来区分游戏后来用同一 UUID 恢复的新对象。
+		std::unordered_map<uint64_t, entt::entity> m_Replicas;
 	};
 }

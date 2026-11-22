@@ -180,6 +180,39 @@ class HostProxy:
             worker.join(timeout=3)
 
 
+def separate_processes(server_exe, workshop):
+    # 两个观看者各自启动一份游戏，没有共享内存。只比较它们都实际收到的场景版本。
+    with server(server_exe, 100, 8000) as port:
+        address = ["127.0.0.1", str(port)]
+        viewers = []
+        try:
+            for _ in range(2):
+                viewers.append(subprocess.Popen([workshop, "watch", *address], stdout=subprocess.PIPE, text=True))
+            host = subprocess.run([workshop, "host", *address], capture_output=True, text=True,
+                                  check=True, timeout=15)
+            states = []
+            for game in viewers:
+                output, _ = game.communicate(timeout=8)
+                assert game.returncode == 0 and "READY" in output, output
+                rows = [line.split() for line in output.splitlines() if line.startswith("STATE ")]
+                snapshots = {int(version): float(y) for _, version, y in rows}
+                assert len(snapshots) == len(rows) and list(snapshots) == sorted(snapshots), rows
+                states.append(snapshots)
+        finally:
+            for game in viewers:
+                if game.poll() is None:
+                    game.terminate()
+                game.wait(timeout=5)
+                game.stdout.close()
+    _, entity, final = next(s.split() for s in host.stdout.splitlines() if s.startswith("HOST "))
+    common = sorted(states[0].keys() & states[1].keys())
+    assert len(common) >= 3 and all(states[0][v] == states[1][v] for v in common)
+    assert states[0][common[0]] > 1 and any(.55 < states[0][v] < 1.8 for v in common)
+    assert all(list(stream.values())[-1] == float(final) for stream in states) and abs(float(final) - .5) < .01
+    print(f"PASS separate game processes: host=1 viewers=2, shared snapshots={len(common)}, "
+          f"entity={entity}, resting height={final} m")
+
+
 def main():
     executable = str(Path(sys.argv[1]).resolve())
     wire_checks(executable)
@@ -192,6 +225,8 @@ def main():
             sequence = [NUMBER.unpack(p[:4])[0] for p in proxy.published]
             assert sequence == [1, 1, 2, 3] and proxy.published[0] == proxy.published[1], sequence
             print(f"PASS engine retransmitted the identical first publish after its ACK was withheld: {sequence}")
+    if len(sys.argv) > 3:
+        separate_processes(executable, str(Path(sys.argv[3]).resolve(strict=True)))
 
 
 if __name__ == "__main__":
