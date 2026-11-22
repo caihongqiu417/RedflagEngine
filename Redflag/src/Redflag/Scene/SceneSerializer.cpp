@@ -533,6 +533,12 @@ namespace Redflag {
             out << YAML::Key << "File" << YAML::Value << (relative.empty() ? player.File : relative).generic_u8string();
             out << YAML::Key << "Playing" << YAML::Value << player.Playing;
             out << YAML::Key << "Time" << YAML::Value << player.Time;
+            if (!player.IdleFile.empty())
+            {
+                const auto idle = player.IdleFile.lexically_relative(folder);
+                out << YAML::Key << "Idle" << YAML::Value << (idle.empty() ? player.IdleFile : idle).generic_u8string();
+                out << YAML::Key << "MoveSpeed" << YAML::Value << player.MoveSpeed;
+            }
             out << YAML::EndMap;
         }
 
@@ -823,6 +829,16 @@ namespace Redflag {
                         try { player.Load(player.File); }
                         catch (const std::exception& error) { RF_CORE_WARN("BVH: {0}", error.what()); }
                         if (player.Clip) player.Seek(animation["Time"].as<float>(0.f));
+                    }
+                    if (const YAML::Node idle = animation["Idle"])
+                    {
+                        player.IdleFile = (std::filesystem::absolute(filepath).parent_path() /
+                            std::filesystem::u8path(idle.as<std::string>())).lexically_normal();
+                        player.MoveSpeed = animation["MoveSpeed"].as<float>(player.MoveSpeed);
+                        if (!std::isfinite(player.MoveSpeed) || player.MoveSpeed < 0.f)
+                            throw std::runtime_error("BVH character speed must be zero or positive");
+                        try { player.SetIdleMotion(player.IdleFile); }
+                        catch (const std::exception& error) { RF_CORE_WARN("BVH character: {0}", error.what()); }
                     }
                 }
 

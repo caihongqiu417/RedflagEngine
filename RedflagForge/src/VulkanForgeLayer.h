@@ -53,6 +53,7 @@ namespace Redflag
 		bool m_SelectSceneTab = false;
 		bool m_ResetLayout = false;
 		bool m_Hovered = false;
+		bool m_ViewportFocused = false;
 		bool m_HasSceneImage = false;
 		glm::mat4 m_LastView{ 1 };
 		double m_NavigationUntil = 0;

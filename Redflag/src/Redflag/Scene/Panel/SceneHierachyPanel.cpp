@@ -1448,6 +1448,35 @@ namespace Redflag {
                     player.Playing = false;
                     player.Seek(time);
                 }
+                ImGui::Separator();
+                ImGui::TextUnformatted("角色控制");
+                if (!player.IdleFile.empty())
+                    ImGui::TextWrapped("%s", player.IdleFile.filename().u8string().c_str());
+                if (ImGui::Button("选择待机 BVH…"))
+                {
+                    const auto file = FileDialogs::OpenFile("BVH motion (*.bvh)\0*.bvh\0");
+                    if (!file.empty())
+                    {
+                        try { player.SetIdleMotion(file); }
+                        catch (const std::exception& error) { RF_CORE_WARN("BVH: {0}", error.what()); ImGui::OpenPopup("待机动作不兼容"); }
+                    }
+                }
+                if (ImGui::BeginPopup("待机动作不兼容"))
+                {
+                    ImGui::TextWrapped("请选择同一骨架的待机与行走动作。行走动作须包含向前的位移。");
+                    ImGui::EndPopup();
+                }
+                if (!player.IdleFile.empty())
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("移除待机动作")) player.SetIdleMotion({});
+                }
+                if (player.HasControl())
+                {
+                    float speed = player.MoveSpeed;
+                    if (ImGui::DragFloat("行走速度（米/秒）", &speed, .05f) && speed >= 0.f) player.MoveSpeed = speed;
+                    ImGui::TextWrapped("启动模拟或游戏，在视口中按方向键行走，松开后站立。");
+                }
             });
 
         DrawComponent<PickupComponent>("可拿取", entity, []()

@@ -7,6 +7,7 @@ namespace Redflag
 	void SkeletonAnimationComponent::Load(const std::filesystem::path& path)
 	{
 		Ref<AnimationClip> clip = CreateRef<AnimationClip>(AnimationClip::LoadBVH(path));
+		if (m_Idle) m_Control = CharacterController(*m_Idle, *clip);
 		File = std::filesystem::absolute(path).lexically_normal();
 		Clip = std::move(clip);
 		Seek(0.f);
@@ -16,8 +17,38 @@ namespace Redflag
 	{
 		Time = std::fmod(seconds, Clip->Duration());
 		if (Time < 0.f) Time += Clip->Duration();
-		Pose local = Clip->Sample(Time);
-		// 在实体原点循环演示步态，保留骨盆的上下起伏，避免动作回到开头时整个人跳回原地。
+		UpdateBones(Clip->Sample(Time));
+	}
+
+	void SkeletonAnimationComponent::SetIdleMotion(const std::filesystem::path& path)
+	{
+		if (path.empty())
+		{
+			m_Control.reset();
+			m_Idle.reset();
+			IdleFile.clear();
+			return;
+		}
+		if (!Clip) throw std::invalid_argument("Select a walking BVH first");
+		Ref<AnimationClip> idle = CreateRef<AnimationClip>(AnimationClip::LoadBVH(path));
+		m_Control = CharacterController(*idle, *Clip);
+		m_Idle = std::move(idle);
+		IdleFile = std::filesystem::absolute(path).lexically_normal();
+	}
+
+	void SkeletonAnimationComponent::RestartControl()
+	{
+		if (m_Idle) m_Control.emplace(*m_Idle, *Clip);
+	}
+
+	void SkeletonAnimationComponent::Move(float seconds, glm::vec2 velocity)
+	{
+		UpdateBones(m_Control->Update(seconds, velocity));
+	}
+
+	void SkeletonAnimationComponent::UpdateBones(Pose local)
+	{
+		// 水平移动交给实体的位置，骨架只保留骨盆的上下起伏。
 		local[0].Position.x = local[0].Position.z = 0.f;
 		const Pose pose = Clip->Rig.ToModelSpace(local);
 		Bones.clear();

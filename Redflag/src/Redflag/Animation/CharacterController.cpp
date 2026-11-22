@@ -51,8 +51,8 @@ namespace Redflag
 			m_Heading += std::atan2(std::sin(angle), std::cos(angle)) * response;
 		}
 
-		Pose pose = m_Idle.Sample(m_Clock);
-		Pose walk = m_Walk.Sample(m_WalkTime);
+		Pose pose = m_Idle.get().Sample(m_Clock);
+		Pose walk = m_Walk.get().Sample(m_WalkTime);
 		const glm::vec3 up(0,1,0);
 		pose[0].Rotation = glm::angleAxis(m_Heading - m_IdleHeading, up) * pose[0].Rotation;
 		walk[0].Rotation = glm::angleAxis(m_Heading - m_WalkHeading, up) * walk[0].Rotation;

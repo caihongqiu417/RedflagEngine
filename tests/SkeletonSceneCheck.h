@@ -63,8 +63,33 @@ static void CheckSkeletonScene(VulkanContext& context, VulkanDraw& draw, const f
     other.Playing = true;
     copy->OnUpdateAnimations(.25f);
     Check(other.Bones != restored.Bones && !restored.Playing, "Scene copy shared playback state");
-    report << "scene,clip,bones,seconds,actor_pixels,changed_pixels,paused_roundtrip,independent_copy,retained_bake\n"
+    Check(restored.HasControl() && restored.IdleFile == player.IdleFile && restored.MoveSpeed == player.MoveSpeed,
+          "Walking speed or idle motion did not survive reopening");
+
+    const Ref<Scene> edited = scene;
+    scene = copy;
+    actor = scene->GetEntityByUUID(102);
+    scene->OnSimulationStart();
+    TransformComponent& transform = actor.GetComponent<TransformComponent>();
+    const glm::vec3 start = transform.Translation;
+    scene->OnUpdateAnimations(.4f, glm::vec2(0));
+    const std::vector<bool> idle = image(true);
+    scene->OnUpdateAnimations(.4f, glm::vec2(1,-1));
+    const glm::vec3 end = transform.Translation;
+    const float distance = glm::length(end - start);
+    Check(std::abs(distance - .4f * restored.MoveSpeed) < .0001f && end.x > start.x && end.z < start.z,
+          "Diagonal input did not move the entity at its configured speed");
+    const std::vector<bool> walking = image(true);
+    Check(walking != idle && std::count(walking.begin(), walking.end(), true) > 0, "Controllable pose not visible in Vulkan");
+    scene->OnUpdateAnimations(.5f, glm::vec2(0));
+    Check(transform.Translation == end, "Character kept travelling after input stopped");
+    scene->OnSimulationStop();
+    Check(edited->GetEntityByUUID(102).GetComponent<TransformComponent>().Translation == start,
+          "Movement changed the editable scene");
+
+    report << "scene,clip,bones,seconds,actor_pixels,changed_pixels,paused_roundtrip,independent_copy,retained_bake,"
+              "control_seconds,diagonal_metres,released_stops\n"
            << "Character-Walk,Walk.bvh," << player.Bones.size() << ',' << player.Time << ',' << visible
-           << ',' << changed << ",pass,pass,pass\n";
+           << ',' << changed << ",pass,pass,pass,0.4," << distance << ",pass\n";
     context.WaitIdle();
 }

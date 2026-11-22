@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnimationClip.h"
+#include <functional>
 
 namespace Redflag
 {
@@ -15,8 +16,7 @@ namespace Redflag
 		glm::vec2 GetPosition() const { return m_Position; }
 
 	private:
-		const AnimationClip& m_Idle;
-		const AnimationClip& m_Walk;
+		std::reference_wrapper<const AnimationClip> m_Idle, m_Walk;
 		glm::vec2 m_Position{0.0f};
 		float m_IdleHeading, m_WalkHeading, m_ClipSpeed;
 		float m_Heading = 0.0f, m_Clock = 0.0f, m_WalkTime = 0.0f, m_WalkWeight = 0.0f;

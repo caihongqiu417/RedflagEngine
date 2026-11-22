@@ -38,7 +38,8 @@ namespace Redflag {
 
 		// 运行或模拟时推进物理。动态刚体的位置、旋转会写回场景，供渲染和脚本读取。
 		void OnUpdatePhysics(Timestep ts);
-		void OnUpdateAnimations(Timestep ts);
+		/// <param name="movement">控制角色在地面上的 X、Z 方向。零让角色停步，省略则只预览动作。</param>
+		void OnUpdateAnimations(Timestep ts, std::optional<glm::vec2> movement = {});
 
 		// 查询最近一次物理步中的碰撞体；距离和半径均以米为单位。
 		std::optional<RayHit3D> Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const;
@@ -46,8 +47,8 @@ namespace Redflag {
 
 		// 编辑、运行和物理模拟分别更新。
 		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
-		void OnUpdateRuntime(Timestep ts);
-		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);
+		void OnUpdateRuntime(Timestep ts, glm::vec2 movement = glm::vec2(0));
+		void OnUpdateSimulation(Timestep ts, EditorCamera& camera, glm::vec2 movement = glm::vec2(0));
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
@@ -63,6 +64,7 @@ namespace Redflag {
 		void SetEnvironment(const std::filesystem::path& path) { m_Environment = path; }
 	private:
 		void OnCameraAdded(CameraComponent& component);
+		void ResetCharacterControls();
 
 		void OnPhysics2DStart();
 		void OnPhysics2DStop();

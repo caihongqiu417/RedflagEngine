@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "VulkanForgeLayer.h"
+#include "CharacterInput.h"
 
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Core/Application.h"
@@ -211,6 +212,7 @@ namespace Redflag
 			simulation->OnSimulationStart();
 			m_EditScene = std::move(m_Scene);
 			m_Scene = std::move(simulation);
+			ImGui::SetWindowFocus("场景视口");
 		}
 		m_Hierarchy.SetContext(m_Scene);
 		m_Lighting->ResetHistory();
@@ -219,9 +221,13 @@ namespace Redflag
 
 	void VulkanForgeLayer::OnUpdate(Timestep ts)
 	{
-		m_Scene->OnUpdateAnimations(ts);
 		if (m_EditScene)
+		{
+			m_Scene->OnUpdateAnimations(ts, ReadCharacterMovement(m_ViewportFocused));
 			m_Scene->OnUpdatePhysics(ts);
+		}
+		else
+			m_Scene->OnUpdateAnimations(ts);
 		if (m_Hovered && !m_GameView)
 			m_Camera.OnUpdate(ts);
 	}
@@ -299,7 +305,9 @@ namespace Redflag
 			ImGui::EndMenu();
 		}
 		ImGui::Separator();
-		if (ImGui::MenuItem(m_EditScene ? "停止模拟" : "模拟物理")) ToggleSimulation();
+		if (ImGui::MenuItem(m_EditScene ? "停止模拟" : "模拟物理", "F5") ||
+			(!ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_F5, false)))
+			ToggleSimulation();
 		if (m_NpcVision.Draw(m_Scene, m_ScenePath, bool(m_EditScene), m_Camera))
 			m_SelectSceneTab = true;
 		ImGui::TextDisabled("%s   /   Vulkan", m_ScenePath.empty() ? "未命名" : m_ScenePath.stem().u8string().c_str());
@@ -453,6 +461,7 @@ namespace Redflag
 	{
 		m_Hovered = false;
 		bool visible = ImGui::Begin("场景视口", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		m_ViewportFocused = visible && ImGui::IsWindowFocused();
 		if (visible && ImGui::BeginTabBar("Cameras"))
 		{
 			const bool previous = m_GameView;

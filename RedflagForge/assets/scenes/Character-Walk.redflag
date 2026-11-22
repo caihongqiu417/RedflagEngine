@@ -27,6 +27,8 @@ Entities:
       Scale: [1, 1, 1]
     SkeletonAnimationComponent:
       File: ../animations/GAMES105/Walk.bvh
+      Idle: ../animations/GAMES105/Idle.bvh
+      MoveSpeed: 1.2
       Playing: true
       Time: 0
   - Entity: 103

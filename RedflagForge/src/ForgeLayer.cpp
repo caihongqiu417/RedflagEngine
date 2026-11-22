@@ -2,6 +2,7 @@
 
 #include"Redflag.h"
 #include "ForgeLayer.h"
+#include "CharacterInput.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -231,7 +232,7 @@ namespace Redflag {
             // Simulate：物理步进 + EditorCamera 渲染，不执行脚本
             case SceneState::Simulate:
             {
-                m_ActiveScene->OnUpdateSimulation(ts, m_EditorCamera);
+                m_ActiveScene->OnUpdateSimulation(ts, m_EditorCamera, ReadCharacterMovement(m_ViewportFocused));
                 break;
             }
 
@@ -350,7 +351,7 @@ namespace Redflag {
             // Play：完整运行时（脚本 + 物理 + 场景主相机渲染）
             case SceneState::Play:
             {
-                m_ActiveScene->OnUpdateRuntime(ts);
+                m_ActiveScene->OnUpdateRuntime(ts, ReadCharacterMovement(m_ViewportFocused));
                 break;
             }
         }

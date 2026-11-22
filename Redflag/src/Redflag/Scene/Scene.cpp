@@ -158,6 +158,7 @@ namespace Redflag {
 
     void Scene::OnRuntimeStart()
     {
+        ResetCharacterControls();
         OnPhysics2DStart();
         SyncPhysics3D();
 
@@ -223,6 +224,7 @@ namespace Redflag {
 
     void Scene::OnSimulationStart()
     {
+        ResetCharacterControls();
         OnPhysics2DStart();
         SyncPhysics3D();
     }
@@ -239,18 +241,34 @@ namespace Redflag {
         SceneRenderer::RenderScene(*this, camera);
     }
 
-    void Scene::OnUpdateAnimations(Timestep ts)
+    void Scene::ResetCharacterControls()
     {
-        m_Registry.view<SkeletonAnimationComponent>().each([&](SkeletonAnimationComponent& player) {
-            if (player.Playing && player.Clip)
+        m_Registry.view<SkeletonAnimationComponent>().each([](SkeletonAnimationComponent& player) { player.RestartControl(); });
+    }
+
+    void Scene::OnUpdateAnimations(Timestep ts, std::optional<glm::vec2> movement)
+    {
+        if (movement && glm::length(*movement) > 1.f) *movement = glm::normalize(*movement);
+        m_Registry.view<TransformComponent, SkeletonAnimationComponent>().each([&](TransformComponent& transform, SkeletonAnimationComponent& player) {
+            if (movement && player.HasControl())
+            {
+                const glm::vec2 velocity = *movement * player.MoveSpeed;
+                const glm::vec3 world(velocity.x, 0.f, velocity.y);
+                transform.Translation += world * ts.GetSeconds();
+
+                // 方向键沿世界地面移动。实体若已绕 Y 轴旋转，骨架要把同一个方向换算到自己的坐标中。
+                const glm::vec3 local = glm::angleAxis(-transform.Rotation.y, glm::vec3(0,1,0)) * world;
+                player.Move(ts.GetSeconds(), {local.x, local.z});
+            }
+            else if (player.Playing && player.Clip)
                 player.Seek(player.Time + ts.GetSeconds());
         });
     }
 
     //runtime
-    void Scene::OnUpdateRuntime(Timestep ts)
+    void Scene::OnUpdateRuntime(Timestep ts, glm::vec2 movement)
     {
-        OnUpdateAnimations(ts);
+        OnUpdateAnimations(ts, movement);
         // Scripts
         // ----------
         {
@@ -361,10 +379,11 @@ namespace Redflag {
         }
     }
 
-    void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+    void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera, glm::vec2 movement)
     {
+        OnUpdateAnimations(ts, movement);
         OnUpdatePhysics(ts);
-        OnUpdateEditor(ts, camera);
+        SceneRenderer::RenderScene(*this, camera);
     }
 
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
