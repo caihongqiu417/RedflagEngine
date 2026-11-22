@@ -1,0 +1,220 @@
+{
+  "frame": 12,
+  "renderdoc": "1.47",
+  "size": [
+    1200,
+    900
+  ],
+  "captures": {
+    "hud": {
+      "path": "output/captures/local/covered-4x3-68dcee446647/hud/studio_frame12.rdc",
+      "sha256": "b1747c78df12894a2e543763f43431283f2b6d186cab719c7b7de0b4bd22494f"
+    },
+    "empty": {
+      "path": "output/captures/local/covered-4x3-68dcee446647/empty/studio_frame12.rdc",
+      "sha256": "ec0741f55271ac23483525116c9e10ad7211897b5f1364fa613e913a4d103ace"
+    }
+  },
+  "exe_sha256": "68dcee4466479aec36f04bf7c9b7e77cf050fec4eb937265db465fc1e69b01f1",
+  "inputs": {
+    "assets/scenes/Watt-Station.redflag": "d3a44674537a14316f5ba643c6f6cadec5af4bab8e84919d642205cb2f7f9b64",
+    "assets/scenes/Watt-Station.redflag.render.yaml": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+    "assets/ui/station/hud.yaml": "74b8d66e73bb240600a621375d92bcabcc4c4667808c9bb402b567eabdf7200d",
+    "Resources/Scripts/Sandbox.dll": "3c1efd6e2c535abb518cf31a00d47faaddc0610e5bf93290aa462581f1f870cb",
+    "Resources/Scripts/Redflag-ScriptCore.dll": "c76ad3ba02c86d4960c574556f4013f3c1d7a1ab04baebae4ee403d9426a1e36"
+  },
+  "game_draws": 16,
+  "no_hud_draws": 2,
+  "hud_draws": 14,
+  "hud_events": [
+    {
+      "event": 2422,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 20034,
+      "fully_transparent_samples": 10,
+      "gpu_samples": 20097,
+      "fragment_invocations": 20097
+    },
+    {
+      "event": 2425,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 44,
+      "coverage": 2312,
+      "fully_transparent_samples": 576,
+      "gpu_samples": 2299,
+      "fragment_invocations": 2299
+    },
+    {
+      "event": 2428,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 34905,
+      "fully_transparent_samples": 12,
+      "gpu_samples": 34970,
+      "fragment_invocations": 34970
+    },
+    {
+      "event": 2431,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 118,
+      "coverage": 3209,
+      "fully_transparent_samples": 875,
+      "gpu_samples": 3251,
+      "fragment_invocations": 3251
+    },
+    {
+      "event": 2434,
+      "texture_size": [
+        74,
+        74
+      ],
+      "triangles": 2,
+      "coverage": 225,
+      "fully_transparent_samples": 181,
+      "gpu_samples": 225,
+      "fragment_invocations": 225
+    },
+    {
+      "event": 2437,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 918,
+      "fully_transparent_samples": 15,
+      "gpu_samples": 918,
+      "fragment_invocations": 918
+    },
+    {
+      "event": 2440,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 10,
+      "coverage": 344,
+      "fully_transparent_samples": 68,
+      "gpu_samples": 344,
+      "fragment_invocations": 344
+    },
+    {
+      "event": 2443,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 102,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 102,
+      "fragment_invocations": 102
+    },
+    {
+      "event": 2446,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 475,
+      "fully_transparent_samples": 11,
+      "gpu_samples": 475,
+      "fragment_invocations": 475
+    },
+    {
+      "event": 2449,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 135,
+      "fully_transparent_samples": 28,
+      "gpu_samples": 144,
+      "fragment_invocations": 144
+    },
+    {
+      "event": 2452,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 50,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 50,
+      "fragment_invocations": 50
+    },
+    {
+      "event": 2455,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 468,
+      "fully_transparent_samples": 7,
+      "gpu_samples": 468,
+      "fragment_invocations": 468
+    },
+    {
+      "event": 2458,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 135,
+      "fully_transparent_samples": 38,
+      "gpu_samples": 144,
+      "fragment_invocations": 144
+    },
+    {
+      "event": 2461,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 52,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 52,
+      "fragment_invocations": 52
+    }
+  ],
+  "window_and_scene": [
+    {
+      "event": 2416,
+      "triangles": 10,
+      "samples": 1088384
+    },
+    {
+      "event": 2419,
+      "triangles": 2,
+      "samples": 808650
+    }
+  ],
+  "pixels_by_hud_layers": [
+    1022975,
+    50813,
+    6085,
+    127
+  ],
+  "rasterized_hud_samples": 63364,
+  "zero_alpha_samples": 1821,
+  "messages": []
+}

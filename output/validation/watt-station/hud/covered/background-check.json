@@ -1,0 +1,9 @@
+{
+  "window_samples": [
+    2085584,
+    11984
+  ],
+  "removed_samples": 2073600,
+  "scene_samples": 2067604,
+  "same_scene_vertices_uv_scissor": true
+}

@@ -1,0 +1,274 @@
+{
+  "frame": 12,
+  "renderdoc": "1.47",
+  "size": [
+    1920,
+    1080
+  ],
+  "captures": {
+    "hud": {
+      "path": "output/captures/local/baseline-29c89e18e794/hud/studio_frame12.rdc",
+      "sha256": "f072af9d11b6792657c996022a892cb122d35bf13bad4627940c3bb1f0cc8e72"
+    },
+    "empty": {
+      "path": "output/captures/local/baseline-29c89e18e794/empty/studio_frame12.rdc",
+      "sha256": "c67266ae273ee8acc4b21f98682e95543868ecea58d8c66028fdbd5daa1e49e1"
+    }
+  },
+  "exe_sha256": "29c89e18e794536fee05cc405c7b123b8dc47d5e74c6ac353cd98c3991bf83eb",
+  "inputs": {
+    "assets/scenes/Watt-Station.redflag": "d3a44674537a14316f5ba643c6f6cadec5af4bab8e84919d642205cb2f7f9b64",
+    "assets/scenes/Watt-Station.redflag.render.yaml": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+    "assets/ui/station/hud.yaml": "74b8d66e73bb240600a621375d92bcabcc4c4667808c9bb402b567eabdf7200d",
+    "Resources/Scripts/Sandbox.dll": "3c1efd6e2c535abb518cf31a00d47faaddc0610e5bf93290aa462581f1f870cb",
+    "Resources/Scripts/Redflag-ScriptCore.dll": "c76ad3ba02c86d4960c574556f4013f3c1d7a1ab04baebae4ee403d9426a1e36"
+  },
+  "game_draws": 16,
+  "no_hud_draws": 2,
+  "hud_draws": 14,
+  "hud_events": [
+    {
+      "event": 2422,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 51000,
+      "fully_transparent_samples": 20,
+      "gpu_samples": 51000,
+      "fragment_invocations": 51000
+    },
+    {
+      "event": 2425,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 44,
+      "coverage": 5939,
+      "fully_transparent_samples": 1550,
+      "gpu_samples": 5939,
+      "fragment_invocations": 5939
+    },
+    {
+      "event": 2428,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 89440,
+      "fully_transparent_samples": 36,
+      "gpu_samples": 89440,
+      "fragment_invocations": 89440
+    },
+    {
+      "event": 2431,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 118,
+      "coverage": 8478,
+      "fully_transparent_samples": 2424,
+      "gpu_samples": 8478,
+      "fragment_invocations": 8478
+    },
+    {
+      "event": 2434,
+      "texture_size": [
+        74,
+        74
+      ],
+      "triangles": 2,
+      "coverage": 576,
+      "fully_transparent_samples": 468,
+      "gpu_samples": 576,
+      "fragment_invocations": 576
+    },
+    {
+      "event": 2437,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 2430,
+      "fully_transparent_samples": 51,
+      "gpu_samples": 2430,
+      "fragment_invocations": 2430
+    },
+    {
+      "event": 2440,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 10,
+      "coverage": 966,
+      "fully_transparent_samples": 246,
+      "gpu_samples": 966,
+      "fragment_invocations": 966
+    },
+    {
+      "event": 2443,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 243,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 243,
+      "fragment_invocations": 243
+    },
+    {
+      "event": 2446,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 1200,
+      "fully_transparent_samples": 23,
+      "gpu_samples": 1200,
+      "fragment_invocations": 1200
+    },
+    {
+      "event": 2449,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 378,
+      "fully_transparent_samples": 95,
+      "gpu_samples": 378,
+      "fragment_invocations": 378
+    },
+    {
+      "event": 2452,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 120,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 120,
+      "fragment_invocations": 120
+    },
+    {
+      "event": 2455,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 1230,
+      "fully_transparent_samples": 22,
+      "gpu_samples": 1230,
+      "fragment_invocations": 1230
+    },
+    {
+      "event": 2458,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 378,
+      "fully_transparent_samples": 103,
+      "gpu_samples": 378,
+      "fragment_invocations": 378
+    },
+    {
+      "event": 2461,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 123,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 123,
+      "fragment_invocations": 123
+    }
+  ],
+  "window_and_scene": [
+    {
+      "event": 2416,
+      "triangles": 10,
+      "samples": 2085584
+    },
+    {
+      "event": 2419,
+      "triangles": 2,
+      "samples": 2067604
+    }
+  ],
+  "pixels_by_hud_layers": [
+    1927724,
+    129520,
+    16087,
+    269
+  ],
+  "rasterized_hud_samples": 162501,
+  "zero_alpha_samples": 5038,
+  "messages": [],
+  "gpu_ms_11_replays": {
+    "window": [
+      0.01584,
+      0.01584,
+      0.018144,
+      0.018784,
+      0.016224,
+      0.016672,
+      0.01744,
+      0.018528,
+      0.017312,
+      0.015296,
+      0.017056
+    ],
+    "scene": [
+      0.058592,
+      0.057024,
+      0.06816,
+      0.068672,
+      0.061152,
+      0.060992000000000005,
+      0.062432,
+      0.065344,
+      0.062304000000000005,
+      0.056832,
+      0.062688
+    ],
+    "hud": [
+      0.0016639999999999997,
+      0.0016959999999999996,
+      0.00192,
+      0.0019519999999999997,
+      0.001696,
+      0.001792,
+      0.0018239999999999999,
+      0.002144,
+      0.0017599999999999998,
+      0.0015999999999999999,
+      0.0021119999999999997
+    ],
+    "window_scene_hud": [
+      0.076096,
+      0.07455999999999997,
+      0.08822399999999998,
+      0.089408,
+      0.079072,
+      0.07945600000000001,
+      0.081696,
+      0.08601600000000001,
+      0.08137599999999999,
+      0.07372799999999997,
+      0.08185599999999998
+    ]
+  }
+}

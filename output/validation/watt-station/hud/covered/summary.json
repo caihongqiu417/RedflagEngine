@@ -1,0 +1,274 @@
+{
+  "frame": 12,
+  "renderdoc": "1.47",
+  "size": [
+    1920,
+    1080
+  ],
+  "captures": {
+    "hud": {
+      "path": "output/captures/local/covered-68dcee446647/hud/studio_frame12.rdc",
+      "sha256": "b6d7cceaa8a2c68b7bc56f99a232047115dc4b5ec9f351ea8c4f139316774305"
+    },
+    "empty": {
+      "path": "output/captures/local/covered-68dcee446647/empty/studio_frame12.rdc",
+      "sha256": "62b1ce04a247858d71de22a1e6ed68f1c565568e7f1b3f94b05aadc001ecce52"
+    }
+  },
+  "exe_sha256": "68dcee4466479aec36f04bf7c9b7e77cf050fec4eb937265db465fc1e69b01f1",
+  "inputs": {
+    "assets/scenes/Watt-Station.redflag": "d3a44674537a14316f5ba643c6f6cadec5af4bab8e84919d642205cb2f7f9b64",
+    "assets/scenes/Watt-Station.redflag.render.yaml": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+    "assets/ui/station/hud.yaml": "74b8d66e73bb240600a621375d92bcabcc4c4667808c9bb402b567eabdf7200d",
+    "Resources/Scripts/Sandbox.dll": "3c1efd6e2c535abb518cf31a00d47faaddc0610e5bf93290aa462581f1f870cb",
+    "Resources/Scripts/Redflag-ScriptCore.dll": "c76ad3ba02c86d4960c574556f4013f3c1d7a1ab04baebae4ee403d9426a1e36"
+  },
+  "game_draws": 16,
+  "no_hud_draws": 2,
+  "hud_draws": 14,
+  "hud_events": [
+    {
+      "event": 2422,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 51000,
+      "fully_transparent_samples": 20,
+      "gpu_samples": 51000,
+      "fragment_invocations": 51000
+    },
+    {
+      "event": 2425,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 44,
+      "coverage": 5939,
+      "fully_transparent_samples": 1550,
+      "gpu_samples": 5939,
+      "fragment_invocations": 5939
+    },
+    {
+      "event": 2428,
+      "texture_size": [
+        192,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 89440,
+      "fully_transparent_samples": 36,
+      "gpu_samples": 89440,
+      "fragment_invocations": 89440
+    },
+    {
+      "event": 2431,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 118,
+      "coverage": 8478,
+      "fully_transparent_samples": 2424,
+      "gpu_samples": 8478,
+      "fragment_invocations": 8478
+    },
+    {
+      "event": 2434,
+      "texture_size": [
+        74,
+        74
+      ],
+      "triangles": 2,
+      "coverage": 576,
+      "fully_transparent_samples": 468,
+      "gpu_samples": 576,
+      "fragment_invocations": 576
+    },
+    {
+      "event": 2437,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 2430,
+      "fully_transparent_samples": 51,
+      "gpu_samples": 2430,
+      "fragment_invocations": 2430
+    },
+    {
+      "event": 2440,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 10,
+      "coverage": 966,
+      "fully_transparent_samples": 246,
+      "gpu_samples": 966,
+      "fragment_invocations": 966
+    },
+    {
+      "event": 2443,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 243,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 243,
+      "fragment_invocations": 243
+    },
+    {
+      "event": 2446,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 1200,
+      "fully_transparent_samples": 23,
+      "gpu_samples": 1200,
+      "fragment_invocations": 1200
+    },
+    {
+      "event": 2449,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 378,
+      "fully_transparent_samples": 95,
+      "gpu_samples": 378,
+      "fragment_invocations": 378
+    },
+    {
+      "event": 2452,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 120,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 120,
+      "fragment_invocations": 120
+    },
+    {
+      "event": 2455,
+      "texture_size": [
+        64,
+        64
+      ],
+      "triangles": 2,
+      "coverage": 1230,
+      "fully_transparent_samples": 22,
+      "gpu_samples": 1230,
+      "fragment_invocations": 1230
+    },
+    {
+      "event": 2458,
+      "texture_size": [
+        4096,
+        4096
+      ],
+      "triangles": 4,
+      "coverage": 378,
+      "fully_transparent_samples": 103,
+      "gpu_samples": 378,
+      "fragment_invocations": 378
+    },
+    {
+      "event": 2461,
+      "texture_size": [
+        96,
+        16
+      ],
+      "triangles": 2,
+      "coverage": 123,
+      "fully_transparent_samples": 0,
+      "gpu_samples": 123,
+      "fragment_invocations": 123
+    }
+  ],
+  "window_and_scene": [
+    {
+      "event": 2416,
+      "triangles": 8,
+      "samples": 11984
+    },
+    {
+      "event": 2419,
+      "triangles": 2,
+      "samples": 2067604
+    }
+  ],
+  "pixels_by_hud_layers": [
+    1927724,
+    129520,
+    16087,
+    269
+  ],
+  "rasterized_hud_samples": 162501,
+  "zero_alpha_samples": 5038,
+  "messages": [],
+  "gpu_ms_11_replays": {
+    "window": [
+      0.0041919999999999995,
+      0.003552,
+      0.00336,
+      0.0038720000000000004,
+      0.0027199999999999998,
+      0.00416,
+      0.00416,
+      0.003968,
+      0.0031999999999999997,
+      0.0041919999999999995,
+      0.004064000000000001
+    ],
+    "scene": [
+      0.054528,
+      0.059232,
+      0.258976,
+      0.057696,
+      0.059648,
+      0.063456,
+      0.061312,
+      0.06112,
+      0.062688,
+      0.056544,
+      0.057536
+    ],
+    "hud": [
+      0.0017279999999999993,
+      0.0013439999999999997,
+      0.0014719999999999998,
+      0.0017279999999999997,
+      0.001728,
+      0.0018559999999999998,
+      0.001504,
+      0.0017280000000000002,
+      0.0017599999999999998,
+      0.0019199999999999998,
+      0.002016
+    ],
+    "window_scene_hud": [
+      0.06044799999999999,
+      0.064128,
+      0.2638079999999999,
+      0.06329599999999999,
+      0.06409600000000001,
+      0.069472,
+      0.06697600000000002,
+      0.06681600000000001,
+      0.06764799999999999,
+      0.062656,
+      0.06361599999999998
+    ]
+  }
+}

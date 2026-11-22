@@ -1,0 +1,11 @@
+{
+  "window_samples": [
+    1088384,
+    1088384
+  ],
+  "removed_samples": 0,
+  "scene_samples": 808650,
+  "same_scene_vertices_uv_scissor": true,
+  "compared_bar_pixels": 260728,
+  "different_bar_pixels": 0
+}

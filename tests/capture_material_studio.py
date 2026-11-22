@@ -21,8 +21,9 @@ def capture():
     # 只让编辑器加载 Vulkan 截帧层，回放进程需要使用正常的 Vulkan 设备。
     env = dict(os.environ, VK_ADD_LAYER_PATH=str(renderdoc), VK_INSTANCE_LAYERS="VK_LAYER_RENDERDOC_Capture")
     with (work / "editor.log").open("wb") as out, (work / "capture.log").open("wb") as err:
+        options = ["--play", os.environ["RF_STUDIO_GAME"]] if os.environ.get("RF_STUDIO_GAME") else ["--vulkan"]
         command = [str(renderdoc / "renderdoccmd.exe"), "capture", "-d", str(work), "-c", str(template),
-                   os.environ["RF_STUDIO_EXE"], "--vulkan", "--frames", "56"]
+                   os.environ["RF_STUDIO_EXE"], *options, "--frames", "56"]
         launcher = subprocess.run(command, env=env, stdout=out, stderr=err, timeout=45)
     found = re.search(rb"\bID\s+(\d+)", (work / "capture.log").read_bytes())
     target = rd.CreateTargetControl("localhost", int(found.group(1)) if found else launcher.returncode,
@@ -30,6 +31,19 @@ def capture():
     if not target or not target.Connected():
         raise RuntimeError("RenderDoc could not connect to the running editor")
     try:
+        size = os.environ.get("RF_STUDIO_WINDOW")
+        if size:
+            import ctypes
+            from ctypes import wintypes as wt
+            user = ctypes.windll.user32
+            user.SetProcessDPIAware()
+            window = user.FindWindowW(None, "Redflag Game")
+            assert window, "game window not found on isolated desktop"
+            rect, client = wt.RECT(), wt.RECT()
+            user.GetWindowRect(window, ctypes.byref(rect))
+            user.GetClientRect(window, ctypes.byref(client))
+            width, height = map(int,size.split(","))
+            user.SetWindowPos(window,0,0,0,width+rect.right-rect.left-client.right,height+rect.bottom-rect.top-client.bottom,0x16)
         target.QueueCapture(number, 1)
         deadline = time.monotonic() + 150
         while target.Connected() and time.monotonic() < deadline:
