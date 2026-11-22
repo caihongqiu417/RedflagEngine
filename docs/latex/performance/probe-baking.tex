@@ -1,0 +1,24 @@
+\clearpage
+\section{静态点光源的探针烘焙}
+
+在 Sponza 走廊停下相机，用探针估计石柱上的间接光。实时版本每帧去探针位置追踪光线，再为屏幕像素插值。这组原始截帧取自单次漫反射版本，离线每方向 64 条射线，保存后下次打开场景只需插值。比较在 Debug x64 的独立 Vulkan 程序中进行，设备是 RTX 5070 Ti Laptop GPU，视口为 $160\times90$。两份实际帧只截取 DDGI 段，表面位置已在此前绘好。后来增加的多次漫反射默认烘焙四轮；这张表保留原测试条件。
+
+{\small\noindent\begin{tabularx}{\linewidth}{@{}Xrr@{}}\toprule
+操作 & 实时更新 & 读取已烘焙探针\\\midrule
+探针更新，GPU 回放中位时间 & 9.369 ms & 省去\\
+表面插值，GPU 回放中位时间 & 0.012 ms & 0.007 ms\\
+CPU 提交到 GPU 完成，中位时间 & 10.858 ms & 0.140 ms\\
+同一区间第 95 百分位 & 12.420 ms & 0.308 ms\\\bottomrule
+\end{tabularx}\par}
+
+实时组每方向取 16 个样本。RenderDoc 1.47 里，事件 8 启动 48 个工作组更新探针，事件 20 用 225 组给 14\,400 个像素插值。预烘焙组只有事件 8 的 225 个工作组。各事件的显卡时间取九次回放的中位数。插值只花几微秒，两个读数的差异很小，节省主要来自省去探针更新。
+
+CPU 计时另开进程，顺序为实时、烘焙、烘焙、实时。每段先热身 4 次，接着记录 16 次，两组各有 32 个样本。计时区间从调用 \texttt{Render(DDGI,16)} 开始，到该调用等待显卡完成为止。打开场景、烘焙过程、直接光和界面绘制都在区间之外。这两个数字不能直接换算为编辑器帧率。重启、灯光和几何失效检查见配套光照册。
+
+\noindent{\small 从仓库根目录执行以下两条 Windows 命令。第一条计算并保存探针，第二条启动新进程，载入后逐像素核对。}
+\begin{lstlisting}
+tests\run_gi_benchmark.cmd --bake
+tests\run_gi_benchmark.cmd --load-bake
+\end{lstlisting}
+
+逐次数据在 \path{output/profiling/probe-bake/dispatch-and-wait.csv}。同目录 \path{renderdoc.json} 保存帧文件名、校验值、事件与九次 GPU 读数。点光源可以编辑的关卡应在布光稳定后再烘焙；需要实时移动的灯仍须重新估算间接光。后续可以逐块更新受影响的探针，用连续开关房门或移动灯具的场景检查更新时间和漏光。

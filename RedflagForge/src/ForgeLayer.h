@@ -36,6 +36,7 @@ namespace Redflag {
 
 		//UI面板
 		void UI_Toolbar();
+		void DrawEnvironmentMenu();
 
 	private:
 		OrthographicCameraController m_CameraController;
@@ -55,6 +56,7 @@ namespace Redflag {
 
 		Ref<Scene> m_EditorScene;   // 原始数据
 		Ref<Scene> m_ActiveScene;   // 当前活跃（编辑时指向 m_EditorScene，Play 时指向副本）
+		std::string m_EnvironmentMessage;
 
 		Entity m_SquareEntity;
 		Entity m_SecondSquareEntity;

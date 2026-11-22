@@ -1,0 +1,14 @@
+{
+  "OpenGL": {
+    "full_pixels": 914,
+    "reduced_pixels": 877,
+    "difference_pixels": 47,
+    "intersection_over_union": 0.9488574537540805
+  },
+  "Vulkan": {
+    "full_pixels": 914,
+    "reduced_pixels": 877,
+    "difference_pixels": 47,
+    "intersection_over_union": 0.9488574537540805
+  }
+}

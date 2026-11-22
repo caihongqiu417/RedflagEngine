@@ -1,0 +1,228 @@
+Scene: Glass Studio
+Entities:
+  - Entity: 1
+    TagComponent:
+      Tag: 主相机
+    TransformComponent:
+      Translation: [0, 1.45, 6.4]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.64
+        PerspectiveNear: 0.1
+        PerspectiveFar: 45
+        OrthographicSize: 5
+        OrthographicNear: -1
+        OrthographicFar: 45
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 2
+    TagComponent:
+      Tag: 地板
+    TransformComponent:
+      Translation: [0, -0.1, -1.5]
+      Rotation: [0, 0, 0]
+      Scale: [15, 0.2, 13]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.29, 0.315, 0.33, 1]
+  - Entity: 3
+    TagComponent:
+      Tag: 背景墙
+    TransformComponent:
+      Translation: [0, 2.3, -2]
+      Rotation: [0, 0, 0]
+      Scale: [12, 5, 0.16]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.79, 0.7, 0.53, 1]
+  - Entity: 4
+    TagComponent:
+      Tag: 蓝色墙条 1
+    TransformComponent:
+      Translation: [-3.15, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 5
+    TagComponent:
+      Tag: 蓝色墙条 2
+    TransformComponent:
+      Translation: [-2.52, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 6
+    TagComponent:
+      Tag: 蓝色墙条 3
+    TransformComponent:
+      Translation: [-1.89, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 7
+    TagComponent:
+      Tag: 蓝色墙条 4
+    TransformComponent:
+      Translation: [-1.26, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 8
+    TagComponent:
+      Tag: 蓝色墙条 5
+    TransformComponent:
+      Translation: [-0.63, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 9
+    TagComponent:
+      Tag: 蓝色墙条 6
+    TransformComponent:
+      Translation: [0, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 10
+    TagComponent:
+      Tag: 蓝色墙条 7
+    TransformComponent:
+      Translation: [0.63, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 11
+    TagComponent:
+      Tag: 蓝色墙条 8
+    TransformComponent:
+      Translation: [1.26, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 12
+    TagComponent:
+      Tag: 蓝色墙条 9
+    TransformComponent:
+      Translation: [1.89, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 13
+    TagComponent:
+      Tag: 蓝色墙条 10
+    TransformComponent:
+      Translation: [2.52, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 14
+    TagComponent:
+      Tag: 蓝色墙条 11
+    TransformComponent:
+      Translation: [3.15, 2.1, -1.86]
+      Rotation: [0, 0, 0]
+      Scale: [0.23, 4.2, 0.08]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.035, 0.115, 0.23, 1]
+  - Entity: 15
+    TagComponent:
+      Tag: 左底座
+    TransformComponent:
+      Translation: [-0.94, 0.1, 0.25]
+      Rotation: [0, 0, 0]
+      Scale: [2.05, 0.2, 0.72]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.18, 0.19, 0.21, 1]
+  - Entity: 16
+    TagComponent:
+      Tag: 右底座
+    TransformComponent:
+      Translation: [1, 0.1, 0.7]
+      Rotation: [0, 0, 0]
+      Scale: [2.02, 0.2, 0.67]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.18, 0.19, 0.21, 1]
+  - Entity: 17
+    TagComponent:
+      Tag: 琥珀玻璃
+    TransformComponent:
+      Translation: [-0.72, 1.41, 0.24]
+      Rotation: [0, 0.36, 0]
+      Scale: [2.26, 2.42, 1]
+    ModelRendererComponent:
+      ModelID: 14903722486078844529
+      FilePath: assets/models/Primitives/Plane.obj
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [0.85, 0.39, 0.14, 0.3]
+          AlphaMode: Blend
+          DoubleSided: true
+          RefractionIndex: 1.5
+          Thickness: 0.42
+  - Entity: 18
+    TagComponent:
+      Tag: 青色玻璃
+    TransformComponent:
+      Translation: [0.64, 1.41, 0.7]
+      Rotation: [0, -0.58, 0]
+      Scale: [2.26, 2.42, 1]
+    ModelRendererComponent:
+      ModelID: 14903722486078844529
+      FilePath: assets/models/Primitives/Plane.obj
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [0.21, 0.71, 0.82, 0.24]
+          AlphaMode: Blend
+          DoubleSided: true
+          RefractionIndex: 1.5
+          Thickness: 0.47
+  - Entity: 19
+    TagComponent:
+      Tag: 主光源
+    TransformComponent:
+      Translation: [-3.4, 4.7, 2.6]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.91, 0.77]
+      Intensity: 155
+      Radius: 15
+      CastShadow: false
+  - Entity: 20
+    TagComponent:
+      Tag: 补光源
+    TransformComponent:
+      Translation: [3.4, 3.2, 1.4]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.71, 0.83, 1]
+      Intensity: 95
+      Radius: 15
+      CastShadow: false

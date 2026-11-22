@@ -3,18 +3,21 @@
 
 #include "rfpch.h"
 #include "IBLPrecompute.h"
+#include "IBLArchive.h"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace Redflag {
 
 	// ---- 环境贴图与绘制资源 ----
 	static IBLTextures s_IBL;
+	static std::filesystem::path s_EnvironmentPath;
 	static bool        s_Ready = false;
 
 	// 预计算结束后释放临时绘制资源，天空盒继续使用立方体。
@@ -91,13 +94,13 @@ in vec3 v_LocalPos;
 out vec4 FragColor;
 uniform sampler2D u_HDR;
 
-const vec2 invAtan = vec2(0.1591, 0.3183);  // (1/(2π), 1/π)
+const float PI = 3.14159265359;
 
 vec2 SampleSphericalMap(vec3 v){
     // atan(z,x) → 经度  [-π, π]  ×  1/(2π)  → [-0.5, 0.5]
     // asin(y)   → 纬度  [-π/2, π/2] × 1/π    → [-0.5, 0.5]
     vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
-    uv *= invAtan;
+    uv /= vec2(2.0 * PI, PI);
     uv += 0.5;
     return uv;
 }
@@ -109,7 +112,7 @@ void main(){
 )";
 
 	// ---- 漫反射环境光 ----
-	// 对表面上方的半球积分。越正对表面，同样一束光照到的面积越小，每单位面积收到的光越多。
+	// 每种法线方向都算一次半球内的辐照度 E，贴图保存 E/π。画模型时按法线取出它，再乘底色和材质的漫反射比例。
 	static const char* s_IrradianceFS = R"(
 #version 450 core
 in vec3 v_LocalPos;
@@ -126,25 +129,26 @@ void main(){
     vec3 right = normalize(cross(up, N));
     up         = normalize(cross(N, right));
 
-    float delta = 0.025;  // 经纬度的角度步长，单位为弧度。
-    float count = 0.0;
-
-    // phi 绕法线转一圈，theta 从正上方走到地平线。
-    for(float phi = 0.0; phi < 2.0*PI; phi += delta){
-        for(float theta = 0.0; theta < 0.5*PI; theta += delta){
+    // 从法线到地平线分 63 格，每格约 1.43 度，沿用原预计算的采样数。
+    const int polarSteps = 63;
+    const int azimuthSteps = 4 * polarSteps;
+    for (int column = 0; column < azimuthSteps; ++column) {
+        float phi = (column + 0.5) * (2.0 * PI / azimuthSteps);
+        for (int row = 0; row < polarSteps; ++row) {
+            float theta = (row + 0.5) * (0.5 * PI / polarSteps);
             vec3 ts = vec3(sin(theta)*cos(phi),
                            sin(theta)*sin(phi),
                            cos(theta));
             // 把采样方向转到世界空间，才能在环境图里查颜色。
             vec3 w = ts.x*right + ts.y*up + ts.z*N;
 
-            // cos(theta) 给斜射光较小的权重，sin(theta) 算入这小块天空占的立体角。
+            // cos(theta)：从来光方向看，表面积缩为原来的 cos(theta) 倍。
+            // sin(theta)：经线在球顶相遇，同样的角度间隔在那里覆盖的面积更小。
             irr += texture(u_EnvMap, w).rgb * cos(theta) * sin(theta);
-            count++;
         }
     }
-    // 两个角度的取值范围相乘是 π²，再乘漫反射的 1/π。这样查图后只需乘表面颜色。
-    irr = PI * irr / count;
+    // 每格的两个角度步长相乘是 π² / 格数。漫反射贴图存的是辐照度除以 π。
+    irr = PI * irr / float(polarSteps * azimuthSteps);
     FragColor = vec4(irr, 1.0);
 }
 )";
@@ -301,7 +305,7 @@ vec2 IntegrateBRDF(float NdV, float rough){
 
         if(NdL > 0.0){
             float G     = GSmith(N, V, L, rough);
-            // 按 GGX 采样后，投影和遮挡留下这个权重。
+            // G 表示光线和视线有多少能越过表面的细小凸起。其余三项按这次选到的方向修正它对平均值的贡献。
             float G_Vis = (G * VdH) / (NdH * NdV);
             float Fc    = pow(1.0 - VdH, 5.0);
 
@@ -435,6 +439,14 @@ void main(){
 		}
 	}
 
+	static void CreateSkyboxProgram()
+	{
+		s_SkyboxProgram = Compile(s_SkyboxVS, s_SkyboxFS);
+		s_SkyboxLocView = glGetUniformLocation(s_SkyboxProgram, "u_View");
+		s_SkyboxLocProj = glGetUniformLocation(s_SkyboxProgram, "u_Projection");
+		glProgramUniform1i(s_SkyboxProgram, glGetUniformLocation(s_SkyboxProgram, "u_EnvMap"), 0);
+	}
+
 	// ---- 载入 HDR 全景 ----
 	void IBLPrecompute::Init(const std::string& hdrPath)
 	{
@@ -469,7 +481,7 @@ void main(){
 
 		MakeCubeVAO();
 		MakeQuadVAO();
-		constexpr int ENV_SIZE = 2048;
+		constexpr int ENV_SIZE = IBLTextures::SkySize;
 		glGenFramebuffers(1, &s_CaptureFBO);
 		glGenRenderbuffers(1, &s_CaptureRBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, s_CaptureFBO);
@@ -479,15 +491,13 @@ void main(){
 
 		RF_CORE_INFO("IBL: Loaded HDR {0}x{1} from {2}", w, h, hdrPath);
 
-		// 非有限值会污染附近的反射。将它们清零，并把每个颜色分量限制在 0 到 50，减少孤立亮点。
+		// RGB16F 能存的最大有限值是 65504。窗户、太阳等亮部要保留到最后的色调映射。
+		constexpr float maxHalfFloat = 65504.0f;
 		const size_t pixelCount = size_t(w) * h * 3;
 		for (size_t i = 0; i < pixelCount; ++i)
 		{
-			float v = pixels[i];
-			if (!std::isfinite(v))       v = 0.0f;
-			else if (v > 50.0f)          v = 50.0f;
-			else if (v < 0.0f)           v = 0.0f;
-			pixels[i] = v;
+			const float value = pixels[i];
+			pixels[i] = std::isfinite(value) ? std::clamp(value, 0.0f, maxHalfFloat) : 0.0f;
 		}
 
 		uint32_t hdrTex = 0;
@@ -495,7 +505,8 @@ void main(){
 		glBindTexture(GL_TEXTURE_2D, hdrTex);
 		// HDR 图里太阳等光源的亮度可以超过 1，用浮点纹理保留这些差别。
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, w, h, 0, GL_RGB, GL_FLOAT, pixels);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		// 经度转一圈会回到起点，接缝两侧的像素也要一起做线性过滤。
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -543,7 +554,7 @@ void main(){
 		for (int i = 0; i < 6; ++i)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
-				32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+				IBLTextures::DiffuseSize, IBLTextures::DiffuseSize, 0, GL_RGB, GL_FLOAT, nullptr);
 		}
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -559,15 +570,15 @@ void main(){
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.EnvCubemap);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, s_CaptureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
-		RenderCubeFaces(prog, s_IBL.IrradianceMap, 32);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, IBLTextures::DiffuseSize, IBLTextures::DiffuseSize);
+		RenderCubeFaces(prog, s_IBL.IrradianceMap, IBLTextures::DiffuseSize);
 		glDeleteProgram(prog);
 		RF_CORE_INFO("IBL: Irradiance map generated (32)");
 
 		// ---- 镜面反射图 ----
 		// 每面从 128×128 缩到 8×8，五层分别对应从 0 到 1 的粗糙度。
-		const int PF_SIZE  = 128;
-		const int MIP_CNT  = 5;
+		constexpr int PF_SIZE = IBLTextures::ReflectionSize;
+		constexpr int MIP_CNT = IBLTextures::ReflectionLevels;
 
 		glGenTextures(1, &s_IBL.PrefilterMap);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_IBL.PrefilterMap);
@@ -612,7 +623,7 @@ void main(){
 		// ---- BRDF 查找表 ----
 		glGenTextures(1, &s_IBL.BRDFLUT);
 		glBindTexture(GL_TEXTURE_2D, s_IBL.BRDFLUT);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, IBLTextures::LutSize, IBLTextures::LutSize, 0, GL_RG, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -622,22 +633,18 @@ void main(){
 		glUseProgram(prog);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, s_CaptureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, IBLTextures::LutSize, IBLTextures::LutSize);
 		glBindFramebuffer(GL_FRAMEBUFFER, s_CaptureFBO);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, s_IBL.BRDFLUT, 0);
-		glViewport(0, 0, 512, 512);
+		glViewport(0, 0, IBLTextures::LutSize, IBLTextures::LutSize);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		DrawQuad();
 		glDeleteProgram(prog);
 		RF_CORE_INFO("IBL: BRDF LUT generated (512)");
 
 		// ---- 天空盒着色器 ----
-		s_SkyboxProgram = Compile(s_SkyboxVS, s_SkyboxFS);
-		s_SkyboxLocView = glGetUniformLocation(s_SkyboxProgram, "u_View");
-		s_SkyboxLocProj = glGetUniformLocation(s_SkyboxProgram, "u_Projection");
-		glUseProgram(s_SkyboxProgram);
-		glUniform1i(glGetUniformLocation(s_SkyboxProgram, "u_EnvMap"), 0);
+		CreateSkyboxProgram();
 		glUseProgram(0);
 
 		// ---- 释放临时绘制资源 ----
@@ -667,6 +674,39 @@ void main(){
 	{
 		Shutdown();
 		Init(hdrPath);
+		if (s_Ready) s_EnvironmentPath = hdrPath;
+	}
+
+	bool IBLPrecompute::SaveBaked(const std::filesystem::path& path)
+	{
+		return s_Ready && IBLArchive::Save(path, s_IBL);
+	}
+
+	bool IBLPrecompute::LoadBaked(const std::filesystem::path& path)
+	{
+		IBLTextures textures;
+		if (!IBLArchive::Load(path, textures)) return false;
+
+		Shutdown();
+		s_IBL = textures;
+		MakeCubeVAO();
+		CreateSkyboxProgram();
+		s_EnvironmentPath = path;
+		s_Ready = true;
+		return true;
+	}
+
+	void IBLPrecompute::UseEnvironment(const std::filesystem::path& path)
+	{
+		if (s_EnvironmentPath == path) return;
+		if (path.extension() == ".rfibl")
+		{
+			if (LoadBaked(path)) return;
+			RF_CORE_WARN("Cannot load baked environment: {0}", path.u8string());
+		}
+		Shutdown();
+		if (!path.empty() && path.extension() != ".rfibl") Init(path.string());
+		s_EnvironmentPath = path;
 	}
 
 	void IBLPrecompute::Shutdown()
@@ -689,6 +729,7 @@ void main(){
 		s_SkyboxLocView = s_SkyboxLocProj = -1;
 
 		s_Ready = false;
+		s_EnvironmentPath.clear();
 	}
 
 	void IBLPrecompute::Bind()

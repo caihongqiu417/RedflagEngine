@@ -1,0 +1,48 @@
+{
+  "size": [
+    800,
+    513
+  ],
+  "region_xywh": [
+    522,
+    218,
+    5,
+    5
+  ],
+  "specular_off": {
+    "capture": "output/captures/local/studio-b92994c760df-800-diffuse/studio_frame24.rdc",
+    "sha256": "f17e40cac20fd949b94d4744951e8be2dc7770eeb4f7bfc20d528c06d142bf99",
+    "frame": 24,
+    "pack_event": 54,
+    "display_event": 126,
+    "mean_linear_rgb": [
+      0.005235802307724953,
+      0.006104168463498354,
+      0.007202114108949899
+    ]
+  },
+  "specular_on": {
+    "capture": "output/captures/local/studio-b92994c760df-800-lit/studio_frame24.rdc",
+    "sha256": "550d7c85b9d6b8251ba9c393a69209f2970c85a0b563a62ef9aacf79c9933334",
+    "frame": 24,
+    "pack_event": 54,
+    "display_event": 139,
+    "mean_linear_rgb": [
+      0.24280531644821168,
+      0.23467497289180755,
+      0.22968747317790986
+    ]
+  },
+  "previous_engine": {
+    "capture": "output/captures/local/Camera-Studio-before_frame24.rdc",
+    "sha256": "02c420d46ac34dc5d1056eae21c4365019885b7b916dd2e20544a999feb08f2d",
+    "frame": 24,
+    "pack_event": 54,
+    "display_event": 126,
+    "mean_linear_rgb": [
+      0.0071993195638060566,
+      0.008387852143496275,
+      0.009892678111791611
+    ]
+  }
+}

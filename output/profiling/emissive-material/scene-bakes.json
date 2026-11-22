@@ -1,0 +1,43 @@
+{
+  "hardware": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "api": "Vulkan",
+  "build": "Debug x64",
+  "shading": "Lit",
+  "indirect": "DDGI",
+  "TAA": false,
+  "width": 160,
+  "session_frames": 48,
+  "camera": "saved camera, stationary after last viewport resize",
+  "scenes": [
+    {
+      "scene": "Light-Studio",
+      "exe_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+      "bake_sha256": "3eaa789d3ec25cdb9cdaf72e0cd90204ce9810f2ec2db254d0145d3405822ca4",
+      "size": 96792,
+      "signature": "0xf45de4dcb809d7ed",
+      "live": {
+        "drawn": 32,
+        "reused": 15
+      },
+      "reopen": {
+        "drawn": 1,
+        "reused": 46
+      }
+    },
+    {
+      "scene": "RTXGI-Bathroom",
+      "exe_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+      "bake_sha256": "becebae2f4208897e025862d34e2fe28b8b288815aef2aea135b64ff38e810ea",
+      "size": 96792,
+      "signature": "0x27c1b324951ac720",
+      "live": {
+        "drawn": 32,
+        "reused": 15
+      },
+      "reopen": {
+        "drawn": 1,
+        "reused": 46
+      }
+    }
+  ]
+}

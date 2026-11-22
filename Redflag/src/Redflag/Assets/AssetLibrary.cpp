@@ -93,7 +93,7 @@ namespace Redflag
 
 	void AssetLibrary::Add(const AssetInfo& info)
 	{
-		// 同一物理文件的路径别名允许重复登记，不同文件共用 ID 则拒绝。
+		// 两条路径可能指向同一个文件。只有它们指向不同文件却用了相同的资源 ID 时，才报告冲突。
 		const auto* old = Get(info.ID);
 		if (old && std::filesystem::exists(old->Path) && !std::filesystem::equivalent(old->Path, info.Path))
 			throw std::runtime_error("Duplicate asset ID: " + info.Path.string());

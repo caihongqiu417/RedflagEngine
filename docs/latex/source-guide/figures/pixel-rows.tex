@@ -1,0 +1,28 @@
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={font=\small\sffamily,text=Ink},labelcell/.style={font=\sffamily\footnotesize}]
+  \draw[draw=Rule,rounded corners=1.4mm] (0,0) rectangle (155,50);
+  \node[anchor=west,font=\sffamily\bfseries,text=Teal] at (4,44){读回内存的图像};
+  \foreach \x in {0,...,3}{
+    \node[labelcell] at ({22+7*\x},37.8){\x};
+  }
+  \node[anchor=east,labelcell,text=Muted] at (16,38){列};
+  \foreach \y in {0,...,2}{
+    \node[anchor=east,labelcell,text=Muted] at (16,{30-7*\y}){第 \y 行};
+    \foreach \x in {0,...,3}
+      \draw[fill=Soft,draw=Rule] ({18.5+7*\x},{26.5-7*\y}) rectangle ++(7,7);
+  }
+  \filldraw[fill=Teal,draw=Teal] (25.5,12.5) rectangle ++(7,7);
+  \filldraw[fill=Rust,draw=Rust] (32.5,12.5) rectangle ++(7,7);
+  \node[text=white,labelcell] at (29,16){A};
+  \node[text=white,labelcell] at (36,16){B};
+  \draw[Rule] (51,7)--(51,42);
+  \node[anchor=west,font=\sffamily\bfseries,text=Teal] at (56,44){第 2 行展开后};
+  \foreach \x/\lo/\hi/\bg/\fg in {57/128/143/Soft/Ink,80/144/159/Teal/white,103/160/175/Rust/white,126/176/191/Soft/Ink}{
+    \draw[fill=\bg,draw=Rule] (\x,20) rectangle ++(23,12);
+    \node[labelcell,text=\fg] at ({\x+11.5},26){\lo--\hi};
+  }
+  \node[text=Teal,font=\sffamily\bfseries] at (91.5,36){A};
+  \node[text=Rust,font=\sffamily\bfseries] at (114.5,36){B};
+  \node[anchor=west,text=Muted] at (56,13){数字是距整张图开头的字节数。};
+  \node[anchor=west,text=Muted] at (56,7){每格一个像素，依次放 R、G、B、A。};
+\end{tikzpicture}

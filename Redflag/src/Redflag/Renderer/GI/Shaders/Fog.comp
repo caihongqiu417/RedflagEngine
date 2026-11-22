@@ -1,0 +1,73 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+layout(local_size_x = 64) in;
+#include "SceneTypes.glsl"
+layout(std430, binding = 0) readonly buffer Nodes { Node node[]; };
+layout(std430, binding = 1) readonly buffer Triangles { Triangle tri[]; };
+layout(std430, binding = 2) readonly buffer Surfaces { Surface surface[]; };
+layout(std430, binding = 3) readonly buffer Lights { Light lights[]; };
+layout(std430, binding = 4) readonly buffer SceneInfo {
+    mat4 inverseVP; vec4 eye, gridOrigin, gridStep; uvec4 imageSize, gridSize;
+};
+layout(std430, binding = 5) readonly buffer SceneColor { vec4 color[]; };
+layout(std430, binding = 6) writeonly buffer FogColor { vec4 fogged[]; };
+#ifdef RF_ALPHA_MASK
+#include "ShadowMaskBindings.glsl"
+#endif
+layout(push_constant) uniform Medium {
+    float density, albedo, anisotropy, maxDistance; int steps;
+};
+const float PI = 3.14159265359, EPS = .001;
+#include "Trace.glsl"
+#include "PointLighting.glsl"
+
+// 从灯到采样点的线段遇到墙，光就到不了这团雾。
+vec3 incidentLight(vec3 point, vec3 viewRay)
+{
+    vec3 sum = vec3(0);
+    for (uint i = 0; i < imageSize.z; ++i)
+    {
+        vec3 delta = lights[i].p.xyz - point;
+        float r = length(delta);
+        if (r < EPS) continue;
+        // 雾离点光源不到 0.2 个场景单位时，按 0.2 计算距离衰减中的 1/r²，避免灯旁的雾亮成白斑。
+        float attenuation = pointAttenuation(r, lights[i].intensity.w) * min(1., r*r/.04);
+        if (attenuation == 0.) continue;
+        vec3 toLight = delta / r;
+        vec2 barycentric;
+        float limit = r;
+        if (trace(point, toLight, limit, true, barycentric) >= 0) continue;
+
+        // 光沿 -toLight 入射，沿 -viewRay 飞向镜头，正向散射时夹角接近零。
+        float g = anisotropy;
+        float p = (1. - g*g) / (4.*PI * pow(1. + g*g - 2.*g*dot(toLight, viewRay), 1.5));
+        sum += lights[i].intensity.rgb * exp(-density*r) * p * attenuation;
+    }
+    return sum;
+}
+
+void main()
+{
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= imageSize.x * imageSize.y) return;
+    uvec2 pixel = uvec2(i % imageSize.x, i / imageSize.x);
+    vec2 ndc = (vec2(pixel)+.5) / vec2(imageSize.xy) * 2. - 1.;
+    ndc.y = -ndc.y;
+    vec4 nearP = inverseVP * vec4(ndc, -1, 1), farP = inverseVP * vec4(ndc, 1, 1);
+    vec3 origin = nearP.w == farP.w ? nearP.xyz / nearP.w : eye.xyz;
+    vec3 end = surface[i].p.w > 0. ? surface[i].p.xyz : farP.xyz / farP.w;
+    vec3 ray = normalize(end - origin);
+    float ds = min(length(end - origin), maxDistance) / float(steps);
+    float stepT = exp(-density * ds);
+
+    // 最终颜色由穿过整段雾的表面光，以及各段雾散射进镜头的光组成。
+    float T = 1.;
+    vec3 scattered = vec3(0);
+    for (int s = 0; s < steps; ++s)
+    {
+        vec3 point = origin + ray * ((float(s) + .5) * ds);
+        scattered += T * albedo * (1. - stepT) * incidentLight(point, ray);
+        T *= stepT;
+    }
+    fogged[i] = vec4(T * color[i].rgb + scattered, color[i].a);
+}

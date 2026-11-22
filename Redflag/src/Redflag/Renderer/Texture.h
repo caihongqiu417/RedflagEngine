@@ -2,8 +2,12 @@
 
 #include"string.h"
 #include"Redflag/Core/Core.h"
+#include <memory>
 
 namespace Redflag {
+
+	/* 材质保留这个引用，绘制时让着色器读取对应的显卡贴图。 */
+	struct SampledTexture { virtual ~SampledTexture() = default; };
 
 	class Texture
 	{
@@ -24,9 +28,11 @@ namespace Redflag {
 
 	};
 
-	class Texture2D :public Texture
+	class Texture2D : public Texture, public SampledTexture, public std::enable_shared_from_this<Texture2D>
 	{
 	public:
+		virtual Ref<SampledTexture> GetSampledTexture() { return shared_from_this(); }
+		virtual bool IsLoaded() const { return GetRendererID() != 0; }
 		static Ref<Texture2D> Create(uint32_t width, uint32_t height);
 		static Ref<Texture2D> Create(const std::string& path);
 

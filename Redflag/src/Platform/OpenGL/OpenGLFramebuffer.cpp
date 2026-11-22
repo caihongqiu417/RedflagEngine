@@ -127,7 +127,7 @@ namespace Redflag {
 	// ---- 附件重建 ----
 	void OpenGLFramebuffer::Invalidate()
 	{
-		// 视口大小改变后会换一批纹理，编辑器预览要重新取纹理 ID。
+		// 面板尺寸改变时会重新创建颜色图和深度图。编辑器下次显示场景要取新图的 ID。
 		if (m_RendererID)
 		{
 			glDeleteFramebuffers(1, &m_RendererID);

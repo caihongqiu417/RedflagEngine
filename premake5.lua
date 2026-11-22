@@ -9,6 +9,34 @@ workspace "Redflag"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- 本地已有的 Mono 保持原路径。全新检出从 Windows 的 Mono x64 SDK 取得导入库与 DLL。
+local monoSDK = os.getenv("REDFLAG_MONO_SDK")
+local monoLib = "Redflag/vendor/mono/lib/Release"
+local monoDLL = "../" .. monoLib .. "/mono-2.0-sgen.dll"
+if monoSDK or not os.isfile(monoLib .. "/mono-2.0-sgen.lib") then
+    monoSDK = monoSDK or path.join(os.getenv("ProgramW6432") or "C:/Program Files", "Mono")
+    monoLib = path.join(monoSDK, "lib")
+    monoDLL = path.join(monoSDK, "bin/mono-2.0-sgen.dll")
+    assert(os.isfile(monoLib .. "/mono-2.0-sgen.lib") and os.isfile(monoDLL),
+        "Install the Windows x64 Mono 6.12 SDK or set REDFLAG_MONO_SDK to its installation directory.")
+end
+
+-- 修正只应用到编译副本，重新生成工程时不会改动第三方工作目录。
+local function dependencyCopy(name, file)
+    local folder = "bin-int/dependencies/" .. name
+    local dest = folder .. "/" .. file
+    os.mkdir(path.getdirectory(dest))
+    assert(os.copyfile("Redflag/vendor/" .. name .. "/" .. file, dest), "Could not copy " .. file)
+    return dest
+end
+
+local function patchCopy(name, patch)
+    local cmd = 'git apply --recount --directory="bin-int/dependencies/' .. name .. '" "patches/' .. patch .. '.patch"'
+    local ok = os.execute(cmd)
+    assert(ok == true or ok == 0, "Could not apply " .. patch .. " to the build copy")
+end
+
+
 --[[
     第三方库头文件路径映射表
     集中管理所有依赖库的 Include 路径，方便维护
@@ -34,10 +62,56 @@ IncludeDir["miniz"]    = "Redflag/vendor/tinyexr/deps/miniz"
 group "Dependencies"  
     include "Redflag/vendor/Box2D"
     include "Redflag/vendor/GLFW"
+    project "GLFW"
+        targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+        objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+        filter "system:windows"
+            includedirs { "Redflag/vendor/GLFW/src", "Redflag/vendor/GLFW/include" }
+        filter {}
+
     include "Redflag/vendor/Glad"
     include "Redflag/vendor/imgui"
+    project "ImGui"
+        local copy = dependencyCopy("imgui", "imgui.cpp")
+        local contents = assert(io.readfile(copy))
+        local active = contents:match("void ImGui::SetActiveID%b()%s*(%b{})")
+        -- 公开版本把销毁窗口布局的循环误放在切换控件焦点时。恢复到 ImGuiWindow 的析构函数。
+        if active and active:find("i < DC.Layouts.Data.Size", 1, true) then
+            patchCopy("imgui", "imgui-layout-lifetime")
+        end
+        removefiles { "Redflag/vendor/imgui/imgui.cpp" }
+        files { copy }
+        includedirs { "Redflag/vendor/imgui" }
+        filter "system:windows"
+            buildoptions { "/utf-8" }
+        filter {}
+
     include "Redflag/vendor/yaml-cpp"
+    project "yaml-cpp"
+        filter "system:windows"
+            buildoptions { "/utf-8" }
+        filter {}
+
     include "Redflag/vendor/assimp"
+    project "assimp"
+        -- 保留 FBX 导入器及其自带的 zlib，运行库与 Redflag 的 /MD、/MDd 一致。
+        staticruntime "off"
+        removedefines { "ASSIMP_BUILD_NO_OWN_ZLIB", "ASSIMP_BUILD_NO_FBX_IMPORTER", "ASSIMP_BUILD_NO_GENFACENORMALS_PROCESS" }
+        files { "Redflag/vendor/assimp/code/FBX*.cpp", "Redflag/vendor/assimp/contrib/zlib/*.c",
+                "Redflag/vendor/assimp/code/GenFaceNormalsProcess.cpp" }
+        removefiles { "Redflag/vendor/assimp/code/FBXExport*.cpp", "Redflag/vendor/assimp/code/glTF2Importer.cpp" }
+
+        local importer = dependencyCopy("assimp", "code/glTF2Importer.cpp")
+        local material = dependencyCopy("assimp", "code/glTF2Asset.inl")
+        dependencyCopy("assimp", "code/glTF2Asset.h")
+        if not assert(io.readfile(material)):find("KHR_materials_emissive_strength", 1, true) then
+            patchCopy("assimp", "assimp-gltf-emissive-strength")
+        end
+        if not assert(io.readfile(importer)):find("const int twoSided = mat.doubleSided", 1, true) then
+            patchCopy("assimp", "assimp-gltf-double-sided")
+        end
+        includedirs { "Redflag/vendor/assimp/code" }
+        files { importer }
 group ""
 
 group "Core"
@@ -105,6 +179,7 @@ project "Redflag"
         "Glad",
         "ImGui",
         "opengl32.lib",
+        "vulkan-1.lib",
         "yaml-cpp",
         "assimp",
     }
@@ -144,7 +219,7 @@ project "Redflag"
             "/wd4828",
             "/wd4005",
         }
-        libdirs { "Redflag/vendor/mono/lib/Release" }
+        libdirs { monoLib }
 
         -- [Debug] 链接带 'd' 的库
         links {
@@ -158,8 +233,8 @@ project "Redflag"
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_sharedd.dll ../bin/" .. outputdir .. "/Sandbox",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/RedflagForge",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/Sandbox",
             "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
         
@@ -173,7 +248,7 @@ project "Redflag"
             "/wd4005",
         }
 
-        libdirs { "Redflag/vendor/mono/lib/Release" }
+        libdirs { monoLib }
         
         -- [Release] 链接不带 'd' 的库
         links {
@@ -187,8 +262,8 @@ project "Redflag"
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/RedflagForge",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/Sandbox",
             "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
         
@@ -202,7 +277,7 @@ project "Redflag"
             "/wd4005",
         }
 
-        libdirs { "Redflag/vendor/mono/lib/Release" }
+        libdirs { monoLib }
         
         -- [Dist] 链接不带 'd' 的库
         links {
@@ -216,8 +291,8 @@ project "Redflag"
         postbuildcommands {
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/RedflagForge",
             "{COPY} %{os.getenv('VULKAN_SDK')}/Bin/shaderc_shared.dll ../bin/" .. outputdir .. "/Sandbox",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/RedflagForge",
-            "{COPY} ../Redflag/vendor/mono/lib/Release/mono-2.0-sgen.dll ../bin/" .. outputdir .. "/Sandbox",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/RedflagForge",
+            '{COPY} "' .. monoDLL .. '" ../bin/' .. outputdir .. "/Sandbox",
             "{COPY} ../RedflagForge/mono ../bin/" .. outputdir .. "/RedflagForge/mono",
         }
 
@@ -315,6 +390,7 @@ project "RedflagForge"
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
     
     flags { "NoPCH" }
+    defines { "RF_FORGE" }
     
     files {
         "%{prj.name}/src/**.h",
@@ -331,7 +407,9 @@ project "RedflagForge"
         "%{IncludeDir.glm}",
         "%{IncludeDir.fmt}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.yaml_cpp}",
+        "%{os.getenv('VULKAN_SDK')}/Include"
     }
     
     links {

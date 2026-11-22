@@ -1,0 +1,44 @@
+{
+  "scene": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag",
+  "steps": [
+    "Open the same original bathroom scene, bake with Ctrl+Shift+B, save with Ctrl+S, close the editor, reopen the saved copy.",
+    "Repeat in a separate private working directory with the fixed editor."
+  ],
+  "before": {
+    "exe_sha256": "70b4ab8fcc25177766e17380669d0fe2c2e11b839c9a10d0b0ff712018c70045",
+    "image": "before.png",
+    "image_sha256": "a7c401a2de799c45ff06e27c8ed48130f940b5303165624eaaf91000fee946fa",
+    "capture_type": "PrintWindow from the real Vulkan editor after restarting"
+  },
+  "after": {
+    "exe_sha256": "5f3db65b56a4a4efbe96f73c574ec91ba3b10995ae61d5653cf59a6a12bd743c",
+    "image": "after.png",
+    "image_sha256": "7aa19a2765ae32aba56d912c8a8fbc3dff2f6f83d41ea3e17476a8964cb1f96b",
+    "capture": "output/captures/local/RTXGI-Bathroom-SaveOrder-12.rdc",
+    "capture_sha256": "66e0a2a939629a8341e828256fa1cdb15852749c94bdf09282552986ef23d854",
+    "dispatches": [
+      11,
+      459,
+      471,
+      483,
+      495,
+      507,
+      519,
+      531
+    ]
+  },
+  "before_order": [
+    4,
+    3,
+    2,
+    5,
+    1
+  ],
+  "after_order": [
+    1,
+    5,
+    2,
+    3,
+    4
+  ]
+}

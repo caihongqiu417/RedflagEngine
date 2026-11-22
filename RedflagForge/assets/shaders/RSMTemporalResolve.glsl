@@ -65,7 +65,7 @@ void main()
     // 把当前像素还原成场景中的点，再投影到上一帧。
     vec3 worldPos  = ReconstructWorldPos(v_TexCoord, depth);
     vec4 prevClip  = u_PrevViewProj * vec4(worldPos, 1.0);
-    // 检查上一帧的左右、上下和远近边界。点在范围外时直接取本帧颜色。
+    // 上一帧的相机拍不到这个点，就只用这次算出的间接光。
     if (prevClip.w <= 0.0 || any(greaterThan(abs(prevClip.xyz), vec3(prevClip.w))))
     {
         o_Resolved = vec4(current, 1.0);
@@ -88,5 +88,5 @@ void main()
     }
     history = clamp(history, cMin, cMax);
 
-    o_Resolved = vec4(mix(current, history, u_BlendAlpha /* 0.9 表示保留九成旧颜色 */), 1.0);
+    o_Resolved = vec4(mix(current, history, u_BlendAlpha /* 默认 0.9，上一帧的间接光占九成，本帧占一成 */), 1.0);
 }

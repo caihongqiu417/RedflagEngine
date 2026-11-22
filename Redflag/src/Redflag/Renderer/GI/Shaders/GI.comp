@@ -1,0 +1,317 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+layout(local_size_x = 64) in;
+#include "SceneTypes.glsl"
+struct Probe
+{
+    vec4 light, moments;
+};
+struct Reservoir
+{
+    vec4 y, ny, lo, stats;
+};
+layout(std430, binding = 0) readonly buffer Nodes
+{
+    Node node[];
+};
+layout(std430, binding = 1) readonly buffer Triangles
+{
+    Triangle tri[];
+};
+layout(std430, binding = 2) buffer Surfaces
+{
+    Surface surface[];
+};
+layout(std430, binding = 3) readonly buffer Lights
+{
+    Light lights[];
+};
+layout(std430, binding = 4) readonly buffer Probes
+{
+    Probe probes[];
+};
+layout(std430, binding = 5) readonly buffer History
+{
+    Reservoir previous[];
+};
+layout(std430, binding = 6) buffer Candidates
+{
+    Reservoir fresh[];
+};
+layout(std430, binding = 7) writeonly buffer Updated
+{
+    Reservoir nextHistory[];
+};
+layout(std430, binding = 8) buffer Pixels
+{
+    vec4 pixels[];
+};
+layout(std430, binding = 9) readonly buffer SceneInfo
+{
+    mat4 inverseVP;
+    vec4 eye, gridOrigin, gridStep;
+    uvec4 imageSize; // 宽、高、灯数、BVH 节点数
+    uvec4 gridSize;
+};
+layout(push_constant) uniform Work
+{
+    uint stage, frame, samples, base, seed;
+};
+layout(std430, binding = 10) buffer PreviousSurfaces
+{
+    Surface lastSurface[];
+};
+#include "TextureFace.glsl"
+layout(std430, binding = 11) readonly buffer TextureFaces { TextureFace faces[]; };
+layout(std430, binding = 12) readonly buffer MaterialPixels { uint texels[]; };
+layout(std430, binding = 13) writeonly buffer UpdatedProbes { Probe nextProbes[]; };
+#ifdef RF_EMISSION
+struct Emission { vec4 color; uvec4 image; };
+layout(std430, binding = 14) readonly buffer Emitters { Emission emitters[]; };
+vec3 emittedAtHit;
+#endif
+#ifdef RF_ALPHA_MASK
+#ifdef RF_EMISSION
+#define RF_MASK_BINDING 15
+#else
+#define RF_MASK_BINDING 14
+#endif
+#endif
+
+#include "MaterialTexture.glsl"
+const float PI = 3.14159265359, EPS = .001;
+#include "PointLighting.glsl"
+#include "ProbeAxes.glsl"
+uint state;
+float random01()
+{
+    state = state * 747796405u + 2891336453u;
+    uint m = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return float(((m >> 22u) ^ m) >> 8u) / 16777216.0;
+}
+vec3 hemisphere(vec3 n)
+{
+    float u = random01(), phi = 2. * PI * random01();
+    vec3 t = normalize(cross(abs(n.z) < .9 ? vec3(0, 0, 1) : vec3(0, 1, 0), n));
+    return normalize(t * sqrt(u) * cos(phi) + cross(n, t) * sqrt(u) * sin(phi) + n * sqrt(1. - u));
+}
+#include "Trace.glsl"
+#include "RaySurface.glsl"
+vec3 direct(Surface s, uint id, bool diffuseOnly)
+{
+    vec3 delta = lights[id].p.xyz - s.p.xyz;
+    float r = length(delta);
+    if (r < EPS)
+        return vec3(0);
+    vec3 wi = delta / r;
+    float cosine = dot(s.n.xyz, wi);
+    float attenuation = pointAttenuation(r, lights[id].intensity.w);
+    if (cosine <= 0. || attenuation == 0.)
+        return vec3(0);
+    if (pointInShadow(s.p.xyz, s.n.xyz, wi, r))
+        return vec3(0);
+    vec3 response = diffuseReflectance(s.rho.rgb, s.rho.w) * (cosine / PI);
+    if (!diffuseOnly && gridOrigin.w == 0.) {
+        vec3 V = inverseVP[2].w == 0. ? normalize(-inverseVP[2].xyz) : normalize(eye.xyz - s.p.xyz);
+        response = reflectedPointLight(s.rho.rgb, s.n.w, s.rho.w, s.n.xyz, V, wi);
+    }
+    return response * lights[id].intensity.rgb * attenuation;
+}
+uint lightID()
+{
+    return uint(random01() * float(imageSize.z));
+}
+vec3 incomingAt(Surface s)
+{
+#ifdef RF_EMISSION
+    // 光线打到灯牌，这一点既能自行发光，也能把点光源照过来的光反射出去。
+    return emittedAtHit + (imageSize.z != 0u ? direct(s, lightID(), true) * float(imageSize.z) : vec3(0));
+#else
+    return imageSize.z != 0u ? direct(s, lightID(), true) * float(imageSize.z) : vec3(0);
+#endif
+}
+float luminance(vec3 v)
+{
+    return dot(v, vec3(.2126, .7152, .0722));
+}
+Reservoir emptyR()
+{
+    return Reservoir(vec4(0, 0, 0, -1), vec4(0), vec4(0), vec4(0));
+}
+// 邻居留下的反射点也可能照亮当前像素。把两点重新连起来，用这段距离和两块表面的朝向计算反射光。
+vec3 evaluate(Surface s, Reservoir v, bool gi, bool visibility)
+{
+    if (v.y.w < 0.)
+        return vec3(0);
+    if (!gi)
+        return direct(s, uint(v.y.w), false);
+    vec3 delta = v.y.xyz - s.p.xyz;
+    float r = length(delta);
+    if (r < 2. * EPS)
+        return vec3(0);
+    vec3 wi = delta / r;
+    float g = max(dot(s.n.xyz, wi), 0.) * max(dot(v.ny.xyz, -wi), 0.) / (r * r);
+    if (g <= 0.)
+        return vec3(0);
+    if (visibility)
+    {
+        float far = r - 2. * EPS;
+        vec2 weights;
+        if (trace(s.p.xyz + EPS * s.n.xyz, wi, far, true, weights) >= 0)
+            return vec3(0);
+    }
+    return diffuseReflectance(s.rho.rgb, s.rho.w) * v.lo.rgb * g / PI;
+}
+Reservoir candidate(Surface s, bool gi)
+{
+    Reservoir r = emptyR();
+    r.stats.y = 1.;
+#ifdef RF_EMISSION
+    if (!gi && imageSize.z == 0u)
+#else
+    if (imageSize.z == 0u)
+#endif
+        return r;
+    float pdf;
+    if (gi)
+    {
+        vec3 wi = hemisphere(s.n.xyz);
+        float t;
+        Surface y = raySurface(s.p.xyz + s.n.xyz * EPS, wi, t);
+        if (y.p.w == 0.)
+            return r;
+        r.y = y.p;
+        r.ny = y.n;
+        r.lo = vec4(incomingAt(y), 0);
+        vec3 segment = r.y.xyz - s.p.xyz;
+        float d2 = dot(segment, segment);
+        vec3 w = normalize(segment);
+        pdf = max(dot(s.n.xyz, w), 0.) * max(dot(y.n.xyz, -w), 0.) / (PI * max(d2, 1e-12));
+    }
+    else
+    {
+        r.y.w = float(lightID());
+        pdf = 1. / float(imageSize.z);
+    }
+    r.stats.x = pdf > 0. ? 1. / pdf : 0.;
+    return r;
+}
+bool compatible(Surface a, Surface b)
+{
+    return b.p.w > 0. && dot(a.n.xyz, b.n.xyz) > .85 && distance(a.p.xyz, b.p.xyz) < .8;
+}
+void mergeR(inout Reservoir result, inout float sum, inout float m, inout float phat, inout float reused,
+            Surface s, Reservoir source, bool gi, float reuse)
+{
+    // 一条旧记录可能汇集了很多次选灯或选反射点的结果。这里最多按 16 次计算它的权重，给本帧新找到的结果留出机会。
+    float count = min(source.stats.y, 16.);
+    m += count;
+    if (source.y.w < 0. || source.stats.x == 0.)
+        return;
+    float p = luminance(evaluate(s, source, gi, reuse != 0.));
+    float weight = p * source.stats.x * count;
+    sum += weight;
+    if (weight > 0. && random01() * sum < weight)
+    {
+        result = source;
+        phat = p;
+        reused = reuse;
+    }
+}
+#include "Probes.glsl"
+void main()
+{
+    uint i = gl_GlobalInvocationID.x;
+    // 更新探针时，base 记录是否计算下一次反射、是否混入上一轮结果。比较这些选项时，用同一批射线。
+    uint sampleOffset = stage == 9u ? 0u : base;
+    state = (i + 1u) * 0x9e3779b9u ^ (frame + 1u) * 0x85ebca6bu ^ (sampleOffset + 1u) * 0xc2b2ae35u ^ seed;
+    if (stage == 9u)
+    {
+        updateProbe(i);
+        return;
+    }
+    if (i >= imageSize.x * imageSize.y)
+        return;
+    if (stage == 11u)
+    {
+        lastSurface[i] = surface[i];
+        return;
+    }
+    uvec2 pixel = uvec2(i % imageSize.x, i / imageSize.x);
+    if (stage == 0u)
+    {
+        vec2 ndc = (vec2(pixel) + .5) / vec2(imageSize.xy) * 2. - 1.;
+        ndc.y = -ndc.y;
+        vec4 nearPoint = inverseVP * vec4(ndc, -1, 1);
+        vec4 farPoint = inverseVP * vec4(ndc, 1, 1);
+        vec3 farWorld = farPoint.xyz / farPoint.w;
+        // 透视相机的射线从镜头散开。正交相机从各像素对应的近平面位置平行出发。
+        bool orthographic = nearPoint.w == farPoint.w;
+        vec3 origin = orthographic ? nearPoint.xyz / nearPoint.w : eye.xyz;
+        float d;
+        Surface hit = raySurface(origin, normalize(farWorld - origin), d);
+        if (orthographic && d > length(farWorld - origin))
+            hit = Surface(vec4(0), vec4(0), vec4(0));
+        surface[i] = hit;
+        return;
+    }
+    Surface s = surface[i];
+    if (s.p.w == 0.)
+    {
+        if (stage == 5u || stage == 6u)
+            fresh[i] = emptyR();
+        else
+            pixels[i] = vec4(0);
+        return;
+    }
+    if (stage == 10u)
+    {
+        pixels[i] = vec4(diffuseReflectance(s.rho.rgb, s.rho.w) * gatherDiffuseLight(s), 0);
+        return;
+    }
+    bool gi = stage == 2u || stage == 4u || stage == 6u || stage == 8u;
+    if (stage == 5u || stage == 6u)
+    {
+        fresh[i] = candidate(s, gi);
+        return;
+    }
+    if (stage == 7u || stage == 8u)
+    {
+        Reservoir r = emptyR();
+        float total = 0., count = 0., selected = 0., reused = 0.;
+        mergeR(r, total, count, selected, reused, s, fresh[i], gi, 0.);
+        if (frame > 0u && (gridSize.w == 0u || compatible(s, lastSurface[i])))
+            mergeR(r, total, count, selected, reused, s, previous[i], gi, 1.);
+        for (int j = 0; j < 4; ++j)
+        {
+            vec2 pos = (vec2(random01(), random01()) - .5) * 8.;
+            ivec2 n = ivec2(pixel) + ivec2(round(pos));
+            if (any(lessThan(n, ivec2(0))) || any(greaterThanEqual(n, ivec2(imageSize.xy))) ||
+                all(equal(n, ivec2(pixel))))
+                continue;
+            uint k = uint(n.y) * imageSize.x + uint(n.x);
+            if (compatible(s, surface[k]))
+                mergeR(r, total, count, selected, reused, s, fresh[k], gi, 1.);
+        }
+        r.stats = vec4(selected > 0. ? total / (count * selected) : 0., count, 0, 0);
+        nextHistory[i] = r;
+        pixels[i] = vec4(evaluate(s, r, gi, false) * r.stats.x, reused);
+        return;
+    }
+    vec3 sum = vec3(0);
+    if (stage == 3u)
+    {
+        for (uint j = 0; j < imageSize.z; ++j)
+            sum += direct(s, j, false);
+        pixels[i] = vec4(sum, 0);
+        return;
+    }
+    for (uint j = 0u; j < samples; ++j)
+    {
+        Reservoir r = candidate(s, gi);
+        sum += evaluate(s, r, gi, false) * r.stats.x;
+    }
+    if (base > 0u)
+        sum += pixels[i].rgb * float(base);
+    pixels[i] = vec4(sum / float(base + samples), 0);
+}

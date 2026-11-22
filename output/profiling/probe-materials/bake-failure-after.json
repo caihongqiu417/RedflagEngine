@@ -1,0 +1,14 @@
+{
+  "command": "tests/run_gi_benchmark.cmd --bake-failure",
+  "binary_sha256": "2b63a453b5f9b5ec12f360603db9b6a1aad181ff8083306e126f15ad184cb44a",
+  "exit_code": 0,
+  "output": [
+    "[08:54:04] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)",
+    "[08:54:04] REDFLAG : Vulkan device: NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "Concurrent probe writes: 12/16 completed, file verified. Long Windows path: 295 characters.",
+    "feedback=0 baked=0 changed_bytes=0 same_buffer=1",
+    "feedback=0 baked=1 changed_bytes=0 same_buffer=1",
+    "feedback=1 baked=0 changed_bytes=0 same_buffer=1",
+    "feedback=1 baked=1 changed_bytes=0 same_buffer=1"
+  ]
+}

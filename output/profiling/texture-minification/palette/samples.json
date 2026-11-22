@@ -1,0 +1,97 @@
+{
+  "capture": "Forge-Mips-Chart_frame12.rdc",
+  "tool": "1.47",
+  "frame": 12,
+  "size": [
+    800,
+    513
+  ],
+  "draw_event": 27,
+  "pack_event": 39,
+  "display_event": 87,
+  "draw_targets": [
+    "ResourceId::394",
+    "ResourceId::398"
+  ],
+  "surface_buffer": "ResourceId::387",
+  "covered": 125316,
+  "debug_messages": [],
+  "samples": [
+    {
+      "x": 311,
+      "y": 167,
+      "source_G": 64,
+      "source_B": 255,
+      "roughness": 0.20073261857032776,
+      "metallic": 0.6000000238418579,
+      "linear_rgb": [
+        0.10000000149011612,
+        0.0,
+        0.0
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "packed_alpha": 10064695.0
+    },
+    {
+      "x": 488,
+      "y": 167,
+      "source_G": 128,
+      "source_B": 0,
+      "roughness": 0.4014652371406555,
+      "metallic": 0.0,
+      "linear_rgb": [
+        0.0,
+        0.10000000149011612,
+        0.0
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "packed_alpha": 1645.0
+    },
+    {
+      "x": 311,
+      "y": 344,
+      "source_G": 192,
+      "source_B": 64,
+      "roughness": 0.6024420261383057,
+      "metallic": 0.1506715565919876,
+      "linear_rgb": [
+        0.0,
+        0.0,
+        0.10000000149011612
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "packed_alpha": 2529700.0
+    },
+    {
+      "x": 488,
+      "y": 344,
+      "source_G": 255,
+      "source_B": 128,
+      "roughness": 0.8000000715255737,
+      "metallic": 0.30109891295433044,
+      "linear_rgb": [
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "packed_alpha": 5053645.0
+    }
+  ]
+}

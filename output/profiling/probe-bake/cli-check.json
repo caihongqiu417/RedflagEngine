@@ -1,0 +1,62 @@
+{
+  "scene": "Light-Studio.redflag",
+  "extra_point_light_intensity": 4,
+  "exe_sha256": "d0180005a4f627736b86bcf10e492192af3da2220acdc8cf639a830d4489022c",
+  "probe_file_bytes": 96792,
+  "probe_rgb_channels": 9072,
+  "results": {
+    "baseline": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "289c8d699b2aca1c0afa6db80c0ff129db61a59c9be566611ece0d2f4a0ee73b",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    },
+    "new-process": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "289c8d699b2aca1c0afa6db80c0ff129db61a59c9be566611ece0d2f4a0ee73b",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    },
+    "single-bounce": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "4271c744231f31d98cc0699d5003c155932944a042e3bd45ca21972cdd5162a0",
+      "payload_sha256": "6338c7ab6b3b43f634257b6b2bc07398039c87638ff3afac16ebdbdfc36eb8b4",
+      "changed_rgb_channels_vs_baseline": 8784
+    },
+    "dark-wall": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "b0790a948af03c05d54b41b01d82103d8c7e58a134d89111ddd20e6ad8518292",
+      "payload_sha256": "f876a46c914d1d654b49f4ead12c30c28a1f4e8989d9c9ea84d5641f6dc3f692",
+      "changed_rgb_channels_vs_baseline": 8631
+    },
+    "bright-point-light": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "f27138f726348c879efc208281cb452a63ca9369480c48362cd874977cf00b05",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "changed_rgb_channels_vs_baseline": 8631
+    },
+    "missing-model": {
+      "exit_code": 1,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "f27138f726348c879efc208281cb452a63ca9369480c48362cd874977cf00b05",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "previous_bake_preserved": true
+    },
+    "damaged-scene": {
+      "exit_code": 1,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "f27138f726348c879efc208281cb452a63ca9369480c48362cd874977cf00b05",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "previous_bake_preserved": true
+    },
+    "editor-hotkey": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "289c8d699b2aca1c0afa6db80c0ff129db61a59c9be566611ece0d2f4a0ee73b",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    }
+  }
+}

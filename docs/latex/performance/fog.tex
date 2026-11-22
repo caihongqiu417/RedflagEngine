@@ -1,0 +1,25 @@
+\clearpage
+\section{体积雾的采样步数}
+方孔左边只有一盏点光源，右边是暗室。画一个像素时，显卡把从相机到墙的路分段，逐段询问点光源能不能照到这里。光柱的边缘越窄，少量采样点越容易漏掉刚好穿过小孔的光。增加步数意味着每个像素要做更多次遮挡查询。
+
+\begin{figure}[H]\centering
+\panelimage{.48\linewidth}{\includegraphics[width=\linewidth]{fog/open.png}}{32 步，方孔打开}
+\hfill
+\panelimage{.48\linewidth}{\includegraphics[width=\linewidth]{fog/closed.png}}{32 步，只把孔封住}
+\caption{Vulkan 计算结果经相同的色调映射显示。封孔后，墙右边的光束消失，左侧的灯仍照亮同一团雾。}
+\end{figure}
+
+测试固定 $384\times216$ 个像素、五个立方体组成的墙面、一盏点光源和正交相机，只改变步数。设备为 RTX 5070 Ti Laptop GPU，Debug x64，Vulkan 验证开启。每种步数预热 4 次，再单独运行 20 次。下表测的是 CPU 发出雾计算到等待 GPU 完成所经过的时间，不含模型加载、直接光、读回、窗口和 TAA。
+
+\begin{center}\smalltable
+\begin{tabular}{lrrr}\toprule
+每像素的采样步数 & 8 & 16 & 32 \\\midrule
+调度与等待的中位数（ms） & 0.230 & 0.327 & 0.537 \\\bottomrule
+\end{tabular}
+\end{center}
+
+另一次用 RenderDoc 1.47 捕获 32 步的计算。事件 8 发出 1,296 组，每组 64 个像素，正好覆盖整幅图。预热一次后读九次 GPU 时间戳，中位数为 0.407 毫秒。回放读到像素 $(288,108)$ 的线性红色分量为 0.0227471，和普通运行一致；封孔后，该处读到 0。捕获没有报告调试消息。雾密度、相函数和遮挡的推导见《实时光照与采样》的「雾中的点光源」一章。
+
+全分辨率的成本会随像素数、灯数和几何复杂度上升。下一次可以固定同一 Sponza 机位，比较半分辨率与全分辨率雾图，在放大半分辨率结果时参考场景深度。若光柱漏到前排石柱上，节省的时间也要和石柱轮廓附近的像素误差一起记录。
+
+\readings{\path{tests/run_fog_tests.cmd} 可复查吸收与封孔测试；传入 RenderDoc DLL 的路径即可截帧。原始帧、采样数据及整张输出的回放摘要位于 \path{output/profiling/fog/}。}

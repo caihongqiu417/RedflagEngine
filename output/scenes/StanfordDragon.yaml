@@ -1,0 +1,45 @@
+Name: StanfordDragon
+Model: ../../RedflagForge/assets/models/reference/StanfordDragon/dragon_vrip_res4.ply
+Size: [768, 512]
+ModelSize: 2
+ModelRotation: [0, 0, 0]
+SurfaceColor: [0.28, 0.66, 0.46]
+Roughness: 0.63
+FloorColor: [0.38, 0.42, 0.48]
+Eye: [0.6, 0.58, 3.2]
+Target: [0, -0.08, 0]
+Fov: 43
+Near: 0.05
+Far: 40
+Direction: [0.45, -0.85, -0.55]
+LightIntensity: 3.3
+PointPosition: [-1.6, 1.3, 2.2]
+PointIntensity: 2
+PointRadius: 7
+ShadowHalfSize: 3.5
+SSAO: true
+RSM: false
+RSMIntensity: 1
+RSMRadius: 0.2
+Exposure: 1.25
+Frames: 6
+Result:
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2
+  OpenGL: 4.6.0 NVIDIA 616.56
+  Submeshes: 1
+  Vertices: 5229
+  Indices: 33342
+  DrawCalls: 8
+  Culled: 0
+  VisiblePixels: 217056
+  ModelPixels: 65371
+  HDRFinite: true
+  Scene: assets/scenes/Reference-StanfordDragon.redflag
+  ReopenedSceneRendered: true
+  ModelID: 6122188709592601978
+  Scale: 9.86092663
+  Translation:
+    - 0.0608877726
+    - -1.22860789
+    - 0.0444224738
+  ImageSource: SceneRenderer final LDR texture, direct readback

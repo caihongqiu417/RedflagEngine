@@ -1,0 +1,97 @@
+{
+  "server": {
+    "name": "renderdoc-mcp",
+    "version": "1.0.0"
+  },
+  "capture": "mcp-capture.rdc",
+  "sha256": "82dc25ca7236f52ea08c86e21efda518cebd60a16b51db6bcbdee3215d81fe24",
+  "open_capture": {
+    "api": "Vulkan",
+    "degraded": false,
+    "driverName": "",
+    "gpus": [],
+    "hasCallstacks": false,
+    "machineIdent": "",
+    "path": "D:\\Cdev\\Redflag\\output\\validation\\gi-mask\\mcp-capture.rdc",
+    "timestampBase": 0,
+    "totalDraws": 3,
+    "totalEvents": 24
+  },
+  "get_capture_info": {
+    "api": "Vulkan",
+    "degraded": false,
+    "driverName": "Vulkan",
+    "gpus": [],
+    "hasCallstacks": false,
+    "machineIdent": "Windows x86 64-bit ",
+    "path": "D:\\Cdev\\Redflag\\output\\validation\\gi-mask\\mcp-capture.rdc",
+    "timestampBase": 695314739281,
+    "totalDraws": 3,
+    "totalEvents": 24
+  },
+  "get_log": {
+    "count": 0,
+    "messages": []
+  },
+  "list_passes": {
+    "count": 0,
+    "passes": []
+  },
+  "get_stats": {
+    "largestResources": [
+      {
+        "byteSize": 196608,
+        "height": 0,
+        "name": "Buffer 456",
+        "type": "Buffer",
+        "width": 0
+      },
+      {
+        "byteSize": 96768,
+        "height": 0,
+        "name": "Buffer 429",
+        "type": "Buffer",
+        "width": 0
+      },
+      {
+        "byteSize": 96768,
+        "height": 0,
+        "name": "Buffer 432",
+        "type": "Buffer",
+        "width": 0
+      },
+      {
+        "byteSize": 65536,
+        "height": 64,
+        "name": "2D Color Attachment 175",
+        "type": "R32G32B32A32_FLOAT",
+        "width": 64
+      },
+      {
+        "byteSize": 65536,
+        "height": 64,
+        "name": "2D Color Attachment 179",
+        "type": "R32G32B32A32_FLOAT",
+        "width": 64
+      }
+    ],
+    "perPass": [],
+    "topDraws": [
+      {
+        "eventId": 25,
+        "name": "vkCmdDrawIndexed()",
+        "numIndices": 6
+      },
+      {
+        "eventId": 30,
+        "name": "vkCmdDrawIndexed()",
+        "numIndices": 6
+      },
+      {
+        "eventId": 58,
+        "name": "vkCmdDrawIndexed()",
+        "numIndices": 6
+      }
+    ]
+  }
+}

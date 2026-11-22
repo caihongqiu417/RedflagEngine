@@ -16,7 +16,7 @@ namespace Redflag {
 
 		void SetContext(const Ref<Scene>& context);
 
-		void OnImguiRender();
+		void OnImguiRender(const char* hierarchy = "Scene Hierachy", const char* inspector = "Properties");
 
 		Entity GetSelectedEntity()const { return m_SelectionContext; }
 

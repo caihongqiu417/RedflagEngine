@@ -9,16 +9,19 @@
 
 namespace Redflag
 {
-	// 单个顶点数据：位置、法线、纹理坐标、切线
+	/* 后端持有上传好的顶点和索引，同一份几何可以画在多个位置。 */
+	struct MeshGeometry { virtual ~MeshGeometry() = default; };
+
 	struct MeshVertex
 	{
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoord;
 		glm::vec3 Tangent;   // 切线向量，用于法线贴图的 TBN 矩阵构建
+		glm::vec2 EmissiveUVOffset{0}; // 加到 TexCoord 上即为发光图坐标。共用同一套 UV 时为零。
 	};
 
-	/* 网格几何：上传顶点和索引，由 VAO 持有缓冲引用；包围盒保留在网格局部空间。 */
+	/* 网格持有当前后端创建的几何数据。包围盒保留在模型坐标中，供场景判断可见性。 */
 	class Mesh
 	{
 	public:
@@ -31,7 +34,8 @@ namespace Redflag
 		// ---- 几何查询 ----
 		uint32_t GetVertexCount() const { return m_VertexCount; }
 		uint32_t GetIndexCount() const { return m_IndexCount; }
-		const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
+		const Ref<MeshGeometry>& GetGeometry() const { return m_Geometry; }
+		const Ref<VertexArray>& GetVertexArray() const; // 原 OpenGL 绘制使用的顶点数组。
 
 		// 本地空间轴对齐包围盒（构造时从顶点扫出，用于视锥体剪裁）
 		const glm::vec3& GetAABBMin() const { return m_AABBMin; }
@@ -44,7 +48,7 @@ namespace Redflag
 		static Ref<Mesh> CreateCube();
 
 	private:
-		Ref<VertexArray>  m_VertexArray;
+		Ref<MeshGeometry> m_Geometry;
 		uint32_t          m_VertexCount = 0;
 		uint32_t          m_IndexCount = 0;
 

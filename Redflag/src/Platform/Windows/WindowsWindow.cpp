@@ -8,6 +8,9 @@
 #include"Redflag/Events/ApplicationEvent.h"
 
 #include"Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Vulkan/VulkanContext.h"
+#include "Redflag/Renderer/RendererAPI.h"
+#include <stdexcept>
 
 namespace Redflag {
 
@@ -62,13 +65,29 @@ namespace Redflag {
 		{
 			RF_PROFILE_SCOPE("glfwCreateWindow - WindowsWindow::Init(const WindowProps&)");
 
+			const bool vulkan = RendererAPI::GetAPI() == RendererAPI::API::Vulkan;
+			glfwWindowHint(GLFW_CLIENT_API, vulkan ? GLFW_NO_API : GLFW_OPENGL_API);
+			glfwWindowHint(GLFW_VISIBLE, props.Visible ? GLFW_TRUE : GLFW_FALSE);
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			if (!m_Window)
+				throw std::runtime_error("Could not create the GLFW window");
 			++s_glfwWindowCount;
 		}
 		
 		
-		m_Context = new OpenGLContext(m_Window);
-		m_Context->Init();
+		try
+		{
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+				m_Context = CreateScope<VulkanContext>(m_Window);
+			else
+				m_Context = CreateScope<OpenGLContext>(m_Window);
+			m_Context->Init();
+		}
+		catch (...)
+		{
+			ShutDown();
+			throw;
+		}
 		
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -187,8 +206,8 @@ namespace Redflag {
 	void WindowsWindow::ShutDown() 
 	{
 		RF_PROFILE_FUNCTION();
-		delete m_Context;
-		m_Context = nullptr;
+		m_Context.reset();
+		--s_glfwWindowCount;
 		glfwDestroyWindow(m_Window);
 	}
 	void WindowsWindow::OnUpdate()
@@ -203,10 +222,10 @@ namespace Redflag {
 	}
 	//----------------------------------------------------------设置opengl回调-----------------------------------------------//
 	void WindowsWindow::SetVSync(bool enable) {
-		if (enable)
-			glfwSwapInterval(1);
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			static_cast<VulkanContext&>(*m_Context).SetVSync(enable);
 		else
-			glfwSwapInterval(0);
+			glfwSwapInterval(enable ? 1 : 0);
 		m_Data.VSync = enable;
 	}
 	bool WindowsWindow::IsVSync() const {

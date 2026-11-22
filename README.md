@@ -1,6 +1,12 @@
 # Redflag
 
-Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可以打开场景、摆放模型和灯光，查看 OpenGL 绘制的画面。
+Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可以打开场景、摆放模型与灯光，再用 OpenGL 或 Vulkan 查看结果。
+
+## 打开编辑器
+
+在 Visual Studio 中生成 Debug / x64 的 RedflagForge，然后双击 [Open-Vulkan-Editor.cmd](Open-Vulkan-Editor.cmd)。场景视口上方有“实时效果”，可以在同一机位切换 DDGI、ReSTIR、GTAO、SSR 和 TAA。直接运行编辑器时默认使用 OpenGL。[编辑器图解手册](output/pdf/Redflag-Editor-Guide.pdf) · [常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
+
+第一次打开 [中庭雕塑展](RedflagForge/assets/scenes/Sponza-Sculpture-Gallery.redflag)，先在仓库根目录分别运行 `python tests/fetch_sponza.py` 和 `python tests/fetch_stanford.py`。前者取得建筑和贴图，后者取得展台上的龙、兔子与佛像。回到编辑器的“项目”面板，双击场景文件就能打开布置好的展厅。[Stanford 模型与来源](output/scenes/Stanford-Scans.md) · [RHI 与 Vulkan](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) · [引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)
 
 ## 编辑器与引擎代码
 
@@ -8,11 +14,22 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 ## 从场景到画面
 
+想调一件具体的材质，可以打开摄影棚里的古董相机。切换“镜面 IBL”，就能看见机身右边框映出的棚灯。场景使用 Khronos 的 Antique Camera 模型和 Poly Haven 的 HDR 环境图。下载命令、同机位实拍和工程里的入口见[摄影棚示例](output/profiling/material-studio/README.md)。
+
+要试灯牌，在 Vulkan 编辑器打开 `assets/scenes/Light-Studio.redflag`。选中“灯牌”，在属性里勾选“为此物体调整材质”，即可换灯的颜色和花纹。房间里只有这块面板发光，把它移出画面，还可以观察白墙接到的暖光。[操作手册](output/pdf/Redflag-Editor-Guide.pdf) · [灯牌与神庙火盆的实际画面](output/profiling/emissive-studio/README.md)
+
+要把房间里的间接光留给下次打开，可以在渲染设置中点“烘焙探针”，也可以从仓库根目录运行下面的 PowerShell 命令。两种方式都读取场景保存的模型、材质、点光源和“多次漫反射”设置，在场景文件旁生成 `.redflag.rfprobes`。
+
+```powershell
+cd RedflagForge
+..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe --bake-probes assets\scenes\Light-Studio.redflag
+```
+
 第一次读项目，可以先看 Cornell Box 的两张对照图。红墙旁边的地板本来是白色，打开间接光后却带上了红色。[经典场景实测](output/pdf/Redflag-Classic-Scenes.pdf) 保存了画面和相机设置，[渲染公式与实现](output/pdf/Redflag-Rendering-Math.pdf) 顺着同一块地面解释公式、着色器和读回的颜色值。
 
-要顺着代码看一个模型怎样加载和绘制，可以接着读[引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)。[RHI 与 Vulkan 方案](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) 通过类图讲解模型、材质、设备和命令列表的分工，并用阴影和后处理说明如何设计绘制接口。目前编辑器使用 OpenGL，文中的 Vulkan 后端是拟议设计。
+做游戏时，可在本地浏览器打开 API 手册，按类名、方法或用途查找 C++ 与 C# 入口。想理解画面时，从《实时光照与采样》选一章，跟着教材例子读公式、看着色器，最后用同一场景的测量检查猜想。[游戏开发 API](output/api/index.html) · [实时光照与采样](output/pdf/Redflag-Realtime-Lighting.pdf) · [分章笔记与原始资料](docs/latex/lighting/README.md)
 
-遇到错图时，[排错记录](output/pdf/Redflag-Debugging-Notes.pdf) 可以从现象追到当时的源码与 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions.pdf) 解释当时为什么选择这种实现。[渲染性能实测](output/pdf/Redflag-Rendering-Performance.pdf) 用实际帧和计时对照深度预写、2D 批渲染和 3D 实例化。各册的 LaTeX 源码与编译命令收在[文档目录](docs/latex/README.md)。
+遇到错图时，可以在[排错记录](output/pdf/Redflag-Debugging-Notes.pdf)里找到对应的源码和 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions-Updated.pdf)比较了让远处铁丝网在镜头移动时保持可见的几种取样方法。在编辑器的“渲染设置 → 质量与参数”中可以打开 SSAA 2×2。[渲染性能实测](output/pdf/Redflag-Rendering-Performance.pdf)记录了它在 Sponza 里的耗时与显存开销，也收录了深度预写、2D 批渲染和 3D 实例化的对照。各册的 LaTeX 源码与编译命令见[文档目录](docs/latex/README.md)。
 
 日常开发使用的[项目记忆](AGENTS.md)、[AI 协作工作流](docs/AI-Workflow.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)也随仓库保存。
 

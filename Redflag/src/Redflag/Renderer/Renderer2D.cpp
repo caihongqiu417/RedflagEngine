@@ -195,9 +195,7 @@ namespace Redflag
         s_Data.QuadVertexPositions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };    // 右上
         s_Data.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };   // 左上
 
-        // [新增] 创建 Camera Uniform Buffer
-        // 大小是 sizeof(mat4) = 64字节
-        // Binding Point = 0 (我们约定 0 号槽位给 Camera)
+        // 2D 着色器从 0 号位置读取相机矩阵。
         s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 
         // ── 初始化线段缓冲 ──

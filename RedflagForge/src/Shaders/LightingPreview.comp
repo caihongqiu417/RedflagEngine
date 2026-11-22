@@ -1,0 +1,27 @@
+#version 450
+
+// 面板显示 GTAO 时用灰度表示遮挡，显示光照时把亮度压到屏幕能显示的范围。原来的光照值仍留在输入数组里。
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 0) readonly buffer Pixels { vec4 values[]; };
+layout(rgba32f, binding = 1) uniform writeonly image2D panel;
+layout(push_constant) uniform Display { uint gray, sampleSide; } settings;
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(panel);
+    if (any(greaterThanEqual(pixel, size))) return;
+    int side = int(settings.sampleSide);
+    int first = (pixel.y * side * size.x + pixel.x) * side;
+    vec4 sampleColor = values[first];
+    if (side == 2)
+    {
+        // 一个像素里的四个位置可能分别看见铁丝和墙。先平均各自算出的光，再作显示转换。
+        int nextRow = size.x * side;
+        sampleColor = .25 * (sampleColor + values[first + 1] + values[first + nextRow] + values[first + nextRow + 1]);
+    }
+    vec3 light = max(sampleColor.rgb, vec3(0));
+    vec3 color = settings.gray != 0 ? vec3(clamp(sampleColor.a, 0.0, 1.0))
+                                    : pow(light / (vec3(1) + light), vec3(1.0 / 2.2));
+    imageStore(panel, pixel, vec4(color, 1));
+}

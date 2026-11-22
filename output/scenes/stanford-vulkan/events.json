@@ -1,0 +1,362 @@
+{
+  "renderdoc_version": "1.47",
+  "scenes": {
+    "StanfordBunny": {
+      "capture": "output/profiling/stanford/StanfordBunny_capture.rdc",
+      "capture_sha256": "7c4b4365d9e17088e2f0fa646cb81d1f9090a8ff2a9eb5b29c7dfcd70a2600d8",
+      "messages": [],
+      "events": [
+        {
+          "stage": "ddgi-probes",
+          "eid": 8,
+          "groups": [
+            48,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "ddgi",
+          "eid": 20,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "gi-candidates",
+          "eid": 32,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-gi",
+          "eid": 44,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "di-candidates",
+          "eid": 56,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-di",
+          "eid": 68,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "direct",
+          "eid": 80,
+          "groups": [
+            864,
+            1,
+            1
+          ],
+          "verified_output_sha256": "80d19cce854c9a1fcd91267b21c19685ebe8b29895d893033a8599d7e1a29b19"
+        },
+        {
+          "stage": "ao",
+          "eid": 92,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "c66a3ecda98f1bf083ac8494193cc6310ba14dd8b3489c57835897fe184b4258"
+        },
+        {
+          "stage": "ssr",
+          "eid": 104,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "b4dff3a443c0cd9b6954da196f04aca4e161e6aa205b21d25244a936fc022be7"
+        },
+        {
+          "stage": "cluster-mask",
+          "eid": 117,
+          "groups": [
+            54,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "cluster",
+          "eid": 128,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "987b02c81f34a531251f21c7be1daab74a6859da27875d8b651d32fcbc92810b"
+        },
+        {
+          "stage": "taa",
+          "eid": 140,
+          "groups": [
+            36,
+            24,
+            1
+          ]
+        }
+      ]
+    },
+    "StanfordDragon": {
+      "capture": "output/profiling/stanford/StanfordDragon_capture.rdc",
+      "capture_sha256": "62dc3af9410c7ddf09081c316d8f89cf5eb1440d78d3f65374b0e1c511af4acc",
+      "messages": [],
+      "events": [
+        {
+          "stage": "ddgi-probes",
+          "eid": 8,
+          "groups": [
+            48,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "ddgi",
+          "eid": 20,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "gi-candidates",
+          "eid": 32,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-gi",
+          "eid": 44,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "di-candidates",
+          "eid": 56,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-di",
+          "eid": 68,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "direct",
+          "eid": 80,
+          "groups": [
+            864,
+            1,
+            1
+          ],
+          "verified_output_sha256": "880f40514c8a547e1859830e7897b0013894a4148d269b302368b010944bdf31"
+        },
+        {
+          "stage": "ao",
+          "eid": 92,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "eba3dc0cfc2cc3f55efab8a69db0b19934a01c9305dfac214fbc9d50dd6a11d7"
+        },
+        {
+          "stage": "ssr",
+          "eid": 104,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "0e34c2492a88af8747816b5643c85a38ae7c25c55cc1c0b61016bd39c29ce83a"
+        },
+        {
+          "stage": "cluster-mask",
+          "eid": 117,
+          "groups": [
+            54,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "cluster",
+          "eid": 128,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "3e220bbc7f767087fcc5534da655111d13237f431950a3c420e8271a6cdb121c"
+        },
+        {
+          "stage": "taa",
+          "eid": 140,
+          "groups": [
+            36,
+            24,
+            1
+          ]
+        }
+      ]
+    },
+    "HappyBuddha": {
+      "capture": "output/profiling/stanford/HappyBuddha_capture.rdc",
+      "capture_sha256": "e95a881f9a8dd482d32c6c7df1fb985f2c0e32a44566f2b8074734665ab7536b",
+      "messages": [],
+      "events": [
+        {
+          "stage": "ddgi-probes",
+          "eid": 8,
+          "groups": [
+            48,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "ddgi",
+          "eid": 20,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "gi-candidates",
+          "eid": 32,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-gi",
+          "eid": 44,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "di-candidates",
+          "eid": 56,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "restir-di",
+          "eid": 68,
+          "groups": [
+            864,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "direct",
+          "eid": 80,
+          "groups": [
+            864,
+            1,
+            1
+          ],
+          "verified_output_sha256": "64580ed9d6120456855b96383857d57d133ce7721197863d30b206f743b55deb"
+        },
+        {
+          "stage": "ao",
+          "eid": 92,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "4df802d9f52c6964d93ebb134f140ebb62476e9c25e8763dbc6ca0fe361af4e7"
+        },
+        {
+          "stage": "ssr",
+          "eid": 104,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "73070ccc047b07d1cfbbeb795a923831a847afb268d89569cd96f2d741451158"
+        },
+        {
+          "stage": "cluster-mask",
+          "eid": 117,
+          "groups": [
+            54,
+            1,
+            1
+          ]
+        },
+        {
+          "stage": "cluster",
+          "eid": 128,
+          "groups": [
+            36,
+            24,
+            1
+          ],
+          "verified_output_sha256": "bf1ae43452c28e09207ef8bd72c371f82d40ac097c28dad20654b72bb38eaff5"
+        },
+        {
+          "stage": "taa",
+          "eid": 140,
+          "groups": [
+            36,
+            24,
+            1
+          ]
+        }
+      ]
+    }
+  }
+}

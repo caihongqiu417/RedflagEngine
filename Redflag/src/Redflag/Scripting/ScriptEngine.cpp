@@ -523,7 +523,7 @@ namespace Redflag {
 
 	ScriptEngine::EntityScriptFieldMap& ScriptEngine::GetScriptFieldCache(UUID entityUUID)
 	{
-		// operator[] 不存在则插入空 map，符合"按需创建"的语义
+		// 第一次访问这个实体时，operator[] 会为它创建一张空的脚本字段表。
 		return s_Data->ScriptFieldCache[entityUUID];
 	}
 

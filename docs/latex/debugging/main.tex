@@ -2,27 +2,31 @@
 \input{../rhi/preamble}
 \usepackage{amsmath}
 \usepackage{fvextra}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \DefineVerbatimEnvironment{Code}{Verbatim}{fontsize=\small,breaklines=true,breakanywhere=true,frame=single,rulecolor=\color{line},framesep=6pt}
-\hypersetup{pdftitle={Redflag 排错与 RenderDoc 截帧记录}}
+\hypersetup{pdftitle={Redflag 排错与 RenderDoc 截帧记录},filecolor=blue}
 \fancyhead[L]{\small\color{muted}Redflag · 排错与截帧}
+\fancyhead[R]{\small\color{muted}2026-11-22}
 \newcommand{\loc}[1]{\par{\footnotesize\color{muted}源码：\path{#1}}\par}
 \renewcommand{\note}[1]{\par{\small\color{muted}#1\par}}
 \setlength{\emergencystretch}{1em}
 \begin{document}
 \zihao{5}
 \raggedright
+\setlength{\parindent}{2\ccwd}
 {\Huge\bfseries Redflag 排错记录}\par\vspace{5pt}
 {\Large\color{muted}从错色、漏影和误拾取追到绘制代码}\par
 \ruleline
 
 给一片叶子贴上透明图，叶缘之外已经能看见背景，深度图里怎么还留着一整块叶片？这次排查先用四条条纹代替叶子，把两次绘制拆开，最后在 RenderDoc 里读同一个像素。后面能看到修复后的截帧、当时的错误代码，以及只改一个材质参数就能重复运行的测试。
 
-这一册整理于 2026 年 11 月 21 日。近期问题保留了源码和实测，早期故障则尽量还原当时看到的画面，用提交和开发日志说明改过哪里。旧素材或截图已经找不到的地方，正文会说明还能核对到哪一步。
+本册于 2026 年 11 月 21 至 22 日整理。近期问题保留了源码和实测，早期故障用提交和开发日志还原当时的画面。旧截图已经找不到的地方，正文注明还能核对哪些记录。
 
 本轮使用 Debug/x64 构建。关于 CPU 在哪里花了时间，Chrome 时间线、采集条件和选型依据另见《技术选型与工程取舍》。
 
 \section{复现用的场景、驱动和测试}
-\begin{tabularx}{\textwidth}{L{3.2cm}YL{2cm}}
+\noindent\begin{tabularx}{\textwidth}{L{3.2cm}YL{2cm}}
 \toprule
 测试 & 检查的行为 & 结果 \\
 \midrule
@@ -37,6 +41,7 @@ Shader 与 GPU 对象 & 内容缓存、资源库查询，以及 VAO 的最后引
 测试用 GLFW 开一个隐藏窗口，让本机 OpenGL 4.6 驱动真正绘制，再把颜色、深度或编号读回来。修改引擎后，先构建 Debug/x64，然后在仓库根目录依次运行下面五条命令。逐个运行可以避免两个用例同时改写着色器缓存。
 
 \begin{verbatim}
+REM 仓库根目录。逐个运行，避免同时改写着色器缓存。
 tests\run_asset_tests.cmd
 tests\run_shader_tests.cmd
 tests\run_depth_tests.cmd
@@ -63,7 +68,7 @@ tests\run_render_tests.cmd
 这里缓存的是 GLSL 450 流程的第一次编译结果，后续反编译、再编译与链接仍要做。升级编译器或更改选项时需更新配置键里的 \code{v1}。外部 include、版本自动识别和旧缓存清理还有待接入。长度与开头标记检查只能发现一部分坏文件。目前实际使用这条路径的是 OpenGL。
 \loc{Redflag/src/Platform/OpenGL/OpenGLShader.cpp}
 
-\subsection{为什么只有 FlatColor 编译失败}
+\subsection{FlatColor 的编译错误}
 清空缓存后逐个编译当时的 16 个文件，只有旧示例 FlatColor 失败。它用普通 uniform 按名称传入矩阵和颜色，第二次编译却套用了 Vulkan 的声明要求。
 
 GLSL 330 示例现交给 OpenGL 直接编译源码，保留 uniform 名称。GLSL 450 继续使用 SPIR-V，两条路径共用程序链接。合并主 Shader 之前，全部 16 个 .glsl 文件链接成功。FlatColor 按名称上传两个单位矩阵与颜色后，实际像素为 $(255,0,255,255)$。
@@ -123,7 +128,7 @@ OpenGL 用顶点数组（VAO）记住如何解释顶点数据。构造函数创�
 
 这些用例检查了读像素前的尺寸判断。对随机损坏文件的测试和地址消毒器检查仍未做。
 
-\subsection{一个没写透明度的 OBJ 为什么消失}
+\subsection{缺少透明度声明的 OBJ 模型}
 当时已有七个贴图合并用例，全部通过，日志里却反复出现玻璃判断。回头看那个没有声明透明的最小 OBJ，贴图的确生成了，网格数据也被清空了。
 
 项目所用的 Assimp 默认给 OBJ 填入透射颜色 $(1,1,1)$。旧 Model 一见非零透射色便删除子网格。它还从材质名、网格名和路径里找 glass、window、mirror 等字样，进而修改金属度、粗糙度，甚至清掉法线图。一个普通模型只要放进带 mirror 的目录，也可能受影响。
@@ -187,7 +192,7 @@ SSAO 遇到屏幕外样本时跳过累加，最后仍除以全部样本数。屏
 过去被名称规则误删的玻璃网格现在能保留下来。要让人透过玻璃看见后面的物体，还需要从文件读出正确的透明材质，按合适的顺序绘制并混合背景。当前导入支持的是不透明材质和用独立透明度图裁掉像素的材质。
 
 \section{像素读数、绘制状态与原始资料}
-\begin{tabularx}{\textwidth}{L{4.3cm}Y}
+\noindent\begin{tabularx}{\textwidth}{L{4.3cm}Y}
 \toprule
 资料 & 用于核对什么 \\
 \midrule
@@ -208,4 +213,13 @@ RenderDoc MCP 0.3.0 通过 stdio 读取到相同的两次绘制，事件编号�
 
 \newpage
 \input{code-cases}
+\input{temporal}
+\input{taa-camera}
+\input{bathroom}
+\input{probe-order}
+\input{cluster-lights}
+\input{emissive-panel}
+\input{mirror-edge}
+\input{probe-materials}
+\input{fine-mask}
 \end{document}

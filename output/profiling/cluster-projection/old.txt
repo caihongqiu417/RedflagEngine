@@ -1,0 +1,2 @@
+perspective cluster max RGB error 2.68221e-07, missed 0/324
+orthographic cluster max RGB error 0.586336, missed 288/288

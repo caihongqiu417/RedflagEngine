@@ -2,7 +2,7 @@
 \input{../rhi/preamble}
 \input{../rhi/layout}
 \input{build/timing-rows}
-\hypersetup{pdftitle={Redflag 渲染性能实测},pdfsubject={2D 批渲染、3D 实例化与深度预写}}
+\hypersetup{pdftitle={Redflag 渲染性能实测},pdfsubject={OpenGL 绘制、Vulkan 光照与屏幕效果}}
 \fancyhead[R]{\sffamily\small\color{Muted}OpenGL / 性能实测}
 \graphicspath{{../../../output/profiling/}}
 \newcommand{\smalltable}{\sffamily\fontsize{10.3}{14}\selectfont\renewcommand{\arraystretch}{1.35}}
@@ -96,10 +96,34 @@ RenderDoc 的 \code{PS Invocations} 计数记录片元着色器启动了多少�
 这次循环只测离屏绘制。下一次用 Release 构建，编译时关闭性能埋点，再固定 Sponza 的镜头检查遮挡与多材质，固定 Cornell Box 的镜头检查间接光。编辑器的深度预览还会把原尺寸深度图读回 CPU，再生成缩略图。对同一镜头单独开关预览，测 CPU 等待和 GPU 区间。如果读回确实占主要时间，再试直接用着色器显示深度。以上是待验证的方向。
 
 \subsection{复查与复现}
-原始帧在 \path{output/profiling/} 的 \code{batch2d} 和 \code{mesh} 子目录中，可以用 RenderDoc 打开。各目录的 README 列有采集命令、设置和回放脚本。计时在仓库根目录依次执行下列命令。
+原始帧及回放说明在 \path{output/profiling/batch2d/} 和 \path{output/profiling/mesh/}。用 RenderDoc 打开捕获，另外运行以下脚本计时。
 \begin{lstlisting}
+REM 在仓库根目录运行。分别保存 2D 合批与 3D 绘制的逐帧计时。
 tests\run_sprite_batch.cmd --measure
 tests\run_profile_tests.cmd --measure output\profiling\mesh\timing.csv
 \end{lstlisting}
-两份 CSV 保留每次执行的顺序和纳秒值。编译本册时先核对四份原始帧与回放记录的文件摘要，再从 CSV 重算第 1 页的表。旧版的 Chrome CPU 时间线另存于 \path{output/profiling/}，当时每轮等待显卡并写日志，采样条件与本册不同。
+编译本册会核对四份原始帧的摘要，再从两份逐帧 CSV 重算首页的表。旧版 Chrome 时间线保存在 \path{output/profiling/}，当时每轮还包含等待和日志写入。
+\input{build/compute-timing}
+\input{gi}
+\input{screen-effects}
+\input{compute-memory}
+\input{navigation-light}
+\input{fog}
+\input{probe-baking}
+\input{probe-feedback}
+\input{mesh-lod}
+\input{primary-surfaces}
+\input{frame-analysis}
+\input{point-materials}
+\input{texture-minification}
+\input{baked-preview}
+\input{emissive-material}
+\input{triangle-intersection}
+\input{scene-reflections}
+\input{rough-reflections}
+\input{masked-materials}
+\input{build/fine-mask-rows}
+\input{fine-mask}
+\input{build/ssaa-rows}
+\input{ssaa}
 \end{document}

@@ -1,5 +1,7 @@
 #include "rfpch.h"
 #include "Renderer3D.h"
+#include "Platform/OpenGL/OpenGLTransparencyPass.h"
+#include "Platform/OpenGL/OpenGLTexture.h"
 #include "Redflag/Renderer/Model.h"
 #include "Redflag/Renderer/Material.h"
 
@@ -14,6 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <functional>
 
 namespace Redflag
@@ -25,13 +28,15 @@ namespace Redflag
 		glm::mat4     Transform;
 		Ref<Material> Mat;  // 提交时已选好材质。
 		int           EntityID = -1;
-		bool          CameraCulled = false; // 只影响主相机绘制，仍可向画面内投影或反射光
+		bool          CameraCulled = false; // 相机看不见的物体仍可能在画面里投下影子，或把光反射进来。
 		bool          Skip     = false;  // 这条记录已合批绘制。
 	};
 
 	struct Renderer3DData
 	{
 		Ref<Shader>        MeshShader;
+		Ref<Shader>        TransparentShader;
+		Scope<OpenGLTransparencyPass> Transparency;
 		Ref<Material>      DefaultMaterial; // 白色纯色
 
 		Ref<UniformBuffer> CameraUniformBuffer;
@@ -54,8 +59,8 @@ namespace Redflag
 			glm::mat4 Transform;
 		};
 
-		// 材质在着色器中占 64 字节，末尾的填充也计入大小。
-		struct MaterialData
+		// 前半部分和深度、阴影着色器共用；折射率和厚度只在绘制玻璃时读取。
+		struct alignas(16) MaterialData
 		{
 			glm::vec4 BaseColor;
 			float     Metallic;
@@ -69,8 +74,14 @@ namespace Redflag
 			int       UseAlphaMap;
 			float     AlphaCutoff;
 			int       AlphaMode;
-			int       _pad0;
+			float     RefractionIndex;
+			float     Thickness;
+			alignas(16) glm::vec3 Emission;
+			int       UseEmissiveMap;
 		};
+
+		static_assert(sizeof(MaterialData) == 96 && offsetof(MaterialData, Emission) == 80 &&
+			offsetof(MaterialData, UseEmissiveMap) == 92, "Match the std140 Material block in Renderer3D_Mesh.glsl");
 
 		CameraData    CameraBuffer;
 		TransformData TransformBuffer;
@@ -83,7 +94,7 @@ namespace Redflag
 			glm::vec4 BaseColor;
 			glm::vec4 MatParams;  // x 金属度、y 粗糙度、z 环境遮蔽。
 			int       EntityID;
-			int       _pad[3];
+			glm::vec3 Emission;
 		};
 
 		static constexpr uint32_t MAX_INSTANCES = 2048;
@@ -92,11 +103,12 @@ namespace Redflag
 		uint32_t     InstanceVBO = 0;
 
 		std::vector<DrawCommand> DrawCommands;
+		std::vector<DrawCommand> TransparentCommands;
 
 		// 当前帧视锥体（BeginScene 时构建，DrawMesh/DrawModel 使用）
 		Frustum CameraFrustum;
 
-		// 剪裁可视化用：世界空间 AABB + 是否被剪掉
+		// 调试视图用这组角点画包围盒，Culled 决定画红框还是绿框。
 		struct DebugAABB { glm::vec3 Min; glm::vec3 Max; bool Culled; };
 		std::vector<DebugAABB> DebugAABBs;
 
@@ -131,13 +143,17 @@ namespace Redflag
 		s_Data.MaterialBuffer.UseAlphaMap            = mat->HasAlphaMap()             ? 1 : 0;
 		s_Data.MaterialBuffer.AlphaCutoff            = mat->AlphaCutoff;
 		s_Data.MaterialBuffer.AlphaMode              = static_cast<int>(mat->Alpha);
-		s_Data.MaterialBuffer._pad0                  = 0;
+		s_Data.MaterialBuffer.RefractionIndex        = mat->RefractionIndex;
+		s_Data.MaterialBuffer.Thickness              = mat->Thickness;
+		s_Data.MaterialBuffer.Emission               = mat->Emission;
+		s_Data.MaterialBuffer.UseEmissiveMap         = mat->EmissiveMap != nullptr;
 
 		if (mat->HasBaseColorMap())        mat->BaseColorMap->Bind(3);
 		if (mat->HasNormalMap())           mat->NormalMap->Bind(4);
 		if (mat->HasMetallicRoughnessMap()) mat->MetallicRoughnessMap->Bind(5);
 		if (mat->HasAOMap())               mat->AOMap->Bind(6);
 		if (mat->HasAlphaMap())            mat->AlphaMap->Bind(10);
+		if (mat->EmissiveMap)              static_cast<OpenGLTexture2D&>(*mat->EmissiveMap).BindSRGB(13);
 	}
 
 	// ---- 初始化与销毁 ----
@@ -164,6 +180,8 @@ namespace Redflag
 	void Renderer3D::Shutdown()
 	{
 		s_Data.MeshShader.reset();
+		s_Data.TransparentShader.reset();
+		s_Data.Transparency.reset();
 		s_Data.InstancedMeshShader.reset();
 		if (s_Data.InstanceVBO) { glDeleteBuffers(1, &s_Data.InstanceVBO); s_Data.InstanceVBO = 0; }
 		s_Data.DefaultMaterial.reset();
@@ -171,6 +189,7 @@ namespace Redflag
 		s_Data.TransformUniformBuffer.reset();
 		s_Data.MaterialUniformBuffer.reset();
 		s_Data.DrawCommands.clear();
+		s_Data.TransparentCommands.clear();
 	}
 
 	// ---- 帧状态 ----
@@ -192,6 +211,7 @@ namespace Redflag
 		s_Data.CameraFrustum = Frustum::FromViewProjection(s_Data.CameraBuffer.ViewProjection);
 
 		s_Data.DrawCommands.clear();
+		s_Data.TransparentCommands.clear();
 		s_Data.DebugAABBs.clear();
 		s_Data.DrawCallLog.clear();
 		ResetStats();
@@ -212,17 +232,66 @@ namespace Redflag
 		s_Data.CameraFrustum = Frustum::FromViewProjection(viewProjection);
 
 		s_Data.DrawCommands.clear();
+		s_Data.TransparentCommands.clear();
 		s_Data.DebugAABBs.clear();
 		s_Data.DrawCallLog.clear();
 		ResetStats();
 	}
 
 	// ---- 主画面 ----
+	static void DrawMeshes(const std::vector<DrawCommand>& commands, const Ref<Shader>& shader,
+		Renderer3D::DrawCallInfo::PassType pass)
+	{
+		shader->Bind();
+
+		// 这些物体都从同一组环境贴图读取光照。
+		IBLPrecompute::Bind();
+
+		// 相邻物体即使共用材质，也需要各自的拾取编号。
+		uintptr_t lastKey = ~0ull;
+		for (const auto& cmd : commands)
+		{
+			const Ref<Material>& mat = cmd.Mat;
+			uintptr_t key = mat->GetSortKey();
+
+			if (key != lastKey)
+			{
+				UploadMaterial(mat);
+				if (mat->Alpha == AlphaMode::Blend)
+				{
+					if (mat->DoubleSided) glDisable(GL_CULL_FACE);
+					else glEnable(GL_CULL_FACE);
+				}
+				lastKey = key;
+			}
+
+			s_Data.TransformBuffer.Transform = cmd.Transform;
+			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
+			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
+			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
+
+			cmd.MeshData->Bind();
+			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
+			s_Data.DrawCallCount++;
+
+			s_Data.DrawCallLog.push_back({ pass,
+				cmd.MeshData->GetIndexCount(), cmd.EntityID,
+				static_cast<int>(mat->Alpha), key,
+				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
+		}
+	}
+
 	void Renderer3D::EndScene()
+	{
+		DrawOpaque();
+		DrawTransparency();
+	}
+
+	void Renderer3D::DrawOpaque()
 	{
 		RF_PROFILE_FUNCTION();
 
-		// 光源 Pass 已使用完整队列；主画面只保留主相机可见的命令。
+		// 视野外的物体也可能把影子投进画面。先用所有物体画阴影，到这里才去掉相机看不到的物体。
 		s_Data.DrawCommands.erase(
 			std::remove_if(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
 				[](const DrawCommand& command) { return command.CameraCulled; }),
@@ -237,6 +306,13 @@ namespace Redflag
 			s_Data.Stats.IndexCount += cmd.MeshData->GetIndexCount();
 		}
 
+		// 保留提交玻璃的顺序，天空填好背景后再合成这些网格。
+		auto transparent = std::stable_partition(s_Data.DrawCommands.begin(), s_Data.DrawCommands.end(),
+			[](const DrawCommand& command) { return command.Mat->Alpha != AlphaMode::Blend; });
+		s_Data.TransparentCommands.assign(std::make_move_iterator(transparent),
+			std::make_move_iterator(s_Data.DrawCommands.end()));
+		s_Data.DrawCommands.erase(transparent, s_Data.DrawCommands.end());
+
 		if (s_Data.DrawCommands.empty())
 			return;
 
@@ -246,8 +322,7 @@ namespace Redflag
 			struct Candidate
 			{
 				size_t CommandIndex;
-				// 顺序固定为网格、基础色、法线、金属粗糙度、AO、透明度贴图。
-				std::array<const void*, 6> Key;
+				std::array<const void*, 7> Key;
 			};
 			std::vector<Candidate> candidates;
 			candidates.reserve(s_Data.DrawCommands.size());
@@ -261,7 +336,7 @@ namespace Redflag
 					candidates.push_back({ i, { cmd.MeshData.get(),
 						mat->BaseColorMap.get(), mat->NormalMap.get(),
 						mat->MetallicRoughnessMap.get(), mat->AOMap.get(),
-						mat->AlphaMap.get() } });
+						mat->AlphaMap.get(), mat->EmissiveMap.get() } });
 				}
 			}
 
@@ -319,7 +394,7 @@ namespace Redflag
 							instBuf[k].BaseColor = mat->BaseColor;
 							instBuf[k].MatParams = glm::vec4(mat->Metallic, mat->Roughness, mat->AO, 0.0f);
 							instBuf[k].EntityID  = cmd.EntityID;
-							instBuf[k]._pad[0] = instBuf[k]._pad[1] = instBuf[k]._pad[2] = 0;
+							instBuf[k].Emission = mat->Emission;
 						}
 
 						glNamedBufferSubData(s_Data.InstanceVBO, 0,
@@ -334,24 +409,28 @@ namespace Redflag
 						// 着色器分四列读取一个模型矩阵。
 						for (int col = 0; col < 4; col++)
 						{
-							glEnableVertexAttribArray(4 + col);
-							glVertexAttribPointer(4 + col, 4, GL_FLOAT, GL_FALSE, stride,
+							glEnableVertexAttribArray(5 + col);
+							glVertexAttribPointer(5 + col, 4, GL_FLOAT, GL_FALSE, stride,
 								(const void*)(offsetof(Renderer3DData::InstanceData, Transform) + col * sizeof(glm::vec4)));
-							glVertexAttribDivisor(4 + col, 1 /* 每画一个实例换一次矩阵 */);
+							glVertexAttribDivisor(5 + col, 1 /* 每画一个实例换一次矩阵 */);
 						}
-						glEnableVertexAttribArray(8);
-						glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, stride,
-							(const void*)offsetof(Renderer3DData::InstanceData, BaseColor));
-						glVertexAttribDivisor(8, 1);
 						glEnableVertexAttribArray(9);
 						glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, stride,
-							(const void*)offsetof(Renderer3DData::InstanceData, MatParams));
+							(const void*)offsetof(Renderer3DData::InstanceData, BaseColor));
 						glVertexAttribDivisor(9, 1);
-						// 实体编号按整数传入，编辑器用它判断点中了哪一个物体。
 						glEnableVertexAttribArray(10);
-						glVertexAttribIPointer(10, 1, GL_INT, stride,
-							(const void*)offsetof(Renderer3DData::InstanceData, EntityID));
+						glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, MatParams));
 						glVertexAttribDivisor(10, 1);
+						// 实体编号按整数传入，编辑器用它判断点中了哪一个物体。
+						glEnableVertexAttribArray(11);
+						glVertexAttribIPointer(11, 1, GL_INT, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, EntityID));
+						glVertexAttribDivisor(11, 1);
+						glEnableVertexAttribArray(12);
+						glVertexAttribPointer(12, 3, GL_FLOAT, GL_FALSE, stride,
+							(const void*)offsetof(Renderer3DData::InstanceData, Emission));
+						glVertexAttribDivisor(12, 1);
 
 						glDrawElementsInstanced(GL_TRIANGLES,
 							(GLsizei)mesh->GetIndexCount(), GL_UNSIGNED_INT,
@@ -366,7 +445,7 @@ namespace Redflag
 							reinterpret_cast<uintptr_t>(mesh.get()) });
 
 						// 这个网格还会单独绘制，画完这一批就停用逐物体的输入。
-						for (int loc = 4; loc <= 10; loc++)
+						for (int loc = 5; loc <= 12; loc++)
 							glDisableVertexAttribArray(loc);
 
 						offset += batchCount;
@@ -398,39 +477,25 @@ namespace Redflag
 				return ka < kb;
 			});
 
-		s_Data.MeshShader->Bind();
+		DrawMeshes(s_Data.DrawCommands, s_Data.MeshShader, DrawCallInfo::PassType::Main);
+	}
 
-		// 这些物体都从同一组环境贴图读取光照。
-		IBLPrecompute::Bind();
+	void Renderer3D::DrawTransparency()
+	{
+		if (s_Data.TransparentCommands.empty())
+			return;
 
-		// 相邻物体即使共用材质，也需要各自的拾取编号。
-		uintptr_t lastKey = ~0ull;
-		for (const auto& cmd : s_Data.DrawCommands)
+		if (!s_Data.Transparency)
 		{
-
-			const Ref<Material>& mat = cmd.Mat;
-			uintptr_t key = mat->GetSortKey();
-
-			if (key != lastKey)
-			{
-				UploadMaterial(mat);
-				lastKey = key;
-			}
-
-			s_Data.TransformBuffer.Transform = cmd.Transform;
-			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
-			s_Data.MaterialBuffer.EntityID = cmd.EntityID;
-			s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer, sizeof(Renderer3DData::MaterialData));
-
-			cmd.MeshData->Bind();
-			RenderCommand::DrawIndexed(cmd.MeshData->GetVertexArray(), cmd.MeshData->GetIndexCount());
-			s_Data.DrawCallCount++;
-
-			s_Data.DrawCallLog.push_back({ Renderer3D::DrawCallInfo::PassType::Main,
-				cmd.MeshData->GetIndexCount(), cmd.EntityID,
-				static_cast<int>(mat->Alpha), key,
-				reinterpret_cast<uintptr_t>(cmd.MeshData.get()) });
+			s_Data.Transparency = CreateScope<OpenGLTransparencyPass>();
+			s_Data.TransparentShader = Shader::Create("assets/shaders/Renderer3D_Mesh.glsl", "TRANSPARENT");
 		}
+
+		s_Data.Transparency->Begin();
+		DrawMeshes(s_Data.TransparentCommands, s_Data.TransparentShader, DrawCallInfo::PassType::Transparency);
+		s_Data.Transparency->Composite();
+		LogExternalDrawCall(DrawCallInfo::PassType::Transparency, 3);
+		s_Data.TransparentCommands.clear();
 	}
 
 	void Renderer3D::ResetStats()
@@ -533,7 +598,7 @@ namespace Redflag
 		for (const auto& cmd : s_Data.DrawCommands)
 		{
 
-			// Blend 仍未实现透射阴影；屏幕外的 Opaque / Mask 也参与光源绘制。
+			// 玻璃跳过这张阴影图。墙和镂空的树叶即使在镜头外，也可能把影子投进画面。
 			if (cmd.Mat->Alpha == AlphaMode::Blend)
 				continue;
 
@@ -633,7 +698,7 @@ namespace Redflag
 			s_Data.TransformBuffer.Transform = cmd.Transform;
 			s_Data.TransformUniformBuffer->SetData(&s_Data.TransformBuffer, sizeof(Renderer3DData::TransformData));
 
-			// Mask 与主 Pass 使用相同透明度：BaseColor.a × BaseColorMap.a × AlphaMap.r。
+			// 画叶片的深度时也要按材质和贴图裁出轮廓，否则叶片之间的空隙会挡住后面的物体。
 			if (mat->Alpha == AlphaMode::Mask)
 			{
 				UploadMaterial(mat);
@@ -752,10 +817,8 @@ namespace Redflag
 
 			glm::mat4 finalTransform = transform * subMesh.LocalTransform;
 			// 优先用场景里的替换材质，其次用模型自带的材质，两者都没有时才用纯色。
-			Ref<Material> mat = (i < overrideMaterials.size() && overrideMaterials[i])
-				? overrideMaterials[i]
-				: (subMesh.Mat ? subMesh.Mat : fallback);
-			SubmitMesh(subMesh.MeshData, finalTransform, mat, entityID);
+			const auto& mat = model->GetMaterial(i, overrideMaterials);
+			SubmitMesh(subMesh.MeshData, finalTransform, mat ? mat : fallback, entityID);
 		}
 	}
 }

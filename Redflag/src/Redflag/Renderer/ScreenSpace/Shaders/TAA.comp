@@ -1,0 +1,86 @@
+#version 450
+#include "Screen.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 2) readonly buffer Current
+{
+    vec4 colors[];
+};
+layout(std430, binding = 3) readonly buffer History
+{
+    vec4 history[];
+};
+layout(std430, binding = 4) readonly buffer PreviousPositions
+{
+    vec4 oldPosition[];
+};
+layout(std430, binding = 5) writeonly buffer Result
+{
+    vec4 result[];
+};
+layout(std430, binding = 6) writeonly buffer Positions
+{
+    vec4 newPosition[];
+};
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (!onScreen(p))
+        return;
+    uint i = indexOf(p);
+    vec4 pos = surfaces[i].position;
+    newPosition[i] = pos;
+    vec3 current = colors[i].rgb;
+    result[i] = vec4(current, 0);
+    if (temporal.y == 0.)
+        return;
+    // 相机矩阵没变时，直接取上一帧同一像素的颜色，避免把细线旁边的颜色也混进来。
+    if (temporal.w != 0.)
+    {
+        result[i] = vec4(mix(current, history[i].rgb, temporal.x), temporal.x);
+        return;
+    }
+    if (pos.w == 0.)
+        return;
+
+    vec4 clip = previousVP * pos;
+    if (clip.w <= 0.)
+        return;
+    vec4 currentClip = stableVP * pos;
+    vec2 oldPixel = vec2(p) + toPixel(clip) - toPixel(currentClip);
+    ivec2 base = ivec2(floor(oldPixel));
+    vec2 part = fract(oldPixel);
+    float used = 0.;
+    vec3 previous = vec3(0);
+    // 镜头移动后，墙上的同一点可能落在旧图的四个像素之间。比较场景中的位置，剔除明显来自其他表面的颜色。
+    // 透视镜头下，远处一个像素能盖住更宽的墙面，裁剪坐标的 w 等于观察深度。正交镜头的 w 始终是 1。
+    float footprint = 2. * currentClip.w / (abs(projection[1][1]) * float(extent.y));
+    for (int y = 0; y < 2; ++y)
+        for (int x = 0; x < 2; ++x)
+        {
+            ivec2 q = base + ivec2(x, y);
+            if (!onScreen(q))
+                continue;
+            uint j = indexOf(q);
+            // 这里试取一个像素宽度的 2.5 倍。若一个像素覆盖 0.1 个场景单位，两帧中的点相距超过 0.25，就舍去上一帧的颜色。
+            if (oldPosition[j].w == 0. || distance(oldPosition[j].xyz, pos.xyz) > 2.5 * footprint)
+                continue;
+            float weight = (x == 0 ? 1. - part.x : part.x) * (y == 0 ? 1. - part.y : part.y);
+            previous += history[j].rgb * weight;
+            used += weight;
+        }
+    if (used <= .001)
+        return;
+
+    vec3 lo = current, hi = current;
+    for (int y = -1; y <= 1; ++y)
+        for (int x = -1; x <= 1; ++x)
+        {
+            ivec2 q = clamp(p + ivec2(x, y), ivec2(0), ivec2(extent.xy) - 1);
+            vec3 c = colors[indexOf(q)].rgb;
+            lo = min(lo, c);
+            hi = max(hi, c);
+        }
+    float weight = clamp(temporal.x, 0., 1.) * used;
+    result[i] = vec4(mix(current, clamp(previous / used, lo, hi), weight), weight);
+}

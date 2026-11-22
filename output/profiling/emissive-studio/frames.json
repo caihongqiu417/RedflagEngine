@@ -1,0 +1,143 @@
+{
+  "wide": {
+    "size": [
+      640,
+      410
+    ],
+    "file": "output/captures/local/lamp-wide-991fdf640a3d-640/studio_frame24.rdc",
+    "sha256": "8de2b6b55de4787abdccad4c55e05ab391e5593074b7d063d6408ca737f87f47",
+    "frame": 24,
+    "display_event": 147,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+    "wall_pixel": [
+      437,
+      184
+    ],
+    "wall_rgb": [
+      0.0963538271188736,
+      0.011552932374179363,
+      0.0033682182803750037
+    ]
+  },
+  "wide-off": {
+    "size": [
+      640,
+      410
+    ],
+    "file": "output/captures/local/lamp-wide-off-991fdf640a3d-640/studio_frame24.rdc",
+    "sha256": "acdd27d2f80b525ca09e46e0bbf4473304db546cd06561a4a60ac3abf58d2ed8",
+    "frame": 24,
+    "display_event": 121,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+    "wall_pixel": [
+      437,
+      184
+    ],
+    "wall_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "wall": {
+    "size": [
+      640,
+      410
+    ],
+    "file": "output/captures/local/lamp-wall-991fdf640a3d-640/studio_frame24.rdc",
+    "sha256": "564ab8a21efad4ac260e85e2d117391d14aa098a35d0a40581c12e53e243f9fe",
+    "frame": 24,
+    "display_event": 147,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+    "wall_pixel": [
+      282,
+      186
+    ],
+    "wall_rgb": [
+      0.09709371358156205,
+      0.011641690470278264,
+      0.0033941019885241983
+    ],
+    "entire_panel_outside_view": true
+  },
+  "wall-off": {
+    "size": [
+      640,
+      410
+    ],
+    "file": "output/captures/local/lamp-wall-off-991fdf640a3d-640/studio_frame24.rdc",
+    "sha256": "f2b123248b668375e9def8f3589b7daf53a09c6b7b25dde56f1c590280fe8fd0",
+    "frame": 24,
+    "display_event": 121,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+    "wall_pixel": [
+      282,
+      186
+    ],
+    "wall_rgb": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "entire_panel_outside_view": true
+  },
+  "temple": {
+    "size": [
+      800,
+      513
+    ],
+    "file": "output/captures/local/lamp-temple-991fdf640a3d-800/studio_frame24.rdc",
+    "sha256": "25c2befa1d07f6d63decf920c09b5febff0262af5a5c495b2cf9e2e3e098a496",
+    "frame": 24,
+    "display_event": 399,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3"
+  },
+  "temple-before": {
+    "size": [
+      800,
+      513
+    ],
+    "file": "output/captures/local/lamp-temple-9e2f588854af-800/studio_frame24.rdc",
+    "sha256": "1838f146758565fc9da479ce6d64863927c60bbc32adcf36183d7b4bcbdddd5d",
+    "frame": 24,
+    "display_event": 358,
+    "executable_sha256": "9e2f588854afc34c99f33473bfb3cde9e92c732de3f42bd09f9a0733f636f7e5"
+  },
+  "firepit": {
+    "pixel": [
+      419,
+      202
+    ],
+    "before": [
+      0.2744959592819214,
+      0.21410682797431946,
+      0.14822784066200256
+    ],
+    "after": [
+      0.8784651160240173,
+      0.21624988317489624,
+      0.14822784066200256
+    ],
+    "pixels_red_gain_above_point_one": 104
+  },
+  "baked": {
+    "size": [
+      640,
+      410
+    ],
+    "file": "output/captures/local/Light-Studio-991fdf640a3d-640/studio_frame24.rdc",
+    "sha256": "f338a683c92eb357ea55ddb7041b4debaf404749050b1508187d1095bbf53ff1",
+    "frame": 24,
+    "display_event": 135,
+    "executable_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+    "wall_pixel": [
+      437,
+      184
+    ],
+    "wall_rgb": [
+      0.09540601760149002,
+      0.01143917728215456,
+      0.0033350365422666075
+    ]
+  }
+}

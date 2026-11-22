@@ -1,0 +1,11 @@
+test,value
+width,384
+height,216
+order_max_abs_linear,0
+ior_one_max_abs_linear,0
+zero_thickness_max_abs_linear,0
+refraction_max_abs_linear,0.499146
+visible_opaque_post_pixels,2074
+foreground_color_leak,0
+changed_pick_ids,0
+changed_depth_pixels,0

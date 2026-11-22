@@ -1,0 +1,257 @@
+{
+  "scene": "Sponza",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "build": "Debug x64",
+  "tool": "1.47",
+  "statistic": "EventGPUDuration (ms); 1 warm-up, 11 measured replays per capture",
+  "cases": {
+    "before": {
+      "executable_sha256": "72bcd0a874199a7faa956ad6befcaa548e5281f164180f88301409b1f48673f7",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "settings_sha256": "357731abcb4b8c001a06bb8861e7fd35bc70cbbc96cb315b6098ee696c08a762",
+      "settings": {
+        "Direct": "Clustered lights",
+        "FogDensity": 0.06,
+        "FogSteps": 8,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 384,
+        "SSR": true,
+        "Samples": 2,
+        "SceneReflections": true,
+        "Shading": "Lit",
+        "TAA": true,
+        "VolumetricFog": true
+      },
+      "size": [
+        384,
+        246
+      ],
+      "frame": 24,
+      "draws": 228,
+      "dispatches": 12,
+      "stages": {
+        "cluster": {
+          "event": 573,
+          "groups": [
+            48,
+            31,
+            1
+          ],
+          "bindings": 7,
+          "gpu_ms": [
+            0.8351040000000001,
+            0.8531839999999999,
+            0.8549439999999999,
+            0.833408,
+            0.876064,
+            0.862656,
+            0.8250879999999999,
+            0.88048,
+            0.86464,
+            0.8673599999999999,
+            0.880224
+          ],
+          "median_ms": 0.862656
+        },
+        "probe": {
+          "event": 585,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "bindings": 14,
+          "gpu_ms": [
+            1.09216,
+            1.101216,
+            1.123328,
+            1.358752,
+            1.109632,
+            1.094976,
+            1.097024,
+            1.2389759999999999,
+            1.371968,
+            1.12336,
+            1.100768
+          ],
+          "median_ms": 1.109632
+        },
+        "reflection": {
+          "event": 634,
+          "groups": [
+            48,
+            31,
+            1
+          ],
+          "bindings": 13,
+          "gpu_ms": [
+            2.76224,
+            2.79408,
+            1.927744,
+            1.879232,
+            2.791744,
+            1.877344,
+            1.9308159999999999,
+            1.928256,
+            1.880032,
+            1.912448,
+            2.795584
+          ],
+          "median_ms": 1.928256
+        },
+        "fog": {
+          "event": 646,
+          "groups": [
+            1476,
+            1,
+            1
+          ],
+          "bindings": 7,
+          "gpu_ms": [
+            2.94064,
+            2.992512,
+            4.172576,
+            3.0147199999999996,
+            3.0233920000000003,
+            3.0139839999999998,
+            3.2799359999999997,
+            4.327776,
+            3.013376,
+            3.086112,
+            3.00928
+          ],
+          "median_ms": 3.0147199999999996
+        }
+      },
+      "capture": "output/captures/local/Sponza-Mask-72bcd0a87419-384/studio_frame24.rdc",
+      "capture_sha256": "92b966c9e9a75b8f62ee3c05c9850416923cc190456a7c2d0dbb3abbd2269461",
+      "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "after": {
+      "executable_sha256": "532eca6d7921519123edb86ed0490765963d4cc1b765d81525d32ea151ef5f0a",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "settings_sha256": "357731abcb4b8c001a06bb8861e7fd35bc70cbbc96cb315b6098ee696c08a762",
+      "settings": {
+        "Direct": "Clustered lights",
+        "FogDensity": 0.06,
+        "FogSteps": 8,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 384,
+        "SSR": true,
+        "Samples": 2,
+        "SceneReflections": true,
+        "Shading": "Lit",
+        "TAA": true,
+        "VolumetricFog": true
+      },
+      "size": [
+        384,
+        246
+      ],
+      "frame": 24,
+      "draws": 228,
+      "dispatches": 12,
+      "stages": {
+        "cluster": {
+          "event": 573,
+          "groups": [
+            48,
+            31,
+            1
+          ],
+          "bindings": 10,
+          "gpu_ms": [
+            0.97872,
+            3.8963520000000003,
+            0.962784,
+            1.748544,
+            4.034304,
+            0.942464,
+            0.930432,
+            1.022336,
+            0.964032,
+            0.9714240000000001,
+            0.97488
+          ],
+          "median_ms": 0.97488
+        },
+        "probe": {
+          "event": 585,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "bindings": 15,
+          "gpu_ms": [
+            0.8921600000000001,
+            1.0134079999999999,
+            0.8980159999999999,
+            0.89488,
+            1.014272,
+            0.859648,
+            0.8563200000000001,
+            0.938816,
+            0.874272,
+            0.89456,
+            0.895744
+          ],
+          "median_ms": 0.89488
+        },
+        "reflection": {
+          "event": 634,
+          "groups": [
+            48,
+            31,
+            1
+          ],
+          "bindings": 14,
+          "gpu_ms": [
+            1.837248,
+            1.7823360000000001,
+            1.8042559999999999,
+            1.790016,
+            1.8065920000000002,
+            1.79408,
+            1.7789760000000001,
+            2.208608,
+            1.82272,
+            1.837728,
+            1.788832
+          ],
+          "median_ms": 1.8042559999999999
+        },
+        "fog": {
+          "event": 646,
+          "groups": [
+            1476,
+            1,
+            1
+          ],
+          "bindings": 10,
+          "gpu_ms": [
+            3.441344,
+            3.210048,
+            3.226624,
+            3.0849279999999997,
+            3.172032,
+            3.217536,
+            3.229408,
+            3.2225919999999997,
+            3.2874559999999997,
+            3.121664,
+            5.404448
+          ],
+          "median_ms": 3.2225919999999997
+        }
+      },
+      "capture": "output/captures/local/Sponza-Mask-532eca6d7921-384/studio_frame24.rdc",
+      "capture_sha256": "f34050c2ec7b870715f6bab023c2b0a94b6e57281690a240e638999386081938",
+      "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    }
+  }
+}

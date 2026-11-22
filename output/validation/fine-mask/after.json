@@ -1,0 +1,193 @@
+{
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "viewport": [
+    64,
+    64
+  ],
+  "texture_size": [
+    1024,
+    32
+  ],
+  "opaque_columns": "x mod 4 == 0",
+  "cutoff": 0.5,
+  "u_texels": [
+    512.125,
+    524.125
+  ],
+  "test_exe_sha256": "8c6414e1c960a4bf08346f5cec9e2b4067bde0a5e5168dd96c61091c75b6972e",
+  "library_sha256": "36d4709926a7b597567a6067c90fe3bfcee9f25efeb82e623d98126194160325",
+  "build": "Debug x64 Vulkan",
+  "cases": {
+    "mask": {
+      "visible_wire_pixels": 342,
+      "raster_wire_columns_at_y32": [
+        13,
+        14,
+        15,
+        25,
+        26,
+        27,
+        38,
+        39,
+        40
+      ],
+      "pick_reads": 200,
+      "mismatched_pick_reads": 0,
+      "nearest_surface_errors": 0,
+      "direct_shadow_errors": 0,
+      "sample_xy": [
+        26,
+        32
+      ],
+      "raster_z": 1.0,
+      "ray_z": 1.0,
+      "wall_red": 0.0,
+      "wall_red_without_wires": 0.2546761631965637
+    },
+    "red_map": {
+      "visible_wire_pixels": 342,
+      "raster_wire_columns_at_y32": [
+        13,
+        14,
+        15,
+        25,
+        26,
+        27,
+        38,
+        39,
+        40
+      ],
+      "pick_reads": 4,
+      "mismatched_pick_reads": 0,
+      "nearest_surface_errors": 0,
+      "direct_shadow_errors": 0,
+      "sample_xy": [
+        26,
+        32
+      ],
+      "raster_z": 1.0,
+      "ray_z": 1.0,
+      "wall_red": 0.0,
+      "wall_red_without_wires": 0.2546761631965637
+    },
+    "obj_original": {
+      "visible_wire_pixels": 342,
+      "raster_wire_columns_at_y32": [
+        13,
+        14,
+        15,
+        25,
+        26,
+        27,
+        38,
+        39,
+        40
+      ],
+      "pick_reads": 4,
+      "mismatched_pick_reads": 0,
+      "nearest_surface_errors": 0,
+      "direct_shadow_errors": 0,
+      "sample_xy": [
+        26,
+        32
+      ],
+      "raster_z": 1.0,
+      "ray_z": 1.0,
+      "wall_red": 0.0,
+      "wall_red_without_wires": 0.2546761631965637
+    }
+  },
+  "changed_probe_directions": 335,
+  "probe_plus_z": {
+    "wires": {
+      "cell": [
+        6,
+        3,
+        2
+      ],
+      "xyz": [
+        0.0833333135,
+        0.166666687,
+        0.357142866
+      ],
+      "rgb": [
+        2.0625,
+        0.2578125,
+        0.064453125
+      ],
+      "emitter_hits_out_of_64": 33,
+      "under_wire": {
+        "cell": [
+          4,
+          3,
+          2
+        ],
+        "xyz": [
+          -0.25,
+          0.16666666666666666,
+          0.35714285714285715
+        ],
+        "direction": "+Z",
+        "rgb": [
+          0.3125,
+          0.0390625,
+          0.009765625
+        ],
+        "emitter_hits_out_of_64": 5
+      }
+    },
+    "clear": {
+      "cell": [
+        6,
+        3,
+        2
+      ],
+      "xyz": [
+        0.0833333135,
+        0.166666687,
+        0.357142866
+      ],
+      "rgb": [
+        2.0625,
+        0.2578125,
+        0.064453125
+      ],
+      "emitter_hits_out_of_64": 33,
+      "under_wire": {
+        "cell": [
+          4,
+          3,
+          2
+        ],
+        "xyz": [
+          -0.25,
+          0.16666666666666666,
+          0.35714285714285715
+        ],
+        "direction": "+Z",
+        "rgb": [
+          1.25,
+          0.15625,
+          0.0390625
+        ],
+        "emitter_hits_out_of_64": 20
+      }
+    }
+  },
+  "bake_compatibility": {
+    "loaded": {
+      "previous-build": false,
+      "other-opacity": false,
+      "original": true,
+      "same": true,
+      "cutoff": false,
+      "replace_opacity": false,
+      "remove_opacity": false,
+      "restore": true
+    },
+    "scene_keys": {
+      "wires": "0x7a76c24bf3c7bc4d",
+      "clear": "0x1f3d70d38ab4270"
+    }
+  }
+}

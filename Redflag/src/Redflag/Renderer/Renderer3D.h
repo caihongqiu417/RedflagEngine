@@ -32,7 +32,7 @@ namespace Redflag
 			// 单次 DrawCall 的简略信息，供 ImGui Profile 面板展示
 			struct DrawCallInfo
 			{
-				enum class PassType { Main, Shadow, Prepass, SSAO, RSM, BloomBright, BloomUp, BloomTonemap };
+				enum class PassType { Main, Shadow, Prepass, SSAO, RSM, BloomBright, BloomUp, BloomTonemap, Transparency };
 				PassType Pass       = PassType::Main;
 				uint32_t IndexCount = 0;
 				int      EntityID   = -1;
@@ -55,6 +55,10 @@ namespace Redflag
 		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPosition = glm::vec3(0.0f), const glm::mat4& view = glm::mat4(1.0f));
 
 		static void EndScene();
+
+		// 需要天空背景时，先画不透明物体和天空，再透过玻璃读取这张背景。
+		static void DrawOpaque();
+		static void DrawTransparency();
 
 		// 把网格加入本帧队列。transform 将顶点从模型空间变到世界空间，entityID 用于鼠标拾取。
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f), int entityID = -1);

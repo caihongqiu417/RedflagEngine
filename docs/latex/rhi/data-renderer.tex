@@ -1,0 +1,172 @@
+\clearpage
+\section{精灵的顶点与批量绘制}\label{sec:data-renderer}
+假设场景里有两张路牌，都用同一张木纹贴图。编辑器需要把两张路牌画在不同位置，点击时还要知道点中了哪一张。现有 OpenGL 路径中，\code{SceneRenderer::RenderScene} 把每张路牌的变换、精灵组件和实体编号交给 \code{Renderer2D::DrawSprite}。后者选好贴图和颜色，交给 \code{DrawQuad} 写入这一批的顶点。
+
+\subsection{四个角和六个索引}
+\code{QuadVertex} 保存一个角在世界中的位置、颜色、贴图坐标、选用的贴图序号、贴图重复次数和实体编号。\code{DrawQuad} 把路牌的四个角乘以它的变换矩阵，依次写入 CPU 上的一块连续数组。同一块路牌的四个角填相同的实体编号。着色器用贴图坐标找木纹的颜色，把实体编号原样写到拾取图上。
+
+一个矩形拆成两个三角形，两个三角形共用一条边。初始化时就能按下面的规律生成索引，把索引上传一次。之后，即便路牌的位置和颜色变了，这六个数字仍然适用。
+
+\begin{center}
+\small\begin{tabular}{@{}lccc@{}}
+\toprule
+ & 四个角的顶点下标 & 第一个三角形 & 第二个三角形 \\
+\midrule
+第一张路牌 & 0，1，2，3 & 0，1，2 & 2，3，0 \\
+第二张路牌 & 4，5，6，7 & 4，5，6 & 6，7，4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{这一次要画多少}
+\code{Renderer2DData} 保存顶点数组的起点和下一个可写的位置。两张路牌写完，一共有八个顶点，\code{QuadIndexCount} 是 12。贴图另用一个固定长度的数组保存，序号 0 留给纯白贴图。第一张路牌把木纹放入序号 1，第二张查到木纹已经在里面，四个角也填 1。这一批只要给着色器选一次木纹。
+
+\code{EndScene} 根据两个指针之间的距离上传已写好的顶点，\code{Flush} 再用 12 个索引提交一次绘制。编辑器的精灵路径为每批预留一万个矩形和 32 个贴图位置。放不下下一个矩形或新贴图时，先画完已有的这一批，再从数组开头写。顶点存储可以跨帧沿用，每一批实际用到多少由计数决定。
+\subsection{圆与线段}
+\code{DrawCircle} 也写四个角，沿用矩形的六个索引。\code{CircleVertex} 多存一份相对圆心的位置，着色器据此计算到圆心的距离，再用环宽和渐隐宽度画出边缘。每个角还带有世界位置、颜色和实体编号。\code{DrawLine} 只写两个端点，\code{LineVertex} 只存位置和颜色。\code{EndScene} 分别上传两种顶点，圆按索引绘制，线段用 \code{DrawLines} 顺次读取端点。线段数组满后会略过新线段。圆的数组已满时，当前实现仍会继续写，存在越界风险。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer2D.cpp\#L22-L81}{精灵顶点与批次数组}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer2D.cpp\#L525-L584}{写入带贴图的矩形}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer2D.cpp\#L840-L898}{圆与线的顶点}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer2D.cpp\#L298-L363}{上传与绘制}}
+
+\clearpage
+\section{网格绘制列表与实例数据}\label{sec:data-instances}
+模型的顶点和索引可以用很多帧，每帧会变的是物体的位置、选定的材质以及相机能看见哪些网格。\code{Renderer3D::BeginScene} 清空上一轮的绘制记录。\code{DrawModel} 遍历子网格，把算好的世界变换和选好的材质交给 \code{SubmitMesh}，由它向 \code{std::vector<DrawCommand>} 追加一条记录。每个可绘制的子网格占一条，因此一个实体可以对应多条记录。
+
+\code{DrawCommand} 保存网格和材质的共享引用、世界变换矩阵、实体编号和相机可见性标记。网格里已有的顶点不会随记录复制。连续的列表允许阴影和反射阴影图遍历同一批记录，然后让主相机移除自己看不见的部分。例如墙外的一棵树可以消失在相机画面里，树影却仍落在画面中的地上。
+
+\subsection{同一片网格放在两个位置}
+在主绘制的 \code{EndScene} 中，每个不透明物体可得到一个候选项，里面放原记录的下标，以及六个用于比较的对象地址，包括网格和五张材质贴图（底色、法线、金属度与粗糙度、环境遮蔽、透明度）。缺少某张贴图时，相应的位置为空。候选项按这六项排序，相同的就挨在一起。一组有至少两个物体才能做实例化绘制\termenglish{instanced drawing}。两个材质的底色可以不同，只要它们使用的网格和这五项贴图完全相同。
+
+假设左边的木箱编号是 17，右边的是 42，两者可以合在一起画。\code{InstanceData} 给每只箱子留一行，分别填它的变换、底色、金属度、粗糙度、环境遮蔽值和编号。GPU 重用同一组索引，画第二只箱子时改读第二行，因此右箱保持自己的位置和编号。当前实现每次最多画 2048 个实例，较大的组分次提交。
+
+\begin{center}
+\small\begin{tabular}{@{}lccc@{}}
+\toprule
+实例数据行 & 模型矩阵中的平移 & 底色示例（RGB） & 实体编号 \\
+\midrule
+左箱 & $(-2,0,0)$ & $(1,1,1)$ & 17 \\
+右箱 & $(2,0,0)$ & $(0.5,0.8,1)$ & 42 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+剩余记录按材质对象的地址排序，相邻记录若共用一个材质，可以沿用贴图。它们仍逐个更新变换与编号，再调用 \code{DrawIndexed}。这里的排序只反映材质复用，无法给出透明表面离相机的远近。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.cpp\#L695-L759}{收集网格}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.cpp\#L243-L358}{分组与实例字段}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.cpp\#L393-L426}{普通绘制}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/assets/shaders/Renderer3D_Mesh.glsl\#L25-L57}{顶点着色器读取实例}}
+
+\clearpage
+\section{相机、灯光与环境贴图}
+移动相机时，场景里所有物体都要从新的位置观察。\code{Renderer3D::BeginScene} 将观察矩阵、观察投影矩阵和相机的世界位置填入 \code{CameraData}，再上传到一块供着色器读取的缓冲区。所有网格都用这一份相机数据。观察投影矩阵决定顶点在画面上的位置，相机的世界位置用来计算表面朝向观察者的方向。
+
+\subsection{两盏点光源怎样排在一起}
+场景用灯光组件保存路灯的颜色、亮度、位置和照明半径。绘制前，场景渲染器调用 \code{CollectAndUploadLights} 读取组件，为每盏灯填写一份 \code{GPULightData}。其中 \code{Color} 的前三项是灯的颜色，第四项是亮度。点光源的 \code{Position} 在同样四个位置保存世界坐标和半径。每盏灯占 64 字节，着色器按这个间隔取下一盏灯。
+
+缓冲区的前 16 字节记录两类灯的数量及对齐用的空位，后面为一盏方向光和十六盏点光源留出固定位置。这是项目与着色器约定的上限。例如场景有两盏点光源、没有方向光，数量就写 0 和 2。方向光的位置仍然留着，点光源的数据从第 80 字节开始，两盏灯的起点依次是 80 和 144。片元着色器按数量读两次，灯移动后只需用新的世界坐标填这份数据。
+
+\begin{center}
+\small\begin{tabular}{@{}rll@{}}
+\toprule
+从第几字节开始 & 为谁保留 & 两盏点光源的例子 \\
+\midrule
+0 & 两类灯的数量 & 方向光 0 盏，点光源 2 盏 \\
+16 & 第一盏方向光 & 预留 64 字节，本次跳过 \\
+80 & 第一盏点光源 & 读第一盏路灯的数据 \\
+144 & 第二盏点光源 & 读第二盏路灯的数据 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{一张阴影图与一组环境贴图}
+方向光的阴影需要从灯的方向再看一次场景。\code{RunShadowPass} 将沿光线最先遇到的表面深度写进阴影图。\code{SetShadowData} 把灯光的观察投影矩阵和深度偏移写入相机数据中预留的位置，主着色器据此找到同一点在阴影图里的位置，比较它与已记录深度的远近。
+
+环境光使用的是另一组寿命更长的数据。\code{IBLTextures} 为天空立方体贴图、漫反射环境图、按粗糙度分层的反射图和镜面反射查找表各保留一个具名字段。\code{IBLPrecompute} 创建并持有这些贴图。绘制模型时，它通过 \code{Bind} 选好材质要读的后三张。移动相机时继续使用原图，更换环境时才重新准备环境光照。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.cpp\#L177-L195}{写入相机数据}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L1247-L1305}{排列灯光}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L917-L951}{准备阴影数据}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/IBLPrecompute.h\#L10-L41}{环境贴图}}
+
+\clearpage
+\section{场景的颜色、编号与历史图像}
+编辑器用 \code{FramebufferSpecification} 描述场景帧缓冲。\code{ForgeLayer} 在创建时填好宽高，字段 \code{Attachments} 按顺序保存随这个目标一起绘制的图像规格。着色器可以把同一个像素的颜色和实体编号分别写到约定的位置，之后各取所需。
+
+\begin{center}
+\small\begin{tabularx}{\linewidth}{@{}p{30mm}p{31mm}X@{}}
+\toprule
+场景图像 & 存储格式 & 在本项目中的用途 \\
+\midrule
+颜色图 0 & \code{RGBA16F} & 保存可超过 1 的亮度，供后处理读取。\\
+编号图 1 & \code{RED\_INTEGER} & 每个像素保存一个有符号的实体编号。\\
+法线图 2 & \code{RGBA16F} & 深度预写时保存表面在相机空间的朝向。\\
+深度与模板 & \code{DEPTH24STENCIL8} & 深度决定前后遮挡，格式另留 8 位模板。\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+例如点中编号 42 的木箱，\code{ReadPixel(1, x, y)} 返回 42。这里的 1 指上表的编号图，后两个数是鼠标对应的像素坐标。背景每帧预先清成 $-1$。编辑器显示的颜色则来自 \code{PostProcess}，它借用场景颜色图，自己持有最多六层泛光图和最终的 \code{RGBA8} 输出图。\code{Composite} 将场景颜色、泛光和曝光合成，面板通过 \code{GetFinalColorTextureID} 取得显示结果。调曝光可以改变木箱的亮度，点选结果仍是 42。
+
+\subsection{间接光的两张历史图}
+反射阴影图\termenglish{reflective shadow map}记录方向光照到的表面。三张颜色图分别保存表面反射的光、世界位置和法线，另有一张深度图留下灯能看到的最近表面。\code{RunRSMIndirectPass} 用这些表面估算到达当前像素的反射光，再把本帧结果交给 \code{RunRSMTemporalResolvePass} 与上一帧的结果混合，以减轻采样噪点。
+
+两张历史图用固定长度的数组保存。假设本帧写第 0 张，混合时就从第 1 张读，写完后交换下标。下一帧可以从第 0 张读到刚算好的颜色。拖大视口后像素位置变了，程序调整图像大小，并让第一次混合只采用本帧结果。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/src/ForgeLayer.cpp\#L176-L190}{场景图像规格}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/src/ForgeLayer.cpp\#L377-L396}{鼠标拾取}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/PostProcess.cpp\#L145-L167}{合成输出}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L583-L641}{轮换历史图}}
+
+\clearpage
+\section{深度预写、环境遮蔽与效果设置}\label{sec:data-effects}
+要看墙角挡住了多少环境光，程序先要知道每个像素看到哪一面墙。\code{ExecuteDepthPrepass} 提前画出相机能看见的表面，保存其深度和朝向。屏幕空间环境遮蔽（SSAO）和反射阴影图的间接光估算都要读取这两张图。因此，只要启用其中任何一种效果，场景仍会准备深度与法线，即使用户单独关掉了深度预写的优化开关。
+
+\subsection{墙角附近选哪些点}
+初始化时，程序在半球内生成 64 个采样偏移，靠近中心的点更密，再生成一张 $4\times4$ 的随机方向图。\code{RunSSAOPass} 通过 \code{SetData} 上传 \code{GPUSSAOParams}，里面有投影矩阵及其逆矩阵、固定的偏移数组，以及编辑器从 \code{GetSSAOSettings} 调节的半径、深度偏移、明暗强度和实际采样数。偏移数组跨帧复用，小图在屏幕平铺，让相邻像素向不同方向寻找遮挡。
+
+计算一个墙角像素时，着色器先从深度还原它的位置，把半球转到法线朝向，再按半径把测试点放到表面附近。每个测试点投回屏幕后都有一个可对照的深度。若另一个表面挡在测试点前方，且距离差超过设定的偏移，就计入遮挡。结果存进视口大小的 \code{RGBA8} 灰度图。值越小，主绘制保留的环境光越少。
+
+\subsection{反射光的采样与跨帧混合}
+反射光使用另一组点。\code{RSMSettings} 给出采样数、强度和按光源图宽度计的半径。GPU 读取的 \code{GPURSMParams} 在开头多存一个光源覆盖范围的边长，后面是圆盘上的采样点数组。设置相同时可以沿用原有点列。计算本帧间接光时，另传相机观察投影矩阵的逆矩阵和帧号，用来找到接收光的表面，并在每帧转动采样方向。
+
+混合时的 \code{GPURSMTemporalParams} 改用当前逆矩阵和上帧的观察投影矩阵，从当前表面找到旧图中对应的位置。\code{BlendAlpha} 是已有结果的权重，\code{ResetHistory} 提醒着色器本次只用新值。例如提高间接光强度后，旧值按原强度算出，程序就会要求重新累积。
+
+\subsection{泛光图的层数与宽度}
+面板通过 \code{GetBloomSettings} 调节亮度阈值、泛光强度、模糊半径和层数。\code{RenderBloom} 先在半宽半高的 \code{RGBA16F} 图里留下亮区，再逐层缩小，最后从小图向大图逐层放大并相加。例如 $800\times600$ 的视口选三层，就会用到 $400\times300$、$200\times150$ 和 $100\times75$ 的三张图。相同尺寸的图下一帧继续使用。调大半径会让高光向周围散开，曝光由另一份 \code{ToneMapSettings} 控制，在最终合成时作用于整幅画面。
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L248-L294}{生成遮蔽采样点}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/assets/shaders/SSAO.glsl\#L48-L105}{比较采样深度}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L535-L574}{反射光的采样参数}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/PostProcess.cpp\#L84-L139}{逐层计算泛光}}
+
+\clearpage
+\section{C++ 和着色器怎样读取同一份材质}\label{sec:data-material}
+材质对象里既有粗糙度这样的数值，也有指向贴图的引用。绘制前，CPU 通过引用选中实际贴图，再把底色、粗糙度、是否使用贴图等数值写入 \code{MaterialData}。着色器只需要知道怎样读取这些值。为此，GLSL 的 \code{Material} 声明约定了各字段的排列方式，项目使用的规则称为 \code{std140}。
+
+\subsection{OpenGL 材质字段的位置}
+普通网格使用的 C++ 材质记录按 16 字节对齐，占 96 字节。前 16 字节是底色的四个浮点数，粗糙度从第 20 字节开始，实体编号从第 44 字节开始。下表的偏移从 0 起算。C++ 和着色器都把“使用底色贴图”存成四字节整数，换成单字节布尔值就会破坏后面字段的排列。
+
+\noindent\begin{tabularx}{\linewidth}{@{}L{30mm}L{36mm}Y@{}}
+\toprule
+起始偏移 & C++ 字段 & 着色器如何解释\\\midrule
+0 字节 & \code{BaseColor} & 连续四个浮点数，依次为红、绿、蓝和透明度。\\
+20 字节 & \code{Roughness} & 一个浮点数，决定高光铺开多宽。\\
+28 字节 & \code{UseBaseColorMap} & 一个 32 位整数，表示本次是否读取底色贴图。\\
+44 字节 & \code{EntityID} & 一个有符号整数，写入鼠标拾取要读的那张图。\\
+60、64 字节 & \code{RefractionIndex}、\code{Thickness} & 折射率和沿法线量得的厚度。玻璃用它们选取背景颜色。\\
+80、92 字节 & \code{Emission}、\code{UseEmissiveMap} & 自发光颜色占三个浮点数；随后一个整数决定是否取发光图案。\\
+\bottomrule
+\end{tabularx}
+
+\subsection{上传数据的起点与长度}
+在现有 OpenGL 主绘制里，每画一个普通网格，渲染器先填入它的编号，再上传整份记录。下面的 \code{s\_Data.MaterialBuffer} 保存这份已填好的 \code{MaterialData}。
+\codewhere{源码}{Redflag/src/Redflag/Renderer/Renderer3D.cpp}{DrawMeshes}
+\begin{lstlisting}
+(*@\rhicomment{// 同一材质可画多次，每次上传的是当前物体的编号。}@*)
+s_Data.MaterialUniformBuffer->SetData(&s_Data.MaterialBuffer,
+    sizeof(Renderer3DData::MaterialData));
+\end{lstlisting}
+
+第一个参数指向要上传的材质记录，第二个参数给出这次要读取的 96 个字节。省略的第三个参数默认为 0，从显卡上这块缓冲区的开头写起。OpenGL 先让着色器使用当前的材质，再写入数据。Vulkan 若提前录好两个物体的命令，需要分别保留两份值。第~\pageref{sec:data-frame}~页的拟议接口让 \code{frame.Write} 返回位置，由命令列表选用。
+
+\readings{\refitem{run:../../Redflag/src/Redflag/Renderer/Renderer3D.cpp}{C++ 的材质字段}\quad
+\refitem{run:../../RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{GLSL 读取顺序}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Platform/OpenGL/OpenGLUniformBuffer.cpp\#L22-L28}{OpenGL 上传实现}}

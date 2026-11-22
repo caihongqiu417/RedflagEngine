@@ -1,0 +1,75 @@
+#version 450
+#include "Screen.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 2) readonly buffer Base { vec4 base[]; };
+layout(std430, binding = 3) readonly buffer Traced { vec4 traced[]; };
+layout(std430, binding = 4) writeonly buffer Filtered { vec4 result[]; };
+layout(push_constant) uniform Options { uint useMaterial; };
+
+// 每组负责 8×8 像素，四周各多读两行或两列，供同组像素共用。
+const int tileWidth = 12;
+shared ScreenSurface tile[tileWidth * tileWidth];
+shared vec3 reflection[tileWidth * tileWidth];
+
+float surfaceWeight(ScreenSurface a, ScreenSurface b, float pixelWidth)
+{
+    vec3 delta = b.position.xyz - a.position.xyz;
+    float separation = max(abs(dot(delta, a.normal.xyz)), abs(dot(delta, b.normal.xyz)));
+    // 同一面斜墙上的两点，到相机的距离也可能不同。这里沿墙面的法线量两点相隔多远。
+    // pixelWidth 表示在这个深度一个像素有多宽。沿法线相隔半个像素宽或更远，就不混合两点的倒影。
+    float plane = max(0., 1. - separation / (.5 * pixelWidth));
+    float facing = clamp((dot(a.normal.xyz, b.normal.xyz) - .9) / .1, 0., 1.);
+
+    vec4 difference = abs(a.albedo - b.albedo); // RGB 是线性底色，w 是金属度。
+    float contrast = max(max(difference.r, difference.g), max(difference.b, difference.a));
+    if (useMaterial != 0u) contrast = max(contrast, abs(a.normal.w - b.normal.w));
+    // 项目取了两个数来保留棱角和材质的交界。两点的法线夹角达到约 26°，或任一材质分量相差 0.125，就不混合它们的倒影。
+    return plane * facing * max(0., 1. - 8. * contrast);
+}
+
+void main()
+{
+    ivec2 corner = ivec2(gl_WorkGroupID.xy) * 8 - 2;
+    for (int k = int(gl_LocalInvocationIndex); k < tileWidth * tileWidth; k += 64)
+    {
+        ivec2 q = corner + ivec2(k % tileWidth, k / tileWidth);
+        if (onScreen(q))
+        {
+            uint i = indexOf(q);
+            tile[k] = surfaces[i];
+            reflection[k] = traced[i].rgb - base[i].rgb;
+        }
+        else tile[k].position.w = 0.;
+    }
+    barrier();
+
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (!onScreen(p)) return;
+    uint i = indexOf(p);
+    ivec2 local = ivec2(gl_LocalInvocationID.xy) + 2;
+    int center = local.y * tileWidth + local.x;
+    ScreenSurface s = tile[center];
+    float roughness = useMaterial != 0u ? s.normal.w : material.z;
+    result[i] = traced[i];
+    if (s.position.w == 0. || roughness == 0.) return;
+
+    float clipW = (projection * view * s.position).w;
+    float pixelWidth = 2. * clipW / (abs(projection[1][1]) * float(extent.y));
+    // 粗糙度达到 0.5 时用满两圈邻居，较光滑的表面少混一些，镜中的细线会更清楚。
+    float radius = min(2., 4. * roughness);
+    const float kernel[5] = float[5](1., 4., 6., 4., 1.);
+    float total = kernel[2] * kernel[2];
+    vec3 sum = total * reflection[center];
+    for (int y = -2; y <= 2; ++y)
+        for (int x = -2; x <= 2; ++x)
+        {
+            int k = center + y * tileWidth + x;
+            if (k == center || tile[k].position.w == 0. || (useMaterial != 0u && tile[k].normal.w == 0.)) continue;
+            float ring = clamp(radius + 1. - float(max(abs(x), abs(y))), 0., 1.);
+            float weight = kernel[x + 2] * kernel[y + 2] * ring * surfaceWeight(s, tile[k], pixelWidth);
+            sum += weight * reflection[k];
+            total += weight;
+        }
+    // 只平均倒影。原像素的灯光和贴图原样加回来，w 仍表示原来的反射光线是否找到了物体。
+    result[i] = vec4(base[i].rgb + sum / total, traced[i].w);
+}

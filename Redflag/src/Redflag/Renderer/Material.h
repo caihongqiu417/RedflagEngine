@@ -13,8 +13,8 @@ namespace Redflag {
 	enum class AlphaMode : int
 	{
 		Opaque = 0,   // 完全不透明，忽略 alpha
-		Mask   = 1,   // 透明度低于阈值的部分会被裁掉
-		Blend  = 2    // 半透明材质标记，当前 3D 绘制还未实现排序混合
+		Mask   = 1,   // 用于树叶、铁丝网这类有孔洞的表面
+		Blend  = 2    // 单独合成半透明表面，保留后面物体的颜色。
 	};
 
 	/*
@@ -34,9 +34,11 @@ namespace Redflag {
 
 		// ---- 表面参数 ----
 		glm::vec4 BaseColor{ 1.0f };  // 基础颜色因子（RGBA）
+		glm::vec3 Emission{ 0.0f };   // 表面自己发出的线性 RGB，可超过 1。
 
 		// ---- 贴图 ----
 		Ref<Texture2D> BaseColorMap;           // 漫反射贴图
+		Ref<Texture2D> EmissiveMap;            // sRGB 发光图案，乘上 Emission。
 		Ref<Texture2D> NormalMap;              // 切线空间法线贴图
 		Ref<Texture2D> MetallicRoughnessMap;   // G=粗糙度, B=金属度
 		Ref<Texture2D> AOMap;                  // 环境遮蔽
@@ -49,8 +51,10 @@ namespace Redflag {
 
 		// ---- 透明度与面朝向 ----
 		AlphaMode Alpha       = AlphaMode::Opaque;
-		float     AlphaCutoff = 0.5f;   // Mask 模式下的裁剪阈值
+		float     AlphaCutoff = 0.5f;   // Mask 模式只画 alpha 大于或等于这个值的像素。
 		bool      DoubleSided = false;
+		float RefractionIndex = 1.0f; // 空气取 1，普通玻璃约 1.5。
+		float Thickness = 0.0f;       // 沿表面法线的厚度，使用场景长度单位。
 
 		// ---- 查询 ----
 		bool HasBaseColorMap()          const { return BaseColorMap != nullptr; }

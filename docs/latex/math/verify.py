@@ -1,5 +1,5 @@
 """复算讲义中的数值；只检查数学例子，不代替 GPU 渲染测试。"""
-from math import isclose, pi, sqrt
+from math import cos, isclose, pi, radians, sin, sqrt
 from pathlib import Path
 import re
 
@@ -91,9 +91,26 @@ assert round(tone, 5) == .91486 and round(255 * tone ** (1 / 2.2)) == 245
 print("Effects: PCF=6/9; ambient visibility=0.5625; bright=0.5; display=245/255")
 
 root = Path(__file__).resolve().parents[3]
+
+# 两格的精确立体角等于方位角宽度乘纬带两端余弦的差。
+def cell_area(top, bottom):
+    return radians(30) * (cos(radians(top)) - cos(radians(bottom)))
+
+close([4 * cos(radians(60)), cell_area(55, 65) / cell_area(10, 20)],
+      [2, sin(radians(60)) / sin(radians(15))])
+steps = 63
+angles = [(row + .5) * (pi / 2) / steps for row in range(steps)]
+constant_light = pi * sum(cos(theta) * sin(theta) for theta in angles) / steps
+assert abs(constant_light - 1) < .00011
+print(f"IBL: projected area 2 cm^2; sky area ratio {cell_area(55, 65) / cell_area(10, 20):.4f}; white input -> {constant_light:.7f}")
+
+def code_line(line):
+    line = re.sub(r"/\*.*?\*/", "", line.split("//", 1)[0])
+    return re.sub(r"\s+", "", line)
+
 source_cache = {}
 excerpt_count = 0
-for name in ["main.tex", "effects.tex", "rsm.tex", "rsm-validation.tex"]:
+for name in ["main.tex", "effects.tex", "ibl.tex", "rsm.tex", "rsm-validation.tex"]:
     document = Path(__file__).with_name(name).read_text(encoding="utf-8")
     # 保留断开的节选，每一组都只对照紧随其后的源码位置。带标题的旧版片段单独标有年代。
     pending = []
@@ -105,11 +122,12 @@ for name in ["main.tex", "effects.tex", "rsm.tex", "rsm-validation.tex"]:
             continue
         if source_name not in source_cache:
             source = (root / source_name).read_text(encoding="utf-8-sig")
-            source_cache[source_name] = {re.sub(r"\s+", "", line.split("//", 1)[0]) for line in source.splitlines()}
+            source_cache[source_name] = {code_line(line) for line in source.splitlines()}
         for snippet in pending:
+            assert "//" in snippet, f"{name}: document excerpt needs a teaching comment: {source_name}"
             for line in snippet.splitlines():
-                if line.strip():
-                    assert re.sub(r"\s+", "", line) in source_cache[source_name], f"{name}: {source_name} differs: {line}"
+                if code_line(line):
+                    assert code_line(line) in source_cache[source_name], f"{name}: {source_name} differs: {line}"
             excerpt_count += 1
         pending.clear()
     assert not pending, f"{name}: source location missing after excerpt"

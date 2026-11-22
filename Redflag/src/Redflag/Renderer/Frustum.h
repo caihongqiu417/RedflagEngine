@@ -31,7 +31,7 @@ namespace Redflag
 			f.Planes[4] = row3 + row2;  // Near
 			f.Planes[5] = row3 - row2;  // Far
 
-			// 归一化（可选；AABB 测试不强制需要，但方便其它用途）
+			// 把平面的法线长度变成 1，下面的点到平面距离就能用场景的长度单位表示。
 			for (auto& p : f.Planes)
 			{
 				float len = glm::length(glm::vec3(p));
@@ -41,7 +41,7 @@ namespace Redflag
 		}
 
 		// d 是盒子中心到平面的有符号距离，r 是盒子沿法线方向的半宽。
-		// d + r 是最靠内的角到平面的有符号距离。它仍小于 0 时，整个盒子都在平面外。
+		// 盒子的八个角中，最大的有符号距离是 d + r。连这个角都在平面外时，就可以跳过整个网格。
 		bool IntersectsAABB(const glm::vec3& minP, const glm::vec3& maxP) const
 		{
 			glm::vec3 center = 0.5f * (minP + maxP);

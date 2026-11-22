@@ -1,0 +1,53 @@
+{
+  "renderdoc": "1.47",
+  "extent": [
+    128,
+    64
+  ],
+  "pixel_xy_top_left": [
+    1,
+    32
+  ],
+  "linear_channels": [
+    "R",
+    "G",
+    "B",
+    "history_weight"
+  ],
+  "old": {
+    "capture": "old/TAA-Ortho_capture.rdc",
+    "eid": 8,
+    "groups": [
+      16,
+      8,
+      1
+    ],
+    "capture_sha256": "8f41c0978e75e974f5ab1f58e5e0e830f8a2f666709675b006e84f7d2a9b1a5a",
+    "result_sha256": "1ec70eace4c8ec9f8ca3eb0fa7e9352573dd399ca1cf25d4570239483e563a58",
+    "pixel": [
+      0.4999999701976776,
+      0.1850000023841858,
+      0.4300000071525574,
+      0.5
+    ],
+    "messages": []
+  },
+  "fixed": {
+    "capture": "fixed/TAA-Ortho_capture.rdc",
+    "eid": 8,
+    "groups": [
+      16,
+      8,
+      1
+    ],
+    "capture_sha256": "63de3bdaca3eb38075f5cd5c6ce5e1e34d5e521640360f9c0327f38fd12fa44d",
+    "result_sha256": "7fc1cf3f26e069a8637e9eb4eb788af71ba3d6435e3d84fffbad3d51a3cd9500",
+    "pixel": [
+      0.10000000149011612,
+      0.25,
+      0.800000011920929,
+      0.0
+    ],
+    "messages": []
+  }
+}

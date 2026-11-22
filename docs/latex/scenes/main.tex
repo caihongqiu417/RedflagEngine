@@ -1,12 +1,14 @@
 % !TeX program = xelatex
 \input{../rhi/preamble}
 \hypersetup{pdftitle={Redflag 经典场景实测}}
-\fancyhead[L]{\small\color{muted}Redflag · OpenGL 场景实测}
+\fancyhead[L]{\small\color{muted}Redflag · 经典场景}
 \graphicspath{{../../../output/scenes/}}
 \begin{document}
 \zihao{5}\raggedright
+\setlength{\parindent}{2\ccwd}
+\ctexset{section={afterindent=true}}
 {\Huge\bfseries 经典场景实测}\par
-{\large\color{muted}Cornell Box 与 Sponza}\par
+{\large\color{muted}Cornell Box、Sponza 中庭与 Sun Temple}\par
 \ruleline
 
 \section{Cornell Box 的红墙与白盒}
@@ -14,7 +16,7 @@
 \begin{center}
 \includegraphics[width=.90\linewidth]{CornellBox.png}
 \end{center}
-这层红色从哪里来？方向光沿 $(-0.6,-0.6,-1)$ 从前方斜照红墙。反射阴影图（RSM）根据这堵墙收到的光，估算它又给附近白地板送去多少光。本次把这个效果的强度设为 1。另有一盏点光源参与直接光照。天花板上的白色矩形是模型几何，编辑器中的点光源单独放置。所以可以用这幅图检查方块的位置和遮挡，或比较同一块地板上的反光。要与 Cornell 的实测照片比较，还需要对应面光源和测量过的反射率。
+方向光沿 $(-0.6,-0.6,-1)$ 从前方斜照红墙。反射阴影图（RSM）根据这堵墙收到的光，估算它又给附近白地板送去多少光。本次把这个效果的强度设为 1。另有一盏点光源参与直接光照。天花板上的白色矩形是模型几何，编辑器中的点光源单独放置。所以可以用这幅图检查方块的位置和遮挡，或比较同一块地板上的反光。要与 Cornell 的实测照片比较，还需要对应面光源和测量过的反射率。
 
 为了下次还能找到同一块地面，测试固定了模型和相机。模型最长边缩放到 4 个场景单位。相机位于 $(0,0,7.8)$，看向原点，垂直视场角 $45^\circ$。分辨率 $1024\times768$，曝光为 1，开启屏幕空间环境遮蔽与反射阴影图，取连续绘制的第 12 帧。5 个子网格共 32 个三角形，397,212 个像素写入了模型的实体编号。
 
@@ -61,6 +63,7 @@
 \section{场景加载与截帧回放}
 要从编辑器重看这两张图，从 Forge 打开 \path{assets/scenes/Reference-CornellBox.redflag} 或 \path{assets/scenes/Reference-Sponza.redflag}，运行场景后使用保存的主相机。Cornell Box 的几何随仓库提供；Sponza 首次运行前在仓库根目录执行下载脚本。灯光与模型保存在场景文件里，实测用的后处理开关和尺寸见对应 YAML。
 
+以下命令均从仓库根目录运行。第一行准备 Sponza，后两行按各自的 YAML 绘制并保存场景图。
 \begin{verbatim}
 python tests/fetch_sponza.py
 tests\run_scene_gallery.cmd tests\scenes\cornell.yaml
@@ -76,4 +79,6 @@ tests\run_scene_gallery.cmd tests\scenes\sponza.yaml
 最后一次绘制为事件 273。导出的 $1024\times768$ 颜色图与运行时读回图逐像素比较，三个 RGB 通道完全一致。捕获时驱动报告了 9 条缓冲性能提示和 6 条着色器状态重编译提示。开启验证后的回放新增 12 条信息，最终状态为 Success。本例没有采 GPU 时间，这些提示没有对应的耗时结论。事件和消息可在 \path{output/scenes/CornellBox-replay.json} 查到。
 
 \note{渲染公式与关键源码见《渲染公式与实现》。排查透明裁剪和着色器链接错误的旧代码、修改与验证见《排错记录》。}
+\input{sculpture-gallery}
+\input{sun-temple}
 \end{document}

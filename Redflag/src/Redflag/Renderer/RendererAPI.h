@@ -12,7 +12,7 @@ namespace Redflag
 	public:
 		enum class API
 		{
-			None = 0, OpenGL = 1
+			None = 0, OpenGL = 1, Vulkan
 		};
 
 	public:
@@ -25,6 +25,7 @@ namespace Redflag
 		virtual void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
 		virtual void SetLineWidth(float width) = 0;
 
+		static void SetAPI(API api) { s_API = api; }
 		inline static API GetAPI() { return s_API; }
 
 	private:

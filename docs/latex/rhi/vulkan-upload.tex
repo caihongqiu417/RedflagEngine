@@ -1,0 +1,27 @@
+\clearpage
+\section{网格和贴图的上传}\label{sec:upload-api}
+假设砖墙贴图只有 $2\times2$ 个像素，每个像素用四个字节保存红、绿、蓝和透明度。左上角是红色，CPU 把它写成 \code{255, 0, 0, 255}。GPU 从暂存缓冲区读出这四个数，再把同样的数写到纹理左上角，这就完成了一个像素的复制。复制完，即使 CPU 把暂存区改写成绿色，纹理里原来的像素仍然是红色。
+
+这次把墙的六个 32 位索引和四个像素放进同一个 \code{VkBuffer}，创建时允许它作为复制来源。六个索引占 24 字节，像素再占 16 字节。CPU 先映射这块内存，也就是取得一个可以写入的地址，然后从开头放索引，从第 24 字节开始放像素。若使用的内存需要显式刷新，提交前调用 \code{vkFlushMappedMemoryRanges}，让 GPU 能读到 CPU 刚写入的值；刷新的字节范围按设备要求对齐。
+
+\codewhere{参数示例}{Redflag/src/Platform/Vulkan/VulkanDrawResources.cpp}{VulkanDraw::CreateMesh / CreateTexture}
+\begin{lstlisting}
+VkBufferCopy indices{0, 0, 24};
+vkCmdCopyBuffer(cmd, staging, indexBuffer, 1, &indices);
+
+(*@\rhicomment{// 前 24 字节保存索引，紧接着的 16 个字节保存四个像素。}@*)
+VkBufferImageCopy pixels{24, 0, 0,
+    {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1}, {0, 0, 0}, {2, 2, 1}};
+vkCmdCopyBufferToImage(cmd, staging, brickImage,
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &pixels);
+\end{lstlisting}
+
+两次调用都把复制操作记进命令缓冲区 \code{cmd}，都从 \code{staging} 读取。第一条的目的地是 \code{indexBuffer}。最后的 \code{1} 表示只复制一段，\code{\&indices} 指向这一段的说明：从来源的第 0 字节开始，写到目标的第 0 字节，共复制 24 字节。顶点数据也用这个方法，换成顶点缓冲区和顶点实际占用的字节数即可。
+
+第二条的目的地是贴图 \code{brickImage}。这里传入的布局表示执行复制时图像已准备好接收写入。末尾的 \code{1} 仍表示一个区域，\code{\&pixels} 指明写到哪里。开头的 \code{24} 跳过索引，随后两个 \code{0} 表示源像素紧密排列。第二行指定写入颜色、原始分辨率（第 0 级）、从第 0 层开始共 1 层。目标起点是 $(0,0,0)$，范围是 $2\times2\times1$。最后的 1 是深度，二维图像沿这个方向只占一个像素。
+
+\termaside{\code{vkCmdPipelineBarrier2(cmd, \&dependency)} 把先后关系记进 \code{cmd}。\code{dependency} 写明哪张图准备接收复制，或哪些刚写好的索引和像素接下来要供绘制读取。}{暂存空间的复用}{CPU 记完命令时，GPU 可能还没读这 40 字节。等 GPU 的完成信号到了，这一段才可以写入下一批数据。整块缓冲区可以留着。}
+\readings{\refitem{https://docs.vulkan.org/tutorial/latest/04_Vertex_buffers/02_Staging_buffer.html}{Khronos · 暂存缓冲区}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdCopyBuffer.html}{缓冲区复制}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdCopyBufferToImage.html}{复制到贴图}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkBufferImageCopy.html}{图像复制范围}}

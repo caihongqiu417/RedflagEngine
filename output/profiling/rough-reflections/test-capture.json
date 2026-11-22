@@ -1,0 +1,59 @@
+{
+  "capture": "output/captures/local/rough-reflection-filter-final/Rough_capture.rdc",
+  "capture_sha256": "f17567726bb050a404171529f28e8ef65b26e306d82b860d142dc19f71ecf7b3",
+  "tool": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "event": 21,
+  "groups": [
+    12,
+    12,
+    1
+  ],
+  "width": 96,
+  "height": 96,
+  "rgba32f_sha256": "713993da88acc6b0004f3a4fd3e943c763099a15e7a180fdd9516fc64843be50",
+  "same_as_live_readback": true,
+  "messages": [],
+  "stripes": {
+    "31": [
+      1.3274040222167969,
+      0.1592884659767151,
+      0.0464591421186924,
+      1.0
+    ],
+    "48": [
+      0.836053192615509,
+      0.10032637417316437,
+      0.029261857271194458,
+      1.0
+    ],
+    "14": [
+      0.8306412100791931,
+      0.0996769368648529,
+      0.029072437435388565,
+      0.0
+    ]
+  },
+  "passes": [
+    {
+      "event": 9,
+      "groups": [
+        12,
+        12,
+        1
+      ],
+      "buffer": "test-raw.f32",
+      "rgba32f_sha256": "881bd5df9b2bdc1767023ac57e42b1644c64bd3b2f8a9a54bddbd051c3fe6a25"
+    },
+    {
+      "event": 21,
+      "groups": [
+        12,
+        12,
+        1
+      ],
+      "buffer": "test-filtered.f32",
+      "rgba32f_sha256": "713993da88acc6b0004f3a4fd3e943c763099a15e7a180fdd9516fc64843be50"
+    }
+  ]
+}

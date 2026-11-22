@@ -5,10 +5,12 @@
 #include"Redflag/Events/Event.h"
 
 namespace Redflag {
+	class GraphicsContext;
 	struct WindowProps {
 		std::string Title;
 		uint32_t Width;
 		uint32_t Height;
+		bool Visible = true;
 		WindowProps(const std::string& title = "Redflag Engine", 
 					uint32_t width = 2560, uint32_t height = 1440)
 					:Title(title), Width(width), Height(height) 
@@ -29,6 +31,7 @@ namespace Redflag {
 		virtual void SetVSync(bool enable) = 0;
 		virtual bool IsVSync() const = 0;
 
+		virtual GraphicsContext& GetGraphicsContext() const = 0;
 		virtual void* GetNativeWindow() const= 0;
 
 		static Window* Create(const WindowProps& props = WindowProps());

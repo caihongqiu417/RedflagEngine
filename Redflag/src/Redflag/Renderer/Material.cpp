@@ -24,8 +24,10 @@ namespace Redflag {
 	{
 		Ref<Material> mat = Ref<Material>(new Material());
 		mat->BaseColor             = BaseColor;
+		mat->Emission              = Emission;
 		// 复制共享引用，不重新创建纹理或上传像素。
 		mat->BaseColorMap          = BaseColorMap;
+		mat->EmissiveMap           = EmissiveMap;
 		mat->NormalMap             = NormalMap;
 		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
 		mat->AOMap                 = AOMap;
@@ -36,6 +38,8 @@ namespace Redflag {
 		mat->Alpha                 = Alpha;
 		mat->AlphaCutoff           = AlphaCutoff;
 		mat->DoubleSided           = DoubleSided;
+		mat->RefractionIndex       = RefractionIndex;
+		mat->Thickness             = Thickness;
 		return mat;
 	}
 

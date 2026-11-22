@@ -1,0 +1,239 @@
+{
+  "renderdoc": "1.47",
+  "samples": [
+    {
+      "api": "OpenGL",
+      "mode": "auto",
+      "file": "output/captures/local/LOD-OpenGL-auto_capture.rdc",
+      "sha256": "2203ba63e2d1be5a6115c5d76db73f266697509a566142b35bf31dd4a8b0d9da",
+      "draw_calls": 2,
+      "entity_indices": 2844,
+      "floor_indices": 36,
+      "entity_event": 22,
+      "gpu_ms": [
+        0.00016,
+        0.00025600000000000004,
+        0.00025600000000000004,
+        0.00016,
+        0.00016,
+        0.00025600000000000004,
+        0.00025600000000000004,
+        0.00022400000000000002,
+        0.00022400000000000002
+      ],
+      "gpu_median_ms": 0.00022400000000000002,
+      "cpu_record_median_us": 52.599999999999994,
+      "validation": []
+    },
+    {
+      "api": "OpenGL",
+      "mode": "full",
+      "file": "output/captures/local/LOD-OpenGL-full_capture.rdc",
+      "sha256": "87530f8146b45628f1d78915103bd98c082fa4bb837b87095bbd17bb785b0716",
+      "draw_calls": 2,
+      "entity_indices": 48903,
+      "floor_indices": 36,
+      "entity_event": 22,
+      "gpu_ms": [
+        0.002272,
+        0.00256,
+        0.0027840000000000005,
+        0.002272,
+        0.002336,
+        0.002368,
+        0.0024000000000000002,
+        0.0026880000000000003,
+        0.0027840000000000005
+      ],
+      "gpu_median_ms": 0.0024000000000000002,
+      "cpu_record_median_us": 64.4,
+      "validation": []
+    },
+    {
+      "api": "Vulkan",
+      "mode": "auto",
+      "file": "output/captures/local/LOD-Vulkan-auto_capture.rdc",
+      "sha256": "78b93ee926149b34cb101d62db5d951abbf5491e2fa397edd166771a3c8742fe",
+      "draw_calls": 2,
+      "entity_indices": 2844,
+      "floor_indices": 36,
+      "entity_event": 20,
+      "gpu_ms": [
+        0.00041600000000000003,
+        0.000544,
+        0.00047999999999999996,
+        0.00047999999999999996,
+        0.0005120000000000001,
+        0.000608,
+        0.000544,
+        0.0005120000000000001,
+        0.00047999999999999996
+      ],
+      "gpu_median_ms": 0.0005120000000000001,
+      "cpu_record_median_us": 47.349999999999994,
+      "validation": []
+    },
+    {
+      "api": "Vulkan",
+      "mode": "full",
+      "file": "output/captures/local/LOD-Vulkan-full_capture.rdc",
+      "sha256": "3644de83366f558fab3c0fcd16a567e05f01a44ced1f6d6bb0db4885cb10cc3f",
+      "draw_calls": 2,
+      "entity_indices": 48903,
+      "floor_indices": 36,
+      "entity_event": 20,
+      "gpu_ms": [
+        0.002016,
+        0.0024,
+        0.002176,
+        0.002336,
+        0.002432,
+        0.002272,
+        0.0025280000000000003,
+        0.0020480000000000003,
+        0.0022400000000000002
+      ],
+      "gpu_median_ms": 0.002272,
+      "cpu_record_median_us": 46.0,
+      "validation": []
+    },
+    {
+      "api": "OpenGLScene",
+      "mode": "auto",
+      "file": "output/captures/local/LOD-OpenGLScene-auto_capture.rdc",
+      "sha256": "99fbb9ec4f2bd52ea34c03756fad36b50435e8333b7c9b1f811b512d27998976",
+      "bunny_passes": [
+        {
+          "event": 43,
+          "indices": 2844,
+          "colors": [
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::80"
+        },
+        {
+          "event": 66,
+          "indices": 2844,
+          "colors": [
+            "ResourceId::125",
+            "ResourceId::126",
+            "ResourceId::127",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::128"
+        },
+        {
+          "event": 89,
+          "indices": 2844,
+          "colors": [
+            "ResourceId::143",
+            "ResourceId::144",
+            "ResourceId::145",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::146"
+        },
+        {
+          "event": 171,
+          "indices": 2844,
+          "colors": [
+            "ResourceId::143",
+            "ResourceId::144",
+            "ResourceId::145",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::146"
+        }
+      ],
+      "validation": []
+    },
+    {
+      "api": "OpenGLScene",
+      "mode": "full",
+      "file": "output/captures/local/LOD-OpenGLScene-full_capture.rdc",
+      "sha256": "11f0e8712ffb744002b2e73cd8654ef22232d3dade198c3514ed2aee50812154",
+      "bunny_passes": [
+        {
+          "event": 43,
+          "indices": 48903,
+          "colors": [
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::80"
+        },
+        {
+          "event": 66,
+          "indices": 48903,
+          "colors": [
+            "ResourceId::125",
+            "ResourceId::126",
+            "ResourceId::127",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::128"
+        },
+        {
+          "event": 89,
+          "indices": 48903,
+          "colors": [
+            "ResourceId::143",
+            "ResourceId::144",
+            "ResourceId::145",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::146"
+        },
+        {
+          "event": 164,
+          "indices": 48903,
+          "colors": [
+            "ResourceId::143",
+            "ResourceId::144",
+            "ResourceId::145",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0",
+            "ResourceId::0"
+          ],
+          "depth": "ResourceId::146"
+        }
+      ],
+      "validation": []
+    }
+  ]
+}

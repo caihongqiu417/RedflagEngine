@@ -1,0 +1,36 @@
+{
+  "test": "CheckRoughReflections",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "build": "Debug x64",
+  "test_executable_sha256": "c86c4b955ebf4ee08d392d2d12ee591319aabad9d5bb6352d64f794f64578c68",
+  "run_command": "tests\\run_environment_lighting.cmd output/captures/local/rough-reflection-filter-final tmp/tools/renderdoc/RenderDoc_1.47_64/renderdoc.dll --rough-reflections",
+  "test_source": "tests/RoughReflectionCheck.h",
+  "source_sha256": "1aefc3b0b016a944f79788bd136de74c789b22625dc594ae71348dfb2ff7c1ac",
+  "mirror_roughness": 0.34,
+  "reference_frames": [
+    256,
+    767
+  ],
+  "evaluated_frames": [
+    0,
+    15
+  ],
+  "each_frame_spp": 1,
+  "width": 96,
+  "height": 96,
+  "filter_history_frames": 0,
+  "taa": false,
+  "mse": "mean squared error of three linear RGB channels over all pixels and the 16 evaluated frames",
+  "flicker": "mean squared difference of the same pixel between adjacent frames over all 15 pairs",
+  "mean_linear_rgb": "mean of all pixels and three linear RGB channels",
+  "bright_minus_middle_red": "bright band mean (x=32..63,y=29..33) minus gray band mean (x=32..63,y=46..50), red channel",
+  "reference_split_estimate": "MSE between first and last 256-frame means divided by four; estimates the noise of the 512-frame mean",
+  "capture": "test-capture.json",
+  "outputs": {
+    "test-edges.csv": "85403ad01332aba63bb2345df67d3a0dfd190d67baaa9b6fdcf5c71a6878b31f",
+    "test-filtered.png": "946125d78c69e6442a82b2540becfdc558ee9cd9d686ca7912c49032961ba6ac",
+    "test-quality.csv": "6a8ebb4b75d2a92ff21b05d83744265620a5334b9971a97ff0a2e4ff14beb59f",
+    "test-raw.png": "040c11ad59e45fd27f62e41482c4d73d2c519c766b0e8d65fc7729c9290998de",
+    "test-reference.png": "920efab66923b1ad504309944bcdf854b5f07ac61eceabddd8b018adf0c9c220"
+  }
+}

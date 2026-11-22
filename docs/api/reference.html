@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redflag · API 手册</title>
+    <style>
+      :root {
+        --ink: #192c2c;
+        --muted: #536864;
+        --line: #cdd8d3;
+        --soft: #eef4ef;
+        --accent: #146657;
+        color: var(--ink);
+        background: #f7f9f6;
+        font:
+          16px/1.65 Inter,
+          "Microsoft YaHei UI",
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      header {
+        background: #162f30;
+        color: white;
+        padding: 14px max(5vw, 24px);
+        display: flex;
+        align-items: center;
+        gap: 2em;
+      }
+      header strong {
+        letter-spacing: 0.04em;
+      }
+      header a {
+        color: #e0efea;
+        text-decoration: none;
+      }
+      header nav {
+        display: flex;
+        gap: 1.3em;
+      }
+      main {
+        max-width: 1300px;
+        margin: auto;
+        padding: 40px 5vw 70px;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.35;
+        margin: 0 0 0.55em;
+      }
+      h1 {
+        font-size: clamp(30px, 4vw, 48px);
+        letter-spacing: -0.04em;
+      }
+      main > p {
+        color: var(--muted);
+        margin: 0 0 25px;
+      }
+      a {
+        color: var(--accent);
+      }
+      #intro {
+        border-block: 1px solid var(--line);
+        padding: 1.4em 0;
+        margin-bottom: 2.3em;
+      }
+      .guide {
+        background: white;
+        margin: 0.45em 0;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+      }
+      .guide > summary {
+        padding: 0.65em 1em;
+        font-weight: 600;
+      }
+      .guide > div {
+        padding: 0 1em 1em;
+        max-width: 84ch;
+      }
+      .guide p {
+        margin: 0.55em 0 1em;
+      }
+      summary,
+      button {
+        cursor: pointer;
+      }
+      pre {
+        background: var(--soft);
+        padding: 1em;
+        overflow: auto;
+        border-radius: 3px;
+        font-size: 0.88em;
+      }
+      code {
+        font-family: "IBM Plex Mono", Consolas, monospace;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: end;
+        flex-wrap: wrap;
+        margin-bottom: 1em;
+      }
+      .toolbar label {
+        display: flex;
+        flex-direction: column;
+        font-size: 0.83em;
+        color: var(--muted);
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        color: var(--ink);
+      }
+      input,
+      select {
+        font-size: 16px;
+        padding: 0.45em 0.6em;
+        border: 1px solid #798e87;
+        border-radius: 4px;
+        background: white;
+      }
+      input {
+        width: min(80vw, 360px);
+      }
+      .api-layout {
+        display: grid;
+        grid-template-columns: 150px minmax(0, 1fr);
+        gap: 24px;
+      }
+      aside {
+        position: sticky;
+        top: 12px;
+        align-self: start;
+      }
+      .module {
+        background: none;
+        border: 0;
+        border-left: 2px solid transparent;
+        padding: 4px 10px;
+        display: block;
+        text-align: left;
+      }
+      .module[aria-current="true"] {
+        border-color: var(--accent);
+        font-weight: bold;
+        background: var(--soft);
+        color: var(--accent);
+      }
+      #results > section {
+        margin: 0 0 22px;
+      }
+      .owner {
+        background: white;
+        border: 1px solid var(--line);
+        margin: 5px 0;
+        border-radius: 4px;
+      }
+      .owner summary {
+        padding: 0.55em 0.75em;
+        overflow-wrap: anywhere;
+      }
+      .entry {
+        border-top: 1px solid var(--line);
+        padding: 0.65em 0.9em;
+      }
+      .meta {
+        font-size: 0.78em;
+        color: var(--muted);
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .source {
+        background: none;
+        color: var(--accent);
+        border: 0;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        padding: 0;
+        text-align: left;
+      }
+      .entry code {
+        display: block;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        margin: 0.2em 0;
+      }
+      .entry p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.89em;
+      }
+      dialog {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        width: min(1020px, 94vw);
+        height: min(86vh, 850px);
+        padding: 0;
+        color: var(--ink);
+      }
+      dialog::backdrop {
+        background: #0d2528a8;
+      }
+      .dialogbar {
+        padding: 0.7em 1em;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: var(--soft);
+        overflow-wrap: anywhere;
+      }
+      .dialogbar button {
+        margin-left: auto;
+      }
+      .sourcecode {
+        height: calc(100% - 55px);
+        overflow: auto;
+        white-space: pre;
+        font:
+          0.85em/1.65 Consolas,
+          monospace;
+        padding: 1em;
+      }
+      .line {
+        display: block;
+      }
+      .num {
+        color: #718580;
+        display: inline-block;
+        width: 4ch;
+        margin-right: 2ch;
+        text-align: right;
+      }
+      .active {
+        background: #ffeab4;
+      }
+      small {
+        color: var(--muted);
+      }
+      :focus-visible {
+        outline: 3px solid #d88845;
+      }
+      @media (max-width: 720px) {
+        main {
+          padding: 25px 16px;
+        }
+        .api-layout {
+          display: block;
+        }
+        aside {
+          position: static;
+          display: flex;
+          flex-wrap: wrap;
+          margin-bottom: 14px;
+        }
+        .module {
+          border-left: 0;
+          border-bottom: 2px solid transparent;
+        }
+        .dialogbar {
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Redflag</strong>
+      <nav><a href="#intro">入门示例</a><a href="#catalog">接口索引</a><a href="../pdf/Redflag-Source-Guide.pdf">源码读本</a></nav>
+    </header>
+    <main>
+      <h1>引擎 API 手册</h1>
+      <p>
+        从场景、脚本和材质的实际用法开始。索引中的文件名可打开源码。第一次使用编辑器可读<a href="../pdf/Redflag-Editor-Guide.pdf">图解用户手册</a>，想对照 OpenGL、Vulkan 和 ImGui 调用可读<a href="../pdf/Redflag-Source-Guide.pdf">常用接口源码读本</a>。
+      </p>
+      <section id="intro">
+        <h2>入门示例</h2>
+        <details class="guide">
+          <summary>创建实体，保存并重新打开场景</summary>
+          <div>
+            <p>
+              场景持有实体和组件。创建门时，场景已经为它准备了变换组件。下面让门在
+              X 轴上向右移动两个单位，再把场景写到 Forge 的资源目录。
+            </p>
+            <pre><code>auto scene = Redflag::CreateRef&lt;Redflag::Scene&gt;();
+auto door = scene-&gt;CreateEntity("Door");
+auto&amp; pose = door.GetComponent&lt;Redflag::TransformComponent&gt;();
+pose.Translation.x = 2.0f;
+Redflag::SceneSerializer(scene).Serialize("assets/scenes/Door.redflag");
+
+auto opened = Redflag::CreateRef&lt;Redflag::Scene&gt;();
+opened-&gt;OnViewportResize(1280, 720);
+bool loaded = Redflag::SceneSerializer(opened).Deserialize("assets/scenes/Door.redflag");</code></pre>
+            <p>
+              示例假设工作目录是 RedflagForge。这里用文本场景的 Serialize 和
+              Deserialize。名字带 Runtime 的二进制序列化入口尚留有
+              TODO。打开含主相机的场景前先告诉场景面板的像素大小，相机读取时就会用它算投影。仅有变换的门还没有可绘制的外形。
+            </p>
+            <button class="source" data-query="SceneSerializer">
+              查看 SceneSerializer
+            </button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>给实体添加网格和材质</summary>
+          <div>
+            <p>
+              应用已经建立图形设备后，给刚才的门添加网格组件。这次直接使用内建立方体，材质设为红棕色。更改粗糙度会影响提供光照计算的绘制路径。
+            </p>
+            <pre><code>auto&amp; mesh = door.AddComponent&lt;Redflag::MeshRendererComponent&gt;();
+mesh.MeshData = Redflag::Mesh::CreateCube();
+mesh.Mat = Redflag::Material::Create(glm::vec4(0.66f, 0.24f, 0.12f, 1.0f));
+mesh.Mat-&gt;Roughness = 0.75f;</code></pre>
+            <p>
+              从文件导入整扇门时，用 ModelRendererComponent
+              保存模型编号，部件材质由加载好的 Model
+              提供。需要单独调门把手时，在对应的子网格位置设置
+              OverrideMaterials。编辑结束后再次调用 Serialize，模型和材质设置才会写入场景文件。
+            </p>
+            <button class="source" data-query="MeshRendererComponent">
+              查看网格组件
+            </button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>用 C# 移动运行中的实体</summary>
+          <div>
+            <p>
+              在脚本工程中继承
+              Entity，把编译后的脚本类挂到实体上。运行场景后，引擎把两次更新之间经过的秒数传给
+              OnUpdate。按住 D 一秒，下面的脚本让实体沿 X 轴移动约两个单位。
+            </p>
+            <pre><code>using Redflag;
+
+namespace Sandbox {
+    public class MoveDoor : Entity {
+        void OnUpdate(float dt) {
+            if (!Input.IsKeyDown(KeyCode.D)) return;
+            var pose = GetComponent&lt;TransformComponent&gt;();
+            var position = pose.Translation;
+            position.X += 2.0f * dt;
+            pose.Translation = position;
+        }
+    }
+}</code></pre>
+            <p>
+              Translation 返回一份 Vector3 值，最后的赋值把新位置写回引擎。选“C#
+              脚本”可以查找脚本可用的属性与键名。
+            </p>
+            <button class="source" data-query="Translation">
+              查看位置属性
+            </button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>调节环境遮蔽与反射阴影图</summary>
+          <div>
+            <p>
+              在 OpenGL 场景渲染器初始化后，可以开关环境遮蔽，或者调整 RSM
+              间接光强度。前者影响角落与相邻表面的明暗，后者改变从带颜色的墙面反射到周围物体上的光。
+            </p>
+            <pre><code>Redflag::SceneRenderer::GetSSAOEnabled() = true;
+auto&amp; indirect = Redflag::SceneRenderer::GetRSMSettings();
+indirect.Enabled = true;
+indirect.Intensity = 1.0f;</code></pre>
+            <p>
+              Vulkan 计算效果通过计算设备与各效果自己的设置工作。找 GPU
+              可写图像时搜索 CreateImage，查一次计算如何开始时搜索
+              Dispatch。着色器所需的资源按绑定编号排列，调度时的三个整数表示工作组数。
+            </p>
+            <button class="source" data-query="ComputeDevice">
+              查看计算设备
+            </button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>调节时间抗锯齿，清除上一视角的历史</summary>
+          <div>
+            <p>
+              时间抗锯齿（TAA）把本次算出的颜色与上一帧留下的颜色结合。连续几帧观察同一条边时，可以利用那些稍有偏移的采样点。切换场景或直接把相机从屋内移到屋外时，上一张图已是另一处景物，需要清除历史。
+            </p>
+            <pre><code>// effects 是当前场景面板持有的 ScreenEffects。
+effects.GetSettings().HistoryWeight = 0.85f;
+effects.ResetHistory();  // 切换场景或跳切相机时调用一次。</code></pre>
+            <p>
+              画面正常更新时保留历史。每帧先调用 JitterProjection
+              取得这次略有偏移的投影，用同一个投影绘制场景并交给 Render。再把偏移前的投影传入
+              stableProjection，让同一机位的两次采样可以在同一像素累积。这个例子用 Vulkan 计算设备执行。
+            </p>
+            <button class="source" data-query="ScreenEffects">
+              查看 ScreenEffects
+            </button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>在 Vulkan 编辑器中用原生分辨率查看光照</summary>
+          <div>
+            <p>从 RedflagForge 目录启动编辑器，在“渲染设置 Lighting”面板顶部选择“组合光照 Lit”。展开“质量与参数”，把“分辨率”设为“原始 Native”，着色计算就会使用场景面板的实际像素。选择“主相机 Game”可以观察场景保存的机位，选择“场景 Scene”可以绕着模型观察。</p>
+            <pre><code>cd RedflagForge
+..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe --vulkan</code></pre>
+            <p>以 Sponza 的砖墙为例，点视口上方的“实时效果”，将“直接光”设为“全部点灯”，“间接光”设为“探针 DDGI”。勾选、取消“对照：只显示直接光”，可以比较墙角增加反弹光后的明暗。GTAO 调节间接光的遮蔽，SSR 使用本帧画面寻找反射，TAA 将多帧采样结合起来。“快速移动相机”开启时，拖动或变焦期间先看模型底色，停下片刻后恢复组合光照。</p>
+            <p>在“文件”菜单中选“保存”，同名的 .redflag.render.yaml 会保留模式、分辨率和效果参数。下次打开场景便可继续比较。初次使用 Sponza 需要在仓库根目录运行 python tests/fetch_sponza.py 获取模型。</p>
+            <button class="source" data-query="LightingPreview">查看 LightingPreview</button>
+            · <button class="source" data-file="RedflagForge/src/LightingPreview.cpp" data-function="LightingPreview::RenderLit(">查看直接光和间接光怎样相加</button>
+            · <button class="source" data-file="RedflagForge/src/VulkanForgeLayer.cpp" data-function="VulkanForgeLayer::SaveScene(">查看场景与光照设置怎样保存</button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>后端、平台与接口状态</summary>
+          <div>
+            <p>
+              RHI 是两种后端之间的公共约定。网格和纹理创建、索引绘制已有 OpenGL
+              和 Vulkan 实现。ComputeDevice 当前使用 Vulkan，同步 Dispatch
+              返回时结果可以读回。OpenGL SceneRenderer 与其后处理设置属于现有
+              OpenGL 绘制路径。WindowsWindow 管理桌面窗口，Forge
+              下的类负责编辑器交互。ScriptCore 的公开类型供 C#
+              使用，脚本可以访问已注册的托管接口。
+            </p>
+            <p>
+              索引取自本次生成时的源码，列出公开声明与重载。平台目录也包含供后端内部协作的类型。类名出现在索引中表示有相应声明，功能是否接入编辑器要结合调用点和测试判断。
+            </p>
+            <a href="../pdf/Redflag-RHI-Vulkan-Plan.pdf"
+              >RHI 与 Vulkan 实现说明</a
+            >
+            · <a href="../scenes/Stanford-Scans.md">可打开的模型场景</a>
+          </div>
+        </details>
+      </section>
+      <section id="catalog">
+        <h2>接口索引</h2>
+        <div class="toolbar">
+          <label
+            >搜索名称、签名或文件<input
+              type="search"
+              id="query"
+              placeholder="例如 DrawIndexed"
+              autocomplete="off"
+          /></label>
+          <label
+            >声明类型<select id="kind">
+              <option value="">所有类型</option>
+            </select></label
+          ><small id="count" aria-live="polite"></small>
+        </div>
+        <div class="api-layout">
+          <aside id="modules" aria-label="模块"></aside>
+          <div id="results"></div>
+        </div>
+      </section>
+    </main>
+    <dialog id="viewer" aria-label="源码">
+      <div class="dialogbar">
+        <strong id="fileTitle"></strong><a id="fileLink">打开源文件</a
+        ><button id="close">关闭</button>
+      </div>
+      <div id="code" class="sourcecode"></div>
+    </dialog>
+    <!-- prettier-ignore -->
+    <script id="db" type="application/json">__REFERENCE_DATA__</script>
+    <script>
+      const { entries, sources } = JSON.parse(
+        document.querySelector("#db").textContent,
+      );
+      const $ = (id) => document.getElementById(id);
+      function element(tag, cls, text) {
+        const node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      }
+      const groups = [...new Set(entries.map((r) => r[0]))].sort(),
+        types = [...new Set(entries.map((r) => r[3]))].sort();
+      let module = "";
+      for (const g of ["", ...groups]) {
+        const b = element("button", "module", g || "全部模块");
+        b.dataset.group = g;
+        b.onclick = () => {
+          module = g;
+          render();
+        };
+        $("modules").append(b);
+      }
+      for (const t of types) $("kind").add(new Option(t, t));
+      function showFile(path, line) {
+        $("fileTitle").textContent = path + " · " + line;
+        $("fileLink").href = "../../" + path;
+        $("code").replaceChildren();
+        const lines = document.createDocumentFragment();
+        sources[path].forEach((txt, i) => {
+          const row = element(
+            "div",
+            "line" + (i + 1 === line ? " active" : ""),
+          );
+          row.append(
+            element("span", "num", String(i + 1)),
+            document.createTextNode(txt || " "),
+          );
+          lines.append(row);
+        });
+        $("code").append(lines);
+        $("viewer").showModal();
+        $("code").querySelector(".active")?.scrollIntoView({ block: "center" });
+      }
+      $("close").onclick = () => $("viewer").close();
+      for (const button of document.querySelectorAll("[data-file]")) {
+        const path = button.dataset.file;
+        const line = sources[path].findIndex((text) => text.includes(button.dataset.function)) + 1;
+        button.onclick = () => showFile(path, line);
+      }
+      function render() {
+        const query = $("query").value.trim().toLowerCase(),
+          kind = $("kind").value;
+        const matches = entries.filter(
+          (r) =>
+            (!module || r[0] === module) &&
+            (!kind || r[3] === kind) &&
+            (!query ||
+              [r[1], r[2], r[4], r[5], r[7]]
+                .join(" ")
+                .toLowerCase()
+                .includes(query)),
+        );
+        $("count").textContent =
+          matches.length + " 项 / " + entries.length + " 项";
+        document
+          .querySelectorAll(".module")
+          .forEach((b) =>
+            b.setAttribute("aria-current", b.dataset.group === module),
+          );
+        const results = document.createDocumentFragment();
+        let sections = new Map();
+        for (const row of matches) {
+          const [g, owner, name, category, sig, path, line, comment] = row;
+          if (!sections.has(g)) {
+            const s = element("section");
+            s.append(element("h3", "", g));
+            results.append(s);
+            sections.set(g, { s, owners: new Map() });
+          }
+          const { s, owners } = sections.get(g),
+            isType = ["结构体", "类", "枚举"].includes(category),
+            sep = g === "C# 脚本" ? "." : "::";
+          const label = isType
+            ? (owner ? owner + sep : "") + name
+            : owner || path;
+          if (!owners.has(label)) {
+            const d = element("details", "owner");
+            d.open = !!query && matches.length < 100;
+            d.append(element("summary", "", label));
+            s.append(d);
+            owners.set(label, d);
+          }
+          const entry = element("div", "entry"),
+            meta = element("div", "meta"),
+            src = element(
+              "button",
+              "source",
+              path.split("/").pop() + " · " + line,
+            );
+          src.onclick = () => showFile(path, line);
+          meta.append(element("span", "", category), src);
+          entry.append(meta, element("code", "", sig));
+          if (comment) entry.append(element("p", "", comment));
+          owners.get(label).append(entry);
+        }
+        if (!matches.length)
+          results.append(
+            element(
+              "p",
+              "",
+              "没有匹配的声明。可以切换到全部模块，或尝试较短的名称。",
+            ),
+          );
+        $("results").replaceChildren(results);
+      }
+      $("query").oninput = render;
+      $("kind").onchange = render;
+      document.querySelectorAll("[data-query]").forEach(
+        (b) =>
+          (b.onclick = () => {
+            module = "";
+            $("kind").value = "";
+            $("query").value = b.dataset.query;
+            render();
+            $("catalog").scrollIntoView();
+          }),
+      );
+      render();
+    </script>
+  </body>
+</html>

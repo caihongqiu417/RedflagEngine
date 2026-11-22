@@ -1,0 +1,10 @@
+test,value
+absorption_max_error,3.12924e-07
+infinite_range_center_red,0.299884
+one_unit_range_center_red,0.244632
+unlit_center_red,0.244632
+fog_8_steps_median_ms,0.2333
+fog_16_steps_median_ms,0.35295
+fog_32_steps_median_ms,0.57745
+open_pixel_red,0.0227471
+closed_pixel_red,0

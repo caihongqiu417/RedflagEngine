@@ -1,0 +1,69 @@
+% 前置知识
+直接光只需写下“选中第几盏灯”。间接光要写下“这条光线先碰到了哪里”。设地板上的点为 $x$，柱子上的点为 $y$。柱子受到灯光照射，再把光反射到地板。邻近像素 $x'$ 可以尝试连接同一个 $y$。改变起点后，距离、两端的夹角和中间有没有障碍都可能变化，只复制旧像素的颜色会忽略这三件事。
+
+\begin{center}
+\begin{tikzpicture}[x=.90cm,y=.86cm,font=\small]
+  \fill[fill=shade,rounded corners=3pt] (0,0) rectangle (15.6,3.6);
+  \fill[quiet!20] (1.1,.65) rectangle (1.45,2.95);
+  \fill[quiet!20] (1.1,.48) rectangle (8.65,.65);
+  \fill[quiet!62] (3.05,.65) rectangle (3.35,1.48);
+  \coordinate (y) at (1.45,2.65);
+  \coordinate (x) at (7.55,.65);
+  \coordinate (near) at (4.35,.65);
+  \draw[->,teal!70!black,very thick,shorten >=2pt] (x)--(y);
+  \draw[wine,very thick] (near)--(3.35,1.34);
+  \draw[wine,densely dashed] (3.35,1.34)--(y);
+  \foreach \p in {x,near,y} \fill[ink] (\p) circle[radius=2pt];
+  \node[anchor=south west] at (1.5,2.65) {柱上的反射点 $y$};
+  \node[anchor=north] at (7.55,.55) {$x$};
+  \node[anchor=north] at (4.35,.55) {$x'$};
+  \draw[quiet!45] (8.94,.45)--(8.94,3.1);
+  \node[anchor=west,text=teal!70!black] at (9.25,2.56) {从地板上的 $x$ 能看见 $y$。};
+  \node[anchor=west,text=wine] at (9.25,1.76) {相邻点 $x'$ 的视线被挡住，};
+  \node[anchor=west] at (9.25,1.08) {这条路径的贡献为零。};
+\end{tikzpicture}\\[1pt]
+{\footnotesize\color{quiet}本册绘制的侧面图。两条线都连向同一个反射点，灰色小块是地上的遮挡物。}
+\end{center}
+
+% 公式推导
+从 $x$ 望向 $y$，同一块小纸片离得越远，占视野的角度越小。若纸片实际面积是 $dA$，斜着看时有效投影还要乘上纸片法线与观察方向的余弦。它张开的立体角是 $d\omega=(n_y\cdot-\omega)_+\,dA/r^2$。这里的比例就是换变量用到的雅可比 \term{Jacobian}。把一块正对眼睛、面积约 0.01 的小片从距离 1 移到 2，它占的立体角大约由 0.01 变成 0.0025 球面度。PBRT 的概率换元和 GAMES101 的点积在这里进入同一个式子。
+
+% 公式
+令 $\omega=(y-x)/r$，$c_x=(n_x\cdot\omega)_+$，$c_y=(n_y\cdot-\omega)_+$。对从 $x$ 按余弦取样得到的二次点，
+\[
+ p_A(y)=\frac{c_xc_y}{\pi r^2},\qquad
+ f_A(x,y)=\frac{\rho_x}{\pi} L_o(y)\,\frac{c_xc_y}{r^2}\,V(x,y).
+\]
+概率和贡献都按每单位面积定义。复用时在新起点算 $f_A(x',y)$；它和旧池中的 $W$ 配合。若贡献用面积，提议概率却仍用每单位立体角，距离翻倍时就会得到错误的权重。
+\pair{profiling/gi/indirect-8spp.png}{单像素独立积累八个样本}{profiling/gi/restir-gi.png}{一次反弹的 ReSTIR GI}
+\clearpage
+% 逐行伪代码
+\subsection{重新连接柱子上的反射点}
+\noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/GI/Shaders/GI.comp}{\texttt{GI.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+direction = cosineSample(normalAt(x))
+y = trace(x, direction)
+if hit(y):
+    radianceAtY = estimateDirectLight(y)
+    pdfArea = cosineAtX * cosineAtY / (pi * distanceSquared)
+    candidate = (y.position, y.normal, radianceAtY, 1 / pdfArea)
+for r in compatibleCandidates:
+    (*@{\footnotesize\color{quiet}试着从脚下连到柱面，中途撞墙就去掉这条路径。}@*)
+    visibility = traceSegment(x, r.y)
+    targetRGB = albedo(x) * r.radiance * geometry(x, r.y) * visibility / pi
+    mergeReservoir(r, luminance(targetRGB))
+output = evaluateSelectedAt(x) * selectedWeight
+\end{lstlisting}
+一条新射线已经确认过 $x$ 到 $y$ 可达。对邻居和历史候选重新连线时必须再查遮挡；保存亮度较大的候选也不能穿墙。没命中二次表面、没有灯或背面余弦为零时，该候选贡献为零。
+
+在 NVIDIA 的 GI 集成中，调用者提供第二个表面的位置、法线、原射线的取样密度，以及从那里回来的亮度。Redflag 在柱面均匀抽一盏点光源估计这份亮度，路径就此结束。PBRT 的路径追踪器还可以在柱上继续选方向，经过更多表面，适合用来研究多次反弹。\href{https://github.com/NVIDIA-RTX/RTXDI/blob/main/Doc/RestirGI.md}{NVIDIA 的 GI 集成说明}\quad\href{https://pbr-book.org/4ed/Light_Transport_I_Surface_Reflection/A_Better_Path_Tracer}{PBRT 第四版 §13.4}
+
+% 接口与数据结构
+\begin{fields}
+\texttt{Reservoir.y, ny} & 世界空间二次交点及其法线；决定邻居重连时的方向、距离与背面剔除。\\
+\texttt{Reservoir.lo} & 二次点处估计的出射光，来自实际点光源和遮挡查询。\\
+\texttt{Render(ReSTIRGI)} & 读写两份历史蓄水池和一份当前帧候选。当前位置和法线来自公共可见表面数组。\\
+\end{fields}
+
+% 验证标准
+间接光参考平均了两组互相独立的 512 spp。独立 1 spp、独立 8 spp 和 ReSTIR GI 第八帧的 MSE 分别为 \measured{indirect-1spp-mse}、\measured{indirect-8spp-mse} 和 \measured{restir-gi-mse}。第八帧有 \measured{restir-gi-reused_fraction_visible}\% 的可见像素选中了历史或邻居的候选。这组固定相机读数检验的是不透明漫反射材质的一次反弹。动态蒙皮和更多次反弹还需要各自的参考图。

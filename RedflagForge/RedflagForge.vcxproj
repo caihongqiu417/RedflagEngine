@@ -78,8 +78,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RF_FORGE;RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;..\Redflag\vendor\yaml-cpp\include;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -98,8 +98,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RF_FORGE;RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;..\Redflag\vendor\yaml-cpp\include;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -121,8 +121,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RF_FORGE;RF_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\Redflag\src;..\Redflag\src\Redflag;..\Redflag\vendor\spdlog\include;..\Redflag\vendor\GLFW\include;..\Redflag\vendor\Glad\include;..\Redflag\vendor\imgui;..\Redflag\vendor\glm;..\Redflag\vendor\fmt\include;..\Redflag\vendor\entt\include;..\Redflag\vendor\ImGuizmo;..\Redflag\vendor\yaml-cpp\include;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -142,10 +142,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\ForgeLayer.h" />
+    <ClInclude Include="src\LightingPreview.h" />
+    <ClInclude Include="src\ProjectPanel.h" />
+    <ClInclude Include="src\VulkanForgeLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ForgeLayer.cpp" />
+    <ClCompile Include="src\LightingPreview.cpp" />
+    <ClCompile Include="src\ProjectPanel.cpp" />
     <ClCompile Include="src\RedflagForgeApp.cpp" />
+    <ClCompile Include="src\VulkanForgeLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Redflag\Redflag.vcxproj">

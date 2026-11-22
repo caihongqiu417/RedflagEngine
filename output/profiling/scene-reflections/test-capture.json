@@ -1,0 +1,37 @@
+{
+  "capture": "output/captures/local/scene-reflection-test-ideal/Mirror_capture.rdc",
+  "capture_sha256": "0a6c30fa29396956ff0bd049088b0c4523488659cf9e64aed899b924667030b8",
+  "tool": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "event": 9,
+  "groups": [
+    12,
+    12,
+    1
+  ],
+  "width": 96,
+  "height": 96,
+  "rgba32f_sha256": "c2566e5171b579a9e9b15ae940261d86735e0dd273cbc8032b35e7a7ae2546a3",
+  "same_as_live_readback": true,
+  "messages": [],
+  "stripes": {
+    "31": [
+      4.0,
+      0.47999998927116394,
+      0.14000000059604645,
+      1.0
+    ],
+    "48": [
+      0.8634423017501831,
+      0.10361307114362717,
+      0.030220480635762215,
+      1.0
+    ],
+    "14": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  }
+}

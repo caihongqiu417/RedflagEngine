@@ -1,0 +1,17 @@
+#version 450
+layout(local_size_x = 64) in;
+layout(std430, binding = 0) readonly buffer Direct { vec4 direct[]; };
+layout(std430, binding = 1) readonly buffer Indirect { vec4 indirect[]; };
+layout(std430, binding = 2) readonly buffer Occlusion { vec4 occlusion[]; };
+layout(std430, binding = 3) writeonly buffer Result { vec4 combined[]; };
+layout(push_constant) uniform Settings { uint pixels; uint hasIndirect; uint useAO; };
+
+// 墙角从周围收到的光较少。开启 GTAO 后按遮挡程度减弱这部分间接光，再加上点光源直接照过来的光。
+void main()
+{
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= pixels) return;
+    vec3 reflected = hasIndirect != 0 ? indirect[i].rgb : vec3(0);
+    if (useAO != 0) reflected *= occlusion[i].a;
+    combined[i] = vec4(direct[i].rgb + reflected, 1);
+}

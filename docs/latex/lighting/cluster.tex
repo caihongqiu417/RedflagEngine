@@ -1,0 +1,48 @@
+% 前置知识
+走廊近处和拱门后面各有一盏灯。若给每个像素都遍历场景里所有点光源，很多次计算都会得到零。LearnOpenGL 的延迟着色一章先算点光源的有效半径；把球形照明范围和相机的观察空间联系起来，就能在逐像素着色前先筛一次。这里先切 $16\times16$ 像素的小块，再把每块从近到远分为 16 段。每小段空间称为灯簇 \term{cluster}。
+
+% 公式推导
+相机看近处时，一米长的物体可能占满屏幕；放到远处就只占几个像素。按固定比率增加分段深度，近处自然得到更细的分段。若近端为 $n$、远端为 $f$、共 $K$ 段，要求 $n r^K=f$，解得 $r=(f/n)^{1/K}$。给定像素的相机深度 $z$，对深度比取对数就能找回它属于第几段。再检查哪盏灯的球与这段空间相交，把灯号写进表里。
+
+% 公式
+\[
+ z_k=n(f/n)^{k/K},\qquad
+ k=\operatorname{clamp}\!\left(\left\lfloor K\frac{\log(z/n)}{\log(f/n)}\right\rfloor,0,K-1\right).
+\]
+灯簇的八个角确定相机空间中的包围盒。将灯心 $l$ 的各坐标限制在盒子的范围，得到盒上最近点 $b$。若 $\|l-b\|^2\le R^2$，保留这盏灯。盒子包得稍大只会多留几盏，少留一盏则会让本该亮的地板变暗。
+\pair{screen-effects/clustered.png}{49 盏灯的纯漫反射教学对照}{screen-effects/cluster-candidates.png}{每个像素要检查的灯数，白色代表 49}
+\clearpage
+% 逐行伪代码
+\subsection{留下能照进这一簇的灯}
+\noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/ClusterCull.comp}{\texttt{ClusterCull.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+for cluster in tiles * depthSlices:
+    box = cameraSpaceBoxOfEightCorners(cluster)
+    for groupOf32Lights:
+        mask = 0
+        for light in groupOf32Lights:
+            if distance(light.center, box) <= light.range:
+                (*@{\footnotesize\color{quiet}第几个灯球碰到格子，就把整数里的第几位置为一。}@*)
+                mask |= 1 << light.localIndex
+        store(cluster, group, mask)
+for pixel in visibleSurfaces:
+    cluster = index(tileAt(pixel), sliceAt(viewDepth(pixel)))
+    for light in setBits(masks[cluster]):
+        if visible(pixel, light):
+            color += reflectedPointLight(pixel, light)
+\end{lstlisting}
+一个无符号整数用 32 个比特表示 32 盏灯；第 33 盏从第二个整数的最低位开始。查表时只遍历值为 1 的位。片段仍须算真实距离和余弦，筛选阶段只知道灯可能有贡献。
+
+$16\times16$ 是每个小块的像素尺寸。改成 $8\times8$ 时，同一画面大约需要四倍数量的灯表，但每块里可以少留一些无关的灯。当前对数分段参考深度从 0.05 到 250，两端的簇还包住更近和更远的表面。测试里的灯半径 4 是光照定义本身，CPU 逐灯对照和 GPU 必须使用同一个值。
+
+% 接口与数据结构
+\begin{fields}
+\texttt{GILight} & 灯心先变到相机坐标与包围盒比较。下面实际着色时仍可在世界坐标算光照。\\
+\texttt{Masks} & 一维无符号整数数组，长度为簇数乘 $\lceil\text{灯数}/32\rceil$，零灯也保留一个空字。\\
+\texttt{Intensity.w} & 每盏灯在世界坐标中的影响半径。从编辑器的点光源属性调整，灯簇先用它筛选，着色再用它算衰减。\\
+\end{fields}
+
+% 验证标准
+历史基准用纯漫反射，并关闭阴影来单独检查分簇。挑 49 盏灯是为了跨过一个整数能表示的 32 盏。测试使用相同半径和衰减公式在 CPU 端逐灯计算，比较每个像素的 RGB；把所有灯移除后，所有输出都应为零。使用 $161\times91$ 的画面还能验证右侧和底部的残缺小块。减少候选数量衡量筛选效率，能否减少整帧耗时还取决于建表成本。
+
+可见像素平均需检查 \measured{cluster_mean_candidates} 盏灯；与逐灯参考之间最大的 RGB 分量绝对误差为 \measured{cluster_max_absolute_rgb_error}。

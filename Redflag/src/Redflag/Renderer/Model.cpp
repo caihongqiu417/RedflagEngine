@@ -1,5 +1,8 @@
 #include "rfpch.h"
 #include "Model.h"
+#include "ModelNodes.h"
+#include "ModelImages.h"
+#include "ModelEmission.h"
 #include <assimp/pbrmaterial.h>
 
 #include <assimp/Importer.hpp>
@@ -20,12 +23,12 @@ namespace Redflag {
 		// importer 销毁时会释放 aiScene，下面递归复制顶点、材质和节点变换。
 		Assimp::Importer importer;
 
-		const aiScene* scene = importer.ReadFile(filepath,
-			aiProcess_Triangulate        |
-			aiProcess_GenSmoothNormals   |
-			aiProcess_CalcTangentSpace   |
-			aiProcess_FixInfacingNormals
-		);
+		std::string extension = std::filesystem::path(filepath).extension().string();
+		std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+		// glTF 缺少 NORMAL 时按面生成。跨过箱子的直角边平滑，会把平墙照出三角形。
+		const bool gltf = extension == ".gltf" || extension == ".glb";
+		const auto normalFlags = gltf ? aiProcess_GenNormals : (aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals);
+		const aiScene* scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_CalcTangentSpace | normalFlags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -40,43 +43,51 @@ namespace Redflag {
 		size_t lastSlash = filepath.find_last_of("/\\");
 		model->m_Directory = (lastSlash != std::string::npos) ? filepath.substr(0, lastSlash) : ".";
 
-		model->ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f));
+		EmbeddedTextures textures;
+		VisitModelMeshes(*scene, *scene->mRootNode, glm::mat4(1.0f), [&](aiMesh& mesh, const glm::mat4& transform) {
+			model->m_SubMeshes.push_back(model->ProcessMesh(&mesh, scene, transform, textures, gltf));
+			const auto& part = model->m_SubMeshes.back();
+			const auto& lo = part.MeshData->GetAABBMin();
+			const auto& hi = part.MeshData->GetAABBMax();
+			for (int i = 0; i < 8; ++i)
+			{
+				glm::vec3 p = transform * glm::vec4(i & 1 ? hi.x : lo.x, i & 2 ? hi.y : lo.y, i & 4 ? hi.z : lo.z, 1);
+				model->m_BoundsMin = glm::min(model->m_BoundsMin, p);
+				model->m_BoundsMax = glm::max(model->m_BoundsMax, p);
+			}
+		});
 		return model;
 	}
 
 	// ---- 节点与几何 ----
-	void Model::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform)
+	float Model::GetScreenHeight(const glm::mat4& modelToClip) const
 	{
-		// 按列传入 glm 构造函数，保留 Assimp 矩阵的数学含义，不反转节点变换。
-		const aiMatrix4x4& am = node->mTransformation;
-		glm::mat4 localMat(
-			am.a1, am.b1, am.c1, am.d1,
-			am.a2, am.b2, am.c2, am.d2,
-			am.a3, am.b3, am.c3, am.d3,
-			am.a4, am.b4, am.c4, am.d4
-		);
-
-		// 将本节点的局部变换与父节点累积变换相乘
-		glm::mat4 nodeTransform = parentTransform * localMat;
-
-		// 处理本节点的所有网格
-		for (uint32_t i = 0; i < node->mNumMeshes; i++)
+		float bottom = std::numeric_limits<float>::max(), top = -bottom;
+		for (int i = 0; i < 8; ++i)
 		{
-			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			m_SubMeshes.push_back(ProcessMesh(mesh, scene, nodeTransform));
+			const glm::vec4 p = modelToClip * glm::vec4(i & 1 ? m_BoundsMax.x : m_BoundsMin.x,
+				i & 2 ? m_BoundsMax.y : m_BoundsMin.y, i & 4 ? m_BoundsMax.z : m_BoundsMin.z, 1);
+			// 穿过近裁剪面时透视除法不能给出完整高度，按近景保留原网格。
+			if (p.w <= 0 || p.z < -p.w) return std::numeric_limits<float>::max();
+			const float y = p.y / p.w;
+			bottom = std::min(bottom, y);
+			top = std::max(top, y);
 		}
-
-		// 递归处理子节点，传入当前累积变换
-		for (uint32_t i = 0; i < node->mNumChildren; i++)
-			ProcessNode(node->mChildren[i], scene, nodeTransform);
+		return (top - bottom) * .5f;
 	}
 
-	SubMesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform)
+	SubMesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& nodeTransform, EmbeddedTextures& textures, bool gltf)
 	{
 		// 顶点保留网格局部坐标；节点变换单独存储，绘制时与实体变换组合。
 		std::vector<MeshVertex> vertices;
 		std::vector<uint32_t>   indices;
 
+		unsigned emissiveUV = 0;
+		if (scene->HasMaterials())
+			scene->mMaterials[mesh->mMaterialIndex]->Get(
+				AI_MATKEY_GLTF_TEXTURE_TEXCOORD(aiTextureType_EMISSIVE, 0), emissiveUV);
+		const auto* emissionCoords = emissiveUV && mesh->HasTextureCoords(emissiveUV)
+			? mesh->mTextureCoords[emissiveUV] : nullptr;
 		vertices.reserve(mesh->mNumVertices);
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++)
@@ -93,13 +104,13 @@ namespace Redflag {
 				? glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z)
 				: glm::vec3(0.0f, 1.0f, 0.0f);
 
-			// Assimp 支持最多 8 组 UV，只取第 0 组
 			vertex.TexCoord = mesh->mTextureCoords[0]
 				? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
 				: glm::vec2(0.0f);
+			if (emissionCoords)
+				vertex.EmissiveUVOffset = glm::vec2(emissionCoords[i].x, emissionCoords[i].y) - vertex.TexCoord;
 
-			// 切线向量（由 aiProcess_CalcTangentSpace 计算）
-			// 如果无 UV 导致 Assimp 无法计算，则回退到 (1,0,0)
+			// Assimp 根据贴图坐标计算切线。模型没有切线时，这里用网格的 X 轴方向。
 			vertex.Tangent = mesh->HasTangentsAndBitangents()
 				? glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z)
 				: glm::vec3(1.0f, 0.0f, 0.0f);
@@ -120,8 +131,7 @@ namespace Redflag {
 		subMesh.LocalTransform = nodeTransform;
 
 		// ---- 材质导入 ----
-		// 先读模型指定的材质，再补缺少的贴图。
-		if (mesh->mMaterialIndex >= 0)
+		if (scene->HasMaterials())
 		{
 			aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
 			auto mat = Ref<Material>(new Material());
@@ -131,71 +141,32 @@ namespace Redflag {
 			RF_CORE_INFO("[Model] Material '{0}' (mesh '{1}')", aiMatName.C_Str(), mesh->mName.C_Str());
 
 			// ---- 模型文件里指定的贴图 ----
-			mat->BaseColorMap = LoadMaterialTexture(aiMat, aiTextureType_DIFFUSE);
+			mat->BaseColorMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_DIFFUSE, textures);
+			mat->Emission = GetModelEmission(*aiMat);
+			mat->EmissiveMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_EMISSIVE, textures);
 
-			mat->NormalMap = LoadMaterialTexture(aiMat, aiTextureType_NORMALS);
+			mat->NormalMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_NORMALS, textures);
 			if (!mat->NormalMap)
 			{
-				// aiTextureType_NORMALS 未命中时打印 assimp 给的原始路径，便于排查
+				// 材质写了法线贴图却没加载成功时，在日志里保留模型文件给的路径。
 				if (aiMat->GetTextureCount(aiTextureType_NORMALS) > 0)
 				{
 					aiString p; aiMat->GetTexture(aiTextureType_NORMALS, 0, &p);
 					RF_CORE_WARN("[Model]   NORMALS slot path not resolved: '{0}'", p.C_Str());
 				}
-				mat->NormalMap = LoadMaterialTexture(aiMat, aiTextureType_HEIGHT);
+				mat->NormalMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_HEIGHT, textures);
 			}
 
-			mat->MetallicRoughnessMap = LoadMaterialTexture(aiMat, aiTextureType_UNKNOWN);
-			if (!mat->MetallicRoughnessMap)
-				mat->MetallicRoughnessMap = MergeMetallicRoughnessTextures(aiMat);
-
-			mat->AOMap = LoadMaterialTexture(aiMat, aiTextureType_LIGHTMAP);
+			mat->MetallicRoughnessMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_UNKNOWN, textures);
+			mat->AOMap = LoadMaterialTexture(*scene, aiMat, aiTextureType_LIGHTMAP, textures);
 
 			// 只读取材质显式声明的 OPACITY，不按文件名给共用材质套透明度掩膜。
-			Ref<Texture2D> opacityTex = LoadMaterialTexture(aiMat, aiTextureType_OPACITY);
+			Ref<Texture2D> opacityTex = LoadMaterialTexture(*scene, aiMat, aiTextureType_OPACITY, textures);
 			if (opacityTex)
 				mat->AlphaMap = opacityTex;
 
-			// ---- 按文件名补齐缺少的颜色、法线和材质贴图 ----
-			if (!mat->BaseColorMap)
-			{
-				std::string p = FindTextureBySuffix({ "_diff", "_basecolor", "_albedo", "_color" });
-				if (!p.empty())
-				{
-					RF_CORE_WARN("[Model]   BaseColor fallback-scan: {0}", p);
-					mat->BaseColorMap = Texture2D::Create(p);
-				}
-			}
-			if (!mat->NormalMap)
-			{
-				std::string p = FindTextureBySuffix({ "_nor_gl", "_nor", "_normal" });
-				if (!p.empty())
-				{
-					RF_CORE_WARN("[Model]   Normal fallback-scan: {0}", p);
-					mat->NormalMap = Texture2D::Create(p);
-				}
-			}
-			if (!mat->AOMap)
-			{
-				std::string p = FindTextureBySuffix({ "_ao", "_ambientocclusion", "_occlusion" });
-				if (!p.empty())
-				{
-					RF_CORE_WARN("[Model]   AO fallback-scan: {0}", p);
-					mat->AOMap = Texture2D::Create(p);
-				}
-			}
-			if (!mat->MetallicRoughnessMap)
-			{
-				// 分别找 metal / rough，合并为 MR 贴图
-				std::string metalPath = FindTextureBySuffix({ "_metal", "_metallic" });
-				std::string roughPath = FindTextureBySuffix({ "_rough", "_roughness" });
-				if (!metalPath.empty() || !roughPath.empty())
-				{
-					RF_CORE_WARN("[Model]   MR fallback-scan: metal='{0}' rough='{1}'",
-						metalPath, roughPath);
-					mat->MetallicRoughnessMap = MergeMetallicRoughnessFromPaths(metalPath, roughPath);
-				}
-			}
+			// glTF 的每个材质都指定自己的贴图。只有旧格式才按文件名补找。
+			if (!gltf) LoadLegacyMaps(*mat, aiMat);
 
 			// ---- 基础色、金属度与粗糙度 ----
 			aiColor4D baseColor;
@@ -208,9 +179,9 @@ namespace Redflag {
 				mat->BaseColor = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
 			}
 
-			// 有贴图但未提供因子时用 1，让贴图直接控制；显式的 0 和黑色必须保留。
-			mat->Metallic = mat->MetallicRoughnessMap ? 1.0f : 0.0f;
-			mat->Roughness = mat->MetallicRoughnessMap ? 1.0f : 0.5f;
+			// glTF 默认把金属度和粗糙度都乘以 1。材质写了 0 时，保留它给出的 0。
+			mat->Metallic = gltf || mat->MetallicRoughnessMap ? 1.0f : 0.0f;
+			mat->Roughness = gltf || mat->MetallicRoughnessMap ? 1.0f : 0.5f;
 			float metallic = 0.0f;
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallic) == AI_SUCCESS)
 				mat->Metallic = metallic;
@@ -219,8 +190,19 @@ namespace Redflag {
 			if (aiMat->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
 				mat->Roughness = roughness;
 
-			// 文件指定了透明度图，才按图上的明暗裁出孔洞。
-			if (mat->AlphaMap)
+			// 树叶贴图中 alpha 低于 AlphaCutoff 的部分留空。玻璃保留每个像素的透明度，稍后和背后的物体一起合成。
+			aiString alphaMode;
+			if (aiMat->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode) == AI_SUCCESS)
+			{
+				const std::string mode = alphaMode.C_Str();
+				if (mode == "MASK") mat->Alpha = AlphaMode::Mask;
+				if (mode == "BLEND") mat->Alpha = AlphaMode::Blend;
+				aiMat->Get(AI_MATKEY_GLTF_ALPHACUTOFF, mat->AlphaCutoff);
+				int twoSided = 0;
+				aiMat->Get(AI_MATKEY_TWOSIDED, twoSided);
+				mat->DoubleSided = twoSided != 0;
+			}
+			else if (mat->AlphaMap)
 			{
 				mat->Alpha = AlphaMode::Mask;
 				mat->AlphaCutoff = 0.5f;
@@ -238,8 +220,42 @@ namespace Redflag {
 	}
 
 	// ---- 贴图路径与加载 ----
-	Ref<Texture2D> Model::LoadMaterialTexture(aiMaterial* material, int textureType)
+	Ref<Texture2D> Model::LoadMaterialTexture(const aiScene& scene, aiMaterial* material, int textureType, EmbeddedTextures& textures)
 	{
+		aiString name;
+		if (material->GetTexture(static_cast<aiTextureType>(textureType), 0, &name) != AI_SUCCESS)
+			return nullptr;
+		if (const auto* embedded = FindModelImage(scene, name))
+		{
+			auto found = textures.find(embedded);
+			if (found != textures.end()) return found->second;
+			int w = embedded->mWidth, h = embedded->mHeight, channels;
+			std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> bytes(nullptr, stbi_image_free);
+			std::vector<glm::u8vec4> rgba;
+			if (h == 0)
+			{
+				// glTF 的 PNG/JPEG 在模型内。翻转行序，与独立文件贴图使用相同的 UV。
+				stbi_set_flip_vertically_on_load(1);
+				bytes.reset(stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(embedded->pcData),
+					embedded->mWidth, &w, &h, &channels, STBI_rgb_alpha));
+				if (!bytes) return nullptr;
+			}
+			else
+			{
+				rgba.resize(size_t(w) * h);
+				for (int y = 0; y < h; ++y)
+					for (int x = 0; x < w; ++x)
+					{
+						const aiTexel& c = embedded->pcData[(h - y - 1) * w + x];
+						rgba[y*w+x] = {c.r, c.g, c.b, c.a};
+					}
+			}
+			auto texture = Texture2D::Create(w, h);
+			texture->SetData(bytes ? static_cast<void*>(bytes.get()) : rgba.data(), uint32_t(size_t(w) * h * 4));
+			textures.emplace(embedded, texture);
+			return texture;
+		}
+
 		std::string fullPath = ResolveTexturePath(material, textureType);
 		if (fullPath.empty())
 			return nullptr;
@@ -247,7 +263,7 @@ namespace Redflag {
 		auto tex = Texture2D::Create(fullPath);
 
 		// EXR 加载失败（如 DWAA 压缩不支持），尝试同名 PNG
-		if (tex && tex->GetRendererID() == 0)
+		if (tex && !tex->IsLoaded())
 		{
 			size_t dotPos = fullPath.rfind('.');
 			if (dotPos != std::string::npos)
@@ -261,7 +277,7 @@ namespace Redflag {
 					{
 						RF_CORE_WARN("[Model] EXR unsupported compression, fallback PNG: {0}", pngPath);
 						auto fallback = Texture2D::Create(pngPath);
-						if (fallback && fallback->GetRendererID() != 0)
+						if (fallback && fallback->IsLoaded())
 							return fallback;
 					}
 				}
@@ -282,7 +298,7 @@ namespace Redflag {
 		if (material->GetTexture(type, 0, &texPath) != AI_SUCCESS)
 			return "";
 
-		// 嵌入式纹理（路径以 '*' 开头）暂不支持
+		// 内嵌图像直接从模型读取，这里只解析文件路径。
 		if (texPath.data[0] == '*')
 			return "";
 
@@ -340,6 +356,52 @@ namespace Redflag {
 		return fullPath;
 	}
 
+	void Model::LoadLegacyMaps(Material& material, aiMaterial* imported)
+	{
+		if (!material.MetallicRoughnessMap)
+			material.MetallicRoughnessMap = MergeMetallicRoughnessTextures(imported);
+
+		if (!material.BaseColorMap)
+		{
+			std::string p = FindTextureBySuffix({ "_diff", "_basecolor", "_albedo", "_color" });
+			if (!p.empty())
+			{
+				RF_CORE_WARN("[Model]   BaseColor fallback-scan: {0}", p);
+				material.BaseColorMap = Texture2D::Create(p);
+			}
+		}
+		if (!material.NormalMap)
+		{
+			std::string p = FindTextureBySuffix({ "_nor_gl", "_nor", "_normal" });
+			if (!p.empty())
+			{
+				RF_CORE_WARN("[Model]   Normal fallback-scan: {0}", p);
+				material.NormalMap = Texture2D::Create(p);
+			}
+		}
+		if (!material.AOMap)
+		{
+			std::string p = FindTextureBySuffix({ "_ao", "_ambientocclusion", "_occlusion" });
+			if (!p.empty())
+			{
+				RF_CORE_WARN("[Model]   AO fallback-scan: {0}", p);
+				material.AOMap = Texture2D::Create(p);
+			}
+		}
+		if (!material.MetallicRoughnessMap)
+		{
+			// 分别找 metal / rough，合并为 MR 贴图
+			std::string metalPath = FindTextureBySuffix({ "_metal", "_metallic" });
+			std::string roughPath = FindTextureBySuffix({ "_rough", "_roughness" });
+			if (!metalPath.empty() || !roughPath.empty())
+			{
+				RF_CORE_WARN("[Model]   MR fallback-scan: metal='{0}' rough='{1}'",
+					metalPath, roughPath);
+				material.MetallicRoughnessMap = MergeMetallicRoughnessFromPaths(metalPath, roughPath);
+			}
+		}
+	}
+
 	// 模型没写明贴图路径时，从模型目录和 textures 子目录按名称查找，例如用 _rough 找粗糙度图。
 	std::string Model::FindTextureBySuffix(const std::vector<std::string>& suffixes) const
 	{
@@ -366,7 +428,7 @@ namespace Redflag {
 			return s;
 		};
 
-		// 按优先扩展名顺序遍历，命中即返回
+		// 按列表里的格式顺序找贴图，找到第一张文件名匹配的就返回。
 		for (const auto& ext : kPreferredExts)
 		{
 			for (const auto& dir : searchDirs)
@@ -385,22 +447,6 @@ namespace Redflag {
 						if (stem.find(lowSuf) != std::string::npos)
 							return entry.path().string();
 					}
-				}
-			}
-		}
-
-		// 未命中：打印扫描目录里所有图像文件，帮助排查命名不匹配
-		RF_CORE_WARN("[Model] FindTextureBySuffix: no match for suffixes in dir '{0}'", m_Directory);
-		for (const auto& dir : searchDirs)
-		{
-			for (const auto& entry : fs::directory_iterator(dir))
-			{
-				if (!entry.is_regular_file()) continue;
-				std::string ext = toLower(entry.path().extension().string());
-				if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
-					ext == ".tga" || ext == ".bmp" || ext == ".exr")
-				{
-					RF_CORE_WARN("[Model]   found image: {0}", entry.path().filename().string());
 				}
 			}
 		}

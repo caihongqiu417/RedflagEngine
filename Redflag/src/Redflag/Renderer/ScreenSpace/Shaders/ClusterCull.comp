@@ -1,0 +1,51 @@
+#version 450
+#include "Screen.glsl"
+#include "Cluster.glsl"
+layout(local_size_x = 64) in;
+layout(std430, binding = 2) readonly buffer Lamps
+{
+    ScreenLight lights[];
+};
+layout(std430, binding = 3) writeonly buffer Lists
+{
+    uint masks[];
+};
+
+void main()
+{
+    uint entry = gl_GlobalInvocationID.x, cluster = entry / words();
+    if (cluster >= tiles().x * tiles().y * slices)
+        return;
+    uint k = cluster / (tiles().x * tiles().y);
+    uvec2 cell = uvec2(cluster % tiles().x, (cluster / tiles().x) % tiles().y);
+
+    // 把小块的四角投回相机空间。在近、远两个截面上各取四点，包住整个灯簇。
+    vec3 lo = vec3(1e30), hi = -lo;
+    float front = k == 0u ? 0. : sliceDepth(k);
+    float back = k + 1u == slices ? 1e15 : sliceDepth(k + 1u);
+    for (uint corner = 0; corner < 4; ++corner)
+    {
+        vec2 pixel = vec2(min((cell + uvec2(corner & 1u, corner >> 1)) * tile, extent.xy));
+        vec2 ndc = (pixel / vec2(extent.xy) * 2. - 1.) * vec2(1, -1);
+        // 在同一角点取近处和稍远处两点来确定射线。正交镜头的四条射线平行，各自穿过不同的角点。
+        vec4 nearClip = inverseProjection * vec4(ndc, -1, 1);
+        vec4 midClip = inverseProjection * vec4(ndc, 0, 1);
+        vec3 origin = nearClip.xyz / nearClip.w;
+        vec3 direction = midClip.xyz / midClip.w - origin;
+        vec3 perDepth = direction / -direction.z;
+        vec3 a = origin + perDepth * (front + origin.z);
+        vec3 b = origin + perDepth * (back + origin.z);
+        lo = min(lo, min(a, b));
+        hi = max(hi, max(a, b));
+    }
+    uint bits = 0u, first = (entry % words()) * 32u;
+    for (uint j = 0; j < 32u && first + j < extent.w; ++j)
+    {
+        vec3 center = (view * vec4(lights[first + j].position.xyz, 1)).xyz;
+        vec3 delta = center - clamp(center, lo, hi);
+        float radius = depthRange.z > 0. ? temporal.z : lights[first + j].intensity.w;
+        if (radius <= 0. || dot(delta, delta) <= radius * radius)
+            bits |= 1u << j;
+    }
+    masks[entry] = bits;
+}

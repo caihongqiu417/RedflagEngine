@@ -1,0 +1,139 @@
+{
+  "model": "Khronos glTF Sample Assets / Sponza",
+  "model_revision": "e124e8d8d7330a5372bc2b4d00d39a4a9d7997ea",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "width": 160,
+  "height": 90,
+  "camera": {
+    "eye": [
+      -5.5,
+      -2.2,
+      0
+    ],
+    "target": [
+      6,
+      -1.8,
+      0
+    ],
+    "vertical_fov_degrees": 65
+  },
+  "visible_pixels": 14256,
+  "point_lights": 16,
+  "seeds": [
+    137,
+    293,
+    587,
+    811
+  ],
+  "direct_reference": "exhaustive discrete light sum",
+  "indirect_reference": {
+    "samples": 1024,
+    "seeds": [
+      5801,
+      9631
+    ],
+    "estimated_mse_floor": 1.0792743735836617e-05
+  },
+  "reference_mean_rgb": {
+    "direct": 0.11139603740093151,
+    "indirect": 0.011097582056171252
+  },
+  "ddgi": {
+    "probe_grid": [
+      12,
+      6,
+      7
+    ],
+    "directions_per_probe": 6,
+    "rays_per_direction_per_frame": 16
+  },
+  "reservoirs": {
+    "fresh_candidates_per_frame": 1,
+    "temporal": true,
+    "spatial_neighbors": 4,
+    "history_count_cap": 16
+  },
+  "display_exposures": {
+    "direct": 4,
+    "indirect": 20
+  },
+  "results": [
+    {
+      "method": "direct-1spp",
+      "mse": 0.16608818322980712,
+      "mean_rgb": 0.10873441613296105,
+      "reused_fraction_visible": 0.0,
+      "reused_fraction_positive": 0.0,
+      "positive_fraction_visible": 0.40128717732884395,
+      "frames": 1.0,
+      "samples": 1.0,
+      "dispatch_and_wait_ms_per_frame": 2.489525
+    },
+    {
+      "method": "direct-8spp",
+      "mse": 0.02152065602866311,
+      "mean_rgb": 0.11018895106494234,
+      "reused_fraction_visible": 0.0,
+      "reused_fraction_positive": 0.0,
+      "positive_fraction_visible": 0.8889239618406286,
+      "frames": 1.0,
+      "samples": 8.0,
+      "dispatch_and_wait_ms_per_frame": 13.07045
+    },
+    {
+      "method": "restir-di",
+      "mse": 0.01131754242521296,
+      "mean_rgb": 0.11225792903555554,
+      "reused_fraction_visible": 0.9099326599326599,
+      "reused_fraction_positive": 0.9468092029102634,
+      "positive_fraction_visible": 0.9610514870931538,
+      "frames": 8.0,
+      "samples": 1.0,
+      "dispatch_and_wait_ms_per_frame": 9.117574999999999
+    },
+    {
+      "method": "indirect-1spp",
+      "mse": 0.02237896734046726,
+      "mean_rgb": 0.011477140943656632,
+      "reused_fraction_visible": 0.0,
+      "reused_fraction_positive": 0.0,
+      "positive_fraction_visible": 0.37545594837261503,
+      "frames": 1.0,
+      "samples": 1.0,
+      "dispatch_and_wait_ms_per_frame": 9.5365
+    },
+    {
+      "method": "indirect-8spp",
+      "mse": 0.0018101838897534137,
+      "mean_rgb": 0.011152468922725237,
+      "reused_fraction_visible": 0.0,
+      "reused_fraction_positive": 0.0,
+      "positive_fraction_visible": 0.9197881593714926,
+      "frames": 1.0,
+      "samples": 8.0,
+      "dispatch_and_wait_ms_per_frame": 86.831275
+    },
+    {
+      "method": "ddgi",
+      "mse": 4.102484848025232e-05,
+      "mean_rgb": 0.009043531273433627,
+      "reused_fraction_visible": 0.0,
+      "reused_fraction_positive": 0.0,
+      "positive_fraction_visible": 1.0,
+      "frames": 8.0,
+      "samples": 16.0,
+      "dispatch_and_wait_ms_per_frame": 30.026843749999998
+    },
+    {
+      "method": "restir-gi",
+      "mse": 0.00036780450269614676,
+      "mean_rgb": 0.010169706837638102,
+      "reused_fraction_visible": 0.9159652076318743,
+      "reused_fraction_positive": 0.9361933787824799,
+      "positive_fraction_visible": 0.978395061728395,
+      "frames": 8.0,
+      "samples": 1.0,
+      "dispatch_and_wait_ms_per_frame": 23.6433125
+    }
+  ]
+}

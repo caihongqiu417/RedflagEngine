@@ -43,7 +43,7 @@ namespace Redflag {
 		ScriptFieldType Type = ScriptFieldType::None;
 		MonoClassField* ClassField = nullptr;
 
-		// C# 字段的默认值（即代码里 = xxx 的初始化结果），编辑器面板未命中缓存时回退显示
+		// 如果还没有给这个实体的字段保存过值，属性面板就显示 C# 脚本里的初始值。
 		std::vector<uint8_t> DefaultValue;
 	};
 
@@ -98,8 +98,7 @@ namespace Redflag {
 	class ScriptEngine
 	{
 	public:
-		// 编辑器模式下每个实体的脚本字段值缓存：字段名 → 原始字节序列
-		// 进入 Play 时会被复制到真正的 ScriptInstance，实现"编辑器里设置默认值"
+		// 属性面板按字段名保存你给这个实体填的值。点击播放后，引擎把这些值写进新建的 C# 脚本对象。
 		using EntityScriptFieldMap = std::unordered_map<std::string, std::vector<uint8_t>>;
 
 		static void Init();
@@ -126,7 +125,7 @@ namespace Redflag {
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityUUID);
 		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
 
-		// 获取实体的字段缓存引用（不存在则返回空 map），编辑器面板读写都通过这里
+		// 属性面板通过这张表读写脚本字段。第一次访问某个实体时，会为它建一张空表。
 		static EntityScriptFieldMap& GetScriptFieldCache(UUID entityUUID);
 
 	private:

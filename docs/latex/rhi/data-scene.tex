@@ -1,0 +1,41 @@
+\clearpage
+\section{场景组件、相机与可见性}\label{sec:data-scene}
+给编辑器里的实体加上模型组件，就能把模型放到这个实体所在的位置。场景用 EnTT 按组件组织数据。一条查询选出同时具备变换和模型组件的实体。组件里若只有资源编号，渲染器会先找回对应的模型。给同一实体再加一盏灯，它也会出现在灯光查询里，场景无需另外维护一份灯的名单。
+
+\codewhere{源码}{Redflag/src/Redflag/Renderer/SceneRenderer.cpp}{ForEachMesh}
+\begin{lstlisting}
+(*@\rhicomment{// 多个实体引用同一模型时，只有第一次需要读取文件。}@*)
+if (!component.ModelAsset && component.ModelID)
+    component.ModelAsset = AssetManager::Load<Model>(component.ModelID);
+if (!component.ModelAsset)
+    return;
+\end{lstlisting}
+
+返回的模型留在组件里，下帧可直接使用。按编号找文件的过程见第~\pageref{sec:data-assets}~页。单个网格走另一次查询，取出 \code{MeshRendererComponent} 交给 \code{DrawMesh}。因此是否使用覆盖材质、提交哪个实体编号，都能在场景和渲染器之间说清楚。图形后端接到绘制请求时，已经有选好的网格。
+
+\subsection{相机如何参与筛选}
+编辑模式下，\code{Scene::OnUpdateEditor} 直接把编辑器相机交给场景渲染器。运行场景时，\code{OnUpdateRuntime} 改为从相机组件查找主相机，再将投影和相机的世界变换传给 \code{RenderRuntime}。相机变换的逆矩阵把世界里的点换到相机视角。移动游戏里的主相机，会改变运行画面，编辑器仍可从自己的位置看它。
+
+相机视野有六个面。\code{Frustum} 用固定六项的数组，每项保存平面的法线和常数；网格只保存局部包围盒的最小、最大坐标。提交网格时，CPU 用物体变换算出世界空间的包围盒，再调用 \code{IntersectsAABB} 检查。整个盒子落在任一平面外，就在绘制记录上标记它对主相机不可见。阴影从灯光的位置看，记录还要留给阴影绘制使用。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Scene/Scene.cpp\#L320-L341}{运行时选择相机}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L887-L919}{两种组件查询}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Frustum.h}{六个平面与包围盒}}
+
+\clearpage
+\section{粒子池与绘制记录}\label{sec:data-observe}
+一团火花里有些粒子刚出生，有些已经快消失。发射器用一份 \code{ParticleProps} 描述下一颗粒子的出生位置、速度、首尾颜色、大小和寿命。调用 \code{Emit(props)} 时，粒子系统从预先分配的数组取出一项，把这些值写进去，并记下这颗粒子的剩余寿命。发射器随后调整颜色，只会影响之后发出的火花。
+
+\subsection{同一份空间循环使用}
+\code{ParticleSystem} 用一个 \code{vector<Particle>} 存粒子，再用下标记住下一颗写在哪里。下标到末尾就回到开头。每次发射都能直接找到要写的那项，代价是写满一圈时可能覆盖仍在发光的较早粒子。当前构造函数给数组分配的项数是传入上限减一。若把上限写成 101，实际可循环使用的是 100 项。
+
+\code{OnUpdate} 更新活动粒子的位置和剩余寿命。运行时绘制调用 \code{RenderBatch()}，按剩余寿命算出当前颜色与大小，将仍可见的粒子交给已经开始的 2D 批次。一个粒子从出生到消失要经过很多帧；同一颗粒子写进 2D 顶点数组的四个角只供当前批次绘制。这也说明了为什么要保留两份数组。
+
+\subsection{怎样查这一帧画了多少次}
+编辑器的性能面板读取两种数据。\code{GetStats()} 按值返回计数，例如 2D 四边形数、3D 主画面收下的网格数与绘制次数。要追查某一次绘制，再调用 \code{Renderer3D::GetDrawCallLog()}，取得按记录顺序排列的数组。每项 \code{DrawCallInfo} 写明属于哪个阶段、用了几个索引，还可以记下实体编号、材质和网格。绘制一批实例时，这条记录只列出批次里的代表实体。
+
+连续几帧看面板就能看到这两种结构的用途。总数适合快速比较，顺序记录能指出一次额外的绘制来自阴影还是主画面。下一次 \code{BeginScene} 会清掉旧记录，日志里的网格地址只在调试当次绘制时有意义。GPU 花了多长时间需要另行测量，次数本身给不出耗时。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/ParticleSystem/ParticleSystem.cpp}{粒子更新与循环写入}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.h\#L22-L47}{绘制记录字段}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/src/ForgeLayer.cpp\#L595-L680}{编辑器读取统计}}

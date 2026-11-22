@@ -143,7 +143,7 @@ namespace Redflag {
 		float Density = 1.f;
 		float Friction = 0.5f;
 		float Restitution = 0.f;
-		float RestitutionThreshold = 0.5f; //只有当两物体 相对碰撞速度 > 0.5 米/秒 时，才启用上面设置的弹性计算。
+		float RestitutionThreshold = 0.5f; //碰撞时取两个物体设置中较小的值。沿接触面法线靠近得比它快，才计算反弹（米/秒）。
 
 		//存储Box2D信息
 		void* RuntimeFixture = nullptr;
@@ -162,19 +162,19 @@ namespace Redflag {
 		// 碰撞圆的半径（局部空间，默认 0.5）
 		float Radius = 0.5f;
 
-		// 密度（kg/m²），影响刚体的质量；设为 0 时视为传感器（无质量）
+		// 密度（kg/m²）。设为 0 时，这个圆仍能碰撞，但它的面积不再计入刚体质量。
 		float Density = 1.f;
 
-		// 摩擦系数 [0, 1]，0 = 完全光滑，1 = 最大摩擦
+		// 沿接触面滑动时的摩擦系数。编辑器可调 0 到 1，设为 0 时可以自由滑动。
 		float Friction = 0.5f;
 
 		// 恢复系数（弹性）[0, 1]，0 = 完全非弹性碰撞，1 = 完全弹性碰撞
 		float Restitution = 0.f;
 
-		// 恢复生效的最低碰撞速度阈值（m/s）；低于此速度时不应用弹性，避免微小抖动
+		// 两个碰撞体取各自设置中较小的值。沿接触面法线相互靠近的速度超过它时，Box2D 才计算反弹（米/秒）。
 		float RestitutionThreshold = 0.5f;
 
-		// 运行时由 Box2D 填充的 b2Fixture* 指针，序列化时忽略
+		// 碰撞形状由 Box2D 刚体持有。当前创建形状时，这个指针保持为空。
 		void* RuntimeFixture = nullptr;
 
 		CircleCollider2DComponent() = default;
@@ -187,10 +187,18 @@ namespace Redflag {
 		Ref<Mesh>      MeshData;
 		glm::vec4      Color = glm::vec4(1.0f);
 		Ref<Texture2D> Texture;
-		Ref<Material>  Mat;   // PBR 材质（若非空则优先使用，否则回退到 Color/Texture）
+		Ref<Material>  Mat;   // 指定材质时用它绘制，否则使用上面的颜色和贴图。
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
+	};
+
+	struct ModelLOD
+	{
+		AssetID ModelID = 0;
+		std::string FilePath;
+		float ScreenHeight = .25f; // 0.25 表示模型大约占场景画面高度的四分之一时用这一档。
+		Ref<Model> ModelAsset;
 	};
 
 	// 3D 模型渲染组件（通过 Assimp 从文件加载，支持多子网格）
@@ -202,25 +210,21 @@ namespace Redflag {
 
 		glm::vec4    Color = glm::vec4(1.0f); // 无贴图时的备用颜色
 		std::vector<Ref<Material>> OverrideMaterials; // per-submesh 覆盖材质（可选）
+		std::vector<ModelLOD> LODs; // LOD 0 用原模型，下面依次保存由近到远的简化模型。
+		size_t ActiveLOD = 0;
 
 		ModelRendererComponent() = default;
 		ModelRendererComponent(const ModelRendererComponent&) = default;
 	};
 
 	// ----------
-	// 方向光组件 — 模拟无限远的平行光源（太阳光）
-	//
-	// Direction 是光线射出的方向（世界空间），shader 中通常取反
-	// 得到「从表面指向光源」的向量用于 NdotL 计算。
-	//
-	// CastShadow 标记该灯是否参与 Shadow Map 生成，
-	// 阶段 5 实现 Shadow Pass 时会读取这个标志。
+	// 方向光的光线彼此平行。Direction 指向光照过去的方向，计算表面迎光的角度时取反。
 	// ----------
 	struct DirectionalLightComponent
 	{
 		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f }; // 默认从正上方往下照
 		glm::vec3 Color     = { 1.0f, 1.0f, 1.0f };  // 白光
-		float     Intensity = 1.0f;                    // 辐照度缩放因子
+		float     Intensity = 1.0f;                    // 灯光亮度的倍数
 		bool      CastShadow = true;                   // 是否投射阴影
 
 		DirectionalLightComponent() = default;
@@ -228,22 +232,14 @@ namespace Redflag {
 	};
 
 	// ----------
-	// 点光源组件 — 从一个点向四周均匀辐射
-	//
-	// 位置由实体的 TransformComponent 决定，这里不重复存储。
-	// Radius 是光照影响范围，超出此距离的片元跳过该灯的计算
-	// （衰减降为零），这是性能优化的关键参数。
-	//
-	// 衰减公式（后续 shader 中使用）：
-	//   attenuation = clamp(1.0 - (distance / Radius)^2, 0, 1)^2
-	// 这是 UE4 风格的平滑衰减，避免硬截断。
+	// 点光源从实体所在的位置向四周照。设定照明半径后，表面越接近半径边缘，收到的灯光就越弱。
 	// ----------
 	struct PointLightComponent
 	{
 		glm::vec3 Color     = { 1.0f, 1.0f, 1.0f };
 		float     Intensity = 1.0f;
 		float     Radius    = 10.0f;  // 影响半径（世界空间单位）
-		bool      CastShadow = false;  // 点光阴影（立方体 Shadow Map），默认关闭因为开销较大
+		bool      CastShadow = false;  // 随场景保存。当前点光源着色器没有按此开关计算阴影。
 
 		PointLightComponent() = default;
 		PointLightComponent(const PointLightComponent&) = default;

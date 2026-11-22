@@ -1,0 +1,33 @@
+\clearpage
+\section{没有点光源时，灯牌照不到墙}
+
+把一块灯牌和一面白墙放在同一个场景，灯牌的正面朝墙。相机只看墙，所有点光源都关掉。原代码会得到全黑的画面。测试先确认相机看见的 289 个像素全部落在墙上，接着检查从墙面发出的第二条射线。它使用场景里全部模型建的树，能打到镜头外的灯牌，却带不回它发出的光。
+
+\loc{Redflag/src/Redflag/Renderer/GI/Shaders/GI.comp}
+\begin{Code}
+// 旧 GLSL。没有点光源时，连寻找反射点的那条射线都不会发出。
+if (imageSize.z == 0u) return r;
+// 旧 GLSL。就算打到会发光的表面，也只去寻找点光源。
+r.lo = vec4(incomingAt(y), 0);
+\end{Code}
+
+修正后，导入器读取发光颜色与强度。二次射线打到灯牌时，按击中位置的 UV 找到对应纹素，解码 sRGB 后乘发光颜色。原来照着这一点的点光源也要算进去。复制一份相同的白墙和灯牌，只翻转灯牌，让背面对着墙；单面材质的墙应当变黑，双面材质则应重新照亮它。第一次运行时，两块墙都是黑的。查 Assimp 存下的材质属性，才找到了第二个错误。
+
+\loc{Redflag/vendor/assimp/code/glTF2Importer.cpp}
+\begin{Code}
+// 原 C++。doubleSided 只有一个字节，下游却按 int 读取。
+aimat->AddProperty(&mat.doubleSided, 1, AI_MATKEY_TWOSIDED);
+// 修正后用 int 写属性，模型绘制和 GI 都能按 Assimp 的约定读到 1。
+const int twoSided = mat.doubleSided ? 1 : 0;
+aimat->AddProperty(&twoSided, 1, AI_MATKEY_TWOSIDED);
+\end{Code}
+
+这份模型的底色坐标始终指向同一个纹素。发光图用另一组 UV，左边红、右边暗绿，因此误用底色坐标会把整块灯牌画成红色。用 2,048 条射线估算每个墙面像素，整面墙的红色均值为 0.215356，绿色为 0.014110。另用 CPU 按灯牌面积积分，分别是 0.215215 与 0.014061。单面翻转后两者都变成零；改双面后红色恢复至 0.134443。翻转使暗绿一端离画面更近，所以双面的读数与原机位有所不同。
+
+把发光因子设为黑色，墙面归零。另一次保留因子，换成纯蓝贴图；因子中的蓝色分量为零，墙也完全变黑，把旧探针加载到新场景会失败。再换成与内嵌图相同的两道纹素，289 个像素的结果都与原图相同。直接移除贴图时，灯牌改为均匀发光，墙面绿色与红色的比例是 $0.5$，与材质中的绿、红因子之比相等。
+
+保持场景不动、关掉程序再打开，读回之前烘焙的 289 个 HDR 像素，四个浮点分量完全相同。当时还用两只不发光的盒子单独检查自发光改动：添加发光材质前后分别烘焙，新旧文件逐字节相同。下页的射线求交改动则改变了探针文件的校验值，用新版本打开这些场景时需要重新烘焙。
+
+从仓库根目录运行 \path{tests/run_gi_benchmark.cmd --emission}，然后用 \texttt{--load-emission} 重新启动测试。RenderDoc 事件 8 选反射点，事件 20 与此前的样本合并。实时探针在大墙上留下的深浅变化，以及加密采样后读数怎样变化，见《实时光照与采样》末章。\href{run:../../tests/EmissiveGICheck.h}{CPU 与 Vulkan 回归}\quad\href{run:../profiling/emissive-gi/renderdoc.json}{原帧与读数}
+
+\input{triangle-edge}

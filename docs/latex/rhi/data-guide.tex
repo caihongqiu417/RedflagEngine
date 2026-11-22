@@ -1,0 +1,17 @@
+\clearpage
+\section{数据结构与接口}\label{sec:data-guide}
+把模型放进场景后，编辑器会陆续用到三份寿命不同的数据。场景文件要一直记得模型的编号。打开场景后，多个物体可以共用已加载的网格和贴图。等到真的要画其中一个物体时，渲染器还要为这一次绘制留下它的位置和拾取编号。即使都在说同一个模型，这三份数据也各有合适的存法。
+
+\noindent\begin{tabularx}{\linewidth}{@{}L{41mm}Y r@{}}
+\toprule
+要做什么 & 会用到的数据和接口 & 页码\\\midrule
+加载与编辑资源 & 模型编号和缓存、部件材质、顶点与索引、贴图坐标、按名称取着色器 & \pageref{sec:data-assets}--\pageref{sec:data-atlas}\\
+从场景选出物体 & 组件查询、编辑器相机和主相机、包围盒与视野检查 & \pageref{sec:data-scene}\\
+绘制粒子与查看记录 & 粒子池、批次入口、统计值与逐次绘制记录 & \pageref{sec:data-observe}\\
+绘制 2D、3D 和光照 & 顶点批次、贴图数组、实例数据、光照和效果用图、材质字段的排列 & \pageref{sec:data-renderer}--\pageref{sec:data-material}\\
+创建显卡资源 & 缓冲区与纹理的规格、上传范围、着色器与材质、每组绘制要读写的图 & \pageref{sec:data-device}--\pageref{sec:data-targets}\\
+提交、显示与拾取 & 工作帧、完成编号、窗口图像、面板输出与鼠标读回的编号 & \pageref{sec:data-frame}--\pageref{sec:data-pick}\\
+\bottomrule
+\end{tabularx}
+
+前四项可以对照现有 OpenGL 源码。后两项是接入 Vulkan 时的设计。比如要给编辑器加一个显示法线的视图，可先看第~\pageref{sec:data-effects}~页的深度预写怎样产生法线图，再看第~\pageref{sec:data-targets}~页的绘制接口怎样声明读取它，最后看第~\pageref{sec:data-pick}~页的面板怎样持有输出图。

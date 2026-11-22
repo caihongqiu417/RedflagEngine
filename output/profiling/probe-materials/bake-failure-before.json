@@ -1,0 +1,14 @@
+{
+  "command": "tests/run_gi_benchmark.cmd --bake-failure",
+  "binary_sha256": "a14fbb1fa627ae7273c116457cbdab15ffac141cde8c6e8e4aa2eb97e9e94d78",
+  "exit_code": 1,
+  "output": [
+    "[08:51:44] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)",
+    "[08:51:44] REDFLAG : Vulkan device: NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "feedback=0 baked=0 changed_bytes=19518 same_buffer=0",
+    "feedback=0 baked=1 changed_bytes=0 same_buffer=0",
+    "feedback=1 baked=0 changed_bytes=55541 same_buffer=1",
+    "feedback=1 baked=1 changed_bytes=0 same_buffer=1",
+    "Failed bake changed the probes used to light the scene"
+  ]
+}

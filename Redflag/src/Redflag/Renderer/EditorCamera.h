@@ -15,6 +15,8 @@ namespace Redflag {
 		EditorCamera() = default;
 		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);
 
+		void LookAt(const glm::vec3& eye, const glm::vec3& target);
+
 		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
 
@@ -59,6 +61,7 @@ namespace Redflag {
 		glm::vec3 m_FocalPoint = { 0.0f, 0.0f, 0.0f };
 
 		glm::vec2 m_InitialMousePosition = { 0.0f, 0.0f };
+		bool m_AltPressed = false;
 
 		float m_Distance = 10.0f;
 		float m_Pitch = 0.0f, m_Yaw = 0.0f;

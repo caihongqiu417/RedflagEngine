@@ -1,0 +1,28 @@
+	apiVersion        = 1.4.351 (4211039)
+	deviceName        = NVIDIA GeForce RTX 5070 Ti Laptop GPU
+	driverName                                           = NVIDIA
+	driverInfo                                           = 616.56
+	memoryHeaps[0]:
+		size   = 12524191744 (0x2ea800000) (11.66 GiB)
+			MEMORY_HEAP_DEVICE_LOCAL_BIT
+	memoryHeaps[1]:
+		size   = 17071091712 (0x3f9843000) (15.90 GiB)
+	memoryTypes[0]:
+		heapIndex     = 1
+	memoryTypes[1]:
+		heapIndex     = 0
+			MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	memoryTypes[2]:
+		heapIndex     = 1
+			MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			MEMORY_PROPERTY_HOST_COHERENT_BIT
+	memoryTypes[3]:
+		heapIndex     = 1
+			MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			MEMORY_PROPERTY_HOST_COHERENT_BIT
+			MEMORY_PROPERTY_HOST_CACHED_BIT
+	memoryTypes[4]:
+		heapIndex     = 0
+			MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			MEMORY_PROPERTY_HOST_COHERENT_BIT

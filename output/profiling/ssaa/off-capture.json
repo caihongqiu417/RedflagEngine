@@ -1,0 +1,25 @@
+{
+  "executable_sha256": "36443f26f669eb5fdbc09a6084772eddac7e37a26e38c263f51a7f1048ce0a53",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "validation_layer": true,
+  "frame": "output/captures/local/Sponza-SSAA-36443f26f669-off/studio_frame24.rdc",
+  "frame_sha256": "864f5172fe47d9748ae8cb9578097861e794d4c596d8565f3b03a243727cebba",
+  "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+  "settings": {
+    "Shading": "Lit",
+    "Direct": "Clustered lights",
+    "Indirect": "DDGI",
+    "GTAO": true,
+    "TAA": true,
+    "SSR": true,
+    "VolumetricFog": true,
+    "FogDensity": 0.06,
+    "FogSteps": 8,
+    "SceneReflections": true,
+    "Samples": 2,
+    "HistoryWeight": 0.85,
+    "PreviewWidth": 384,
+    "Supersampling": false
+  },
+  "settings_sha256": "055391c8e8b66f4044fbbeda2d9bcb83856fdfe457a2f9dfd6ddc9668cdcde8c"
+}

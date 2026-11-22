@@ -3,10 +3,28 @@
 	url = https://github.com/gabime/spdlog
 [submodule "Redflag/vendor/imgui"]
 	path = Redflag/vendor/imgui
-	url = http://github.com/TheCherno/imgui
+	url = https://github.com/TheCherno/imgui.git
 [submodule "Redflag/vendor/glm"]
 	path = Redflag/vendor/glm
 	url = https://github.com/g-truc/glm
 [submodule "Redflag/vendor/Box2D"]
 	path = Redflag/vendor/Box2D
 	url = https://github.com/theCherno/box2D
+[submodule "Redflag/vendor/GLFW"]
+	path = Redflag/vendor/GLFW
+	url = https://github.com/TheCherno/glfw.git
+[submodule "Redflag/vendor/assimp"]
+	path = Redflag/vendor/assimp
+	url = https://github.com/AminAliari/assimp.git
+[submodule "Redflag/vendor/fmt"]
+	path = Redflag/vendor/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "Redflag/vendor/ImGuizmo"]
+	path = Redflag/vendor/ImGuizmo
+	url = https://github.com/TheCherno/ImGuizmo.git
+[submodule "Redflag/vendor/yaml-cpp"]
+	path = Redflag/vendor/yaml-cpp
+	url = https://github.com/TheCherno/yaml-cpp.git
+[submodule "Redflag/vendor/tinyexr"]
+	path = Redflag/vendor/tinyexr
+	url = https://github.com/syoyo/tinyexr.git

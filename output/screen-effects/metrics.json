@@ -1,0 +1,35 @@
+{
+  "scene": "Khronos Sponza",
+  "width": 161,
+  "height": 91,
+  "camera_eye": [
+    -5.5,
+    -2.2,
+    0
+  ],
+  "camera_target": [
+    6,
+    -1.8,
+    0
+  ],
+  "vertical_fov_degrees": 65,
+  "display_exposure": 4,
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "visible_pixels": 14501,
+  "lights_for_cluster_test": 49,
+  "ao_min": 0.023614846169948578,
+  "ao_mean": 0.8986836671829224,
+  "ao_negligible_radius_mean": 0.9997441172599792,
+  "ssr_hit_fraction": 0.3633542514309358,
+  "ssr_repeat_max_difference": 0.0,
+  "ssr_roughness_image_mse": 0.00017207832605133945,
+  "taa_first_rgb_mse": 0.0,
+  "taa_reset_max_weight": 0.0,
+  "taa_frame8_mean_weight": 0.875,
+  "taa_moved_frame_reused_fraction": 0.4104156712852365,
+  "single_frame_vs_eight_jitters_mse": 0.0016975147636882624,
+  "taa_vs_eight_jitters_mse": 1.1056921907287959e-16,
+  "cluster_max_absolute_rgb_error": 1.4901161193847656e-07,
+  "cluster_mean_candidates": 18.109302520751953,
+  "cluster_zero_lights_rgb_max": 0.0
+}

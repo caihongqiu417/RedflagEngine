@@ -1,0 +1,37 @@
+{
+  "renderdoc": "1.47",
+  "capture": "IBL-SSR_capture.rdc",
+  "capture_sha256": "a1bb706e6f0afd5ddc6516c3e3673398bf86e6145552ab4ddf1670ac1eff7215",
+  "extent": [
+    160,
+    64
+  ],
+  "output": [
+    "linear_R",
+    "linear_G",
+    "linear_B",
+    "SSR_hit"
+  ],
+  "eid": 9,
+  "group_count": [
+    20,
+    8,
+    1
+  ],
+  "result_sha256": "967947aa8297fbf48e8a546b1e17aea21fc4e0fde97f245405f948d16d80e4b7",
+  "pixels": {
+    "(32, 32)": [
+      0.0,
+      0.3960319459438324,
+      0.03225823864340782,
+      1.0
+    ],
+    "(128, 32)": [
+      1.7165602445602417,
+      0.5111830234527588,
+      0.11956696957349777,
+      0.0
+    ]
+  },
+  "messages": []
+}

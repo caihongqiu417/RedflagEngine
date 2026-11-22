@@ -423,6 +423,7 @@ RedflagProfile-*.json
 
 # OpenGL Shader 编译结果由当前源码在本机生成。
 /RedflagForge/assets/cache/shader/opengl/*.spv
+/RedflagForge/imgui-vulkan.ini
 
 # Large asset packs (models, textures, fonts etc. — managed outside git)
 RedflagForge/assets/models/
@@ -461,6 +462,9 @@ Redflag/vendor/mono/lib/**/*.sh
 RedflagForge/assets/models/**
 !RedflagForge/assets/models/**/
 !RedflagForge/assets/models/**/*.rfmeta
+!RedflagForge/assets/models/Primitives/Plane.obj
+!RedflagForge/assets/models/LightPanel/LightPanel.gltf
+!tests/fixtures/*.obj
 
 # 只发布 Redflag 项目生成的 PDF
 /output/pdf/*
@@ -483,3 +487,4 @@ thesis/
 *毕业论文*.pdf
 *毕业论文*.docx
 *答辩*.pptx
+/output/captures/local/

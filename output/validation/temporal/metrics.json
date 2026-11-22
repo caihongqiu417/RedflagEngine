@@ -1,0 +1,41 @@
+{
+  "scene": "Khronos Sponza",
+  "render_size": [
+    161,
+    91
+  ],
+  "samples_per_period": 16,
+  "compared_frames_zero_based": [
+    16,
+    31
+  ],
+  "input_matches_original_device": false,
+  "display_exposure": 4,
+  "pixel_differences": 219765,
+  "example_pixel": {
+    "x": 98,
+    "y": 61,
+    "before": {
+      "frame17": 0.4578183591365814,
+      "frame18": 0.13867570459842682,
+      "difference": -0.3191426396369934
+    },
+    "after": {
+      "frame17": 0.4291206896305084,
+      "frame18": 0.4133903980255127,
+      "difference": -0.015730291604995728
+    }
+  },
+  "before": {
+    "adjacent_frame_luma_rms": 0.06584257355880055,
+    "adjacent_frame_p95_absolute_luma": 0.11712545901536942,
+    "gradient_error_rms": 0.03671850419439572,
+    "linear_rgb_mse": 0.0008633681513931166
+  },
+  "after": {
+    "adjacent_frame_luma_rms": 0.005533567892512018,
+    "adjacent_frame_p95_absolute_luma": 0.012035613879561424,
+    "gradient_error_rms": 0.0017017620377616021,
+    "linear_rgb_mse": 1.2004821471622568e-05
+  }
+}

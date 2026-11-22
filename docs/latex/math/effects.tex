@@ -20,9 +20,10 @@
 \]
 九个位置组成 $3\times3$ 方格，横竖相邻点在阴影图上相隔一个像素。先看函数如何判定一次受光，再看外层如何累计同一种结果。
 \begin{lstlisting}
+// 接收点在阴影图记录的表面之前，灯就能照到它。
 return refDepth <= occ ? 1.0 : 0.0;
-\end{lstlisting}
-\begin{lstlisting}
+
+// 九次深度比较各给出零或一，平均值作为可见比例。
 sum += SampleShadow(baseUV + vec2(x, y) * texel, refDepth);
 return sum / 9.0;
 \end{lstlisting}
@@ -45,6 +46,7 @@ return sum / 9.0;
 \]
 $w_i$ 在 $0$ 和 $1$ 之间。当前表面与采到的表面相距很远时，着色器减小它的权重，避免远墙的轮廓在近处物体边缘印出黑圈。屏幕外的样本贡献为零，分母仍是全部 $K$ 个样本。$s$ 决定遮蔽处的明暗。
 \begin{lstlisting}
+// 先累加被邻近几何挡住的样本，再换算成可见比例。
 occlusion += (sceneZ >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
 occlusion = 1.0 - occlusion / float(kernelSize);
 float ao  = pow(clamp(occlusion, 0.0, 1.0), u_Params.z);
@@ -53,38 +55,7 @@ float ao  = pow(clamp(occlusion, 0.0, 1.0), u_Params.z);
 例如四个等权样本中只有一个被挡，$s=2$，留下的环境光比例为 $(1-1/4)^2=0.5625$。单独查看 SSAO 灰度图时，这个位置应呈灰色；回到主画面，这个数只衰减环境项。移到屏幕外的物体没有深度记录，无法参加这一估算。
 
 \clearpage
-\section{环境贴图照明与粗糙度}
-抛光金属能映出一扇窗的轮廓，磨粗的金属上，同一扇窗会散成一片亮斑。Redflag 把四周各方向的亮度存进一张立方体贴图。环境贴图照明（IBL）从中计算两种不同的结果，漫反射随表面朝向变化，镜面反射还随观察方向和粗糙度变化。
-\begin{figure}[H]\centering
-\href{https://learnopengl.com/img/pbr/ibl_hemisphere_sample_normal.png}{\includegraphics[height=2.7cm]{figures/effects-irradiance.png}}\hfill
-\href{https://learnopengl.com/img/pbr/ibl_specular_lobe.png}{\includegraphics[width=.64\linewidth]{figures/effects-specular.png}}
-\caption{左图沿法线上方的半球汇总照明。右图从左到右越来越粗糙，能对倒影产生影响的方向也越来越多。}
-\effectcredit{https://learnopengl.com/PBR/IBL/Diffuse-irradiance}{Diffuse irradiance}
-{\footnotesize\color{muted}右图同作者、同许可，出自 \href{https://learnopengl.com/PBR/IBL/Specular-IBL}{Specular IBL}。}
-\end{figure}
-
-设环境从方向 $\omega$ 送来的线性 RGB 为 $L(\omega)$，它与法线 $N$ 的夹角为 $\theta$。正对表面的光比擦过表面的光更有效，因此用 $\cos\theta$ 加权。漫反射还要除以 $\pi$，项目在预计算时已经做了这一步。着色时沿 $N$ 取一次贴图，再乘材质颜色 $\rho$ 就得到 $\rho D(N)$：
-\[
-D(N)=\frac{1}{\pi}\int_{\Omega^+(N)}L(\omega)\cos\theta\,\mathrm d\omega,\qquad
-\mathrm d\omega=\sin\theta\,\mathrm d\theta\,\mathrm d\phi .
-\]
-按经纬角等步长取样时，每格立体角带有 $\sin\theta$。两个角度的范围乘积是 $\pi^2$，除以漫反射的 $\pi$ 后，程序给样本平均值乘 $\pi$。
-\begin{lstlisting}
-irr += texture(u_EnvMap, w).rgb * cos(theta) * sin(theta);
-irr = PI * irr / count;
-\end{lstlisting}
-\loc{Redflag/src/Redflag/Renderer/IBLPrecompute.cpp}{s\_IrradianceFS（漫反射预计算）}
-镜面项沿视线的反射方向查另一张预先模糊的环境图。粗糙度从 $0$ 变为 $1$，读取的层级从 $0$ 变为 $4$。一张二维表保存了视线角度和粗糙度对应的两个系数 $a,b$，用来调整镜面反射颜色 $k_S$：
-\[
- L_{\rm env}=A\,[k_D\,\rho D(N)+L_{\rm filtered}(R,4r)(k_S a+b)].
-\]
-这里 $r$ 表示粗糙度，$A$ 合并了材质和屏幕空间的遮蔽。项目把它同时乘在环境漫反射和镜面反射上。
-\begin{lstlisting}
-vec3 specularIBL = prefilteredColor * (kS * brdf.x + brdf.y);
-ambient = (kD * diffuseIBL + specularIBL) * ao;
-\end{lstlisting}
-\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（片元阶段，节选）}
-如果六面环境图都是 $(2,1,0.5)$，任何朝向应得到同样的 $D$，模糊一块纯色也应保留该颜色。\path{tests/run_ibl_tests.cmd} 正是这样检查立方体六面。上一页的 Cornell 截图关闭了 IBL；墙面反弹到地板上的红光来自下一节的反射阴影图。
+\input{ibl}
 
 \input{rsm}
 
@@ -107,6 +78,7 @@ g&=\frac{\max\!\bigl(Y-t,\,h^2/(4k+\varepsilon),\,0\bigr)}
 \]
 最后的除法逐颜色分量计算。以白灯 $C=(2,2,2)$、$t=1$ 为例，$Y=2$，超过阈值的部分为 $1$，$g=1/2$，提取出的颜色为 $(0.5,0.5,0.5)$。原场景里灯的颜色仍是 $(2,2,2)$。
 \begin{lstlisting}
+// 只把超过亮度阈值或位于软过渡区的颜色送入泛光。
 float contribution = max(hard, soft) / max(lum, 0.0001);
 vec3 bloom = c * contribution;
 bloom = bloom / (vec3(1.0) + bloom);
@@ -141,6 +113,7 @@ bloom = bloom / (vec3(1.0) + bloom);
 \caption{按项目着色器绘制的单通道曲线。高亮处曲线变平，$x=2$ 处的两个点对应下文取样。}
 \end{figure}
 \begin{lstlisting}
+// 先调整线性亮度，最后一次幂运算得到显示用的值。
 combined *= u_Exposure;
 vec3 tonemapped = ACESTonemap(combined /* 已乘曝光的线性 RGB */);
 vec3 gammaCorrected = pow(tonemapped, vec3(1.0 / 2.2));

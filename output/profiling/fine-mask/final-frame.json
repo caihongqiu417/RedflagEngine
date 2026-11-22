@@ -1,0 +1,88 @@
+{
+  "timed": {
+    "capture": "output/captures/local/Sponza-Mask-7c1c4c8e2382-384/studio_frame24.rdc",
+    "sha256": "d60f2906d9a436b7c3dcd5632184936db97614cdeaa32745c40a3366dbc265ff",
+    "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+    "executable_sha_prefix": "7c1c4c8e2382",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "settings_sha256": "357731abcb4b8c001a06bb8861e7fd35bc70cbbc96cb315b6098ee696c08a762",
+    "settings": {
+      "Direct": "Clustered lights",
+      "FogDensity": 0.06,
+      "FogSteps": 8,
+      "GTAO": true,
+      "HistoryWeight": 0.85,
+      "Indirect": "DDGI",
+      "PreviewWidth": 384,
+      "SSR": true,
+      "Samples": 2,
+      "SceneReflections": true,
+      "Shading": "Lit",
+      "TAA": true,
+      "VolumetricFog": true
+    },
+    "size": [
+      384,
+      246
+    ]
+  },
+  "final": {
+    "capture": "output/captures/local/Sponza-Mask-435a0ada6466-384/studio_frame24.rdc",
+    "sha256": "0e3f1882887fe2aabaa3a35e868b1eb6651c5d55a3da090b657006eb43318e48",
+    "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+    "executable_sha_prefix": "435a0ada6466",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "settings_sha256": "357731abcb4b8c001a06bb8861e7fd35bc70cbbc96cb315b6098ee696c08a762",
+    "settings": {
+      "Direct": "Clustered lights",
+      "FogDensity": 0.06,
+      "FogSteps": 8,
+      "GTAO": true,
+      "HistoryWeight": 0.85,
+      "Indirect": "DDGI",
+      "PreviewWidth": 384,
+      "SSR": true,
+      "Samples": 2,
+      "SceneReflections": true,
+      "Shading": "Lit",
+      "TAA": true,
+      "VolumetricFog": true
+    },
+    "size": [
+      384,
+      246
+    ]
+  },
+  "final_executable_sha256": "435a0ada6466506eef76b3f0bf2fb186add87be5abfb680d8da9c8c60c1ae93d",
+  "files": {
+    "triangles.bin": {
+      "timed_sha256": "7bbb3d8fca80025bf3955f41acd32314fce9cc0b93cd7004686eed4dd3478e60",
+      "final_sha256": "7bbb3d8fca80025bf3955f41acd32314fce9cc0b93cd7004686eed4dd3478e60"
+    },
+    "faces.bin": {
+      "timed_sha256": "b48bc8c5ba3779e81388e0d9b03b8bbeb38bd2467e72061018d2efd0b3d55272",
+      "final_sha256": "b48bc8c5ba3779e81388e0d9b03b8bbeb38bd2467e72061018d2efd0b3d55272"
+    },
+    "masks.bin": {
+      "timed_sha256": "eee4f8d55f6ff2a98e651cada5b6d0beb9053ea3bf0437aa85d6030a01158469",
+      "final_sha256": "eee4f8d55f6ff2a98e651cada5b6d0beb9053ea3bf0437aa85d6030a01158469"
+    },
+    "material_pixels.bin": {
+      "timed_sha256": "82460a35a903a035552780e02372e09990fbd82f3815b7bb63ebb57bad57745a",
+      "final_sha256": "82460a35a903a035552780e02372e09990fbd82f3815b7bb63ebb57bad57745a"
+    },
+    "surface.f32": {
+      "timed_sha256": "832a4d7ffb8c3f9c7d3524880a2af98cc60d23a0f1ffe225b262708d4ff11cb8",
+      "final_sha256": "832a4d7ffb8c3f9c7d3524880a2af98cc60d23a0f1ffe225b262708d4ff11cb8"
+    },
+    "light.f32": {
+      "timed_sha256": "0dec3bec1dfe231afbdfa11fe0e232cb9dbd90f4d55c78a3070c8700cb49f943",
+      "final_sha256": "0dec3bec1dfe231afbdfa11fe0e232cb9dbd90f4d55c78a3070c8700cb49f943"
+    },
+    "display.f32": {
+      "timed_sha256": "5b3e30c5b705815e82aeae1350ed1d96eb88cad75f698ad35a354e5c4799b95a",
+      "final_sha256": "5b3e30c5b705815e82aeae1350ed1d96eb88cad75f698ad35a354e5c4799b95a"
+    }
+  },
+  "scope": "Fresh frame 24. Compared captured storage and float outputs byte-for-byte. No timings from this run."
+}

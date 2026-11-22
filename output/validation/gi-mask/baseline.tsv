@@ -1,0 +1,10 @@
+case	sample	x	y	picked_id	raster_primary_z	ray_primary_z	raster_surface_direct_red	receiver_direct_red
+receiver	hole	33	29	0	-5.72204e-06	2.07567e-07	0.256441	0.256441
+receiver	solid_ring	18	29	0	-5.72204e-06	3.53924e-08	0.242519	0.242519
+receiver	outside	6	29	0	-5.72204e-06	7.85121e-08	0.211139	0.211139
+mask	hole	33	29	0	-5.72204e-06	1	0	0
+mask	solid_ring	18	29	1	1	1	0.0300583	0
+mask	outside	6	29	0	-5.72204e-06	7.85121e-08	0.211139	0.211139
+opaque	hole	33	29	1	1	1	0.0325221	0
+opaque	solid_ring	18	29	1	1	1	0.0300583	0
+opaque	outside	6	29	0	-5.72204e-06	7.85121e-08	0.211139	0.211139

@@ -1,0 +1,57 @@
+\clearpage
+\section{镂空材质的着色器接口}
+给编辑器中已有的立方体换一张带孔的贴图，只需要设置材质。下例中的 \code{image} 是用 \code{Texture2D::Create(path)} 读入的 RGBA 图片，A 通道在孔内为 0，在实心处为 1。材质和场景组件保留对贴图的共享引用，绘制这只立方体时可以一直使用它。
+
+\begin{lstlisting}
+// (*@调用示例。接口见 Material.h、Components.h。@*)
+void SetFence(MeshRendererComponent& cube, const Ref<Texture2D>& image)
+{
+    Ref<Material> material = Material::Create(image);
+    material->Alpha = AlphaMode::Mask;
+    material->AlphaCutoff = 0.5f;  // (*@等于 0.5 的位置也保留。@*)
+    cube.Mat = material;
+}
+\end{lstlisting}
+
+接下来是引擎的工作。\code{SceneRenderer::DrawGeometry} 从组件取出材质，把底色贴图传给 \code{CommandList::DrawIndexed}。其他会影响表面的参数装在 \code{SurfaceMaterial} 里，其中 \code{AlphaCutoff} 给出保留像素所需的透明度，\code{Opacity} 可以再放一张单独的透明图。没有提供透明图时，Vulkan 后端绑定一张白图，读出来的值为 1，对乘积没有影响。
+
+普通绘制与鼠标拾取按三角形上的贴图坐标读取这两张图。底色图的 A、单独透明图的 R 和此次绘制的透明度相乘，小于裁剪值就留下一个孔。后面的模型仍可写下自己的颜色、深度与实体编号。\code{Mesh.frag} 负责主绘制，\code{Emission.frag} 单独画材质发出的光，两者调用同一个 \code{coversSample}。打开 SSAA 时，光照绘制会在一个像素里区分四个位置。
+
+间接光要找的是一条射线碰到的表面。\code{CollectModels} 因此把材质的透明度和裁剪值交给光照计算，模型加载器从模型内嵌图片或指定的贴图文件取像素。\code{AlphaMask.glsl} 在每个可能的交点调用 \code{passesAlphaMask}，穿过孔后继续检查更远的三角形。若在内存里生成一张新贴图，光照加载器目前无法从文件重建它的透明度。需要同时得到正确的相机画面、阴影和烘焙时，请使用有文件来源的贴图。
+
+\readings{\src{Redflag/src/Redflag/Renderer/RHI/SurfaceMaterial.h}{绘制用的材质参数}\quad
+\src{Redflag/src/Platform/Vulkan/VulkanDraw.cpp}{VulkanDraw::DrawIndexed}\quad
+\src{Redflag/src/Redflag/Renderer/GI/Shaders/AlphaMask.glsl}{射线读取透明度}\quad
+\href{run:Redflag-Debugging-Notes.pdf}{实机对照与烘焙读数}}
+
+\clearpage
+\section{一个像素里的四份光照}
+
+\code{LightingPreview::Render} 先根据场景面板选定输出尺寸。开启 SSAA 后，宽和高各乘二，画网格、计算光照、加雾和绘制玻璃都用这个尺寸。铁丝和后面的墙有各自的深度与材质。占到铁丝的位置按铁丝着色，占到墙的位置按墙着色。最后才把相邻四个位置的颜色合到面板的一个像素里。鼠标点选仍读单独绘制的实体编号图，一个位置只返回一个实体。
+
+假定铁丝刚好遮住四个位置中的一个。用 $L_f$ 表示铁丝反射或发出的光，用 $L_b$ 表示墙面的光，则该像素的亮度是 $(L_f+3L_b)/4$。以红通道为例，若铁丝为 4、墙面为 0，平均亮度为 1。项目用 $L/(1+L)$ 把亮度压进显示范围，1 对应 0.5。反过来若先把亮度 4 压到 0.8，再与三份黑色平均，只得到 0.2，亮铁丝会明显发暗。实际着色器在这之后才作显示用的伽马转换。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small\sffamily]
+\foreach \x/\y/\paint/\label in {0/0/Soft/墙 0,1.32/0/Soft/墙 0,0/.64/Rust!16/铁丝 4,1.32/.64/Soft/墙 0}{
+  \filldraw[fill=\paint,draw=Rule] (\x,\y) rectangle ++(1.32,.64);
+  \node at (\x+.66,\y+.32) {\label};
+}
+\draw[->,thick,color=Teal] (2.85,.64)--(4.55,.64) node[midway,above]{取平均};
+\node[draw=Teal,rounded corners,fill=Soft,inner sep=6pt] at (5.85,.64) {线性亮度 1};
+\draw[->,thick,color=Teal] (7.0,.64)--(8.75,.64) node[midway,above]{压缩亮度};
+\node[draw=Teal,rounded corners,inner sep=6pt] at (9.6,.64) {$0.5$};
+\end{tikzpicture}
+\caption{每格代表同一像素里的一个取样位置。数字表示红通道的线性亮度，方格底色用来区分表面。}
+\end{figure}
+
+\begin{lstlisting}
+// (*@LightingPreview.comp，节选。first 指向这四个位置的左上角。@*)
+int nextRow = size.x * side;  // (*@光照图每行有两倍的输出像素数。@*)
+sampleColor = .25 * (sampleColor + values[first + 1]
+                   + values[first + nextRow] + values[first + nextRow + 1]);
+\end{lstlisting}
+
+放大能看清纹素时，\code{coversSample} 按材质原来的裁剪值开孔。纯黑白的网格缩小后，可以把四处读到的灰度取平均，估算铁丝占了多少面积。若平均值为四分之一，就留下最像实心铁丝的一个位置，另外三个露出墙面。这样斜边也能跟着原图走。仅当一张图决定孔的位置、另一通道全白，且材质正好在两端的中点裁剪时，才这样估算。灰度透明图仍按原材质在每处分别裁剪。
+
+两张错开两列的网各遮住四分之一，叠起来本应遮住一半。缩小后两张图都读到同样的灰，当前四个门槛会让它们占到同一个位置，实测仍只有四分之一。实验也交换过铁丝与背景的亮度，两组颜色都可以从显卡的原始读数复算。\href{run:../validation/mask-supersampling/subpixel-materials.csv}{材质与双层网读数}\quad\href{run:../validation/mask-supersampling/two-colors.png}{两组前后景颜色}\quad\src{Redflag/src/Platform/Vulkan/Shaders/Cutout.glsl}{镂空取样源码}

@@ -1,0 +1,28 @@
+{
+  "extent": [
+    161,
+    91
+  ],
+  "linear_rgba_max_absolute_difference": {
+    "static-taa-16.f32": 0.0,
+    "static-taa-17.f32": 0.0,
+    "static-taa-18.f32": 0.0,
+    "static-taa-19.f32": 0.0,
+    "static-taa-20.f32": 0.0,
+    "static-taa-21.f32": 0.0,
+    "static-taa-22.f32": 0.0,
+    "static-taa-23.f32": 0.0,
+    "static-taa-24.f32": 0.0,
+    "static-taa-25.f32": 0.0,
+    "static-taa-26.f32": 0.0,
+    "static-taa-27.f32": 0.0,
+    "static-taa-28.f32": 0.0,
+    "static-taa-29.f32": 0.0,
+    "static-taa-30.f32": 0.0,
+    "static-taa-31.f32": 0.0,
+    "taa-first.f32": 0.0,
+    "taa-last.f32": 0.0,
+    "taa-moved.f32": 0.0,
+    "taa-reset.f32": 0.0
+  }
+}

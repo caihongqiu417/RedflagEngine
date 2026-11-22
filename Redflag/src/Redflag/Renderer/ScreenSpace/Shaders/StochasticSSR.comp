@@ -1,0 +1,152 @@
+#version 450
+#include "Screen.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 2) readonly buffer Lighting
+{
+    vec4 colors[];
+};
+layout(std430, binding = 3) writeonly buffer Result
+{
+    vec4 result[];
+};
+layout(std430, binding = 4) readonly buffer LightingEnvironment { vec4 environment[]; };
+layout(push_constant) uniform ReflectionOptions { uint useMaterial, traceScreen, useEnvironment;
+#ifdef RF_SCENE_REFLECTION
+    uint useProbes, useDiffuseSky;
+#endif
+};
+#include "Environment.glsl"
+#ifdef RF_SCENE_REFLECTION
+#include "SceneReflection.glsl"
+#endif
+
+float random01(inout uint seed)
+{
+    seed = 1664525u * seed + 1013904223u;
+    uint x = (seed ^ (seed >> 16)) * 2246822519u;
+    return float((x ^ (x >> 13)) >> 8) * (1. / 16777216.);
+}
+float smith(float cosine, float a2)
+{
+    return 2. * cosine / (cosine + sqrt(a2 + (1. - a2) * cosine * cosine));
+}
+
+bool sampleReflection(vec3 n, vec3 v, float nv, float roughness, vec3 f0, uint pixel,
+                      out vec3 direction, out vec3 weight)
+{
+    if (nv <= 0.) return false;
+    float vh = nv, scale = 1.;
+    if (roughness == 0.)
+    {
+        // 完全光滑的镜面只有一个反射方向。相机不动，镜中的灯牌边缘每帧都应落在同一处。
+        direction = reflect(-v, n);
+    }
+    else
+    {
+        vec3 tangent = normalize(cross(abs(n.z) < .9 ? vec3(0, 0, 1) : vec3(0, 1, 0), n));
+        uint seed = pixel * 747796405u + extent.z * 2891336453u;
+        float a = max(.002, roughness * roughness), a2 = a * a;
+        float u = random01(seed), phi = 2. * PI * random01(seed);
+        float nh = sqrt((1. - u) / (1. + (a2 - 1.) * u)), sh = sqrt(max(0., 1. - nh * nh));
+        vec3 h = tangent * (sh * cos(phi)) + cross(n, tangent) * (sh * sin(phi)) + n * nh;
+        direction = reflect(-v, h);
+        float nl = dot(n, direction);
+        vh = dot(v, h);
+        if (min(nl, vh) <= 0.) return false;
+        scale = smith(nl, a2) * smith(nv, a2) * vh / max(nv * nh, 1e-5);
+    }
+    vec3 fresnel = f0 + (1. - f0) * pow(1. - clamp(vh, 0., 1.), 5.);
+    weight = fresnel * scale;
+    return true;
+}
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (!onScreen(p))
+        return;
+    uint i = indexOf(p);
+    result[i] = vec4(colors[i].rgb, 0);
+    ScreenSurface s = surfaces[i];
+    if (s.position.w == 0.)
+        return;
+
+    vec3 n = s.normal.xyz, v = viewDirection(s.position.xyz);
+    float roughness = useMaterial != 0 ? s.normal.w : material.z;
+    vec3 f0 = useMaterial != 0 ? mix(vec3(.04),s.albedo.rgb,s.albedo.w) : vec3(.04);
+    float nv = clamp(dot(n,v),0.,1.);
+    // 先用环境贴图画倒影。沿反射方向找到画面里的物体后，再用那个物体的颜色画倒影。
+    if (useEnvironment != 0)
+    {
+        vec3 ks = environmentFresnel(f0,nv,roughness);
+        result[i] = vec4(colors[i].rgb + specularEnvironment(reflect(-v,n),nv,roughness,ks),0);
+    }
+    if (traceScreen == 0) return;
+    vec3 l, weight;
+    if (!sampleReflection(n, v, nv, roughness, f0, i, l, weight)) return;
+
+    // 沿反射方向前进。一旦采样点比该像素的可见表面更远，就在前后两步之间对半查找，看光线是否碰到了表面。
+    float last = 0., bias = max(.008, .001 * depthOf(s.position.xyz));
+    vec3 origin = s.position.xyz + n * bias;
+    // 每条光线最多向前查 64 次。加大次数能查得更密，每个像素也要多读几次深度。
+    for (int step = 1; step <= 64; ++step)
+    {
+        float t = material.w * pow(float(step) / 64., 1.5);
+        vec3 ray = origin + l * t;
+        vec4 clip = projection * view * vec4(ray, 1);
+        if (clip.w <= 0.)
+            break;
+        ivec2 q = ivec2(floor(toPixel(clip)));
+        if (!onScreen(q))
+            break;
+        ScreenSurface target = surfaces[indexOf(q)];
+        if (target.position.w == 0. || all(equal(q, p)))
+        {
+            last = t;
+            continue;
+        }
+        if (depthOf(ray) < depthOf(target.position.xyz))
+        {
+            last = t;
+            continue;
+        }
+
+        float low = last, high = t;
+        for (int j = 0; j < 5; ++j)
+        {
+            float mid = .5 * (low + high);
+            vec3 pt = origin + l * mid;
+            ivec2 at = ivec2(floor(toPixel(projection * view * vec4(pt, 1))));
+            if (!onScreen(at))
+            {
+                low = mid;
+                continue;
+            }
+            ScreenSurface samplePoint = surfaces[indexOf(at)];
+            if (samplePoint.position.w == 0. || depthOf(pt) < depthOf(samplePoint.position.xyz))
+                low = mid;
+            else
+                high = mid;
+        }
+        ray = origin + l * high;
+        q = ivec2(floor(toPixel(projection * view * vec4(ray, 1))));
+        if (!onScreen(q) || all(equal(q, p)))
+            break;
+        target = surfaces[indexOf(q)];
+        if (target.position.w != 0. && abs(depthOf(ray) - depthOf(target.position.xyz)) < max(.04, 2. * bias) &&
+            dot(target.normal.xyz, -l) > 0.)
+        {
+            result[i] = vec4(colors[i].rgb + colors[indexOf(q)].rgb * weight, 1);
+            return;
+        }
+        break;
+    }
+#ifdef RF_SCENE_REFLECTION
+    // 深度图里找不到倒影时，从镜面沿同一方向找最近的三角形。射线没有碰到模型，就保留先前算好的环境光。
+    vec3 incoming;
+    if (sceneReflection(s.position.xyz + n * EPS, l, material.w, incoming))
+    {
+        result[i] = vec4(colors[i].rgb + incoming * weight, 1);
+    }
+#endif
+}

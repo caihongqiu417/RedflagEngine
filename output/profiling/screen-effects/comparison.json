@@ -1,0 +1,11 @@
+{
+  "gtao_baseline_max_diff": 0.0,
+  "gtao_mean_alpha_on_surface": 0.8986836671829224,
+  "ssr_baseline_max_diff": 0.0,
+  "ssr_mean_alpha_on_surface": 0.36335426568984985,
+  "taa_mean_alpha_on_surface": 0.5,
+  "clustered_baseline_max_diff": 0.0,
+  "clustered_mean_alpha_on_surface": 18.109302520751953,
+  "clusters": 1056,
+  "clusters_containing_a_light_above_32": 627
+}

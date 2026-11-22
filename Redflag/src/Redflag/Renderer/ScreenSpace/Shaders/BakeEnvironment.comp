@@ -1,0 +1,122 @@
+#version 450
+#include "EnvironmentLayout.glsl"
+layout(local_size_x = 64) in;
+layout(std430, binding = 0) readonly buffer Panorama { vec4 sky[]; };
+layout(std430, binding = 1) writeonly buffer Lighting { vec4 lighting[]; };
+layout(push_constant) uniform Image { ivec2 size; };
+const float pi = 3.14159265359;
+const uint samples = 256u;
+
+vec3 panorama(vec3 direction, float solidAngle)
+{
+    vec2 uv = vec2(atan(direction.z, direction.x) / (2. * pi), asin(clamp(direction.y,-1.,1.)) / pi) + .5;
+    // 赤道的纹素比极点覆盖更大的立体角。一个采样点代表的范围越大，读取越模糊的一层。
+    float texelAngle = 2. * pi * pi * max(length(direction.xz), 1. / size.y) / float(size.x * size.y);
+    int mip = int(max(0., floor(.5 * log2(max(1., solidAngle / texelAngle)) + .5)));
+    ivec2 extent = size;
+    int offset = 0;
+    for (int level = 0; level < mip && any(greaterThan(extent,ivec2(1))); ++level)
+    {
+        offset += extent.x * extent.y;
+        extent = max(extent / 2, ivec2(1));
+    }
+    vec2 p = uv * vec2(extent) - .5;
+    ivec2 q = ivec2(floor(p));
+    ivec2 x = (ivec2(q.x, q.x+1) + extent.x) % extent.x;
+    ivec2 y = clamp(ivec2(q.y, q.y+1), ivec2(0), ivec2(extent.y-1));
+    vec2 f = fract(p);
+    return mix(mix(sky[offset+y.x*extent.x+x.x].rgb, sky[offset+y.x*extent.x+x.y].rgb, f.x),
+               mix(sky[offset+y.y*extent.x+x.x].rgb, sky[offset+y.y*extent.x+x.y].rgb, f.x), f.y);
+}
+
+vec2 hammersley(uint i)
+{
+    return vec2(float(i) / float(samples), float(bitfieldReverse(i)) * 2.3283064365386963e-10);
+}
+vec3 ggx(vec2 u, float roughness)
+{
+    float a = roughness * roughness;
+    float nz = sqrt((1.-u.y) / (1.+(a*a-1.)*u.y));
+    float radius = sqrt(max(0.,1.-nz*nz)), phi = 2.*pi*u.x;
+    return vec3(radius*cos(phi),radius*sin(phi),nz);
+}
+
+vec3 convolve(vec3 n, float roughness, bool diffuse)
+{
+    if (!diffuse && roughness == 0.) return panorama(n,0.);
+    vec3 t = normalize(cross(abs(n.z)<.999 ? vec3(0,0,1) : vec3(1,0,0), n));
+    mat3 basis = mat3(t, cross(n,t), n);
+    vec3 sum = vec3(0);
+    float weights = 0.;
+    for (uint i = 0u; i < samples; ++i)
+    {
+        vec2 u = hammersley(i);
+        vec3 local;
+        float pdf, weight;
+        if (diffuse)
+        {
+            float phi = 2.*pi*u.x;
+            local = vec3(sqrt(u.y)*vec2(cos(phi),sin(phi)), sqrt(1.-u.y));
+            pdf = local.z / pi;
+            weight = 1.; // 正对表面的方向抽得多，斜着掠过表面的方向抽得少。直接平均采到的天空颜色，就是白色漫反射表面反回的光（E/π）。
+        }
+        else
+        {
+            vec3 h = ggx(u,roughness);
+            local = 2.*h.z*h - vec3(0,0,1);
+            if (local.z <= 0.) continue;
+            float a2 = pow(roughness,4.), d = h.z*h.z*(a2-1.)+1.;
+            pdf = a2 / (4.*pi*d*d);
+            weight = local.z;
+        }
+        sum += panorama(basis*local,1./(float(samples)*max(pdf,.00001))) * weight;
+        weights += weight;
+    }
+    return sum / weights;
+}
+
+vec2 integrateBRDF(vec2 uv)
+{
+    float nv = uv.x, roughness = uv.y, k = roughness * roughness * .5;
+    vec3 v = vec3(sqrt(1.-nv*nv),0,nv);
+    vec2 sum = vec2(0);
+    for (uint i = 0u; i < samples; ++i)
+    {
+        vec3 h = ggx(hammersley(i),roughness);
+        float vh = max(dot(v,h),0.), nl = 2.*vh*h.z - nv;
+        if (nl <= 0.) continue;
+        float visibility = (nl/(nl*(1.-k)+k)) * vh / (h.z*(nv*(1.-k)+k));
+        float grazing = pow(1.-vh,5.);
+        sum += visibility * vec2(1.-grazing,grazing);
+    }
+    return sum / float(samples);
+}
+
+void main()
+{
+    int i = int(gl_GlobalInvocationID.x);
+    int lut = reflectionOffset(reflectionLevels);
+    if (i >= lut+lutSize*lutSize) return;
+    if (i >= lut)
+    {
+        ivec2 p = ivec2((i-lut)%lutSize,(i-lut)/lutSize);
+        lighting[i] = vec4(integrateBRDF((vec2(p)+.5)/float(lutSize)),0,0);
+        return;
+    }
+    int width = diffuseSize, local = i, level = 0;
+    bool diffuse = i < reflectionOffset(0);
+    if (!diffuse)
+    {
+        local -= reflectionOffset(0);
+        width = reflectionSize;
+        while (local >= 6*width*width)
+        {
+            local -= 6*width*width;
+            width /= 2;
+            ++level;
+        }
+    }
+    vec2 uv = (vec2(local%width,local/width%width)+.5) / float(width);
+    vec3 n = normalize(cubeDirection(local/(width*width),uv));
+    lighting[i] = vec4(convolve(n,float(level)/float(reflectionLevels-1),diffuse),0);
+}

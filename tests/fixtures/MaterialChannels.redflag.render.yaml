@@ -1,0 +1,8 @@
+Shading: Lit
+PreviewWidth: 800
+Samples: 1
+Direct: All point lights
+Indirect: Off
+GTAO: false
+SSR: false
+TAA: true

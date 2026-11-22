@@ -17,6 +17,16 @@ namespace Redflag {
 		UpdateView();
 	}
 
+	void EditorCamera::LookAt(const glm::vec3& eye, const glm::vec3& target)
+	{
+		m_FocalPoint = target;
+		m_Distance = glm::distance(eye, target);
+		const glm::vec3 forward = (target - eye) / m_Distance;
+		m_Pitch = -std::asin(glm::clamp(forward.y, -1.0f, 1.0f));
+		m_Yaw = std::atan2(forward.x, -forward.z);
+		UpdateView();
+	}
+
 	void EditorCamera::UpdateProjection()
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
@@ -60,10 +70,12 @@ namespace Redflag {
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		if (Input::IsKeyPressed(RF_KEY_LEFT_ALT))
+		const bool alt = Input::IsKeyPressed(RF_KEY_LEFT_ALT);
+		if (alt)
 		{
 			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
+			// 按下 Alt 的第一帧先记下光标。开始拖动后只累计这次手势的位移。
+			glm::vec2 delta = m_AltPressed ? (mouse - m_InitialMousePosition) * 0.003f : glm::vec2(0);
 			m_InitialMousePosition = mouse;
 
 			if (Input::IsMouseButtonPressed(RF_MOUSE_BUTTON_MIDDLE))
@@ -73,6 +85,7 @@ namespace Redflag {
 			else if (Input::IsMouseButtonPressed(RF_MOUSE_BUTTON_RIGHT))
 				MouseZoom(delta.y);
 		}
+		m_AltPressed = alt;
 
 		UpdateView();
 	}

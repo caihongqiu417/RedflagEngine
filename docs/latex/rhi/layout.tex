@@ -20,7 +20,7 @@
     beforeskip=0pt,afterskip=9pt},
   subsection={format=\raggedright\sffamily\bfseries\fontsize{13}{18}\selectfont\color{Teal},
     beforeskip=8pt,afterskip=2pt}}
-\hypersetup{urlcolor=Teal,linkcolor=Teal,bookmarksnumbered=false,
+\hypersetup{urlcolor=Teal,linkcolor=Teal,runcolor=Teal,bookmarksnumbered=false,
   pdfsubject={Redflag 渲染接口、后端实现与验证}}
 \fancyhf{}
 \setlength{\headwidth}{\textwidth}
@@ -46,3 +46,9 @@
 \newcommand{\bodytype}{\normalfont\fontsize{11.4}{17.8}\selectfont\color{Ink}}
 \lstdefinestyle{besidetext}{basicstyle=\ttfamily\fontsize{9.6}{13}\selectfont\color{Ink},
   xleftmargin=2mm,xrightmargin=0pt,framexleftmargin=1mm}
+
+% 代码框上方给出仓库入口。PDF 位于 output/pdf，单击文件名可打开本地源码。
+\newcommand{\codewhere}[3]{\par\smallskip\noindent{\sffamily\fontsize{8.5}{11.3}\selectfont
+    \color{Muted}#1\enspace\href{run:../../#2}{\nolinkurl{#2}}\enspace·\enspace#3\par}\nobreak}
+\newcommand{\rhicomment}[1]{{\normalfont\sffamily\fontsize{9.0}{12}\selectfont\color{Muted}#1}}
+\lstset{escapeinside={(*@}{@*)}}

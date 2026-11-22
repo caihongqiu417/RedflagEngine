@@ -1,0 +1,47 @@
+{
+  "method": "CPU fixture checks against GIScene.Pixels from LoadGIScene and GITextureLibrary::Read; compiled Debug x64 /MDd with assertions enabled. The checks do not measure GPU execution.",
+  "sources": {
+    "Redflag/src/Redflag/Renderer/GI/GIScene.h": "8b2ee9b095f22432be3fd0d03af3db714d12272471143c82e860139607a2f7f5",
+    "Redflag/src/Redflag/Renderer/GI/GIScene.cpp": "c9c3d166963702b83b9da790d2e87eed4deecb30bb7a5b563e3f66bdc1a67417",
+    "Redflag/src/Redflag/Renderer/GI/GITexture.h": "ecd05af0f276f26a6d76f62be76a48caf21c455eb4c73d58a8d1cd31edad7010",
+    "Redflag/src/Redflag/Renderer/GI/GITexture.cpp": "4a5e648484a9ec21ff0cac61bcef715171241186968ecb1275ed6f477ca3c0ea",
+    "tmp/probe-materials/mask-cpu/fine.cpp": "83547418fd8103cb35a8492464bdc7cbc7c963be3e8256810059ec4b4c14df68",
+    "tmp/probe-materials/mask-cpu/fine.exe": "21e41883653e8859f4c6831e02f4c7aa9df15720572baf8989593b71991f8f2d",
+    "tmp/probe-materials/mask-cpu/large.png": "f46febe5861fc2c47674ab822c3c165919f8af0bf4bfdb885208faf1fcc5f03b",
+    "tmp/probe-materials/mask-cpu/constant.png": "accf8663960cf9d24aaf6cdfcf0aa8288e554e5f6e12231c90784b5086f5d450",
+    "tmp/probe-materials/mask-cpu/small.png": "206a71536a090c84a0d57428ad99a318f9727961c7dacfc1a8be52c9687d5148"
+  },
+  "coverage": [
+    {
+      "source": "1025x7 RGBA8 PNG; bottom row y=0 in GI storage",
+      "input": {
+        "A": "((x+3*y)%13)*19",
+        "R": "(17*x+29*y)%256"
+      },
+      "inspected_pairs": 7175,
+      "scenes": "two built-in cubes and one imported glTF share the same external image under relative and absolute paths; imported embedded PNG read through glTF twice",
+      "small_rgba_words": 1536,
+      "per_channel_words_including_header": 1796,
+      "total_atlas_words": 5128,
+      "result": "all scalar values and dimensions match; both descriptors use identical low-resolution xyz and distinct .w offsets"
+    },
+    {
+      "source": "3x1025 uncompressed embedded Assimp aiTexel, BGRA in top-down order",
+      "input": {
+        "A": "(253+5*x+7*y)%256",
+        "R": "(23*x+y)%256"
+      },
+      "inspected_pairs": 3075,
+      "result": "all scalar values match with the same bottom-row UV convention, including the incomplete final group of four"
+    },
+    {
+      "source": "9x3 varying PNG and 1025x7 constant PNG",
+      "result": "zero extra words, .w=0; R and A share one small color copy when masked"
+    },
+    {
+      "source": "material override or remove, Opaque and Blend, two ordinary color replacements with distinct pre-existing path spellings",
+      "result": "mask enabled by override retains original alpha; removal clears source; Opaque and Blend omit full-size channels; ordinary color atlas retains original per-path layout"
+    }
+  ],
+  "stdout": "3075 raw embedded BGRA texels passed, ordinary color-only old layout preserved\n7175 original A+R pairs checked, bottom row/tail, glTF embedded/shared, three instances/cube and imported shared source, small/constant, Blend/Opaque, override/remove passed"
+}

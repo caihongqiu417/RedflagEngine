@@ -1,0 +1,43 @@
+{
+  "scene": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag",
+  "camera": "inside doorway",
+  "renderer": "Debug x64 Vulkan, RTX 5070 Ti Laptop GPU",
+  "tool": "1.47",
+  "exe_sha256": "86f30ec769dc1aeec9eb74ce9f77342c8fc443a316049d61c8f67e3460d26921",
+  "asset_path": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag.rfprobes",
+  "asset_sha256": "5ced53148fae42a7269210d3106ea77ba2cca1b515bf63fabde5867818675ae7",
+  "asset_bytes": 96792,
+  "creation": "Ctrl+Shift+B and then Ctrl+S in the editor, then process exit.",
+  "reopen": "Separate editor process loading the saved scene: same room, lights and meshes with reversed entity order. Frame 12 includes only probe gathering.",
+  "dispatch_events": [
+    11,
+    459,
+    471,
+    483,
+    495,
+    507,
+    519,
+    531
+  ],
+  "capture": "output/captures/local/RTXGI-Bathroom-Baked-12.rdc",
+  "capture_sha256": "b6eecff038b4748f9ded33a588b02f576bfb75fa4ef3a10054ed5f30e3995ce7",
+  "output_sha256": "ca1be4f0c6789a3c847bc8a62c72bd2c17fcf158aa974e81cd3bcec242822de1",
+  "messages": [],
+  "entity_order_before": [
+    4,
+    3,
+    2,
+    5,
+    1
+  ],
+  "entity_order_after_save": [
+    1,
+    5,
+    2,
+    3,
+    4
+  ],
+  "probe_feedback": true,
+  "bake_rounds": 4,
+  "rays_per_direction_per_round": 64
+}

@@ -1,0 +1,49 @@
+% 前置知识
+地板上一点同时看得到两盏灯。为了便于心算，假设它们给这一点带来的亮度分别是 2 和 6，真实总和就是 8。每次只肯花一条阴影光线时，程序只能检查其中一盏。它需要保存“我是以多大的机会选到这盏灯的”，才能用这一次观察估计两盏灯的总和。PBRT 第四版第 2 章从同样的期望定义出发；到 ReSTIR 章节时，被挑选的对象会从灯变成整条反射路径。
+
+% 公式推导
+两盏灯各有一半机会被选中。直接返回 2 或 6，多次试验的平均值会靠近 4，因为只看到了一半的灯。分别除以选中它的概率，返回值变成 4 或 12，平均值就靠近 8。期望是按每个结果发生的概率加权得到的平均。估计量的期望恰好等于目标时，称它无偏。一次采样究竟偏离 8 多远，则要看方差。这里方差是 $(4-8)^2/2+(12-8)^2/2=16$。若事先知道亮度之比，用 $1/4,3/4$ 的概率选两盏灯，两种结果都返回 8。这就是重要性采样的出发点。在有遮挡的真实场景中，真实亮度恰好是我们还没算出来的量，只能用便宜的近似来选灯。
+
+% 公式
+对于离散灯号 $i$，记贡献为 $f_i$，选灯概率为 $p_i$。对于连续方向 $\omega$，概率密度 $p(\omega)$ 表示单位立体角内分配多少概率；一个小区域的概率近似为密度乘上该区域的立体角。
+\[
+\widehat L=f_i/p_i,\qquad
+\mathbb E[\widehat L]=\sum_i p_i f_i/p_i=\sum_i f_i,\qquad
+\widehat I_N=\frac1N\sum_{k=1}^N\frac{f(\omega_k)}{p(\omega_k)}.
+\]
+任何有贡献的候选都须有机会被选中。独立样本取平均会让方差除以 $N$；重复用同一条旧路径时，样本间产生相关性，这条方差结论就不能直接套用。
+
+\begin{center}\begin{tikzpicture}[x=.95cm,y=.9cm]
+\draw[rounded corners,gray!50,fill=shade] (-.45,-1.05) rectangle (12.45,1.35);
+\fill[wine!28] (0,0) rectangle (3,.7);
+\fill[teal!22] (3,0) rectangle (12,.7);
+\draw[gray] (0,0) rectangle (12,.7);\draw[gray] (3,0)--(3,.7);
+\node at (1.5,.35){灯 A};\node at (7.5,.35){灯 B};
+\node[above] at (1.5,.7){25\%};\node[above] at (7.5,.7){75\%};
+\draw[->,thick] (1.2,-.46)--(1.2,-.02);\draw[->,thick] (7.44,-.46)--(7.44,-.02);
+\node[below] at (1.2,-.42){$u=0.10$};\node[below] at (7.44,-.42){$u=0.62$};
+\end{tikzpicture}\\{\small 本册绘制。一个随机数只落入一段，段越长，对应灯被抽到的机会越大。}\end{center}
+
+\clearpage
+% 逐行伪代码
+\subsection{只追踪一盏灯}
+一张累积概率表 \term{CDF} 把 $[0,1)$ 划成不同长度的区间。掷出 $0.10$ 落入第一段，掷出 $0.62$ 落入第二段。PBRT 的逆变换采样把这个办法推广到连续分布。
+\noindent{\small\color{quiet}教学伪代码，手算例\quad\href{run:../../Redflag/src/Redflag/Renderer/GI/Shaders/GI.comp}{\texttt{GI.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+probability = [0.25, 0.75]
+endOfRange  = [0.25, 1.00]
+u = uniformRandom(0, 1)
+i = firstIndexWhere(endOfRange > u)
+(*@{\footnotesize\color{quiet}一盏灯只在部分帧被抽到，除以选中概率补回其份额。}@*)
+return contribution(i) / probability[i]
+\end{lstlisting}
+
+% 接口与数据结构
+\begin{fields}
+\texttt{GILight} & 世界位置决定方向和距离，RGB 强度决定三个颜色通道各自的光量。\\
+\texttt{candidate} & 直接光分支均匀挑一盏灯，临时权重为灯数；间接光分支在表面上方挑一个方向。\\
+\texttt{SetSeed} & 固定一串随机数的起点，重复绘制时便于逐像素检查。换种子后可观察误差的波动。\\
+\end{fields}
+
+% 验证标准
+拿纸列出前面的两个结果，分别算 $\mathbb E[\widehat L]$ 和 $\mathbb E[(\widehat L-8)^2]$。再打开项目的 Sponza 基准。它将 16 盏点光源逐盏求和作为直接光参考，误差在曝光前的线性 RGB 上计算。把屏幕 PNG 再相减会把显示曲线也算进误差。后面的章节沿用这个区别。

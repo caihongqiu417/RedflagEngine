@@ -1,0 +1,1158 @@
+{
+  "Sun-Temple": {
+    "991fdf640a3d": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 8,
+        "nodes": 262143,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 606376
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 70,
+      "dispatches": 7,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "24b629033733a7084f0d887a5fe334a56ed243808e04fd1638bcb04f71024ff9",
+          "captured_cpu_dispatch_us": 10,
+          "gpu_ms": [
+            1.000672,
+            0.991776,
+            1.0251839999999999,
+            1.0112,
+            1.251264,
+            0.9753919999999999,
+            1.824544,
+            1.0269439999999999,
+            1.0199040000000001,
+            0.993728,
+            1.0291199999999998
+          ],
+          "median_ms": 1.0199040000000001
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "95581bec8f2b1a6fbfcba78191539b9e37568690f10e0c59d779c035ca5cf392",
+          "captured_cpu_dispatch_us": 5,
+          "gpu_ms": [
+            1.19264,
+            1.1737600000000001,
+            1.1762560000000002,
+            1.165536,
+            1.1653760000000002,
+            1.14848,
+            1.203904,
+            1.2094079999999998,
+            1.197984,
+            1.169632,
+            1.180704
+          ],
+          "median_ms": 1.1762560000000002
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "fdb9cff4bb6a51c6f89f20628b85393cfce53e02333ffc25d9a50e5ba8b282dd",
+          "captured_cpu_dispatch_us": 4,
+          "gpu_ms": [
+            0.013152,
+            0.012864,
+            0.022112,
+            0.013184,
+            0.013056,
+            0.012735999999999999,
+            0.013632,
+            0.02224,
+            0.013312000000000001,
+            0.013023999999999999,
+            0.013312000000000001
+          ],
+          "median_ms": 0.013184
+        },
+        "fog": {
+          "event": 70,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "0e872ee3a47e356784f0ba3778ea3bfa97ad75b8398c08ef75ff043110ac2610",
+          "captured_cpu_dispatch_us": 10,
+          "gpu_ms": [
+            4.2792639999999995,
+            4.423488,
+            5.960191999999999,
+            4.2287360000000005,
+            4.231776,
+            4.415552,
+            4.65232,
+            6.140928000000001,
+            4.401952,
+            4.2829440000000005,
+            4.304448
+          ],
+          "median_ms": 4.401952
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sun-Temple-rays-991fdf640a3d-320/studio_frame24.rdc",
+      "capture_sha256": "3fd7884f3468e2183e83b5d85a0dc012238b1776a81b4248e42cc8044c9b743c",
+      "exe_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+      "scene_sha256": "3bcf0f1f86d9efa3f264f7231195a19670ea8d9a221533c6e882b666925dec49",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "35ee823aa5a55b99683b2bd7a3027a45b3d75b48c82c70abe640084a86a5dac4",
+      "display_sha256": "a9427f23fb9f6176e9ed04c244a46a558d9bb2ea7cef34c258ba2fb86b90a30a"
+    },
+    "ee2627d7c42f": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 8,
+        "nodes": 262143,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 606376,
+        "root_children": [
+          {
+            "low": [
+              -101.39675903320312,
+              -70.07438659667969,
+              -163.80580139160156
+            ],
+            "high": [
+              8.75,
+              24.275625228881836,
+              72.6502914428711
+            ],
+            "first": 0,
+            "count": 0,
+            "end": 131072
+          },
+          {
+            "low": [
+              -8.75,
+              -69.67193603515625,
+              -158.79408264160156
+            ],
+            "high": [
+              169.4049530029297,
+              24.275625228881836,
+              85.26197052001953
+            ],
+            "first": 303188,
+            "count": 0,
+            "end": 262143
+          }
+        ]
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 70,
+      "dispatches": 7,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "24b629033733a7084f0d887a5fe334a56ed243808e04fd1638bcb04f71024ff9",
+          "captured_cpu_dispatch_us": 18,
+          "gpu_ms": [
+            1.6839680000000001,
+            2.616064,
+            1.593408,
+            1.524768,
+            2.517312,
+            2.588704,
+            1.54064,
+            1.6067200000000001,
+            2.603072,
+            1.572192,
+            1.540096
+          ],
+          "median_ms": 1.6067200000000001
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "4ad7d5743adce9c3421846174eb52e1b509db6be6edf0d25b9dfbadf6052ba4b",
+          "captured_cpu_dispatch_us": 7,
+          "gpu_ms": [
+            2.292128,
+            2.539072,
+            2.229056,
+            2.230912,
+            2.201952,
+            2.446336,
+            2.203808,
+            2.258848,
+            2.4784,
+            2.3062400000000003,
+            2.199552
+          ],
+          "median_ms": 2.258848
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "b980008b751565d8fafe522602cdbecf2b09761ab9575f79ab33c9ac67919f44",
+          "captured_cpu_dispatch_us": 11,
+          "gpu_ms": [
+            0.012480000000000002,
+            0.012,
+            0.011904,
+            0.011904,
+            0.011488,
+            0.011968,
+            0.011712,
+            0.011904,
+            0.01392,
+            0.011712,
+            0.011456000000000001
+          ],
+          "median_ms": 0.011904
+        },
+        "fog": {
+          "event": 70,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "b91efa7a8a1283b0d484ee3ae6e01c926e95b4cc1005cce7f77f3d2b9dc67562",
+          "captured_cpu_dispatch_us": 10,
+          "gpu_ms": [
+            5.86464,
+            5.8850880000000005,
+            5.5431680000000005,
+            7.385184000000001,
+            7.310592000000001,
+            5.655328,
+            5.703392,
+            5.896928,
+            5.463296000000001,
+            5.52128,
+            5.723296
+          ],
+          "median_ms": 5.723296
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sun-Temple-rays-ee2627d7c42f-320/studio_frame24.rdc",
+      "capture_sha256": "09d63bceee9aeb9072e9f7af66fc0832c3173111933c822933ba85a4402eea62",
+      "exe_sha256": "ee2627d7c42fcbe55f532ddf77d148288a6637a1a47ae1f97f51462645bf8db5",
+      "scene_sha256": "3bcf0f1f86d9efa3f264f7231195a19670ea8d9a221533c6e882b666925dec49",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "b2c75ba0f1d46b34d588746ca59b7cd3db664593e916e12733df2db411c1b403",
+      "display_sha256": "d2fd50f61a75efe756021e1489e37d2ad4f4d08976243006485cc1eac5818909"
+    },
+    "d0180005a4f6": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 8,
+        "nodes": 260265,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 606376,
+        "root_children": [
+          {
+            "low": [
+              -101.39675903320312,
+              -70.07438659667969,
+              -163.80580139160156
+            ],
+            "high": [
+              13.850000381469727,
+              24.275625228881836,
+              72.6502914428711
+            ],
+            "first": 0,
+            "count": 0,
+            "end": 230974
+          },
+          {
+            "low": [
+              4.763184547424316,
+              -69.67193603515625,
+              -154.91676330566406
+            ],
+            "high": [
+              169.4049530029297,
+              18.71438980102539,
+              85.26197052001953
+            ],
+            "first": 538079,
+            "count": 0,
+            "end": 260265
+          }
+        ]
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 70,
+      "dispatches": 7,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "24b629033733a7084f0d887a5fe334a56ed243808e04fd1638bcb04f71024ff9",
+          "captured_cpu_dispatch_us": 15,
+          "gpu_ms": [
+            0.764384,
+            1.190272,
+            0.7614399999999999,
+            1.043808,
+            0.785728,
+            0.788416,
+            0.790304,
+            0.790048,
+            0.779808,
+            0.812256,
+            0.8033600000000001
+          ],
+          "median_ms": 0.790048
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "b04f0f1ea54ea42db4038183eef5fdc251596632e7a6a89f1379889a6e55480a",
+          "captured_cpu_dispatch_us": 7,
+          "gpu_ms": [
+            1.460768,
+            1.471648,
+            1.4736639999999999,
+            1.466816,
+            1.472224,
+            1.68784,
+            1.4449599999999998,
+            1.485792,
+            1.4760000000000002,
+            1.455168,
+            1.48976
+          ],
+          "median_ms": 1.472224
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "6ab8927423c3162a8ecfa3666d67cb3b3c172446af1b4bc98a121a33c5c929e0",
+          "captured_cpu_dispatch_us": 7,
+          "gpu_ms": [
+            0.011424,
+            0.011264,
+            0.011296,
+            0.011392000000000001,
+            0.011296,
+            0.01136,
+            0.011616,
+            0.012032,
+            0.017759999999999998,
+            0.011776,
+            0.017504
+          ],
+          "median_ms": 0.011424
+        },
+        "fog": {
+          "event": 70,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "dd661c6b71ecc0e5394b4c4f6d9c13de478c8bd58f6064c9e02fc0e707a41496",
+          "captured_cpu_dispatch_us": 4,
+          "gpu_ms": [
+            2.544544,
+            2.54752,
+            2.5450559999999998,
+            2.4886399999999997,
+            2.533792,
+            2.5536320000000003,
+            2.63008,
+            2.982368,
+            2.580928,
+            2.558368,
+            2.8592
+          ],
+          "median_ms": 2.5536320000000003
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sun-Temple-rays-d0180005a4f6-320/studio_frame24.rdc",
+      "capture_sha256": "5db8fb9c0c2440a2c327b36096de7d9c62ff6eb66a367997df38f35154f94591",
+      "exe_sha256": "d0180005a4f627736b86bcf10e492192af3da2220acdc8cf639a830d4489022c",
+      "scene_sha256": "3bcf0f1f86d9efa3f264f7231195a19670ea8d9a221533c6e882b666925dec49",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "0a318d77cde971c6b7bca69cf075329207dc251106847c1b224b64e3a6ce3925",
+      "display_sha256": "ee2438314a5fe895ebdcf04e32c5f53f7b1954ee4f833428a3135fd7edb5648b"
+    }
+  },
+  "Sponza-Atrium": {
+    "991fdf640a3d": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 3,
+        "nodes": 131071,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 262267
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 125,
+      "dispatches": 6,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "cf883dffc3eacebad23cf44d98d6350cd3ccc0133a4d886583e638618e80ce1d",
+          "captured_cpu_dispatch_us": 13,
+          "gpu_ms": [
+            0.8910399999999999,
+            0.946368,
+            0.8960319999999999,
+            0.919584,
+            0.924896,
+            0.90464,
+            0.8825280000000001,
+            0.91552,
+            0.910752,
+            0.903584,
+            1.005504
+          ],
+          "median_ms": 0.910752
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "52efb7a1934ee758afe4309a439835349d0aaa8db6ed4fec0541cc981b64c58b",
+          "captured_cpu_dispatch_us": 14,
+          "gpu_ms": [
+            1.173408,
+            1.289568,
+            1.186976,
+            1.458944,
+            1.194432,
+            1.188896,
+            1.1792319999999998,
+            1.184832,
+            1.5578239999999999,
+            1.1847999999999999,
+            1.322976
+          ],
+          "median_ms": 1.188896
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "02c62752fc8dc4ef15785d84c9a15e0fa6798767f2984ed18207d3d93a4f5118",
+          "captured_cpu_dispatch_us": 8,
+          "gpu_ms": [
+            0.012320000000000001,
+            0.012288,
+            0.012064,
+            0.017696,
+            0.012192,
+            0.012256,
+            0.011871999999999999,
+            0.011936,
+            0.012192,
+            0.01216,
+            0.020608
+          ],
+          "median_ms": 0.012192
+        },
+        "fog": {
+          "event": 59,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "7f0ab880ca02564960594ae03927ff0e7ac2ff81b7472de309d6fec8bf73e87a",
+          "captured_cpu_dispatch_us": 24,
+          "gpu_ms": [
+            3.660096,
+            5.2145280000000005,
+            3.610912,
+            5.212576,
+            3.634464,
+            3.611968,
+            3.666304,
+            3.602976,
+            5.447744,
+            3.9154560000000003,
+            6.230816
+          ],
+          "median_ms": 3.666304
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-rays-991fdf640a3d-320/studio_frame24.rdc",
+      "capture_sha256": "650c772ce33d9df9506b8aafb03df43939ea59dd222359c6469643bfd095aba3",
+      "exe_sha256": "991fdf640a3d2470a6b235b1eb8ba0bf8d5a2941a1113aad024c22c043f82ef3",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "6d63b61ae3a45f03706282b41892f761890984c7217f42a1ad2377e19cbacdc9",
+      "display_sha256": "c44adc494f2b0f658943e24912c4a7d626b0185b242577296e97fb712efd252e"
+    },
+    "ee2627d7c42f": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 3,
+        "nodes": 131071,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 262267
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 125,
+      "dispatches": 6,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "cf883dffc3eacebad23cf44d98d6350cd3ccc0133a4d886583e638618e80ce1d",
+          "captured_cpu_dispatch_us": 16,
+          "gpu_ms": [
+            1.4428480000000001,
+            1.434368,
+            1.517472,
+            1.450464,
+            1.48016,
+            1.509728,
+            1.510816,
+            1.524096,
+            1.597984,
+            1.548384,
+            2.292576
+          ],
+          "median_ms": 1.510816
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "4a25987add5cd58c4e731fa455a984337b86ba8beabd0abdf7399c6a697fc42a",
+          "captured_cpu_dispatch_us": 5,
+          "gpu_ms": [
+            2.04528,
+            2.070688,
+            2.10048,
+            2.0596799999999997,
+            2.615136,
+            2.2429759999999996,
+            2.622976,
+            2.139008,
+            2.696704,
+            2.119904,
+            2.257536
+          ],
+          "median_ms": 2.139008
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "8ae85ee72f01aace9946259bd23909658fb33a6c2fdf25e61265328722e59b63",
+          "captured_cpu_dispatch_us": 10,
+          "gpu_ms": [
+            0.019488000000000002,
+            0.012,
+            0.019232000000000003,
+            0.011712,
+            0.019008,
+            0.012,
+            0.01744,
+            0.01216,
+            0.017152,
+            0.012032,
+            0.012256
+          ],
+          "median_ms": 0.012256
+        },
+        "fog": {
+          "event": 59,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "d709d1ec98ee6524f3445e314d7537ea927ef48488ada873ce2db0bda8491c82",
+          "captured_cpu_dispatch_us": 5,
+          "gpu_ms": [
+            4.6327679999999996,
+            4.501696,
+            4.85712,
+            4.528224,
+            5.05968,
+            6.927968,
+            4.596704,
+            4.792704,
+            4.741792,
+            4.613088,
+            4.502848
+          ],
+          "median_ms": 4.6327679999999996
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-rays-ee2627d7c42f-320/studio_frame24.rdc",
+      "capture_sha256": "af6061f4199ad919e5748d257c6f273addf18fbf2a17f5e0ee72617741ac340b",
+      "exe_sha256": "ee2627d7c42fcbe55f532ddf77d148288a6637a1a47ae1f97f51462645bf8db5",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "074196a3d03ec69b39ad02f3dff50351b7426a6c78db5ab968fedd96a88ac40a",
+      "display_sha256": "d122a89aa0d5378af9d57cc2eb21873eb2b8323fcf61bdcf7cf50d9ba72fdb8d"
+    },
+    "d0180005a4f6": {
+      "scene": {
+        "size": [
+          320,
+          205
+        ],
+        "lights": 3,
+        "nodes": 111903,
+        "grid": [
+          12,
+          6,
+          7
+        ],
+        "triangles": 262267,
+        "root_children": [
+          {
+            "low": [
+              -10.0,
+              -4.181501388549805,
+              -6.149752616882324
+            ],
+            "high": [
+              -0.015174388885498047,
+              4.181501865386963,
+              6.149752616882324
+            ],
+            "first": 0,
+            "count": 0,
+            "end": 18936
+          },
+          {
+            "low": [
+              -9.709942817687988,
+              -4.181501388549805,
+              -6.149752616882324
+            ],
+            "high": [
+              9.999999046325684,
+              4.181501865386963,
+              6.149752616882324
+            ],
+            "first": 44416,
+            "count": 0,
+            "end": 111903
+          }
+        ]
+      },
+      "renderdoc": "1.47",
+      "frame": 24,
+      "draws": 125,
+      "dispatches": 6,
+      "stages": {
+        "direct": {
+          "event": 11,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 3,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "cf883dffc3eacebad23cf44d98d6350cd3ccc0133a4d886583e638618e80ce1d",
+          "captured_cpu_dispatch_us": 17,
+          "gpu_ms": [
+            0.841952,
+            0.795904,
+            0.795456,
+            1.285952,
+            0.8047679999999999,
+            1.114144,
+            0.7890240000000001,
+            0.793248,
+            0.795296,
+            0.789888,
+            0.7789119999999999
+          ],
+          "median_ms": 0.795456
+        },
+        "probe": {
+          "event": 23,
+          "groups": [
+            48,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 9,
+            "frame": 24,
+            "samples": 2,
+            "flags": 3,
+            "seed": 137
+          },
+          "output_bytes": 96768,
+          "sha256": "b22641724dc21d1024feef2248c4bdc1ac342b843a3a26929c075286c9279757",
+          "captured_cpu_dispatch_us": 13,
+          "gpu_ms": [
+            1.1493440000000001,
+            1.0280639999999999,
+            1.028576,
+            1.01248,
+            1.179072,
+            1.168704,
+            1.034592,
+            1.0231999999999999,
+            1.306272,
+            1.04144,
+            1.030336
+          ],
+          "median_ms": 1.034592
+        },
+        "ddgi": {
+          "event": 35,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "stage": 10,
+            "frame": 23,
+            "samples": 1,
+            "flags": 0,
+            "seed": 137
+          },
+          "output_bytes": 1049600,
+          "sha256": "b61f57ab4d3c8ce12c1c9b4ce394b74dcd44fc8a2d3023caabedd2280d2dc6f1",
+          "captured_cpu_dispatch_us": 5,
+          "gpu_ms": [
+            0.012032,
+            0.011807999999999999,
+            0.011936,
+            0.012352,
+            0.012352,
+            0.012480000000000002,
+            0.011871999999999999,
+            0.011807999999999999,
+            0.012064,
+            0.01216,
+            0.011776
+          ],
+          "median_ms": 0.012032
+        },
+        "fog": {
+          "event": 59,
+          "groups": [
+            1025,
+            1,
+            1
+          ],
+          "parameters": {
+            "density": 0.05999999865889549,
+            "albedo": 0.800000011920929,
+            "g": 0.15000000596046448,
+            "max_distance": 12.0,
+            "steps": 8
+          },
+          "output_bytes": 1049600,
+          "sha256": "83ad4afebc536646e8af06c035489c719cc7d7b06ddfcd625aa27234c276c224",
+          "captured_cpu_dispatch_us": 13,
+          "gpu_ms": [
+            2.516448,
+            2.5708480000000002,
+            2.55184,
+            2.6299840000000003,
+            2.632736,
+            2.571648,
+            2.599104,
+            2.529184,
+            2.547648,
+            2.55232,
+            2.85936
+          ],
+          "median_ms": 2.5708480000000002
+        }
+      },
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-rays-d0180005a4f6-320/studio_frame24.rdc",
+      "capture_sha256": "dc89733d90e5c04400d125d0abfd4ea9d877612171b79550f42bd1d92495ef26",
+      "exe_sha256": "d0180005a4f627736b86bcf10e492192af3da2220acdc8cf639a830d4489022c",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "settings_sha256": "62b5a3bffb5327a26a46034fa71a05b50240c47cae5afd9dc23e7159b2326634",
+      "settings": {
+        "Direct": "All point lights",
+        "FastNavigation": false,
+        "FogAlbedo": 0.8,
+        "FogAnisotropy": 0.15,
+        "FogDensity": 0.06,
+        "FogDistance": 12,
+        "FogSteps": 8,
+        "GTAO": false,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 320,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "TAA": false,
+        "VolumetricFog": true
+      },
+      "fog_input_sha256": "72597b2748ac326be8d6c58ce9b930444a6dbf937c8ca556dd6efb2c85b49ee0",
+      "display_sha256": "3d5cc36e2df6af402e516ef800e73c01b8cefbf99ccffbf4fdf54e1448c09d24"
+    }
+  }
+}

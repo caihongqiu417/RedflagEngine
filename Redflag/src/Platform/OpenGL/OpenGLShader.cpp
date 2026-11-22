@@ -85,7 +85,7 @@ namespace Redflag {
 
         static std::filesystem::path GetCachePath(GLenum stage, const std::string& source)
         {
-            // 源码决定缓存文件名。改编译选项或升级编译器时，要改下面的版本号才能让旧缓存失效。
+            // 源码改动后会得到新的缓存文件名。改编译选项或升级编译器时，也要更新下面的版本号，让着色器重新编译。
             const std::string key = "opengl45-performance-auto-locations-auto-bind-v1\n" + source;
             uint64_t hash = 14695981039346656037ull;
             for (unsigned char value : key)

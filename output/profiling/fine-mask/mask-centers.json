@@ -1,0 +1,180 @@
+{
+  "reference": "Source baseColor PNG alpha >= 0.5, each original texel center, LOD 0, repeat addressing. CPU calculation from RenderDoc buffer bytes; no counts of scene pixels or rays.",
+  "crop": "Material 0, 64x64 nonoverlapping tile with most old misclassifications. Columns: source, old GPU buffer sampled on CPU, new GPU buffer sampled on CPU. Red blocks a hole, amber lets light through solid.",
+  "cases": {
+    "old": {
+      "triangles": 262267,
+      "masked_triangles": 34940,
+      "mask_rows": 14,
+      "materials": [
+        {
+          "material": 0,
+          "file": "5061699253647017043.png",
+          "sha256": "6fbdbf67d3501831ad3a4e2adbf3d27e4c3d13ba1d655e5861c3f39b5f899f65",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 31436,
+          "mask_rows": [
+            0,
+            2
+          ],
+          "stored_size": [
+            512,
+            512
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "64634eea8a8b7044e808886455d80d025b04d6068f171d599921033bbe0b4158",
+          "source_alpha_sha256": "9df2e36ef3397d3417ac35b1df83820250120cf75b8286140c020b1aadcde1cc",
+          "passed_through_solid": 10893,
+          "blocked_holes": 10692,
+          "crop_bottom_left": [
+            320,
+            320
+          ]
+        },
+        {
+          "material": 3,
+          "file": "8006627369776289000.png",
+          "sha256": "75328d1aac87f8539be2456e6a5392cef7c6d08476d75585eafcd334dbeee0c5",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 3472,
+          "mask_rows": [
+            1,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "stored_size": [
+            512,
+            512
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "44f0d6001fe983f0cdf6bbd97c3c3ad2aa98d08e87542be48d0d43b3bf4b863f",
+          "source_alpha_sha256": "d74851b4342d3c2c91c401a66126cee61db479a300a3b792b51af31e7ca1e82f",
+          "passed_through_solid": 4061,
+          "blocked_holes": 3931,
+          "crop_bottom_left": [
+            64,
+            896
+          ]
+        },
+        {
+          "material": 20,
+          "file": "16275776544635328252.png",
+          "sha256": "d6df943a0dcf535d9dfb009c2833e0c7dc21939cfe3a2c10316c552b3dc3441b",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 32,
+          "mask_rows": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "stored_size": [
+            512,
+            512
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "f278ca18c5b6ce3ef2bbc4d22001872095830f5b0dac91f8a4446c824af12798",
+          "source_alpha_sha256": "5190bc68a9936a934b4b56f40c4dd9717f69b9a1f3c8602c1971918d488200fc",
+          "passed_through_solid": 2142,
+          "blocked_holes": 1750,
+          "crop_bottom_left": [
+            640,
+            256
+          ]
+        }
+      ]
+    },
+    "new": {
+      "triangles": 262267,
+      "masked_triangles": 34940,
+      "mask_rows": 14,
+      "materials": [
+        {
+          "material": 0,
+          "file": "5061699253647017043.png",
+          "sha256": "6fbdbf67d3501831ad3a4e2adbf3d27e4c3d13ba1d655e5861c3f39b5f899f65",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 31436,
+          "mask_rows": [
+            0,
+            2
+          ],
+          "stored_size": [
+            1024,
+            1024
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "9df2e36ef3397d3417ac35b1df83820250120cf75b8286140c020b1aadcde1cc",
+          "source_alpha_sha256": "9df2e36ef3397d3417ac35b1df83820250120cf75b8286140c020b1aadcde1cc",
+          "passed_through_solid": 0,
+          "blocked_holes": 0
+        },
+        {
+          "material": 3,
+          "file": "8006627369776289000.png",
+          "sha256": "75328d1aac87f8539be2456e6a5392cef7c6d08476d75585eafcd334dbeee0c5",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 3472,
+          "mask_rows": [
+            1,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "stored_size": [
+            1024,
+            1024
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "d74851b4342d3c2c91c401a66126cee61db479a300a3b792b51af31e7ca1e82f",
+          "source_alpha_sha256": "d74851b4342d3c2c91c401a66126cee61db479a300a3b792b51af31e7ca1e82f",
+          "passed_through_solid": 0,
+          "blocked_holes": 0
+        },
+        {
+          "material": 20,
+          "file": "16275776544635328252.png",
+          "sha256": "d6df943a0dcf535d9dfb009c2833e0c7dc21939cfe3a2c10316c552b3dc3441b",
+          "width": 1024,
+          "height": 1024,
+          "cutoff": 0.5,
+          "triangles": 32,
+          "mask_rows": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "stored_size": [
+            1024,
+            1024
+          ],
+          "sampled_centers": 1048576,
+          "stored_alpha_sha256": "5190bc68a9936a934b4b56f40c4dd9717f69b9a1f3c8602c1971918d488200fc",
+          "source_alpha_sha256": "5190bc68a9936a934b4b56f40c4dd9717f69b9a1f3c8602c1971918d488200fc",
+          "passed_through_solid": 0,
+          "blocked_holes": 0
+        }
+      ]
+    }
+  }
+}

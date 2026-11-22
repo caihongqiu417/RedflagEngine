@@ -16,7 +16,7 @@ namespace Redflag {
             if (std::filesystem::exists(path))
                 return Texture2D::Create(path);
 
-            // 回退：创建 1x1 RGBA 纹理并写入单像素颜色
+            // 找不到图标文件时，用一个纯色方块代替。
             auto tex = Texture2D::Create(1, 1);
             uint32_t c = color;
             tex->SetData(&c, sizeof(uint32_t)); // 1x1 RGBA => 4 字节
@@ -53,7 +53,7 @@ namespace Redflag {
         if (ext == ".redflag")
             return m_SceneIcon;
 
-        // 其余扩展名查专用图标表，最后回退通用图标
+        // 查找这个扩展名对应的图标。没有专用图标时，显示普通文件图标。
         if (!ext.empty() && ext[0] == '.') ext = ext.substr(1);
         auto it = m_FileTypeIcons_reserved.find(ext);
         if (it != m_FileTypeIcons_reserved.end())

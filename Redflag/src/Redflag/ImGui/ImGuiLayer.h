@@ -9,6 +9,8 @@
 
 namespace Redflag
 {
+	class VulkanImGui;
+
 	class REDFLAG_API ImGuiLayer :public Layer
 	{
 	public:
@@ -28,7 +30,7 @@ namespace Redflag
 
 		void SetThemeColor();
 	private:
-		float m_Time = 0.0f;
+		Scope<VulkanImGui> m_Vulkan;
 		bool m_BlockEvents = true;  // Ä¬ÈÏÀ¹½ØÊÂ¼þ
 	};
 }

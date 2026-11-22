@@ -1,0 +1,81 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 4
+    TagComponent:
+      Tag: Main Camera
+    TransformComponent:
+      Translation: [1.14999998, 0.649999976, 3.25]
+      Rotation: [-0.208667606, 0.34009707, 3.95163058e-09]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.75049156
+        PerspectiveNear: 0.0500000007
+        PerspectiveFar: 40
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 40
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: Point Light
+    TransformComponent:
+      Translation: [-1.60000002, 1.29999995, 2.20000005]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 2
+      Radius: 7
+      CastShadow: false
+  - Entity: 2
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [0.449999988, -0.850000024, -0.550000012]
+      Color: [1, 1, 1]
+      Intensity: 3.29999995
+      CastShadow: true
+  - Entity: 5
+    TagComponent:
+      Tag: Floor
+    TransformComponent:
+      Translation: [0, -1.0355165, 0]
+      Rotation: [0, 0, 0]
+      Scale: [6, 0.100000001, 5]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.379999995, 0.419999987, 0.479999989, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 1
+    TagComponent:
+      Tag: StanfordBunny
+    TransformComponent:
+      Translation: [0.216306493, -1.41494107, 0.0204757042]
+      Rotation: [0, 0, 0]
+      Scale: [12.8612242, 12.8612242, 12.8612242]
+    ModelRendererComponent:
+      ModelID: 17135308193928371761
+      FilePath: assets/models/reference/StanfordBunny/bun_zipper_res2.ply
+      LODs:
+        - ModelID: 587234730730683917
+          FilePath: assets/models/reference/StanfordBunny/bun_zipper_res3.ply
+          ScreenHeight: 0.25
+        - ModelID: 12429440132096761301
+          FilePath: assets/models/reference/StanfordBunny/bun_zipper_res4.ply
+          ScreenHeight: 0.12
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [0.75999999, 0.519999981, 0.330000013, 1]
+          Metallic: 0
+          Roughness: 0.629999995
+          AO: 1

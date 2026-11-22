@@ -18,4 +18,6 @@ if errorlevel 1 exit /b 1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 cd RedflagForge
 ..\bin-int\Tests\IBLTests.exe %*
+if errorlevel 1 exit /b 1
+..\bin-int\Tests\IBLTests.exe --reload-baked
 exit /b %errorlevel%

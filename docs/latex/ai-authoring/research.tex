@@ -1,0 +1,88 @@
+% !TeX program = xelatex
+% 在 docs/latex/ai-authoring 目录以 XeLaTeX 编译 research.tex。
+\documentclass[UTF8,11pt,fontset=fandol,a4paper]{ctexart}
+\usepackage[top=24mm,bottom=22mm,left=22mm,right=22mm]{geometry}
+\usepackage{tikz,fancyhdr,hyperref,tabularx,booktabs}
+\usetikzlibrary{arrows.meta,fit,backgrounds}
+\definecolor{ink}{HTML}{18363E}\definecolor{teal}{HTML}{196C64}\definecolor{muted}{HTML}{4D666A}
+\hypersetup{colorlinks=true,urlcolor=teal,linkcolor=teal,pdftitle={Redflag 的 AI 制作与可交互高斯场景}}
+\ctexset{section={format=\Large\bfseries\color{ink},afterindent=true},subsection={format=\large\bfseries\color{teal},afterindent=true}}
+\setlength{\parindent}{2\ccwd}\setlength{\parskip}{.55\baselineskip}\setlength{\emergencystretch}{6em}
+\pagestyle{fancy}\fancyhf{}\lhead{\small Redflag\enspace / \enspace 专用引擎研究与设计}\rhead{\small 2026.11.22}\rfoot{\small \thepage}
+\newcommand{\f}[1]{\texttt{\detokenize{#1}}}\newcommand{\src}[2]{\href{#1}{#2}}\newcommand{\pg}[1]{\clearpage\section{#1}}
+\begin{document}
+\section{从桌上认出锤子，到把它拿起来}
+你对 NPC 说「帮我把桌上的锤子拿起来」。在普通网格引擎里，让 NPC 的眼睛充当相机，视觉模型就能从图像里找锤子。游戏可以用深度和射线把看见的位置落回场景。锤子原本就是独立实体时，命中它的碰撞体即可取得实体引用，检查距离后抓取。开发者可以给它起任意名字。只要采用相同的视角和识别模型，换一套渲染表示本身没有理由让 NPC 认得更准。
+
+另一种开局是一份整屋扫描，里面看得见锤子，编辑器却只能选中整间屋子。转成 Redflag 自己的文件后，如果内容仍是一批没有分组的高斯，点击锤头只能给出待调查的位置。NPC 需要从几个实际看过的角度圈出锤子，把锤头和木柄对应到同一组三维元素，再由游戏创建可移动的实例。这才是值得在 Redflag 里研究的差别。三角网格或点云也能配三维分割；例如 ConceptGraphs 就把来自多个视角的识别结果关联成三维物件。\src{https://concept-graphs.github.io/}{ConceptGraphs，ICRA 2024}
+
+\textbf{NeRF 和 3DGS 解决哪个问题。} 拍一张桌子的正面，再拍它的斜侧面，两种方法都试图合成中间机位的画面。原始 NeRF 学一个函数，沿相机射线查询各处密度和朝当前方向的颜色，再合成像素。原始 3DGS 优化许多个各向异性的高斯，每颗有位置、形状、不透明度和随方向变化的颜色。它们投到屏幕上形成有软边的椭圆，按可见性混合。前者便于理解连续场怎样绘制；后者显式列出可选取、可变换的元素，更贴合这一项编辑实验。两条方法都要从观测推外观，没拍过的桌面纹路仍属未知。\src{https://www.matthewtancik.com/nerf}{NeRF，论文与 ECCV 演讲}\quad\src{https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/}{3DGS，SIGGRAPH 论文与演示}
+
+\textbf{文件格式怎样选。} 单独导入锤子时，以整个资产为一个实例，取得引用后就能沿用游戏的抓取操作。导入整间屋子时，保留高斯的逐元素属性与稳定索引，资产可按块加载；运行时发现的物件先保存为「源资产版本、成员索引、局部坐标系」。后续烘焙成独立的小资产，移动只改实例变换。索引以指定版本为准，重新优化可能改变成员对应关系。若导入时把所有数据烘成三角网格，仍可抓实体或分割三角面，代价是已经失去直接挑原始高斯的入口。游戏能否抓得稳还取决于碰撞、抓点与约束。
+
+\pg{一份世界外观怎样供人和 NPC 使用}
+\begin{center}
+\begin{tikzpicture}[n/.style={rounded corners=2pt,draw=teal!60,fill=white,minimum height=11mm,text width=39mm,align=center,font=\small},a/.style={-{Stealth[length=2mm]},teal,thick},t/.style={anchor=west,font=\small\bfseries,text=ink}]
+\path[draw=ink!60,rounded corners=3pt] (-0.3,.72) rectangle (15.55,-5.66);
+\fill[teal!5] (-.18,.6) rectangle (15.43,-1.38);
+\fill[blue!4] (-.18,-1.51) rectangle (15.43,-3.42);
+\fill[orange!7] (-.18,-3.53) rectangle (15.43,-5.52);
+\node[t] at (.07,.35){制作与资源};\node[t] at (.07,-1.78){玩家、NPC 与同一场景};\node[t] at (3.12,-3.79){发现物件与更新世界};
+\node[n](in) at (2.35,-.71){GLB 模型或扫描照片\\离线转换或重建};
+\node[n](ast) at (7.55,-.71){高斯资产与版本\\AssetLibrary 记录路径};
+\node[n](edit) at (12.7,-.71){人或制作助手\\保存、复用物件};
+\node[n](draw) at (7.55,-2.69){SceneRenderer\\按机位绘制高斯};
+\node[n](eye) at (2.35,-2.69){NPC 相机与识别\\返回位置、掩码和机位};
+\node[n](player) at (12.7,-2.69){玩家视口\\看到锤子移动};
+\node[n](seg) at (2.35,-4.76){多视角三维分割\\提交候选高斯子集};
+\node[n](scene) at (7.55,-4.76){游戏服务器 / Scene\\确认实例与变换};
+\node[n](save) at (12.7,-4.76){导出本次发现\\创建独立资产};
+\draw[a](in)--(ast);\draw[a](edit)--(ast);\draw[a](ast)--(draw);\draw[a](draw)--(eye);\draw[a](draw)--(player);\draw[a](eye)--(seg);\draw[a](seg)--(scene);\draw[a](scene)--(draw);\draw[a](scene)--(save);
+\end{tikzpicture}
+
+{\small\color{muted}图 1\quad 项目设计示意。横向箭头表示输入或提交结果。服务器确认的实例变换在下一帧参与两个机位的绘制。导出物重新从上方的制作入口载入。}
+\end{center}
+
+Redflag 已有 \f{SceneRenderer::RenderScene}、\f{RenderRuntime}，分别接编辑和运行机位，源码见 \f{Redflag/src/Redflag/Renderer/SceneRenderer.h}。图中的高斯绘制、三维分割、服务器确认及导出均为设计。统一的是玩家与 NPC 看到的外观和实例变换。相机各自有深度、分辨率和历史帧。NPC 只在观察或需要确认时请求新画面，优先选能看到木柄、且能实际到达的位置。这样无需为每个潜在机位预存一张图。世界碰撞可以读另外生成的简单几何。
+
+手工资产可用 EA 的 Mesh2Splat 将带材质的 GLB 转为表面高斯；动态光照、骨骼变形和换材质后的质量要逐项对照。扫描图像可用 gsplat 做离线优化，Vulkan 绘制可参考 NVIDIA 的公开样例。标准扫描高斯往往已带采集时的光照；要实现换灯后两种来源仍一致，需要额外材质数据、匹配的着色路径和对照场景。两类数据统一容器后仍应保留来源信息。\src{https://github.com/electronicarts/mesh2splat}{EA Mesh2Splat}\quad\src{https://github.com/nerfstudio-project/gsplat}{gsplat}\quad\src{https://github.com/nvpro-samples/vk_gaussian_splatting}{NVIDIA Vulkan 样例}
+
+\pg{先在第一次看见时划边界}
+离线准备场景外观、相机标定和用于导航的碰撞。第一个实验封存物件名称、已有实体编号、人工掩码和物件分组，只让 NPC 读其相机所见。视觉模型根据玩家描述给出框或点，SAM 2 给出图上锤头和木柄的掩码。保存机位、时间戳和场景版本；NPC 走到斜侧面后再取一张。沿每幅画面的可见高斯对像素的实际贡献，把多次掩码映回三维，防止把桌子背面一起选入。算出的候选应先从保留视角重画，与视觉判断比较。确认前可以指向或追问，确认后才能创建物件。找错时保留观察和失败原因。\src{https://github.com/facebookresearch/sam2}{Meta SAM 2，代码与模型}
+
+GaussianCut 已演示从单视图输入开始，借助其他视图和三维图割分出前景高斯。作者在论文第 6 节明确说图割有时要数分钟，初始掩码或跟踪错误可能导致只恢复部分物件。它支持「分得出来」这个研究方向。NPC 自主选角度、在游玩预算内分出整把锤子、生成稳定碰撞并联机抓取，还需我们自己验证。作者仓库可读，顶层未见许可声明；可据论文做对照设计。SAM 2 与 gsplat 的代码许可为 Apache 2.0，接入时另查各自依赖和权重。EA 转换器另有许可及素材声明。\src{https://arxiv.org/html/2411.07555v1}{GaussianCut 正文，第 3、5、6 节}\quad\src{https://github.com/umangi-jain/gaussiancut}{作者实现}\quad\src{https://github.com/electronicarts/mesh2splat/blob/main/LICENSE.txt}{EA 许可}
+
+分割完成后，服务器给实例分配标识，从原场景的绘制和碰撞中排除已划走的部分，给锤子装配独立的简化碰撞并确定抓点。这样抬手时不会出现桌面上还有一把「原锤子」，放回时也不会保留悬空的旧碰撞。已有模型场景可从完整桌面得到下方纹理。扫描从未看见那块桌面时，优先补拍空桌；缺少补拍时可以补绘，但新生成的纹路要标明来源。作者公开的 Gaussian Grouping 编辑示例涉及图像补全和三维微调。\src{https://github.com/lkeab/gaussian-grouping/blob/main/docs/edit_removal_inpaint.md}{Gaussian Grouping 移除与补全}
+
+\textbf{决定要不要提前计算的实验。} 同一张桌子做两个试件，一份保留独立模型供裁判核验，另一份作为没有分组的整屋高斯。再加入相邻的第二把工具和部分遮挡。固定观察路线、图像分辨率与视觉模型，分别计时首次指对、取得可移动子集、两端看见移动。统计保留机位的掩码交并比、错带桌面和漏掉木柄的比例、抓取成功率，以及每帧 GPU 耗时和显存峰值。在目标机器分别报告冷启动、热运行的中位数及 P95。先测纯在线；如果分组步骤超出交互预算，再依次比较提前计算视觉特征、提前计算未命名候选分组的收益。沿用同一批盲测机位；命名、选择和抓取仍在游玩时发生。预算与结果均待项目实测。
+
+\pg{从一句话到可接手的游戏工程}
+你说「做个双人第一人称修理间游戏，玩家说话让技师找锤子、拿起再放回，两人都看见，完成后可以再玩」。制作助手把这句话写成一次可回放的试玩。两名玩家加入房间，技师从自己的位置寻找物件，桌面随搬动显露，锤子放回后任务结算。生成物包括可启动的游戏包、可编辑的源项目、素材来源和试玩录像。
+
+\textbf{先问正在运行的编辑器。} 拟议的 Redflag MCP 返回工具名与参数。编辑器另报当前构建、场景修订、已加载脚本、活动图形后端和通过自检的功能。材质写入、编辑场景与发布包运行各有自己的能力记录。Skill 记下制作顺序与验收办法。Coplay 的 Unity MCP 已有场景对象命令及异步测试任务，可参考其源代码。 \src{https://modelcontextprotocol.io/specification/2025-11-25/server/tools}{MCP 工具协议}\quad\src{https://github.com/CoplayDev/unity-mcp/blob/19b66ecef4ac3a9be22a7a62ea21accb975c39e7/.claude/skills/unity-mcp-skill/SKILL.md}{Unity MCP Skill}
+
+\textbf{沿着缺口选择写入位置。} 工作台和候选工具可用 Tripo 生成。助手按参考图提出布局，通过编辑器写入米制位置、材质槽与灯光，回读实拍后由现有场景序列化器保存 YAML。完成与重开由游戏 C\# 脚本处理。如果底层缺少从高斯选区生成可拿取部件的操作，助手记录缺口与失败样例，在独立工作区修改 C++，构建、运行测试、重启加载新构建并再次查询能力，随后接回原任务。该例各环节均为终版设计。 \src{https://developers.tripo3d.ai/en/mcp}{Tripo 官方接口}
+
+\textbf{你挪动工作台时。} 现有 \f{ForgeLayer.cpp} 的 Gizmo 直接写入变换，\f{OnScenePlay} 复制编辑场景。设计中属性面板和助手共用同一条可撤销命令。你拖完桌子，即使尚未存盘，桌子的位置修订也会更新。助手提交旧抓取路线时收到冲突，重读新位置并重测接近路线，已选材质继续使用。若你手改 C++，按工作区实际文件内容重做差异；两者改了同一处且意图难以判定，编辑器只展示这处差异供你决定。退出试玩前可明确选择将发现的锤子保存到资产库。
+
+\pg{玩家说完话，谁让锤子动起来}
+终版把语音后端作为一名房间参与者。玩家通过 WebRTC 发出声音，后端给这轮话一个编号。流式 STT 产生临时字幕，轮次结束后提交可执行请求。语言模型按需取技师当时的视图，提出「靠近工作台左侧，再看一次」或「拿起刚确认的部件」。场景返回观察帧、临时目标句柄及其修订。目标离开视野或被另一人拿走时，技师用新观察继续寻找。模型能讨论画面里的陌生东西，也能明确说自己还没看清。
+
+\textbf{声音与动作各自有完成条件。} 语音后端把文本片段送给 TTS，客户端按轮次播放。玩家打断时取消旧轮次后续音频和待执行请求；已被服务器确认的拾取保留在世界状态中。剧情脚本只在收到权威的「拿起」「放回」事件后计分，技师据此回答「放好了」。可用 LiveKit Agents 组合 WebRTC、STT、LLM 与 TTS，更换模型时共用相同的观察和动作约定。 \src{https://github.com/livekit/agents}{LiveKit Agents}\quad\src{https://docs.livekit.io/agents/logic/turns/}{轮次与打断}
+
+\textbf{两个客户端看见同一把锤子。} 建议 C++ 游戏服务器校验距离、句柄修订与持有者。拾取请求有唯一编号，重复到达只结算一次；成功后可靠广播持有者变化。连续位姿按序号发送，较新的快照覆盖旧快照。客户端预装同版本高斯资产。首次发现时可靠下发源版本、成员索引集与部件编号，客户端完成装配后，再以编号同步变换及持有者。邻近的 REDFServer 当前是 TCP 项目。可靠与不可靠 UDP 消息可参考 Valve 的实现，状态复制和所有权仍由 Redflag 编写。 \src{https://github.com/ValveSoftware/GameNetworkingSockets}{GameNetworkingSockets}
+
+\textbf{自动试玩留下人能复查的证据。} 一服两端从玩家入口回放找寻、打断、两人争抢及重开，检查同一时刻只有一个持有者，双方最终看见相同归位结果。另测遮挡与看错，记录成功率、需要几个新视角及误抓次数。延迟按玩家说完到首段可听音频、请求到首张可用观察、服务器确认到另一端可见三段记录中位数和第 95 百分位。按目标机器与并发数测定预算，GPU 时间与 RenderDoc 事件单独保留。 \src{https://arxiv.org/abs/2602.11103v2}{GameDevBench 视觉反馈实验}
+
+
+\pg{找对那把工具}
+玩家从一张真实工坊照片里看中了锤柄缠蓝胶带的锤子。进入双人游戏后，他对技师说「借我那把缠蓝胶带的锤子」。桌上有两把轮廓相近的锤子，正面只能看见锤头。一次新导入的工坊扫描就构成一张挑战地图。开发者只需设定出生点、可走范围和通关动作；本轮寻找的东西可以由玩家进入后才指定。这样能分别观察两件事，技师怎样处理线索，换一间工坊又要花多少制作时间。
+
+\textbf{玩家看得见的判断。} 技师先指向两个候选所在的桌角，绕到能看见手柄的一侧。另一名玩家可以故意站到它面前挡住视线。它应换到仍能看见桌面的角度，再比较两把手柄，指向有蓝胶带的那一把。若柜子挡住了第二个观察位置，它可以问「你指的是靠窗那把吗？」。线索依然不足时允许玩家回答「对」或现场指示，NPC 记下这次指向所对应的画面和机位。识别结果可以推翻，服务端的拿取动作始终要通过距离与持有状态检查。任务结束时，编辑器能选中本次新分出的物件，把它另存到项目资源中。
+
+\textbf{自变量怎样隔离。} 同一桌面、同样的可走路径、相同视觉模型，先用具备独立实体的普通网格做对照；再输入一份合并的扫描网格与一份未分组的高斯场景，两者都允许在线三维分割。三组都不向 NPC 提供实体名字或答案，统一采用可见画面衡量识别。第一组告诉我们现成道具的交互上限以及普通视觉 NPC 能有多聪明。后两组比较无标注素材的分离、重用和绘制代价。已有 GLB 和真实扫描分开报告，否则很容易把模型本来就有的部件边界算成某个算法的成绩。
+
+\textbf{怎样决定是否值得做成引擎能力。} 更换未见过的工坊，统计人从原始素材到首个可玩关卡的工时，记录重建或转换耗时、手工划分次数、首次认对与最终递对比例、玩家等待时间，以及抓取后桌面残影和露底的次数。对话质量用盲测录像判断，分别记是否主动换角度、是否提出能区分候选的追问、证据变化后是否纠正。若普通网格路径已能以更低成本完成相同玩法，继续用它承载制作工具和 LLM 接入；若无标注高斯在新扫描上确实节省制作工时，并满足抓取成功率和延迟要求，再把高斯做成这类地图的正式选项。待实测。
+
+\textbf{可在编辑器里复核的证据。} 社区工具 gs-object-extraction 能从普通 3DGS 场景选择目标、清理并导出独立 PLY，适合对照人工提取结果。Sony 的 B³-Seg 按预期信息增益选择下一观察点，可用于研究怎样少看几张图；论文中的候选相机在游戏里还要经过遮挡与角色可达性检查。这两项均未在 Redflag 本机运行。\src{https://github.com/07LEE/gs-object-extraction}{提取与导出工具}\quad\src{https://sony.github.io/B3-Seg-project/}{B³-Seg，论文与作者讲解}
+\end{document}

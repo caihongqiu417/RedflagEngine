@@ -4,6 +4,8 @@
 #include<Redflag/Core/EntryPoint.h>
 
 #include "ForgeLayer.h"
+#include "VulkanForgeLayer.h"
+#include "Redflag/Renderer/RendererAPI.h"
 
 namespace Redflag{
 
@@ -13,7 +15,14 @@ namespace Redflag{
 		RedflagForge()
 			:Application("Redflag Forge")
 		{
-			PushLayer(new ForgeLayer());
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				VulkanForgeLayer* editor = new VulkanForgeLayer();
+				PushLayer(editor);
+				editor->OpenDefaultScene();
+			}
+			else
+				PushLayer(new ForgeLayer());
 		}
 		
 		~RedflagForge()
@@ -25,5 +34,13 @@ namespace Redflag{
 	Application* CreateApplication()
 	{
 		return new RedflagForge();
+	}
+
+	void BakeSceneProbes(const std::filesystem::path& scene)
+	{
+		Application app("Redflag Forge", false);
+		VulkanForgeLayer* editor = new VulkanForgeLayer();
+		app.PushLayer(editor);
+		editor->BakeScene(scene);
 	}
 }

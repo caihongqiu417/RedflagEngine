@@ -12,8 +12,48 @@
 #include "Scene/Components.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
+#include "Redflag/Renderer/RendererAPI.h"
+#include "Redflag/Utils/PlatformUtils.h"
 
 namespace Redflag {
+
+    static void DrawModelLODs(ModelRendererComponent& model)
+    {
+        ImGui::Text("当前网格  LOD %d", int(model.ActiveLOD));
+        for (size_t i = 0; i < model.LODs.size(); ++i)
+        {
+            auto& lod = model.LODs[i];
+            ImGui::PushID(int(i));
+            ImGui::Text("LOD %d  %s", int(i + 1), std::filesystem::path(lod.FilePath).filename().u8string().c_str());
+            const float low = i + 1 < model.LODs.size() ? model.LODs[i + 1].ScreenHeight : 0.f;
+            const float high = i ? model.LODs[i - 1].ScreenHeight : 1.f;
+            float percent = lod.ScreenHeight * 100.f;
+            if (ImGui::SliderFloat("视口高度", &percent, low * 100.f + .01f, high * 100.f - .01f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp))
+                lod.ScreenHeight = percent / 100.f;
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("模型缩小到视口高度的这个比例附近时，改用这份网格。");
+            const bool remove = ImGui::SmallButton("移除此级");
+            ImGui::PopID();
+            if (remove)
+            {
+                model.LODs.erase(model.LODs.begin() + i);
+                model.ActiveLOD = 0;
+                break;
+            }
+        }
+
+        if (ImGui::Button("添加简化模型…"))
+        {
+            const auto path = FileDialogs::OpenFile("3D Model (*.obj;*.fbx;*.gltf;*.glb;*.ply)\0*.obj;*.fbx;*.gltf;*.glb;*.ply\0");
+            if (path.empty()) return;
+            ModelLOD lod;
+            lod.ModelID = AssetManager::Add<Model>(path);
+            lod.ModelAsset = AssetManager::Load<Model>(lod.ModelID);
+            if (!lod.ModelAsset) return;
+            lod.FilePath = std::filesystem::proximate(path).generic_string();
+            lod.ScreenHeight = model.LODs.empty() ? .25f : .5f * model.LODs.back().ScreenHeight;
+            model.LODs.push_back(std::move(lod));
+        }
+    }
 
     struct ScriptSourceCacheEntry
     {
@@ -439,6 +479,9 @@ namespace Redflag {
 
     static Ref<Texture2D> GetEntityIconTexture()
     {
+        // 此处的图标用 OpenGL 纹理编号显示，其他后端沿用下方的文字按钮。
+        if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL)
+            return nullptr;
         static Ref<Texture2D> iconTexture;
         static bool loadAttempted = false;
 
@@ -596,9 +639,9 @@ namespace Redflag {
         m_EntityToDelete = {};
 	}
 
-    void SceneHierachyPanel::OnImguiRender()
+    void SceneHierachyPanel::OnImguiRender(const char* hierarchy, const char* inspector)
     {
-        ImGui::Begin("Scene Hierachy");
+        ImGui::Begin(hierarchy);
 
         if (m_Context) {
             // 遍历所有实体并绘制节点
@@ -619,45 +662,28 @@ namespace Redflag {
             }
         }
 
-        if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
             m_SelectionContext = {};
         
         if (ImGui::BeginPopupContextWindow("HierarchyPopup", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
         {
-            if (ImGui::MenuItem("Create Empty Entity"))
-                m_Context->CreateEntity("Empty Entity");
+            if (ImGui::MenuItem("创建空对象"))
+                m_SelectionContext = m_Context->CreateEntity("空对象");
             ImGui::EndPopup();
         }
         ImGui::End();
 
-        ImGui::Begin("Properties");
+        ImGui::Begin(inspector);
         if (m_SelectionContext && m_Context)
         {
             ImGui::BeginChild("PropertiesContent", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
             DrawComponents(m_SelectionContext);
             ImGui::Dummy(ImVec2(0.0f, ImGui::GetStyle().ItemSpacing.y));
             ImGui::EndChild();
-            
-            /*
-            if (ImGui::Button("Add Component"))
-                ImGui::OpenPopup("Add Component");
-
-            if (ImGui::BeginPopup("Add Component"))
-            {
-                if (ImGui::MenuItem("Camera"))
-                {
-                    m_SelectionContext.AddComponent<CameraComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-                if (ImGui::MenuItem("Sprite Renderer"))
-                {
-                    m_SelectionContext.AddComponent<SpriteRendererComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
-            */
+        }
+        else
+        {
+            ImGui::TextWrapped("先在左侧层级里选一个对象，就能在这里改它的位置、外观或灯光。");
         }
 
         ImGui::End();
@@ -705,7 +731,7 @@ namespace Redflag {
         // 右键菜单 - 使用 BeginPopupContextItem 的正确方式
         if (ImGui::BeginPopupContextItem())  // 不需要条件判断，它会自动处理右键点击
         {
-            if (ImGui::MenuItem("Delete Entity"))
+            if (ImGui::MenuItem("删除对象"))
                 entityDeleted = true;  // 只设置标记，不立即删除
 
             ImGui::EndPopup();
@@ -731,56 +757,28 @@ namespace Redflag {
         ImGui::PushID(label.c_str());
 
         ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::SetColumnWidth(0, std::min(columnWidth, ImGui::GetWindowWidth() * .25f));
         ImGui::Text(label.c_str());
         ImGui::NextColumn();
 
-        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0,0 });
-
-        float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-        ImVec2 buttonSize = { lineHeight + 3.0f,lineHeight };
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.2f, 0.6f, 1.0f));        // 霓虹粉
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.8f, 1.0f));  // 亮霓虹粉
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.1f, 0.5f, 1.0f));   // 暗霓虹粉
-        if (ImGui::Button("x", buttonSize))
-            values.x = resetValue;
-        ImGui::PopStyleColor(3);
-
-
-        ImGui::SameLine();
-        ImGui::DragFloat("##x", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 1.0f, 0.4f, 1.0f));        // 霓虹绿
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 1.0f, 0.6f, 1.0f));  // 亮霓虹绿
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.9f, 0.3f, 1.0f));   // 暗霓虹绿
-        if (ImGui::Button("y", buttonSize))
-            values.y = resetValue;
-        ImGui::PopStyleColor(3);
-
-        ImGui::SameLine();
-        ImGui::DragFloat("##y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));        // 电光蓝
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));  // 亮电光蓝
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.9f, 1.0f));   // 暗电光蓝
-        if (ImGui::Button("z", buttonSize))
-            values.z = resetValue;
-        ImGui::PopStyleColor(3);
-
-        ImGui::SameLine();
-        ImGui::DragFloat("##z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-
+        const char* axes[] = { "X", "Y", "Z" };
+        const ImVec4 colors[] = { { .46f,.18f,.20f,1 }, { .22f,.38f,.29f,1 }, { .22f,.30f,.44f,1 } };
+        const float height = ImGui::GetFrameHeight();
+        const float axisWidth = ImGui::GetContentRegionAvail().x / 3.0f;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
+        for (int i = 0; i < 3; ++i)
+        {
+            if (i) ImGui::SameLine();
+            ImGui::PushID(i);
+            ImGui::PushStyleColor(ImGuiCol_Button, colors[i]);
+            if (ImGui::Button(axes[i], { height, height })) values[i] = resetValue;
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(std::max(1.0f, axisWidth - height - 1));
+            ImGui::DragFloat("##axis", &values[i], .1f, 0, 0, "%.2f");
+            ImGui::PopID();
+        }
         ImGui::PopStyleVar();
-
         ImGui::Columns(1);
 
         ImGui::PopID();
@@ -844,8 +842,8 @@ namespace Redflag {
             return;
         }
 
-        // 命中缓存→显示用户填的值；未命中→显示 C# 字段初始化器（= xxx）的默认值
-        // 仅"看一眼"不会写入缓存，所以不会覆盖 C# 端的初值
+        // 优先显示用户给这个实体填的值。还没填过时，显示 C# 脚本里的初始值。
+        // 只有在面板里修改字段才保存，展开面板不会改变脚本的初始值。
         auto cacheIt = fieldCache.find(field.Name);
         std::vector<uint8_t> buffer;
         if (cacheIt != fieldCache.end())
@@ -982,42 +980,89 @@ namespace Redflag {
     template<typename T, typename UIFunction>
     static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
     {
-        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
+        if (!entity.HasComponent<T>()) return;
 
-        if (entity.HasComponent<T>())
+        const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
+        float right = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x;
+        ImGui::PushID((void*)typeid(T).hash_code());
+        ImGui::Separator();
+        bool open = ImGui::TreeNodeEx("##component", flags, "%s", name.c_str());
+        bool remove = false;
+
+        // 每个场景对象都需要变换，其他组件可以从标题栏删除。
+        if constexpr (!std::is_same_v<T, TransformComponent>)
         {
-            auto& component = entity.GetComponent<T>();
-            ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-            
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4,4 });
-            float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.f;
-            ImGui::Separator();
-            bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
-            ImGui::PopStyleVar();
-            ImGui::SameLine(contentRegionAvailable.x-lineHeight*0.5f);
-            if (ImGui::Button("+", ImVec2{ lineHeight,lineHeight }))
-            {
-                ImGui::OpenPopup("ComponentSettings");
-            }
-
-            bool removeComponent = false;
+            ImGui::SameLine(right - ImGui::CalcTextSize("…").x - 2 * ImGui::GetStyle().FramePadding.x);
+            if (ImGui::SmallButton("…")) ImGui::OpenPopup("ComponentSettings");
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("组件选项");
             if (ImGui::BeginPopup("ComponentSettings"))
             {
-                if (ImGui::MenuItem("Remove component"))
-                    removeComponent = true;
-
+                remove = ImGui::MenuItem("移除组件");
                 ImGui::EndPopup();
             }
+        }
+        if (open)
+        {
+            uiFunction(entity.GetComponent<T>());
+            ImGui::TreePop();
+        }
+        if (remove) entity.RemoveComponent<T>();
+        ImGui::PopID();
+    }
 
-            if (open)
+    template<typename T>
+    static bool AddComponentItem(Entity entity, const char* name)
+    {
+        if (entity.HasComponent<T>() || !ImGui::MenuItem(name)) return false;
+        entity.AddComponent<T>();
+        return true;
+    }
+
+    static void DrawEmission(Material& material)
+    {
+        if (ImGui::ColorEdit3("自发光", glm::value_ptr(material.Emission), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR))
+            material.Emission = glm::max(material.Emission, glm::vec3(0));
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("这三个数是表面自己发出的红、绿、蓝光。可输入大于 1 的值，三项都为 0 时熄灭。");
+        if (ImGui::Button("选择自发光贴图"))
+        {
+            const std::string file = FileDialogs::OpenFile("Image (*.png;*.jpg;*.tga)\0*.png;*.jpg;*.jpeg;*.tga\0");
+            if (!file.empty())
             {
-                auto& src = entity.GetComponent<T>();
-                uiFunction(component);
-                ImGui::TreePop();
+                const Ref<Texture2D> texture = Texture2D::Create(file);
+                if (texture->IsLoaded()) material.EmissiveMap = texture;
             }
+        }
+        if (material.EmissiveMap)
+        {
+            ImGui::SameLine();
+            if (ImGui::SmallButton("移除##Emission")) material.EmissiveMap.reset();
+        }
+        if (material.EmissiveMap)
+        {
+            const std::filesystem::path file = material.EmissiveMap->GetPath();
+            ImGui::TextDisabled("%s", file.empty() ? "使用模型内的图片" : file.filename().u8string().c_str());
+        }
+    }
 
-            if (removeComponent)
-                entity.RemoveComponent<T>();
+    static void DrawTransparency(Material& material)
+    {
+        const char* modes[] = { "不透明", "透明裁剪", "半透明" };
+        int mode = static_cast<int>(material.Alpha);
+        if (ImGui::Combo("表面类型", &mode, modes, IM_ARRAYSIZE(modes)))
+            material.Alpha = static_cast<AlphaMode>(mode);
+        ImGui::Checkbox("双面绘制", &material.DoubleSided);
+
+        if (material.Alpha == AlphaMode::Mask)
+            ImGui::SliderFloat("裁剪阈值", &material.AlphaCutoff, 0.0f, 1.0f);
+        if (material.Alpha == AlphaMode::Blend)
+        {
+            if (ImGui::InputFloat("折射率", &material.RefractionIndex))
+                material.RefractionIndex = std::max(1.0f, material.RefractionIndex);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("空气取 1，普通玻璃约为 1.5。");
+            if (ImGui::InputFloat("厚度", &material.Thickness))
+                material.Thickness = std::max(0.0f, material.Thickness);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("使用场景长度单位。厚度为零时，背景保持在原位置。");
         }
     }
 
@@ -1026,7 +1071,7 @@ namespace Redflag {
         if (!entity) return;
 
        
-        const ImGuiTreeNodeFlags tagTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
+        const float addWidth = ImGui::CalcTextSize("添加组件").x + ImGui::GetStyle().FramePadding.x * 2;
         // Tag组件
         if (entity.HasComponent<TagComponent>())
         {
@@ -1035,9 +1080,8 @@ namespace Redflag {
             memset(buffer, 0, sizeof(buffer));
             strcpy_s(buffer, sizeof(buffer), tag.c_str());
 
-            const float addComponentButtonWidth = 88.0f;
             const float spacing = ImGui::GetStyle().ItemSpacing.x;
-            ImGui::PushItemWidth(std::max(120.0f, ImGui::GetContentRegionAvail().x - addComponentButtonWidth - spacing));
+            ImGui::PushItemWidth(std::max(1.0f, ImGui::GetContentRegionAvail().x - addWidth - spacing));
             if (ImGui::InputText("##ReName", buffer, sizeof(buffer)))
             {
                 tag = std::string(buffer);
@@ -1046,163 +1090,61 @@ namespace Redflag {
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Add Comp", ImVec2(88.0f, 0.0f)))
+        if (ImGui::Button("添加组件", ImVec2(addWidth, 0)))
             ImGui::OpenPopup("Add Comp");
 
         if (ImGui::BeginPopup("Add Comp"))
         {
-            if (!m_SelectionContext.HasComponent<CameraComponent>())
-            {
-                if (ImGui::MenuItem("Camera"))
-                {
-                    m_SelectionContext.AddComponent<CameraComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
+            AddComponentItem<CameraComponent>(entity, "相机  Camera");
+            AddComponentItem<PointLightComponent>(entity, "点光源  Point Light");
+            if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
+                entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
+            AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
 
-            if (!m_SelectionContext.HasComponent<ScriptComponent>())
+            const char* extra = RendererAPI::GetAPI() == RendererAPI::API::Vulkan ? "其他组件（OpenGL 预览）" : "更多组件";
+            if (ImGui::BeginMenu(extra))
             {
-                if (ImGui::MenuItem("Script"))
-                {
-                    m_SelectionContext.AddComponent<ScriptComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
+                AddComponentItem<DirectionalLightComponent>(entity, "方向光");
+                AddComponentItem<ScriptComponent>(entity, "脚本");
+                AddComponentItem<SpriteRendererComponent>(entity, "2D 精灵");
+                AddComponentItem<CircleRendererComponent>(entity, "2D 圆形");
+                AddComponentItem<RigidBody2DComponent>(entity, "2D 刚体");
+                AddComponentItem<BoxCollider2DComponent>(entity, "2D 方形碰撞体");
+                AddComponentItem<CircleCollider2DComponent>(entity, "2D 圆形碰撞体");
+                AddComponentItem<ParticleEmitterComponent>(entity, "2D 粒子发射器");
+                AddComponentItem<TextureAnimationComponent>(entity, "贴图动画");
+                ImGui::EndMenu();
             }
-            
-            if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
-            {
-                if (ImGui::MenuItem("Sprite Renderer"))
-                {
-                    m_SelectionContext.AddComponent<SpriteRendererComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<CircleRendererComponent>())
-            {
-                if (ImGui::MenuItem("Circle Renderer"))
-                {
-                    m_SelectionContext.AddComponent<CircleRendererComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            
-            if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
-            {
-                if (ImGui::MenuItem("Rigidbody 2D"))
-                {
-                    m_SelectionContext.AddComponent<RigidBody2DComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
-            {
-                if (ImGui::MenuItem("Box Collider 2D"))
-                {
-                    m_SelectionContext.AddComponent<BoxCollider2DComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
-            {
-                if (ImGui::MenuItem("Circle Collider 2D"))
-                {
-                    m_SelectionContext.AddComponent<CircleCollider2DComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<MeshRendererComponent>())
-            {
-                if (ImGui::MenuItem("Mesh Renderer"))
-                {
-                    auto& mr = m_SelectionContext.AddComponent<MeshRendererComponent>();
-                    mr.MeshData = Mesh::CreateCube();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<ModelRendererComponent>())
-            {
-                if (ImGui::MenuItem("Model Renderer"))
-                {
-                    m_SelectionContext.AddComponent<ModelRendererComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            ImGui::Separator();
-
-            if (!m_SelectionContext.HasComponent<DirectionalLightComponent>())
-            {
-                if (ImGui::MenuItem("Directional Light"))
-                {
-                    m_SelectionContext.AddComponent<DirectionalLightComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<PointLightComponent>())
-            {
-                if (ImGui::MenuItem("Point Light"))
-                {
-                    m_SelectionContext.AddComponent<PointLightComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            ImGui::Separator();
-
-            if (!m_SelectionContext.HasComponent<ParticleEmitterComponent>())
-            {
-                if (ImGui::MenuItem("Particle Emitter 2D"))
-                {
-                    m_SelectionContext.AddComponent<ParticleEmitterComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
-            if (!m_SelectionContext.HasComponent<TextureAnimationComponent>())
-            {
-                if (ImGui::MenuItem("Texture Animation"))
-                {
-                    m_SelectionContext.AddComponent<TextureAnimationComponent>();
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-
             ImGui::EndPopup();
         }
 
         ImGui::Spacing();
-        DrawReadOnlyTextControl("UUID", std::to_string((uint64_t)entity.GetUUID()));
-        DrawReadOnlyTextControl("EntityID", std::to_string((uint32_t)entity));
-        ImGui::Spacing();
-
 
         // Transform组件
-        DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
+        DrawComponent<TransformComponent>("变换  Transform", entity, [](auto& component)
             {
-                DrawVec3Control("Translation", component.Translation);
-                glm::vec3 rotation = glm::degrees(component.Rotation);
-                DrawVec3Control("Rotation", rotation);
-                component.Rotation = glm::radians(rotation);
-                DrawVec3Control("Scale", component.Scale, 1.0f);
+                DrawVec3Control("位置", component.Translation);
+                const glm::vec3 degrees = glm::degrees(component.Rotation);
+                glm::vec3 edited = degrees;
+                DrawVec3Control("旋转", edited);
+                // 面板显示角度，场景保存弧度。只改用户动过的轴，单纯选中物体也能沿用原来的烘焙。
+                for (int axis = 0; axis < 3; ++axis)
+                    if (edited[axis] != degrees[axis])
+                        component.Rotation[axis] = glm::radians(edited[axis]);
+                DrawVec3Control("缩放", component.Scale, 1.0f);
             });
 
         // Camera组件
-        DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
+        DrawComponent<CameraComponent>("相机  Camera", entity, [](auto& component)
             {
                 auto& camera = component.Camera;
 
-                ImGui::Checkbox("Primary", &component.Primary);
+                ImGui::Checkbox("主相机", &component.Primary);
 
-                const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };
+                const char* projectionTypeStrings[] = { "透视", "正交" };
                 const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
 
-                if (ImGui::BeginCombo("CamType", currentProjectionTypeString))
+                if (ImGui::BeginCombo("投影方式", currentProjectionTypeString))
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -1221,39 +1163,39 @@ namespace Redflag {
                 if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
                 {
                     float verticalFov = glm::degrees(camera.GetPerspectiveFOV());
-                    if (ImGui::DragFloat("Fov", &verticalFov))
+                    if (ImGui::DragFloat("垂直视角", &verticalFov))
                         camera.SetPerspectiveFOV(glm::radians(verticalFov));
 
                     float perspectiveNear = camera.GetPerspectiveNearClip();
-                    if (ImGui::DragFloat("Near", &perspectiveNear))
+                    if (ImGui::DragFloat("近裁剪面", &perspectiveNear))
                         camera.SetPerspectiveNearClip(perspectiveNear);
 
                     float perspectiveFar = camera.GetPerspectiveFarClip();
-                    if (ImGui::DragFloat("Far", &perspectiveFar))
+                    if (ImGui::DragFloat("远裁剪面", &perspectiveFar))
                         camera.SetPerspectiveFarClip(perspectiveFar);
                 }
 
                 if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
                 {
                     float orthoSize = camera.GetOrthographicSize();
-                    if (ImGui::DragFloat("Size", &orthoSize))
+                    if (ImGui::DragFloat("视野高度", &orthoSize))
                         camera.SetOrthographicSize(orthoSize);
 
                     float orthoNear = camera.GetOrthographicNearClip();
-                    if (ImGui::DragFloat("Near", &orthoNear))
+                    if (ImGui::DragFloat("近裁剪面", &orthoNear))
                         camera.SetOrthographicNearClip(orthoNear);
 
                     float orthoFar = camera.GetOrthographicFarClip();
-                    if (ImGui::DragFloat("Far", &orthoFar))
+                    if (ImGui::DragFloat("远裁剪面", &orthoFar))
                         camera.SetOrthographicFarClip(orthoFar);
 
-                    ImGui::Checkbox("Fixed AspectRatio", &component.FixedAspectRatio);
+                    ImGui::Checkbox("固定宽高比", &component.FixedAspectRatio);
                 }
 
             });
 
         // Script 组件面板
-        DrawComponent<ScriptComponent>("Script Component", entity, [entity, this](auto& component)
+        DrawComponent<ScriptComponent>("脚本", entity, [entity, this](auto& component)
             {
                 const auto& entityClasses = ScriptEngine::GetEntityClasses();
 
@@ -1403,7 +1345,7 @@ namespace Redflag {
 
 
         // SpriteRender
-        DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
+        DrawComponent<SpriteRendererComponent>("2D 精灵", entity, [](auto& component)
             {
                 // 颜色编辑
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
@@ -1458,7 +1400,7 @@ namespace Redflag {
 
 
         //CircleRendererComponent
-        DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
+        DrawComponent<CircleRendererComponent>("2D 圆形", entity, [](auto& component)
             {
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
                 ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.f, 1.f);
@@ -1466,7 +1408,7 @@ namespace Redflag {
             });
 
         // Rigidbody2D 组件
-        DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](auto& component)
+        DrawComponent<RigidBody2DComponent>("2D 刚体", entity, [](auto& component)
             {
                 // 刚体类型下拉框
                 const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
@@ -1492,7 +1434,7 @@ namespace Redflag {
             });
 
         // BoxCollider2D 组件
-        DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
+        DrawComponent<BoxCollider2DComponent>("2D 方形碰撞体", entity, [](auto& component)
             {
                 // 偏移量
                 ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
@@ -1504,12 +1446,12 @@ namespace Redflag {
                 ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
                 // 弹性
                 ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-                // 弹跳阈值
+                // 速度单位是米/秒。接触面两侧靠近得足够快才会反弹。
                 ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
             });
 
         // CircleCollider2D 属性面板
-        DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](auto& component)
+        DrawComponent<CircleCollider2DComponent>("2D 圆形碰撞体", entity, [](auto& component)
             {
                 // 碰撞圆心相对实体原点的偏移
                 ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
@@ -1521,12 +1463,12 @@ namespace Redflag {
                 ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
                 // 恢复系数（弹性）
                 ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
-                // 恢复生效的最低碰撞速度阈值
+                // 慢慢贴在一起时跳过反弹，提高这个速度会让物体更容易停稳。
                 ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
             });
 
         // Mesh Renderer
-        DrawComponent<MeshRendererComponent>("Mesh Renderer", entity, [](auto& component)
+        DrawComponent<MeshRendererComponent>("网格绘制", entity, [](auto& component)
             {
                 // 如果还没有 Material，自动创建一个默认 PBR 材质
                 if (!component.Mat)
@@ -1545,8 +1487,10 @@ namespace Redflag {
                 ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
                 ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
                 ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
+                DrawEmission(*mat);
+                DrawTransparency(*mat);
 
-                // ---- 贴图槽位（统一的 helper：预览 + 拖拽 + 清除）----
+                // ---- 查看和更换材质贴图 ----
                 auto TextureSlotUI = [](const char* label, Ref<Texture2D>& tex)
                 {
                     ImGui::Separator();
@@ -1585,10 +1529,12 @@ namespace Redflag {
             });
 
         // Model Renderer
-        DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& component)
+        DrawComponent<ModelRendererComponent>("模型绘制", entity, [](auto& component)
             {
                 // 文件路径（只读显示）
-                ImGui::Text("File: %s", component.FilePath.empty() ? "(none)" : component.FilePath.c_str());
+                std::filesystem::path file(component.FilePath);
+                ImGui::Text("模型文件  %s", component.FilePath.empty() ? "从项目中拖入模型" : file.filename().u8string().c_str());
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", component.FilePath.c_str());
 
                 // 拖拽接受区：从 Content Browser 拖入模型文件
                 if (ImGui::BeginDragDropTarget())
@@ -1608,6 +1554,8 @@ namespace Redflag {
                                     component.ModelID = id;
                                     component.ModelAsset = model;
                                     component.OverrideMaterials.clear();
+                                    component.LODs.clear();
+                                    component.ActiveLOD = 0;
                                 }
                             }
                             catch (const std::exception& error)
@@ -1620,26 +1568,37 @@ namespace Redflag {
                 }
 
                 // 备用颜色
-                ImGui::ColorEdit4("Fallback Color", glm::value_ptr(component.Color));
+                ImGui::TextUnformatted("整体颜色");
+                ImGui::SetNextItemWidth(-1);
+                ImGui::ColorEdit4("##ModelTint", glm::value_ptr(component.Color));
 
                 // 卸载按钮
                 if (component.ModelAsset)
                 {
-                    if (ImGui::Button("Unload"))
+                    if (ImGui::Button("移除模型文件"))
                     {
                         AssetManager::Unload<Model>(component.ModelID);
                         component.ModelAsset.reset();
                         component.ModelID = 0;
                         component.FilePath.clear();
                         component.OverrideMaterials.clear();
+                        component.LODs.clear();
+                        component.ActiveLOD = 0;
                     }
+                }
+
+                const auto lodFlags = component.LODs.empty() ? 0 : ImGuiTreeNodeFlags_DefaultOpen;
+                if (component.ModelAsset && ImGui::TreeNodeEx("网格细节 LOD", lodFlags))
+                {
+                    DrawModelLODs(component);
+                    ImGui::TreePop();
                 }
 
                 // ---- 模型自带材质信息（只读预览）----
                 if (component.ModelAsset)
                 {
                     const auto& subMeshes = component.ModelAsset->GetSubMeshes();
-                    if (!subMeshes.empty() && ImGui::TreeNode("Imported Materials"))
+                    if (!subMeshes.empty() && ImGui::TreeNode("模型自带材质"))
                     {
                         for (size_t i = 0; i < subMeshes.size(); i++)
                         {
@@ -1654,6 +1613,8 @@ namespace Redflag {
                                         sub.Mat->BaseColor.b, sub.Mat->BaseColor.a);
                                     ImGui::Text("Metallic: %.2f  Roughness: %.2f  AO: %.2f",
                                         sub.Mat->Metallic, sub.Mat->Roughness, sub.Mat->AO);
+                                    ImGui::Text("自发光 RGB  %.2f  %.2f  %.2f", sub.Mat->Emission.r,
+                                        sub.Mat->Emission.g, sub.Mat->Emission.b);
                                     ImGui::Text("Maps: %s%s%s%s",
                                         sub.Mat->HasBaseColorMap()         ? "[Base] " : "",
                                         sub.Mat->HasNormalMap()            ? "[Normal] " : "",
@@ -1675,7 +1636,7 @@ namespace Redflag {
                 // ---- 覆盖材质（可选，per-submesh，优先级高于模型自带材质）----
                 ImGui::Separator();
                 bool hasOverride = !component.OverrideMaterials.empty();
-                if (ImGui::Checkbox("Override Materials", &hasOverride))
+                if (ImGui::Checkbox("为此物体调整材质", &hasOverride))
                 {
                     if (hasOverride && component.OverrideMaterials.empty() && component.ModelAsset)
                     {
@@ -1734,12 +1695,14 @@ namespace Redflag {
                         if (!mat) continue;
 
                         ImGui::PushID((int)i);
-                        if (ImGui::TreeNode("SubMeshMat", "SubMesh %d Material", (int)i))
+                        if (ImGui::TreeNode("SubMeshMat", "部件 %d 的材质", (int)i + 1))
                         {
                             ImGui::ColorEdit4("Base Color", glm::value_ptr(mat->BaseColor));
                             ImGui::SliderFloat("Metallic",  &mat->Metallic,  0.0f, 1.0f);
                             ImGui::SliderFloat("Roughness", &mat->Roughness, 0.0f, 1.0f);
                             ImGui::SliderFloat("AO",        &mat->AO,        0.0f, 1.0f);
+                            DrawEmission(*mat);
+                            DrawTransparency(*mat);
 
                             TextureSlotUI("BaseColor Map",          mat->BaseColorMap);
                             TextureSlotUI("Normal Map",             mat->NormalMap);
@@ -1756,7 +1719,7 @@ namespace Redflag {
             });
 
         // Directional Light 属性面板
-        DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](auto& component)
+        DrawComponent<DirectionalLightComponent>("方向光", entity, [](auto& component)
             {
                 // 光线方向（世界空间），shader 中取反得到指向光源的向量
                 ImGui::DragFloat3("Direction", glm::value_ptr(component.Direction), 0.01f);
@@ -1769,12 +1732,14 @@ namespace Redflag {
             });
 
         // Point Light 属性面板
-        DrawComponent<PointLightComponent>("Point Light", entity, [](auto& component)
+        DrawComponent<PointLightComponent>("点光源  Point Light", entity, [](auto& component)
             {
                 // 光源颜色
-                ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+                ImGui::ColorEdit3("颜色", glm::value_ptr(component.Color));
                 // 辐照度缩放
-                ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
+                ImGui::DragFloat("强度", &component.Intensity, 0.05f, 0.0f, 100.0f);
+                if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+                    return;
                 // 影响半径
                 ImGui::DragFloat("Radius", &component.Radius, 0.1f, 0.01f, 1000.0f);
                 // 是否投射阴影（点光用立方体 Shadow Map，开销较大）
@@ -1782,7 +1747,7 @@ namespace Redflag {
             });
 
         // Particle Emitter 2D 属性面板
-        DrawComponent<ParticleEmitterComponent>("Particle Emitter 2D", entity, [](auto& component)
+        DrawComponent<ParticleEmitterComponent>("2D 粒子发射器", entity, [](auto& component)
             {
                 ImGui::Checkbox("Active", &component.Active);
 
@@ -1814,7 +1779,7 @@ namespace Redflag {
             });
 
         // Texture Animation 属性面板
-        DrawComponent<TextureAnimationComponent>("Texture Animation", entity, [](auto& component)
+        DrawComponent<TextureAnimationComponent>("贴图动画", entity, [](auto& component)
             {
                 ImGui::DragInt("Columns",    &component.Columns,        1.0f, 1, 64);
                 ImGui::DragInt("Rows",       &component.Rows,           1.0f, 1, 64);
@@ -1825,5 +1790,12 @@ namespace Redflag {
                 ImGui::Separator();
                 ImGui::Text("Runtime: Frame %d / %d", component.CurrentFrame, component.FrameCount);
             });
+
+        if (ImGui::TreeNode("调试信息"))
+        {
+            DrawReadOnlyTextControl("UUID", std::to_string((uint64_t)entity.GetUUID()));
+            DrawReadOnlyTextControl("Entity ID", std::to_string((uint32_t)entity));
+            ImGui::TreePop();
+        }
     }
 }

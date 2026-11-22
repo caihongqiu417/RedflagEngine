@@ -1,0 +1,19 @@
+\begingroup
+\newcommand{\attachment}[2]{%
+  \begin{minipage}{.484\linewidth}
+  {\noindent\sffamily\bfseries\small\color{Teal}#2\par}
+  \noindent\begin{tikzpicture}
+    \node[inner sep=0] (im) {\includegraphics[width=\linewidth]{figures/sponza-attachments/#1.png}};
+    \foreach \x/\y/\letter in {.0575/.316/A,.4986/.9675/B}{
+      \coordinate (point) at ($(im.south west)!\x!(im.south east)$);
+      \coordinate (high) at ($(im.south west)!\y!(im.north west)$);
+      \node[circle,inner sep=0pt,minimum size=3.4mm,font=\sffamily\bfseries\tiny,
+        draw=white,fill=Ink,text=white,line width=.45pt] at (point |- high) {\letter};
+    }
+  \end{tikzpicture}
+  \end{minipage}}
+\noindent\attachment{color}{材质底色}\hfill\attachment{lit}{编辑器显示的光照}
+\par\smallskip
+\noindent\attachment{depth}{深度　近处亮，远处暗}\hfill\attachment{entity}{实体编号　青色为中庭，米色为背景}
+\par
+\endgroup

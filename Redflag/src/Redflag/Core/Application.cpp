@@ -7,6 +7,8 @@
 #include "Redflag/Assets/AssetManager.h"
 
 #include"Input.h"
+#include "Redflag/Renderer/GraphicsContext.h"
+#include "Redflag/Renderer/RendererAPI.h"
 #include "Redflag/Renderer/Renderer.h"
 
 #include"Redflag/Scripting/ScriptEngine.h"
@@ -22,7 +24,7 @@ namespace Redflag
 
 	Application* Application::s_Instance = nullptr;
 
-    Application::Application(const std::string& name)
+    Application::Application(const std::string& name, bool visible)
     {
 		RF_PROFILE_FUNCTION();
 
@@ -31,11 +33,14 @@ namespace Redflag
         s_Instance = this;
 
         // 创建窗口并设置事件回调
-		m_Window = Window::Create(WindowProps(name));
+		WindowProps props(name);
+        props.Visible = visible;
+        m_Window = Window::Create(props);
         m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
 		//目前实际调用Renderer2D::Init()
-		Renderer::Init();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+			Renderer::Init();
 
 		//脚本系统
 		ScriptEngine::Init();
@@ -53,7 +58,8 @@ namespace Redflag
 		ScriptEngine::Shutdown();
 		AssetManager::ClearAll();
 		AssetManager::GetLibrary().Clear();
-		Renderer::Shutdown();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+			Renderer::Shutdown();
 		delete m_Window;
 		s_Instance = nullptr;
 	}
@@ -98,7 +104,7 @@ namespace Redflag
 	}
 
 
-	void Application::Run()
+	void Application::Run(unsigned frameLimit)
 	{
 		RF_PROFILE_FUNCTION();
 
@@ -120,7 +126,7 @@ namespace Redflag
 			m_LastFrameTime = time;
 
 			// 更新所有层
-			if (!m_Minimized)
+			if (!m_Minimized && m_Window->GetGraphicsContext().BeginFrame())
 			{
 				{
 					RF_PROFILE_SCOPE("LayerStack OnUpdate"); 
@@ -142,6 +148,8 @@ namespace Redflag
 
 				// 结束ImGui帧并渲染
 				m_ImGuiLayer->End();
+				if (frameLimit && --frameLimit == 0)
+					Close();
 				
 			}
 	
@@ -167,7 +175,8 @@ namespace Redflag
 		}
 		m_Minimized = false;
 
-		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+			Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
 	}

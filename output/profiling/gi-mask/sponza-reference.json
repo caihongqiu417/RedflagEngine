@@ -1,0 +1,95 @@
+{
+  "capture_sha256": "f34050c2ec7b870715f6bab023c2b0a94b6e57281690a240e638999386081938",
+  "reference_executable_sha256": "4304e3e962c6386dc0850288eba382542dbfbb679dc55137d5f98ae104082147",
+  "size": [
+    384,
+    246
+  ],
+  "frame": 24,
+  "event": 634,
+  "alpha_mask": true,
+  "single_sample_reproduced": true,
+  "samples": 256,
+  "mse_raw": 0.00038524585910680614,
+  "half_reference_mse": 1.4308347916550715e-05,
+  "detail_box": [
+    153,
+    1,
+    281,
+    62
+  ],
+  "figure_sha256": "c596bffdb8b4939d11f3418ff0e1c9167dee98f1ef0ce283c992d33fd64fd720",
+  "raw_sha256": "f64471c6d8e79ea9efcdf5ea98ceb6da7f791f482b38bec7a650581cdead6293",
+  "half_reference_sha256": [
+    "3b1b104b3a9d8bf83d11a4e004289d81cc6892e4cdb3784560faa91e3164bb35",
+    "3c1834d1dfe1a5ac3089850f91c9ea21ee5ef61fc6e668cda540253f626c08af"
+  ],
+  "camera_eye": [
+    -5.5,
+    -2.200000047683716,
+    -8.526512829121202e-14
+  ],
+  "reference_seeds": [
+    24,
+    279
+  ],
+  "scene": "Sponza Atrium",
+  "figure": "sponza-reference.png",
+  "stage": "Reflection output before temporal anti-aliasing and fog, same display transform for both images.",
+  "mse_units": "Mean squared scene-linear RGB over the entire 384 x 246 image and all three color channels.",
+  "capture": "output/captures/local/Sponza-Mask-532eca6d7921-384/studio_frame24.rdc",
+  "verified_passes": {
+    "cluster": 573,
+    "probe": 585,
+    "ddgi": 597,
+    "fog": 646,
+    "scene_reflection": 634
+  },
+  "old_bathroom_recheck": {
+    "old_binary_sha256": "0247582cdd70353b5eb654a488146e1667179b3a3f79cfc8cc58ed92c7fafcc4",
+    "same_original_tool_as_archive": true,
+    "captured_frame_input_and_output_identical": true,
+    "archive_vs_current": [
+      {
+        "channels": 787200,
+        "changed": 67,
+        "max_abs": 0.0008318424224853516,
+        "mse": 2.188371341916895e-12
+      },
+      {
+        "channels": 787200,
+        "changed": 61,
+        "max_abs": 9.101256728172302e-05,
+        "mse": 3.738868041080951e-14
+      }
+    ],
+    "archive_vs_original_tool_rerun": [
+      {
+        "channels": 787200,
+        "changed": 487,
+        "max_abs": 0.0012710094451904297,
+        "mse": 9.25421635397881e-12
+      },
+      {
+        "channels": 787200,
+        "changed": 493,
+        "max_abs": 0.0012328624725341797,
+        "mse": 8.481518690207901e-12
+      }
+    ],
+    "current_vs_original_tool_rerun": [
+      {
+        "channels": 787200,
+        "changed": 486,
+        "max_abs": 0.0012710094451904297,
+        "mse": 7.368509177475906e-12
+      },
+      {
+        "channels": 787200,
+        "changed": 462,
+        "max_abs": 0.0012328624725341797,
+        "mse": 8.445877351953976e-12
+      }
+    ]
+  }
+}

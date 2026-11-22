@@ -94,7 +94,7 @@ vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
     float lightWidth = u_RSMHeader.w;
     float texelWidth = lightWidth / float(textureSize(u_RSMDepth, 0).x);
 
-    // 每个像素从不同角度开始采样，每帧再转一点。混合几帧后，固定的采样花纹就会变淡。
+    // 每个像素从不同角度开始采样。每过一帧，采样方向转约 0.618 圈（黄金比例的倒数），连续几帧就能取到不同位置的反射光。
     float baseAngle   = Hash12(gl_FragCoord.xy);
     float frameOffset = fract(float(u_FrameIndex) * 0.618033988749895);
     float angle = 6.28318530718 * fract(baseAngle + frameOffset);
@@ -130,13 +130,13 @@ vec3 ComputeRSMIndirect(vec3 fragWorldPos, vec3 N, vec2 shadowUV)
         float fragFacing = max(0.0, dot(N, -dirN));
 
         // 两块表面越正对彼此，传过去的光越强。距离翻倍时，光降为四分之一。
-        // 两点非常近时用一个光源纹素的宽度作下限，防止出现亮斑。
+        // 两点贴得很近时，按光源图中一个像素覆盖的场景宽度计算最小距离，避免反射光突然变成亮点。
         float geometry = vplFacing * fragFacing / max(dist2, texelWidth * texelWidth);
         indirect += vplFlux * geometry * sampleWeight;
     }
 
-    // 圆盘均匀采样：平均值要乘上采样圆盘在灯光投影平面上的面积。源面和接收面的
-    // Lambert 漫反射各含 1/π，故 πr² / π² = r² / π。
+    // 样点的平均亮度乘上灯光图里这片圆盘覆盖的面积 πr²。光从墙反到地板，再由地板反向相机，
+    // 两次漫反射各除以 π，所以这里用 r²/π。r 按场景单位算。
     const float PI = 3.14159265;
     float radius = sampleRadius * lightWidth;
     return indirect * (intensity * radius * radius / (PI * float(numSamples)));
@@ -163,7 +163,7 @@ void main()
     mat3 invView3 = transpose(mat3(u_View));
     vec3 N = normalize(invView3 * viewNormal);
 
-    // 同一个接收点还要从灯光看一次，才能定位到反射阴影图上。
+    // 把相机看到的这个点投到灯光图上，接下来在它周围寻找能把光反过来的表面。
     vec4 lsPos = u_LightSpaceMatrix * vec4(worldPos, 1.0);
     vec3 lsProj = lsPos.xyz / max(lsPos.w, 1e-6);
     lsProj = lsProj * 0.5 + 0.5;

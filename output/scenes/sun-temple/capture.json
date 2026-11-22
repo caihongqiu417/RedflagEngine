@@ -1,0 +1,226 @@
+{
+  "capture": "output/captures/local/SunTemple-12.rdc",
+  "tool": "1.47",
+  "frame": 12,
+  "dispatches": [
+    11,
+    274,
+    286,
+    298,
+    310,
+    322,
+    334,
+    346,
+    358
+  ],
+  "draws": [
+    27,
+    32,
+    37,
+    42,
+    47,
+    52,
+    57,
+    62,
+    67,
+    72,
+    77,
+    82,
+    87,
+    92,
+    97,
+    102,
+    107,
+    112,
+    117,
+    122,
+    127,
+    132,
+    137,
+    142,
+    147,
+    152,
+    157,
+    162,
+    167,
+    172,
+    177,
+    182,
+    187,
+    192,
+    197,
+    202,
+    207,
+    212,
+    217,
+    222,
+    227,
+    232,
+    237,
+    242,
+    247,
+    252,
+    257,
+    262,
+    378,
+    383,
+    388,
+    393,
+    398,
+    403,
+    408,
+    413,
+    418,
+    423,
+    428,
+    433,
+    438,
+    443,
+    448,
+    453,
+    458,
+    463,
+    468,
+    473,
+    478,
+    483,
+    488,
+    493,
+    498,
+    503,
+    508,
+    513,
+    518,
+    523,
+    528,
+    533,
+    538,
+    543,
+    548,
+    553,
+    558,
+    563,
+    568,
+    573,
+    578,
+    583,
+    588,
+    593,
+    598,
+    603,
+    608,
+    613,
+    624,
+    627,
+    630,
+    633,
+    636,
+    639,
+    642,
+    645,
+    648,
+    651,
+    654,
+    657,
+    660,
+    663,
+    666,
+    669,
+    672,
+    675,
+    678,
+    681,
+    684,
+    687
+  ],
+  "messages": [],
+  "passes": [
+    [
+      262,
+      [
+        [
+          "ResourceId::2469",
+          "R32G32B32A32_FLOAT",
+          1391,
+          892
+        ],
+        [
+          "ResourceId::2473",
+          "R32G32B32A32_FLOAT",
+          1391,
+          892
+        ]
+      ]
+    ],
+    [
+      613,
+      [
+        [
+          "ResourceId::2418",
+          "R8G8B8A8_UNORM",
+          1391,
+          892
+        ],
+        [
+          "ResourceId::2422",
+          "R32_SINT",
+          1391,
+          892
+        ]
+      ]
+    ],
+    [
+      687,
+      [
+        [
+          "ResourceId::109",
+          "B8G8R8A8_UNORM",
+          2560,
+          1440
+        ]
+      ]
+    ]
+  ],
+  "lit": [
+    358,
+    "ResourceId::2482",
+    1391,
+    892
+  ],
+  "scene": "RedflagForge/assets/scenes/Sun-Temple.redflag",
+  "backend": "Vulkan, Debug x64, NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "geometry": {
+    "source_mesh_objects": 517,
+    "triangles": 606376,
+    "materials": 48,
+    "gltf_referenced_images": 148
+  },
+  "capture_sha256": "fadf147d2afe07745a2c67fdaa66a36c31402367cbee8010ffe0360fdae9eb8e",
+  "output_sha256": {
+    "albedo.png": "302582a2e7c3c716cac67a41f69cd7811eab325cf589e82c9fbf311441748836",
+    "normal-depth.png": "0932b40981e68eaaa49c61175273aa5b3300979f3db63501fac25f5af24145b3",
+    "SunTemple.png": "3c919dc58085f4dc356c9862fe946fea8be8c48fc27ce632076a63b6427a5b8f"
+  },
+  "center_pixel": {
+    "xy": [
+      695,
+      446
+    ],
+    "albedo": [
+      0.4889831244945526,
+      0.4427154064178467,
+      0.4001646935939789,
+      1.0
+    ],
+    "normal_depth": [
+      -0.11439359933137894,
+      -0.06550004333257675,
+      0.991273820400238,
+      0.9973783493041992
+    ]
+  },
+  "normal_length_max_abs_error": 1.7881393432617188e-07,
+  "rgba32f_finite": true,
+  "screenshot": "Final display image before ImGui. Surface color uses linear-to-sRGB for the illustration; normals use 0.5*n+0.5. No filtering of areas observed.",
+  "source": "Epic Games, ORCA Sun Temple, CC BY-NC-SA 4.0; see README.md"
+}

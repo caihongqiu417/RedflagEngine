@@ -1,0 +1,270 @@
+{
+  "scene": "assets/scenes/Glass-Studio.redflag",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "backend": "Vulkan",
+  "build": "Debug x64",
+  "source": "RenderDoc 1.47, formal editor Lit display output, frame 12. Exact same scene, cameras and lights; only RefractionIndex differs.",
+  "captures": {
+    "straight": {
+      "file": "output/captures/local/Glass-straight-12.rdc",
+      "sha256": "ee1a3f65c099208ef1f159ad272756660b5d64c1e2d4a6de23bd566ae752ad20",
+      "image": "straight.png",
+      "png_sha256": "acda5cf67967978e49f85f32b36f958e4cf4cab50cea1b10f4fc23c3b99bffbc",
+      "frame": 12,
+      "size": [
+        1393,
+        893
+      ],
+      "display_event": 189,
+      "display_image": "ResourceId::577",
+      "groups": [
+        {
+          "resources": [
+            "ResourceId::564",
+            "ResourceId::568"
+          ],
+          "draws": [
+            27,
+            32,
+            37,
+            42,
+            47,
+            52,
+            57,
+            62,
+            67,
+            72,
+            77,
+            82,
+            87,
+            92,
+            97
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::632",
+            "ResourceId::636",
+            "ResourceId::640"
+          ],
+          "draws": [
+            112,
+            117
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::543",
+            "ResourceId::547"
+          ],
+          "draws": [
+            209,
+            214,
+            219,
+            224,
+            229,
+            234,
+            239,
+            244,
+            249,
+            254,
+            259,
+            264,
+            269,
+            274,
+            279,
+            284,
+            289
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::113"
+          ],
+          "draws": [
+            300,
+            303,
+            306,
+            309,
+            312,
+            315,
+            318,
+            321,
+            324,
+            327,
+            330,
+            333,
+            336,
+            339,
+            342,
+            345,
+            348,
+            351,
+            354,
+            357,
+            360,
+            363
+          ]
+        }
+      ],
+      "dispatches": [
+        11,
+        129,
+        141,
+        153,
+        165,
+        177,
+        189
+      ],
+      "renderdoc_messages": []
+    },
+    "bent": {
+      "file": "output/captures/local/Glass-bent-12.rdc",
+      "sha256": "cdb378928840bffdc74eafad886089cd627910533d25e02fe70fb524f3d1171a",
+      "image": "bent.png",
+      "png_sha256": "20413e26714607723907a2756fc9c0e1ef97b16d66678f319f7fd7bf07c1fa72",
+      "frame": 12,
+      "size": [
+        1393,
+        893
+      ],
+      "display_event": 189,
+      "display_image": "ResourceId::577",
+      "groups": [
+        {
+          "resources": [
+            "ResourceId::564",
+            "ResourceId::568"
+          ],
+          "draws": [
+            27,
+            32,
+            37,
+            42,
+            47,
+            52,
+            57,
+            62,
+            67,
+            72,
+            77,
+            82,
+            87,
+            92,
+            97
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::632",
+            "ResourceId::636",
+            "ResourceId::640"
+          ],
+          "draws": [
+            112,
+            117
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::543",
+            "ResourceId::547"
+          ],
+          "draws": [
+            209,
+            214,
+            219,
+            224,
+            229,
+            234,
+            239,
+            244,
+            249,
+            254,
+            259,
+            264,
+            269,
+            274,
+            279,
+            284,
+            289
+          ]
+        },
+        {
+          "resources": [
+            "ResourceId::112"
+          ],
+          "draws": [
+            300,
+            303,
+            306,
+            309,
+            312,
+            315,
+            318,
+            321,
+            324,
+            327,
+            330,
+            333,
+            336,
+            339,
+            342,
+            345,
+            348,
+            351,
+            354,
+            357,
+            360,
+            363
+          ]
+        }
+      ],
+      "dispatches": [
+        11,
+        129,
+        141,
+        153,
+        165,
+        177,
+        189
+      ],
+      "renderdoc_messages": []
+    }
+  },
+  "offscreen": {
+    "test": "tests/RHITests.cpp::CheckTransparency",
+    "size": [
+      192,
+      112
+    ],
+    "panes_degrees": 38,
+    "thickness_world": 0.4,
+    "alphas": [
+      0.22,
+      0.35
+    ],
+    "reversing_draw_order_max_linear_RGBA_distance": 0,
+    "refraction_changed_pixels_at_linear_RGB_distance_over_0.02": 2458,
+    "linear_RGB_distance_max": 0.940806
+  },
+  "measured_display_difference": {
+    "rgb_max": 0.49411413073539734,
+    "at_xy": [
+      1075,
+      161
+    ],
+    "at_xy_straight": [
+      0.7810537219047546,
+      0.7906780242919922,
+      0.7737816572189331
+    ],
+    "at_xy_bent": [
+      0.2869395911693573,
+      0.4626061022281647,
+      0.506540060043335
+    ],
+    "pixels_max_rgb_difference_more_than_8_over_255": 157890,
+    "total_pixels": 1243949
+  }
+}

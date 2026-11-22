@@ -1,0 +1,30 @@
+\clearpage
+\section{显卡上的数组、图像和上一帧}
+在 GAMES104 的引擎分层里，上层知道要算什么，底层知道怎么把工作交给某一种图形接口。Redflag 中的 \texttt{Scene} 保存模型和点光源，\texttt{GlobalIllumination} 决定对哪些表面追踪光线，\texttt{ScreenEffects} 决定要运行哪个屏幕效果。这两者只向 \texttt{ComputeDevice} 提交程序、资源和工作组数。实际分配 Vulkan 内存、把资源交给着色器并提交命令的是 \texttt{VulkanComputeDevice}。游戏脚本平时操作的是场景实体，只有编写新的 GPU 效果才需要碰这些接口。
+
+\subsection{从一个像素读懂三帧}
+以 $7\times5$ 的测试图为例。CPU 先准备 35 个整数 $0,\ldots,34$，另分配两张每像素四个浮点数的图。第一张清零，第二张留作第一次的输出。每一帧的着色器读上一张图、更新对应整数，把新值写入另一张图。要保留历史只须交换两张图的角色，数据仍留在显卡可以访问的资源里。
+
+\noindent{\small\color{quiet}C++ 接口调用示例\quad\href{run:../../tests/ComputeTests.cpp}{\texttt{ComputeTests.cpp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+auto numbers = device.CreateBuffer(sizeof(initial), initial);
+auto first   = device.CreateImage(7, 5, zeros);
+auto second  = device.CreateImage(7, 5);
+auto program = device.CreatePipeline(code, bytes,
+    {Buffer, Image, Image}, sizeof(uint32_t));
+(*@{\footnotesize\color{quiet}两个方向各派两组线程；本帧读第一张图，写第二张图。}@*)
+device.Dispatch(program, {numbers, first, second}, &frame, 2, 2);
+\end{lstlisting}
+这里省略了枚举类型名前缀。每组覆盖 $4\times4$ 个像素，宽 7、高 5，两个方向都向上取整得到两组。超出图像的线程直接返回。数组和图的排列必须与着色器中的声明相同；最后的 \texttt{frame} 指向当前帧号，只有四字节。前三帧的输出依次是第二、第一、第二张图。测试读回所有整数及像素分量，第三帧最后一像素红色通道应等于 112。
+
+\subsection{提交与读取}
+Khronos 的计算着色器教程从工作组和读写依赖入手。Redflag 在 CPU 端调用 \texttt{Dispatch} 时先记录资源和计算工作，再提交队列。当前版本等该次提交完成后才返回，下一次计算可以安全读取结果。连续处理多道效果时，这个约定简化了排错，也会让 CPU 等待多次。评估异步提交应先把 GPU 时间查询与 CPU 等待分开记录，再比较同一场景的帧耗时。
+
+\texttt{Readback} 将指定资源的字节读进 CPU 提供的数组，适合测试逐值核验。编辑器显示画面可以直接读取显卡输出，经显示着色器写进 ImGui 的纹理，从而省掉逐帧回读。
+
+在项目的 \texttt{tests} 目录执行 \texttt{run\_compute\_tests.cmd}，就能单独验证这三帧。CPU 端的读回检查写在 \texttt{ComputeTests.cpp}，对应的计算着色器名为 \texttt{ComputeHistory.comp}。
+
+{\small 参考\quad\href{https://docs.vulkan.org/tutorial/latest/11_Compute_Shader.html}{Khronos 的计算着色器}\quad
+\href{https://games104.boomingtech.com/sc/course-list/}{GAMES104，第 2 讲}\quad
+\href{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Texture.h}{Hazel 的资源接口}\quad
+\href{https://gameenginebook.com/}{Gregory，《游戏引擎架构》}}

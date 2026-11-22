@@ -1,0 +1,33 @@
+{
+  "executable_sha256": "435a0ada6466506eef76b3f0bf2fb186add87be5abfb680d8da9c8c60c1ae93d",
+  "method": "--bake-probes on temporary copies, Debug x64 with Vulkan validation; compare against pre-existing files",
+  "cases": {
+    "Light-Studio": {
+      "scene_sha256": "092afea63e0e211ac9917c8761f4f0185e1a60fd1027b41d7e312f30d0bfadc6",
+      "source_probe_sha256": "bafb16b5a5fc91705500fe8e202929228aa01b0108caec771567e4c582bfd8e3",
+      "new_probe_sha256": "bafb16b5a5fc91705500fe8e202929228aa01b0108caec771567e4c582bfd8e3",
+      "scene_key_before": 7662115054685930439,
+      "scene_key_after": 7662115054685930439,
+      "bytes": 96792,
+      "identical": true
+    },
+    "Mirror-Studio": {
+      "scene_sha256": "be9f32bec133fff930af931532d62d2b8767fd5034b441ac13706caab63758c0",
+      "source_probe_sha256": "9071040d10e2766fa355de530c6d1570012d91dfe5d3dd5c610d542323432c66",
+      "new_probe_sha256": "9071040d10e2766fa355de530c6d1570012d91dfe5d3dd5c610d542323432c66",
+      "scene_key_before": 380440734025080226,
+      "scene_key_after": 380440734025080226,
+      "bytes": 96792,
+      "identical": true
+    },
+    "RTXGI-Bathroom": {
+      "scene_sha256": "d200107e6d95f810c1ad0d7021712f1153a667dd1cae332f27aca1508e26c930",
+      "source_probe_sha256": "26f8f8991aa105df05cf1436bacee50810122d9113206d0e4ba3b0f31b22890e",
+      "new_probe_sha256": "26f8f8991aa105df05cf1436bacee50810122d9113206d0e4ba3b0f31b22890e",
+      "scene_key_before": 13512947767734862604,
+      "scene_key_after": 13512947767734862604,
+      "bytes": 96792,
+      "identical": true
+    }
+  }
+}

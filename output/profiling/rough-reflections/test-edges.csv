@@ -1,0 +1,10 @@
+case,compared_pixels,max_linear_rgb_distance
+base_checker,9216,4.7829e-07
+background,192,0
+smooth,192,0
+roughness,192,0
+depth,192,0
+normal,192,0
+metallic,192,0
+color,192,0
+camera_pan_vs_new_view,9216,0

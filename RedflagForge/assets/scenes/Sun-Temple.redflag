@@ -1,0 +1,127 @@
+Scene: Sun Temple
+Entities:
+  - Entity: 1
+    TagComponent:
+      Tag: 神庙
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ModelRendererComponent:
+      ModelID: 10601837587118816766
+      FilePath: assets/models/reference/SunTemple/SunTemple.gltf
+      Color: [1, 1, 1, 1]
+  - Entity: 2
+    TagComponent:
+      Tag: 主相机
+    TransformComponent:
+      Translation: [0.128, 3.17, 70.874]
+      Rotation: [-0.057, 0.0662, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 1.1083
+        PerspectiveNear: 0.1
+        PerspectiveFar: 225
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 225
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: 左壁灯
+    TransformComponent:
+      Translation: [-1.465, 1.999, 70.885]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.78, 0.54]
+      Intensity: 45
+      Radius: 18
+      CastShadow: false
+  - Entity: 4
+    TagComponent:
+      Tag: 右壁灯
+    TransformComponent:
+      Translation: [1.668, 1.999, 70.885]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.78, 0.54]
+      Intensity: 45
+      Radius: 18
+      CastShadow: false
+  - Entity: 5
+    TagComponent:
+      Tag: 前厅灯
+    TransformComponent:
+      Translation: [0.03, 2.8, 58.014]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.82, 0.6]
+      Intensity: 130
+      Radius: 28
+      CastShadow: false
+  - Entity: 6
+    TagComponent:
+      Tag: 廊灯
+    TransformComponent:
+      Translation: [-2.088, 2.9, 50.802]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.62, 0.72, 1]
+      Intensity: 120
+      Radius: 28
+      CastShadow: false
+  - Entity: 7
+    TagComponent:
+      Tag: 左殿灯
+    TransformComponent:
+      Translation: [-7.15, 1.993, 43.253]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.78, 0.56]
+      Intensity: 160
+      Radius: 32
+      CastShadow: false
+  - Entity: 8
+    TagComponent:
+      Tag: 右殿灯
+    TransformComponent:
+      Translation: [7.195, 1.993, 43.253]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.78, 0.56]
+      Intensity: 160
+      Radius: 32
+      CastShadow: false
+  - Entity: 9
+    TagComponent:
+      Tag: 穹顶灯
+    TransformComponent:
+      Translation: [0.03, 6.8, 31.556]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.87, 0.68]
+      Intensity: 350
+      Radius: 40
+      CastShadow: false
+  - Entity: 10
+    TagComponent:
+      Tag: 后殿灯
+    TransformComponent:
+      Translation: [7.464, 3.992, 18.076]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.8, 0.87, 1]
+      Intensity: 220
+      Radius: 35
+      CastShadow: false

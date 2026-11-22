@@ -69,6 +69,7 @@ namespace Redflag {
 
         newScene->m_ViewportWidth = other->m_ViewportWidth;
         newScene->m_ViewportHeight = other->m_ViewportHeight;
+        newScene->m_Environment = other->m_Environment;
 
         auto& srcSceneRegistry = other->m_Registry;
         auto& dstSceneRegistry = newScene->m_Registry;

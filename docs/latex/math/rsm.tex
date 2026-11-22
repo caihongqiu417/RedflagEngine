@@ -54,6 +54,7 @@ B，另一侧的白地面 $(716,651)$ & 0.06946 & 0.06836 & 0.06836\\
 所以着色器只在墙面朝灯时写下 $D_y=\rho_y q$。这个 RGB 值表示每单位投影面积反射多少光，乘上一个像素的投影面积才得到该像素的通量。代码里的 $\rho_y$ 是线性底色乘以 $1-\mathrm{metallic}$，$q$ 取灯的颜色乘以强度。项目中的光强尚未做光度标定，背光面的值为零。项目用 RGBA16F 浮点纹理保存 $D_y$，面积留到采样时统一乘入。
 
 \begin{lstlisting}
+// 先扣除金属部分，再存下表面可用于漫反射的光。
 vec3 diffuse = baseColor.rgb * (1.0 - metallic);
 fluxDensity = diffuse * u_DirLights[0].Color.rgb * u_DirLights[0].Color.w;
 o_Flux     = vec4(fluxDensity, 1.0);
@@ -71,6 +72,7 @@ o_Flux     = vec4(fluxDensity, 1.0);
 \]
 原论文的式（1）使用未经单位化的位移向量，两个点积各多出一个 $r$，所以它的分母写作 $r^4$。项目里的 \code{dirN} 已经单位化，分母便是 $r^2$。当两点近到不足一个光源纹素时，用纹素宽度 $\delta=w/W$ 给距离设下限。两点重合时直接跳过。
 \begin{lstlisting}
+// 发光面和接收面必须朝向彼此，两个余弦各算一次。
 float vplFacing  = max(0.0, dot(vplNormal, dirN));
 float fragFacing = max(0.0, dot(N, -dirN));
 float geometry = vplFacing * fragFacing / max(dist2, texelWidth * texelWidth);
@@ -95,20 +97,25 @@ indirect += vplFlux * geometry * sampleWeight;
 \]
 代码把最后的乘法留到主绘制。先用圆盘面积和样本数算出白色漫反射表面能反射的颜色，再乘具体地面的底色与非金属比例。\code{intensity} 是调节外观的倍率，默认值为 1。落在光源图外或没有表面的样本贡献为零，最后仍除以请求的 $N$，否则光源图边缘会被人为提亮。
 \begin{lstlisting}
+// 纹理上的半径乘光源视野宽度，得到场景中的采样半径。
 float radius = sampleRadius * lightWidth;
 return indirect * (intensity * radius * radius / (PI * float(numSamples)));
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/RSMIndirect.glsl}{ComputeRSMIndirect}
 \begin{lstlisting}
+// 用接收表面的底色给到达这里的间接光着色。
 Lo += texture(u_RSMResolved, screenUV).rgb * albedo * (1.0 - metallic);
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（片元阶段）}
 
 \textbf{旧实现为什么偏暗。}提交 \code{1a168c3} 的两行代码如下。第一行又乘了入射余弦 \code{NdL}，使斜照红墙上的样本额外变暗。第二行只求样本平均值，漏掉了圆盘面积，也没有按上面的定义计入两次漫反射。
 \begin{lstlisting}[title={旧版 RSMDepth 与 RSMIndirect 中的表达式}]
+// 旧式记录发送端受光余弦，求和时也没有乘采样面积。
 o_Flux     = vec4(albedo * lightColor * NdL, 1.0);
 return indirect * (intensity / float(numSamples));
 \end{lstlisting}
+\loc{RedflagForge/assets/shaders/RSMDepth.glsl}{main，1a168c3（上行）}
+\loc{RedflagForge/assets/shaders/RSMIndirect.glsl}{ComputeRSMIndirect，1a168c3（下行）}
 
 采样数以前还会改变墙上的取样范围。现在第 $i$ 个样本在单位圆盘上的半径为 $\sqrt{(i+0.5)/N}$（Vogel 圆盘）。原先分母写死为 128，选 16 个样本时只覆盖约 $\sqrt{16/128}=0.354$ 倍的半径。让半径跟实际 $N$ 走，低采样数也能覆盖圆盘外围。这组等面积样本使用相同权重，原论文另一种分布的径向权重不适用于这里。\source{https://doi.org/10.1145/1053427.1053460}{原论文第 3.3 节，式（3）}
 

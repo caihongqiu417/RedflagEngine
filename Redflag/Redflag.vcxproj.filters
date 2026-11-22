@@ -10,11 +10,17 @@
     <Filter Include="src\Platform\OpenGL">
       <UniqueIdentifier>{35A49437-A105-7245-2A73-B8F796D3A804}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Platform\Vulkan">
+      <UniqueIdentifier>{81084748-ED69-2456-76D7-6A08E2375B15}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Platform\Windows">
       <UniqueIdentifier>{5B054582-4794-CE4B-F0B2-E246DC20DFF1}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag">
       <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Assets">
+      <UniqueIdentifier>{F3F9669F-DFDD-27F5-483E-224834411277}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag\Core">
       <UniqueIdentifier>{29DF537F-15D8-72D1-3E0A-58562A6252DD}</UniqueIdentifier>
@@ -36,6 +42,15 @@
     </Filter>
     <Filter Include="src\Redflag\Renderer">
       <UniqueIdentifier>{F7FEF883-E38D-824D-8CAC-9648781A93F3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Renderer\GI">
+      <UniqueIdentifier>{F680C82C-62B8-10C4-6BC2-74E7D77837BD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Renderer\RHI">
+      <UniqueIdentifier>{A9CED8C5-95F3-2746-BE3E-0DD6AAC22664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Renderer\ScreenSpace">
+      <UniqueIdentifier>{B2F4BC5C-9E45-A89E-C7A9-9660B3593B08}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag\Scene">
       <UniqueIdentifier>{0E82EA6A-7A98-E800-C30F-74222F65B988}</UniqueIdentifier>
@@ -90,10 +105,19 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLCommandList.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLMeshGeometry.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLRenderDevice.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
@@ -105,17 +129,50 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLTransparencyPass.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanComputeData.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanComputeDevice.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanContext.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanDraw.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanDrawData.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanResult.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanTexture2D.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
       <Filter>src\Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Assets\Asset.h">
+      <Filter>src\Redflag\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Assets\AssetLibrary.h">
+      <Filter>src\Redflag\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Assets\AssetManager.h">
+      <Filter>src\Redflag\Assets</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core\Application.h">
       <Filter>src\Redflag\Core</Filter>
@@ -174,6 +231,9 @@
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
       <Filter>src\Redflag\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\ImGui\VulkanImGui.h">
+      <Filter>src\Redflag\ImGui</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Math\Math.h">
       <Filter>src\Redflag\Math</Filter>
     </ClInclude>
@@ -189,13 +249,34 @@
     <ClInclude Include="src\Redflag\Renderer\EditorCamera.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\EnvironmentLighting.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Frustum.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\GI\FogSettings.h">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\GI\GIScene.h">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\GI\GITexture.h">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\GI\GlobalIllumination.h">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\GI\ProbeBake.h">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\GraphicsContext.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\IBLArchive.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\IBLPrecompute.h">
@@ -210,11 +291,35 @@
     <ClInclude Include="src\Redflag\Renderer\Model.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\ModelEmission.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\ModelImages.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\ModelNodes.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\OrthographicCamera.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\OrthographicCameraController.h">
       <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\PostProcess.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\RHI\CommandList.h">
+      <Filter>src\Redflag\Renderer\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\RHI\ComputeDevice.h">
+      <Filter>src\Redflag\Renderer\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\RHI\RenderDevice.h">
+      <Filter>src\Redflag\Renderer\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\RHI\SurfaceMaterial.h">
+      <Filter>src\Redflag\Renderer\RHI</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\RenderCommand.h">
       <Filter>src\Redflag\Renderer</Filter>
@@ -233,6 +338,9 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\SceneRenderer.h">
       <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\ScreenSpace\ScreenEffects.h">
+      <Filter>src\Redflag\Renderer\ScreenSpace</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Shader.h">
       <Filter>src\Redflag\Renderer</Filter>
@@ -281,6 +389,9 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h">
       <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Utils\FileSystem.h">
+      <Filter>src\Redflag\Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Utils\PlatformUtils.h">
       <Filter>src\Redflag\Utils</Filter>
@@ -1559,10 +1670,16 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLCommandList.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLRenderDevice.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
@@ -1574,13 +1691,40 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLTransparencyPass.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanComputeDevice.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanComputePipeline.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanContext.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanDraw.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanDrawPipeline.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanDrawResources.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanTexture2D.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowPlatformUltils.cpp">
+      <Filter>src\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Windows\WindowsFileSystem.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
@@ -1588,6 +1732,9 @@
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Assets\AssetLibrary.cpp">
+      <Filter>src\Redflag\Assets</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Core\Application.cpp">
       <Filter>src\Redflag\Core</Filter>
@@ -1610,6 +1757,12 @@
     <ClCompile Include="src\Redflag\ImGui\ImGuiLayer.cpp">
       <Filter>src\Redflag\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\ImGui\ImGuiVulkanBuild.cpp">
+      <Filter>src\Redflag\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\ImGui\VulkanImGui.cpp">
+      <Filter>src\Redflag\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Math\Math.cpp">
       <Filter>src\Redflag\Math</Filter>
     </ClCompile>
@@ -1622,7 +1775,25 @@
     <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\EnvironmentLighting.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\GI\GIScene.cpp">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\GI\GITexture.cpp">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\GI\GlobalIllumination.cpp">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\GI\ProbeBake.cpp">
+      <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\IBLArchive.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\IBLPrecompute.cpp">
@@ -1643,6 +1814,12 @@
     <ClCompile Include="src\Redflag\Renderer\OrthographicCameraController.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\PostProcess.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\RHI\RenderDevice.cpp">
+      <Filter>src\Redflag\Renderer\RHI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\RenderCommand.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
@@ -1660,6 +1837,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\SceneRenderer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\ScreenSpace\ScreenEffects.cpp">
+      <Filter>src\Redflag\Renderer\ScreenSpace</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp">
       <Filter>src\Redflag\Renderer</Filter>

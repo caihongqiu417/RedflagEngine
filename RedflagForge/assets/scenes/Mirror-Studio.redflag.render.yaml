@@ -1,0 +1,12 @@
+Shading: Lit
+PreviewWidth: 0
+Direct: All point lights
+Indirect: DDGI
+DDGIProbeFeedback: true
+GTAO: false
+SSR: true
+SceneReflections: true
+ReflectionDistance: 12
+SpecularIBL: false
+TAA: true
+HistoryWeight: 0.85

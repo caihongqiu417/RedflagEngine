@@ -3,14 +3,15 @@
 \usepackage{amsmath,amssymb,listings}
 \hypersetup{pdftitle={Redflag 渲染公式与实现}}
 \fancyhead[L]{\small\color{muted}Redflag · 渲染公式与实现}
+\fancyhead[R]{\small\color{muted}2026-11-22}
 \lstset{language=C++,basicstyle=\small\ttfamily,keywordstyle=\color{blue},
-  commentstyle=\color{muted},backgroundcolor=\color{pale},frame=single,
+  commentstyle=\color{ink!82},backgroundcolor=\color{pale},frame=single,
   rulecolor=\color{line},framesep=6pt,breaklines=true,columns=fullflexible,
   keepspaces=true,showstringspaces=false,aboveskip=7pt,belowskip=7pt}
 \newcommand{\loc}[2]{\par{\footnotesize\color{muted}\path{#1}\quad\code{#2}}\par}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
 \begin{document}
-\zihao{5}\raggedright
+\zihao{5}\raggedright\setlength{\parindent}{2\ccwd}
 {\Huge\bfseries 渲染公式与实现}\par\vspace{5pt}
 {\Large\color{muted}从模型上的一个顶点，到屏幕上的一块颜色}\par
 \ruleline
@@ -31,6 +32,7 @@
 移动整个盒子时，它的边角会一起移动。模型文件只存各个顶点相对模型原点的位置。对于有多个零件的模型，Redflag 先累积导入文件里的父子节点变换，再把整件模型摆到场景中。下面这行由 CPU 执行，等号右边的矩阵从右往左起作用。
 
 \begin{lstlisting}
+// 先应用部件在模型内的变换，再把整个模型放进场景。
 glm::mat4 finalTransform = transform * subMesh.LocalTransform;
 \end{lstlisting}
 \loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}{DrawModel}
@@ -41,10 +43,11 @@ glm::mat4 finalTransform = transform * subMesh.LocalTransform;
 \]
 顶点着色器里，\code{worldPos} 就是 $p_w$。它把这个位置留下，之后着色时可用来计算灯和表面相距多远。CPU 已将 $P$ 和 $V$ 乘好，所以第二段代码只做一次矩阵乘法便得到了 $p_c$。
 \begin{lstlisting}
+// 保留世界坐标，片元阶段要用它求灯光方向。
 vec4 worldPos = model * vec4(a_Position, 1.0);
 v_WorldPos = worldPos.xyz;
-\end{lstlisting}
-\begin{lstlisting}
+
+// 投影后的四个数交给裁剪阶段，硬件随后除以 w。
 gl_Position = u_ViewProjection * worldPos;
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（顶点阶段）}
@@ -80,6 +83,7 @@ gl_Position = u_ViewProjection * worldPos;
 例如 $t=(1,1,0)/\sqrt2$、$n=(1,-1,0)/\sqrt2$。沿 $X$ 放大两倍以后，若两者都用 $A$ 变换，点积会变成 $1.5$。用逆转置处理法线则仍得到 0。归一化后的法线约为 $(0.4472,-0.8944,0)$，这才是光照计算应当采用的方向。
 
 \begin{lstlisting}
+// 法线要垂直于变换后的表面，缩放不同时需要逆转置矩阵。
 mat3 axes = mat3(model);
 vec3 N = normalize(transpose(inverse(axes)) * a_Normal);
 vec3 T = axes * a_Tangent;
@@ -96,6 +100,11 @@ v_TBN = mat3(T, cross(N, T), N);
 \section{从深度找回表面位置}\label{sec:recover-depth}
 观察矮盒盖住高盒的地方。一个屏幕像素对应一条从相机发出的射线，可能穿过矮盒、高盒和后墙。深度测试留下最靠近相机的可见表面。稍后计算环境遮蔽时，着色器拿到像素的位置和深度，就能找回那个表面在相机前方多远。
 
+\begin{figure}[H]\centering
+\input{figures/view-depth}
+\caption{左图从上方看，相机透过蓝点先看见矮盒，虚线上的后墙被挡住。右图把近、远裁剪面设在相机前方 1 和 9 个单位。距离走到正中间的 5 时，深度已经到了 0.90。曲线按本节的透视投影公式绘制。}
+\end{figure}
+
 继续用顶点投影的例子。$(90,60)$ 在 $100\times100$ 的视口中对应纹理坐标 $(u,v)=(0.9,0.6)$，读到的深度 $d=0.9$。先把三个数从 $[0,1]$ 换回 OpenGL 投影后的 $[-1,1]$。补上第四个分量 1，我们便得到和原裁剪坐标成比例的一组数。
 \[
  p_n=(2u-1,\,2v-1,\,2d-1,\,1)^{\mathsf T},\qquad
@@ -103,6 +112,7 @@ v_TBN = mat3(T, cross(N, T), N);
 \]
 把 $p_n$ 送进写入这份深度时的投影矩阵的逆矩阵，会得到 $q=(0.8,0.2,-1,0.2)$。还要除以 $q.w=0.2$，才恢复出 $(4,1,-5)$。下面三句正好对应这三个步骤。
 \begin{lstlisting}
+// OpenGL 的深度图存的是 0 到 1，逆投影前先还原坐标范围。
 vec4 ndc   = vec4(uv * 2.0 - 1.0, depth01 * 2.0 - 1.0, 1.0);
 vec4 viewH = u_InvProjection * ndc;
 return viewH.xyz / viewH.w;
@@ -111,6 +121,7 @@ return viewH.xyz / viewH.w;
 
 同一像素也可以直接还原到世界。间接光要比较白盒与红墙的位置，两者需要用同一个房间坐标。于是下面这段代码使用 $(PV)^{-1}$，它同时撤销投影和相机变换。在这个例子里就得到原来的世界坐标 $(4,1,-2)$。
 \begin{lstlisting}
+// 这次使用视图投影矩阵的逆，得到世界坐标。
 vec4 ndc    = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
 vec4 worldH = u_InvViewProj * ndc;
 return worldH.xyz / worldH.w;
@@ -135,9 +146,10 @@ return worldH.xyz / worldH.w;
 
 设观察方向 $V$ 从表面指向相机，光照方向 $L$ 从表面指向灯，它们和法线 $N$ 均是世界空间单位向量。想让光正好反射进相机，微小镜面的法线应指向 $H=(V+L)/\lVert V+L\rVert$。因此 \code{CalcDirectionalLight} 先找出 $H$，再分别计算下列三个量。
 \begin{lstlisting}
+// 只有朝向 H 的微小镜面能把这束光反射进相机。
 vec3 H = normalize(V + L);
-\end{lstlisting}
-\begin{lstlisting}
+
+// 粗糙度决定朝向 H 的微小镜面有多集中。
 float NDF = DistributionGGX(N, H, roughness);
 float G   = GeometrySmith(N, V, L, roughness);
 vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
@@ -156,7 +168,7 @@ vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
  F&=F_0+(1-F_0)(1-H\cdot V)^5 .
  \end{aligned}
 \]
-\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{DistributionGGX / GeometrySchlickGGX / FresnelSchlick}
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{CalcDirectionalLight（片元阶段）}
 \note{\source{https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory}{PBRT 第四版 §9.6 · Roughness Using Microfacet Theory}。本节中的 $G$ 和 $F$ 使用实时绘制的近似。}
 
 \newpage
@@ -165,7 +177,7 @@ vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
 \[
  L_o(V)=\int_\Omega f_r(L,V)\,L_i(L)\,\max(N\cdot L,0)\,\mathrm d\omega .
 \]
-这里 $\mathrm d\omega$ 是一小片方向覆盖的立体角。其余条件相同时，垂直照向墙面的光收得最多；斜射时，同样一束光摊到更大的表面上，$\max(N\cdot L,0)$ 相应变小。理论上入射与出射辐亮度 $L_i,L_o$ 的单位为 $\mathrm{W\,m^{-2}\,sr^{-1}}$，$f_r$ 的单位为 $\mathrm{sr^{-1}}$。本项目灯光强度使用相对值，下面的结果按线性颜色比较。
+对着墙上一点看天空，一扇窗在半球上圈出一片区域。积分中的 $\mathrm d\omega$ 就用来量这样的方向范围。若改用一束均匀的平行光，可以先看墙上的一块方砖。沿光线看去，方砖越倾斜，轮廓越窄。对单位向量，点积 $N\cdot L$ 等于这个夹角的余弦，正好给出轮廓与原面积之比。灯在墙背面时取零。图~\ref{fig:ibl-card} 用一块有实际尺寸的卡片量出这个比例。$L_i,L_o$ 的单位是 $\mathrm{W\,m^{-2}\,sr^{-1}}$，$f_r$ 的单位是 $\mathrm{sr^{-1}}$。项目灯光强度用相对值，下面按线性颜色比较。
 
 对于 Redflag 的一盏方向光，照明颜色乘强度得到 $q$，阴影计算提供可见度 $s\in[0,1]$。受光一面的两个点积均取正值，镜面项和漫反射项合起来，一盏灯的贡献可以写成
 \[
@@ -174,19 +186,30 @@ vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
  \qquad L_o^{\mathrm{light}}=f_r\,q\,\max(N\cdot L,0)\,s .
 \]
 \begin{lstlisting}
+// 金属度为一时，直接光不再计入这一项漫反射。
 vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
-\end{lstlisting}
-\begin{lstlisting}
+
+// 把材质反射乘以来光、受光面积比例和阴影可见度。
 return (kD * albedo / PI + specular) * radiance * NdotL * shadow;
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{CalcDirectionalLight}
 
 举一个便于复算的灰色材质例子。设灯和相机都正对表面，$N=V=L=(0,0,1)$，底色取 $0.5$，粗糙度取 $0.5$，金属度取 0。方向光强度为 3，无遮挡。这时 $G=1$、$F=0.04$、$D=16/\pi$。项目在镜面项分母加 $10^{-4}$，于是镜面项约为 $0.05093$，漫反射项约为 $0.15279$。着色器最后一行把两者相加，再乘灯的强度，得到单通道 $0.61115$。环境光、墙面的反光和屏幕显示校正都留在后面计算。
 
-很小的粗糙度会产生尖锐的高光。实现将粗糙度限制在 $[0.089,1]$，给 $D$ 的分母设置下限，还把镜面项限制到 80。这样会改变极亮处的能量。点光另有半径 $R$ 和距离 $d$，在半径内用 $(1-(d/R)^2)^2$ 衰减；复算这盏点光源时，应代入项目实际使用的距离衰减式。环境光预计算中使用的 $k=r^2/2$ 也与上页的直接光不同。
+把粗糙度调低，高光会集中在很小的一块表面上。可以在下面这组材质球中看到它逐渐展开的过程。
 
-现在看白盒靠近地面的地方。要给刚算出的直接光乘上阴影可见度，程序得先弄清从这点往灯的方向看，中间有没有东西挡住光。接下来从这个阴影值算起，再看房间里的环境光和红墙反射来的光怎样补上阴影里的细节。
-\note{\source{https://learnopengl.com/PBR/Lighting}{LearnOpenGL · PBR Lighting}。本页算例由 \path{verify.py} 核对。两张教材原图来自 \href{https://learnopengl.com/About}{Joey de Vries}（\href{https://twitter.com/JoeyDeVriez}{@JoeyDeVriez}），只调整印刷尺寸。}
+\begin{figure}[H]\centering
+\begin{minipage}[c]{.57\linewidth}\centering
+\includegraphics[width=\linewidth]{figures/material-spheres.png}
+\end{minipage}\hfill
+\begin{minipage}[c]{.39\linewidth}\small
+看右半幅，沿中间一行从左向右看。四盏点光源起初在球面上各留一个小亮点；粗糙度增加后，亮点的边缘逐渐摊开。沿同一列自下向上看，变化的则是金属度。左半幅给出了另一角度。
+\end{minipage}
+\caption{教材中的材质球阵列。原图 © \href{https://twitter.com/JoeyDeVriez}{Joey de Vries}，\href{https://learnopengl.com/PBR/Lighting}{LearnOpenGL · Lighting}，\href{https://creativecommons.org/licenses/by/4.0/}{CC BY 4.0}。}
+\end{figure}
+
+Redflag 将粗糙度限制在 $[0.089,1]$，给 $D$ 的分母设置下限，还把镜面项限制到 80。这样会改变极亮处的能量。点光源另有半径 $R$ 和距离 $d$，在半径内用 $(1-(d/R)^2)^2$ 衰减。环境光预计算中使用的 $k=r^2/2$ 也与上页的直接光不同。
+
 
 \input{effects}
 \end{document}

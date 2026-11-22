@@ -1,0 +1,39 @@
+\documentclass[UTF8,fontset=fandol,11pt,a4paper]{ctexart}
+\usepackage[paperwidth=200mm,paperheight=267mm,left=20mm,right=20mm,top=21mm,bottom=19mm,headheight=16pt]{geometry}
+\usepackage{amsmath,amssymb,booktabs,tabularx,graphicx,xcolor,hyperref,fancyhdr,indentfirst,listings}
+\usepackage{tikz}
+\definecolor{wine}{HTML}{833A42}
+\definecolor{ink}{HTML}{22292C}
+\definecolor{quiet}{HTML}{565E64}
+\definecolor{shade}{HTML}{F5F2EF}
+\hypersetup{colorlinks=true,urlcolor=wine,linkcolor=wine,filecolor=wine,pdftitle={Redflag 实时光照与采样}}
+\setlength{\parindent}{2\ccwd}
+\setlength{\parskip}{5pt plus 1pt}
+\linespread{1.1}
+\ctexset{section={format=\Large\bfseries\color{wine},afterindent=true},subsection={format=\large\bfseries\color{ink},beforeskip=8pt,afterskip=2pt,afterindent=true}}
+\setcounter{secnumdepth}{1}
+\setcounter{tocdepth}{1}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small Redflag\enspace / \enspace 实时光照与采样}
+\fancyhead[R]{\small\color{quiet}\nouppercase{\leftmark}}\fancyfoot[R]{\thepage}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\renewcommand{\headrulewidth}{.35pt}
+\setlength{\emergencystretch}{2em}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{shade},frame=l,rulecolor=\color{wine},xleftmargin=4mm,framexleftmargin=2mm,columns=fullflexible,keepspaces=true,showstringspaces=false,breaklines=true}
+\newcommand{\term}[1]{{\small\color{quiet}(#1)}}
+\newcommand{\pair}[5][.48\linewidth]{\begin{center}\begin{minipage}{#1}\centering\includegraphics[width=\linewidth]{../../../output/#2}\\[-2pt]{\small #3}\end{minipage}\hfill\begin{minipage}{#1}\centering\includegraphics[width=\linewidth]{../../../output/#4}\\[-2pt]{\small #5}\end{minipage}\end{center}}
+\newenvironment{fields}{\par\noindent\tabularx{\linewidth}{@{}p{.30\linewidth}X@{}}\toprule 字段或入口 & 读写时的含义\\\midrule}{\bottomrule\endtabularx}
+\begin{document}
+\section*{实时光照与采样}
+\markboth{阅读与复现}{}
+走廊里两盏灯同时照到地板，给同一点的两份亮度相加就得到直接光。灯多时，也可以抽查其中一盏，再用选中它的概率估计总和。后面介绍的 ReSTIR 还会用上相邻像素与上一帧挑出来的灯。
+
+本册的比较图来自 Redflag。Sponza 定量测试把模型缩到最大跨度 20 个世界单位，各种采样方法都看同一条走廊。为了单独观察噪声，这组基准采用贴图的平均底色和纯漫反射。编辑器中的挂毯则保留花纹。Vulkan 先画出相机看见的三角形和带花纹的底色，计算着色器再沿光线去找灯前的遮挡物，以及下一次反射碰到的表面。
+\pair[.40\linewidth]{profiling/gi/direct-reference.png}{逐灯求和得到的直接光}{profiling/gi/indirect-reference.png}{墙面反射一次后的间接光}
+{\small\linespread{.94}\selectfont\setlength{\parskip}{0pt}\tableofcontents}
+\input{compute}
+\input{chapters.generated}
+\input{light-representations}
+\input{fog}
+\input{emissive-panel}
+\input{triangle-groups}
+\end{document}

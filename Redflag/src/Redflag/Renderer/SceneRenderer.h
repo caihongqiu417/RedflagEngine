@@ -10,13 +10,14 @@
 namespace Redflag {
 
 	class Scene;
+	class CommandList;
 
 	// 每盏灯占 64 字节，成员顺序与着色器里的 LightData 一致。
 	struct GPULightData
 	{
-		glm::vec4 Direction;  // xyz 沿光线方向，w 为 0 表示方向光，1 表示点光
+		glm::vec4 Direction;  // xyz 沿光线方向，w 为 0 表示方向光，1 表示点光源
 		glm::vec4 Color;       // xyz = 颜色,       w = 强度
-		glm::vec4 Position;    // xyz = 世界坐标,   w = 半径（点光）
+		glm::vec4 Position;    // xyz 是点光源在场景中的位置，w 是照明半径
 		int       CastShadow;  // 0 或 1
 		int       _pad[3];  // 着色器每隔 64 字节开始读下一盏灯
 	};
@@ -48,8 +49,8 @@ namespace Redflag {
 	// ---- 屏幕空间环境遮蔽（SSAO）参数 ----
 	struct SSAOSettings
 	{
-		float Radius = 0.5f;    // 观察空间采样半径，与场景长度单位一致
-		float Bias   = 0.025f;  // 观察空间深度偏移，与 Radius 同单位
+		float Radius = 0.5f;    // 在表面周围这么远的范围内查找遮挡，距离用场景单位表示。
+		float Bias   = 0.025f;  // 邻近表面至少要比测试点靠近相机这么多，才算一次遮挡。单位与 Radius 相同。
 		float Power  = 2.0f;  // 值越大，受遮蔽的地方越暗
 		int   KernelSize = 64;  // 每个像素检查多少个邻近位置，最多 64 个
 	};
@@ -58,11 +59,11 @@ namespace Redflag {
 	// 把本帧与前帧结果混合以减轻噪点，再加到主画面；关闭时改读黑图，贡献为零。
 	struct RSMSettings
 	{
-		bool  Enabled      = true;    // 关闭后使历史失效，下次启用从当前帧开始累积
-		int   NumSamples   = 128;     // 每个像素选取的反射点数量（16~128，越大噪点越少）
+		bool  Enabled      = true;    // 再次打开时，只用这一帧算出的间接光。
+		int   NumSamples   = 128;     // 每个像素从光源图取多少个点。面板可调 16 到 128 个，取点越多，通常噪点越少。
 		float Intensity    = 1.0f;    // 间接光倍率；1 保留采样面积与漫反射公式算出的值
 		// 以整张光源图的宽度为 1。半宽为 5 时，半径 0.4 对应 4 个世界单位。
-		float SampleRadius = 0.40f;   // 0.01 ~ 0.6
+		float SampleRadius = 0.40f;   // 调大后，会在光源图上更远的地方寻找能照亮地板的表面。
 	};
 	/*
 	 * 读取场景里的物体和灯光，安排阴影、遮蔽、间接光、主画面和后处理的绘制顺序。
@@ -81,6 +82,9 @@ namespace Redflag {
 		// ---- 场景绘制 ----
 		// 调用前选好主画面的绘制目标。它需能保存 HDR 颜色、拾取编号、观察空间法线和深度。
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
+		// 用场景里的模型、材质底色和实体编号绘制当前目标。
+		static void DrawGeometry(Scene& scene, CommandList& commands, const glm::mat4& viewProjection,
+			const glm::mat4* lodViewProjection = nullptr /* TAA 时传入未偏移的相机矩阵 */);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform /* 相机到世界空间 */);
 
 		// ---- 渲染参数 ----
@@ -109,16 +113,16 @@ namespace Redflag {
 		// 后处理在本帧读取这张场景颜色图，由调用方保管。宽高以像素计。
 		static void SetMainSceneColorTarget(uint32_t colorTex, int width, int height);
 
-		// RSM 三张产物纹理（供 Render Passes 面板预览）：
+		// Render Passes 面板能分别查看从光源方向画出的三张图。
 		//   Flux：每单位光源投影面积的反射通量，采样计算时再乘面积。
 		//   Normal：表面在世界空间中的朝向，分量从 [-1,1] 映射到 [0,1] 保存。
-		//   Distance：从光源方向看到的深度；0 到 1 对应近、远裁剪面，不是世界单位的距离。
+		//   Distance 保存从光源看过去的深度，0 对应最近的裁剪面，1 对应最远的裁剪面。
 		static uint32_t GetRSMFluxTextureID();
 		static uint32_t GetRSMNormalTextureID();
 		static uint32_t GetRSMDistanceTextureID();
 		// 本帧与前帧混合后的间接光图，供面板预览。
 		static uint32_t GetRSMResolvedTextureID();
-		// 旧结果所占比例：0 只用本帧，0.9 表示旧结果占 90%。
+		// 两帧间接光的混合比例。设为 0 只用本帧，设为 0.9 就保留九成上一帧的颜色。
 		static float& GetRSMBlendAlpha();
 
 		// 返回后处理的 LDR 输出纹理。

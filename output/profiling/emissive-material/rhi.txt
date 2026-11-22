@@ -1,0 +1,5 @@
+[06:26:18] REDFLAG : Vulkan device: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+Emission linear RGB (sRGB bytes 0/128/255): (0,0,0) (0.863281,0.103594,0.0302148) (4,0.48,0.14) occlusion, cutout, coplanar depth, front/back and emission UV passed
+Two glowing glass layers (.22, .35): added red 0.986
+Transparency: order max 0, refraction changed 2458/21504 pixels above 0.02 linear RGB distance, maximum 0.940806
+RHI pixel and resize checks passed

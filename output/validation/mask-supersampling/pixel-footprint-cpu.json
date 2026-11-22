@@ -1,0 +1,211 @@
+{
+  "scope": "CPU diagnostics at the 64 central-row pixels only. GPU columns read the archived native results. CPU uses ideal trilinear mip filtering of 8-bit alpha. Razor-thin vertical binary stripes, frontal camera. No GPU times, production changes or assumptions about arbitrary textures.",
+  "calibration": {
+    "zoom": 0.0046487603305785125,
+    "pan": 0.032692307692307694,
+    "far8": 0.0,
+    "far26.5": 0.0002403846153846154
+  },
+  "results": {
+    "zoom": {
+      "gpu_model": {
+        "spatial_mae": 0.08512956962569247,
+        "temporal_mae": 0.105113950760589,
+        "peak_area_error": 0.10663698248592737,
+        "area_mean": 0.22265625
+      },
+      "common_mip": {
+        "spatial_mae": 0.08208270205619167,
+        "temporal_mae": 0.07426113349917404,
+        "peak_area_error": 0.09960937500000347,
+        "area_mean": 0.2395080061983471
+      },
+      "two_lookups": {
+        "spatial_mae": 0.058339880610670275,
+        "temporal_mae": 0.0598500118765348,
+        "peak_area_error": 0.05273437500000347,
+        "area_mean": 0.23989540289256198
+      },
+      "four_lookups": {
+        "spatial_mae": 0.057496700209036446,
+        "temporal_mae": 0.06259008120418032,
+        "peak_area_error": 0.05623524313784711,
+        "area_mean": 0.235182076446281
+      },
+      "gpu_1": {
+        "spatial_mae": 0.23292266151587054,
+        "temporal_mae": 0.0990211780425009,
+        "peak_area_error": 0.2552816951747239,
+        "area_mean": 0.04829545319080353
+      },
+      "gpu_2": {
+        "spatial_mae": 0.15082314858546636,
+        "temporal_mae": 0.12852654161665583,
+        "peak_area_error": 0.25265957546267703,
+        "area_mean": 0.18026860058307648
+      },
+      "gpu_production-2": {
+        "spatial_mae": 0.0855820236399818,
+        "temporal_mae": 0.10590053936228613,
+        "peak_area_error": 0.10663698248592737,
+        "area_mean": 0.22323735058307648
+      },
+      "nearest_quarter_oracle": {
+        "spatial_mae": 0.0484206386702148,
+        "temporal_mae": 0.04655568454608748,
+        "peak_area_error": 0.06915508808787758,
+        "area_mean": 0.24270402892561985
+      }
+    },
+    "pan": {
+      "gpu_model": {
+        "spatial_mae": 0.08862179477930537,
+        "temporal_mae": 0.04947916607094391,
+        "peak_area_error": 2.2781751922440474e-08,
+        "area_mean": 0.25
+      },
+      "common_mip": {
+        "spatial_mae": 0.08621796719526946,
+        "temporal_mae": 0.039062499538714074,
+        "peak_area_error": 0.06250002278175193,
+        "area_mean": 0.19903846153846153
+      },
+      "two_lookups": {
+        "spatial_mae": 0.08423480268790702,
+        "temporal_mae": 0.04687499942938064,
+        "peak_area_error": 0.06250002278175192,
+        "area_mean": 0.22806490384615385
+      },
+      "four_lookups": {
+        "spatial_mae": 0.084234794705444,
+        "temporal_mae": 0.03906249942938064,
+        "peak_area_error": 0.06250002278175192,
+        "area_mean": 0.2165264423076923
+      },
+      "gpu_1": {
+        "spatial_mae": 0.2006410384786983,
+        "temporal_mae": 0.050781242090120006,
+        "peak_area_error": 0.12500002278175193,
+        "area_mean": 0.17115384340286255
+      },
+      "gpu_2": {
+        "spatial_mae": 0.09134616979927837,
+        "temporal_mae": 0.04947916596627734,
+        "peak_area_error": 0.06250000759391064,
+        "area_mean": 0.26634615659713745
+      },
+      "gpu_production-2": {
+        "spatial_mae": 0.09134616979927837,
+        "temporal_mae": 0.04947916596627734,
+        "peak_area_error": 0.06250000759391064,
+        "area_mean": 0.26634615659713745
+      },
+      "nearest_quarter_oracle": {
+        "spatial_mae": 0.04294872185468505,
+        "temporal_mae": 0.03645833299781738,
+        "peak_area_error": 0.03125000759391064,
+        "area_mean": 0.25769230769230766
+      }
+    },
+    "far8": {
+      "gpu_model": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      },
+      "common_mip": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      },
+      "two_lookups": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      },
+      "four_lookups": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      },
+      "gpu_1": {
+        "spatial_mae": 0.24999999999503195,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 0.2500000001076361,
+        "area_mean": 0.0
+      },
+      "gpu_2": {
+        "spatial_mae": 0.24999999999503195,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 0.2500000001076361,
+        "area_mean": 0.0
+      },
+      "gpu_production-2": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      },
+      "nearest_quarter_oracle": {
+        "spatial_mae": 1.6393832616210182e-10,
+        "temporal_mae": 1.3454543035251731e-11,
+        "peak_area_error": 3.229092548906465e-10,
+        "area_mean": 0.25
+      }
+    },
+    "far26.5": {
+      "gpu_model": {
+        "spatial_mae": 0.011244786166989146,
+        "temporal_mae": 0.0007796377683058857,
+        "peak_area_error": 0.002505899947738752,
+        "area_mean": 0.14993990384615385
+      },
+      "common_mip": {
+        "spatial_mae": 0.011244786166989146,
+        "temporal_mae": 0.0007796377683058857,
+        "peak_area_error": 0.002505899947738752,
+        "area_mean": 0.14993990384615385
+      },
+      "two_lookups": {
+        "spatial_mae": 0.011244786166989146,
+        "temporal_mae": 0.0007796377683058857,
+        "peak_area_error": 0.002505899947738752,
+        "area_mean": 0.14993990384615385
+      },
+      "four_lookups": {
+        "spatial_mae": 0.011244786166989146,
+        "temporal_mae": 0.0007796377683058857,
+        "peak_area_error": 0.002505899947738752,
+        "area_mean": 0.14993990384615385
+      },
+      "gpu_1": {
+        "spatial_mae": 0.15094339994773875,
+        "temporal_mae": 0.0007186026120558857,
+        "peak_area_error": 0.15094339994773875,
+        "area_mean": 0.0
+      },
+      "gpu_2": {
+        "spatial_mae": 0.15094339994773875,
+        "temporal_mae": 0.0007186026120558857,
+        "peak_area_error": 0.15094339994773875,
+        "area_mean": 0.0
+      },
+      "gpu_production-2": {
+        "spatial_mae": 0.011202832248713632,
+        "temporal_mae": 0.0007796377683058857,
+        "peak_area_error": 0.002505899947738752,
+        "area_mean": 0.1498798131942749
+      },
+      "nearest_quarter_oracle": {
+        "spatial_mae": 0.010335407982450842,
+        "temporal_mae": 0.0007784861615557962,
+        "peak_area_error": 0.0025058999477387523,
+        "area_mean": 0.14903846153846154
+      }
+    }
+  }
+}

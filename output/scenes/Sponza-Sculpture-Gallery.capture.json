@@ -1,0 +1,37 @@
+{
+  "scene": "RedflagForge/assets/scenes/Sponza-Sculpture-Gallery.redflag",
+  "scene_sha256": "94d8a468ba51945e2ea2e86fc507cb6a3987816f31addb9633c7f8a6d43c503f",
+  "settings_sha256": "6848762aa051d26fbedf60fd67bf81f315d0b72c84dff3e20052e77a2dd678e1",
+  "ui": "Debug x64 / RedflagForge --vulkan / 主相机 Game",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "settings": {
+    "Shading": "Lit",
+    "PreviewWidth": 0,
+    "Samples": 3,
+    "Direct": "All point lights",
+    "Indirect": "DDGI",
+    "GTAO": true,
+    "SSR": false,
+    "TAA": true,
+    "HistoryWeight": 0.85
+  },
+  "window": "output/rhi/editor-sculpture-gallery.png",
+  "window_sha256": "1fbb9901a6f690e3a74846ce3b7ab0eaed57029ed47dc973927b16e544454786",
+  "window_size": [
+    1701,
+    991
+  ],
+  "crop_ltrb": [
+    292,
+    182,
+    1220,
+    767
+  ],
+  "panel": "output/scenes/Sponza-Sculpture-Gallery.png",
+  "panel_size": [
+    928,
+    585
+  ],
+  "panel_sha256": "ee50768c0311a2fb280251a7024e1855a0d24d6703167f23ab760212cda8a9f2",
+  "source_encoding": "Windows.Graphics.Capture through @oai/sky, delivered as JPEG; PNG export and integer-pixel crop without resizing or color adjustment"
+}

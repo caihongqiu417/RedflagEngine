@@ -1,0 +1,14 @@
+{
+  "before": {
+    "exe_sha256": "b2c29bee33ffda93b8a125b9a21f7d9733e60fab37f5ddb4340dceb7c2869175",
+    "material_reports": 103,
+    "optional_file_list_lines": 7314,
+    "scan_failure_lines": 106
+  },
+  "after": {
+    "exe_sha256": "193235ce7b858338a18a6cf1b0af9623ef70188105168721f3a3c6fc18ca6f3d",
+    "material_reports": 103,
+    "optional_file_list_lines": 0,
+    "scan_failure_lines": 0
+  }
+}

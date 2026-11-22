@@ -1,0 +1,52 @@
+{
+  "asset": "Bathroom by cenobi, CC BY 3.0; NVIDIA RTXGI-Assets",
+  "scene": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag",
+  "scene_sha256": "d200107e6d95f810c1ad0d7021712f1153a667dd1cae332f27aca1508e26c930",
+  "settings_sha256": "6848762aa051d26fbedf60fd67bf81f315d0b72c84dff3e20052e77a2dd678e1",
+  "exe_sha256": "eb43cf559e35b800ae525c28b6c3fa98e0289d1bb80eaafb7d9c229acee432b6",
+  "renderer": "Debug x64, RedflagForge --vulkan, RenderDoc 1.47",
+  "capture_method": "Scene file and sidecar copied into the isolated working directory under the default startup filename. Exported the RGBA32F display image after the last compute event, before ImGui overlays. The second capture changes only Indirect to Off. GTAO applies only when indirect light is present.",
+  "lit_frame": "output/captures/local/RTXGI-Bathroom-Lit-12.rdc",
+  "size": [
+    1391,
+    892
+  ],
+  "lit": {
+    "frame": 12,
+    "api": "GraphicsAPI.Vulkan",
+    "dispatch_events": [
+      11,
+      24,
+      36,
+      48,
+      60,
+      72,
+      84,
+      96,
+      108
+    ],
+    "draws": 107,
+    "last_display_event": 108,
+    "panel": "panel-1085.png",
+    "messages": []
+  },
+  "direct": {
+    "frame": 12,
+    "api": "GraphicsAPI.Vulkan",
+    "dispatch_events": [
+      11,
+      24,
+      36,
+      48,
+      60,
+      72
+    ],
+    "draws": 107,
+    "last_display_event": 72,
+    "panel": "panel-1085.png",
+    "messages": []
+  },
+  "display_rgb_mean_abs_difference_0_to_255": 25.787553501637152,
+  "panel_sha256": "967f0f4b08358f1d77f7f0d9b2ed5a6d147c73678796fb4adee2a15201719ca9",
+  "direct_sha256": "bd6b1b500458e28dba6c97e6871efddda574703993781c9ff478b067d076b11d"
+}

@@ -86,19 +86,10 @@ namespace Redflag {
         Renderer2D::DrawLine(pos, pos + dir * rayLen, color);
     }
 
-    // ----------
-    // DrawPointLightGizmo — 点光源可视化
-    //
-    // 设计目标：一眼能看懂"哪里是灯"以及"照多远"，但不要抢主视觉。
-    //   1. 中心 bulb：固定小尺寸 (~0.15) 的 3 轴线框球，不随 Radius 变化
-    //      → 无论灯多大多小，位置点都清晰；不再像原来那样三大圆环重叠成水母
-    //   2. 四周短光线：8 条从 bulb 表面往外射的小段，指示"发光感"
-    //   3. 影响范围：单个 XZ 平面的虚线环 + 8 条细立柱，用更暗的 alpha
-    //      → 半径大时不会被线填满画面；关心时仍能读到范围
-    // ----------
+    // 小球标出点光源的位置，虚线圈标出它能照到多远。
     static void DrawPointLightGizmo(const glm::vec3& pos, float radius, const glm::vec4& color)
     {
-        // ---- bulb：固定半径的小线框球 ----
+        // 灯的照明半径可以调整，中心小球始终画成 0.15 个场景单位，方便辨认。
         constexpr float bulbR = 0.15f;
         constexpr int   bulbSegs = 12;
         for (int i = 0; i < bulbSegs; ++i)
@@ -114,8 +105,8 @@ namespace Redflag {
                                  pos + glm::vec3(0.0f, bulbR * c1, bulbR * s1), color);
         }
 
-        // ---- 放射线：8 条从 bulb 表面往外射的小段 (发光感) ----
-        constexpr float rayInner = bulbR * 1.15f;  // 略离 bulb 表面一点
+        // 八条短线与球面留一点距离，让点光源图标和普通线框球容易区分。
+        constexpr float rayInner = bulbR * 1.15f;
         constexpr float rayOuter = bulbR * 2.2f;
         const glm::vec3 rayDirs[8] = {
             { 1, 0, 0}, {-1, 0, 0}, {0,  1, 0}, {0, -1, 0},
@@ -127,7 +118,7 @@ namespace Redflag {
             Renderer2D::DrawLine(pos + d * rayInner, pos + d * rayOuter, color);
         }
 
-        // ---- 影响范围：单个 XZ 虚线环 + 4 根立柱，颜色压到 40% alpha ----
+        // 两个圈靠得太近时只画灯的图标。能分开看清时，再用浅色虚线圈画出照明范围。
         if (radius > bulbR * 3.0f)
         {
             glm::vec4 dim = color;
@@ -145,7 +136,7 @@ namespace Redflag {
                     pos + glm::vec3(radius * cosf(a1), 0.0f, radius * sinf(a1)), dim);
             }
 
-            // 4 根轻量立柱暗示球形作用域（XZ 四向 + 上下竖直短线）
+            // 在圆周的四个方向各画一条竖线，从侧面看也能看出照明范围。
             const float pole = radius * 0.08f;
             Renderer2D::DrawLine(pos + glm::vec3( radius, 0, 0), pos + glm::vec3( radius, pole, 0), dim);
             Renderer2D::DrawLine(pos + glm::vec3(-radius, 0, 0), pos + glm::vec3(-radius, pole, 0), dim);
@@ -173,13 +164,8 @@ namespace Redflag {
         // 初始化正交相机控制器缩放
         m_CameraController.SetZoomLevel(6.f);
 
-        // 创建帧缓冲
-        // attachment0: RGBA16F      -> HDR 颜色输出（供 Bloom / Tonemap 后处理读取）
-        //                             改用浮点格式：场景颜色可超过 1.0，Bloom 需要在
-        //                             Tonemap 之前提取高光；RGBA8 无法存储 HDR 值。
-        // attachment1: RED_INTEGER  -> Entity ID 拾取（不受 HDR 升级影响）
-        // attachment2: RGBA16F      -> View-space 法线（供 SSAO Pass 采样）
-        // attachment3: Depth
+        // 每个像素保存颜色、物体编号、相机看到的表面法线和深度，顺序与下面的格式一致。
+        // 颜色用浮点数保存，亮度超过 1 的部分仍可用于计算光晕。鼠标选物体时读的是编号。
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA16F,
                                FramebufferTextureFormat::RED_INTEGER,
@@ -198,7 +184,6 @@ namespace Redflag {
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
 
-        // 初始化 EditorCamera（FOV=30, Aspect=16/9, Near=0.1, Far=1000）
         m_EditorCamera = EditorCamera(30.f, 1.788f, 0.1f, 1000.f);
     }
 
@@ -224,12 +209,12 @@ namespace Redflag {
 
         Renderer2D::ResetStats();
 
-        // 绑定帧缓冲并清屏，Entity ID 附件清为 -1（无实体）
+        // 先把所有像素的物体编号清为 -1。画完后，鼠标指到背景仍会读到 -1。
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         RenderCommand::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
-        // 将主场景 HDR 颜色附件显式登记给 SceneRenderer，避免其依赖 GL 当前 FBO 状态。
+        // 后处理需要从这张场景颜色图取亮度来画光晕，把图和它的尺寸交给 SceneRenderer。
         {
             const auto& spec = m_Framebuffer->GetSpecifictaion();
             SceneRenderer::SetMainSceneColorTarget(
@@ -237,8 +222,7 @@ namespace Redflag {
                 (int)spec.Width,
                 (int)spec.Height);
         }
-        // 清 view-space 法线附件：0 向量表示"无几何/天空"，SSAO Pass 会当作
-        // 全亮处理。
+        // 背景没有表面，把法线清成零。SSAO 读到零就跳过这个像素，保留原来的亮度。
         m_Framebuffer->ClearAttachment(2, 0);
 
         // 按场景状态分发更新逻辑
@@ -371,15 +355,15 @@ namespace Redflag {
             }
         }
 
-        // SceneRenderer 的后处理会切换到自己的 FBO；拾取前重新绑定主场景 FBO。
+        // 后处理把结果画到了另一张图上。读鼠标下的物体编号前，要切回保存编号的场景帧缓冲。
         m_Framebuffer->Bind();
 
-        // Entity ID 拾取：读取鼠标悬停位置的 RED_INTEGER 附件
+        // 鼠标位置以整个窗口为准，先减去场景面板左上角的位置。
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my; // 翻转 Y 轴以对齐 OpenGL 坐标系
+        my = viewportSize.y - my; // ImGui 从上往下数行，OpenGL 从下往上数。
 
         int mouseX = (int)mx;
         int mouseY = (int)my;
@@ -406,6 +390,43 @@ namespace Redflag {
         }
 
         m_Framebuffer->Unbind();
+    }
+
+    void ForgeLayer::DrawEnvironmentMenu()
+    {
+        if (!ImGui::BeginMenu(u8"环境贴图", m_SceneState == SceneState::Edit)) return;
+        if (ImGui::MenuItem(u8"载入 HDR 全景…"))
+        {
+            const std::string path = FileDialogs::OpenFile("HDR (*.hdr)\0*.hdr\0");
+            if (!path.empty())
+            {
+                IBLPrecompute::Reload(path);
+                if (IBLPrecompute::IsReady()) m_EditorScene->SetEnvironment(path);
+                m_EnvironmentMessage = IBLPrecompute::IsReady() ? u8"环境贴图已生成。" : u8"无法读取这张 HDR 图。";
+            }
+        }
+        if (ImGui::MenuItem(u8"保存烘焙结果…", nullptr, false, IBLPrecompute::IsReady()))
+        {
+            const std::string path = FileDialogs::SaveFile("Redflag IBL (*.rfibl)\0*.rfibl\0", "rfibl");
+            if (!path.empty())
+            {
+                const bool saved = IBLPrecompute::SaveBaked(path);
+                if (saved) m_EditorScene->SetEnvironment(path);
+                m_EnvironmentMessage = saved ? u8"烘焙结果已保存。保存场景后，下次打开会直接使用它。" : u8"写入失败，请检查所选目录。";
+            }
+        }
+        if (ImGui::MenuItem(u8"使用烘焙文件…"))
+        {
+            const std::string path = FileDialogs::OpenFile("Redflag IBL (*.rfibl)\0*.rfibl\0");
+            if (!path.empty())
+            {
+                const bool loaded = IBLPrecompute::LoadBaked(path);
+                if (loaded) m_EditorScene->SetEnvironment(path);
+                m_EnvironmentMessage = loaded ? u8"已载入烘焙环境光。" : u8"文件不完整或版本不匹配。";
+            }
+        }
+        if (!m_EnvironmentMessage.empty()) ImGui::TextDisabled("%s", m_EnvironmentMessage.c_str());
+        ImGui::EndMenu();
     }
 
     void ForgeLayer::OnImGuiRender()
@@ -460,19 +481,20 @@ namespace Redflag {
                 ImGui::MenuItem("Show Culling AABBs",nullptr, &Renderer3D::GetDebugCullingVizEnabled());
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Render"))
+            if (ImGui::BeginMenu(u8"渲染效果"))
             {
-                ImGui::MenuItem("IBL",             nullptr, &SceneRenderer::GetIBLEnabled());
-                ImGui::MenuItem("Shadow",          nullptr, &SceneRenderer::GetShadowEnabled());
-                ImGui::MenuItem("Z-Prepass",       nullptr, &SceneRenderer::GetZPrepassEnabled());
-                ImGui::MenuItem("SSAO",            nullptr, &SceneRenderer::GetSSAOEnabled());
-                ImGui::MenuItem("RSM",             nullptr, &SceneRenderer::GetRSMSettings().Enabled);
-                ImGui::MenuItem("Frustum Culling", nullptr, &Renderer3D::GetFrustumCullingEnabled());
+                ImGui::MenuItem(u8"环境照明 (IBL)",             nullptr, &SceneRenderer::GetIBLEnabled());
+                DrawEnvironmentMenu();
+                ImGui::MenuItem(u8"阴影",          nullptr, &SceneRenderer::GetShadowEnabled());
+                ImGui::MenuItem(u8"深度预写 (Pre-Z)",       nullptr, &SceneRenderer::GetZPrepassEnabled());
+                ImGui::MenuItem(u8"环境光遮蔽 (SSAO)",            nullptr, &SceneRenderer::GetSSAOEnabled());
+                ImGui::MenuItem(u8"间接光 (RSM)",             nullptr, &SceneRenderer::GetRSMSettings().Enabled);
+                ImGui::MenuItem(u8"视野外物体剔除", nullptr, &Renderer3D::GetFrustumCullingEnabled());
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("PostEffect"))
+            if (ImGui::BeginMenu(u8"后处理"))
             {
-                ImGui::MenuItem("Bloom", nullptr, &SceneRenderer::GetBloomSettings().Enabled);
+                ImGui::MenuItem(u8"泛光 (Bloom)", nullptr, &SceneRenderer::GetBloomSettings().Enabled);
                 ImGui::EndMenu();
             }
 
@@ -492,7 +514,7 @@ namespace Redflag {
 
                 ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.2f, 0.6f, 1.0f, 0.6f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
 
                 // Play / Stop 按钮
                 // Edit->Play：触发 OnScenePlay()
@@ -608,7 +630,7 @@ namespace Redflag {
             ImGui::Text("Vertices    %d", totalVertices);
             ImGui::Text("Indices     %d", totalIndices);
             float fps = ImGui::GetIO().Framerate;
-            // 每 0.5s 刷新一次，避免数字刷新过快难以阅读
+            // 面板每半秒更新一次读数，留出看清帧率的时间。
             m_FpsAccumTime += ImGui::GetIO().DeltaTime;
             if (m_FpsAccumTime >= 0.5f || m_DisplayedFPS == 0.0f)
             {
@@ -658,40 +680,15 @@ namespace Redflag {
             ImGui::PopStyleVar(2);
         }
 
-        // Draw Call 明细面板：每帧把 Renderer3D 提交执行的每次 draw 都列出
+        // 面板按绘制顺序列出 Renderer3D 记下的调用。
         {
             ImGui::Begin("Draw Calls");
             const auto& log = Renderer3D::GetDrawCallLog();
             ImGui::Text("Total  %d", (int)log.size());
 
-            // --- IBL 说明 ---
-            ImGui::Separator();
-            bool iblReady   = IBLPrecompute::IsReady();
-            bool iblEnabled = SceneRenderer::GetIBLEnabled();
-            ImGui::TextDisabled("IBL");
-            ImGui::SameLine();
-            if (!iblReady)
-                ImGui::TextColored(ImVec4(1,0.4f,0.4f,1), "Not loaded");
-            else if (!iblEnabled)
-                ImGui::TextColored(ImVec4(0.6f,0.6f,0.6f,1), "Disabled");
-            else
-                ImGui::TextColored(ImVec4(0.4f,1,0.4f,1), "Active");
-            if (iblReady)
-            {
-                ImGui::SameLine();
-                ImGui::TextDisabled("| slot 7=Irradiance  8=Prefilter  9=BRDFLUT");
-            }
-            if (ImGui::Button("Load HDR..."))
-            {
-                std::string path = FileDialogs::OpenFile("HDR Image (*.hdr)\0*.hdr\0");
-                if (!path.empty())
-                    IBLPrecompute::Reload(path);
-            }
-            ImGui::TextDisabled("Note: IBL does not issue extra DrawCalls.");
-            ImGui::Separator();
-
-            static int s_PassFilter = 0;  // 0=All 1=Main 2=Shadow 3=Prepass 4=SSAO 5=RSM 6=BloomBright 7=BloomUp 8=BloomTonemap
-            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "RSM", "BloomBright", "BloomUp", "BloomTonemap" };
+            static int s_PassFilter = 0;
+            const char* filters[] = { "All", "Main", "Shadow", "Prepass", "SSAO", "RSM",
+                "BloomBright", "BloomUp", "BloomTonemap", "Transparency" };
             ImGui::Combo("Pass", &s_PassFilter, filters, IM_ARRAYSIZE(filters));
 
             if (ImGui::BeginTable("dc_table", 4,
@@ -713,36 +710,22 @@ namespace Redflag {
                 for (size_t i = 0; i < log.size(); ++i)
                 {
                     const auto& dc = log[i];
-                    if (s_PassFilter == 1 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Main)        continue;
-                    if (s_PassFilter == 2 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Shadow)      continue;
-                    if (s_PassFilter == 3 && dc.Pass != Renderer3D::DrawCallInfo::PassType::Prepass)     continue;
-                    if (s_PassFilter == 4 && dc.Pass != Renderer3D::DrawCallInfo::PassType::SSAO)        continue;
-                    if (s_PassFilter == 5 && dc.Pass != Renderer3D::DrawCallInfo::PassType::RSM)         continue;
-                    if (s_PassFilter == 6 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomBright) continue;
-                    if (s_PassFilter == 7 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomUp)     continue;
-                    if (s_PassFilter == 8 && dc.Pass != Renderer3D::DrawCallInfo::PassType::BloomTonemap) continue;
+                    int pass = static_cast<int>(dc.Pass) + 1;
+                    if (s_PassFilter && s_PassFilter != pass) continue;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("%d", row++);
 
                     ImGui::TableSetColumnIndex(1);
-                    const char* passName =
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Main        ? "Main" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Shadow       ? "Shadow" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::Prepass      ? "Prepass" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO         ? "SSAO" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::RSM          ? "RSM" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright  ? "BloomBrt" :
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp      ? "BloomUp" :
-                                                                                       "BloomTonemap";
-                    ImGui::TextUnformatted(passName);
+                    ImGui::TextUnformatted(filters[pass]);
 
                     ImGui::TableSetColumnIndex(2);
                     if (dc.Pass == Renderer3D::DrawCallInfo::PassType::SSAO ||
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomBright ||
                         dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomUp ||
-                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomTonemap)
+                        dc.Pass == Renderer3D::DrawCallInfo::PassType::BloomTonemap ||
+                        (dc.Pass == Renderer3D::DrawCallInfo::PassType::Transparency && dc.MeshPtr == 0))
                     {
                         ImGui::TextDisabled("(fullscreen)");
                     }
@@ -845,12 +828,8 @@ namespace Redflag {
                 }
 
                 // ---- RSM 页签 ----
-                // RSM (Reflective Shadow Maps) — 1-bounce 间接光
-                // 主 Pass 在直接光累加之后随机采样 Flux/WorldPos/Normal，
-                // 把每个 lit texel 当虚拟点光源 (VPL)。三张产物：
-                //   Flux     : albedo × lightColor × NdotL（被照表面的出射通量）
-                //   Normal   : 世界法线（压缩到 [0,1]）
-                //   Distance : 光源视角下的深度（正交投影下线性 = 到 near 平面的距离）
+                // RSM 先从方向光的位置画一张图，记下受光表面的位置、朝向和反射光颜色。
+                // 再从图里选一些点，估算它们反射的光有多少能照到眼前的表面。
                 if (ImGui::BeginTabItem("RSM"))
                 {
                     auto& rs = SceneRenderer::GetRSMSettings();
@@ -860,29 +839,29 @@ namespace Redflag {
                     ImGui::Separator();
                     ImGui::TextUnformatted("RSM Parameters");
 
-                    // VPL 采样数：越多越平滑，越少越快
+                    // 每个像素要从光源图里取多少个点。取点越多，噪点通常越少，计算也越久。
                     ImGui::SliderInt("Num Samples", &rs.NumSamples, 16, 128);
                     ImGui::SameLine(); ImGui::TextDisabled("(VPLs per pixel)");
 
-                    // 间接光强度倍率（÷N 归一化下单样本 ~0.01，需要较大 intensity）
+                    // 只调整反射光的亮度。取 1 时保留算法算出的值。
                     ImGui::DragFloat("Intensity",     &rs.Intensity,     0.2f, 0.0f, 50.0f, "%.2f");
                     ImGui::SameLine(); ImGui::TextDisabled("(1-bounce strength)");
 
-                    // shadow map UV 空间内的采样半径
+                    // 半径用光源图的宽度表示，0.1 表示图宽的十分之一。
                     ImGui::DragFloat("Sample Radius", &rs.SampleRadius, 0.001f, 0.005f, 0.5f, "%.3f");
                     ImGui::SameLine(); ImGui::TextDisabled("(UV-space radius)");
 
                     if (ImGui::Button("Reset"))
                         rs = RSMSettings{};
 
-                    // TAA 时域混合权重
+                    // 0 只显示这次算出的间接光。0.9 表示上一帧的颜色占九成。
                     ImGui::Separator();
                     ImGui::TextUnformatted("TAA Temporal Accumulation");
                     ImGui::SliderFloat("Blend Alpha", &SceneRenderer::GetRSMBlendAlpha(), 0.0f, 0.99f, "%.2f");
                     ImGui::SameLine(); ImGui::TextDisabled("(0=no TAA, 0.9=strong smoothing)");
 
                     ImGui::Separator();
-                    ImGui::TextDisabled("RSM Flux  (albedo x light x NdotL)");
+                    ImGui::TextDisabled("RSM Flux  (reflected light per unit projected area)");
                     uint32_t fluxTex = SceneRenderer::GetRSMFluxTextureID();
                     if (fluxTex)
                         ImGui::Image((void*)(uint64_t)fluxTex, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
@@ -915,18 +894,18 @@ namespace Redflag {
                     ImGui::Separator();
                     ImGui::TextUnformatted("Bloom Parameters");
 
-                    // Threshold：亮度阈值，越低越多像素发光（0=全部，3=只有极亮处）
+                    // 调高后，只有更亮的表面才会产生明显的光晕。传给着色器的值最低为 0.5。
                     ImGui::DragFloat("Threshold",  &bs.Threshold,  0.05f, 0.0f, 5.0f,  "%.2f");
                     ImGui::SameLine(); ImGui::TextDisabled("(lum > this triggers bloom)");
 
-                    // Intensity：叠加强度，越高光晕越亮
+                    // 合成时控制光晕的亮度。超过 1 按 1 计算。
                     ImGui::DragFloat("Intensity",  &bs.Intensity,  0.05f, 0.0f, 5.0f,  "%.2f");
 
-                    // Radius：泊松圆盘半径（每层上采样的散布程度）
+                    // 放大光晕图时会取周围十二处的颜色。半径越大，取色位置离中心越远。
                     ImGui::DragFloat("Radius",     &bs.Radius,     0.05f, 0.1f, 10.0f, "%.2f");
                     ImGui::SameLine(); ImGui::TextDisabled("(Poisson disk radius per upsample)");
 
-                    // MipLevels：下采样层数（层越多 = 光晕半径越大）
+                    // 每多用一层，就多取一张更小的光晕图，放大叠回去后光晕会更宽。
                     ImGui::SliderInt("Mip Levels", &bs.MipLevels,  2, 6);
                     ImGui::SameLine(); ImGui::TextDisabled("(more = larger bloom radius)");
 
@@ -934,7 +913,7 @@ namespace Redflag {
                         bs = BloomSettings{};
 
                     ImGui::Separator();
-                    // 预览 Bloom 第 0 层（多频段叠加结果）
+                    // 这里显示各层叠加后的光晕，下一步才把它加到场景颜色上。
                     ImGui::TextDisabled("Bloom Mip[0] (actual bloom buffer)");
                     uint32_t bloomTex = SceneRenderer::GetBloomTextureID();
                     if (bloomTex)
@@ -958,10 +937,7 @@ namespace Redflag {
                         ts = ToneMapSettings{};
 
                     // ---- ACES 曲线预览 ----
-                    // X 轴：原始线性 HDR 输入值 [0, xMax]
-                    // Y 轴：经曝光 → ACES → Gamma 2.2 后的显示输出 [0, 1]
-                    // 蓝色竖线 = HDR 标准白点 (input = 1.0)
-                    // 灰色对角线 = 线性参考（无 tonemap 时的结果）
+                    // 横轴是场景原本的亮度，纵轴是经过曝光、ACES 和伽马校正后送到屏幕的值。
                     ImGui::Spacing();
                     ImGui::Separator();
                     ImGui::TextUnformatted("Tone Curve  ( X = linear HDR [0..4],  Y = display )");
@@ -979,7 +955,7 @@ namespace Redflag {
                         { canvasPos.x + canvasW, canvasPos.y + canvasH },
                         IM_COL32(70, 70, 70, 255));
 
-                    // 对角线（线性参考：无 tonemap 时 output == input）
+                    // 画布的对角线，方便对照曲线在哪一段变平。
                     dl->AddLine({ canvasPos.x,         canvasPos.y + canvasH },
                                  { canvasPos.x + canvasW, canvasPos.y },
                                  IM_COL32(55, 55, 55, 200));
@@ -989,14 +965,14 @@ namespace Redflag {
                                  { canvasPos.x + canvasW, canvasPos.y + canvasH * 0.5f },
                                  IM_COL32(45, 45, 45, 180));
 
-                    // ACES Narkowicz 近似（与 shader 完全一致）
+                    // 沿用 PostProcess_Composite.glsl 中 Narkowicz 的 ACES 拟合公式和系数。
                     auto acesF = [](float x) -> float {
                         const float a = 2.51f, b = 0.03f, c = 2.43f, d = 0.59f, e = 0.14f;
                         float v = (x * (a * x + b)) / (x * (c * x + d) + e);
                         return v < 0.f ? 0.f : (v > 1.f ? 1.f : v);
                     };
 
-                    const float xMax     = 4.0f;  // X 轴显示上限
+                    const float xMax     = 4.0f;  // 横轴画出曝光处理前 0 到 4 的亮度
                     const int   STEPS    = 200;
                     const float exposure = ts.Exposure;
                     ImVec2      prevPt{};
@@ -1013,7 +989,7 @@ namespace Redflag {
                         prevPt = pt;
                     }
 
-                    // X = 1.0 刻度线（HDR 标准白点）
+                    // 标出输入亮度等于 1 的位置。
                     {
                         float mx = (1.0f / xMax) * canvasW;
                         dl->AddLine({ canvasPos.x + mx, canvasPos.y },
@@ -1065,9 +1041,7 @@ namespace Redflag {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        // 将后处理最终输出（ACES tonemap + gamma 2.2 已完成的 LDR 纹理）渲染到 ImGui Image
-        // SceneRenderer::GetFinalColorTextureID() 返回 s_PostFBO 的 RGBA8 attachment，
-        // 主 FBO 的 attachment0 现在是 RGBA16F HDR，不能直接显示（值 > 1 会被 ImGui 钳到 1 变成纯白）。
+        // 面板显示后处理画好的图。曝光和色调映射保留了亮部的明暗差别。
         uint32_t textureID = SceneRenderer::GetFinalColorTextureID();
         if (textureID != 0)
         {
@@ -1077,8 +1051,7 @@ namespace Redflag {
         }
         else
         {
-            // 后处理链路尚未就绪（Composite 尚未成功写过一次）：占位显示深灰，
-            // 不回退到主 FBO 的 RGBA16F 附件，避免 HDR 值被 clamp 成整屏白。
+            // 第一张图还没画好，先给场景面板留出位置。
             ImGui::Dummy(ImVec2(m_ViewportSize.x, m_ViewportSize.y));
         }
 
@@ -1203,9 +1176,7 @@ namespace Redflag {
     {
         if (e.GetMouseButton() == RF_MOUSE_BUTTON_LEFT)
         {
-            // 左键点击 Viewport 且未操作 Gizmo 时，选中悬停实体。
-            // Play 模式下不把运行时副本里的实体写进面板选中状态，
-            // 否则 Stop 同一帧切回编辑场景后，后面的 Gizmo 代码会拿到悬空实体。
+            // 播放时显示的是场景副本，按停止就会销毁。因此播放期间的点击不会把副本里的物体交给属性面板。
             if (m_ViewportHovered && !ImGuizmo::IsOver() &&
                 !Input::IsKeyPressed(RF_KEY_LEFT_ALT) &&
                 m_SceneState != SceneState::Play)
@@ -1241,8 +1212,8 @@ namespace Redflag {
 
     void ForgeLayer::OnSceneStop()
     {
-        m_ActiveScene->OnRuntimeStop(); // 停止物理
-        m_HoveredEntity = {};           // 清除悬空指针（指向即将销毁的运行时场景）
+        m_ActiveScene->OnRuntimeStop();
+        m_HoveredEntity = {};           // 鼠标指着的是副本里的物体，切回编辑场景前先清掉。
         m_ActiveScene = m_EditorScene;  // 恢复编辑场景
         m_SceneState  = SceneState::Edit;
     }
@@ -1260,7 +1231,7 @@ namespace Redflag {
     void ForgeLayer::OnSceneSimulateStop()
     {
         m_ActiveScene->OnSimulationStop(); // 停止物理
-        m_HoveredEntity = {};              // 清除悬空指针
+        m_HoveredEntity = {};              // 同样清掉鼠标指着的模拟场景物体。
         m_ActiveScene = m_EditorScene;     // 恢复编辑场景
         m_SceneState  = SceneState::Edit;
     }
@@ -1276,13 +1247,26 @@ namespace Redflag {
             m_EditorScene->DuplicateEntity(selectedEntity);
     }
 
+    static bool SaveSceneFile(const Ref<Scene>& scene, const std::string& path)
+    {
+        try
+        {
+            SceneSerializer(scene).Serialize(path);
+            RF_CORE_INFO("Scene saved: {0}", path);
+            return true;
+        }
+        catch (const std::exception& error)
+        {
+            RF_CORE_ERROR("Could not save scene: {0}", error.what());
+            return false;
+        }
+    }
+
     void ForgeLayer::SaveScene()
     {
         if (!m_SceneFilePath.empty())
         {
-            SceneSerializer serializer(m_EditorScene);
-            serializer.Serialize(m_SceneFilePath);
-            RF_CORE_INFO("Scene saved: {0}", m_SceneFilePath);
+            SaveSceneFile(m_EditorScene, m_SceneFilePath);
         }
         else
         {
@@ -1298,10 +1282,8 @@ namespace Redflag {
             if (filepath.find(".redflag") == std::string::npos)
                 filepath += ".redflag";
 
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.Serialize(filepath);
-            m_SceneFilePath = filepath;
-            RF_CORE_INFO("Scene saved as: {0}", filepath);
+            if (SaveSceneFile(m_ActiveScene, filepath))
+                m_SceneFilePath = filepath;
         }
     }
 
@@ -1329,7 +1311,7 @@ namespace Redflag {
             }
             else
             {
-                // 反序列化失败，回退到空场景
+                // 场景文件没能读完，层级面板显示这次新建的场景。
                 m_ActiveScene = m_EditorScene;
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
                 RF_CORE_ERROR("Failed to open scene: {0}", filepath);

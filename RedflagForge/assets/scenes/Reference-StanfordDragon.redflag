@@ -1,0 +1,74 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 4
+    TagComponent:
+      Tag: Main Camera
+    TransformComponent:
+      Translation: [0.600000024, 0.579999983, 3.20000005]
+      Rotation: [-0.200007081, 0.185347944, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.75049156
+        PerspectiveNear: 0.0500000007
+        PerspectiveFar: 40
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 40
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: Point Light
+    TransformComponent:
+      Translation: [-1.60000002, 1.29999995, 2.20000005]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 2
+      Radius: 7
+      CastShadow: false
+  - Entity: 2
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [0.449999988, -0.850000024, -0.550000012]
+      Color: [1, 1, 1]
+      Intensity: 3.29999995
+      CastShadow: true
+  - Entity: 5
+    TagComponent:
+      Tag: Floor
+    TransformComponent:
+      Translation: [0, -0.757516086, 0]
+      Rotation: [0, 0, 0]
+      Scale: [6, 0.100000001, 5]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.379999995, 0.419999987, 0.479999989, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 1
+    TagComponent:
+      Tag: StanfordDragon
+    TransformComponent:
+      Translation: [0.0608877726, -1.22860789, 0.0444224738]
+      Rotation: [0, 0, 0]
+      Scale: [9.86092663, 9.86092663, 9.86092663]
+    ModelRendererComponent:
+      ModelID: 6122188709592601978
+      FilePath: assets/models/reference/StanfordDragon/dragon_vrip_res4.ply
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [0.280000001, 0.660000026, 0.460000008, 1]
+          Metallic: 0
+          Roughness: 0.629999995
+          AO: 1

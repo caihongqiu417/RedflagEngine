@@ -1,0 +1,135 @@
+{
+  "build": "Debug",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "width": 64,
+  "height": 64,
+  "tool": "Vulkan RHI direct readback; no RenderDoc attached",
+  "camera_point_light_xyz": [
+    0,
+    0,
+    3
+  ],
+  "receiver_z": 0,
+  "sheet_z": 1,
+  "glTF_cutoff": 0.5,
+  "solid_rectangle_pixels": 1444,
+  "rasterized_sheet_ring_pixels": 1248,
+  "rasterized_hole_pixels": 196,
+  "hole_pixels_lit_without_sheet": 196,
+  "hole_pixels_receiving_light_with_mask": 0,
+  "mean_linear_red_no_sheet_in_hole": 0.25452443957328796,
+  "mean_linear_red_with_mask_in_hole": 0.0,
+  "max_mask_vs_opaque_direct_diff_all_4096_receivers": 0.0,
+  "sample_readings": [
+    {
+      "case": "receiver",
+      "sample": "hole",
+      "x": "33",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "2.07567e-07",
+      "raster_surface_direct_red": "0.256441",
+      "receiver_direct_red": "0.256441"
+    },
+    {
+      "case": "receiver",
+      "sample": "solid_ring",
+      "x": "18",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "3.53924e-08",
+      "raster_surface_direct_red": "0.242519",
+      "receiver_direct_red": "0.242519"
+    },
+    {
+      "case": "receiver",
+      "sample": "outside",
+      "x": "6",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "7.85121e-08",
+      "raster_surface_direct_red": "0.211139",
+      "receiver_direct_red": "0.211139"
+    },
+    {
+      "case": "mask",
+      "sample": "hole",
+      "x": "33",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "1",
+      "raster_surface_direct_red": "0",
+      "receiver_direct_red": "0"
+    },
+    {
+      "case": "mask",
+      "sample": "solid_ring",
+      "x": "18",
+      "y": "29",
+      "picked_id": "1",
+      "raster_primary_z": "1",
+      "ray_primary_z": "1",
+      "raster_surface_direct_red": "0.0300583",
+      "receiver_direct_red": "0"
+    },
+    {
+      "case": "mask",
+      "sample": "outside",
+      "x": "6",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "7.85121e-08",
+      "raster_surface_direct_red": "0.211139",
+      "receiver_direct_red": "0.211139"
+    },
+    {
+      "case": "opaque",
+      "sample": "hole",
+      "x": "33",
+      "y": "29",
+      "picked_id": "1",
+      "raster_primary_z": "1",
+      "ray_primary_z": "1",
+      "raster_surface_direct_red": "0.0325221",
+      "receiver_direct_red": "0"
+    },
+    {
+      "case": "opaque",
+      "sample": "solid_ring",
+      "x": "18",
+      "y": "29",
+      "picked_id": "1",
+      "raster_primary_z": "1",
+      "ray_primary_z": "1",
+      "raster_surface_direct_red": "0.0300583",
+      "receiver_direct_red": "0"
+    },
+    {
+      "case": "opaque",
+      "sample": "outside",
+      "x": "6",
+      "y": "29",
+      "picked_id": "0",
+      "raster_primary_z": "-5.72204e-06",
+      "ray_primary_z": "7.85121e-08",
+      "raster_surface_direct_red": "0.211139",
+      "receiver_direct_red": "0.211139"
+    }
+  ],
+  "display": {
+    "shown_mask": "white=visible thin sheet, dark=receiver",
+    "direct_light": "all three single-channel intensity images are exported by multiplying linear red by 255 / 0.26; no per-image normalization"
+  },
+  "files_sha256": {
+    "bin\\Debug-windows-x86_64\\Redflag\\Redflag.lib": "272e13373ee831b151d15911c5e770a0a351f0a1dd80afec796b90548a9f78e4",
+    "tmp\\gi-mask-baseline\\mask.png": "91de59d8925d9326a3759eedb9e68e1c0737bc89a639550f4501634474e73306",
+    "tmp\\gi-mask-baseline\\mask.gltf": "5e1e152ba567db34eb38410ed425543143ee17eae64c98d45296d7c11b0db3ae",
+    "tmp\\gi-mask-baseline\\receiver.gltf": "c242186d99132cb2fd2f87d18ca4f3b0fcaddf9641091458553a1b958b0be4a5",
+    "tmp\\gi-mask-baseline\\opaque.gltf": "1f74e9d9d41fd278ae26666e32d03fcbf22d99306cba049014bbd4f7702cc0cb"
+  }
+}

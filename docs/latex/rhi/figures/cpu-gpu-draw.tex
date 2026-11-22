@@ -24,7 +24,7 @@
   \node[api] at (8,103.4) {vkCreateShaderModule};
   \node[api] at (8,97) {vkCreateGraphicsPipelines};
   \node[labeltext,text=HostBlue] at (82,116.3) {首次上传模型};
-  \node at (82,109.9) {把顶点、索引和像素写进中转缓冲};
+  \node at (82,109.9) {CPU 写入暂存缓冲区\termenglish{staging buffer}};
   \node[api] at (82,103.4) {vkCmdCopyBuffer};
   \node[api] at (82,97) {vkCmdCopyBufferToImage};
   \draw[HostBlue!38] (8,92)--(150,92);
@@ -46,8 +46,8 @@
   \node[title,text=DeviceGreen] at (8,44.2) {GPU 执行复制与绘制};
   \draw[DeviceGreen!38] (8,40)--(150,40);
   \node[labeltext,text=DeviceGreen] at (8,34.8) {执行复制};
-  \node at (29,34.8) {从中转缓冲复制到顶点缓冲、索引缓冲和砖墙纹理。};
-  \node at (29,28.6) {复制的结果可供绘制读取后，再使用这些资源。};
+  \node at (29,34.8) {读出暂存缓冲区里的数值，把相同的数值写到目标位置。};
+  \node at (29,28.6) {顶点和索引写进各自的缓冲区，像素写进砖墙纹理。};
   \draw[flowarrow] (22,31.4)--(22,22.3);
   \foreach \start/\head/\detail in {
     7/顶点着色/变换顶点位置,

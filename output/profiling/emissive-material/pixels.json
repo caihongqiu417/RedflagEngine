@@ -1,0 +1,60 @@
+{
+  "temple": {
+    "lit_pixels": 396,
+    "matched_rgba_pixels": 410400,
+    "crop_xywh": [
+      345,
+      234,
+      134,
+      116
+    ]
+  },
+  "camera": {
+    "before": {
+      "capture": "output/captures/local/studio-b92994c760df-800-lit/studio_frame24.rdc",
+      "sha256": "550d7c85b9d6b8251ba9c393a69209f2970c85a0b563a62ef9aacf79c9933334",
+      "frame": 24,
+      "size": [
+        800,
+        513
+      ],
+      "draws": 29,
+      "dispatches": [
+        11,
+        54,
+        66,
+        78,
+        90,
+        102,
+        115,
+        127,
+        139
+      ],
+      "display_sha256": "199dab9fee402a263367a1af2e2226a5ab396fc824ad1554668e2c9f91242307",
+      "light_sha256": "3bfd0a2a1a4de0c37a2288002c954b404f91305f8bfc7a952d342e1f7bcda2e2"
+    },
+    "after": {
+      "capture": "output/captures/local/studio-991fdf640a3d-800-lit/studio_frame24.rdc",
+      "sha256": "b4d032fbbf1417041245e003af70bd03c5f46c60ec334a0d53d20097edf357f8",
+      "frame": 24,
+      "size": [
+        800,
+        513
+      ],
+      "draws": 29,
+      "dispatches": [
+        11,
+        54,
+        66,
+        78,
+        90,
+        102,
+        115,
+        127,
+        139
+      ],
+      "display_sha256": "199dab9fee402a263367a1af2e2226a5ab396fc824ad1554668e2c9f91242307",
+      "light_sha256": "3bfd0a2a1a4de0c37a2288002c954b404f91305f8bfc7a952d342e1f7bcda2e2"
+    }
+  }
+}

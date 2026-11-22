@@ -53,7 +53,7 @@ void main()
 
     const float weight = 1.0 / 12.0;
 
-    // 每层只加回一部分颜色，防止多层叠加把灯光周围变成一片白。
+    // 项目给每层光晕取 0.35，即把十二处颜色的平均值乘 35% 再加到大图上。调大后灯光周围会更亮。
     const float upsampleGain = 0.35;
 
     vec2 scale = u_TexelSize * u_Radius;

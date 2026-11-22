@@ -1,5 +1,4 @@
-/* 绘制模型表面。先算灯光、阴影和反射，再把颜色交给后处理。
- * 同时写出实体编号，供编辑器拾取模型。 */
+/* 不透明表面写入场景颜色和拾取编号。玻璃另存表面颜色、朝向和折射参数，等背景画好再合成。 */
 
 // ---- 顶点阶段 ----
 #type vertex
@@ -10,6 +9,7 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
 layout(location = 3) in vec3 a_Tangent;
+layout(location = 4) in vec2 a_EmissiveUVOffset;
 
 // ---- 相机与阴影 ----
 layout(std140, binding = 0) uniform Camera
@@ -24,10 +24,11 @@ layout(std140, binding = 0) uniform Camera
 
 // 合批绘制时，每个实例带自己的模型矩阵、颜色和实体编号。
 #ifdef INSTANCED
-layout(location = 4) in mat4 a_Transform;
-layout(location = 8) in vec4 a_BaseColor;
-layout(location = 9) in vec4 a_MatParams;   // 金属度、粗糙度、环境遮蔽
-layout(location = 10) in int a_EntityID;
+layout(location = 5) in mat4 a_Transform;
+layout(location = 9) in vec4 a_BaseColor;
+layout(location = 10) in vec4 a_MatParams;   // 金属度、粗糙度、环境遮蔽
+layout(location = 11) in int a_EntityID;
+layout(location = 12) in vec3 a_Emission;
 #else
 layout(std140, binding = 1) uniform Transform
 {
@@ -38,6 +39,7 @@ layout(std140, binding = 1) uniform Transform
 // ---- 顶点传给片元的数据 ----
 layout(location = 0) out vec3  v_WorldPos;
 layout(location = 1) out vec2  v_TexCoord;
+layout(location = 11) out vec2 v_EmissiveUV;
 layout(location = 2) out vec3  v_Normal;
 layout(location = 3) out mat3  v_TBN;  // 将法线贴图中的方向转到世界空间
 layout(location = 6) out vec4  v_LightSpacePos;  // 从方向光看这个点的位置，保留 w 供片元计算阴影
@@ -46,6 +48,7 @@ layout(location = 6) out vec4  v_LightSpacePos;  // 从方向光看这个点的�
 layout(location = 7) flat out vec4 v_BaseColor;
 layout(location = 8) flat out vec4 v_MatParams;
 layout(location = 9) flat out int v_EntityID;
+layout(location = 10) flat out vec3 v_Emission;
 #endif
 
 void main()
@@ -55,12 +58,14 @@ void main()
     v_BaseColor = a_BaseColor;
     v_MatParams = a_MatParams;
     v_EntityID = a_EntityID;
+    v_Emission = a_Emission;
 #else
     mat4 model = u_Transform;
 #endif
     vec4 worldPos = model * vec4(a_Position, 1.0);
     v_WorldPos = worldPos.xyz;
     v_TexCoord = a_TexCoord;
+    v_EmissiveUV = a_TexCoord + a_EmissiveUVOffset;
 
     // 切线沿表面伸缩。法线用逆转置变换，才能在非均匀缩放后仍垂直于表面。
     mat3 axes = mat3(model);
@@ -78,11 +83,18 @@ void main()
 #type fragment
 #version 450 core
 
+#ifdef TRANSPARENT
+layout(location = 0) out vec4 o_Surface;
+layout(location = 1) out vec4 o_NormalDepth;
+layout(location = 2) out vec4 o_Optics;
+#else
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out int  o_EntityID;  // 鼠标指向这个像素时读到的实体编号
+#endif
 
 layout(location = 0) in vec3  v_WorldPos;
 layout(location = 1) in vec2  v_TexCoord;
+layout(location = 11) in vec2 v_EmissiveUV;
 layout(location = 2) in vec3  v_Normal;
 layout(location = 3) in mat3  v_TBN;
 layout(location = 6) in vec4  v_LightSpacePos;
@@ -90,6 +102,7 @@ layout(location = 6) in vec4  v_LightSpacePos;
 layout(location = 7) flat in vec4 v_BaseColor;
 layout(location = 8) flat in vec4 v_MatParams;
 layout(location = 9) flat in int v_EntityID;
+layout(location = 10) flat in vec3 v_Emission;
 #endif
 
 // ---- 相机与阴影 ----
@@ -106,7 +119,7 @@ layout(std140, binding = 0) uniform Camera
 // ---- 材质 ----
 layout(std140, binding = 2) uniform Material
 {
-    vec4  u_BaseColor;  // rgb 给底色贴图着色，a 参与透明裁剪
+    vec4  u_BaseColor;  // rgb 乘到底色贴图上，a 参与树叶的镂空和玻璃的混合
     float u_Metallic;  // 0 为非金属，1 为纯金属
     float u_Roughness;  // 越光滑，高光越集中
     float u_AO;  // 留给环境光的比例，1 表示完全保留
@@ -116,9 +129,12 @@ layout(std140, binding = 2) uniform Material
     int   u_UseAOMap;
     int   u_EntityID;
     int   u_UseAlphaMap;
-    float u_AlphaCutoff;  // Mask 材质中，小于此透明度的像素会被丢弃
-    int   u_AlphaMode;  // 0 不透明，1 按阈值裁剪，2 输出混合用的透明度
-    int   _matPad0;
+    float u_AlphaCutoff;  // 画镂空材质时，透明度低于此值的像素露出背景。
+    int   u_AlphaMode;  // 0 画不透明表面，1 跳过 alpha 低于 u_AlphaCutoff 的像素，2 保留 alpha 供玻璃等半透明表面合成。
+    float u_RefractionIndex;
+    float u_Thickness;
+    vec3  u_Emission;
+    int   u_UseEmissiveMap;
 };
 
 // ---- 场景灯光 ----
@@ -149,6 +165,7 @@ layout(binding = 4) uniform sampler2D u_NormalMap;
 layout(binding = 5) uniform sampler2D u_MetallicRoughnessMap;  // G 为粗糙度，B 为金属度
 layout(binding = 6) uniform sampler2D u_AOMap;  // R 为环境光保留的比例
 layout(binding = 10) uniform sampler2D u_AlphaMap;  // R 为透明裁剪和混合用的 alpha
+layout(binding = 13) uniform sampler2D u_EmissiveMap;  // sRGB 取样已转为线性 RGB。
 
 // ---- 阴影与环境光 ----
 layout(binding = 11) uniform sampler2D u_ShadowMap;  // 从灯光看，最近表面的深度
@@ -290,7 +307,7 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
     // 斜面容易把自己判为遮挡物，深度比较时让它稍微靠近灯光一些。
     float NdotL = max(dot(N, L), 0.0);
     float bias  = max(depthBias * (1.0 - NdotL), depthBias * 0.1);
-    bias       += normalBias * texel;  // 额外偏移随阴影图分辨率缩放
+    bias       += normalBias * texel;  // 阴影图越细，一个像素越窄，这里从比较深度中扣掉的量就越小。
     float refDepth = proj.z - bias;
 
     if (mode == 2)
@@ -299,10 +316,10 @@ float ComputeDirectionalShadow(vec4 lightSpacePos, vec3 N, vec3 L)
         float LIGHT_SIZE   = max(u_ShadowParams2.y, 0.0);
         const float SEARCH_RADIUS = 4.0;
 
-        float avgBlocker = FindBlockerDepth(proj.xy, refDepth, SEARCH_RADIUS /* 向四周各找 4 个阴影像素 */, texel);
+        float avgBlocker = FindBlockerDepth(proj.xy, refDepth, SEARCH_RADIUS /* 搜索半径是 4 个阴影图像素，在范围内取 5×5 个样点 */, texel);
         if (avgBlocker < 0.0) return 1.0;
 
-        // 两者越贴近，影子越清晰。
+        // 桌脚越贴近地板，阴影边缘越窄。这里把取样半径限制在 0.5 到 16 个阴影图像素，阴影再软也只在这个范围内取样。
         float penumbra = (refDepth - avgBlocker) / max(avgBlocker, 0.0001);
         float radius   = clamp(penumbra * LIGHT_SIZE, 0.5, 16.0);
         return PCFVariable(proj.xy, refDepth, radius /* 半影半径，按阴影图像素计 */, texel);
@@ -333,7 +350,7 @@ vec3 CalcDirectionalLight(LightData light, vec3 N, vec3 V, vec3 albedo,
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3  specular    = numerator / denominator;
 
-    // 很光滑的表面会产生尖锐的高光，限制峰值以免亮成一片。
+    // 这个着色器把镜面反射项的每个颜色通道最多取到 80，再乘灯光亮度。调低会压暗光滑材质最亮的高光。
     specular = min(specular, vec3(80.0));
 
     // 为漫反射留下镜面反射用剩的部分。纯金属只产生镜面反射。
@@ -364,7 +381,7 @@ vec3 CalcPointLight(LightData light, vec3 N, vec3 V, vec3 worldPos,
 
     vec3 radiance = light.Color.xyz * light.Color.w * attenuation;
 
-    // 点光和方向光共用同一套表面反射公式。
+    // 点光源和方向光共用同一套表面反射公式。
     float NDF = DistributionGGX(N, H, roughness);
     float G   = GeometrySmith(N, V, L, roughness);
     vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
@@ -390,12 +407,14 @@ void main()
     float roughness = v_MatParams.y;
     float ao = v_MatParams.z;
     int entityID = v_EntityID;
+    vec3 emission = v_Emission;
 #else
     vec4 albedo4 = u_BaseColor;
     float metallic = u_Metallic;
     float roughness = u_Roughness;
     float ao = u_AO;
     int entityID = u_EntityID;
+    vec3 emission = u_Emission;
 #endif
     if (u_UseBaseColorMap == 1)
     {
@@ -406,15 +425,17 @@ void main()
     }
     vec3 albedo = albedo4.rgb;
 
-    // Mask 的轮廓同时受材质颜色、底色贴图和独立透明贴图影响。
+    // 叶片边缘的透明度等于材质 alpha、底色图 alpha 和透明度图红通道三者的乘积。
     float alphaValue = albedo4.a;
     if (u_UseAlphaMap == 1)
         alphaValue *= texture(u_AlphaMap, v_TexCoord).r;
     if (u_AlphaMode == 1 && alphaValue < u_AlphaCutoff)
         discard;
 
-    // 只有半透明材质需要将 alpha 留给后续混合。
-    float outAlpha = (u_AlphaMode == 2) ? alphaValue : 1.0;
+#ifdef TRANSPARENT
+    float alpha = clamp(alphaValue, 0.0, 1.0);
+    if (alpha == 0.0) discard;
+#endif
 
     if (u_UseMetallicRoughnessMap == 1)
     {
@@ -453,7 +474,7 @@ void main()
     // ---- 灯光与阴影 ----
     vec3 Lo = vec3(0.0);
 
-    // 阴影图来自第一盏方向光。点光源只计算距离衰减。
+    // 只有第一盏方向光查阴影图。点光源会照出漫反射和高光，光强随距离减弱。
     for (int i = 0; i < u_NumDirectionalLights; i++)
     {
         vec3 L = normalize(-u_DirLights[i].Direction.xyz);
@@ -508,9 +529,21 @@ void main()
         ambient = vec3(0.03) * albedo * ao;
     }
 
-    vec3 color = ambient + Lo;
+    if (u_UseEmissiveMap != 0)
+        emission *= texture(u_EmissiveMap, v_EmissiveUV).rgb;
+    // 发光来自表面本身。即使底色全黑，关灯后仍能看到发光图案。
+    vec3 color = ambient + Lo + emission;
 
     // 保留高于 1 的亮度，后处理会用这些亮部生成光晕，再映射到屏幕颜色。
-    o_Color    = vec4(color, outAlpha);
+#ifdef TRANSPARENT
+    // 两片玻璃透明度相同时，近处那片对颜色和折射方向的影响更大。
+    float weight = alpha * max(0.01, pow(1.0 - 0.9 * gl_FragCoord.z, 3.0));
+    o_Surface = vec4(color, 1.0) * weight;
+    o_NormalDepth = vec4(N, gl_FragCoord.z) * weight;
+    // 两片玻璃各透过一半背景光，叠起来透过四分之一。这里加对数，合成时再取 exp。
+    o_Optics = vec4(log(max(1.0 - alpha, 1e-6)), u_RefractionIndex * weight, u_Thickness * weight, 0.0);
+#else
+    o_Color = vec4(color, 1.0);
     o_EntityID = entityID;
+#endif
 }

@@ -19,13 +19,14 @@ namespace Redflag {
 		void SetVSync(bool enable)override;
 		bool IsVSync()const override;
 
+		GraphicsContext& GetGraphicsContext() const override { return *m_Context; }
 		inline virtual void* GetNativeWindow()const override { return m_Window; }
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void ShutDown();
 	private:
 		GLFWwindow* m_Window;
-		GraphicsContext* m_Context;
+		Scope<GraphicsContext> m_Context;
 		static int s_glfwWindowCount;
 		struct WindowData {
 			std::string Title;

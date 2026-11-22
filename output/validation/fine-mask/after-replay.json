@@ -1,0 +1,379 @@
+{
+  "capture": "output/validation/fine-mask/after_capture.rdc",
+  "sha256": "b7891c05d628733540105ffd8a5c4025eec380b550d5f55151be4232449d72b9",
+  "renderdoc": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "draws": 3,
+  "dispatches": 4,
+  "messages": [],
+  "events": [
+    {
+      "id": 9,
+      "pass_name": "nearest_surface",
+      "groups": [
+        64,
+        1,
+        1
+      ],
+      "shader": "ResourceId::440",
+      "bindings": {
+        "0": "ResourceId::411",
+        "1": "ResourceId::414",
+        "2": "ResourceId::447",
+        "3": "ResourceId::454",
+        "4": "ResourceId::420",
+        "5": "ResourceId::444",
+        "6": "ResourceId::444",
+        "7": "ResourceId::444",
+        "8": "ResourceId::450",
+        "9": "ResourceId::426",
+        "10": "ResourceId::444",
+        "11": "ResourceId::429",
+        "12": "ResourceId::432",
+        "13": "ResourceId::423",
+        "14": "ResourceId::435"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "2b59b8e85b4719a081669cc8ed1c1b3a409dbcd504ec4fc9f2d5136ad5537be8",
+        "sample_xyzw": {
+          "26,32": [
+            -0.14238563179969788,
+            -0.012944148853421211,
+            1.0,
+            1.0
+          ],
+          "33,29": [
+            0.058248668909072876,
+            0.09708111733198166,
+            2.0756681351485895e-07,
+            1.0
+          ],
+          "6,29": [
+            -0.9902274012565613,
+            0.09708111733198166,
+            7.851213013054803e-08,
+            1.0
+          ]
+        },
+        "equal_to_live_readback": true
+      },
+      "cutout_inputs": {
+        "triangles": 4,
+        "masked_triangles": 2,
+        "mask_face_indices": [
+          0,
+          1
+        ],
+        "alpha_factor": 1.0,
+        "cutoff": 0.5,
+        "texture_dimensions": [
+          512,
+          16
+        ],
+        "transparent_texels": 8192,
+        "corner_texel_rgba8": [
+          42,
+          180,
+          68,
+          0
+        ],
+        "center_texel_rgba8": [
+          42,
+          180,
+          68,
+          0
+        ],
+        "full_resolution_alpha": {
+          "size": [
+            1024,
+            32
+          ],
+          "bytes": 32768,
+          "opaque_texels": 8192,
+          "first_eight": [
+            255,
+            0,
+            0,
+            0,
+            255,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "id": 25,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::458",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ],
+      "base_texture": {
+        "resource": "ResourceId::458",
+        "dimensions": [
+          1024,
+          32
+        ],
+        "format": "R8G8B8A8_SRGB",
+        "minify": "FilterMode.Linear",
+        "magnify": "FilterMode.Linear",
+        "mip_filter": "FilterMode.Linear",
+        "lod_bias": 0.0,
+        "min_lod": 0.0,
+        "max_lod": 1000.0,
+        "alpha_by_level": [
+          {
+            "level": 0,
+            "min_alpha8": 0,
+            "max_alpha8": 255,
+            "fraction_above_cutoff": 0.25
+          },
+          {
+            "level": 1,
+            "min_alpha8": 0,
+            "max_alpha8": 127,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 2,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 3,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 4,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 5,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 6,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 7,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 8,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 9,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          },
+          {
+            "level": 10,
+            "min_alpha8": 64,
+            "max_alpha8": 64,
+            "fraction_above_cutoff": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::270",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ]
+    },
+    {
+      "id": 42,
+      "pass_name": "pack_visible_surfaces",
+      "groups": [
+        8,
+        8,
+        1
+      ],
+      "shader": "ResourceId::181",
+      "bindings": {
+        "0": "ResourceId::166",
+        "1": "ResourceId::170",
+        "2": "ResourceId::447"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "ae73a7905b65716e7e2bcc61847c87cfc836bace18a6621f2dcb92153a07d3dc",
+        "sample_xyzw": {
+          "26,32": [
+            -0.14238564670085907,
+            -0.012944148853421211,
+            1.0,
+            1.0
+          ],
+          "33,29": [
+            0.05824875831604004,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "6,29": [
+            -0.9902288317680359,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ]
+        },
+        "equal_to_live_readback": true
+      }
+    },
+    {
+      "id": 58,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::270",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ]
+    },
+    {
+      "id": 70,
+      "pass_name": "pack_receiver_alone",
+      "groups": [
+        8,
+        8,
+        1
+      ],
+      "shader": "ResourceId::181",
+      "bindings": {
+        "0": "ResourceId::166",
+        "1": "ResourceId::170",
+        "2": "ResourceId::447"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "9c05d0aba517d510d51070570eac1efb8bd8dbac290e275dce28f6b180d9561b",
+        "sample_xyzw": {
+          "26,32": [
+            -0.21357877552509308,
+            -0.01941625215113163,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "33,29": [
+            0.05824875831604004,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "6,29": [
+            -0.9902288317680359,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "id": 82,
+      "pass_name": "all_point_shadows",
+      "groups": [
+        64,
+        1,
+        1
+      ],
+      "shader": "ResourceId::440",
+      "bindings": {
+        "0": "ResourceId::411",
+        "1": "ResourceId::414",
+        "2": "ResourceId::447",
+        "3": "ResourceId::454",
+        "4": "ResourceId::420",
+        "5": "ResourceId::444",
+        "6": "ResourceId::444",
+        "7": "ResourceId::444",
+        "8": "ResourceId::1272",
+        "9": "ResourceId::426",
+        "10": "ResourceId::444",
+        "11": "ResourceId::429",
+        "12": "ResourceId::432",
+        "13": "ResourceId::423",
+        "14": "ResourceId::435"
+      },
+      "output": {
+        "id": "ResourceId::1272",
+        "bytes": 65536,
+        "sha256": "daea82a50ac901c4293e4e7464ecd46d518cd4140fb674624e11e6e820ae64e8",
+        "sample_xyzw": {
+          "26,32": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "33,29": [
+            0.2564408779144287,
+            0.2564408779144287,
+            0.2564408779144287,
+            0.0
+          ],
+          "6,29": [
+            0.21113920211791992,
+            0.21113920211791992,
+            0.21113920211791992,
+            0.0
+          ]
+        },
+        "equal_to_live_readback": true
+      }
+    }
+  ]
+}

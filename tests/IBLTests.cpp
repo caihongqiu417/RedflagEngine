@@ -96,7 +96,44 @@ static void CheckSkyboxAttachments()
     glDeleteTextures(4, attachments);
 }
 
-int main()
+// 经纬图首尾指向同一条经线。两端的红通道为 1 和 0，绿通道为 128 和 0。
+static void CheckPanoramaSeam()
+{
+    const std::filesystem::path path = "../bin-int/Tests/ibl-seam.hdr";
+    {
+        std::ofstream file(path, std::ios::binary);
+        file << "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 2 +X 4\n";
+        const unsigned char bright[] = {1, 128, 1, 136};
+        const unsigned char black[] = {0, 0, 0, 0};
+        for (int row = 0; row < 2; ++row)
+            for (int column = 0; column < 4; ++column)
+                file.write(reinterpret_cast<const char*>(column < 2 ? bright : black), 4);
+    }
+
+    IBLPrecompute::Reload(path.string());
+    const GLuint environment = IBLPrecompute::GetTextures().EnvCubemap;
+    GLint size;
+    glGetTextureLevelParameteriv(environment, 0, GL_TEXTURE_WIDTH, &size);
+    std::vector<float> row(size);
+    glGetTextureSubImage(environment, 0, 0, size / 2, 1 /* 负 X 面 */, size, 1, 1,
+                         GL_RED, GL_FLOAT, GLsizei(row.size() * sizeof(float)), row.data());
+    const float left = row[size / 2 - 1], right = row[size / 2];
+    std::cout << "Seam center texels (linear): " << left << ", " << right << '\n';
+    Check(std::abs(left - .5f) < .005f && std::abs(right - .5f) < .005f, "longitude wraps with linear filtering");
+    std::array<float, 2> green{};
+    glGetTextureSubImage(environment, 0, size / 2 - 1, size / 2, 1, 2, 1, 1,
+                         GL_GREEN, GL_FLOAT, sizeof(green), green.data());
+    std::cout << "HDR seam texels (linear): " << green[0] << ", " << green[1] << '\n';
+    Check(std::abs(green[0] - 64.f) < .5f && std::abs(green[1] - 64.f) < .5f,
+          "HDR intensity survives panorama conversion");
+    std::ofstream csv("../bin-int/Tests/ibl-seam.csv");
+    csv << "x,linear_red\n";
+    for (int x = 0; x < size; ++x)
+        csv << x << ',' << row[x] << '\n';
+    IBLPrecompute::Shutdown();
+}
+
+int main(int argc, char** argv)
 {
     Log::Init();
     if (!glfwInit()) return 1;
@@ -112,6 +149,41 @@ int main()
     s_GenBuffers = glad_glGenBuffers;
     glad_glGenVertexArrays = TrackVertexArrays;
     glad_glGenBuffers = TrackBuffers;
+
+    const std::filesystem::path baked = "../bin-int/Tests/test-room.rfibl";
+    if (argc == 2 && std::string(argv[1]) == "--reload-baked")
+    {
+        Check(IBLPrecompute::LoadBaked(baked), "load baked lighting in a fresh OpenGL context");
+        if (IBLPrecompute::IsReady())
+        {
+            CheckCube(IBLPrecompute::GetTextures().IrradianceMap, 0, {2, 1, .5f}, .002f);
+            CheckSkyboxAttachments();
+            const std::filesystem::path second = "../bin-int/Tests/test-room-reloaded.rfibl";
+            Check(IBLPrecompute::SaveBaked(second), "export restored textures");
+            std::ifstream a(baked, std::ios::binary), b(second, std::ios::binary);
+            std::array<char, 64 * 1024> left, right;
+            bool same = a && b;
+            while (same && a && b)
+            {
+                a.read(left.data(), left.size());
+                b.read(right.data(), right.size());
+                same = a.gcount() == b.gcount() && std::equal(left.begin(), left.begin() + a.gcount(), right.begin());
+            }
+            Check(same, "sky, irradiance, five reflection levels and BRDF table match byte for byte");
+
+            const std::filesystem::path partial = "../bin-int/Tests/incomplete.rfibl";
+            std::ofstream(partial, std::ios::binary) << "RFIBL01\n";
+            const GLuint previous = IBLPrecompute::GetTextures().EnvCubemap;
+            Check(!IBLPrecompute::LoadBaked(partial) && IBLPrecompute::GetTextures().EnvCubemap == previous,
+                  "incomplete bake leaves the current environment available");
+        }
+        IBLPrecompute::Shutdown();
+        CheckReleased();
+        Check(glGetError() == GL_NO_ERROR, "no OpenGL error when loading a bake");
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return s_Failures ? 1 : 0;
+    }
 
     IBLPrecompute::Init("../bin-int/Tests/missing-ibl-file.hdr");
     Check(!IBLPrecompute::IsReady(), "missing file leaves IBL unavailable");
@@ -140,9 +212,11 @@ int main()
     glViewport(2, 3, 13, 17);
     IBLPrecompute::Reload(path.string());
     Check(IBLPrecompute::IsReady(), "constant HDR precomputation completes");
-    const auto textures = IBLPrecompute::GetTextures();
+    const IBLTextures textures = IBLPrecompute::GetTextures();
+    Check(IBLPrecompute::SaveBaked(baked), "export computed lighting for another process");
     CheckCube(textures.EnvCubemap, 0, {2, 1, .5f}, .015f);
-    CheckCube(textures.IrradianceMap, 0, {2, 1, .5f}, .04f);
+    // 对线性红色 2，容差约等于 RGB16F 在这个量级的一档精度。
+    CheckCube(textures.IrradianceMap, 0, {2, 1, .5f}, .002f);
     for (int mip = 0; mip < 5; ++mip)
         CheckCube(textures.PrefilterMap, mip, {2, 1, .5f}, .025f);
     std::vector<float> brdf(512 * 512 * 2);
@@ -181,6 +255,8 @@ int main()
     CheckCube(IBLPrecompute::GetTextures().EnvCubemap, 0,
               {1, std::pow(128.0f / 255, 2.2f), std::pow(64.0f / 255, 2.2f)}, .01f);
     IBLPrecompute::Shutdown();
+    CheckReleased();
+    CheckPanoramaSeam();
     CheckReleased();
     Check(glGetError() == GL_NO_ERROR, "no OpenGL error");
     glfwDestroyWindow(window);

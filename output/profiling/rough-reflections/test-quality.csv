@@ -1,0 +1,5 @@
+mode,width,height,frames,reference_spp,mean_rgb_mse,adjacent_rgb_mse,mean_linear_rgb,bright_minus_middle_red
+reference,96,96,1,512,0,0,0.255143,0.475319
+reference_split_estimate,96,96,2,256,0.00112385,,,
+raw,96,96,16,512,0.58163,1.16031,0.256464,0.560711
+filtered,96,96,16,512,0.0591933,0.116254,0.256493,0.553285

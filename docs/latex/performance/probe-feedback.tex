@@ -1,0 +1,25 @@
+\clearpage
+\fancyhead[R]{\small\sffamily\color{Muted}Vulkan / 探针间的反光}
+\section{探针多查一次反光的开销}
+一次漫反射时，探针射线打到地板，只要算地板从点光源收到多少光。开启多次漫反射后，同一个命中点还要查询附近八个探针在上一轮记住的光。下表使用只有地面、侧墙和后墙的固定房间，直接对照这次额外查询。两次都是第四轮更新，使用同一随机种子 137，$12\times6\times7$ 个探针各有六个方向，每个方向 64 条射线，共 193,536 条。
+
+\begin{center}\smalltable
+\begin{tabular}{lrr}
+\toprule
+中位时间（ms）& 一次反射 & 多次反射\\
+\midrule
+GPU 更新探针，第 8 号事件 & 0.518 & 0.683\\
+GPU 计算 $65\times65$ 画面的间接光，第 20 号事件 & 0.0068 & 0.0068\\
+主线程调用两次调度并等到光照结果可用 & 0.890 & 1.022\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+GPU 时间来自 RTX 5070 Ti Laptop GPU 上 RenderDoc 1.47 的两个真实捕获，每个先回放一次预热，再读 11 次时间戳。每份捕获都有两次计算调度、零次三角形绘制。主线程另在开启 Vulkan 验证的 Debug x64 程序中预热四次，测 11 次完整的 \code{Render} 调用，计时区间包括两个调度的录制、提交和等待。由于其中包含等待显卡的时间，不能从这一行反推驱动单独花在提交上的时间。
+
+增加的 GPU 工作集中在探针更新。最终像素仍从同一份新探针中汇集照明，因此本例的这次调度用时相同。为了让整轮读取到相同的旧值，引擎另外保留 3,024 份方向记录，每份 32 字节，共新增 96,768 字节，约 94.5 KiB。静态多次反射要进行四轮更新，保存的文件依然只包含最后一轮。读回真实画面的对照见\href{run:Redflag-Realtime-Lighting.pdf}{《实时光照与采样》}。这组时间衡量小房间以及单项间接光；正式中庭还要另算直接光、后处理和界面。
+
+在项目根目录执行 \path{tests/run_gi_benchmark.cmd --probe-feedback} 可重新测量主线程。若改为分批更新探针，适合在同一个机位移动点光源，记录受遮挡墙面需要几帧才恢复到新亮度，再比较节省的毫秒与多出的延迟。
+\readings{\href{run:../profiling/probe-feedback/replay.json}{原始 GPU 时间与工作组数}\quad
+\href{run:../profiling/probe-feedback/dispatch-and-wait.csv}{主线程逐次记录}\quad
+\href{run:../profiling/probe-feedback/README.md}{源码、截图及复现方法}}

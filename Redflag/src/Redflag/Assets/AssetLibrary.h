@@ -6,21 +6,20 @@
 namespace Redflag
 {
 	/*
-	 * 资源库：保存 ID 到类型、源文件路径的映射，不持有模型或 GPU 资源。
-	 * Add 读取或创建源文件旁的 .rfmeta，Scan 用目录中的元数据重建整张表。
+	 * 按编号查找模型或贴图的源文件。Add 在源文件旁读写 .rfmeta，Scan 读取目录中的 .rfmeta，重新登记文件。
 	 */
 	class AssetLibrary
 	{
 	public:
 		// ---- 登记 ----
-		// 源文件不存在时返回 0，元数据损坏或身份冲突时抛出异常。
+		// 找不到源文件时返回 0。如果 .rfmeta 损坏、类型不符，或另一份文件用了同一编号，就抛出异常。
 		AssetID Add(const std::filesystem::path& path, AssetType type);
 
 		// 替换当前登记表。源文件与 .rfmeta 一起移动时，ID 保持不变。
 		void Scan(const std::filesystem::path& directory);
 
 		// ---- 查询与清理 ----
-		// 未登记返回 nullptr；返回指针归资源库所有，Scan/Clear 后不可继续使用。
+		// 找不到编号时返回 nullptr。结果指向表里的一条记录，重新扫描或清空资源库后要再查一次。
 		const AssetInfo* Get(AssetID id) const;
 
 		void Clear() { m_Assets.clear(); }

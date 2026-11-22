@@ -1,0 +1,56 @@
+{
+  "tool": "1.47",
+  "api": "OpenGL",
+  "capture": "GL-Glass_capture.rdc",
+  "sha256": "eafb864abed354b1d8a980aa71738488d60db418c2b06e096d2a872b4223a1b3",
+  "resolution": [
+    384,
+    216
+  ],
+  "draws": [
+    {
+      "event": 10,
+      "indices": 6,
+      "outputs": [
+        "ResourceId::57",
+        "ResourceId::58",
+        "ResourceId::59"
+      ]
+    },
+    {
+      "event": 17,
+      "indices": 6,
+      "outputs": [
+        "ResourceId::57",
+        "ResourceId::58",
+        "ResourceId::59"
+      ]
+    },
+    {
+      "event": 54,
+      "indices": 6,
+      "outputs": [
+        "ResourceId::80",
+        "ResourceId::81",
+        "ResourceId::82"
+      ]
+    },
+    {
+      "event": 62,
+      "indices": 6,
+      "outputs": [
+        "ResourceId::80",
+        "ResourceId::81",
+        "ResourceId::82"
+      ]
+    },
+    {
+      "event": 75,
+      "indices": 3,
+      "outputs": [
+        "ResourceId::57"
+      ]
+    }
+  ],
+  "messages": []
+}

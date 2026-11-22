@@ -1,0 +1,32 @@
+\clearpage
+\section{正交相机转动时的红色拖影}
+\label{sec:taa-ortho-camera}
+
+蓝墙前竖着一块红挡板。相机向右移，再转过 $12^\circ$，挡板的左边露出一条蓝墙。时间抗锯齿（TAA）会把前后两帧看到的同一块表面混起来，让边缘平滑。刚露出的墙在上一帧被挡住了，能用的只有这一帧的蓝色。旧版在这里画出了一条紫边。
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{@{}cccc@{}}
+\includegraphics[width=.245\linewidth]{../../../output/profiling/taa-camera/fixed/ortho-old.png} &
+\includegraphics[width=.245\linewidth]{../../../output/profiling/taa-camera/fixed/ortho-current.png} &
+\includegraphics[height=.1225\linewidth]{../../../output/profiling/taa-camera/old-edge.png} &
+\includegraphics[height=.1225\linewidth]{../../../output/profiling/taa-camera/fixed-edge.png} \\
+{\small 第一帧} & {\small 移动后的第二帧} & {\small 旧版边缘} & {\small 修复后}
+\end{tabular}
+\caption{Vulkan 实际输出。右侧两图放大第二帧最左侧的 $7\times6$ 个像素。自左向右数第二列，原来混入红色的竖线已恢复成墙的蓝色。}
+\end{figure}
+
+着色器把蓝墙上的一点投回上一帧，通常会落在四个像素之间。要借用其中一个像素的颜色，先比较它原来画的点和现在的墙相距多远。本例用正交相机正对蓝墙，镜头纵向能看到 4 个场景单位，图高 64 像素。一个像素覆盖的宽度是 $4/64=0.0625$。代码取这个宽度的 2.5 倍作为判断距离，也就是 $0.15625$。红板在墙前 1 个单位，应该舍去它的颜色。旧代码还把这个距离乘了观察深度，在深度 8 处得到 $0.15625\times8=1.25$，于是把红板也算了进去。
+
+透视投影把画面坐标除以 $w$，墙越远，一个像素覆盖的范围越大。正交投影的 $w$ 恒为 1。沿图像高度看，投影坐标的全长是 2；除以图高 $H$、再除以投影矩阵的纵向缩放 $|P_{yy}|$，乘回投影用的 $w$，两种镜头就都得到 $2w/(|P_{yy}|H)$。这里按正对镜头的平面计算宽度。墙面倾斜时，相邻像素画的两个点可能隔得更远，因此项目取了 2.5 倍。这个倍数调得过大，挡板的颜色就容易混进墙里。
+
+\loc{Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/TAA.comp}
+\begin{Code}
+// 算一个像素在墙上覆盖的宽度。正交相机的 w 等于 1，拉远镜头也不会改变这个宽度。
+vec4 currentClip = stableVP * pos;
+float footprint = 2. * currentClip.w / (abs(projection[1][1]) * float(extent.y));
+\end{Code}
+
+在 RenderDoc 的第 8 个事件读左上角起算的像素 $(1,32)$。旧版给上一帧的红色一半权重，线性 RGB 成了 $(0.50,0.185,0.43)$。修后权重为 0，读回蓝墙原色 $(0.10,0.25,0.80)$。在上一帧四个邻居全为红色的 54 个蓝墙像素中，旧版 54 个都混入了历史，修后为 0；另有 3,795 个仍是蓝墙的像素保留了历史。把墙移到相机前 0.15 个单位、横纵各平移半个像素时，两帧仍看着同一面墙，历史权重也从误判的 0 回到 0.5。
+
+透视镜头同样露出 96 个像素，修前修后都正确拒绝了历史。另取四种距离检查投影抖动，两个镜头前三帧的横纵采样偏移与预期相差均小于 $0.000005$ 像素。Sponza 透视场景的 20 份浮点输出也逐值相同，其中包括镜头移动和清空历史的帧。运行 \path{tests/run_taa_camera_tests.cmd} 可重做双帧对照，两份截帧和逐像素读数见 \path{output/profiling/taa-camera/}。

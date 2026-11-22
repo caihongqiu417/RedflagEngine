@@ -15,6 +15,7 @@
 
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
+#include "Redflag/Renderer/RHI/CommandList.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,7 +62,7 @@ namespace Redflag {
 	{
 		glm::mat4 Projection;
 		glm::mat4 InvProjection;
-		glm::vec4 Params;      // x=radius y=bias z=power w=kernelSize
+		glm::vec4 Params;      // 依次是采样半径、判断遮挡所需的深度差、遮蔽强度的指数、采样点数。
 		glm::vec4 NoiseScale;  // xy 控制 4×4 随机方向图在屏幕上重复多少次
 		glm::vec4 Kernel[SSAO_KERNEL_SIZE];
 	};
@@ -139,18 +140,18 @@ namespace Redflag {
 	// 关闭 RSM 时让主绘制读取黑图，间接光贡献为零。
 	static uint32_t           s_RSMBlackTex = 0;
 
-	// ---- RSM 时域累积 ----
+	// ---- 合并前后两帧的间接光 ----
 	static constexpr uint32_t RSM_INDIRECT_SCENE_DEPTH_SLOT = 18;
 	static constexpr uint32_t RSM_INDIRECT_VIEW_NORMAL_SLOT = 19;
 	static constexpr uint32_t RSM_RESOLVED_SLOT             = 17;
 
 	static Ref<Framebuffer>   s_RSMIndirectFBO;       // 本帧单独算出的间接光，与屏幕同尺寸
 	static Ref<Framebuffer>   s_RSMHistoryFBO[2];     // 两张图交替读写，保留上次混合结果
-	static int                s_RSMHistoryIndex = 0;  // 当前写入目标索引（0 或 1）
+	static int                s_RSMHistoryIndex = 0;  // 下次把混好的间接光写到哪张图（0 或 1）
 	static uint32_t           s_FrameIndex      = 0;  // 每帧转动采样点，避免总取到相同位置
 	static glm::mat4          s_PrevViewProj    = glm::mat4(1.0f);
-	static bool               s_RSMHistoryValid = false; // 能否继续使用上次结果
-	static float              s_RSMBlendAlpha   = 0.9f;  // 混合时旧结果所占比例
+	static bool               s_RSMHistoryValid = false; // 上一帧的间接光还能否用于这次绘制
+	static float              s_RSMBlendAlpha   = 0.9f;  // 默认混入九成上一帧的间接光。调低后，本帧新算出的反射光占比更大。
 	// 记录上次使用的场景、相机与光照，避免把另一幅画面的颜色混进来。
 	static const Scene*       s_RSMScene = nullptr;
 	static const EditorCamera* s_RSMEditorCamera = nullptr; // nullptr 表示运行时入口
@@ -201,7 +202,7 @@ namespace Redflag {
 	}
 	uint32_t SceneRenderer::GetRSMResolvedTextureID()
 	{
-		// 写完后索引已翻转，另一张图才是最近一次完成的混合结果。
+		// 索引已经指向下次要写的图，面板读取刚画完的另一张。
 		int readIdx = 1 - s_RSMHistoryIndex;
 		return (s_RSMHistoryValid && s_RSMHistoryFBO[readIdx])
 			? s_RSMHistoryFBO[readIdx]->GetColorAttachmentRendererID(0) : 0;
@@ -417,7 +418,7 @@ namespace Redflag {
 		s_RSMScene = &scene;
 		s_RSMEditorCamera = editorCamera;
 		s_RSMProjection = projection;
-		// 相机移动时仍寻找表面在前帧的位置。运行时没有相机身份，无法区分普通移动与同投影的切镜。
+		// 移动相机时，着色器会找回墙面在上一帧的位置。游戏运行时没有传入相机对象，换成投影相同的另一台相机也会沿用上一帧的间接光。
 	}
 
 	// ---- 光源矩阵 ----
@@ -477,8 +478,8 @@ namespace Redflag {
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 	}
 
-	// ---- RSM 光源 Pass ----
-	// 从灯光方向重画几何，记录受光表面；即使关闭阴影，也要单独提供光源矩阵。
+	// ---- 从方向光绘制反射阴影图 ----
+	// 从方向光看场景，记录受光表面的位置、朝向和反射光。关闭阴影开关后，RSM 仍用这个光源矩阵绘图。
 	// 画完后回到主画面的绘制目标，后续用这些表面估算反射光。
 	static void RunRSMPass(const glm::mat4& lightSpaceMatrix)
 	{
@@ -532,7 +533,7 @@ namespace Redflag {
 		}
 		if (!s_RSMIndirectFBO) return;
 
-		// 提供这次的点数、半径和光照倍率；参数改变后不再混入按旧参数算出的颜色。
+		// 调整采样或光照参数后，从这一次算出的颜色开始重新叠加。
 		const int numSamples = glm::clamp(s_RSMSettings.NumSamples, 0, (int)RSM_MAX_SAMPLES);
 		const glm::vec4 header(float(numSamples), s_RSMSettings.Intensity,
 		                       s_RSMSettings.SampleRadius, 2.0f * s_ShadowSettings.OrthoHalfSize);
@@ -540,9 +541,8 @@ namespace Redflag {
 		{
 			s_RSMHistoryValid = false;
 			s_RSMParameters.Header = header;
-			// r²=(i+0.5)/N 让每个样本代表相同盘面积；减少 N 时仍覆盖整个采样半径。
-			// 参数不变时复用这组点，每帧的旋转由 shader 完成。
-			constexpr float GOLDEN_ANGLE = 2.39996322973f;
+			// 把圆盘分成面积相等的圆环，每个环取一个点。圆的面积与半径的平方成正比，所以下面要开平方。
+			constexpr float GOLDEN_ANGLE = 2.39996322973f; // 黄金角，约 137.5°。相邻两点转过这个角，样本就分散在不同方向。
 			for (int i = 0; i < numSamples; ++i)
 			{
 				const float radius = glm::sqrt((float(i) + 0.5f) / float(numSamples));
@@ -578,7 +578,7 @@ namespace Redflag {
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	// ---- 跨帧混合 ----
+	// ---- 混合前后两帧的间接光 ----
 	// 把本帧间接光与上次结果混合以减轻噪点。两张结果图轮换，读旧图时只写另一张。
 	static void RunRSMTemporalResolvePass(int w, int h,
 	                                      const glm::mat4& viewProj,
@@ -586,7 +586,7 @@ namespace Redflag {
 	{
 		if (!s_RSMTemporalResolveShader || !s_RSMTemporalParamsUBO || !s_RSMIndirectFBO) return;
 
-		// 两张历史图都使用当前视口尺寸。
+		// 视口变大或变小时，两张保存反射光的图也要一起调整大小。
 		for (int i = 0; i < 2; ++i)
 		{
 			if (!s_RSMHistoryFBO[i])
@@ -667,7 +667,7 @@ namespace Redflag {
 		const int w = viewport[2], h = viewport[3];
 		if (w <= 0 || h <= 0) return;
 
-		// 只限制预览输出宽度；下面仍读取整个深度缓冲，glReadPixels 可能等待 GPU。
+		// 面板显示的是缩小后的图。这里仍要读回整张深度图，GPU 还在绘制时就得等它画完。
 		int maxW = 512;
 		int vw = std::min(w, maxW);
 		int vh = std::max(1, h * vw / w);
@@ -693,7 +693,7 @@ namespace Redflag {
 		bool hasGeo = dMin <= dMax;
 		float range = std::max(dMax - dMin, 0.000001f);
 
-		// 预览图每个像素取原图中最近的像素，保持上下方向。
+		// 按宽高比例从原深度图取一个像素。例如宽度减半时，每隔两列取一次深度。
 		static std::vector<uint8_t> pixels;
 		pixels.resize(size_t(vw) * vh);
 		for (int y = 0; y < vh; ++y)
@@ -823,10 +823,124 @@ namespace Redflag {
 			glBindTextureUnit(SSAO_MAP_SLOT, s_SSAOWhiteTex);
 	}
 
+	// ---- 场景几何 ----
+	static const Ref<Model>& SelectModel(ModelRendererComponent& component, const glm::mat4& modelToClip)
+	{
+		auto& level = component.ActiveLOD;
+		level = std::min(level, component.LODs.size());
+		if (component.LODs.empty()) return component.ModelAsset;
+
+		const float height = component.ModelAsset->GetScreenHeight(modelToClip);
+		// 例如设为 25%，兔子小于画面高度的 22.5% 才换简模，大于 27.5% 才换回。中间保留上一档。
+		while (level < component.LODs.size() && height < .9f * component.LODs[level].ScreenHeight) ++level;
+		while (level > 0 && height > 1.1f * component.LODs[level - 1].ScreenHeight) --level;
+		// 远处用的网格文件丢失时，向上找一份仍能画的模型。
+		while (level > 0)
+		{
+			auto& lod = component.LODs[level - 1];
+			if (!lod.ModelAsset) lod.ModelAsset = AssetManager::Load<Model>(lod.ModelID);
+			if (lod.ModelAsset) return lod.ModelAsset;
+			--level;
+		}
+		return component.ModelAsset;
+	}
+
+	// 编辑器和游戏相机共用这次查询。第一次遇到模型时加载，以后直接用组件里的引用。
+	template<typename Draw>
+	static void ForEachMesh(Scene& scene, const glm::mat4& lodViewProjection, Draw draw)
+	{
+		auto& registry = scene.GetRegistry();
+
+		// 直接创建的单个网格用组件上的材质、贴图或颜色。
+		registry.view<TransformComponent, MeshRendererComponent>().each(
+			[&](auto entity, TransformComponent& transform, MeshRendererComponent& mesh)
+		{
+			if (!mesh.MeshData)
+				return;
+			auto material = mesh.Mat;
+			if (!material)
+				material = mesh.Texture ? Material::Create(mesh.Texture) : Material::Create(mesh.Color);
+			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), 1.0f);
+		});
+
+		// 文件导入的模型可能含多个部件，实体的变换对它们全部生效。
+		registry.view<TransformComponent, ModelRendererComponent>().each(
+			[&](auto entity, TransformComponent& transform, ModelRendererComponent& component)
+		{
+			if (!component.ModelAsset && component.ModelID)
+				component.ModelAsset = AssetManager::Load<Model>(component.ModelID);
+			if (!component.ModelAsset)
+				return;
+
+			const glm::mat4 world = transform.GetTransform();
+			const auto& model = *SelectModel(component, lodViewProjection * world);
+			const auto& parts = model.GetSubMeshes();
+			Ref<Material> fallback;
+
+			for (size_t i = 0; i < parts.size(); ++i)
+			{
+				const auto& part = parts[i];
+				if (!part.MeshData)
+					continue;
+
+				const auto& material = model.GetMaterial(i, component.OverrideMaterials);
+				if (!material && !fallback)
+					fallback = Material::Create(component.Color);
+
+				const float instanceAlpha = material && material->Alpha == AlphaMode::Mask ? component.Color.a : 1.0f;
+				draw(part.MeshData, world * part.LocalTransform, material ? material : fallback,
+					static_cast<int>(entity), instanceAlpha);
+			}
+		});
+	}
+
+	static void CollectGeometry(Scene& scene, const glm::mat4& viewProjection)
+	{
+		ForEachMesh(scene, viewProjection, [](const Ref<Mesh>& mesh, const glm::mat4& world,
+			const Ref<Material>& material, int id, float instanceAlpha)
+		{
+			Ref<Material> drawMaterial = material;
+			if (instanceAlpha != 1.0f)
+			{
+				// 两个实体可以共用树叶材质。只改这次绘制的透明度，贴图仍共用。
+				drawMaterial = material->Clone();
+				drawMaterial->BaseColor.a *= instanceAlpha;
+			}
+			Renderer3D::DrawMesh(mesh, world, drawMaterial, id);
+		});
+	}
+
+	void SceneRenderer::DrawGeometry(Scene& scene, CommandList& commands, const glm::mat4& viewProjection,
+		const glm::mat4* lodViewProjection)
+	{
+		ForEachMesh(scene, lodViewProjection ? *lodViewProjection : viewProjection, [&](const Ref<Mesh>& mesh, const glm::mat4& world,
+			const Ref<Material>& material, int id, float instanceAlpha)
+		{
+			const auto texture = material->BaseColorMap ? material->BaseColorMap->GetSampledTexture() : nullptr;
+			SurfaceMaterial surface;
+			surface.Normal = material->NormalMap ? material->NormalMap->GetSampledTexture() : nullptr;
+			surface.Opacity = material->AlphaMap ? material->AlphaMap->GetSampledTexture() : nullptr;
+			surface.MetallicRoughnessMap = material->MetallicRoughnessMap ? material->MetallicRoughnessMap->GetSampledTexture() : nullptr;
+			surface.Metallic = material->Metallic;
+			surface.Roughness = material->Roughness;
+			surface.Blend = material->Alpha == AlphaMode::Blend;
+			surface.DoubleSided = material->DoubleSided;
+			surface.Emission = material->Emission;
+			surface.EmissiveMap = material->EmissiveMap ? material->EmissiveMap->GetSampledTexture() : nullptr;
+			surface.RefractionIndex = material->RefractionIndex;
+			surface.Thickness = material->Thickness;
+			if (material->Alpha == AlphaMode::Mask) surface.AlphaCutoff = material->AlphaCutoff;
+			glm::vec4 color = material->BaseColor;
+			color.a *= instanceAlpha;
+			commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection, world, color, id, surface);
+		});
+	}
+
 	// ---- 编辑器帧 ----
 	// 先从光源方向画阴影和反射阴影图，再从主相机画深度与法线。有了两组数据才能算遮蔽与间接光。
 	void SceneRenderer::RenderScene(Scene& scene, const EditorCamera& camera)
 	{
+		IBLPrecompute::UseEnvironment(scene.GetEnvironment());
 		UpdateRSMView(scene, camera.GetProjection(), &camera);
 		entt::registry& registry = scene.GetRegistry();
 
@@ -876,7 +990,7 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
-		// 后续阶段写入完整的几何和光照数据，不与旧附件内容混合。
+		// 2D 绘制用过透明混合。画 3D 网格前先关掉，避免把原图的颜色混进不透明表面。
 		glDisable(GL_BLEND);
 
 		CollectAndUploadLights(scene);
@@ -886,35 +1000,7 @@ namespace Redflag {
 		if (!s_IBLEnabled)
 			Renderer3D::OverrideIBLFlag(false);
 
-		// 网格优先用指定材质，没有材质时使用组件上的贴图或纯色。
-		{
-			auto view = registry.view<TransformComponent, MeshRendererComponent>();
-			view.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
-			{
-				if (mr.MeshData)
-				{
-					if (mr.Mat)
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Mat, (int)entity);
-					else if (mr.Texture)
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
-					else
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
-				}
-			});
-		}
-
-		// 第一次画模型时按资产 ID 读取，之后复用组件保存的模型。
-		{
-			auto view = registry.view<TransformComponent, ModelRendererComponent>();
-			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
-			{
-				if (!mr.ModelAsset && mr.ModelID)
-					mr.ModelAsset = AssetManager::Load<Model>(mr.ModelID);
-
-				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
-			});
-		}
+		CollectGeometry(scene, camera.GetViewProjection());
 
 		// ---- 阴影与间接光 ----
 		// 阴影和反射阴影图从同一盏方向光看场景，开关各自独立。
@@ -996,14 +1082,14 @@ namespace Redflag {
 		}
 		else if (!runRSM)
 		{
-			// RSM 关闭时让 history 失效，下次开启时从第一帧重新累积
+			// 关掉间接光后，旧图可能和场景不再相符。下次打开要重新画。
 			s_RSMHistoryValid = false;
 		}
 
 		// 为主绘制选好间接光图；关闭时改用黑图。
 		BindRSMResources();
 
-		Renderer3D::EndScene();
+		Renderer3D::DrawOpaque();
 
 		++s_FrameIndex;
 
@@ -1016,6 +1102,8 @@ namespace Redflag {
 		// 不透明物体画完后，用天空填上余下的背景。
 		if (s_IBLEnabled)
 			IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
+
+		Renderer3D::DrawTransparency();
 
 		// 画包围盒，方便核对哪些物体被相机剔除了。
 		if (Renderer3D::GetDebugCullingVizEnabled())
@@ -1033,6 +1121,7 @@ namespace Redflag {
 	// 与编辑器的绘制顺序相同，观察矩阵由相机的世界变换求逆得到。
 	void SceneRenderer::RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform)
 	{
+		IBLPrecompute::UseEnvironment(scene.GetEnvironment());
 		UpdateRSMView(scene, projection);
 		entt::registry& registry = scene.GetRegistry();
 
@@ -1093,7 +1182,7 @@ namespace Redflag {
 
 		Renderer2D::EndScene();
 
-		// 后续阶段写入完整的几何和光照数据，不与旧附件内容混合。
+		// 2D 绘制用过透明混合。画 3D 网格前先关掉，避免把原图的颜色混进不透明表面。
 		glDisable(GL_BLEND);
 
 		// 灯光收集
@@ -1106,33 +1195,7 @@ namespace Redflag {
 		if (!s_IBLEnabled)
 			Renderer3D::OverrideIBLFlag(false);
 
-		{
-			auto view = registry.view<TransformComponent, MeshRendererComponent>();
-			view.each([&](auto entity, TransformComponent& transform, MeshRendererComponent& mr)
-			{
-				if (mr.MeshData)
-				{
-					if (mr.Mat)
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Mat, (int)entity);
-					else if (mr.Texture)
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Texture, (int)entity);
-					else
-						Renderer3D::DrawMesh(mr.MeshData, transform.GetTransform(), mr.Color, (int)entity);
-				}
-			});
-		}
-
-		{
-			auto view = registry.view<TransformComponent, ModelRendererComponent>();
-			view.each([&](auto entity, TransformComponent& transform, ModelRendererComponent& mr)
-			{
-				if (!mr.ModelAsset && mr.ModelID)
-					mr.ModelAsset = AssetManager::Load<Model>(mr.ModelID);
-
-				if (mr.ModelAsset)
-					Renderer3D::DrawModel(mr.ModelAsset, transform.GetTransform(), mr.OverrideMaterials, mr.Color, (int)entity);
-			});
-		}
+		CollectGeometry(scene, viewProj3D);
 
 		// ---- 阴影与间接光 ----
 		glm::mat4 lightSpaceMatrix_rt(1.0f);
@@ -1182,7 +1245,7 @@ namespace Redflag {
 			else
 				BindSSAOWhiteFallback();
 
-			// 用本帧的反射光更新历史图。
+			// 先算出当前表面收到的反射光，再与上一帧保存在图里的间接光混合，减轻噪点。
 			if (runRSM_rt && runPrepass)
 			{
 				GLint mainFBO = 0;
@@ -1214,7 +1277,7 @@ namespace Redflag {
 
 			BindRSMResources();
 
-			Renderer3D::EndScene();
+			Renderer3D::DrawOpaque();
 			++s_FrameIndex;
 
 			if (runPrepass)
@@ -1230,6 +1293,8 @@ namespace Redflag {
 			glm::mat4 viewMat3D = glm::inverse(cameraTransform);
 			IBLPrecompute::RenderSkybox(viewMat3D, projection);
 		}
+
+		Renderer3D::DrawTransparency();
 
 		// 剪裁可视化调试
 		if (Renderer3D::GetDebugCullingVizEnabled())

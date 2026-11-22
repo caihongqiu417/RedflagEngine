@@ -1,0 +1,106 @@
+\clearpage
+\section{缓冲区与纹理的创建规格}\label{sec:data-device}
+今天加载一张砖墙贴图，可以把文件路径交给 \code{Texture2D::Create(path)}。模型加载器保留这个入口就能继续工作。新增 Vulkan 后，计划让加载器先解码像素，再把创建规格\termenglish{specification} 交给 \code{RenderDevice}。规格是一份短小的结构体。加载器填入已经知道的尺寸、格式和用途，后端据此创建对象并安排上传，材质保存返回的纹理。
+
+\codewhere{设计伪代码 · 对照}{Redflag/src/Platform/Vulkan/VulkanDrawResources.cpp}{VulkanDraw::CreateMesh / CreateTexture}
+\begin{lstlisting}
+indices.Size = 6 * sizeof(uint32_t);
+(*@\rhicomment{// 这六个索引一共占 24 字节。}@*)
+indices.Usage = Index | CopyDestination;
+indices.InitialData = {wallIndices, indices.Size};
+meshIndices = device.CreateBuffer(indices);
+
+brick.Width = 2;  brick.Height = 2;
+brick.Format = RGBA8;  brick.Usage = Sampled | CopyDestination;
+brick.InitialData = {rgbaPixels, 16};
+brickTexture = device.CreateTexture(brick);
+\end{lstlisting}
+
+\code{Size} 是缓冲区的总字节数。墙面含六个 32 位索引，所以这次需要 24 字节。纹理则按像素寻址，$2\times2$ 的宽高还不足以确定怎样读取数据。这里选用每像素四个 8 位分量的格式，解码器按行排好红、绿、蓝和透明度，四个像素正好 16 字节。以上两份规格都可以附上一段初始数据，分别写明来源地址和有效字节数。新建一张稍后要由场景绘制填满的颜色图时，这一项留空。
+
+\subsection{一份资源可以有几种用途}
+同一块索引缓冲区既接收上传的数据，又供绘制读取索引。\code{Usage} 因而适合用一组可以组合的标志，竖线表示两个用途同时生效。纹理也一样，砖墙需要接收复制并供着色器采样，面板的颜色图则需要接受绘制并供后处理读取。Vulkan 后端在创建时填写这些用途，以后增加读回或写入的用法时，要核对原规格和设备对该格式的支持。网格与材质拿到设备返回的对象后，可以在许多帧里复用它们。
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkBufferCreateInfo.html}{Khronos · 缓冲区的大小与用途}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkImageCreateInfo.html}{图像的尺寸、格式与用途}}
+
+\clearpage
+\section{一次上传的来源与去向}\label{sec:data-upload}
+模型加载器读完一张贴图就可以去读下一张，GPU 却可能稍后才执行复制。拟议的创建函数约定，调用期间借用 \code{InitialData}，返回前就把要上传的字节写进后端保管的暂存缓冲区。这样解码器可以在函数返回后释放原像素。设备仍需保留暂存区的这段内容，直到 GPU 已经读完。本页说明后端怎样记住它要读的那一段。
+
+\codewhere{设计伪代码 · 对照}{Redflag/src/Platform/Vulkan/VulkanDrawResources.cpp}{VulkanDraw::CreateMesh}
+\begin{lstlisting}
+(*@\rhicomment{// 两段共用同一块暂存空间，像素从第 24 字节起。}@*)
+indexBytes = {staging,  0, 24};
+pixelBytes = {staging, 24, 16};
+\end{lstlisting}
+
+三个字段依次是源缓冲区、从哪里开始读、可读多少字节。两项都引用同一块暂存缓冲区。第一项占用偏移 0 到 23，对应六个索引；第二项占用 24 到 39，对应砖墙的四个像素。加载这面墙时，两次复制都可以引用各自的范围，后端只需保管一块暂存内存。这种共用方式也有代价，后来的上传写入同一块内存时，必须避开 GPU 尚在读取的范围。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1mm,y=1mm,every node/.style={inner sep=0pt,text=Ink,font=\sffamily\small}]
+  \draw[draw=Ink!65,rounded corners=1.4mm] (0,0) rectangle (151,25);
+  \node[anchor=west,text=Muted] at (4,21) {暂存缓冲区中的字节偏移};
+  \filldraw[fill=Teal!9,draw=Teal!65] (8,3) rectangle (89,12);
+  \filldraw[fill=Rust!8,draw=Rust!65] (89,3) rectangle (143,12);
+  \node at (48.5,7.5) {6 个索引 $\times$ 4 字节};
+  \node at (116,7.5) {4 个像素 $\times$ 4 字节};
+  \foreach \x/\offset in {8/0,89/24,143/40}{
+    \draw[Muted] (\x,12)--(\x,14);
+    \node[anchor=south] at (\x,14.5) {\offset};}
+\end{tikzpicture}
+\caption{第二段紧接着第一段，从偏移 24 开始。右端的 40 是存完这两段后的下一个位置。}
+\end{figure}
+
+\subsection{缓冲区的字节位置与纹理的像素位置}
+写到索引缓冲区时，后端需要目标缓冲区和目标字节起点。它将第一项转成 \code{VkBufferCopy}，从暂存区的第 0 字节开始读 24 字节，从索引缓冲区的第 0 字节开始写。日后同一缓冲区还存有别的网格时，目标起点也可以不同。
+
+写到纹理时，目标用像素位置表示。本例选择砖墙图的原始分辨率、第 0 层，从左上角 $(0,0)$ 起填满 $2\times2$。后端把这些值与源字节起点 24 一起填入 \code{VkBufferImageCopy}，四个像素逐行取出。复制结束后，网格继续保管索引缓冲区，材质继续保管纹理，各自已有独立的数据。第~\pageref{sec:upload-api}~页给出了两条复制命令以及写入后如何让绘制读到结果。
+
+\termaside{这里的源数据按行紧密排列。本例每行有两个像素，一个像素四字节，第二行从暂存区偏移 $24+8=32$ 处开始。}{行距\termenglish{row pitch}}{行距指从一行开头到下一行开头的字节数。本例为 8。导入器若在行末加了空隙，可以先逐行排紧，再交给这个上传入口。}
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkBufferCopy.html}{Khronos · 缓冲区复制范围}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkBufferImageCopy.html}{像素范围、分辨率层与数组层}}
+
+\clearpage
+\section{着色器、管线与材质的数据}\label{sec:data-pipeline}
+把墙上的砖换成木板，三角形的画法可以沿用。要让同一条管线画出不同表面，后端需要分别保存两件事：着色器约定从哪里取哪类数据，以及这次绘制实际提供哪张图、哪段数据。现有的 \code{Material} 已经保存底色、粗糙度和贴图引用。下面是 Vulkan 后端怎样配合这份材质的拟议设计。
+
+\codewhere{设计伪代码 · 对照}{Redflag/src/Platform/Vulkan/VulkanDrawPipeline.cpp}{Data::CreatePipeline}
+\begin{lstlisting}
+(*@\rhicomment{// 两个阶段各自从自己的 main 开始执行。}@*)
+stages = [{Vertex, vertexSpirv, "main"},
+          {Fragment, fragmentSpirv, "main"}];
+setLayouts = [frameLayout, materialLayout, objectLayout];
+\end{lstlisting}
+
+每项着色器程序记录三个值：执行阶段、编译后的 SPIR-V 指令、程序入口名称。每段指令用连续的 32 位无符号整数保存，传给 Vulkan 时按字节计算长度。第~\pageref{sec:shader-api}~页列出了创建着色器模块和图形管线的方法。管线的创建规格还要写明各类顶点数据的位置与格式、深度测试和混合规则，以及输出图的格式和采样数。这样同一管线可以反复使用，变更了参与创建的规则后再选另一条合适的管线。
+
+\subsection{资源位置与本次填入的值}
+\code{setLayouts} 是有顺序的数组。首版模型着色器约定第 0 组读本帧的数据，第 1 组读材质，第 2 组读物体。以第 1 组的一项为例，后端记录该项在组内的编号、资源类型、数量和使用它的着色阶段。底色图这项可约定为一个由片元程序读取的纹理与采样器组合。各组的约定合在一起构成管线布局\termenglish{pipeline layout}。组的位置要与编译后的着色器一致，数组中的顺序有实际含义。
+
+到了绘制时，\code{BindPipeline} 选好这套规则。\code{BindMaterial} 根据材质准备一份描述符集，底色图的位置实际填入砖墙的图像视图和采样器。\code{BindCamera} 和 \code{BindObject} 分别选相机数据和当前物体的数据范围。换木板时可以为木板选另一份材质描述符集，让两次绘制各自读到正确的纹理。准备过的材质可以复用，但一份仍被 GPU 使用的描述符集必须保留相应内容。第~\pageref{sec:bind-api}~页演示了三组实际资源如何交给命令缓冲区。
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkDescriptorSetLayoutBinding.html}{Khronos · 每项资源的类型与数量}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineLayoutCreateInfo.html}{管线布局}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineRenderingCreateInfo.html}{管线使用的目标格式}}
+
+\clearpage
+\section{一组绘制读写哪些图像}\label{sec:data-targets}
+点击场景里的墙，编辑器会读到墙所属的实体编号。在现有 OpenGL 路径中，网格主着色器写颜色和实体编号。若启用深度预写，深度和表面法线先由预写阶段生成，主绘制再用已有深度判断遮挡。迁移到 RHI 后，这几张图都归视口管理。渲染器在每次调用 \code{BeginPass(targets)} 时说明这组绘制用到其中哪些图。
+
+\subsection{按着色器输出的位置排列附件}
+附件\termenglish{attachment} 是这次接收绘制结果的图像或其中一层。拟议的 \code{targets} 用有序数组保存颜色附件，下标对应当前着色器的输出位置。主绘制从位置 0 写场景颜色，从位置 1 写实体编号。预写着色器沿用位置 2 写法线时，后端要保留前两个空位，或同步调整着色器与附件编号。深度另有一个可选字段，只绘制阴影时可以留下空的颜色数组。此外，读取清单记下着色器需要采样的图。
+
+\noindent\begin{tabularx}{\linewidth}{@{}l@{\hspace{1.0em}}l@{\hspace{1.0em}}X@{}}
+\toprule
+一项附件里保存什么 & 以实体编号图为例 & 记录命令时怎样使用\\\midrule
+图像与写入范围 & 当前视口的编号图，第 0 层 & 选出接收实体编号的图像视图。\\
+开始时的做法、清除值 & 清除，整数 $-1$ & 尚未画到物体的像素保持背景编号。\\
+结束时的做法 & 保留 & 鼠标拾取稍后仍能读到编号。\\
+\bottomrule
+\end{tabularx}
+
+清除值的类型跟随图像格式。编号用带符号整数 $-1$，浮点场景颜色可以用四个颜色分量，深度使用深度值。场景颜色和法线当前都用 RGBA16F，二者用途却不同，后处理需要读前者，屏幕空间环境遮蔽要读后者。上一步若已经预写深度，主绘制应读入已有的深度再测试；要开始一张新的阴影图时则清除深度。格式随图像创建，保留或清除由每次绘制决定。
+
+若着色器随后要用阴影计算光照，渲染器先用 \code{scene.Read(shadowMap)} 把图写入读取清单，然后让 \code{BeginPass} 开始主绘制。Vulkan 后端根据先前的深度写入和接下来的采样，安排等待并将那部分图像切到可读取的布局，之后 \code{BindSampledTexture} 才为着色器选中这张图。这样同一张图先写后读时，两次用途都讲得清楚，公共附件说明也无需写死某个 Vulkan 布局。
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkRenderingInfo.html}{Khronos · 动态绘制的颜色与深度附件}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkRenderingAttachmentInfo.html}{附件开始与结束时的处理}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/assets/shaders/Depth_Prepass.glsl\#L51}{预写阶段的法线输出}}

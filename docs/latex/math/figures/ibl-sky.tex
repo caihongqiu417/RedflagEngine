@@ -1,0 +1,44 @@
+% 球心在原点。左半图为正交投影，观察方向比赤道高 16 度。
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small,>=Stealth,
+  declare function={skyx(\t,\p)=3.08*sin(\t)*sin(\p);
+                    skyy(\t,\p)=3.08*(cos(\t)*cos(16)-sin(\t)*cos(\p)*sin(16));}]
+  \draw[rounded corners,draw=line,fill=pale!35] (0,0) rectangle (15.7,5.55);
+  \draw[line] (7.9,.22)--(7.9,5.3);
+  \node[anchor=west,font=\bfseries] at (.32,5.17) {从半球上取两格};
+  \node[anchor=west,font=\bfseries] at (8.16,5.17) {沿球轴切开，看其中一条纬线};
+  \begin{scope}[shift={(4.1,1.38)}]
+    \draw[line,dashed] (-3.08,0) arc[start angle=180,end angle=0,x radius=3.08,y radius=.85];
+    \foreach \t in {10,20,35,45,55,65,75,90} {
+      \draw[line] plot[domain=-90:90,samples=41,variable=\p] ({skyx(\t,\p)},{skyy(\t,\p)});
+    }
+    \foreach \p in {-90,-60,-30,-15,15,30,60,90} {
+      \draw[line] plot[domain=0:90,samples=31,variable=\t] ({skyx(\t,\p)},{skyy(\t,\p)});
+    }
+    \foreach \ta/\tb/\col in {10/20/blue,55/65/orange!80!black} {
+      \path[fill=\col!23,draw=\col,thick]
+          plot[domain=-15:15,samples=13,variable=\p] ({skyx(\ta,\p)},{skyy(\ta,\p)})
+       -- plot[domain=\ta:\tb,samples=8,variable=\t] ({skyx(\t,15)},{skyy(\t,15)})
+       -- plot[domain=15:-15,samples=13,variable=\p] ({skyx(\tb,\p)},{skyy(\tb,\p)})
+       -- cycle;
+    }
+    \draw[blue] ({skyx(15,-15)},{skyy(15,-15)}) -- (-1.13,2.82) -- (-1.54,2.82);
+    \node[anchor=east,text=blue] at (-1.50,2.82) {近球顶};
+    \draw[orange!80!black] ({skyx(60,15)},{skyy(60,15)}) -- (1.58,.74) -- (1.84,.74);
+    \node[anchor=west,text=orange!80!black] at (1.79,.74) {近赤道};
+  \end{scope}
+  \begin{scope}[shift={(9.62,.85)}]
+    \coordinate (p) at (2.60,1.5);
+    \draw[line] (0,3) arc[start angle=90,end angle=0,radius=3];
+    \draw[->,muted] (0,0)--(0,3.38) node[above] {球轴};
+    \draw[muted] (0,0)--(3.2,0);
+    \draw[very thick,blue] (0,0)--(p);
+    \draw[very thick,orange!80!black] (0,1.5)--(p);
+    \draw[muted] (0,1.35)--(.15,1.35)--(.15,1.5);
+    \draw[muted] (0,.69) arc[start angle=90,end angle=30,radius=.69];
+    \node at (.52,.89) {$\theta$};
+    \node[text=blue,fill=pale!40,inner sep=1pt] at (1.47,.70) {$1$};
+    \node[text=orange!80!black,above] at (1.3,1.53) {纬线半径 $r$};
+    \fill[blue] (0,0) circle (1.6pt) node[below] {球心};
+    \fill[orange!80!black] (p) circle (1.8pt) node[right] {球面上一点};
+  \end{scope}
+\end{tikzpicture}

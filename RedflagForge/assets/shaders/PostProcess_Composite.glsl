@@ -73,7 +73,7 @@ void main()
 
     vec3 bloomColor = SampleBloom(v_TexCoord);
 
-    // 光晕来自几层小图的叠加。这里限制加回场景的那部分亮度。
+    // 光晕来自几层小图的叠加。每个颜色通道最多给场景加 1，灯本身的亮度仍由 HDR 场景图提供。
     bloomColor = clamp(bloomColor * u_BloomIntensity, 0.0, 1.0);
 
     vec3 combined = SanitizeHDR(hdrColor + bloomColor);

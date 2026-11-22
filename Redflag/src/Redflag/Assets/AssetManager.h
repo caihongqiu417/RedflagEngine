@@ -35,7 +35,7 @@ namespace Redflag
 		}
 
 		// ---- 加载 ----
-		// T 提供 static Ref<T> Load(const std::string&)；未登记或类型不符返回空引用。
+		// 首次加载模型会调用 Model::Load 读文件。找不到这个 ID，或它登记的是另一类资源时，返回 nullptr。
 		template<typename T>
 		static Ref<T> Load(AssetID id)
 		{
@@ -54,7 +54,7 @@ namespace Redflag
 			return asset;
 		}
 
-		// 路径入口会先登记元数据，绘制阶段应使用已登记的 ID。
+		// 按文件名加载时先登记资源。场景绘制同一模型时可以直接使用它的 ID。
 		template<typename T>
 		static Ref<T> Load(const std::string& path)
 		{
@@ -77,12 +77,12 @@ namespace Redflag
 				cache->Assets.erase(id);
 		}
 
-		// 清空对象缓存但保留资源库，关闭图形上下文前调用。
+		// 关闭图形设备前调用，清空管理器保存的模型和贴图。文件路径和 ID 仍在资源库里。
 		static void ClearAll() { GetCaches().clear(); }
 
 	private:
 		// ---- 类型缓存 ----
-		// 外层按 type_index 管理类型，内层按 AssetID 管理对象。
+		// 每种资源类型各有一张表。加载模型时，按 ID 去模型表里找。
 		struct CacheBase
 		{
 			virtual ~CacheBase() = default;

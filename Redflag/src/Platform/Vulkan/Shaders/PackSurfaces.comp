@@ -1,0 +1,35 @@
+#version 450
+#include "MaterialChannels.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(rgba32f, binding = 0) readonly uniform image2D albedoImage;
+layout(rgba32f, binding = 1) readonly uniform image2D normalDepthImage;
+struct Surface { vec4 position, normal, albedo; };
+layout(std430, binding = 2) writeonly buffer Surfaces { Surface pixels[]; };
+layout(push_constant) uniform Camera { mat4 inverseVP; };
+
+vec3 unproject(vec2 ndc, float depth)
+{
+    vec4 h = inverseVP * vec4(ndc, depth, 1);
+    return h.xyz / h.w;
+}
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy), size = imageSize(albedoImage);
+    if (any(greaterThanEqual(p, size))) return;
+    uint i = uint(p.y * size.x + p.x);
+    vec4 albedo = imageLoad(albedoImage, p);
+    if (albedo.a == 0.) {
+        pixels[i] = Surface(vec4(0), vec4(0), vec4(0));
+        return;
+    }
+    vec4 surface = imageLoad(normalDepthImage, p);
+    vec2 ndc = (vec2(p) + .5) / vec2(size) * 2. - 1.;
+    ndc.y = -ndc.y;
+    // 深度图里近裁面为 0、远裁面为 1。先换回项目相机的 −1 到 1，再用逆矩阵算出像素对应的世界位置。
+    vec3 position = unproject(ndc, surface.w * 2. - 1.);
+    vec3 viewRay = unproject(ndc, 1.) - unproject(ndc, -1.);
+    vec3 n = dot(surface.xyz, viewRay) > 0. ? -surface.xyz : surface.xyz;
+    vec2 material = decodeMaterial(abs(albedo.a));
+    pixels[i] = Surface(vec4(position, 1.), vec4(n, material.y), vec4(albedo.rgb, material.x));
+}

@@ -1,0 +1,38 @@
+{
+  "capture": "output/captures/local/OffscreenEmitter_capture.rdc",
+  "sha256": "3f110a13e7161c203a9607285e61760dbe3b72c208ee8b93dd72ebca9cfa983f",
+  "tool": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "events": [
+    {
+      "event": 8,
+      "stage": 6,
+      "frame_from_zero": 511,
+      "groups": [
+        5,
+        1,
+        1
+      ],
+      "samples": 1,
+      "seed": 137
+    },
+    {
+      "event": 20,
+      "stage": 8,
+      "frame_from_zero": 511,
+      "groups": [
+        5,
+        1,
+        1
+      ],
+      "samples": 1,
+      "seed": 137
+    }
+  ],
+  "messages": [],
+  "mean_rgb_last_frame": [
+    0.21504819275534173,
+    0.013672678092809613,
+    0.0
+  ]
+}

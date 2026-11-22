@@ -1,0 +1,115 @@
+{
+  "scene": "Sponza-Atrium.redflag",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "build": "Windows x64 Debug",
+  "client": [
+    1698,
+    984
+  ],
+  "viewport": [
+    948,
+    613
+  ],
+  "lighting": "All point lights + DDGI (2 rays per direction) + GTAO + TAA (weight 0.85)",
+  "source": "Production RedflagForge --vulkan. RunLoop CPU wall time from RedflagProfile-Runtime.json, includes GPU waits and presentation. No RenderDoc or GPU timestamp query.",
+  "camera_input": "50 Win32 mouse-wheel events at 150 ms intervals, alternating five positive and five negative. Native traces only; first setup frame excluded.",
+  "shots": {
+    "320": {
+      "internal": [
+        320,
+        207
+      ],
+      "file": "sponza-editor-320.png",
+      "repeat_interval_s": 0.5,
+      "sha256": "05c4b03ebb53bb5571218d055964b6752028a8fa43e75942972543ffdf24619e",
+      "changed_channels": 0,
+      "crop_LTRB": [
+        405,
+        380,
+        665,
+        575
+      ]
+    },
+    "native": {
+      "internal": [
+        948,
+        613
+      ],
+      "file": "sponza-editor-native.png",
+      "repeat_interval_s": 0.5,
+      "sha256": "b564713f3b930b279dc840ced266f137987e014563a40b1ad0b15d80e108a06e",
+      "changed_channels": 0,
+      "crop_LTRB": [
+        405,
+        380,
+        665,
+        575
+      ]
+    }
+  },
+  "frame_times_ms": {
+    "320": {
+      "first_frame_ms": 4433.264,
+      "Lighting accumulation": {
+        "frames": 31,
+        "p50": 40.017,
+        "p95": 42.475,
+        "max": 43.579
+      },
+      "Lighting cached": {
+        "frames": 352,
+        "p50": 4.165,
+        "p95": 5.201,
+        "max": 8.841
+      }
+    },
+    "native": {
+      "first_frame_ms": 4614.755,
+      "Lighting camera motion": {
+        "frames": 1,
+        "p50": 150.865,
+        "p95": 150.865,
+        "max": 150.865
+      },
+      "Lighting accumulation": {
+        "frames": 39,
+        "p50": 164.511,
+        "p95": 169.426,
+        "max": 170.475
+      },
+      "Lighting cached": {
+        "frames": 395,
+        "p50": 4.153,
+        "p95": 4.863,
+        "max": 7.757
+      },
+      "Lighting navigation": {
+        "frames": 1761,
+        "p50": 4.153,
+        "p95": 6.735,
+        "max": 12.808
+      }
+    },
+    "rawmotion": {
+      "first_frame_ms": 5072.943,
+      "Lighting camera motion": {
+        "frames": 25,
+        "p50": 155.02,
+        "p95": 173.041,
+        "max": 177.757
+      },
+      "Lighting accumulation": {
+        "frames": 63,
+        "p50": 163.337,
+        "p95": 172.665,
+        "max": 177.348
+      },
+      "Lighting cached": {
+        "frames": 365,
+        "p50": 4.086,
+        "p95": 6.515,
+        "max": 9.725
+      }
+    }
+  }
+}

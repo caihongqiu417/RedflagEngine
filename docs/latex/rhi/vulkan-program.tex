@@ -1,0 +1,33 @@
+\clearpage
+\section{着色器模块与图形管线}\label{sec:shader-api}
+画一面砖墙，顶点着色器要算出四个墙角在屏幕上的位置，片元着色器要根据贴图和光照算出墙面的颜色。我们用 GLSL 编写这两段程序，再用 \code{glslc} 把它们分别编译为 SPIR-V。SPIR-V 是驱动可以继续编译的中间指令。把其中一段交给 Vulkan，创建的对象叫作着色器模块\termenglish{shader module}。
+
+\subsection{把编译好的程序交给设备}
+下面用顶点程序举例。\code{vertexSpirv} 以 32 位整数保存读入的指令。\code{pCode} 指向第一项，\code{codeSize} 告诉驱动要读多少字节。例如数组有 256 项，每项占 4 字节，就该传 1024。下例省略创建结构中按 Vulkan 规定填写的类型标记和默认字段。
+\codewhere{参数示例}{Redflag/src/Platform/Vulkan/VulkanDrawPipeline.cpp}{Data::CreatePipeline}
+\begin{lstlisting}
+(*@\rhicomment{// SPIR-V 按 32 位字保存，传给 Vulkan 的长度按字节计。}@*)
+moduleInfo.pCode    = vertexSpirv.data();
+moduleInfo.codeSize = vertexSpirv.size() * sizeof(uint32_t);
+result = vkCreateShaderModule(device, &moduleInfo,
+                              nullptr, &vertexModule);
+\end{lstlisting}
+
+\code{device} 指定在哪个设备上创建模块，\code{\&moduleInfo} 交给它上面的指令和长度。第三个参数传 \code{nullptr}，表示由 Vulkan 自行分配创建对象所需的主机内存。第四个参数提供存放结果的地址。函数返回 \code{VK\_SUCCESS} 时，\code{vertexModule} 就保存了新模块的句柄。片元程序也按同样的方法创建自己的模块。
+
+\subsection{把两段程序配成一条绘制管线}
+现在要决定怎样画墙。图形管线\termenglish{graphics pipeline} 把着色器和绘制规则配在一起，包括怎样读取网格顶点、怎样测试深度，以及把颜色写进什么格式的图。\code{wallStages} 有两项。第一项选择顶点模块，第二项选择片元模块，每项都用 \code{pName} 指定程序入口，本例的两个入口都叫 \code{main}。
+\codewhere{参数示例}{Redflag/src/Platform/Vulkan/VulkanDrawPipeline.cpp}{Data::CreatePipeline}
+\begin{lstlisting}
+(*@\rhicomment{// 顶点和片元各占一项，共同创建一条图形管线。}@*)
+wallInfo.stageCount = 2;
+wallInfo.pStages    = wallStages;
+result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE,
+                                   1, &wallInfo, nullptr,
+                                   &wallPipeline);
+\end{lstlisting}
+
+在同一设备上创建管线时，第二个参数传 \code{VK\_NULL\_HANDLE}，表示本例没有传入可复用的管线编译缓存。\code{1} 表示创建一条管线，\code{\&wallInfo} 指向这条管线的配置。\code{nullptr} 仍选默认的主机内存分配方式。函数返回成功后，新管线的句柄就保存在 \code{wallPipeline} 里。等 GPU 执行使用这条管线的绘制命令，两段程序才开始处理砖墙的顶点和片元。
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCreateShaderModule.html}{Khronos · 创建着色器模块}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkShaderModuleCreateInfo.html}{代码长度与指针}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCreateGraphicsPipelines.html}{创建图形管线}}

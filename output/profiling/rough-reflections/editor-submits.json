@@ -1,0 +1,66 @@
+{
+  "off": {
+    "frame": 24,
+    "size": [
+      1391,
+      892
+    ],
+    "tool": "1.47",
+    "capture": "output/captures/local/rough-native-off-9e48ab1fee7f-0/studio_frame24.rdc",
+    "capture_sha256": "fd94bf5f8cde0d802fb9c4b23fe7e95f6a3e20adb87e7e30bbcef65d5214b16e",
+    "stages": {
+      "reflection": {
+        "dispatch_event": 556,
+        "command_buffer": 103,
+        "begin_chunk": 1596,
+        "dispatch_chunk": 1601,
+        "end_chunk": 1603,
+        "submit_chunk": 1604,
+        "queue": 91,
+        "cpu_submit_us": 44
+      }
+    },
+    "all_frame_submits": 13,
+    "all_frame_submit_us": 557,
+    "method": "CPU vkQueueSubmit duration inside one captured frame. Excludes command recording, the subsequent vkWaitForFences call, and GPU execution.",
+    "scene_reflections": true,
+    "denoise_reflections": false
+  },
+  "on": {
+    "frame": 24,
+    "size": [
+      1391,
+      892
+    ],
+    "tool": "1.47",
+    "capture": "output/captures/local/rough-native-on-9e48ab1fee7f-0/studio_frame24.rdc",
+    "capture_sha256": "2c17fc7f76dde991f1fd71fa0a3ad62f912815ae85cf0b67438b6a57de77d268",
+    "stages": {
+      "reflection": {
+        "dispatch_event": 556,
+        "command_buffer": 103,
+        "begin_chunk": 1607,
+        "dispatch_chunk": 1612,
+        "end_chunk": 1614,
+        "submit_chunk": 1615,
+        "queue": 91,
+        "cpu_submit_us": 36
+      },
+      "filter": {
+        "dispatch_event": 568,
+        "command_buffer": 103,
+        "begin_chunk": 1619,
+        "dispatch_chunk": 1624,
+        "end_chunk": 1626,
+        "submit_chunk": 1627,
+        "queue": 91,
+        "cpu_submit_us": 57
+      }
+    },
+    "all_frame_submits": 14,
+    "all_frame_submit_us": 639,
+    "method": "CPU vkQueueSubmit duration inside one captured frame. Excludes command recording, the subsequent vkWaitForFences call, and GPU execution.",
+    "scene_reflections": true,
+    "denoise_reflections": true
+  }
+}

@@ -1,0 +1,46 @@
+% 前置知识
+从正在画的石柱向一盏灯发阴影光线，才知道这束光有没有被栏杆挡住。若逐像素枚举所有灯，代价随灯数增加。两盏灯的例子给了另一条路，先随机找候选，再让比较亮的候选更有机会留下来。一个蓄水池 \term{reservoir} 只存一个候选，还存它代表过多少候选、累计过多少权重。这样即使一盏灯最后没留下，它的贡献也参与了选择概率。
+
+% 公式推导
+两个候选权重分别为 1 和 3。第一项必选，第二项到来时以 $3/(1+3)$ 的概率替换第一项，最终保存两者的概率是 $1/4,3/4$。这个过程可扩展到任意长的输入流。候选由概率 $q$ 提出，我们用标量亮度 $\hat p$ 作筛选目标，因此先令权重 $w=\hat p/q$。最终输出还要恢复彩色贡献并补偿选中的概率，否则偏爱亮灯会让画面变亮。
+
+% 公式
+记最终选中的灯为 $y$，候选数为 $M$，则
+\[
+  S=\sum_i w_i,\qquad W=\frac{S}{M\hat p(y)},\qquad L_o=f_{\rm RGB}(y)W.
+\]
+合并另一个蓄水池时，把它所代表的候选数带进来。本像素重新计算 $\hat p_x(y)$，加入的权重为 $\hat p_x(y)W_{\rm old}M_{\rm old}$。在新像素重新查遮挡，能识别邻居看到而自己看不到的灯。截断历史、过滤邻居都会改变采样性质，需要用基准检查偏差。
+\pair{profiling/gi/direct-1spp.png}{每像素随机挑一盏灯}{profiling/gi/restir-di.png}{历史及邻居参与选择后的第八帧}
+\clearpage
+% 逐行伪代码
+\subsection{把相邻像素选中的灯留下来}
+\noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/GI/Shaders/GI.comp}{\texttt{GI.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+fresh = pickUniformLight(pixel)
+neighbors = compatibleFreshNeighbors(pixel, count=4)
+for r in [fresh, previousPixelReservoir, neighbors]:
+    m = min(r.candidateCount, 16)
+    totalCount += m
+    target = luminance(directRGB(pixel, r.light))
+    (*@{\footnotesize\color{quiet}旧池的样本回到当前表面，要重新计算它在这里的亮度。}@*)
+    w = target * r.W * m
+    sum += w
+    if w > 0 and random() * sum < w:
+        selected, selectedTarget = r, target
+W = sum / (totalCount * selectedTarget) if selectedTarget > 0 else 0
+writeHistory(selected, W, totalCount)
+output = directRGB(pixel, selected.light) * W
+\end{lstlisting}
+全黑时留空蓄水池并返回零。程序分两次调度，先让所有像素产生自己的新候选，第二次才读邻居。这样一个像素不会读到另一个像素写了一半的结果。NVIDIA 的 MinimalSample 把获取场景表面和光源的工作交给应用，复用代码单独存放。这里直接在同一份 GLSL 中读取点光源数组。每像素每帧只提一个新候选，让我们能数清借用邻居前后实际多查了几束影子。\href{https://github.com/NVIDIA-RTX/RTXDI/blob/main/Doc/Integration.md}{RTXDI 集成指南}
+
+四个邻居决定每像素最多额外检查几处光路。兼容条件中的法线点积阈值 0.85 对应夹角约 $32^\circ$，位置距离 0.8 则相当于这个归一化场景最大跨度的 4\%。它们是阻止跨墙借样本的几何筛选。旧池的候选数另限为 16，作用是限制它在新选择中占的权重；调高后旧光照也会保留更久。
+
+% 接口与数据结构
+\begin{fields}
+\texttt{Reservoir.y.w} & 直接光模式下是灯号。正式场景用本像素的金属度、粗糙度、底色和阴影重新计算 RGB 与选择权重。\\
+\texttt{stats.x, stats.y} & 保存 $W$ 和候选数，分别由 \texttt{mergeR} 与下一帧历史读取。\\
+\texttt{ReSTIRDI} & 当前每帧每像素提出一个新候选，读旧帧同一像素与最多四个邻居。相机大幅改变时需处理历史有效性。\\
+\end{fields}
+
+% 验证标准
+在 Sponza 的 16 盏灯纯漫反射对照中，四个种子的平均 MSE 从独立 1 spp 的 \measured{direct-1spp-mse} 降到第八帧的 \measured{restir-di-mse}。花相同的八个新候选做独立平均得到 \measured{direct-8spp-mse}。三者的邻居访问和阴影射线工作量不同。亮度为正的像素中有 \measured{restir-di-reused_fraction_positive}\% 选中了复用样本；若以全部可见像素为分母则为 \measured{restir-di-reused_fraction_visible}\%。这两个比例回答不同的问题。

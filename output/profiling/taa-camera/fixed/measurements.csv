@@ -1,0 +1,3 @@
+projection,disoccluded,false_history,stable_pixels_with_history,max_color_error,max_jitter_error_pixels,near_history_weight
+perspective,96,0,3738,0,1.2666e-06,-1
+ortho,54,0,3795,0,4.01948e-06,0.5

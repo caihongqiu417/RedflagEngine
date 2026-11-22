@@ -59,7 +59,7 @@ namespace Redflag {
 	}
 
 	// IBO й╣ож
-	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(const uint32_t* indices, uint32_t count)
 		: m_Count(count)
 	{
 		RF_PROFILE_FUNCTION();

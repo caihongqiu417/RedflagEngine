@@ -142,6 +142,6 @@ namespace Redflag
 		virtual uint32_t GetCount() const = 0;  // 获取索引数量
 
 		// 注意：索引通常是uint32_t类型，不是float
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(const uint32_t* indices, uint32_t count);
 	};
 }

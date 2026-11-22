@@ -1,0 +1,74 @@
+Scene: Unamed Scene
+Entities:
+  - Entity: 4
+    TagComponent:
+      Tag: Main Camera
+    TransformComponent:
+      Translation: [0.219999999, 0.479999989, 3.1500001]
+      Rotation: [-0.175520837, 0.0697280541, -9.33591204e-10]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.75049156
+        PerspectiveNear: 0.0500000007
+        PerspectiveFar: 40
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 40
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: Point Light
+    TransformComponent:
+      Translation: [-1.60000002, 1.29999995, 2.20000005]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 2
+      Radius: 7
+      CastShadow: false
+  - Entity: 2
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Direction: [0.449999988, -0.850000024, -0.550000012]
+      Color: [1, 1, 1]
+      Intensity: 3.29999995
+      CastShadow: true
+  - Entity: 5
+    TagComponent:
+      Tag: Floor
+    TransformComponent:
+      Translation: [0, -1.04999995, 0]
+      Rotation: [0, 0, 0]
+      Scale: [6, 0.100000001, 5]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      MeshType: Cube
+      BaseColor: [0.379999995, 0.419999987, 0.479999989, 1]
+      Metallic: 0
+      Roughness: 0.850000024
+      AO: 1
+  - Entity: 1
+    TagComponent:
+      Tag: HappyBuddha
+    TransformComponent:
+      Translation: [0.0554254763, -1.50682092, 0.0682109445]
+      Rotation: [0, 0, 0]
+      Scale: [10.1255007, 10.1255007, 10.1255007]
+    ModelRendererComponent:
+      ModelID: 3990453198303663497
+      FilePath: assets/models/reference/HappyBuddha/happy_vrip_res4.ply
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColor: [0.720000029, 0.519999981, 0.25, 1]
+          Metallic: 0
+          Roughness: 0.629999995
+          AO: 1

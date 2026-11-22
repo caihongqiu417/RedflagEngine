@@ -1,0 +1,12 @@
+Shading: Lit
+PreviewWidth: 0
+Samples: 3
+Direct: All point lights
+Indirect: DDGI
+DDGIProbeFeedback: true
+GTAO: true
+SSR: false
+SceneReflections: true
+DenoiseReflections: true
+TAA: true
+HistoryWeight: 0.85

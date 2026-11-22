@@ -2,6 +2,7 @@
 #include"OpenGLTexture.h"
 
 #include"stb_image.h"
+#include <glm/gtc/type_precision.hpp>
 
 #define TINYEXR_IMPLEMENTATION
 #include "tinyexr.h"
@@ -9,7 +10,7 @@
 
 
 namespace Redflag {
-	// 文件解码与 SetData 都提供紧密排列的像素，不含行末填充字节。
+	// 传入的每一行都紧接上一行。上传宽 3 像素的 RGB 图时，OpenGL 读完 9 个字节就应读下一行。
 	static void UploadPixels(uint32_t texture, uint32_t width, uint32_t height,
 		GLenum format, GLenum type, const void* pixels)
 	{
@@ -32,7 +33,7 @@ namespace Redflag {
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //用于像素
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 放大贴图时取最近的像素，保留清晰的色块边缘。
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -71,8 +72,8 @@ namespace Redflag {
 					std::swap(exrData[y * exrWidth * 4 + x], exrData[opp * exrWidth * 4 + x]);
 			}
 
-			// 兼容部分法线 EXR：前 2048 像素的 R/G 存在负值时，按 [-1,1]→[0,1] 映射。
-			// 这是数据启发式判断，当前作用于所有通道，不能识别贴图的真实用途。
+			// 有些 EXR 用 −1 到 1 存法线。这里最多查前 2048 个像素，红或绿分量低于 −0.01 就按法线图处理。
+			// 这两个数是项目选的。判断一旦成立，整张图的每个通道都会转换，带负值的颜色图也可能被改动。
 			{
 				bool needsRemap = false;
 				int samplePx = std::min(exrWidth * exrHeight, 2048);
@@ -157,6 +158,7 @@ namespace Redflag {
 	{
 		RF_PROFILE_FUNCTION();
 
+		glDeleteTextures(1, &m_SRGBView);
 		glDeleteTextures(1, &m_RendererID);
 	}
 
@@ -170,6 +172,11 @@ namespace Redflag {
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : m_DataFormat == GL_RGB ? 3 : m_DataFormat == GL_RG ? 2 : 1;
 		RF_CORE_ASSERT(size==m_Width*m_Height*bpp,"Data must be entire texture!");
 		UploadPixels(m_RendererID, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		if (m_SRGBView && (m_InternalFormat == GL_R8 || m_InternalFormat == GL_RG8))
+		{
+			glDeleteTextures(1, &m_SRGBView);
+			m_SRGBView = 0;
+		}
 	}
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
@@ -177,5 +184,45 @@ namespace Redflag {
 		RF_PROFILE_FUNCTION();
 
 		glBindTextureUnit(slot, m_RendererID);
+	}
+
+	void OpenGLTexture2D::BindSRGB(uint32_t slot)
+	{
+		if (m_InternalFormat == GL_RGBA16F)
+		{
+			Bind(slot); // EXR 已经保存了线性亮度。
+			return;
+		}
+		if (!m_SRGBView)
+		{
+			if (m_InternalFormat == GL_RGB8 || m_InternalFormat == GL_RGBA8)
+			{
+				glGenTextures(1, &m_SRGBView);
+				const GLenum format = m_InternalFormat == GL_RGB8 ? GL_SRGB8 : GL_SRGB8_ALPHA8;
+				glTextureView(m_SRGBView, GL_TEXTURE_2D, m_RendererID, format, 0, 1, 0, 1);
+			}
+			else
+			{
+				// OpenGL 的标准 sRGB 格式至少需要三个通道。灰度文件只在首次当颜色使用时展开。
+				std::vector<glm::u8vec4> pixels(size_t(m_Width) * m_Height);
+				glGetTextureImage(m_RendererID, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+					GLsizei(pixels.size() * sizeof(pixels[0])), pixels.data());
+				for (auto& p : pixels)
+				{
+					p.a = m_InternalFormat == GL_RG8 ? p.g : 255;
+					p.g = p.b = p.r;
+				}
+				glCreateTextures(GL_TEXTURE_2D, 1, &m_SRGBView);
+				glTextureStorage2D(m_SRGBView, 1, GL_SRGB8_ALPHA8, m_Width, m_Height);
+				UploadPixels(m_SRGBView, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+			}
+			for (GLenum filter : {GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER})
+			{
+				GLint value;
+				glGetTextureParameteriv(m_RendererID, filter, &value);
+				glTextureParameteri(m_SRGBView, filter, value);
+			}
+		}
+		glBindTextureUnit(slot, m_SRGBView);
 	}
 }

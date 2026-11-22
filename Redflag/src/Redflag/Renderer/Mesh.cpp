@@ -1,5 +1,7 @@
 #include "rfpch.h"
 #include "Mesh.h"
+#include "Platform/OpenGL/OpenGLMeshGeometry.h"
+#include "Redflag/Renderer/RHI/RenderDevice.h"
 
 namespace Redflag
 {
@@ -20,36 +22,22 @@ namespace Redflag
 			}
 		}
 
-		m_VertexArray = VertexArray::Create();
+		m_Geometry = RenderDevice::Get().CreateMesh(vertices, indices);
+	}
 
-		// 顶点缓冲
-		Ref<VertexBuffer> vbo = VertexBuffer::Create((uint32_t)(vertices.size() * sizeof(MeshVertex)));
-		vbo->SetData((void*)vertices.data(), (uint32_t)(vertices.size() * sizeof(MeshVertex)));
-
-		vbo->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float3, "a_Normal"   },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float3, "a_Tangent"  }
-		});
-		m_VertexArray->AddVertexBuffer(vbo);
-
-		// 索引缓冲
-		Ref<IndexBuffer> ibo = IndexBuffer::Create(
-			(uint32_t*)indices.data(),
-			(uint32_t)indices.size()
-		);
-		m_VertexArray->SetIndexBuffer(ibo);
+	const Ref<VertexArray>& Mesh::GetVertexArray() const
+	{
+		return dynamic_cast<const OpenGLMeshGeometry&>(*m_Geometry).Array;
 	}
 
 	void Mesh::Bind() const
 	{
-		m_VertexArray->Bind();
+		GetVertexArray()->Bind();
 	}
 
 	void Mesh::Unbind() const
 	{
-		m_VertexArray->Unbind();
+		GetVertexArray()->Unbind();
 	}
 
 	Ref<Mesh> Mesh::Create(const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices)

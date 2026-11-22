@@ -1,0 +1,279 @@
+{
+  "capture": "output/validation/gi-mask/Mask_capture.rdc",
+  "sha256": "2d5be6511f81910e01d2ac5b0ef6e172e6e855e7953bca708602683366167456",
+  "renderdoc": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "draws": 3,
+  "dispatches": 4,
+  "messages": [],
+  "events": [
+    {
+      "id": 9,
+      "pass_name": "nearest_surface",
+      "groups": [
+        64,
+        1,
+        1
+      ],
+      "shader": "ResourceId::440",
+      "bindings": {
+        "0": "ResourceId::411",
+        "1": "ResourceId::414",
+        "2": "ResourceId::447",
+        "3": "ResourceId::454",
+        "4": "ResourceId::420",
+        "5": "ResourceId::444",
+        "6": "ResourceId::444",
+        "7": "ResourceId::444",
+        "8": "ResourceId::450",
+        "9": "ResourceId::426",
+        "10": "ResourceId::444",
+        "11": "ResourceId::429",
+        "12": "ResourceId::432",
+        "13": "ResourceId::423",
+        "14": "ResourceId::435"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "efd54421e1eee4e5d1329fdbddbdc1dc3f214fe40374934435719c3c9f7c8e39",
+        "sample_xyzw": {
+          "33,29": [
+            0.058248668909072876,
+            0.09708111733198166,
+            2.0756681351485895e-07,
+            1.0
+          ],
+          "18,29": [
+            -0.34949204325675964,
+            0.0647207498550415,
+            0.9999999403953552,
+            1.0
+          ],
+          "6,29": [
+            -0.9902274012565613,
+            0.09708111733198166,
+            7.851213013054803e-08,
+            1.0
+          ]
+        },
+        "equal_to_live_readback": true
+      },
+      "cutout_inputs": {
+        "triangles": 4,
+        "masked_triangles": 2,
+        "mask_face_indices": [
+          0,
+          1
+        ],
+        "alpha_factor": 1.0,
+        "cutoff": 0.5,
+        "texture_dimensions": [
+          16,
+          16
+        ],
+        "transparent_texels": 36,
+        "corner_texel_rgba8": [
+          42,
+          180,
+          68,
+          255
+        ],
+        "center_texel_rgba8": [
+          42,
+          180,
+          68,
+          0
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::458",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ]
+    },
+    {
+      "id": 30,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::270",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ]
+    },
+    {
+      "id": 42,
+      "pass_name": "pack_visible_surfaces",
+      "groups": [
+        8,
+        8,
+        1
+      ],
+      "shader": "ResourceId::181",
+      "bindings": {
+        "0": "ResourceId::166",
+        "1": "ResourceId::170",
+        "2": "ResourceId::447"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "ff59ff73be8d35c39cf5f7158b9ff3cc89a1dc1d7e3b7536c2fa306c02c26f11",
+        "sample_xyzw": {
+          "33,29": [
+            0.05824875831604004,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "18,29": [
+            -0.34949204325675964,
+            0.06472074240446091,
+            1.0,
+            1.0
+          ],
+          "6,29": [
+            -0.9902288317680359,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ]
+        },
+        "equal_to_live_readback": true
+      }
+    },
+    {
+      "id": 58,
+      "pass_name": "rasterize",
+      "index_count": 6,
+      "color_targets": [
+        "ResourceId::166",
+        "ResourceId::170",
+        "ResourceId::0",
+        "ResourceId::0"
+      ],
+      "fragment_shader": "ResourceId::160",
+      "sampled_textures": [
+        "ResourceId::270",
+        "ResourceId::277",
+        "ResourceId::277",
+        "ResourceId::277"
+      ]
+    },
+    {
+      "id": 70,
+      "pass_name": "pack_receiver_alone",
+      "groups": [
+        8,
+        8,
+        1
+      ],
+      "shader": "ResourceId::181",
+      "bindings": {
+        "0": "ResourceId::166",
+        "1": "ResourceId::170",
+        "2": "ResourceId::447"
+      },
+      "output": {
+        "id": "ResourceId::447",
+        "bytes": 196608,
+        "sha256": "9c05d0aba517d510d51070570eac1efb8bd8dbac290e275dce28f6b180d9561b",
+        "sample_xyzw": {
+          "33,29": [
+            0.05824875831604004,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "18,29": [
+            -0.5242388248443604,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ],
+          "6,29": [
+            -0.9902288317680359,
+            0.097081258893013,
+            -5.722043169953395e-06,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "id": 82,
+      "pass_name": "all_point_shadows",
+      "groups": [
+        64,
+        1,
+        1
+      ],
+      "shader": "ResourceId::440",
+      "bindings": {
+        "0": "ResourceId::411",
+        "1": "ResourceId::414",
+        "2": "ResourceId::447",
+        "3": "ResourceId::454",
+        "4": "ResourceId::420",
+        "5": "ResourceId::444",
+        "6": "ResourceId::444",
+        "7": "ResourceId::444",
+        "8": "ResourceId::1272",
+        "9": "ResourceId::426",
+        "10": "ResourceId::444",
+        "11": "ResourceId::429",
+        "12": "ResourceId::432",
+        "13": "ResourceId::423",
+        "14": "ResourceId::435"
+      },
+      "output": {
+        "id": "ResourceId::1272",
+        "bytes": 65536,
+        "sha256": "adcffba8a149527fc3957f7e9a8befe00428ac51f803dd98339f053a0b5d84d0",
+        "sample_xyzw": {
+          "33,29": [
+            0.2564408779144287,
+            0.2564408779144287,
+            0.2564408779144287,
+            0.0
+          ],
+          "18,29": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "6,29": [
+            0.21113920211791992,
+            0.21113920211791992,
+            0.21113920211791992,
+            0.0
+          ]
+        },
+        "equal_to_live_readback": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "scene": "Sponza-Atrium.redflag",
+  "preview_width": 160,
+  "application_frames": 48,
+  "exe_sha256": "04a5688842b3efe680b31527e438d09fffd5a66fd695dc957d44a2e4a0285d1f",
+  "cases": {
+    "direct": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    },
+    "clustered": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    },
+    "restir-di": {
+      "startup_before_last_resize": 1,
+      "drawn": 32,
+      "cached": 15,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting accumulation": 31,
+        "Lighting cached": 15
+      }
+    },
+    "taa": {
+      "startup_before_last_resize": 1,
+      "drawn": 32,
+      "cached": 15,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting accumulation": 31,
+        "Lighting cached": 15
+      }
+    },
+    "ddgi": {
+      "startup_before_last_resize": 1,
+      "drawn": 32,
+      "cached": 15,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting accumulation": 31,
+        "Lighting cached": 15
+      }
+    }
+  }
+}

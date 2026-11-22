@@ -1,0 +1,23 @@
+\begin{tikzpicture}[x=1mm,y=1mm, font=\sffamily\small, >=Stealth,
+ box/.style={draw=Rule,fill=white,rounded corners=1mm,minimum height=10mm,align=center,inner sep=2pt},
+ arrow/.style={->,draw=Ink,line width=.65pt}, label/.style={anchor=west,font=\sffamily\bfseries\small}]
+ \draw[rounded corners=2mm,draw=Rule] (0,0) rectangle (158,91);
+ \foreach \y/\tone in {62/blue,33/Teal,4/Rust}{
+   \filldraw[fill=\tone!5,draw=\tone!48,rounded corners=1mm] (2,\y) rectangle ++(154,24);
+ }
+ \node[label,text=blue!68!black] at (5,82){OpenGL\quad 现有前向渲染};
+ \node[box,text width=35mm] (a) at (26,70){读取网格和材质};
+ \node[box,text width=49mm] (b) at (81,70){片元着色器遍历点光源};
+ \node[box,text width=29mm] (c) at (137,70){写场景颜色};
+ \draw[arrow] (a)--(b); \draw[arrow] (b)--(c);
+ \node[label,text=Teal] at (5,53){Vulkan Lit\quad 已接入分簇的延迟着色};
+ \node[box,text width=39mm] (d) at (26,41){网格画入底色、\,法线深度};
+ \node[box,text width=47mm] (e) at (81,41){计算着色器读表面与灯表};
+ \node[box,text width=29mm] (f) at (137,41){写直接光图};
+ \draw[arrow] (d)--(e); \draw[arrow] (e)--(f);
+ \node[label,text=Rust] at (5,24){分簇 Forward+\quad 设计方案};
+ \node[box,text width=35mm] (g) at (26,12){计算着色器建立灯表};
+ \node[box,text width=49mm] (h) at (81,12){画网格时，片元着色器查表};
+ \node[box,text width=29mm] (j) at (137,12){写场景颜色};
+ \draw[arrow] (g)--(h); \draw[arrow] (h)--(j);
+\end{tikzpicture}

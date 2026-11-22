@@ -1,0 +1,48 @@
+% 前置知识
+在抛光石地上能看到立柱的倒影。粗糙表面可以想象成许多朝向略有不同的小镜子，PBRT 和 LearnOpenGL 的微表面模型都从这个想法出发。理想镜面只有一条反射方向；粗糙材质则可以从一个分布里抽出一面小镜子的法线，再按镜面反射定律追踪它。当前帧的深度和颜色已提供一张可查询的表，便可沿反射线寻找屏幕上先被它遇到的表面。
+
+% 公式推导
+令 $v$ 为表面指向眼睛的方向，$h$ 为 GGX 分布抽到的微表面法线，$l$ 为反射方向。微表面越粗糙，$h$ 离几何法线 $n$ 越远的机会越大。方向采样的概率必须一起带进估计量。取半程向量的密度 $p_h=D(h)(n\cdot h)$，对于镜面反射换成出射方向后，$p_l=p_h/(4|v\cdot h|)$。这里的概率原本描述小镜子的朝向，实际追踪的却是反射光线，所以算权重前需要换元。
+
+% 公式
+若屏幕交点有入射光 $L_i$，反射贡献估计为 $L_i f_s(n\cdot l)/p_l$。代入微表面反射函数 $f_s=DFG/[4(n\cdot v)(n\cdot l)]$，消掉相同因子后得到
+\[
+ l=2(v\cdot h)h-v,\qquad
+ L_{\rm refl}= L_i F\,G\,\frac{v\cdot h}{(n\cdot v)(n\cdot h)}.
+\]
+$F$ 是掠射角下更强的菲涅耳反射，$G$ 则考虑小镜面之间的相互遮挡。图中的早期实验令整块地面使用同一粗糙度，非金属取 $F_0=0.04$。编辑器的组合光照按像素读取粗糙度和金属度；SSR 找到画面里的物体时，倒影取该处像素的颜色。下一节会把灯牌放在相机身后，看看怎样把它也画进镜子。
+\pair{screen-effects/ssr.png}{直接颜色加随机反射}{screen-effects/ssr-hits.png}{白点表示反射线找到了可见表面}
+\clearpage
+% 逐行伪代码
+\subsection{沿反射线寻找屏幕交点}
+\noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/StochasticSSR.comp}{\texttt{StochasticSSR.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+u, phi = random2(pixelIndex, frame)
+h = sampleGGXHalfVector(roughness, u, phi)
+ray = reflect(-view, h)
+for distance in increasingSteps(maxDistance, count=64):
+    p = worldOrigin + ray * distance
+    q = projectToScreen(p)
+    if outside(q): break
+    if behindVisibleSurface(p, q):
+        (*@{\footnotesize\color{quiet}在刚刚穿过深度表面的这段路上折半，收紧交点位置。}@*)
+        narrowIntervalFiveTimes()
+        if closeInDepth and frontFacing and notSelfHit:
+            output += sceneColor[hitPixel] * brdfWeight
+        break
+\end{lstlisting}
+步数固定时，近处先用更密的步长。比较时双方都转换为相机前方的线性距离，不能直接拿一方的投影深度去减另一方的米数。五次二分查找收窄穿过深度的区间；命中厚度过宽会把无关的柱子当作反射源。
+
+默认最远距离 12 使用场景世界单位，64 是每条射线的最大步数。局部找到相交区间后再折半五次，最终区间宽度是原来的 $1/32$。材质检查选 0.08 和 0.65 两档粗糙度，用意是让窄反射和散开的反射容易区别。它们是对照材质的输入，不是根据命中率倒算出来的参数。
+
+% 接口与数据结构
+\begin{fields}
+\texttt{Roughness} & 粗糙度经平方得到 GGX 粗糙参数。它改变采样方向分布，粗糙度较大时单样本噪声也更明显。\\
+\texttt{ReflectionDistance} & 光线最多走多远，使用场景世界单位。单独测试 SSR 时，找不到可见表面就保留输入颜色。\\
+\texttt{Render(..., inputColor)} & 接收当前线性颜色和表面数据，返回含反射的独立缓冲。第四通道记录是否命中。\\
+\end{fields}
+
+% 验证标准
+固定帧编号与输入，两次 GPU 运行需逐值相等。改变粗糙度应同时改变命中图或颜色。这组测试只使用屏幕上的数据。把被反射的物体转出画面后，就查不到它的颜色。AMD 的完整 SSSR 还使用分层深度、光线分类与降噪；本章的均匀预算和命中图让这些扩展可以单独验证。原始 SIGGRAPH 课程和配套 JCGT 射线遍历论文均未列 DOI。
+
+这次固定粗糙度 0.08，命中比例为 \measured{ssr_hit_fraction}（1 代表全部命中）。两次同帧产生的最大逐值差为 \measured{ssr_repeat_max_difference}。

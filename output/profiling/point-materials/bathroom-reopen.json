@@ -1,0 +1,104 @@
+{
+  "scene": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag",
+  "settings": "Lit; all three point lights, DDGI four-round bake, GTAO and TAA on, SSR off; see scene sidecar",
+  "creation": "Ctrl+Shift+B and Ctrl+S in Debug Vulkan editor, exit, then reopen with RenderDoc",
+  "renderer_exe_sha256": "c37dd65c4491afcb8678b8b04af0b716fedae9ec36881f0ac337cba9253db9db",
+  "probe_asset": "RedflagForge/assets/scenes/RTXGI-Bathroom.redflag.rfprobes",
+  "probe_sha256": "8851a986c0b5b9b0f994cc20849f3989f3d319fd1f5893766c7bf9c0273a85ac",
+  "bytes": 96792,
+  "frame": 12,
+  "renderdoc": "1.47",
+  "capture": "output/captures/local/RTXGI-Bathroom-PBR-Baked-12.rdc",
+  "capture_sha256": "b6b38df3c379e95b8ac801d3c7808aacb828e3643ae6c09faa9b74514d795c00",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "panel": [
+    1391,
+    892
+  ],
+  "draws": 186,
+  "dispatches": [
+    {
+      "event": 11,
+      "groups": [
+        19388,
+        1,
+        1
+      ],
+      "shader": "ResourceId::1152",
+      "entry": "main"
+    },
+    {
+      "event": 459,
+      "groups": [
+        174,
+        112,
+        1
+      ],
+      "shader": "ResourceId::185",
+      "entry": "main"
+    },
+    {
+      "event": 471,
+      "groups": [
+        19388,
+        1,
+        1
+      ],
+      "shader": "ResourceId::1152",
+      "entry": "main"
+    },
+    {
+      "event": 483,
+      "groups": [
+        19388,
+        1,
+        1
+      ],
+      "shader": "ResourceId::1152",
+      "entry": "main"
+    },
+    {
+      "event": 495,
+      "groups": [
+        174,
+        112,
+        1
+      ],
+      "shader": "ResourceId::1311",
+      "entry": "main"
+    },
+    {
+      "event": 507,
+      "groups": [
+        19388,
+        1,
+        1
+      ],
+      "shader": "ResourceId::1250",
+      "entry": "main"
+    },
+    {
+      "event": 519,
+      "groups": [
+        174,
+        112,
+        1
+      ],
+      "shader": "ResourceId::1335",
+      "entry": "main"
+    },
+    {
+      "event": 531,
+      "groups": [
+        174,
+        112,
+        1
+      ],
+      "shader": "ResourceId::1235",
+      "entry": "main"
+    }
+  ],
+  "validation_messages": [],
+  "color": "bathroom-pbr.png",
+  "color_sha256": "437bde2c904d864b67189ebfa5c55168eeb9f996fec76439c8399f039682c50c"
+}

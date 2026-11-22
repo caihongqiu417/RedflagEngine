@@ -1,0 +1,83 @@
+{
+  "backend": "OpenGL 4.6 core",
+  "configuration": "Debug x64",
+  "framebuffer": "64 x 16, RGBA16F, preceding tone mapping",
+  "linear_rgb_error_limit": 0.012,
+  "material_sample_srgb_rgba_bytes": [
+    128,
+    64,
+    255,
+    0
+  ],
+  "pixels": [
+    {
+      "x": 8,
+      "y": 8,
+      "material_factor": [
+        1,
+        2,
+        3
+      ],
+      "texture": "stripe",
+      "linear_rgb": [
+        0.216553,
+        0.103333,
+        3.0
+      ]
+    },
+    {
+      "x": 24,
+      "y": 8,
+      "material_factor": [
+        3,
+        1,
+        0.25
+      ],
+      "texture": "stripe",
+      "linear_rgb": [
+        0.648438,
+        0.0525818,
+        0.251221
+      ]
+    },
+    {
+      "x": 40,
+      "y": 8,
+      "material_factor": [
+        4,
+        0.5,
+        2
+      ],
+      "texture": null,
+      "linear_rgb": [
+        4.0,
+        0.500977,
+        2.0
+      ]
+    },
+    {
+      "x": 56,
+      "y": 8,
+      "material_factor": [
+        7,
+        2.5,
+        5
+      ],
+      "texture": "green",
+      "linear_rgb": [
+        0.00080061,
+        2.5,
+        0.00080061
+      ]
+    }
+  ],
+  "main_draws": 3,
+  "all_picking_ids_match": true,
+  "independent_texcoord": {
+    "model": "tests/fixtures/EmissivePanel.gltf",
+    "base_color_uv": 0,
+    "emissive_uv": 1,
+    "rgba16f_left_red": 4,
+    "rgba16f_right_green": 0.433594
+  }
+}

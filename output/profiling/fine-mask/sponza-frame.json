@@ -1,0 +1,17 @@
+{
+  "size": [
+    384,
+    246
+  ],
+  "frame": 24,
+  "measure": "Round each clamped display RGB channel to 8 bits. For each pixel take largest absolute old/new channel difference before forming counts.",
+  "max_change": 11,
+  "total_pixels": 94464,
+  "pixels_changed": {
+    "1": 616,
+    "2": 125,
+    "8": 5
+  },
+  "old_display_sha256": "eb45e81661eb2906e9df9e42aa9eda7fdbb40f7116b38c7e84e754873e0833d7",
+  "new_display_sha256": "5b3e30c5b705815e82aeae1350ed1d96eb88cad75f698ad35a354e5c4799b95a"
+}

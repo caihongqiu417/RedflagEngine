@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
+#include <filesystem>
 #include"Redflag/Core/UUID.h"
 #include"Components.h"
 #include"Redflag/Core/Timestep.h"
@@ -47,6 +48,9 @@ namespace Redflag {
 		entt::registry& GetRegistry() { return m_Registry; }
 
 		Entity GetPrimaryCameraEntity();
+
+		const std::filesystem::path& GetEnvironment() const { return m_Environment; }
+		void SetEnvironment(const std::filesystem::path& path) { m_Environment = path; }
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -55,6 +59,7 @@ namespace Redflag {
 		void OnPhysics2DStop();
 	private:
 		entt::registry m_Registry;
+		std::filesystem::path m_Environment;
 
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

@@ -1,0 +1,68 @@
+#version 450
+#include "Screen.glsl"
+#include "Cluster.glsl"
+#include "../../GI/Shaders/PointLighting.glsl"
+#include "../../GI/Shaders/TraceTypes.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 2) readonly buffer Lamps
+{
+    ScreenLight lights[];
+};
+layout(std430, binding = 3) readonly buffer Lists
+{
+    uint masks[];
+};
+layout(std430, binding = 4) writeonly buffer Result
+{
+    vec4 result[];
+};
+layout(std430, binding = 5) readonly buffer Nodes { Node node[]; };
+layout(std430, binding = 6) readonly buffer Triangles { Triangle tri[]; };
+#ifdef RF_ALPHA_MASK
+#include "../../GI/Shaders/ShadowMaskBindings.glsl"
+#endif
+const float EPS = .001;
+#include "../../GI/Shaders/Trace.glsl"
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (!onScreen(p))
+        return;
+    uint i = indexOf(p);
+    ScreenSurface s = surfaces[i];
+    if (s.position.w == 0.)
+    {
+        result[i] = vec4(0);
+        return;
+    }
+    uint start = clusterAt(uvec2(p) / tile, depthSlice(depthOf(s.position.xyz))) * words();
+    vec3 sum = vec3(0);
+    int candidates = 0;
+    vec3 V = projection[3].w == 1. ? transpose(mat3(view))[2] : normalize(eye.xyz - s.position.xyz);
+    for (uint j = 0; j < words(); ++j)
+    {
+        uint bits = masks[start + j];
+        candidates += bitCount(bits);
+        while (bits != 0u)
+        {
+            uint lamp = j * 32u + uint(findLSB(bits));
+            bits &= bits - 1u;
+            vec3 delta = lights[lamp].position.xyz - s.position.xyz;
+            float r = length(delta);
+            if (r < EPS) continue;
+            vec3 L = delta / r;
+            bool diffuseReference = depthRange.z > 0.;
+            float attenuation = pointAttenuation(r, diffuseReference ? temporal.z : lights[lamp].intensity.w);
+            if (dot(s.normal.xyz, L) <= 0. || attenuation == 0.) continue;
+            vec3 response;
+            if (diffuseReference)
+                response = s.albedo.rgb * max(dot(s.normal.xyz, L), 0.) / PI;
+            else {
+                if (pointInShadow(s.position.xyz, s.normal.xyz, L, r)) continue;
+                response = reflectedPointLight(s.albedo.rgb, s.normal.w, s.albedo.w, s.normal.xyz, V, L);
+            }
+            sum += response * lights[lamp].intensity.rgb * attenuation;
+        }
+    }
+    result[i] = vec4(sum, float(candidates));
+}

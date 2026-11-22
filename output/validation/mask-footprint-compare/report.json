@@ -1,0 +1,373 @@
+{
+  "executable_sha256": {
+    "first": "dbd4381c2f596ec1b24de31dcd7aec3d5c2810f60ae117a415f240d364d3aa3c",
+    "candidate": "ce6734b540fcb558f40e4fc32b6b144f16f0047349ba4974a04827795701f026"
+  },
+  "geometry": {
+    "vertical": {
+      "first": {
+        "mesh_sha256": "042c1f29e7920cd245aeb835f72866eb877dac01ea04d9e41a0821a9749c8792",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.10416663882230931,
+            "temporal_mae": 0.0,
+            "full_area": 0.3125,
+            "expected_area": 0.25000002278174704,
+            "worst_pixel_error": 0.3333333535838121,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.08557998093590329,
+            "temporal_mae": 0.10590054452942403,
+            "full_area": 0.2232625661802686,
+            "expected_area": 0.25003869556315067,
+            "worst_pixel_error": 0.4878049071250664,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.09134616979927844,
+            "temporal_mae": 0.04947916596627699,
+            "full_area": 0.26634615384615384,
+            "expected_area": 0.2500000003504885,
+            "worst_pixel_error": 0.3333333535838121,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 1.6393843206029803e-10,
+            "temporal_mae": 1.3454543035251731e-11,
+            "full_area": 0.25,
+            "expected_area": 0.24999999999503222,
+            "worst_pixel_error": 3.229279066374602e-10,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.009015591670573269,
+            "temporal_mae": 0.0004710665842400084,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113563995113194,
+            "worst_pixel_error": 0.23789603014270297,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      },
+      "candidate": {
+        "mesh_sha256": "042c1f29e7920cd245aeb835f72866eb877dac01ea04d9e41a0821a9749c8792",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.0937500398680572,
+            "temporal_mae": 0.0,
+            "full_area": 0.21875,
+            "expected_area": 0.25000002278174704,
+            "worst_pixel_error": 0.25000096442730974,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.058368818451816795,
+            "temporal_mae": 0.06000663831818949,
+            "full_area": 0.23977282815728307,
+            "expected_area": 0.25003869556315067,
+            "worst_pixel_error": 0.3181822818614416,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.08297059281175376,
+            "temporal_mae": 0.046697933906972355,
+            "full_area": 0.22992506760817308,
+            "expected_area": 0.2500000003504885,
+            "worst_pixel_error": 0.2916676299990065,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 1.6393843206029803e-10,
+            "temporal_mae": 1.3454543035251731e-11,
+            "full_area": 0.25,
+            "expected_area": 0.24999999999503222,
+            "worst_pixel_error": 3.229279066374602e-10,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.009015591670573269,
+            "temporal_mae": 0.0004710665842400084,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113563995113194,
+            "worst_pixel_error": 0.23789603014270297,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      }
+    },
+    "horizontal": {
+      "first": {
+        "mesh_sha256": "e1f530c23d40d90787eb6d6a991ce42a5c852d346dcf093ad0f7988d234b9308",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.08333334598985973,
+            "temporal_mae": 0.0,
+            "full_area": 0.25,
+            "expected_area": 0.25000000759391605,
+            "worst_pixel_error": 0.16666755768611807,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.08184619402586811,
+            "temporal_mae": 0.10103146531189726,
+            "full_area": 0.22472236570247933,
+            "expected_area": 0.25002708642887234,
+            "worst_pixel_error": 0.48051947677487505,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.08333334598985974,
+            "temporal_mae": 5.828517799024054e-16,
+            "full_area": 0.25,
+            "expected_area": 0.25000000759391605,
+            "worst_pixel_error": 0.16666755768611807,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 2.152726885640277e-10,
+            "temporal_mae": 0.0,
+            "full_area": 0.25,
+            "expected_area": 0.2499999998923637,
+            "worst_pixel_error": 3.22913695782745e-10,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.009480542301752751,
+            "temporal_mae": 4.81461244923101e-05,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113563995113197,
+            "worst_pixel_error": 0.23095403989201302,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      },
+      "candidate": {
+        "mesh_sha256": "e1f530c23d40d90787eb6d6a991ce42a5c852d346dcf093ad0f7988d234b9308",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.050781310751326345,
+            "temporal_mae": 0.0,
+            "full_area": 0.22265625,
+            "expected_area": 0.25000000759391605,
+            "worst_pixel_error": 0.1666666464162383,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.055838883205810146,
+            "temporal_mae": 0.05897665512688373,
+            "full_area": 0.23957257231404958,
+            "expected_area": 0.25002708642887234,
+            "worst_pixel_error": 0.32258113342475137,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.051642687281898775,
+            "temporal_mae": 0.002624511718750566,
+            "full_area": 0.22007211538461538,
+            "expected_area": 0.25000000759391605,
+            "worst_pixel_error": 0.1666666464162383,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 2.152726885640277e-10,
+            "temporal_mae": 0.0,
+            "full_area": 0.25,
+            "expected_area": 0.2499999998923637,
+            "worst_pixel_error": 3.22913695782745e-10,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.009480542301752751,
+            "temporal_mae": 4.81461244923101e-05,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113563995113197,
+            "worst_pixel_error": 0.23095403989201302,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      }
+    },
+    "diagonal": {
+      "first": {
+        "mesh_sha256": "39d09b63b6c3f151f84f46629c6c34abd59cc5f947bbb18c47076bdef7e04cda",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.04625786853440088,
+            "temporal_mae": 0.0,
+            "full_area": 0.25,
+            "expected_area": 0.2499276617518164,
+            "worst_pixel_error": 0.14351971132510777,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.09052549025847127,
+            "temporal_mae": 0.09244158547646443,
+            "full_area": 0.22374378551136365,
+            "expected_area": 0.2500021131083096,
+            "worst_pixel_error": 0.4139346350671588,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.051198618100963475,
+            "temporal_mae": 0.037907299978752626,
+            "full_area": 0.2500169020432692,
+            "expected_area": 0.25001313302616107,
+            "worst_pixel_error": 0.21990739197097198,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 0.008675908305817917,
+            "temporal_mae": 0.0006429124616444736,
+            "full_area": 0.25,
+            "expected_area": 0.2499995382932067,
+            "worst_pixel_error": 0.015299479138679573,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.004261543912200701,
+            "temporal_mae": 5.1990657723260115e-05,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113542266683411,
+            "worst_pixel_error": 0.22991569445779864,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      },
+      "candidate": {
+        "mesh_sha256": "39d09b63b6c3f151f84f46629c6c34abd59cc5f947bbb18c47076bdef7e04cda",
+        "shader_sha256": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
+        "device": [
+          "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "2584608768"
+        ],
+        "tracks": {
+          "fixed": {
+            "frames": 8,
+            "spatial_mae": 0.09953477784260469,
+            "temporal_mae": 0.0,
+            "full_area": 0.24371337890625,
+            "expected_area": 0.2499276617518164,
+            "worst_pixel_error": 0.3379638250186594,
+            "missing_frames": 0
+          },
+          "zoom": {
+            "frames": 121,
+            "spatial_mae": 0.06743975920651231,
+            "temporal_mae": 0.07114023228528854,
+            "full_area": 0.2460897146177686,
+            "expected_area": 0.2500021131083096,
+            "worst_pixel_error": 0.35592180010499963,
+            "missing_frames": 0
+          },
+          "pan": {
+            "frames": 65,
+            "spatial_mae": 0.09739861481583124,
+            "temporal_mae": 0.038696032778982724,
+            "full_area": 0.23960806039663463,
+            "expected_area": 0.25001313302616107,
+            "worst_pixel_error": 0.3379638934598158,
+            "missing_frames": 0
+          },
+          "far8": {
+            "frames": 65,
+            "spatial_mae": 0.008675908305817917,
+            "temporal_mae": 0.0006429124616444736,
+            "full_area": 0.25,
+            "expected_area": 0.2499995382932067,
+            "worst_pixel_error": 0.015299479138679573,
+            "missing_frames": 0
+          },
+          "far26.5": {
+            "frames": 65,
+            "spatial_mae": 0.004261543912200701,
+            "temporal_mae": 5.1990657723260115e-05,
+            "full_area": 0.0913330078125,
+            "expected_area": 0.09113542266683411,
+            "worst_pixel_error": 0.22991569445779864,
+            "missing_frames": 0
+          }
+        },
+        "tone_order_error": [
+          5.960464477539063e-08,
+          5.960464477539063e-08
+        ]
+      }
+    }
+  },
+  "diagonal_quadrature_errors": [
+    0.0,
+    9.778450132168215e-05,
+    5.880942602226602e-05
+  ]
+}

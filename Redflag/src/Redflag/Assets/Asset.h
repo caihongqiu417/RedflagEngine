@@ -9,7 +9,7 @@ namespace Redflag
 
 	enum class AssetType { None, Model, Texture };
 
-	/* 资源身份和源文件位置。Path 在登记时转为规范绝对路径，ID 写入旁置 .rfmeta。 */
+	/* Path 是源文件的完整路径。模型的编号和类型保存在它旁边的 .rfmeta 文件里。 */
 	struct AssetInfo
 	{
 		AssetID ID = 0;
@@ -18,7 +18,7 @@ namespace Redflag
 	};
 
 	class Model;
-	// 支持进入 AssetManager 的类型在这里声明对应的元数据类型。
+	// 调用 Load<Model> 时，用 AssetType::Model 检查这个文件是否登记为模型。
 	template<typename T> struct AssetTraits;
 	template<> struct AssetTraits<Model>
 	{

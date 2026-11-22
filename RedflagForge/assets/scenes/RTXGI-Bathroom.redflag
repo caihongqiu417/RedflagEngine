@@ -1,0 +1,67 @@
+Scene: 浴室
+Entities:
+- Entity: 4
+  TagComponent:
+    Tag: 主相机
+  TransformComponent:
+    Translation: [-1.55, 1.32, 4.83]
+    Rotation: [-0.215, -0.81, 0]
+    Scale: [1, 1, 1]
+  CameraComponent:
+    Camera:
+      ProjectionType: 0
+      PerspectiveFov: 1.1
+      PerspectiveNear: 0.01
+      PerspectiveFar: 100
+      OrthographicSize: 10
+      OrthographicNear: -1
+      OrthographicFar: 100
+    Primary: true
+    FixedAspectRatio: false
+- Entity: 3
+  TagComponent:
+    Tag: 镜前灯
+  TransformComponent:
+    Translation: [-0.7, 1.55, 4.15]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.84, 0.68]
+    Intensity: 6.3
+    Radius: 12
+    CastShadow: false
+- Entity: 2
+  TagComponent:
+    Tag: 窗边灯
+  TransformComponent:
+    Translation: [0.95, 1.45, 3.0]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [0.84, 0.91, 1]
+    Intensity: 4.7
+    Radius: 12
+    CastShadow: false
+- Entity: 5
+  TagComponent:
+    Tag: 门边灯
+  TransformComponent:
+    Translation: [-1.45, 1.2, 4.7]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.91, 0.81]
+    Intensity: 2.8
+    Radius: 12
+    CastShadow: false
+- Entity: 1
+  TagComponent:
+    Tag: 浴室
+  TransformComponent:
+    Translation: [0, 0, 0]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  ModelRendererComponent:
+    ModelID: 8402268767080581991
+    FilePath: assets/models/reference/RTXGI-Bathroom/LAZIENKA.glb
+    Color: [1, 1, 1, 1]

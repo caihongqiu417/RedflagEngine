@@ -1,0 +1,34 @@
+{
+  "fixed_camera": [
+    0,
+    0,
+    3
+  ],
+  "image_size": [
+    1024,
+    32
+  ],
+  "viewport": [
+    64,
+    64
+  ],
+  "u_texels": [
+    0,
+    1024
+  ],
+  "projected_quad_width_px": 38.62741699796952,
+  "texels_horizontally_per_pixel": 26.509667991878086,
+  "area_pixels": 1444,
+  "original_opacity_coverage": 0.25,
+  "raster_covered_pixels": 0,
+  "raster_coverage": 0.0,
+  "primary_covered_pixels": 0,
+  "primary_coverage": 0.0,
+  "shadowed_pixels": 0,
+  "shadow_coverage": 0.0,
+  "pick_reads": 200,
+  "picks_on_wire": 0,
+  "exe_sha256": "50a224add0b4ff996ea68a1f954dcc484b4ed4a60250d960791fb2bc0895f2b2",
+  "library_sha256": "f5cc15ffa72ab5e92504f607bd9e84d9c327591885e007ef9762cfa7c96fa108",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+}

@@ -1,0 +1,22 @@
+#version 450
+layout(local_size_x=8, local_size_y=8) in;
+layout(rgba32f, binding=0) uniform readonly image2D rendered;
+layout(rgba32f, binding=1) uniform writeonly image2D outputColor;
+layout(std430, binding=2) writeonly buffer FullImage { vec4 samples[]; };
+layout(push_constant) uniform Settings { int scale; };
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    vec3 sum = vec3(0.);
+    // 这里读的是每个子像素画完的线性 RGB。一个孔可能已经露出了另一种颜色的背景。
+    for (int y = 0; y < scale; ++y)
+        for (int x = 0; x < scale; ++x)
+        {
+            ivec2 coord = pixel * scale + ivec2(x, y);
+            vec4 color = imageLoad(rendered, coord);
+            samples[coord.y * imageSize(rendered).x + coord.x] = color;
+            sum += color.rgb;
+        }
+    imageStore(outputColor, pixel, vec4(sum / float(scale * scale), 1.));
+}

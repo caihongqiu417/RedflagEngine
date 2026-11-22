@@ -1,11 +1,12 @@
 \section{透明裁剪和镜头外模型的阴影}
 条纹、灯下的四边形和空的精灵批次，分别对应三处可以直接对照的代码。摘录保留了影响这三种画面的分支，旧版本用提交链接定位。
 
-\subsection{深度绘制在哪里漏读了透明度}
+\subsection{深度绘制中的透明裁剪}
 先看 \path{RedflagForge/assets/shaders/Depth_Prepass.glsl} 的片元 main。在 \rev{1a168c3}，有独立透明度图就只取它的红通道，否则才取材质底色的透明度。无论走哪一边，底色贴图上的孔洞都没参与。
 
 旧判断只取一项：
 \begin{Code}
+// 旧版只在颜色因子和独立透明图中二选一，会漏掉底色贴图上的叶片轮廓。
 float alpha = u_UseAlphaMap == 1
     ? texture(u_AlphaMap, v_TexCoord).r
     : u_BaseColor.a;
@@ -15,6 +16,7 @@ if (alpha < u_AlphaCutoff)
 
 修复后的深度绘制逐项相乘：
 \begin{Code}
+// 从材质透明度起算，把实际使用的两张贴图都计入裁剪。
 float alpha = u_BaseColor.a;
 if (u_UseBaseColorMap == 1)
     alpha *= texture(u_BaseColorMap, v_TexCoord).a;
@@ -25,16 +27,20 @@ if (alpha < u_AlphaCutoff)
 \end{Code}
 
 C++ 也要把底色图和是否使用它的开关交给着色器。改完后，DepthPrepassTests 独立清屏和绘制，RenderDoc 的 EID 28、52 对应 1024 个像素，深度逐字节相同。从灯的位置绘制阴影与 RSM 的结果另由 Renderer3DTests 核对。
+\loc{RedflagForge/assets/shaders/Depth_Prepass.glsl}
 
-\subsection{在相机外提早返回会丢掉阴影}
+\newpage
+\subsection{镜头外物体的阴影}
 同一提交里的 Renderer3D::DrawMesh 按相机视野检查网格，一旦发现它在镜头外就直接返回，后面连画阴影时也找不到它。
 \begin{Code}
+// 提前返回后，连光源绘制要用的网格记录也丢失了。
 if (CullMesh(*mesh, transform)) { s_Data.Stats.CulledCount++; return; }
 s_Data.DrawCommands.push_back({ mesh, transform, material, entityID });
 \end{Code}
 
 修复把这一步移到 SubmitMesh，只记录相机能否看见，并保留命令：
 \begin{Code}
+// 保留原记录，主相机和灯在各自的绘制阶段选择网格。
 bool culled = CullMesh(*mesh, transform);
 if (culled)
     s_Data.Stats.CulledCount++;
@@ -45,11 +51,12 @@ s_Data.DrawCommands.push_back({ mesh, transform, material, entityID, culled });
 \loc{Redflag/src/Redflag/Renderer/Renderer3D.cpp}
 
 \newpage
-\section{这一帧没有精灵，为什么还会画出上一帧}
+\section{空帧中残留的精灵}
 提交 \rev{e80839c} 前，Renderer2D::EndScene 即使索引数量为零，也计算上传大小后调用 Flush。下段取自该提交的父版本，保留实际调用。
 
 旧版在场景结束时总会执行这段上传：
 \begin{Code}
+// 本帧没有追加顶点时，这两个指针相同，算出的上传长度是零。
 uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -
     (uint8_t*)s_Data.QuadVertexBufferBase);
 s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
@@ -58,12 +65,14 @@ Flush();
 
 空批次为什么仍会画出内容，还要继续查到当时 OpenGLRendererAPI::DrawIndexed。这里零数量表示使用整个索引缓冲，并不表示零次绘制。
 \begin{Code}
+// 该接口把传入的零解释为使用网格的全部索引。
 uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 glDrawElements(GL_TRIANGLES, count,GL_UNSIGNED_INT,nullptr);
 \end{Code}
 
 修复后，先看本批次是否有索引：
 \begin{Code}
+// 只有本帧写入过四边形才会提交绘制。
 if (s_Data.QuadIndexCount > 0)
 {
     uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr -

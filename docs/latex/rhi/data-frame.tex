@@ -1,0 +1,61 @@
+\clearpage
+\section{一份工作帧保存什么}\label{sec:data-frame}
+CPU 可以先准备下一幅画面，显卡此时可能还在读上一幅画面的相机矩阵。首版 Vulkan 后端拟在设备里放两份 \code{FrameData}，轮流使用。每份都有自己的命令池、命令缓冲区和上传空间。帧数在这个方案里固定，两个元素的数组就能表示。贴图和网格随场景变化，工作帧另外保存数量可变的资源引用，直到这次提交执行完。
+
+\codewhere{设计伪代码 · 对照}{Redflag/src/Platform/Vulkan/VulkanContext.h}{VulkanContext::Frame}
+\begin{lstlisting}
+FrameData {
+(*@\rhicomment{// 该帧提交后，所有仍会被 GPU 读取的资源都随帧保留。}@*)
+    commandPool, commands
+    uploadBuffer, nextByte
+    imageAvailable, lastSubmit
+    usedResources[]
+}
+\end{lstlisting}
+
+开始录制前，设备先看 \code{lastSubmit}。例如这份工作帧上次提交的编号是 17，显卡只完成到 16，就要等它到 17。随后可以重置命令池，放下上一轮资源引用，并把 \code{nextByte} 归零。池负责保管录制命令所需的内存，整池重置便可把这份工作帧的命令一起重新使用。
+
+\code{frame.Write(camera)} 把相机数据写在满足设备对齐要求的空闲位置，推进 \code{nextByte}，返回缓冲区及所占的字节范围。下一次写物体矩阵从新的位置开始。命令列表需要砖墙贴图时，就为当前工作帧保留贴图引用。若录制时就放弃这批命令，可以在丢弃命令后放下这些引用；如果已经从窗口取图，该图和取图信号仍须按窗口流程处理。
+
+录制完成后，设备调用 \code{Submit(commands)}。提交成功才把本次编号记进工作帧；提交给同一图形队列的工作按约定发出递增的完成信号。CPU 下次只要比较两个数，就能知道这份空间还能不能写。两份工作帧轮用是首版在显存占用与 CPU 提前录制之间的选择。若以后增加并行队列，要另行追踪那些队列对同一资源的最后一次使用。
+
+\readings{\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkResetCommandPool.html}{Khronos · 何时可以重置命令池}\quad
+\refitem{https://docs.vulkan.org/samples/latest/samples/extensions/timeline_semaphore/README.html}{用完成编号追踪队列}\quad 旧图的时间轴见第~\pageref{sec:recycle}~页。}
+
+\clearpage
+\section{工作帧和窗口图像怎样配对}\label{sec:data-window}
+现有 \code{WindowProps} 提供创建窗口用的标题和宽高。\code{WindowsWindow} 保存原生窗口和上下文，用 \code{WindowData} 记住当前尺寸、垂直同步开关和事件回调。接入 Vulkan 后，窗口仍接收系统消息；后端另外持有交换链。它向 Vulkan 查询实际有几张窗口图，按返回的数目建立数组，每项对应一张图、它的视图和一只通知窗口可以显示的信号量。
+
+\figpanel{frame-images}{拟议 Vulkan 后端的一次成功取图。左边按 CPU 正在录哪份命令取数据，右边按窗口交回的图像编号取数据。示意值 0 和 2 可以同时出现在一次提交中。}
+
+例如 CPU 轮到工作帧 0，\code{vkAcquireNextImageKHR} 交回图像 2。后端用帧 0 的命令缓冲区录下界面，目标设为图像 2，提交时等待帧 0 的取图信号，再发出图像 2 自己的完成信号。\code{vkQueuePresentKHR} 随后等待这只信号，把图像 2 交给窗口。下次取图可能拿到另一张，不能用 CPU 的轮换下标猜测结果。
+
+显卡画完帧 0，CPU 就能复用这份工作帧里的命令。窗口可能还在使用图像 2 的显示信号。等同一张图再次被取到，且取图的等待已经满足，才能确认窗口用完了上一次的信号。重建交换链时，后端为新的一组图重新建立数组；旧图像本身归交换链所有，应用负责回收自己创建的视图和信号。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Platform/Windows/WindowsWindow.h}{Redflag · 窗口数据}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkGetSwapchainImagesKHR.html}{Khronos · 取得窗口图像}\quad
+\refitem{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{呈现信号的复用}}
+
+\clearpage
+\section{面板输出与拾取结果}\label{sec:data-pick}
+把鼠标移到一扇门上，屏幕显示经过曝光调整的颜色，但编辑器还需要知道这扇门属于哪个实体。现有 \code{ForgeLayer} 留下场景面板的两个对角坐标，用它们把鼠标位置换成图内像素。场景绘制前，\code{ClearAttachment(1, -1)} 将编号图清成背景。画完后，\code{ReadPixel(1, x, y)} 读取该位置的有符号整数，再用当前场景的实体表确认这个编号仍然有效。
+
+\subsection{每个视口保管自己的图}
+拟议接口把尺寸、场景颜色、法线、实体编号、深度和最终输出放进同一份视口数据，用具名字段区分用途。\code{view.Output()} 交给 ImGui 显示，读取实体编号的操作则选择这个视口的编号图。两张图都可以随面板一起调整大小。新图建好时增加一个版本号，旧图由仍在使用它的工作帧继续持有。如果两次提交会读写同一张可复用的图，后端还要安排先读完再写；仅保留引用只能保证图还在。
+
+\codewhere{异步拾取伪代码 · 现有同步入口}{Redflag/src/Platform/Vulkan/VulkanDraw.cpp}{VulkanDraw::ReadPixel}
+\begin{lstlisting}
+pick = view.RequestPick(commands, x, y)
+
+(*@\rhicomment{// 读回结果要等复制完成，编辑器下一帧可以再来查。}@*)
+if result = view.TryReadPick(pick):
+    editor.SetHoveredEntity(result.entityID)
+\end{lstlisting}
+
+\code{RequestPick} 记下来源视口、场景与图像版本、像素坐标，以及结果在读回缓冲区的位置。后端等编号图写完，将该像素的四个字节复制到 GPU 能写、CPU 能读的空间，并安排复制写入对 CPU 可见。提交成功后，请求便可关联到完成编号。\code{TryReadPick} 在复制完成后取数；对需要显式更新 CPU 缓存的内存，先让映射区域反映显卡刚写入的内容。多个未完成的请求各占一段空间，结果取走或作废后才可复用它。
+
+如果结果是 $-1$，鼠标在背景上。若用户已切换场景、拖大面板或移到另一个像素，编辑器丢弃过期的悬停结果；仍有效的编号才交给当前场景查询实体。让读取可以稍后完成，CPU 就能在等待这四个字节期间继续录制下一帧。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/RedflagForge/src/ForgeLayer.cpp\#L375-L407}{现有鼠标坐标与实体查询}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdCopyImageToBuffer.html}{Khronos · 图像读回}\quad
+\refitem{https://docs.vulkan.org/refpages/latest/refpages/source/vkInvalidateMappedMemoryRanges.html}{CPU 读取映射内存}}

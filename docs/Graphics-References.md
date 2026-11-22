@@ -1,5 +1,11 @@
 # 图形学与引擎教材
 
+## 实时光照的交叉阅读
+
+同一根石柱可以连接几门课。FCG 的相机变换和 GAMES101 的投影解释石柱的边缘落在哪个像素；Karis 的课程接着说明怎样跨帧使用这些采样。项目的 TAA 笔记把两步放在一起，推导出“显示像素的运动 = 两次稳定投影的位置差”。PBRT 第四版 §2.1 的两灯估计解释选中一盏灯后为什么要除以概率；ReSTIR DI 把这项权重带进蓄水池，ReSTIR GI 再用 §2.4 的概率换元，把反射方向变成柱面上的二次交点。[每章的仓库、论文、课程和源码入口](latex/lighting/README.md) · [PBRT 的概率换元](https://pbr-book.org/4ed/Monte_Carlo_Integration/Transforming_between_Distributions) · [Karis 的 SIGGRAPH 课程](https://advances.realtimerendering.com/s2014/)
+
+比较相邻路线时，AMD GI-1.0 的辐亮度缓存和 Godot 的 SDFGI 提供了不同的场景表示，可以对照 DDGI 的探针范围和光线怎样寻找遮挡物。项目已实现的七项方法、采用的近似和各自的误差都写在分章笔记里。[AMD Capsaicin](https://github.com/GPUOpen-LibrariesAndSDKs/Capsaicin) · [Godot 关于有符号距离场全局光照的说明](https://docs.godotengine.org/en/stable/tutorials/3d/global_illumination/using_sdfgi.html)
+
 这份索引记录 Redflag 设计和验证渲染器时用到的资料。下面的阅读记录写到具体函数、章节或讲义页码。本次按问题选读了这些内容，尚未通读整套教材或逐文件审查两个引擎仓库。后面的书目也保留了供日后查阅的主题。
 
 ## RHI 方案的阅读记录（2026-11-21）
@@ -17,6 +23,12 @@
 交换链还有一项独立约定。CPU 等到一帧绘制完成时，窗口系统可能仍在等待呈现这张图。Khronos 的示例给每张交换链图像配一个供呈现等待的信号量，重新取到同一张图并等到取图完成后，才复用它。Redflag 的 Vulkan 后端据此分别管理每帧提交的状态和每张图呈现所需的信号。[Khronos：Swapchain Semaphore Reuse](https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html)
 
 ### 两种后端的画面验证
+
+**从图理解受光面积。** 虎书《Fundamentals of Computer Graphics》第五版第 5 章图 5.2 把受光面转过 60°，图 5.3 给出法线与来光方向。§14.6–14.7 再讨论辐射度量和表面散射。Marschner 的公开讲义第 6 页推导迎光面积和斜面面积之间的换算。《渲染公式与实现》用卡片和半球网格另画了两幅图。使用者可据章节核对原例与单位。[虎书作者配套页](https://www.cs.cornell.edu/~srm/fcg5/) · [Marschner《Radiometry》第 6 页](https://www.cs.cornell.edu/courses/cs6630/2022fa/notes/radiometry-notes.pdf#page=6)
+
+**从有限求和到积分。** OpenStax《Calculus》卷一 §5.1 讲把区间切成小段、用矩形面积近似曲线下的面积，§5.5 讲积分换元。卷三 §5.1 把求和扩展到二维小格。IBL 正文先量半球上一格的宽和高，再用常量环境图检查求和。向量投影、垂直关系和坐标变换可配 Strang 的线性代数课程；学习随机采样时，从一盏灯被抽中的概率算起，再读 PBRT 的期望与方差。[矩形求和](https://openstax.org/books/calculus-volume-1/pages/5-1-approximating-areas) · [换元](https://openstax.org/books/calculus-volume-1/pages/5-5-substitution) · [二重积分](https://openstax.org/books/calculus-volume-3/pages/5-1-double-integrals-over-rectangular-regions) · [MIT 18.06SC](https://ocw.mit.edu/courses/18-06sc-linear-algebra-fall-2011/) · [PBRT §2.1](https://pbr-book.org/4ed/Monte_Carlo_Integration/Monte_Carlo_Basics)
+
+**引擎和厂商资料。** 编辑器讲义保留 Unity 对场景视图、层级和属性的区分，操作图来自 Redflag 实机。Godot 的 GI 概览把照明方案放到可编辑场景中比较，适合对照烘焙和动态光照的用法。DDGI 的探针状态、更新和 SDK 使用条件则应回到 NVIDIA 自己的仓库与其中的文档。[Unity 场景视图](https://docs.unity3d.com/Manual/UsingTheSceneView.html) · [Godot 全局光照](https://docs.godotengine.org/en/stable/tutorials/3d/global_illumination/introduction_to_global_illumination.html) · [NVIDIA RTXGI-DDGI](https://github.com/NVIDIAGameWorks/RTXGI-DDGI)
 
 **顶点、深度和法线。** 《Fundamentals of Computer Graphics》第五版 §1.3–1.4（印刷页 4–5）介绍绘图接口、顶点怎样投到屏幕，以及深度缓冲怎样判定前后。作者的 Cornell 课程第 14 讲第 2–3 页画出了从模型到屏幕的各次变换。GAMES101 第 4 讲第 17、21–24 页接着说明如何把正交视体移到原点，再缩放到标准立方体。Redflag 对照两个后端时，可以给定同一个顶点，按各自 API 的深度约定换算后，再比较屏幕位置和深度。[FCG 第五版公开试读](https://api.pageplace.de/preview/DT0400.9781000426281_A41250965/preview-9781000426281_A41250965.pdf) · [Cornell CS4620 第 14 讲](https://www.cs.cornell.edu/courses/cs4620/2014fa/lectures/14pipeline.pdf#page=2) · [GAMES101 第 4 讲](https://sites.cs.ucsb.edu/~lingqi/teaching/resources/GAMES101_Lecture_04.pdf#page=17)
 
@@ -54,7 +66,7 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 - **光照公式、余弦项、立体角、BRDF 的来源**：以 PBRT 的定义和推导为主，再说明 RTR4 与 LearnOpenGL 中的实时近似。
 - **采样、PDF、蒙特卡洛、重要性采样、MIS**：以 PBRT 为主，明确积分测度、采样分布和估计量；这里的 PDF 是概率密度，不是文档格式。
 - **阴影、SSAO、Bloom、IBL 等实际效果**：先用 LearnOpenGL 解释实现，再查 RTR4 说明适用条件、误差和性能成本。
-- **GPU 对象与同步为什么需要显式管理**：用用户指定的 Khronos 教程讲解，再对照 Redflag 当前的 OpenGL 实现。不假装项目已有 Vulkan 后端。
+- **GPU 对象的持有与释放**。对照 Khronos 示例和项目现有的 Vulkan 绘制、计算与窗口呈现代码。更细粒度的异步回收单独标为后续设计。
 - **引擎类名和封装方式**：仍以项目记忆中的 Hazel 源码约定为准。教材用于解释图形学，不自动替代现有工程规范。
 - **资源层、Renderer 与 RHI 如何分工**：读《游戏引擎架构》的相关主题和 GAMES104 第 2 讲，再对照 Hazel 与 Piccolo。资产 ID 指向内容，RHI 对象表示 GPU 资源，帧内临时附件归渲染器管理。
 
@@ -128,3 +140,11 @@ GAMES101/202/104 分别补基础原理、实时效果和引擎组织，三者不
 - 核对时 Khronos latest 教程采用 Vulkan 1.4、C++20、Vulkan-Hpp RAII，并使用 Slang。以后引用要重新核对，不直接把旧 C API 教程代码拼进该版本，也不因此擅自升级 Redflag 的 C++17 工程。
 - Jason Gregory 作者站目前介绍第四版两卷本，新增或扩充 GPU 编程、渲染与光照、motion matching、C++23 等内容。第三版和第四版的章节组织不同；本项目尚未获得对应版次全文，本轮只据官方介绍和实际查阅的公开资料讨论，不引用未经核实的书中图号。
 - 后续用户提供具体版本或本地书籍时，将文件位置与版次补入本目录。
+
+## C++、计算机系统与编辑器
+
+材质共享贴图、图像独占显存与析构顺序对照《C++ Primer》第五版第 12.1 节和第 13 章。可直接阅读出版社公开的[第 12 章样章](https://www.informit.com/content/images/9780321714114/samplepages/0321714113.pdf)。
+
+按行读取像素、相邻地址和重复使用同一份数据可结合 Bryant 与 O’Hallaron 的 CS:APP 第三版第 6 章及 Cache Lab 来读。该书建立 CPU 存储层次的直觉，GPU 堆的实际位置按 Vulkan 报告核对。[作者目录与前言](https://csapp.cs.cmu.edu/3e/pieces/preface3e.pdf) · [Cache Lab](https://csapp.cs.cmu.edu/3e/labs.html)
+
+编辑器的信息布局参考 Unity 的层级、场景、项目与属性窗口。操作手册用 Redflag 当前版本实拍。[Unity 界面](https://docs.unity3d.com/cn/2018.3/Manual/LearningtheInterface.html)

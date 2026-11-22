@@ -2,15 +2,16 @@
 \input{../rhi/preamble}
 \hypersetup{pdftitle={Redflag 技术选型与工程取舍}}
 \fancyhead[L]{\small\color{muted}Redflag · 技术选型与取舍}
+\fancyhead[R]{\small\color{muted}2026-11-22}
 \newcommand{\loc}[1]{\par{\footnotesize\color{muted}源码见 \path{#1}。}\par}
 \renewcommand{\note}[1]{\par{\small\color{muted}#1\par}}
 \begin{document}
-\zihao{5}\raggedright
+\zihao{5}\raggedright\setlength{\parindent}{2\ccwd}
 {\Huge\bfseries Redflag 技术选型}\par\vspace{5pt}
 {\Large\color{muted}模型引用、材质绘制与渲染开销}\par
 \ruleline
 
-模型移了目录，已经保存的场景怎样找到它？同一片树叶先写深度、后画颜色，怎样让两次绘制留下相同的轮廓？这些选择影响使用编辑器的人，也决定日后怎样接入 Vulkan。本册从 Redflag 已有的 OpenGL 实现讲起。后两幅截图分别记录了一次像素检查和一次 CPU 计时，采集条件写在图旁。
+把椅子移到新的资源目录，编辑器再打开场景时还要找到它。同一片树叶会先画进深度图，再画进颜色图，两次留下的轮廓也要一致。本册从这两件事讲起，再看 OpenGL 和 Vulkan 如何绘制同一份模型。像素检查和 CPU 计时的采集条件写在各自的图旁。
 
 \section{模型移动后的场景引用}
 场景原先按文件路径寻找模型。比如将一把椅子从道具目录移到家具目录，场景里留下的还是旧路径。改用文件内容的哈希值可以认出相同字节，却又带来另一个问题：只要美术修改了椅背，同一把椅子便有了另一个编号。这里要记录的是场景中的实体一直引用哪件资产，即使文件被移动，或模型被重新导出。
@@ -43,8 +44,8 @@ Redflag 为每个登记的模型分配一个 ID，写进模型旁的 \texttt{.rf
 材质 & 遇到一个像素时怎样画 & 适用情况 \\
 \midrule
 Opaque & 保留表面并写深度。 & 普通不透明物体。 \\
-Mask & 算出透明度，低于阈值的像素丢弃。 & 常见于树叶、铁丝网。当前导入器发现独立透明度贴图才自动选择此模式。 \\
-Blend & 按透明度把表面颜色与后面的颜色混合。 & 玻璃等连续半透明表面还需要导入约定和绘制顺序，当前尚未接通。 \\
+Mask & 透明度低于阈值的像素不画。 & 树叶和铁丝网。glTF 读取材质的 MASK 标记和裁剪阈值。 \\
+Blend & 先画后面的墙，再把玻璃的颜色合到墙面图上。 & 彩色玻璃。glTF 读取 BLEND 标记，两种后端都能画。 \\
 \bottomrule
 \end{tabularx}
 
@@ -53,7 +54,7 @@ Mask 材质的最终透明度，等于底色自身的 alpha、底色贴图的 al
 \subsection{保留导入文件中的几何}
 旧代码只要看到材质名里有 \code{glass}、\code{window} 或 \code{mirror}，或者发现透射色非零，就可能把对应网格隐藏掉。最初七个导入用例都生成了预期的贴图，日志里却把一个普通 OBJ 判成了玻璃。继续检查才发现，导入器给它填了默认透射色，而网格已经被清空。此后用例加入了几何、法线检查，扩为九例；再补上对材质中显式零值的检查，形成现在的十例。
 
-现在导入保留文件里实际存在的几何。没有完整半透明支持时，有些玻璃会以不透明表面显示，但仍能在编辑器里选择、检查和修正其材质。按名称删掉模型则会连这些机会一起丢掉。
+现在即使材质名叫 glass，模型也会保留。glTF 文件明确标为 BLEND 时，导入器会选半透明画法。编辑器也可以给玻璃设置折射率和厚度。画面中的折射使用屏幕上已有的背景颜色；要追踪光线连续穿过几层玻璃，还需要另一种算法。可用 \path{assets/scenes/Glass-Studio.redflag} 查看两层薄玻璃的实测效果。
 
 \subsection{合并金属度与粗糙度贴图}
 两张贴图尺寸相同时，同一像素可以分别写进合成图的两个颜色通道。尺寸不同时，按一张图的宽高去读另一张会越界或取错位置。当前导入器放弃这次合并、释放临时像素，材质继续使用金属度和粗糙度的单个数值。模型仍能画出来，但表面的局部变化会丢失。若要保留细节，需要先确定输出尺寸和过滤方式，再对其中一张贴图重新采样。
@@ -71,11 +72,11 @@ Mask 材质的最终透明度，等于底色自身的 alpha、底色贴图的 al
 \loc{Redflag/src/Redflag/Renderer/PostProcess.cpp}
 
 \subsection{从窗口三角形接到 Vulkan 编辑器}
-场景和编辑器现在还直接使用 OpenGL 调用与整数纹理编号。本项目计划把共同的操作放进渲染硬件接口（RHI），让上层表达“画哪个模型、用哪份材质”。后端负责把它交给显卡。C++17 和 GLSL 继续使用，Vulkan 以 1.3 为目标。当前已查询本机设备能力并做过着色器离线编译检查，应用中的 Vulkan 画面仍待实现。
+编辑器打开带贴图的模型时，OpenGL 和 Vulkan 需要同一份顶点、索引和材质。模型加载器把要上传的数据交给 \code{RenderDevice}，由当前后端创建网格和贴图。场景决定画哪些物体。绘制一个部件时，\code{CommandList::DrawIndexed} 接收网格和这一次的绘制数据，后端负责执行。这样，同一个场景文件可以交给两种图形接口绘制。
 
-第一步先打通窗口，在 OpenGL 和 Vulkan 中各画一个三角形，检查调整大小、最小化和恢复。接着画带贴图的模型，点击它应读回正确的实体编号；改动相机、材质或裁剪阈值，颜色和深度也应随之改变。第三步把这张图放进编辑器，检查面板缩放、交替曝光和资源释放。最后才逐项接回深度预写、阴影、环境遮蔽、环境光预计算、RSM、光晕及 2D 绘制。每一步都有现成的 OpenGL 画面可对照。
+这次接入从画一个三角形开始，接着检查带贴图的模型。颜色看起来正确，只说明画出了物体。还要点击模型和背景，分别读回实体编号和 $-1$，才能确认拾取也正常。现在用 \code{--vulkan} 启动正式编辑器便可打开 Sponza。场景先画出当前可见表面的底色、法线与深度，光照计算再读这些数据，场景面板显示最后的图。两种后端的模型、拾取和材质测试见 \path{tests/run_rhi_tests.cmd}。
 
-这种顺序需要同时维护两个后端一段时间，换来的是出错时能区分窗口呈现、模型数据和具体效果。Hazel 公开源码提供资源工厂的命名例子，GAMES104 和 Khronos 的教程提供渲染层划分的参考。各阶段实际要读回哪些像素、怎样释放仍在显卡使用的图像，详见配套《RHI 与 Vulkan 接入设计》。
+分别检查模型、场景图和面板，就能判断该去哪个环节找错。Hazel 公开源码提供了创建贴图的接口例子，GAMES104 和 Khronos 的教程讲解了渲染器各部分怎样配合。《RHI 与 Vulkan 接入设计》列出本项目的实际调用，也画出面板改变尺寸后，旧图还要保留多久。
 \note{\source{https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Renderer/Texture.h}{Hazel，Texture}
 \quad\source{https://games-cn.org/games104-slides/}{GAMES104 官方课件}
 \quad\source{https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/Engine_Architecture/05_rendering_pipeline.html}{Khronos，Rendering Pipeline}。}
@@ -123,4 +124,29 @@ RSM 用方向光看到的表面估算一次漫反射。Redflag 让采样点覆�
 比较实例化时还要保持模型数量和屏幕覆盖范围相同，记录分组数与实际绘制次数。比较深度预览时按相同尺寸分别开关面板；比较着色器缓存时把磁盘冷缓存和命中缓存分开。分别保存采样次数、中位数和波动范围，再回头用 RenderDoc 查看异常帧用了哪些资源。上一页的 Chrome 数据回答了 CPU 在哪个区间花时间；完整场景的 GPU 性能还要靠这样的对照实验来测。
 
 引擎分层可对照 Jason Gregory《游戏引擎架构》和 GAMES104。要复习光照、采样及实时近似，再看 GAMES101、GAMES202。本项目引用的版次、章节与原始入口收在 \path{docs/Graphics-References.md}。
+\clearpage
+\section{网格与材质的着色器接口}
+有十把摆在不同位置的椅子，木纹来自同一张贴图。一个物体单独绘制时，CPU 交给着色器一份模型矩阵和一个实体编号；合在一次绘制里时，GPU 要能为每把椅子分别读到这两样东西。无论在哪个位置，木纹该有多粗糙、哪一侧能看见高光，都可以用同一段材质代码计算。
+
+这个约定称为着色器接口。顶点阶段读取网格的位置、法线、纹理坐标和切线；片元阶段读取材质的底色、粗糙度以及相机和灯的位置。Redflag 把共用的光照代码放在一个网格着色器文件里，创建程序时按用途选择不同的输入或输出。发行版里的每个程序只包含它所选的那种画法。
+
+\noindent\begin{tabularx}{\textwidth}{L{3.15cm}YY}
+\toprule
+OpenGL 画法 & 每个物体提供什么 & 绘制后留下什么 \\\midrule
+普通模型 & 当前物体的模型矩阵、材质和编号 & 不透明表面的颜色和编号 \\
+\code{INSTANCED} & 每个实例各自的位置、颜色、材质数值和编号 & 同一张画面上仍能选中不同的椅子 \\
+\code{TRANSPARENT} & 透明度、折射率和厚度，以及普通网格用的材质数据 & 玻璃颜色、朝向和透光数据，等背景画完再合成 \\\bottomrule
+\end{tabularx}
+
+以玻璃为例，背景只画一次。每片玻璃让多少背景光通过，取决于材质的透明度；两片各透过一半的玻璃叠起来，背景光剩四分之一。后端把每片的透光率取对数后相加，最后用下面这段恢复乘积。这样交换两片玻璃的提交顺序也能得到同一个透光率。几层玻璃的表面颜色采用加权平均，颜色与真实的多层光学过程仍有差别。
+
+\begin{verbatim}
+// optics.x 存各层透光率的对数之和，取 exp 得到总透光率。
+float transmittance = exp(optics.x);
+// 按总透光率混合玻璃的平均颜色和它后面的场景颜色。
+o_Color = vec4(mix(sum.rgb / sum.a, background, transmittance), 1.0);
+\end{verbatim}
+\loc{RedflagForge/assets/shaders/Transparency_Composite.glsl}
+这两行位于全屏合成的片元 \code{main}。三种网格画法的创建入口在 \path{Redflag/src/Redflag/Renderer/Renderer3D.cpp}，共用材质见 \path{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}。加权透明的原理可读 \source{https://jcgt.org/published/0002/02/09/}{McGuire 与 Bavoil，Weighted Blended Order-Independent Transparency}。
+\input{fine-mask}
 \end{document}

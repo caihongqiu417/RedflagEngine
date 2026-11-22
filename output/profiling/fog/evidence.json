@@ -1,0 +1,41 @@
+{
+  "scene": "Sponza-Atrium",
+  "viewport": [
+    948,
+    613
+  ],
+  "window": [
+    1763,
+    1079
+  ],
+  "crop_left_top_right_bottom": [
+    305,
+    214,
+    1253,
+    827
+  ],
+  "flags": [
+    "Lit",
+    "DDGI 2",
+    "GTAO",
+    "TAA .85",
+    "all 3 point lights"
+  ],
+  "fog": {
+    "Density": 0.1,
+    "Albedo": 0.92,
+    "Anisotropy": 0.35,
+    "Distance": 24,
+    "Steps": 16
+  },
+  "build": "Debug x64 + Vulkan validation, RTX 5070 Ti Laptop",
+  "executable_sha256": "b19ae99d84c3edd59d535148210297eeb6adff7f28f1db33a7db0f580f840ff6",
+  "screenshots": {
+    "clear.png": "1284081565a4592a624c1dc3e2c3b60f0b68ad9ca618320036867c78cfc3348d",
+    "closed.png": "2eb2a3c3d8cfdb129a395f66244a692c3f67fb061098839dd009586981da4936",
+    "open.png": "9cef1fa296fdfdee67ed0c11aae257bac18c1e80312ff342d0378851ea43b8d8",
+    "sponza-clear.png": "ea893460de74239d0b2cb72e02ccdf25643ba1a7a349d2a44cdc86a49bdb68e7",
+    "sponza-fog.png": "e6b4e6910248d8ea2698dcca1b0b0da53af39388850b572de24a1d5c0a4cffdc"
+  },
+  "sponza_rgb_display_mae": 0.14354790151319555
+}

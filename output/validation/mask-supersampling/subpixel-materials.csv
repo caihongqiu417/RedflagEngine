@@ -1,0 +1,9 @@
+case,samples_per_pixel,area,reference
+base-alpha,4,0.25,0.25
+opacity-red,4,0.25,0.25
+tinted-half-cutoff,4,0.25,0.25
+cutoff-three-quarters,4,0,0
+uniform-gray,4,0,0
+disjoint-alpha-and-red,4,0,0
+opaque,4,1,1
+two-shifted-layers,4,0.25,0.5

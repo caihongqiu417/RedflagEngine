@@ -1,0 +1,67 @@
+Scene: Sponza Atrium
+Entities:
+  - Entity: 4
+    TagComponent:
+      Tag: Main Camera
+    TransformComponent:
+      Translation: [-5.5, -2.20000005, 0]
+      Rotation: [0.0347686037, -1.57079637, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 1.13446403
+        PerspectiveNear: 0.0500000007
+        PerspectiveFar: 100
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 100
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 3
+    TagComponent:
+      Tag: Gallery Lamp
+    TransformComponent:
+      Translation: [-2, -1, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 15
+      Radius: 20
+      CastShadow: false
+  - Entity: 2
+    TagComponent:
+      Tag: Courtyard Lamp
+    TransformComponent:
+      Translation: [1.5, 1.5, -1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.8, 0.64]
+      Intensity: 28
+      Radius: 18
+      CastShadow: false
+  - Entity: 5
+    TagComponent:
+      Tag: Arcade Lamp
+    TransformComponent:
+      Translation: [5.5, -0.5, 1.2]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.64, 0.77, 1]
+      Intensity: 19
+      Radius: 12
+      CastShadow: false
+  - Entity: 1
+    TagComponent:
+      Tag: Sponza
+    TransformComponent:
+      Translation: [0.325295836, -3.50185919, 0.207966045]
+      Rotation: [0, 0, 0]
+      Scale: [0.671888709, 0.671888709, 0.671888709]
+    ModelRendererComponent:
+      ModelID: 14269338671407101124
+      FilePath: assets/models/reference/Sponza/Sponza.gltf
+      Color: [1, 1, 1, 1]

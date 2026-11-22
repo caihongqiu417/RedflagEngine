@@ -1,0 +1,64 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding=0) readonly buffer Background { vec4 scene[]; };
+layout(rgba32f, binding=1) readonly uniform image2D accumulatedColor;
+layout(rgba32f, binding=2) readonly uniform image2D accumulatedNormalDepth;
+layout(rgba32f, binding=3) readonly uniform image2D accumulatedOptics;
+layout(rgba32f, binding=4) readonly uniform image2D opaqueNormalDepth;
+layout(std430, binding=5) writeonly buffer Output { vec4 result[]; };
+layout(push_constant) uniform Camera { mat4 vp, inverseVP; };
+
+vec3 world(vec2 ndc, float depth)
+{
+    vec4 h = inverseVP * vec4(ndc, depth, 1);
+    return h.xyz / h.w;
+}
+
+vec3 backgroundPixel(ivec2 pixel, int width, float glassDepth, vec3 fallback)
+{
+    vec4 opaque = imageLoad(opaqueNormalDepth, pixel);
+    if (dot(opaque.xyz, opaque.xyz) > 0. && opaque.w < glassDepth) return fallback;
+    return scene[pixel.y * width + pixel.x].rgb;
+}
+
+vec3 background(vec2 uv, ivec2 size, float glassDepth, vec3 fallback)
+{
+    vec2 samplePos = clamp(uv * vec2(size) - .5, vec2(0.), vec2(size - 1));
+    ivec2 a = ivec2(samplePos), b = min(a + 1, size - 1);
+    vec2 f = fract(samplePos);
+    vec3 top = mix(backgroundPixel(a, size.x, glassDepth, fallback),
+                   backgroundPixel(ivec2(b.x, a.y), size.x, glassDepth, fallback), f.x);
+    vec3 bottom = mix(backgroundPixel(ivec2(a.x, b.y), size.x, glassDepth, fallback),
+                      backgroundPixel(b, size.x, glassDepth, fallback), f.x);
+    return mix(top, bottom, f.y);
+}
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy), size = imageSize(accumulatedColor);
+    if(any(greaterThanEqual(p, size))) return;
+    int index = p.y * size.x + p.x;
+    vec4 color = imageLoad(accumulatedColor,p);
+    if (color.a <= 0.) { result[index] = scene[index]; return; }
+    vec4 nd = imageLoad(accumulatedNormalDepth,p) / color.a;
+    vec4 optics = imageLoad(accumulatedOptics,p);
+    float ior = max(1., optics.y / color.a), thickness = optics.z / color.a;
+    vec2 uv = (vec2(p) + .5) / vec2(size);
+    vec3 through = scene[index].rgb;
+    if (thickness > 0. && ior > 1. && dot(nd.xyz,nd.xyz) > 1e-8) {
+        vec2 ndc = vec2(uv.x, 1.-uv.y) * 2. - 1.;
+        vec3 hit = world(ndc, 2.*nd.w-1.);
+        vec3 incident = normalize(world(ndc,1.) - world(ndc,-1.));
+        vec3 normal = normalize(nd.xyz);
+        normal = faceforward(normal, incident, normal);
+        vec3 bent = refract(incident, normal, 1./ior);
+        // 沿折射方向找到玻璃背面的出射点，再把它投到屏幕上，得到要读取的背景位置。
+        vec4 clip = vp * vec4(hit + bent * (thickness / max(.001, -dot(normal,bent))), 1.);
+        vec2 sampleUV = clip.xy / clip.w * vec2(.5,-.5) + .5;
+        if (clip.w > 0. && all(greaterThanEqual(sampleUV,vec2(0.))) && all(lessThan(sampleUV,vec2(1.)))) {
+            // 混合周围四个背景像素前逐个检查深度。若其中一个落在玻璃前面，只把它换成当前像素的原背景色。
+            through = background(sampleUV, size, nd.w, through);
+        }
+    }
+    result[index] = vec4(mix(color.rgb / color.a, through, exp(optics.x)), 1.);
+}

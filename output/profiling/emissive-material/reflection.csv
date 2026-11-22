@@ -1,0 +1,3 @@
+case,r,g,b,screen_hit
+SSR_hit_emissive_sign,3.40905,0.237619,0.0301077,1
+SSR_miss_emissive_sign,0,0,0,0

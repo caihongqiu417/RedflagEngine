@@ -1,0 +1,4 @@
+material,center_rgb_r,edge_rgb_r,max_cpu_error,max_cluster_error,restir_1_frame_mse,restir_64_frame_mean_mse
+dielectric,1.16988,0.51537,8.0358e-05,7.24792e-05,0.0108801,0.000395724
+rough-metal,0.345568,0.456176,4.32737e-07,3.8743e-07,0.00415659,0.000199375
+smooth-metal,16.1053,0.403564,0.00100907,0.000564575,0.319885,0.00431319

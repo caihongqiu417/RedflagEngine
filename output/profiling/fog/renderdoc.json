@@ -1,0 +1,32 @@
+{
+  "capture": "Fog-Aperture_capture.rdc",
+  "sha256": "bd954d8648c8d55ad06abf48bb6b95fad762f1109064f03ba45bc6c703bca6c5",
+  "tool": "1.47",
+  "eid": 8,
+  "groups": [
+    1296,
+    1,
+    1
+  ],
+  "dimensions": [
+    384,
+    216
+  ],
+  "steps": 32,
+  "open_pixel_red": 0.02274712175130844,
+  "format": "float4 linear RGBA",
+  "output_sha256": "b65e1138ec9036c9d97211b9aa9aad7136b2223ae29d37694c604cc615594ffe",
+  "messages": [],
+  "replay_timestamp_ms": [
+    0.40672,
+    0.40665599999999996,
+    0.401024,
+    0.417408,
+    0.40393599999999996,
+    0.402656,
+    0.417024,
+    0.41500800000000004,
+    0.40988800000000003
+  ],
+  "median_replay_gpu_ms": 0.40672
+}

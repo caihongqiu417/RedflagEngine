@@ -1,0 +1,10 @@
+Shading: Lit
+PreviewWidth: 0
+Samples: 2
+Direct: All point lights
+Indirect: DDGI
+GTAO: false
+SSR: false
+SpecularIBL: true
+TAA: true
+HistoryWeight: 0.85

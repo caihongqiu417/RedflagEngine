@@ -95,7 +95,7 @@ layout(binding = 10) uniform sampler2D u_AlphaMap;
 
 layout(location = 0) out vec4 o_Flux;      /* 每单位光源投影面积的反射通量，RGB 保留反射光颜色。 */
 layout(location = 1) out vec4 o_WorldPos;  // 世界坐标
-layout(location = 2) out vec4 o_Normal;    // 世界法线（压到 [0,1]）
+layout(location = 2) out vec4 o_Normal;    // 表面在世界坐标中的法线，每个分量从 [-1,1] 换算到 [0,1] 存储。
 
 void main()
 {
@@ -123,8 +123,8 @@ void main()
         metallic *= texture(u_MetallicRoughnessMap, v_TexCoord).b;
     vec3 diffuse = baseColor.rgb * (1.0 - metallic);
 
-    // 方向光下每个纹素覆盖相同的投影面积。斜面的实际面积增加，
-    // 恰好抵消入射余弦；这里用朝向排除背面，圆盘面积在收集时计入。
+    // 把正对方向光的墙转过 60°，单位墙面收到的光减半（cos 60° = 0.5），光源图中每个像素覆盖的墙面面积却加倍。
+    // 两者相抵，这里只用法线排除背光面。RSMIndirect 再乘采样圆盘的投影面积。
     vec3 N = normalize(v_WorldNormal);
     vec3 fluxDensity = vec3(0.0);
     if (u_NumDirectionalLights > 0 && dot(N, -u_DirLights[0].Direction.xyz) > 0.0)

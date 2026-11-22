@@ -1,0 +1,13 @@
+axis,side,projection,rays,misses
+0,-1,orthographic,289,0
+0,-1,perspective,289,0
+0,1,orthographic,289,0
+0,1,perspective,289,0
+1,-1,orthographic,289,0
+1,-1,perspective,289,0
+1,1,orthographic,289,0
+1,1,perspective,289,0
+2,-1,orthographic,289,0
+2,-1,perspective,289,0
+2,1,orthographic,289,0
+2,1,perspective,289,0

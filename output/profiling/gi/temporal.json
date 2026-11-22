@@ -1,0 +1,58 @@
+{
+  "width": 320,
+  "height": 180,
+  "frames": 24,
+  "seed": 137,
+  "point_lights": 3,
+  "scene": "Sponza-Atrium.redflag, ECS transform and UV textures",
+  "results": {
+    "direct": {
+      "first_to_second_linear_rms": 0.0,
+      "steady_linear_rms": 0.0,
+      "steady_display_mean_abs_8bit": 0.0,
+      "steady_fraction_any_channel_above_3": 0.0,
+      "steady_display_p95_abs_8bit": 0.0,
+      "last_history_index": 24
+    },
+    "ddgi-2": {
+      "first_to_second_linear_rms": 0.0030742275546934254,
+      "steady_linear_rms": 0.035794723534101236,
+      "steady_display_mean_abs_8bit": 0.6620263479051142,
+      "steady_fraction_any_channel_above_3": 0.038875,
+      "steady_display_p95_abs_8bit": 2.041592828929423,
+      "last_history_index": 24
+    },
+    "ddgi-16": {
+      "first_to_second_linear_rms": 0.000983547426301852,
+      "steady_linear_rms": 0.006932396344616678,
+      "steady_display_mean_abs_8bit": 0.3466584668398759,
+      "steady_fraction_any_channel_above_3": 0.010269675925925925,
+      "steady_display_p95_abs_8bit": 1.1132422238588304,
+      "last_history_index": 24
+    },
+    "di": {
+      "first_to_second_linear_rms": 0.22576881938973958,
+      "steady_linear_rms": 0.02150809263624299,
+      "steady_display_mean_abs_8bit": 1.7120432096989908,
+      "steady_fraction_any_channel_above_3": 0.2848541666666667,
+      "steady_display_p95_abs_8bit": 6.86821011453866,
+      "last_history_index": 24
+    },
+    "gi": {
+      "first_to_second_linear_rms": 0.019135246861062397,
+      "steady_linear_rms": 0.008501329443810376,
+      "steady_display_mean_abs_8bit": 0.8862086443678322,
+      "steady_fraction_any_channel_above_3": 0.09307060185185186,
+      "steady_display_p95_abs_8bit": 3.199979670345782,
+      "last_history_index": 24
+    },
+    "direct-jitter": {
+      "first_to_second_linear_rms": 0.1436007781896243,
+      "steady_linear_rms": 0.22066529197887916,
+      "steady_display_mean_abs_8bit": 8.847142067302883,
+      "steady_fraction_any_channel_above_3": 0.6088703703703704,
+      "steady_display_p95_abs_8bit": 39.34810488112266,
+      "last_history_index": 24
+    }
+  }
+}

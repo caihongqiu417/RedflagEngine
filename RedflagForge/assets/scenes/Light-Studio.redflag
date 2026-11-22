@@ -1,0 +1,55 @@
+Scene: 灯光工作室
+Entities:
+  - Entity: 1
+    TagComponent:
+      Tag: 主相机
+    TransformComponent:
+      Translation: [0.4, 1.36, 3.8]
+      Rotation: [-0.08, 0.12, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.72
+        PerspectiveNear: 0.05
+        PerspectiveFar: 30
+        OrthographicSize: 4
+        OrthographicNear: -1
+        OrthographicFar: 30
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 2
+    TagComponent:
+      Tag: 灯牌
+    TransformComponent:
+      Translation: [-0.94, 1.18, 0.95]
+      Rotation: [0, 1.28, 0]
+      Scale: [1, 1, 1]
+    ModelRendererComponent:
+      ModelID: 4649196139292786281
+      FilePath: assets/models/LightPanel/LightPanel.gltf
+      Color: [1, 1, 1, 1]
+  - Entity: 3
+    TagComponent:
+      Tag: 白墙
+    TransformComponent:
+      Translation: [0, 1.25, -0.06]
+      Rotation: [0, 0, 0]
+      Scale: [5, 2.5, 0.12]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.78, 0.78, 0.78, 1]
+      Metallic: 0
+      Roughness: 0.9
+  - Entity: 4
+    TagComponent:
+      Tag: 地面
+    TransformComponent:
+      Translation: [0, -0.06, 1.45]
+      Rotation: [0, 0, 0]
+      Scale: [5, 0.12, 3.2]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.65, 0.65, 0.65, 1]
+      Metallic: 0
+      Roughness: 0.85

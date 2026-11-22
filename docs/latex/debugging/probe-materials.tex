@@ -1,0 +1,94 @@
+\clearpage
+\section{墙面换色后的反射光}
+白色点光源照在红墙上，粗糙的墙面会把一部分红光反射到灰地板上。换成蓝墙，地板靠墙的地方也应当跟着偏蓝。实际调试时，墙变了颜色，重新烘焙后的地板却和原来一样。单看墙会以为换贴图已经成功，因此这次保留相机、灯和地板，只给墙换一张纯色贴图。
+
+\begin{figure}[H]\centering
+\begin{tabular}{@{}cc@{}}
+\includegraphics[width=.43\linewidth]{../../../output/profiling/probe-materials/before-red.png}&
+\includegraphics[width=.43\linewidth]{../../../output/profiling/probe-materials/before-blue.png}\\[-2pt]
+\small 修正前，红墙&\small 修正前，蓝墙\\[3pt]
+\includegraphics[width=.43\linewidth]{../../../output/profiling/probe-materials/after-red.png}&
+\includegraphics[width=.43\linewidth]{../../../output/profiling/probe-materials/after-blue.png}\\[-2pt]
+\small 修正后，红墙&\small 修正后，蓝墙
+\end{tabular}
+\caption{Vulkan 编辑器同一机位的第 24 帧。每次换图都重新烘焙。先看上排两幅画面里的地板，再比较下排地板靠墙的部分。}
+\end{figure}
+
+墙在代码里有两种用法。画相机看到的墙时，渲染器使用实体当前的材质。烘焙时，一条光线碰到墙上的三角形，程序要根据命中位置重新读贴图，才能算出它向房间反射的光。旧代码从模型文件取回了最初的贴图，漏掉了在编辑器里换图这一步。旧版红墙和蓝墙的 3\,024 组探针方向记录中，光照逐项相同。
+
+现在，\code{LightingPreview.cpp} 的 \code{CollectModels} 会记录每个模型部件沿用了原图、换了图，还是移除了图。\code{GIScene.cpp} 按这个选择把像素和三角形的贴图坐标交给着色器。清除贴图后，墙仍可使用材质上选定的颜色。为核对这一点，还用红色材质代替红色贴图，分别烘焙并比较了每个探针的 RGB。
+
+\clearpage
+\section{材质与烘焙文件}
+测试用的红墙受白光照射。设材质底色为 $C$，贴图在光线命中处的颜色为 $T$，两者逐通道相乘。金属度 $m$ 决定还有多少底色用于漫反射。这里的颜色都已转换成可以直接参与光照计算的线性 RGB。
+\[
+  \rho_{\mathrm{diffuse}}=(1-m)(C\mathbin{\odot}T).
+\]
+例如，白色材质配纯红色贴图，取 $m=0$，结果是 $(1,0,0)$。去掉贴图后，直接把材质设为红色，可以得到相同的漫反射。若把 $m$ 提高到 1，这项漫反射就消失了，表面仍能有镜面反射。glTF 的金属度从贴图的蓝通道读取，绿色通道保存粗糙度。\href{https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html\#materials}{Khronos glTF 材质说明}
+
+\begin{Code}
+// PointLighting.glsl / diffuseReflectance
+// color 已经乘过命中处的贴图颜色。
+return color * (1. - metallic);
+\end{Code}
+
+判断地板是否真的受到了墙面反光时，先从 RenderDoc 取出底色图，只保留在两帧中都属于灰地板的像素。墙脚可能同时采到墙和地板，也从比较中去掉。余下的 56\,160 个像素，在显示器颜色转换前分别取 RGB 平均值。红墙下读到 $(0.265,\,0.111,\,0.111)$；换成蓝墙，地板的平均颜色随之变为 $(0.111,\,0.111,\,0.265)$。旧版两次读数都为 $(0.186,\,0.186,\,0.172)$。\href{run:../profiling/probe-materials/before.json}{旧版读数}\quad\href{run:../profiling/probe-materials/after.json}{修正后的读数}
+
+保存好的探针也要随材质变化。一张墙面贴图换了颜色，即使模型、相机和灯都没动，原有探针仍记着旧墙反射的光。编辑器会重新计算。若取消该实体的材质修改，回到烘焙时的墙面，原文件又能继续用。想保留新墙面的反光，就在“渲染设置 → 质量与参数”重新烘焙，再保存场景。
+
+\subsection{另存场景}
+在“材质底色”视图里，编辑器无需计算间接光。以前直接在这个视图另存浴室，副本可能缺少探针。现在另存时会读取原场景旁边的烘焙文件，对照此刻的模型、贴图和点光源。房间没变，就连同探针一起保存。若已移动了灯牌，就只保存新的房间与设置，打开副本后可以按新的灯光重新烘焙。
+
+场景、渲染设置、探针各自保存在一个文件里。写每个文件时先在同目录写完临时文件，写好再替换相应的旧文件。若只有渲染设置文件被锁住，场景本身可能已写入，编辑器会指出哪一步失败。三个文件分别完成写入，重新打开副本前仍可按提示处理未保存的部分。
+
+还有一份数据留在显卡上，正在给眼前的房间照明。旧版烘焙会在它上面直接计算。如果文件最后没能写入，磁盘保住了旧版本，画面里的光却已经变了。现在烘焙时多申请一份探针空间，让着色器先把新结果算完。只有文件写好，当前画面才改读新探针。在测试中故意让写入失败，分别用实时光照和已有烘焙打开房间，再分别开启和关闭多次反射。四种情况下，显卡上用于照亮场景的数据都和失败前逐字节一致。\href{run:../profiling/probe-materials/bake-failure-after.json}{显卡读回}\quad\href{run:../profiling/probe-materials/save-as-after.json}{保存与另存为测试}
+
+\clearpage
+\section{镂空材质的阴影}
+在白墙前放一张中间有孔的薄片，再把点光源放在相机的位置。从镜头穿过孔能看见的墙，光也应当照得到。用这个布置排错，可以把看到的孔和墙上的光斑逐个像素对齐。下面三张图使用相同的相机、薄片和点光源。
+
+\begin{figure}[H]\centering
+\begin{tabular}{@{}ccc@{}}
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/raster-visible-sheet.png}&
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/direct-with-masked-sheet.png}&
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/mask-direct.png}\\
+\small 相机看到的薄片&\small 修复前的墙面&\small 修复后的墙面
+\end{tabular}
+\caption{左图用白色标出薄片的实心部分。中、右两图只显示白墙收到的直接光。薄片外侧都有光，差别在中央。两张亮度图使用同一标尺。}
+\end{figure}
+
+这张薄片由两个三角形组成，孔画在贴图上。相机绘制薄片时会读取像素的透明度，孔内的 196 个像素都露出了白墙。旧版计算阴影时只要发现光线碰到三角形，就认为光被挡住了。把贴图换成完全不透明，墙上全部 4\,096 个像素的直接光竟然都和换图前相同。错误就在“碰到三角形”到“确认遮光”这一步。\href{run:../validation/gi-mask/baseline.json}{修复前的读数}
+
+现在射线碰到有孔的三角形后，先找出交点在贴图上的位置。例如，材质与实体相乘后得到的透明度是 $0.8\times0.625=0.5$，该处底色图的透明通道和独立透明贴图的红通道都为 1，最终的值就是 0.5。材质要求“至少 0.5”时，这处仍然挡光。把要求调到 0.501，同一处就透光。没有指定的贴图按 1 计算。\href{https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html\#alpha-coverage}{glTF 2.0 对镂空材质的规定}
+
+\begin{Code}
+// Trace.glsl / trace，节选。h 是从射线起点到当前三角形的距离。
+// areas.yz / sum 给出交点在三角形里的位置，用它找贴图上对应的像素。
+if (t.albedo.w < 0. && !passesAlphaMask(t.albedo.w, areas.yz / sum))
+    continue;   // 穿过孔，接着查后面的三角形。
+far = h;        // 只有碰到实心部分，才用这个距离限制后续搜索。
+\end{Code}
+
+修复后，孔后 196 个像素全部受光，实心边框遮住的 1\,248 个位置仍然处在阴影里。取这 196 个像素在显示转换前的红通道平均值，修复前为 0，修复后为 0.25452，与移走薄片时相同。再在孔后放一小块实心板，64 个位置重新变暗，其余 132 个仍然受光。这个对照也检查了射线穿过孔后有没有继续查更远的物体。\href{run:../validation/gi-mask/after.json}{逐组测量}
+
+\clearpage
+\subsection{镜中的灯牌}
+把薄片与一块发光板移到镜头背后，让镜子映出它们。镜面收到的屏幕颜色设为黑色，镜中的灯牌只能来自射线找到的场景表面。测试把灯牌的线性 RGB 设为 $(4,0.5,0.125)$，红通道超过 1 的亮度也保留在显卡上。下图从镜面输出取图，三幅都用相同的比例显示。
+
+\begin{figure}[H]\centering
+\begin{tabular}{@{}ccc@{}}
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/mirror-opaque.png}&
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/mirror-mask.png}&
+\includegraphics[width=.285\linewidth]{../../../output/validation/gi-mask/mirror-backstop.png}\\
+\small 实心薄片&\small 中央开孔&\small 孔后再加小挡板
+\end{tabular}
+\caption{观察镜子中央。开孔后读到灯牌原本的 RGB，小挡板盖住的地方又变为黑色。三幅图都保留薄片外侧的灯光，方便看清挡板的位置。}
+\end{figure}
+
+一条射线可能先穿过镂空的贴图，然后碰到灯牌。阴影只关心灯前是否还有东西挡光，镜面则需要知道最近的实心表面是什么颜色。两者都调用 \code{trace}，先判断交点是否落在孔里。为此，模型加载时只给有孔的材质多存一条记录，里面有透明度、裁剪阈值和独立透明贴图的位置。每个三角形已有一个数指向自己的贴图坐标，取负值便能让射线知道要查透明度，也保住了原有三角形的大小。
+
+打开验证帧，在 RenderDoc 里选事件 9，可以读到射线碰到的最近表面。事件 42 给出相机画到的表面，事件 82 给出白墙收到的直接光。在孔内读 $(33,29)$，前两处的深度位置都落在墙面上；读薄片的边缘 $(18,29)$，都落在前面那张薄片上。三个事件的数据均与程序运行时从显卡读回的结果逐字节相同。\href{run:../validation/gi-mask/Mask_capture.rdc}{RenderDoc 验证帧}\quad\href{run:../validation/gi-mask/replay.json}{事件与像素读数}
+
+保存到探针里的光也能这样检查。只算一轮反射，在薄片前选一个探针，向灯牌一侧发出 64 条射线。33 条穿过孔碰到灯牌，其余都没有带回红光。按灯牌的红通道亮度 4 计算，探针应当记下 $4\times33/64=2.0625$，显卡与烘焙文件里读到的都是这个值。封住孔，同一处变为 0。改动薄片的透明贴图后，原来的烘焙文件也会被识别为过期。三份未使用镂空材质的房间重新烘焙后，探针文件分别与原件逐字节相同。\href{run:../validation/gi-mask/after.json}{探针读数}\quad\href{run:../profiling/probe-materials/mask-bake-compat.json}{原有房间的烘焙}
+
+这次用的透明图只有 $16\times16$。换上一张宽 1\,024 像素、每根铁丝只占一列的图，让其中十二列铺满网片，原先的阴影代码还会漏光。下一页用三根能数清的铁丝来查这次漏光发生在哪里。

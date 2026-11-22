@@ -1,0 +1,53 @@
+% 前置知识
+在石柱的斜边上，一个像素可能一半覆盖石头、一半覆盖背景。本帧只在中心取一个点，下一帧把采样点挪开一点，便能观察到不同的覆盖情况。这些观测可以积累到一起，条件是找回同一块石头在上一帧的位置。GAMES101 的模型、观察和投影变换，以及 RTR4 附录里的透视除法，正好就是这里要用的工具。
+
+% 公式推导
+可见表面已经给出世界坐标 $p=(x,y,z,1)$。乘上偏移前的观察投影矩阵得到齐次坐标 $c$，除以 $c_w$ 后才是屏幕位置。用两帧的相机分别投影同一个点，就能分清“相机移动了多少”和“这次在像素内取了哪个样本”。若相机静止，旧颜色就存在同一显示像素。若相机真在移动，旧位置通常落在四个像素之间，此时才做双线性插值，并检查那里以前是否被别的柱子挡住。
+
+% 公式
+记视口宽高为 $(W,H)$，原点在左上。$s(c)$ 把齐次位置换算为像素，$i$ 是当前整数像素中心。运动矢量用两个偏移前的投影相减，所以半像素的中心约定也随之抵消。
+\[
+ s(c)=\left(\tfrac12+\tfrac12c_x/c_w,\ \tfrac12-\tfrac12c_y/c_w\right)(W,H),\quad
+ q=i+s(c_{t-1})-s(c_t).
+\]
+找到旧位置以后，还要检查旧图里画的是不是同一面墙。设投影矩阵把观察坐标的高度乘以 $P_{yy}$，画面高 $H$ 像素。一个像素在标准化坐标中高 $2/H$，把透视除法和高度缩放倒过来，就得到它在墙面深度处对应的世界高度 $h=2w/(|P_{yy}|H)$。透视相机的 $w$ 是沿视线轴量出的深度，远墙的一个像素盖得更宽；正交相机的 $w=1$，同一面墙退远后仍占相同像素数。旧点与眼前的点若相距超过 $2.5h$，这里就舍掉旧颜色。2.5 是经验值，取大了容易把前景颜色拖到背后的墙上，取小了则会丢掉本可用的历史。
+
+像素最后得到 $C=(1-\alpha)C_t+\alpha C_{t-1}$。最初有 $n$ 帧历史时，$\alpha$ 最大为 $n/(n+1)$。相机移动时，四个邻居各带一份双线性权重。通过距离检查的权重之和若为 0.5，就把历史占比再减半。旧颜色也限制在当前 $3\times3$ 像素的亮暗范围内，以减轻重影。
+\pair{screen-effects/taa.png}{静止八帧后的颜色}{screen-effects/taa-history.png}{横移相机后，亮处仍能采用旧帧}
+\clearpage
+% 逐行伪代码
+\subsection{找回上一帧的颜色}
+\noindent{\small\color{quiet}按 GLSL 与相机代码整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/TAA.comp}{\texttt{TAA.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+jitter = halton(frame % 16 + 1, bases=(2,3)) - 0.5
+projection = shiftClipPositionByPixelFraction(projection, jitter)
+drawVisibleSurfacesAndColor(projection)
+if cameraIsStill and sceneHasNotChanged:
+    return blend(current, history[pixel], weight)
+motion = previousStablePixel(world) - currentStablePixel(world)
+(*@{\footnotesize\color{quiet}加上运动量才得到旧图里的位置。}@*)
+oldPixel = pixel + motion
+pixelHeight = 2 * currentClip.w / (abs(projection.yy) * imageHeight)
+for neighbor, coefficient in bilinearNeighbors(oldPixel):
+    if validOldPosition(neighbor) and distanceToOldPoint(neighbor) <= 2.5 * pixelHeight:
+        sum += coefficient * oldColor[neighbor]
+        accepted += coefficient
+if accepted > 0:
+    old = clamp(sum / accepted, minRGB3x3, maxRGB3x3)
+    current = mix(current, old, historyWeight * accepted)
+writeSeparateHistory(currentColor, currentWorldPosition)
+\end{lstlisting}
+
+% 接口与数据结构
+\begin{fields}
+\texttt{JitterProjection} & 用偏移后的投影画几何。调用 \texttt{Render} 时再传偏移前的 \texttt{stableProjection}，用来计算相机运动。\\
+\texttt{History[2], Positions[2]} & 每帧读一组、写另一组，下一帧换角色。颜色与世界位置必须来自同一帧。\\
+\texttt{ResetHistory()} & 切场景、重建视口或跳切后，第一帧直接写新颜色。移动相机时仍可重投影静态物体。\\
+\end{fields}
+
+% 验证标准
+用同一静态场景的八张抖动图求逐像素均值作对照。它代表这八个实际采样位置。检查 TAA 第一帧与当前输入逐像素相同；再侧移相机，刚露出的区域应拒绝历史。现阶段世界位置能处理静止几何上的相机运动，蒙皮或独立移动物体还需要它们自己的上一帧位置与运动向量。
+
+最后一张单帧与八张均值的 MSE 为 \measured{single_frame_vs_eight_jitters_mse}，混合后为 \measured{taa_vs_eight_jitters_mse}。另一组测试把红板放在蓝墙前，横移并旋转相机。正交视图中新露出的 54 个像素原先都混入红色，修正后误收为零；透视视图中新露出的 96 个像素在修改前后都正确。\href{run:../../output/profiling/taa-camera/fixed/measurements.csv}{逐项结果}
+
+相机和场景都没动时，编辑器仍让 TAA 合并多帧的颜色。画满 32 帧，面板就一直显示最后一张图。这里的 32 决定显卡要多画多久，程序没有逐帧测量噪点，也就不能据此判断所有场景都已足够平滑。再移动相机、调灯或改变效果，面板会重新绘制。

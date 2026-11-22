@@ -1,0 +1,36 @@
+{
+  "scene": "RTXGI-Bathroom.redflag",
+  "preview_width": 160,
+  "application_frames": 48,
+  "exe_sha256": "9e48ab1fee7f12e442e2c25de9d7dfdd7c47c3ea775f75b17bcb3d1453714159",
+  "cases": {
+    "baked": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    },
+    "baked-taa": {
+      "startup_before_last_resize": 1,
+      "drawn": 32,
+      "cached": 15,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting accumulation": 31,
+        "Lighting cached": 15
+      }
+    },
+    "baked-ddgi": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    }
+  }
+}

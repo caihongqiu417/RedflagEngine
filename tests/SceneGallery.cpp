@@ -61,7 +61,7 @@ static YAML::Node SaveFloatTexture(uint32_t texture, const fs::path& file, bool 
 }
 
 // 节点变换仍由 Model 保存；这里只给整个模型统一尺度并移到世界原点。
-static void FitModel(const Model& model, float size, TransformComponent& transform)
+static float FitModel(const Model& model, float size, TransformComponent& transform)
 {
     glm::vec3 minimum(std::numeric_limits<float>::max());
     glm::vec3 maximum(std::numeric_limits<float>::lowest());
@@ -85,6 +85,7 @@ static void FitModel(const Model& model, float size, TransformComponent& transfo
     float scale = size / std::max({ extent.x, extent.y, extent.z });
     transform.Scale = glm::vec3(scale);
     transform.Translation = -(minimum + maximum) * (0.5f * scale);
+    return -0.5f * extent.y * scale;
 }
 
 static void RenderGallery(YAML::Node settings, const fs::path& configPath, RenderDocCapture& capture)
@@ -128,8 +129,38 @@ static void RenderGallery(YAML::Node settings, const fs::path& configPath, Rende
     renderer.FilePath = fs::relative(modelPath).generic_string();
     renderer.ModelID = AssetManager::Add<Model>(modelPath.generic_string());
     renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
+    for (const auto& entry : settings["LODs"])
+    {
+        ModelLOD lod;
+        lod.FilePath = fs::relative(modelPath.parent_path() / entry[0].as<std::string>()).generic_string();
+        lod.ModelID = AssetManager::Add<Model>(lod.FilePath);
+        lod.ScreenHeight = entry[1].as<float>();
+        renderer.LODs.push_back(std::move(lod));
+    }
     Require(renderer.ModelAsset && !renderer.ModelAsset->GetSubMeshes().empty(), "Model import failed");
-    FitModel(*renderer.ModelAsset, settings["ModelSize"].as<float>(), transform);
+    const float bottom = FitModel(*renderer.ModelAsset, settings["ModelSize"].as<float>(), transform);
+
+    if (settings["SurfaceColor"])
+    {
+        for (const auto& part : renderer.ModelAsset->GetSubMeshes())
+        {
+            auto material = part.Mat ? part.Mat->Clone() : Material::Create();
+            material->BaseColor = glm::vec4(ReadVector(settings["SurfaceColor"]), 1);
+            material->Roughness = settings["Roughness"].as<float>();
+            renderer.OverrideMaterials.push_back(material);
+        }
+    }
+    if (settings["FloorColor"])
+    {
+        auto floor = scene->CreateEntityWithUUID(UUID(5), "Floor");
+        auto& pose = floor.GetComponent<TransformComponent>();
+        pose.Translation = {0, bottom - 0.05f, 0};
+        pose.Scale = {6, 0.1f, 5};
+        auto& mesh = floor.AddComponent<MeshRendererComponent>();
+        mesh.MeshData = Mesh::CreateCube();
+        mesh.Mat = Material::Create(glm::vec4(ReadVector(settings["FloorColor"]), 1));
+        mesh.Mat->Roughness = 0.85f;
+    }
 
     auto sunlight = scene->CreateEntityWithUUID(UUID(2), "Directional Light");
     auto& directional = sunlight.AddComponent<DirectionalLightComponent>();
@@ -207,6 +238,9 @@ static void RenderGallery(YAML::Node settings, const fs::path& configPath, Rende
         static_cast<GLsizei>(ids.size() * sizeof(int)), ids.data());
     const auto visiblePixels = std::count_if(ids.begin(), ids.end(), [](int id) { return id != -1; });
     Require(visiblePixels > 100, "Scene geometry is not visible");
+    const auto modelID = static_cast<uint32_t>(reopened->GetEntityByUUID(UUID(1)));
+    const auto modelPixels = std::count(ids.begin(), ids.end(), static_cast<int>(modelID));
+    Require(modelPixels > 100, "Imported model is not visible");
     Require(glGetError() == GL_NO_ERROR, "Attachment readback failed");
 
     if (settings["Readback"] && settings["Readback"].as<bool>())
@@ -236,6 +270,7 @@ static void RenderGallery(YAML::Node settings, const fs::path& configPath, Rende
     settings["Result"]["DrawCalls"] = statistics.DrawCalls;
     settings["Result"]["Culled"] = statistics.CulledCount;
     settings["Result"]["VisiblePixels"] = visiblePixels;
+    settings["Result"]["ModelPixels"] = modelPixels;
     settings["Result"]["HDRFinite"] = true;
     settings["Result"]["Scene"] = scenePath.generic_string();
     settings["Result"]["ReopenedSceneRendered"] = true;

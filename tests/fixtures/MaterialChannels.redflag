@@ -1,0 +1,42 @@
+Scene: Material Channels
+Entities:
+  - Entity: 1
+    TagComponent:
+      Tag: 主相机
+    TransformComponent:
+      Translation: [0, 0, 3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.9
+        PerspectiveNear: 0.1
+        PerspectiveFar: 15
+        OrthographicSize: 3
+        OrthographicNear: -1
+        OrthographicFar: 15
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 2
+    TagComponent:
+      Tag: 材质色板
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ModelRendererComponent:
+      FilePath: ../tests/fixtures/TextureQuad.gltf
+      Color: [1, 1, 1, 1]
+  - Entity: 3
+    TagComponent:
+      Tag: 点光源
+    TransformComponent:
+      Translation: [-0.5, 0.75, 2.5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 12
+      Radius: 12
+      CastShadow: false

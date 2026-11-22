@@ -1,4 +1,6 @@
 \clearpage
+\begingroup
+\setlength{\parskip}{8pt}
 \section{附录 A　深度换算与鼠标拾取}\label{app:coordinates}
 
 相机能看见的最近位置称为近裁面。假设一个顶点恰好在近裁面上，现有相机投影后，它的深度是 $-1$，Vulkan 却要求这里是 $0$。最远处比较简单，两边的深度都是 $1$。沿用同一台相机，只需在 Vulkan 顶点着色器输出位置时换算一次。
@@ -9,8 +11,11 @@
   \frac{z_{\mathrm{vk}}}{w}=\frac{1}{2}\left(\frac{z_{\mathrm{gl}}}{w}+1\right)
   \qquad\Longrightarrow\qquad z_{\mathrm{vk}}=\frac{z_{\mathrm{gl}}+w}{2}.
 \]
+\codewhere{着色器}{Redflag/src/Platform/Vulkan/Shaders/Mesh.vert}{main}
 \begin{lstlisting}
-gl_Position.z = 0.5 * (gl_Position.z + gl_Position.w);
+(*@\rhicomment{// 沿用原相机矩阵，把近裁面从 −w 换到 0。}@*)
+clip.z = 0.5 * (clip.z + clip.w);
+gl_Position = clip;
 \end{lstlisting}
 
 CPU 判断模型是否在镜头内、着色器查询阴影时，都可继续用原来的相机或光源矩阵。从深度图读回的值 $d$ 在 $[0,1]$，用原相机的逆投影矩阵还原位置前，要先用 $2d-1$ 换回来。这里采用默认的深度范围。
@@ -20,15 +25,17 @@ CPU 判断模型是否在镜头内、着色器查询阴影时，都可继续用�
 
 \path{tests/DepthPrepassTests.cpp} 直接读取图中的实体编号。在 OpenGL 坐标 $(8,16)$ 读到 71，换成左上原点就是 $(8,15)$。右边的 $(24,15)$ 有第二个实例时读到 72，移走它后读到背景 $-1$。迁移时还要从面板点一次顶行，补上现有测试没有经过的鼠标换算。Vulkan 拾取时复制所点像素，等复制结束再读编号，若期间换图则丢弃旧结果。
 
-为使相机上方落在图像上方，Vulkan 视口拟从 $y=H$ 开始，高度取 $-H$。用原投影得到的纹理坐标 $v$ 读取这种图时，纵向取 $1-v$。模型底色贴图仍用导入时的坐标。
+为使相机上方落在图像上方，当前 Vulkan 视口从 $y=H$ 开始，高度取 $-H$。用原投影得到的纹理坐标 $v$ 读取这种图时，纵向取 $1-v$。模型底色贴图仍用导入时的坐标。
 
 \readings{\refitem{https://docs.vulkan.org/guide/latest/depth.html}{Khronos：深度范围}\quad
 \refitem{https://www.realtimerendering.com/Real-Time_Rendering_4th-Appendices.pdf\#page=19}{RTR4：附录 A.4}}
 
+\endgroup
+
 \clearpage
 \section{附录 B　着色器与画面测试}\label{app:checks}
 
-\subsection{为什么原来的着色器需要改}
+\subsection{两种后端的着色器约定}
 同一个着色器文件里，顶点程序计算三角形画在哪里，片元程序计算它覆盖的像素是什么颜色。此前把 Forge 的 15 个文件按这两部分拆开，得到 30 段程序。按 Vulkan 1.3 的规则编译，再检查生成的指令，17 段通过，另外 13 段在编译时就报了错。这次检查用的是每次画一个物体的版本。
 
 \noindent\begin{tabularx}{\linewidth}{@{}r@{\hspace{1em}}X@{}}
@@ -53,9 +60,9 @@ CPU 判断模型是否在镜头内、着色器查询阴影时，都可继续用�
 \section{附录 C　设备配置与窗口呈现}\label{app:window}
 
 \subsection{开发机与设备能力}
-开发机的 RTX 5070 Ti Laptop GPU 报告支持 Vulkan 1.4.351，同一条队列可以绘制并把图交给窗口。已安装的 SDK 是 1.3.275.0。本项目拟以 Vulkan 1.3、C++17 和 GLSL 开发，从 \code{VULKAN\_SDK} 查找依赖并链接 \code{vulkan-1.lib}。目前只有设备查询记录，首帧待测。
+开发机使用 RTX 5070 Ti Laptop GPU，驱动报告支持 Vulkan 1.4.351。此次接入使用 Vulkan 1.3 与 SDK 1.3.275.0，宿主代码用 C++17 编译，着色器用 GLSL 编写。构建时从 SDK 取得头文件和 \code{vulkan-1.lib}。窗口已经能够呈现画面，两种尺寸下的绘制与拾取对照见第~\pageref{impl:pixels}~页。
 
-创建设备前查询并启用三项功能。绘制时直接指定目标图，用 1.3 的 \code{dynamicRendering}。让后处理等场景颜色写好再读取，用 1.3 的 \code{synchronization2}。查询显卡做完了第几次提交，用 1.2 的 \code{timelineSemaphore}。开窗还要启用 GLFW 要求的实例扩展，以及轮换窗口图像的设备扩展 \code{VK\_KHR\_swapchain}。
+目前场景和界面通过 \code{VkRenderPass} 绘制，后端用围栏确认一份工作帧已执行完。早期方案里的动态渲染、\code{synchronization2} 和时间线信号量是继续迁移时的选择。若采用它们，创建设备时需要查询并启用相应的功能。现有窗口路径通过 GLFW 提供的实例扩展和 \code{VK\_KHR\_swapchain} 取得可显示的图像。
 
 \subsection{窗口缩放与取图}
 窗口轮流显示的一组图称为交换链。按 GLFW 报告的像素尺寸建图。最小化后若宽或高为零，就继续处理窗口事件，等恢复再取图。取图时若收到 \code{OUT\_OF\_DATE}，旧图已不能使用，本轮跳过绘制并重建交换链，也没有新的提交编号。若收到 \code{SUBOPTIMAL}，图仍可用，可以画完这一帧再重建。若在提交成功、把图交给窗口时才收到这两种状态，仍须保留刚才的提交编号，显卡可能还在画。
@@ -71,19 +78,15 @@ CPU 判断模型是否在镜头内、着色器查询阴影时，都可继续用�
 \refitem{https://docs.vulkan.org/refpages/latest/refpages/source/VkPhysicalDeviceVulkan13Features.html}{Vulkan 1.3 设备功能}}
 
 \clearpage
-\section{附录 D　接入顺序与验证}\label{app:migration}
+\section{附录 D　从三角形到场景的验证}\label{app:migration}
 
-\subsection{窗口与三角形}
-先让程序在开窗前选定 OpenGL 或 Vulkan。\code{Application} 保存这次选择，窗口类按它创建 GLFW 窗口，\code{RenderCommand} 将绘制交给选中的后端。两种后端共用的声明放进 \code{Renderer/RHI}，具体实现分别放进 \code{Platform/OpenGL} 和 \code{Platform/Vulkan}。用两个后端各画一个三角形，在 RenderDoc 的同一次绘制中检查三个顶点和三个角的颜色，再拖动、最小化、恢复和关闭窗口。编辑器也走这条开窗路径。
+接通 Vulkan 的第一张图只有一个三角形。它已经经过窗口、设备、顶点、命令提交和呈现，任意一处出错都可能只剩背景。在 RenderDoc 里选中绘制事件，先看三个顶点和对应颜色，再看它们写进的目标图。OpenGL 与 Vulkan 的共用声明位于 \path{Renderer/RHI}，可分别到 \path{Platform/OpenGL} 和 \path{Platform/Vulkan} 跟进同一调用。
 
-\subsection{模型与拾取}
-让创建网格缓冲区、贴图和着色器的函数都使用同一设备。画两个形状相同的模型，先关掉光照，给它们不同的位置、贴图和编号。这样，位置错了可以先查矩阵，颜色错了可以先查贴图，点错物体可以先查编号。编辑器保存颜色和表面朝向时，每个分量用 16 位浮点数（RGBA16F）；物体编号用带正负号的 32 位整数。主视口用 24 位记录深度，另有 8 位模板值。专项测试另用 32 位浮点深度。Vulkan 要查询设备能否读写这些格式，两端在相同像素上比较。
+三角形能显示以后，测试改画两个实例。它们共用网格，有各自的位置、颜色和实体编号。颜色正确而点击总选中同一个物体，就只需沿编号查写入与读回。原有 OpenGL 主视口使用高精度颜色和带模板的深度格式，Vulkan 基础材质视图使用自己的离屏附件。对照时在相同的像素检查颜色、前后遮挡关系和实体编号。运行 \path{tests/run_rhi_tests.cmd} 可以重做这组测试，包括改变目标大小后的第二次绘制。
 
-\subsection{视口与界面}
-让后处理把输出图交给编辑器面板。开两个曝光不同的视口，只拖大其中一个，观察另一幅图的亮度和尺寸。随后点选图像上边缘，在绘制提交后删除模型，再退出程序。调试时打开 Vulkan 验证层和同步检查，它们能报告图像还在使用就被销毁等错误。结合帧回放找到最后一次读取旧图的命令，再对照程序记录的回收时刻。
+编辑器加入后，还需检查最后使用这张图的对象。场景绘制结束时，ImGui 仍可能采样它。拖宽面板、在边沿点选物体、再关闭窗口，是检查这种依赖的三个好时机。验证层能指出提交后过早释放图像等错误，帧回放还能显示最后一个读取旧图的绘制事件。多视口以不同曝光并行绘制是后续移植原 OpenGL 后处理时可增加的对照。
 
-\subsection{光照效果与 2D}
-先接回深度预写和阴影，看地板上的遮挡是否正确。再接环境遮蔽、环境光预计算、间接光和泛光，每次只加一个效果，在 RenderDoc 里检查这一步写出的图和下一步读到的图。Sponza 可以用来检查多种材质和叶片镂空的边缘。最后接回 2D 的精灵、圆、线和粒子，按附录 B 的方法比对，并记录版本、驱动、对应的绘制事件和像素值。要比较速度，两种后端还需在相同预热和采样条件下单独计时。
+今天可以在 Sponza 检查实际的 Vulkan 计算光照，再用兔、龙和佛像的不同轮廓检查遮蔽与反射。每种算法的参考图、实测条件与差异见\href{run:Redflag-Realtime-Lighting.pdf}{《实时光照与采样》}。原有 OpenGL 的阴影、环境预计算、泛光和完整 2D 绘制链仍有独立的迁移工作，后续接入时可保留原帧，与新后端逐项比对。
 
 \readings{\refitem{https://docs.vulkan.org/guide/latest/validation_overview.html}{Khronos：Vulkan 验证层}\quad
 \refitem{https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html}{Khronos：窗口与 Vulkan 实例}}

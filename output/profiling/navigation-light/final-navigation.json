@@ -1,0 +1,45 @@
+{
+  "scene": "Sponza-Atrium.redflag",
+  "viewport": [
+    948,
+    613
+  ],
+  "build": "Debug",
+  "validation": true,
+  "executable_sha256": "eb43cf559e35b800ae525c28b6c3fa98e0289d1bb80eaafb7d9c229acee432b6",
+  "source": "Whole RunLoop wall time including GPU waits and presentation. 50 wheel events, 150ms apart.",
+  "lit_motion": {
+    "Lighting camera motion": {
+      "frames": 50,
+      "p50_ms": 15.238499999999998,
+      "p95_ms": 18.617700000000003
+    },
+    "Lighting accumulation": {
+      "frames": 457,
+      "p50_ms": 15.265,
+      "p95_ms": 18.189999999999998
+    },
+    "Lighting cached": {
+      "frames": 404,
+      "p50_ms": 4.1575,
+      "p95_ms": 5.2886
+    }
+  },
+  "navigation": {
+    "Lighting navigation": {
+      "frames": 50,
+      "p50_ms": 17.560499999999998,
+      "p95_ms": 19.60885
+    },
+    "Lighting cached": {
+      "frames": 2045,
+      "p50_ms": 4.063,
+      "p95_ms": 6.9318
+    },
+    "Lighting accumulation": {
+      "frames": 32,
+      "p50_ms": 14.498999999999999,
+      "p95_ms": 17.527549999999998
+    }
+  }
+}

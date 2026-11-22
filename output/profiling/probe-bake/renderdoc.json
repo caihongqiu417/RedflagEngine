@@ -1,0 +1,80 @@
+{
+  "renderdoc": "1.47",
+  "live": {
+    "path": "output/captures/local/DDGI-Live_capture.rdc",
+    "sha256": "676f41961d08ba4e4b03c7744ecdfc5cdcd91c16f2d85a31a3c77b676b145fe1",
+    "messages": [],
+    "dispatches": [
+      {
+        "stage": "update",
+        "event": 8,
+        "groups": [
+          48,
+          1,
+          1
+        ],
+        "gpu_median_ms": 9.368896,
+        "gpu_ms": [
+          10.077984,
+          9.368896,
+          10.804608,
+          8.728639999999999,
+          8.723136,
+          11.390464,
+          8.718399999999999,
+          8.661024,
+          10.175264
+        ]
+      },
+      {
+        "stage": "gather",
+        "event": 20,
+        "groups": [
+          225,
+          1,
+          1
+        ],
+        "gpu_median_ms": 0.011712,
+        "gpu_ms": [
+          0.011712,
+          0.009375999999999999,
+          0.013536000000000001,
+          0.011072,
+          0.008608,
+          0.012864,
+          0.011712,
+          0.007904,
+          0.012704
+        ]
+      }
+    ]
+  },
+  "baked": {
+    "path": "output/captures/local/DDGI-Baked_capture.rdc",
+    "sha256": "3fd78b9406d5ea9c1523fca817aa2edde58937220e05337dac7d503b8d020214",
+    "messages": [],
+    "dispatches": [
+      {
+        "stage": "gather",
+        "event": 8,
+        "groups": [
+          225,
+          1,
+          1
+        ],
+        "gpu_median_ms": 0.006944,
+        "gpu_ms": [
+          0.007936,
+          0.0072640000000000005,
+          0.00688,
+          0.006944,
+          0.007776,
+          0.006912,
+          0.01168,
+          0.006912,
+          0.00688
+        ]
+      }
+    ]
+  }
+}

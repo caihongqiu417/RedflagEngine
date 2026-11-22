@@ -1,0 +1,125 @@
+% !TeX program = xelatex
+% 从 docs/latex/ai-authoring 运行 xelatex main.tex；成品位于 output/pdf/Redflag-AI-Authoring-Plan.pdf。
+\documentclass[UTF8,11pt,fontset=fandol,a4paper]{ctexart}
+\usepackage[margin=23mm,top=24mm,bottom=21mm]{geometry}
+\usepackage{tikz,tabularx,array,booktabs,fancyhdr,hyperref}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\definecolor{ink}{HTML}{19363D}\definecolor{teal}{HTML}{176C65}\definecolor{muted}{HTML}{526B70}
+\hypersetup{colorlinks=true,urlcolor=teal,linkcolor=teal,pdftitle={Redflag 的 AI 开发工作流与接口设计}}
+\ctexset{section={format=\Large\bfseries\color{ink},afterindent=true},subsection={format=\large\bfseries\color{teal},afterindent=true}}
+\setlength{\parindent}{2\ccwd}\setlength{\parskip}{.55\baselineskip}
+\pagestyle{fancy}\fancyhf{}\lhead{\small Redflag\enspace / \enspace 引擎设计}\rhead{\small 2026.11.22}\rfoot{\small \thepage}
+\newcommand{\src}[2]{\href{#1}{#2}}
+\newcommand{\f}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\pg}[1]{\clearpage\section{#1}}
+\setlength{\emergencystretch}{8em}
+\begin{document}
+\section{一句话生成小游戏的交付标准}
+你在聊天中说「做一个双人第一人称仓库夺分游戏，带倒计时和结算，打完能再来一局」。Redflag 交付一个可运行的游戏目录、一个启动入口、一份可继续编辑的源项目，以及本次试玩的结果。单机游戏双击后进入游戏；这个联机例子另附开房和加入方式，本机可启动一服两端验证。目标平台暂定当前 Windows 电脑，对局进程可单独构建。以后只改一句「改成限时收集」，应当保留选定的角色和地图，更新规则、HUD 和验收条件。
+
+\textbf{个人引擎的能力范围。} 你可以维护一组可自由组合的游戏操作，例如移动、交互、拾取、触发区域、生成实体、计时、计分、结算和重新开始。它们可组合成仓库夺分、单人限时探索或障碍跑。一个需求缺少操作时，AI 优先在游戏项目里写 C\# 脚本；若确实缺少物理查询等底层能力，工具应明确指出缺口，进入引擎扩展任务并重新验收。对发行平台、风格和素材来源设个人默认值，平常一句话就能走完制作。
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{30mm}XX@{}}\toprule
+制作过程 & AI 和工具做的工作 & 可接着编辑或检查的结果\\\midrule
+理解需求 & 写出玩家动作、目标、结束条件、必需的反馈和平台；对未指定项采用个人偏好 & 游戏规则说明、可执行试玩条件\\
+组成项目 & 选相机、控制器、碰撞与规则，取得有许可的资源，按参考图摆场景 & 可编辑场景、资源清单、来源与署名\\
+生成玩法 & 写游戏脚本、动画状态、UI 布局与绑定；配置启动场景 & 脚本程序集、场景和布局，以及编译诊断\\
+自动试玩 & 用普通玩家入口执行移动、交互、得分、结算与重开；失败则定位并重跑 & 逐步状态、输入回放、关键帧和修复记录\\
+构建交付 & 收集地图、贴图、程序集和运行依赖，在独立目录启动发布包 & 玩家启动入口、源项目、操作说明及试玩报告\\
+\bottomrule\end{tabularx}\end{center}
+
+\textbf{终版怎样算通过。} 在新输出目录用一句新描述生成项目，启动后一个人能按屏幕提示完成一局并重开。再换一个规则不同的描述，确认操作、胜负与反馈都发生相应变化。验证联机时，从两端读取独立输入和一致的终局状态。打包后再启动一次，检查缺失资产、绝对路径和运行依赖。自动试玩覆盖功能，最终好不好玩由你试玩判断。所有这些是拟议的完成条件。
+
+\clearpage
+
+
+\section{从一句话到可复查的编辑结果}
+Redflag 的目标是你一个人能理解、维护并长期用来做游戏的小引擎。保留熟悉的 Application、Layer、Scene、Entity 和编辑器。日常制作提供三项常用操作：挑选资产、修改当前场景、运行后检查结果。每个新增操作都从你实际做过的任务中提取。你可以在聊天中说「把龙改成拉丝金属，沿用当前机位，保存一个可比较的版本」。引擎应能告诉 AI 哪个实体是龙、有哪些材质槽、哪些字段可以改，并在执行后返回真正画出的图。多人 FPS 是以后的一项综合验收，第一项演示只需要目前已有的静态场景。
+
+仓库的 \f{RedflagForge/assets/scenes/Reference-StanfordDragon.redflag} 已经提供了这个实验的输入。实体 1 引用的模型编号是 \f{6122188709592601978}，其首个覆盖材质的金属度为 0，粗糙度约为 0.63。先在副本上把需求收窄到「只把龙改成更粗糙的表面」，用固定曝光和左右并排的实拍验收。若要求拉丝产生有方向的高光，工具应该报告现有材质能表达哪些特征，并保留材质扩展需求。两项浮点数不能完整描述拉丝方向。
+
+\begin{center}
+\begin{tikzpicture}[n/.style={draw=teal!60,fill=teal!5,rounded corners=2pt,text width=41mm,align=center,minimum height=14mm,font=\small},a/.style={-{Stealth},thick,teal}]
+\node[n](a){人或聊天客户端\\提出制作目标};
+\node[n,right=4mm of a](b){AI 读取场景\\提出有范围的修改};
+\node[n,right=4mm of b](c){本地编辑器\\校验并应用到副本};
+\node[n,below=8mm of c](d){Redflag 运行与渲染\\输出状态、图像和指标};
+\node[n,below=8mm of b](e){AI 核对结果\\继续修正或交付};
+\draw[a](a)--(b);\draw[a](b)--(c);\draw[a](c)--(d);\draw[a](d)--(e);\draw[a](e)--(b);
+\end{tikzpicture}
+
+{\small 图 1\quad 拟议工作流。箭头指向下一步接收任务或证据的一方；截图由实际运行引擎产生。}
+\end{center}
+
+\textbf{已有依据。} \f{SceneSerializer.cpp} 的 \f{SerializeEntity} 和 \f{Deserialize} 负责实体与 YAML 的往返，\f{Material::Clone} 可复制实例材质。此次从 Redflag 根目录运行 \f{tests/run_asset_tests.cmd}，资源身份、移动、元数据错误、类型和缓存检查通过。这里验证的是资源库，AI 编辑、撤销及预览属于拟议能力。
+
+\textbf{研究依据。} SWE-agent 的 §2、§3 和 §5.1 讨论接口设计对代理读写与测试的影响。GameDevBench 把图像、动画等素材与游戏工程任务放在一起评测。Redflag 应将可运行项目及其行为作为验收对象。 \src{https://arxiv.org/html/2405.15793v3}{SWE-agent 论文}\quad \src{https://arxiv.org/abs/2602.11103}{GameDevBench 论文}
+
+\pg{聊天、编辑器与游戏怎样共用接口}
+编辑器拥有当前场景、未保存修改和 GPU 资源。建议先给本地开发助手一个可脚本调用的入口。第一次实现只抽出读场景、改单个材质和预览所需的操作；有了第二个调用者，属性面板和工具才共享同一段修改逻辑。场景文件继续使用现有 YAML，旧路径沿用当前反序列化入口。模型现代化、图形后端迁移各按自身验证进度推进。
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{31mm}XX@{}}\toprule
+拟议操作 & 输入与结果 & 谁执行、怎样验收\\\midrule
+查询场景 & 场景版本、实体名或编号。返回匹配项、材质槽、可写字段、单位和当前值 & 编辑器读取实际对象；重名时返回候选及其编号。\\
+预演并应用修改 & 基准版本、实体编号、字段和新值。返回旧值、新值及修改后的版本 & 编辑器主线程统一修改；版本过期返回冲突。一批有错则整批不落盘。\\
+预览与回放 & 相机、像素尺寸、输入序列和时长。返回截图或连续帧、状态记录及日志路径 & 使用真实运行路径；保存后重新打开复查字段。\\
+撤销与检查 & 指定任务的修改记录或测试名。返回恢复结果、通过项和失败原因 & 一个任务单独撤销；后续人工修改与目标冲突时显式报告。\\
+\bottomrule\end{tabularx}\end{center}
+
+对外传输 64 位资源与实体编号时用十进制字符串。上一页的龙模型编号超过 JavaScript 能精确表示的整数范围，工具若将其读成普通 Number，返回的编号可能指向不存在的资源。运行时继续用原来的整数类型。资产编号、实体编号及临时测试运行编号各自有清楚的字段。
+
+\textbf{两种入口。} 先沿用本机已有的聊天助手，直接调用少数本地命令。常用操作稳定后，再按使用频率选一个入口：想留在聊天就包一层 MCP，想留在编辑器就加一个小面板，二者共用操作实现。普通网页 ChatGPT 还需支持的连接方式、可达服务与授权，列为后续选项。游戏读取普通资产和脚本，可以独立启动。 \src{https://modelcontextprotocol.io/specification/2025-11-25/basic/transports}{MCP 传输规范}\quad \src{https://developers.openai.com/plugins/concepts/mcp-server}{ChatGPT 工具服务文档}
+
+\textbf{长任务。} 每次任务用一个本地目录保存输入摘要、工具版本、源文件哈希、已完成步骤、失败原因与产物位置。生成服务返回任务号后即可断点续查；重试、预算与停止条件属于一次制作任务。若连续修改都未通过同一个判据，交付最后一个可运行版本和失败证据。 \src{https://www.anthropic.com/research/effective-harnesses-for-long-running-agents}{Anthropic 长任务工程记录}
+
+\pg{资产挑选、材质编辑和参考图布局}
+你还没有角色或动作库，因此资源发现本身就是引擎工具的一部分。聊天可以接受「找一个有人形骨架、有待机和跑步动作、允许随游戏分发的角色」。工具按条件查作者仓库和发布页，逐项核对模型、动作、贴图各自的许可，读取真实文件再列可用动作。每个候选返回原始链接、作者、版本或哈希、许可与署名、尺度、骨架、片段名和预览。清楚区分候选、已下载、已检查和已登记四种事实。可选择让 AI 在约定条件内自行采用，也可让它把几个候选交你挑。
+
+已有模型先走当前 Assimp 导入器。Tripo 作为可替换的资产来源，提供来源记录与同一套验收。下载或生成的源文件单独保存；人工材质覆盖按模型和槽位记录，重新生成时如果网格或槽位已变，列出无法对应的覆盖。初版先支持现有粗糙度、金属度、底色、法线及透明模式。检查底色的 sRGB 转换与线性数据贴图，保留两套不同照明下的预览，发现烘进底色的阴影。 \src{https://www.tripo3d.ai/product-doc/module-post-processing/rigging-animation}{Tripo 文档}\quad \src{https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html}{glTF 2.0 材质规范}\quad \src{https://research.adobe.com/publication/matsynth-a-modern-pbr-materials-dataset/}{MatSynth}
+
+\textbf{从 GPT Image 概念图到 YAML。} 例如仓库里有两个出生区，中间有立柱。AI 提取物体、前后关系、遮挡与主相机构图，给无法从单张图确定的尺寸一个可编辑初值。先在已有资产中按尺寸和用途选模型，缺项用方块占位。工具从碰撞体或包围盒检查接地、重叠和通路，再生成场景差异。主相机检查构图，俯视相机检查通行，两端的玩家视角检查出生区。改一根立柱时保留旁边人工放置的灯光和现有实体编号。 \src{https://openaccess.thecvf.com/content/CVPR2024/html/Yang_Holodeck_Language_Guided_Generation_of_3D_Embodied_AI_Environments_CVPR_2024_paper.html}{Holodeck，CVPR 2024，空间约束与布局}
+
+\textbf{反例也是资产测试。} 分别准备缺法线贴图、错误尺度、材质槽发生变化、无许可说明、同名不同模型等输入。每种情况都规定期望结果。比如缺少动作时应列出实际片段，允许改选其他角色；它不能把文件名中出现的「run」当作已验证的跑步曲线。素材最终是否符合美术方向，由你选择或给定风格样例。
+
+\pg{自研动画、游戏脚本与界面}
+自研动画可以从 Python 开始。先做一个离线参考实现，读取骨架层级、参考姿态和曲线，在指定时刻计算每根骨骼的模型空间变换，保存成可比较的数据。Redflag 当前的 \f{Model::ProcessMesh} 会复制顶点、法线、UV 和切线。要让角色动起来，导入器还需读取蒙皮关节索引、权重、逆绑定矩阵和动画轨道。让 Python 与客户端用同一片段在首帧、中间和末帧对照关节位置，再看 GPU 蒙皮的实际画面。若希望运行时使用 Python，可先在一个角色上试验采样、数据传输与帧耗时，再决定哪些部分迁至 C++。 \src{https://games-105.github.io/}{GAMES105 课程与作业}
+
+Maya 的控制器供制作使用。先从一个已绑骨角色打通播放，再用第二个骨架验证重定向。通过 AdvancedSkeleton 配置骨架和权重，保存人形骨骼映射与参考姿势，将 HumanIK 的重定向结果烘焙到变形骨架，导出网格、变形骨架与片段。比较身高、朝向、弯肘、足底接触和根位移。能自动执行多少个操作，取决于安装版本和该角色的绑定质量。 \src{https://animationstudios.com.au/help/asExportFBX.html}{AdvancedSkeleton FBX 导出}\quad \src{https://help.autodesk.com/cloudhelp/2024/ENU/Maya-CharacterAnimation/files/GUID-8D27BAFD-7785-4173-860E-515FEB2E9C98.htm}{Maya HumanIK 参考姿势}
+
+角色控制器拥有碰撞后的位置与速度。动画读取速度、朝向、接地和动作事件，状态机先做站立、移动、腾空。远端角色用第三人称骨架，本地视角可独立控制相机与手部表现。后续将起步、急停和转向样本组成数据库。自研 Motion Matching 对归一化后的姿态与预期轨迹计算距离，先做线性搜索，记录所选片段、切换点和各特征误差。用相同输入与基础状态机比较脚滑、转向响应、搜索时间和内存。只有待机与直线循环时，要先补动作覆盖。 \src{https://media.gdcvault.com/gdc2016/Presentations/Zadziuk_Kristjan_MotionMatchingFutureOfGamesAnimation.pdf}{Zadziuk，GDC 2016，课件第 20 页}\quad \src{https://github.com/orangeduck/Motion-Matching}{Holden 示例实现}
+
+游戏逻辑沿用 C\# 脚本。AI 可生成脚本、绑定实体与可编辑字段、编译并跑输入回放。自研游戏 UI 先做一个准星、比分和结算按钮。借 Unity 的 Canvas、锚点和轴心定义布局；游戏状态保存分数，View 绑定分数，Controller 把按钮或快捷键变成同一条「准备下一局」操作。重连后用服务器状态刷新界面。工具要能返回控件树、绑定字段、屏幕矩形和游戏画面，供 AI 在两种宽高比和 DPI 下验证。 \src{https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UIBasicLayout.html}{Unity uGUI，Basic Layout}
+
+\pg{用双人 FPS 检验运行时能力}
+假设第一句游戏需求是「用这张图搭一个双人仓库，小局能开始、双方能移动并看见对方，触碰目标计分，先到三分结算」。这是用 FPS 视角检验工具接入能力的最小玩法。触碰目标可先隔离移动与计分的问题。需要加入虚拟对战判定时再加入同一份验收，单独核对事件发生的服务器时刻与去重结果。
+
+\f{D:/Cdev/REDFServer} 的连接入口为 \f{TcpNewConnectionAcceptor.cpp}，现有 TCP 服务使用 POSIX、SQLite 并提供账户、好友和聊天。Redflag 的 \f{Application} 构造即创建窗口，\f{Scene::OnUpdateRuntime} 同时更新脚本、Box2D 和画面。建议先在本机启动一个独立的无窗口对局进程，用两份客户端验证房间与同步。后续登录服务发入局凭据，对局进程验证凭据。Windows 编辑器与 POSIX 服务通过协议互通，构建目标分别维护。
+
+\textbf{谁拥有位置。} 客户端发送带序号的输入，服务端在固定 tick 执行规则，快照返回位置、速度及最后处理的输入号。本地从权威状态重放未确认输入，远端保存短期快照用于插值。加入房间、回合变化等可靠事件带可去重的编号，高频位置采用可丢弃的快照。可用 GameNetworkingSockets 建对照，再给自研可靠 UDP 使用同一数据包记录与回放。测试注入延迟、抖动、丢包、重复和乱序，记录实际校正距离、每秒字节数与最终比分。参数先随实验明确标出，测量后才设门槛。 \src{https://github.com/ValveSoftware/GameNetworkingSockets}{Valve 传输实现}\quad \src{https://www.gabrielgambetta.com/client-side-prediction-server-reconciliation.html}{Gambetta 客户端预测与校正}\quad \src{https://gafferongames.com/post/snapshot_interpolation/}{Fiedler 快照插值}
+
+\textbf{谁拥有碰撞。} 第一版用 CPU PhysX、静态地图和一个胶囊角色控制器。移动代码按本步长算出位移与重力，胶囊处理碰撞，服务端保存足底位置和着地状态。地图使用相同碰撞资产与尺度，检查穿墙、台阶、落地和重连。美术网格、相机、手部动画由客户端持有。后续若采用根运动，要指明哪一方消耗位移，避免动画和移动控制器各向前推进一次。 \src{https://nvidia-omniverse.github.io/PhysX/physx/5.6.1/docs/CharacterControllers.html}{NVIDIA PhysX 5.6.1 角色控制器}
+
+\textbf{让 AI 真能测试一局。} 给开发工具一个启动一服两端的入口，返回三个进程的日志和同一次运行编号。AI 注入固定输入，等候服务器确认第 3 分，读取两端比分控件及回合状态，再保存双方机位。即使两个画面不同也可通过游戏规则，若两端都显示 3 分而服务器只记录 2 次有效事件则判失败。此例可复用于验证排错与脚本修改。
+
+\pg{素材、工具与交付顺序}
+\textbf{可立即查阅的角色。} three.js r180 的 RobotExpressive 在公开示例中可旋转、切换动作。此次只读 GLB 元数据，实际列出 14 个动画片段，包括 Idle、Walking、Running、Jump，两个 skin 各列 43 个关节。固定版本目录附 CC0 说明。用它验证蒙皮和状态机，另选不同骨架验证重定向。Quaternius 动作库可作为第二来源，入选前核对所选下载包的真实动作。工作机找到了 Maya 2023/2025 和 Blender 5.0.1 的安装目录，AdvancedSkeleton 的实际安装位置与加载状态待核对。 \src{https://github.com/mrdoob/three.js/tree/r180/examples/models/gltf/RobotExpressive}{固定版本与许可}\quad \src{https://threejs.org/examples/webgl_animation_skinning_morph.html}{动作预览}\quad \src{https://quaternius.com/packs/universalanimationlibrary.html}{Quaternius 动作库}
+
+\textbf{开源工具按真实任务试用。} 项目已有 renderdoc-mcp v0.3.0 的实际帧记录，可优先复用。GG\_MayaMCP 可作为 Maya 查询、截图及动画操作候选，先取一个关节和三个动作时刻，与 Maya 脚本查询值核对。ForgeSkills 的动画与移动检查可参考，改写为会调用 Redflag 回放的项目 skill。一个 skill 写清输入、可调用操作、重试条件和通过判据；工具适配层负责执行，版本与结果一同保存。 \src{https://github.com/JiaboLi-GitHub/renderdoc-mcp/releases/tag/v0.3.0}{RenderDoc MCP}\quad \src{https://github.com/GimbalGoats/GG_MayaMCP}{Maya MCP}\quad \src{https://github.com/sekaikx/ForgeSkills}{ForgeSkills}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{27mm}XX@{}}\toprule
+交付顺序 & 用户能提出的任务 & 进入下一步的依据\\\midrule
+1 场景编辑 & 调整龙的材质，保存前后图并撤销 & 只改指定槽；重开文件读到新值；撤销后还原。\\
+2 美术制作 & 按图搭另一处展厅，选材并保留主相机 & 资产有来源与稳定编号；无意外覆盖；俯视图和相机图可查。\\
+3 可玩逻辑 & 写计分脚本和小型 HUD，运行一段输入 & 编译通过；运行事件、状态与 HUD 一致；更换关卡仍能复用。\\
+4 角色与对局 & 加入自己挑选的角色，启动双人仓库 & 姿态可对照；一服两端可重放；断线或重试后比分正确。\\
+5 故障与扩展 & 找出静止抖动或卡顿，验证修改 & 同输入复现，保存失败与修复证据；新任务复测旧能力。\\
+6 一句话成品 & 按新描述生成、试玩并打包完整小游戏 & 从独立发布目录启动，完成一局并重开；再用另一种玩法复验。\\
+\bottomrule\end{tabularx}\end{center}
+
+\textbf{AI 本身也要测。} 留出一张未参与开发的场景，重复用不同措辞要求同一行为，记录首次成功率、需人工介入的步骤、失败修复率、耗时及生成费用。评审美术风格时看候选图，评审游戏规则时读引擎状态。性能检查固定设备、Release 配置、场景和输入，对比 CPU 提交、GPU、服务器 tick 与帧时间分布。已有 \f{tests/DrawTiming.h} 对绘制微基准预热 30 轮、交替采样 120 轮；整局仍需单独测量。异常帧关联 RenderDoc 事件，时域画质检查保留连续帧和误差。 \src{https://www.anthropic.com/research/demystifying-evals-for-ai-agents}{Anthropic 代理评测方法}
+
+\end{document}
+

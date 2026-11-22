@@ -1,0 +1,88 @@
+\clearpage
+\section{资源编号和模型缓存}\label{sec:data-assets}
+场景里有两扇相同的门。保存场景时，每个实体都要记住自己选的是哪个模型。打开场景后，两扇门又应当共用已经读入的顶点和贴图。前一件事需要一份能保存在磁盘上的编号，后一件事需要一个在程序运行期间有效的模型对象。模型渲染组件 \code{ModelRendererComponent} 为此保存了两个字段，\code{ModelID} 写入场景文件，\code{ModelAsset} 在加载后指向模型。
+
+\subsection{从编号找到文件}
+首次登记模型时，\code{AssetLibrary::Add} 生成一个非零的 64 位编号，把编号和资源类型写进模型旁的 \code{.rfmeta} 文件。资源库在内存中也保留一条 \code{AssetInfo}，其中有编号、类型和源文件的绝对路径。所有记录放在一张以编号为键的哈希表\termenglish{hash table}里。给它一个编号就能找到对应记录，场景无需逐个比较文件名。
+
+例如，将 \code{door.fbx} 和 \code{door.fbx.rfmeta} 一起移入新的目录。下次扫描这个目录时，\code{Scan} 从旁置文件读回原编号，根据它现在的位置算出新的模型路径。场景里两扇门保存的编号仍然有效。
+
+\subsection{从编号取得可以绘制的模型}
+第一次画门时，\code{SceneRenderer} 把组件里的编号交给 \code{AssetManager::Load<Model>}。管理器先查登记表，确认这个编号代表模型，再查专门存放模型的缓存。缓存内部也是一张按编号查找的表，这次表里存的是 \code{Ref<Model>}。找不到现成对象时，管理器才调用 \code{Model::Load}，读取成功后把引用存入表中。第二扇门请求同一编号，就会取得同一个模型。
+
+\figpanel{shared-model}{两个实体的位置和拾取编号各自保存。模型编号 503 用来查找同一个文件，两次加载请求得到同一份已加载的模型。图中编号为示例值。}
+
+\code{Ref<Model>} 是共享引用。两扇门各保留一份引用，缓存也保留一份。调用 \code{Unload<Model>} 会移除缓存中的那一份，两扇门仍可以用自己的引用继续绘制。如果此时再按编号加载，管理器会重新读文件。当前只有模型接入这套按类型缓存的入口，导入材质时仍由加载器直接创建贴图。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Assets/AssetLibrary.cpp\#L10-L58}{编号登记与扫描}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Assets/AssetManager.h\#L40-L99}{加载、缓存与卸载}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SceneRenderer.cpp\#L911-L915}{场景读取模型}}
+
+\clearpage
+\section{模型的部件和材质}
+一扇门有木质的门板和金属的把手，文件为两者分别保存了网格和材质。导入模型时，\code{ProcessNode} 顺着节点读取部件，把父节点已经累积的变换乘到当前节点的变换上。每读到一个网格，\code{ProcessMesh} 就生成一条子网格记录\termenglish{submesh}，追加到模型的动态数组。绘制时按顺序读取这些记录，就能画全一扇门。
+
+\subsection{一条子网格记录}
+数组类型是 \code{std::vector<SubMesh>}。每项有三个字段。\code{MeshData} 指向含顶点和索引的网格，\code{Mat} 引用这块网格的材质，\code{LocalTransform} 把部件坐标变成模型坐标。例如，把手在门中心右侧 0.4 个单位，整扇门再向右平移 2 个单位。只考虑平移，把手最终在世界原点右侧 2.4 个单位处。引擎用矩阵表达这两层关系
+\[
+ M_{\text{部件到世界}} =
+ M_{\text{实体到世界}}\, M_{\text{部件到模型}} .
+\]
+移动另一扇门只需要改变那个实体的变换，两个实体可以继续读取相同的把手顶点。
+
+\subsection{给一扇门更换把手材质}
+材质保存底色、粗糙度、金属度等数值，另用 \code{BaseColorMap}、\code{NormalMap} 等字段分别引用颜色贴图和法线贴图。编辑器开启材质覆盖时，会按子网格的顺序为这个实体建立 \code{OverrideMaterials} 数组，并从各部件的材质复制出可以单独编辑的对象。复制粗糙度会得到独立的数值，复制贴图引用后，两份材质仍可读同一张图。
+
+若第 0 项是门板、第 1 项是把手，只调节第 1 项的粗糙度，就能单独改这扇门的把手。绘制时，\code{DrawModel} 取出子网格，优先选同一下标的覆盖材质，该项为空时沿用部件材质。下标很适合按导入顺序编辑和绘制。如果重新导出模型时部件换了顺序，原来第 1 项的设置也会落到新的第 1 项上。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Model.cpp\#L48-L74}{子网格的导入顺序}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Scene/Panel/SceneHierachyPanel.cpp\#L1680-L1691}{编辑器建立覆盖材质}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer3D.cpp\#L741-L759}{绘制时选材质}}
+
+\clearpage
+\section{一个网格里的顶点和索引}
+项目自带的 \code{Mesh::CreateCube} 很适合看清顶点数组和索引数组各存什么。立方体有六个面，每个面用四条顶点记录。虽然相邻两个面可以共用一个空间位置，但它们朝向不同，各自的顶点必须保留各自的法线。于是模型使用 24 条顶点记录。一个面的两个三角形则可以共用同一组四条记录，它们的六个索引依次是 \(0,1,2,\;2,3,0\)。六个面总计 36 个索引。
+
+\subsection{顶点字段的位置}
+\code{MeshVertex} 顺序保存位置、法线、贴图坐标和切线。法线给出表面的朝向，贴图坐标指出顶点落在图上哪里，切线给法线贴图提供沿表面的一条方向。最后两个数用于发光图。灯牌的图案若与底色使用同一套坐标，这两个数就是零；若使用另一套坐标，顶点着色器给底色坐标加上这段偏移，就能找到发光图案。
+
+\begin{center}
+{\small\begin{tabularx}{.98\linewidth}{@{}Yrrrrr@{}}
+\toprule
+字段 & 位置 & 法线 & 贴图坐标 & 切线 & 发光 UV 偏移 \\
+\midrule
+浮点数个数 & 3 & 3 & 2 & 3 & 2 \\
+距顶点开头（字节） & 0 & 12 & 24 & 32 & 44 \\
+\bottomrule
+\end{tabularx}}
+\end{center}
+
+读第一个顶点的贴图坐标从第 24 字节开始，再前进 52 字节就来到第二个顶点的贴图坐标。这里的 24 叫字段偏移\termenglish{offset}，52 叫顶点步长\termenglish{stride}。每个浮点数占 4 字节，上表共 13 个。构造网格时，CPU 上传顶点数组，并用 \code{BufferLayout} 记录字段顺序。与着色器的输入对应后，GPU 才能逐列读取。
+
+在 OpenGL 中，\code{AddVertexBuffer} 根据布局告诉顶点数组对象\termenglish{VAO}怎样读取这些字段。\code{SetIndexBuffer} 把索引缓冲区也关联到这个对象，两种缓冲区都由它持有引用。画完整立方体时，渲染器选好网格，发出一次读取 36 个索引的请求。Vulkan 后端从同一个 C++ 顶点类型取得步长与字段偏移。拾取时只读取位置和底色 UV，画灯牌时还读取发光 UV 偏移。
+
+\readings{\refitem{run:../../Redflag/src/Redflag/Renderer/Mesh.h}{C++ 顶点字段}\quad
+\refitem{run:../../Redflag/src/Platform/Vulkan/VulkanDrawPipeline.cpp}{Vulkan 读取顶点}\quad
+\refitem{run:../../Redflag/src/Platform/OpenGL/OpenGLVertexArray.cpp}{OpenGL 读取顶点}}
+
+\clearpage
+\section{图集坐标和着色器名称}\label{sec:data-atlas}
+一张地砖图集可以给很多精灵共用。假设整张图有 \(256\times128\) 个像素，里面排着 \(32\times32\) 像素的地砖。要取从零开始数的第 2 列、第 1 行，横向从像素边界 64 到 96，纵向从 32 到 64。着色器使用的贴图坐标把整张图的宽、高分别看作 1，因此这块地砖对应的范围是 \(u=0.25\) 到 \(0.375\)，\(v=0.25\) 到 \(0.5\)。
+
+\codewhere{调用示例}{Redflag/src/Redflag/Renderer/SubTexture2D.cpp}{SubTexture2D::CreateFromCoords}
+\begin{lstlisting}
+(*@\rhicomment{// 第 2 列、第 1 行，每格为 32 像素见方。}@*)
+auto tile = SubTexture2D::CreateFromCoords(
+    atlas, {2, 1}, {32, 32}, {1, 1});
+\end{lstlisting}
+
+调用的四项依次是整张图、起始格的位置、每格的像素尺寸，以及这个精灵占几格。返回的 \code{SubTexture2D} 只需要一个整图引用和四个角的坐标。四边形总有四个角，所以这里可以使用固定长度的数组 \code{m\_TexCoords[4]}。绘制精灵时，\code{Renderer2D} 取得整张纹理，再按四个顶点的顺序写入这四对坐标。换一块地砖，只需换坐标，原图的像素可以继续共用。
+
+\subsection{按名称取出着色器}
+在 Sandbox 的 \code{ExampleLayer} 里，需要反复使用同一个纹理着色器。初始化时，示例调用 \code{ShaderLibrary::Load} 载入 \code{Texture.glsl}。库在自己的哈希表里记下一对值，键是程序名 \code{Texture}，值是已创建的 \code{Ref<Shader>}。之后绘制时，示例通过 \code{Get("Texture")} 取回它。\code{Load} 每次都会请求创建，已有对象应通过 \code{Get} 重用。
+
+这两例的差别决定了容器怎么选。四个贴图坐标要与四个顶点逐一对应，数组能直接保留这个次序。着色器库只需要按名取对象，所以可以用哈希表。这张表属于持有它的示例层，名称供程序选择着色器。场景里的模型则需要随文件移动而保留身份，使用前文的资源编号来查找。
+
+\readings{\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/SubTexture2D.cpp\#L6-L41}{图集坐标换算}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Redflag/src/Redflag/Renderer/Renderer2D.cpp\#L440-L470}{四边形读取坐标}\quad
+\refitem{https://github.com/caihongqiu417/RedflagEngine/blob/e90c28b/Sandbox/src/ExampleLayer.cpp\#L153-L190}{示例层使用着色器}}

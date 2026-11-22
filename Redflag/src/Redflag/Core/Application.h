@@ -29,10 +29,10 @@ namespace Redflag
 	class REDFLAG_API Application
 	{
 	public:
-		Application(const std::string& name="Redflag App");
+		Application(const std::string& name="Redflag App", bool visible = true);
 		virtual ~Application();
 
-		void Run();
+		void Run(unsigned frameLimit = 0);
 
 		void OnEvent(Event& e);
 

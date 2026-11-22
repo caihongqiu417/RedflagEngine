@@ -1,0 +1,395 @@
+{
+  "file": "Forge-Sponza_frame10.rdc",
+  "tool": "1.47",
+  "frame": 10,
+  "api": "GraphicsAPI.Vulkan",
+  "dispatches": [
+    {
+      "event": 11,
+      "groups": [
+        19111,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4018",
+      "entry": "main"
+    },
+    {
+      "event": 24,
+      "groups": [
+        19111,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4018",
+      "entry": "main"
+    },
+    {
+      "event": 36,
+      "groups": [
+        19111,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4018",
+      "entry": "main"
+    },
+    {
+      "event": 48,
+      "groups": [
+        48,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4018",
+      "entry": "main"
+    },
+    {
+      "event": 60,
+      "groups": [
+        19111,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4018",
+      "entry": "main"
+    },
+    {
+      "event": 72,
+      "groups": [
+        175,
+        110,
+        1
+      ],
+      "shader": "ResourceId::4040",
+      "entry": "main"
+    },
+    {
+      "event": 84,
+      "groups": [
+        19111,
+        1,
+        1
+      ],
+      "shader": "ResourceId::4098",
+      "entry": "main"
+    },
+    {
+      "event": 96,
+      "groups": [
+        175,
+        110,
+        1
+      ],
+      "shader": "ResourceId::4064",
+      "entry": "main"
+    },
+    {
+      "event": 108,
+      "groups": [
+        175,
+        110,
+        1
+      ],
+      "shader": "ResourceId::4088",
+      "entry": "main"
+    }
+  ],
+  "draws": 125,
+  "draw_events": [
+    128,
+    133,
+    138,
+    143,
+    148,
+    153,
+    158,
+    163,
+    168,
+    173,
+    178,
+    183,
+    188,
+    193,
+    198,
+    203,
+    208,
+    213,
+    218,
+    223,
+    228,
+    233,
+    238,
+    243,
+    248,
+    253,
+    258,
+    263,
+    268,
+    273,
+    278,
+    283,
+    288,
+    293,
+    298,
+    303,
+    308,
+    313,
+    318,
+    323,
+    328,
+    333,
+    338,
+    343,
+    348,
+    353,
+    358,
+    363,
+    368,
+    373,
+    378,
+    383,
+    388,
+    393,
+    398,
+    403,
+    408,
+    413,
+    418,
+    423,
+    428,
+    433,
+    438,
+    443,
+    448,
+    453,
+    458,
+    463,
+    468,
+    473,
+    478,
+    483,
+    488,
+    493,
+    498,
+    503,
+    508,
+    513,
+    518,
+    523,
+    528,
+    533,
+    538,
+    543,
+    548,
+    553,
+    558,
+    563,
+    568,
+    573,
+    578,
+    583,
+    588,
+    593,
+    598,
+    603,
+    608,
+    613,
+    618,
+    623,
+    628,
+    633,
+    638,
+    649,
+    652,
+    655,
+    658,
+    661,
+    664,
+    667,
+    670,
+    673,
+    676,
+    679,
+    682,
+    685,
+    688,
+    691,
+    694,
+    697,
+    700,
+    703,
+    706,
+    709,
+    712
+  ],
+  "draw_targets": [
+    {
+      "event": 128,
+      "images": [
+        [
+          1393,
+          878,
+          "R8G8B8A8_UNORM"
+        ],
+        [
+          1393,
+          878,
+          "R32_SINT"
+        ]
+      ]
+    },
+    {
+      "event": 712,
+      "images": [
+        [
+          2560,
+          1440,
+          "B8G8R8A8_UNORM"
+        ]
+      ]
+    }
+  ],
+  "passes": [
+    {
+      "event": 6,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4217)"
+    },
+    {
+      "event": 13,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4217)"
+    },
+    {
+      "event": 19,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4218)"
+    },
+    {
+      "event": 26,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4218)"
+    },
+    {
+      "event": 31,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4219)"
+    },
+    {
+      "event": 38,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4219)"
+    },
+    {
+      "event": 43,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4220)"
+    },
+    {
+      "event": 50,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4220)"
+    },
+    {
+      "event": 55,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4221)"
+    },
+    {
+      "event": 62,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4221)"
+    },
+    {
+      "event": 68,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4222)"
+    },
+    {
+      "event": 74,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4222)"
+    },
+    {
+      "event": 79,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4223)"
+    },
+    {
+      "event": 86,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4223)"
+    },
+    {
+      "event": 92,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4224)"
+    },
+    {
+      "event": 98,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4224)"
+    },
+    {
+      "event": 103,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4225)"
+    },
+    {
+      "event": 110,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4225)"
+    },
+    {
+      "event": 119,
+      "flags": "ActionFlags.CommandBufferBoundary|BeginPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkBeginCommandBuffer(ResourceId::4216)"
+    },
+    {
+      "event": 120,
+      "flags": "ActionFlags.BeginPass|PassBoundary",
+      "name": "vkCmdBeginRenderPass(C=Clear, D=Clear)"
+    },
+    {
+      "event": 639,
+      "flags": "ActionFlags.EndPass|PassBoundary",
+      "name": "vkCmdEndRenderPass(C=Store, D=Don't Care)"
+    },
+    {
+      "event": 640,
+      "flags": "ActionFlags.BeginPass|PassBoundary",
+      "name": "vkCmdBeginRenderPass(Clear)"
+    },
+    {
+      "event": 714,
+      "flags": "ActionFlags.EndPass|PassBoundary",
+      "name": "vkCmdEndRenderPass(Store)"
+    },
+    {
+      "event": 715,
+      "flags": "ActionFlags.CommandBufferBoundary|EndPass|PassBoundary",
+      "name": "=> vkQueueSubmit(1)[0]: vkEndCommandBuffer(ResourceId::4216)"
+    }
+  ],
+  "frame_messages": [],
+  "status": "ok",
+  "capture": "output/captures/local/Forge-Sponza-Lit-10.rdc",
+  "capture_bytes": 699787576,
+  "capture_sha256": "c2036e22e56ca70040434715ac296a844a9216bf32a44bf4cb0bc622446cfef8",
+  "executable_sha256": "5a18df8cf2f11097fdd55f71f4dc241cfe48c66e41f4e308490d29887ccb5f30",
+  "build": "Debug x64, with validation",
+  "adapter": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "scene": "assets/scenes/Sponza-Atrium.redflag",
+  "settings": "Native, all 3 point lights + DDGI (2 samples), GTAO on, SSR off, TAA on (0.85)",
+  "scene_draws": 103,
+  "imgui_draws": 22,
+  "screenshot": "editor-sponza-rdc.png",
+  "screenshot_sha256": "d87a195b324efa17e55e4a8a9d631fddc73572aaee07d633e3e3e232a54cce3c",
+  "reproduction": [
+    "Build the Debug x64 RedflagForge editor. Fetch external Sponza assets with python tests/fetch_sponza.py and restore the scene sidecar defaults if changed.",
+    "In RenderDoc 1.47 launch RedflagForge.exe with --vulkan, set the working directory to RedflagForge, then queue frame 10 before launching. This capture used the editor scene camera and full-size 2560 x 1440 window. Viewport size also depends on the stored ImGui docking layout.",
+    "In the replay, go to event 108 for the display conversion, 128 for the raster RGB and integer entity-ID targets, and 712 for the final ImGui window image. Open output/captures/local/Forge-Sponza-Lit-10.rdc locally; it is omitted from Git."
+  ],
+  "replay": "RenderDoc 1.47 native ReplayController. renderdoc-mcp v0.3.0 rejected the newly versioned Vulkan frame (version 32)."
+}

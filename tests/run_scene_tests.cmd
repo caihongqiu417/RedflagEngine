@@ -13,7 +13,7 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
  tests\SceneRenderTests.cpp /Fe:bin-int\Tests\SceneRenderTests.exe /Fo:bin-int\Tests\SceneRenderTests.obj ^
  /link bin\Debug-windows-x86_64\Redflag\Redflag.lib bin\Debug-windows-x86_64\GLFW\GLFW.lib ^
  bin\Debug-windows-x86_64\Glad\Glad.lib Redflag\vendor\assimp\bin\Debug-windows-x86_64\assimp\assimp.lib Redflag\vendor\Box2D\bin\Debug-windows-x86_64\Box2D\Box2D.lib Redflag\vendor\imgui\bin\Debug-windows-x86_64\ImGui\ImGui.lib opengl32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ^
- /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCPMTD
+ Redflag\vendor\yaml-cpp\bin\Debug-windows-x86_64\yaml-cpp\yaml-cpp.lib /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCPMTD
 if errorlevel 1 exit /b 1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 cd RedflagForge

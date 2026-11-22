@@ -1,0 +1,14 @@
+case,r,g,b,screen_hit
+OpenGL_vs_Vulkan_max_cube_and_mean_BRDF_error,0.00111879,0.0031153,0,0
+window_sharp,6.59375,5.97443,5.97443,0
+window_rough,1.78847,1.34756,1.34928,0
+metal_specular_constant,1.7,0.48,0.095,0
+dielectric_specular_constant,0.08,0.04,0.02,0
+metal_diffuse,0,0,0,1
+dielectric_diffuse,1.632,0.4608,0.0912,1
+cube_edge_left,1.418,0.996091,1.41793,0
+cube_edge_right,1.41793,0.996091,1.418,0
+SSR_hit_with_environment,0,0.396032,0.0322582,1
+SSR_hit_without_environment,0,0.396032,0.0322582,1
+SSR_miss_with_environment,1.71656,0.511183,0.119567,0
+SSR_miss_without_environment,0,0,0,0

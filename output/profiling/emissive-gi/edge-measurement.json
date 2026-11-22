@@ -1,0 +1,63 @@
+{
+  "api": "Vulkan",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "configuration": "Debug x64",
+  "command": "tests/run_gi_benchmark.cmd --triangle-edge",
+  "front_z": 0,
+  "back_z": -0.1,
+  "hit_tolerance_world_units": 0.0001,
+  "old": {
+    "front": 279,
+    "back": 10,
+    "center_z": -0.1
+  },
+  "corrected": {
+    "front": 289,
+    "back": 0,
+    "center_z": 0.0,
+    "range_z": [
+      -2.38419e-07,
+      4.76837e-07
+    ]
+  },
+  "wall_directions": {
+    "rays_per_case": 289,
+    "cases": 12,
+    "missed": 0,
+    "csv": "edge-directions.csv"
+  },
+  "real_gap_width_world": 0.002,
+  "shadow_linear_red": {
+    "opaque_in_front": 0,
+    "opaque_behind_light": 0.168192,
+    "thin_glass_in_front": 0.168192
+  },
+  "sha256": {
+    "Redflag/src/Redflag/Renderer/GI/GIScene.h": "0257630b3d21c9f1c6921fb451c44b13dcf897b91bf40906bdb4d5bec3da08dd",
+    "Redflag/src/Redflag/Renderer/GI/GIScene.cpp": "cbf33b079bc927e0e108366409097b61ca2e456cdf42ae1e4df7945c02149983",
+    "Redflag/src/Redflag/Renderer/GI/Shaders/GI.comp.inc": "becf4b0b06fe22dbcf93610a46341a17a8951672ab767222790fc0596d5e05e0",
+    "Redflag/src/Redflag/Renderer/GI/Shaders/GIEmission.comp.inc": "7c2576551dc81bb27f345e419b034bbcde1f5c36c790530dd61fe348dcbdbd67",
+    "Redflag/src/Redflag/Renderer/GI/Shaders/Fog.comp.inc": "dab6a9cc202fcf32e49a9b62f8fa94de4fabc1746bd84b7a783fe836ac4baa86",
+    "Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/ClusterShade.comp.inc": "311e47679e11ca9f9b6f818d52aeecc022481375cce63b11a2b82196893081b6",
+    "Redflag/src/Redflag/Renderer/GI/Shaders/Trace.glsl": "f7f96e52843cccd9908eea7932cc02411aeafabaedda024cc6723bc8348ed4ec",
+    "tests/GIBenchmark.cpp": "690b3d9df729e69ba6a12bd2f267da9576502c275b5c280162217ff94bda92d0",
+    "tests/TriangleIntersectionCheck.h": "771117f95c912f7648a530d5293e739b8304a68343ba20023a385f35586b4a7a",
+    "tests/fixtures/LongSharedEdge.obj": "a46ee05bf0fa1e5554a6d4e3fa4e294b8d573c9648681f60ab46d256dbdedd53",
+    "bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe": "d0180005a4f627736b86bcf10e492192af3da2220acdc8cf639a830d4489022c",
+    "bin-int/Tests/GIBenchmark.exe": "37331e481bfbed16f8323ded6ae4d8b54bef8151b597b0d8767bba838853af3d",
+    "output/profiling/emissive-gi/edge-final.csv": "925982e46036e26ba496a762fdeadbe6e764fb8363fff1c77cbdf7c31ed4586f",
+    "output/profiling/emissive-gi/edge-directions.csv": "1e03bee95aabc03b0e76f6010153fa5fa2d847674e81334f1795ab741f2bdb8b",
+    "output/profiling/emissive-gi/measurements-watertight.csv": "3e5bbbf8d50aeef3f56434e8cf67645ac6116321155c86d347b2857712101b09"
+  },
+  "long_triangle": {
+    "fixture": "tests/fixtures/LongSharedEdge.obj",
+    "leftmost_x": -8192,
+    "common_edge_x": 0.00025,
+    "view": [
+      17,
+      3
+    ],
+    "rays": 51,
+    "missed": 0
+  }
+}

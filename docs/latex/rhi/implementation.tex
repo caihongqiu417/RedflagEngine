@@ -1,0 +1,120 @@
+\clearpage
+\section{在编辑器里运行 Vulkan}\label{impl:entry}
+用 Vulkan 打开 RedflagForge，首先看到 Sponza 中庭。右侧 Lighting 面板默认选中 Lit，石柱与挂毯受场景里的三盏点光源照明。左侧选择一盏灯，可以在 Inspector 里调整颜色、强度和位置。中间的 Scene 视图使用编辑相机，Game 视图使用场景中勾选「主相机」的相机。
+
+\codewhere{运行命令}{tests/fetch_sponza.py}{模型下载与 Vulkan 启动}
+\begin{lstlisting}
+(*@\rhicomment{\# 首次运行时补齐中庭模型和贴图。}@*)
+python tests/fetch_sponza.py
+Set-Location RedflagForge
+..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe --vulkan
+\end{lstlisting}
+
+下载脚本会补齐中庭模型和贴图。进入编辑器目录后再启动程序，场景、字体和贴图都从这个目录读取。省略 \code{--vulkan} 就使用 OpenGL。在新环境中，先安装 Visual Studio 的 C++ 工具与 Vulkan SDK，设置 \code{VULKAN\_SDK}，从仓库根目录运行 \path{GenerateProjects.bat}，打开解决方案构建 \code{RedflagForge}。本机使用 SDK 1.3.275.0。
+
+\subsection{开窗前选择图形后端}
+程序先在 \code{EntryPoint.h} 读取启动选项，再由 \code{WindowsWindow} 创建窗口。OpenGL 使用自己的上下文。选用 Vulkan 时，窗口将由另一套呈现机制显示画面，因此创建窗口前就要告诉 GLFW 使用 \code{GLFW\_NO\_API}。\code{VulkanContext} 随后找到能绘制并显示到该窗口的设备，准备可轮流显示的图像。
+
+应用只在 \code{BeginFrame()} 成功取到图像后才让各层绘制。若用户把窗口最小化，本轮继续处理窗口消息。等窗口恢复，后端再按实际像素尺寸准备图像。这个判断留在窗口和上下文里，模型加载器就无需知道桌面窗口有多大。
+
+\readings{源码位于 \path{Redflag/src/Platform} 下的 \path{Windows} 与 \path{Vulkan} 目录。\quad
+\refitem{https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html}{Khronos · 窗口取图}}
+
+\input{editor}
+
+\clearpage
+\section{颜色图怎样出现在场景面板里}
+下面是打开项目自带 \path{assets/scenes/CornellBox.redflag} 后的实际编辑器画面。层级面板里，红墙是 \code{LeftWall\_Red}，绿墙是另一个实体。这张截图来自最初接入 Vulkan 的版本，当时只显示材质颜色，因此房间内部的两只浅色箱子与地面的明暗很接近。
+
+\begin{center}
+\includegraphics[width=.97\linewidth]{../../../output/rhi/forge-cornell-window.png}
+\captionof*{figure}{RenderDoc 回放正式编辑器第 66 帧，窗口为 $2560\times1440$ 像素。七次网格绘制在事件 49 结束，随后五次 ImGui 绘制把右侧场景和左侧工具面板合到窗口图上，最后一次为事件 72。}
+\end{center}
+
+每帧，编辑器先根据右侧面板的实际像素尺寸选好绘制目标。\code{BeginScene} 清除上次留下的颜色、实体编号和深度。\code{SceneRenderer::DrawGeometry} 将模型画进这些图，\code{EndScene} 结束这次场景绘制。随后 ImGui 从颜色图读取像素，把它和左边的实体列表一起画进窗口图像，最后才轮到窗口呈现。面板只占窗口的一部分，这正是要保留两张不同颜色图的原因。
+
+点选时读另一项结果。编辑器将鼠标位置减去场景图的左上角，再按实际像素尺寸换算。在 Vulkan 路径里，图的左上角就是像素 $(0,0)$。\code{ReadPixel} 返回该位置上一次已提交的实体编号；层级面板拿这个编号去当前场景中找实体。背景保留清除时写入的 $-1$，点击空处会清掉选中状态。
+
+\clearpage
+\section{资源创建与场景绘制}\label{impl:objects}
+导入一扇带木纹的门时，模型加载器已经读出两组数组：顶点写明门板各个角的位置和贴图坐标，索引写明哪些角连成三角形。它仍然调用项目原有的 \code{Mesh::Create}。\code{Mesh} 从顶点算出自己的包围盒，再通过当前 \code{RenderDevice} 创建显卡上的几何。模型保存返回的对象，下一帧即使相机换了位置，这些顶点和索引仍可使用。
+
+\codewhere{源码}{Redflag/src/Redflag/Renderer/Mesh.cpp}{Mesh::Mesh}
+\begin{lstlisting}
+(*@\rhicomment{// 几何随网格保存，移动相机时继续用这一份。}@*)
+m_Geometry = RenderDevice::Get().CreateMesh(vertices, indices);
+\end{lstlisting}
+
+对 OpenGL，设备把顶点布局、顶点缓冲和索引缓冲关联到一个顶点数组对象。对 Vulkan，后端先把原始数值写入 CPU 能访问的暂存缓冲区，录下复制命令，把同样的数值写到绘制使用的缓冲区。加载器拿到创建结果以后可以释放原数组。底色图也遵循这项约定，因此 \code{CreateTexture} 的接口注释说明了像素的顺序，以及调用者可以在什么时候释放它们。
+
+\subsection{材质由场景选，后端接收这次绘制}
+如果只给一扇门换颜色，编辑器会在这个实体上保存覆盖材质。\code{SceneRenderer} 遍历场景时优先选它；没有覆盖时沿用模型部件自带的材质。部件的顶点先放进模型，再随整扇门进到世界中。代码把实体矩阵乘在部件矩阵左边。现有 OpenGL 完整渲染和 Vulkan 底色视图共用这段收集逻辑。前者把网格交给 \code{Renderer3D} 继续做可见性判断和合批，后者调用下面的接口。
+
+\codewhere{源码}{Redflag/src/Redflag/Renderer/SceneRenderer.cpp}{SceneRenderer::DrawGeometry}
+\begin{lstlisting}
+(*@\rhicomment{// world 定位这个部件，id 让编辑器能找回实体。}@*)
+commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection,
+                     world, material->BaseColor, id, surface);
+\end{lstlisting}
+
+设备接口在 \path{Renderer/RHI/RenderDevice.h}，绘制接口在同目录的 \path{CommandList.h}。前者接收顶点或像素，返回可以保留的资源；后者接收本次使用的资源和数值。网格、贴图、材质仍各自在原有资源头文件里。要改材质选择，可以从 \code{SceneRenderer} 找；要查 GPU 最终收到的指令，则看 \code{VulkanDraw::DrawIndexed}。
+
+\clearpage
+\section{用一个像素检查绘制}\label{impl:pixels}
+一块蓝色方形放在绿色方形的前面。测试故意先画近处的蓝色，再画远处的绿色。如果只看最后一次绘制，重叠处应当变绿。打开深度测试后，远处片元未能通过测试，这里的颜色和拾取编号都会保留近处方形的值。下面是从本项目的 Vulkan 帧直接导出的颜色图。
+
+\begin{center}
+\includegraphics[width=.40\linewidth]{../../../output/rhi/mesh-depth-color.png}
+\captionof*{figure}{RenderDoc 1.47 回放，原图 $32\times16$ 像素。蓝面为实体 17，绿面为实体 42。两次索引绘制分别是事件 13 和 18，每次读六个索引。}
+\end{center}
+
+\noindent\begin{tabularx}{\linewidth}{@{}L{33mm}L{28mm}L{45mm}Y@{}}
+\toprule
+从左上角量起 & 采样位置 & 读回的 RGB & 实体编号\\\midrule
+$(8,4)$ & 只有近面 & $(43,82,231)$ & 17\\
+$(24,4)$ & 只有远面 & $(31,208,67)$ & 42\\
+$(16,4)$ & 两面重叠 & $(43,82,231)$ & 17\\
+$(16,12)$ & 背景 & 清除时的颜色 & $-1$\\
+\bottomrule
+\end{tabularx}
+
+两个后端的命令列表读取同一份测试输入。四种颜色来自一张 $2\times2$ 的真实贴图，两个网格的贴图坐标分别指向蓝色和绿色。程序先在 $32\times16$ 的目标上连续画三帧，再换成 $64\times32$ 画三帧，分别读取对应位置。两种尺寸的 OpenGL 和 Vulkan 结果都通过了检查。复现入口是仓库根目录的 \path{tests/run_rhi_tests.cmd}。
+
+\subsection{怎样解释这次截帧}
+本机 RTX 5070 Ti Laptop GPU 运行原生 Vulkan 测试时，Khronos 验证层未报告错误。对同一份捕获额外开启 RenderDoc 的回放校验，打开帧时事件 4 出现四条图像布局消息；再定位两个绘制事件没有新增消息。这一差异尚待定位。两份原始捕获保存在仓库的 \path{output/captures} 中，可用 RenderDoc 1.47 回放。表中的实测值可以用来回归颜色、遮挡和点选，不能据此推算 GPU 用时。
+
+\clearpage
+\section{视口尺寸与图像寿命}\label{impl:fix}
+最初接入时，离屏测试已经能画对两个方形，正式编辑器却在打开 Cornell Box 时触发了相机投影断言。测试自己指定投影矩阵，编辑器从场景文件恢复相机。反序列化刚添加相机组件，场景就会用当前宽高设置它的投影。此时若宽和高还都是零，宽高比就算不出来。
+
+\codewhere{旧调用顺序 · 伪代码}{RedflagForge/src/VulkanForgeLayer.cpp}{VulkanForgeLayer::OpenScene}
+\begin{lstlisting}
+(*@\rhicomment{// 旧版本在面板宽高仍为零时读入了场景相机。}@*)
+SceneSerializer(scene).Deserialize(path);
+\end{lstlisting}
+
+\codewhere{源码}{RedflagForge/src/VulkanForgeLayer.cpp}{VulkanForgeLayer::OpenScene}
+\begin{lstlisting}
+(*@\rhicomment{// 新视口还没有尺寸时，先借用窗口宽高计算投影。}@*)
+auto extent = m_Draw->GetExtent();
+if (extent.width == 0)
+    extent = GetWindowContext().GetExtent();
+scene->OnViewportResize(extent.width, extent.height);
+
+if (!SceneSerializer(scene).Deserialize(path.string()))
+{
+    Report("Could not open scene: " + path.u8string());
+    return;
+}
+\end{lstlisting}
+
+首次开场景时，ImGui 还没有排出场景面板，但窗口已经有可用的像素尺寸。先把它交给场景，相机组件就能正常创建。面板完成布局后，再用面板的实际尺寸更新场景。这处修改放在打开场景的入口，相机仍按原来的规则计算投影。
+
+\subsection{当前实现怎样保留已经提交的数据}
+移动一个物体后，Vulkan 将新的矩阵、底色和实体编号随这条绘制命令写入少量常量\termenglish{push constants}。网格与贴图继续共用。后端轮流使用两份工作帧，各自保留该帧用到的网格与贴图引用。等对应的围栏通知 CPU 绘制完成，这一份才可重新录制。
+
+拖大面板时，当前实现先建立新图，再等显卡用完旧图才更换。鼠标点选也采用同步读回，只在点击时等一个像素的结果。这样第一次接入时容易检查图像究竟来自哪帧，代价是这些操作可能使 CPU 等待。后文关于延后回收与异步拾取的设计，可以在保留本次像素测试的基础上继续实现和计时。
+
+\readings{\path{RedflagForge/src/VulkanForgeLayer.cpp}\quad
+\path{Redflag/src/Redflag/Scene/Scene.cpp}\quad
+\refitem{https://docs.vulkan.org/guide/latest/push_constants.html}{Khronos · 随命令记录常量}}

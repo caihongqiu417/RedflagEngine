@@ -1,0 +1,27 @@
+--- a/imgui.cpp
++++ b/imgui.cpp
+@@ -3747,6 +3747,12 @@
+     IM_ASSERT(DrawList == &DrawListInst);
+     IM_DELETE(Name);
+     ColumnsStorage.clear_destruct();
++
++    for (int i = 0; i < DC.Layouts.Data.Size; i++)
++    {
++        ImGuiLayout* layout = (ImGuiLayout*)DC.Layouts.Data[i].val_p;
++        IM_DELETE(layout);
++    }
+ }
+ 
+ ImGuiID ImGuiWindow::GetID(const char* str, const char* str_end)
+@@ -3836,11 +3842,6 @@
+     ImGuiContext& g = *GImGui;
+ 
+ 
+-    for (int i = 0; i < DC.Layouts.Data.Size; i++)
+-    {
+-        ImGuiLayout* layout = (ImGuiLayout*)DC.Layouts.Data[i].val_p;
+-        IM_DELETE(layout);
+-    }
+     // While most behaved code would make an effort to not steal active id during window move/drag operations,
+     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
+     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.

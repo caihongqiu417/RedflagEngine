@@ -1,0 +1,15 @@
+\begin{tikzpicture}[x=1mm,y=1mm,every node/.style={align=center,inner sep=0pt,text=Ink,font=\sffamily\fontsize{10.2}{13.5}\selectfont},
+  pane/.style={rounded corners=1.2mm,line width=.65pt},down/.style={draw=Muted,line width=.7pt,-{Stealth[length=2mm]}}]
+  \draw[pane,draw=Ink!65] (0,0) rectangle (158,65);
+  \draw[pane,draw=Teal!70,fill=Soft] (3,3) rectangle (76.5,62);
+  \draw[pane,draw=Rust!70,fill=Rust!5] (81.5,3) rectangle (155,62);
+  \foreach \x/\shade/\label in {40/Teal/场景几何与鼠标拾取,118/Rust/场景光照与屏幕效果}
+    \node[text=\shade,font=\sffamily\bfseries] at (\x,56) {\label};
+  \node at (40,45) {\texttt{SceneRenderer::DrawGeometry}};
+  \node at (118,45) {\texttt{LightingPreview::Render}};
+  \node at (40,30) {\texttt{CommandList::DrawIndexed}};
+  \node at (118,30) {全局光照与屏幕效果计算};
+  \node at (40,12) {\texttt{VulkanDraw}\\写入颜色和物体编号};
+  \node at (118,12) {\texttt{ComputeDevice::Dispatch}\\按工作组处理像素与场景数据};
+  \foreach \x in {40,118}{\draw[down] (\x,41)--(\x,34); \draw[down] (\x,26)--(\x,20);}
+\end{tikzpicture}

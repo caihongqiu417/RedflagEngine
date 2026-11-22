@@ -7,6 +7,7 @@
 #include"Components.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
+#include "Redflag/Utils/FileSystem.h"
 
 #include <fstream>
 namespace YAML {
@@ -244,6 +245,100 @@ namespace Redflag {
         }
     }
 
+    struct MaterialMap
+    {
+        const char* Name;
+        Ref<Texture2D> Material::*Texture;
+    };
+
+    static constexpr MaterialMap s_MaterialMaps[] = {
+        { "BaseColorMap", &Material::BaseColorMap }, { "NormalMap", &Material::NormalMap },
+        { "MetallicRoughnessMap", &Material::MetallicRoughnessMap }, { "AOMap", &Material::AOMap },
+        { "AlphaMap", &Material::AlphaMap }, { "EmissiveMap", &Material::EmissiveMap }
+    };
+
+    static void WriteMaterial(YAML::Emitter& out, const Material& material, const Material* original = nullptr)
+    {
+        out << YAML::Key << "BaseColor" << YAML::Value << material.BaseColor;
+        out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
+        out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
+        out << YAML::Key << "AO" << YAML::Value << material.AO;
+        if (material.Emission != glm::vec3(0))
+            out << YAML::Key << "Emission" << YAML::Value << material.Emission;
+
+        // 模型内的图片没有独立文件名。只记下哪些贴图沿用模型，重开场景时即可找回原图。
+        std::vector<std::string> modelMaps;
+        for (const MaterialMap& map : s_MaterialMaps)
+        {
+            const Ref<Texture2D>& texture = material.*map.Texture;
+            if (!texture) continue;
+            if (original && texture == original->*map.Texture)
+                modelMaps.emplace_back(map.Name);
+            else if (!texture->GetPath().empty())
+                out << YAML::Key << map.Name << YAML::Value << std::filesystem::proximate(texture->GetPath()).generic_u8string();
+        }
+        if (!modelMaps.empty())
+            out << YAML::Key << "ModelMaps" << YAML::Value << YAML::Flow << modelMaps;
+
+        const char* alpha = "Opaque";
+        if (material.Alpha == AlphaMode::Mask) alpha = "Mask";
+        if (material.Alpha == AlphaMode::Blend) alpha = "Blend";
+        out << YAML::Key << "AlphaMode" << YAML::Value << alpha;
+        out << YAML::Key << "AlphaCutoff" << YAML::Value << material.AlphaCutoff;
+        out << YAML::Key << "DoubleSided" << YAML::Value << material.DoubleSided;
+        out << YAML::Key << "RefractionIndex" << YAML::Value << material.RefractionIndex;
+        out << YAML::Key << "Thickness" << YAML::Value << material.Thickness;
+    }
+
+    static void ReadMaterial(const YAML::Node& node, Material& material, const Material* original = nullptr)
+    {
+        if (node["BaseColor"]) material.BaseColor = node["BaseColor"].as<glm::vec4>();
+        material.Metallic = node["Metallic"].as<float>(material.Metallic);
+        material.Roughness = node["Roughness"].as<float>(material.Roughness);
+        material.AO = node["AO"].as<float>(material.AO);
+        if (node["Emission"]) material.Emission = node["Emission"].as<glm::vec3>();
+        for (const MaterialMap& map : s_MaterialMaps)
+        {
+            if (node[map.Name])
+                material.*map.Texture = Texture2D::Create(std::filesystem::u8path(node[map.Name].as<std::string>()).string());
+        }
+        if (original)
+        {
+            for (const YAML::Node& entry : node["ModelMaps"])
+            {
+                const std::string name = entry.as<std::string>();
+                for (const MaterialMap& map : s_MaterialMaps)
+                    if (name == map.Name) material.*map.Texture = original->*map.Texture;
+            }
+        }
+
+        const std::string alpha = node["AlphaMode"].as<std::string>("Opaque");
+        if (alpha == "Blend") material.Alpha = AlphaMode::Blend;
+        else if (alpha == "Mask") material.Alpha = AlphaMode::Mask;
+        else if (alpha == "Opaque") material.Alpha = AlphaMode::Opaque;
+        else throw std::runtime_error("Unknown material AlphaMode: " + alpha);
+        material.AlphaCutoff = node["AlphaCutoff"].as<float>(material.AlphaCutoff);
+        material.DoubleSided = node["DoubleSided"].as<bool>(material.DoubleSided);
+        material.RefractionIndex = node["RefractionIndex"].as<float>(material.RefractionIndex);
+        material.Thickness = node["Thickness"].as<float>(material.Thickness);
+    }
+
+    static void ReadModelFile(const YAML::Node& node, AssetID& id, std::string& path)
+    {
+        path = node["FilePath"].as<std::string>("");
+        id = node["ModelID"].as<AssetID>(0);
+        if (!id)
+            id = AssetManager::Add<Model>(path);
+        else if (!AssetManager::GetLibrary().Get(id) && std::filesystem::exists(path + ".rfmeta"))
+        {
+            // 项目外的模型也能按路径找回，但其 ID 须和场景中保存的一致。
+            auto found = AssetManager::Add<Model>(path);
+            if (found && found != id) throw std::runtime_error("Model ID does not match: " + path);
+        }
+        if (const auto* info = AssetManager::GetLibrary().Get(id))
+            path = std::filesystem::proximate(info->Path).generic_string();
+    }
+
     static void SerializeEntity(YAML::Emitter& out, Entity entity)
     {
         RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
@@ -372,10 +467,7 @@ namespace Redflag {
             // PBR 材质参数（BaseColor 取 mat->BaseColor，它才是 Inspector 编辑的值）
             if (mr.Mat)
             {
-                out << YAML::Key << "BaseColor" << YAML::Value << mr.Mat->BaseColor;
-                out << YAML::Key << "Metallic"  << YAML::Value << mr.Mat->Metallic;
-                out << YAML::Key << "Roughness" << YAML::Value << mr.Mat->Roughness;
-                out << YAML::Key << "AO"        << YAML::Value << mr.Mat->AO;
+                WriteMaterial(out, *mr.Mat);
             }
 
             out << YAML::EndMap;
@@ -390,6 +482,15 @@ namespace Redflag {
             out << YAML::Key << "ModelID" << YAML::Value << mr.ModelID;
             out << YAML::Key << "FilePath" << YAML::Value << mr.FilePath;
             out << YAML::Key << "Color"    << YAML::Value << mr.Color;
+            if (!mr.LODs.empty())
+            {
+                out << YAML::Key << "LODs" << YAML::Value << YAML::BeginSeq;
+                for (const auto& lod : mr.LODs)
+                    out << YAML::BeginMap << YAML::Key << "ModelID" << YAML::Value << lod.ModelID
+                        << YAML::Key << "FilePath" << YAML::Value << lod.FilePath
+                        << YAML::Key << "ScreenHeight" << YAML::Value << lod.ScreenHeight << YAML::EndMap;
+                out << YAML::EndSeq;
+            }
 
             // per-submesh 覆盖材质 PBR 参数
             if (!mr.OverrideMaterials.empty())
@@ -401,11 +502,9 @@ namespace Redflag {
                     out << YAML::BeginMap;
                     if (mr.OverrideMaterials[i])
                     {
-                        const auto& mat = mr.OverrideMaterials[i];
-                        out << YAML::Key << "BaseColor" << YAML::Value << mat->BaseColor;
-                        out << YAML::Key << "Metallic"  << YAML::Value << mat->Metallic;
-                        out << YAML::Key << "Roughness" << YAML::Value << mat->Roughness;
-                        out << YAML::Key << "AO"        << YAML::Value << mat->AO;
+                        const Material* original = mr.ModelAsset && i < mr.ModelAsset->GetSubMeshes().size()
+                            ? mr.ModelAsset->GetSubMeshes()[i].Mat.get() : nullptr;
+                        WriteMaterial(out, *mr.OverrideMaterials[i], original);
                     }
                     out << YAML::EndMap;
                 }
@@ -530,6 +629,13 @@ namespace Redflag {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unamed Scene";
+		if (!m_Scene->GetEnvironment().empty())
+		{
+			const std::filesystem::path environment = std::filesystem::absolute(m_Scene->GetEnvironment());
+			const std::filesystem::path folder = std::filesystem::absolute(filepath).parent_path();
+			const std::filesystem::path relative = environment.lexically_relative(folder);
+			out << YAML::Key << "Environment" << YAML::Value << (relative.empty() ? environment : relative).generic_u8string();
+		}
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		// 使用 view 或 storage 来遍历实体
 		auto view = m_Scene->m_Registry.view<entt::entity>();
@@ -541,8 +647,7 @@ namespace Redflag {
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
-		std::ofstream fout(filepath);
-		fout << out.c_str();
+		FileSystem::WriteText(filepath, out.c_str());
 	}
 
 	void SceneSerializer::SerializeRuntime(const std::string& filepath)
@@ -560,6 +665,12 @@ namespace Redflag {
         YAML::Node data = YAML::Load(strStream.str());
         if (!data["Scene"])
             return false;
+
+        std::filesystem::path environment;
+        if (data["Environment"])
+            environment = (std::filesystem::absolute(filepath).parent_path() /
+                std::filesystem::u8path(data["Environment"].as<std::string>())).lexically_normal();
+        m_Scene->SetEnvironment(environment);
 
         AssetManager::GetLibrary().Scan("assets");
 
@@ -707,14 +818,9 @@ namespace Redflag {
                     // 目前只支持立方体
                     mr.MeshData = Mesh::CreateCube();
 
-                    // PBR 材质参数
-                    // BaseColor 优先用 mat->BaseColor（Inspector 编辑的值），
-                    // 向后兼容：旧文件没有 BaseColor 字段时回退到 mr.Color。
+                    // 旧场景只保存网格颜色。先用它创建材质，文件里另有 BaseColor 时再读入材质自己的颜色。
                     mr.Mat = Material::Create(mr.Color);
-                    if (mrNode["BaseColor"]) mr.Mat->BaseColor = mrNode["BaseColor"].as<glm::vec4>();
-                    if (mrNode["Metallic"])  mr.Mat->Metallic  = mrNode["Metallic"].as<float>();
-                    if (mrNode["Roughness"]) mr.Mat->Roughness = mrNode["Roughness"].as<float>();
-                    if (mrNode["AO"])        mr.Mat->AO        = mrNode["AO"].as<float>();
+                    ReadMaterial(mrNode, *mr.Mat);
                 }
 
                 // ModelRendererComponent
@@ -722,24 +828,18 @@ namespace Redflag {
                 {
                     auto mrNode = entity["ModelRendererComponent"];
                     auto& mr = deserializedEntity.AddComponent<ModelRendererComponent>();
-                    mr.FilePath = mrNode["FilePath"] ? mrNode["FilePath"].as<std::string>() : "";
-                    mr.ModelID = mrNode["ModelID"] ? mrNode["ModelID"].as<AssetID>() : 0;
-                    if (!mr.ModelID)
-                        mr.ModelID = AssetManager::Add<Model>(mr.FilePath);
-                    else if (!AssetManager::GetLibrary().Get(mr.ModelID))
+                    ReadModelFile(mrNode, mr.ModelID, mr.FilePath);
+                    float previousHeight = 1.0f;
+                    for (const auto& entry : mrNode["LODs"])
                     {
-                        // assets 外的模型按保存路径定位，但不能用不同 ID 的文件替换。
-                        auto meta = std::filesystem::path(mr.FilePath);
-                        meta += ".rfmeta";
-                        if (std::filesystem::exists(meta))
-                        {
-                            auto id = AssetManager::Add<Model>(mr.FilePath);
-                            if (id && id != mr.ModelID)
-                                throw std::runtime_error("Model ID does not match: " + mr.FilePath);
-                        }
+                        ModelLOD lod;
+                        ReadModelFile(entry, lod.ModelID, lod.FilePath);
+                        lod.ScreenHeight = entry["ScreenHeight"].as<float>();
+                        if (!(lod.ScreenHeight > 0 && lod.ScreenHeight < previousHeight))
+                            throw std::runtime_error("LOD screen heights must decrease from 1 to 0: " + mr.FilePath);
+                        previousHeight = lod.ScreenHeight;
+                        mr.LODs.push_back(std::move(lod));
                     }
-                    if (const auto* info = AssetManager::GetLibrary().Get(mr.ModelID))
-                        mr.FilePath = std::filesystem::proximate(info->Path).generic_string();
                     mr.Color    = mrNode["Color"].as<glm::vec4>();
                     // ModelAsset 将在首次渲染时由 AssetManager 懒加载
 
@@ -750,12 +850,22 @@ namespace Redflag {
                         for (size_t i = 0; i < matsNode.size(); i++)
                         {
                             auto matNode = matsNode[i];
-                            auto mat = Material::Create(glm::vec4(1.0f));
-                            if (matNode["BaseColor"]) mat->BaseColor = matNode["BaseColor"].as<glm::vec4>();
-                            if (matNode["Metallic"])   mat->Metallic  = matNode["Metallic"].as<float>();
-                            if (matNode["Roughness"])  mat->Roughness = matNode["Roughness"].as<float>();
-                            if (matNode["AO"])         mat->AO        = matNode["AO"].as<float>();
-                            mr.OverrideMaterials.push_back(mat);
+                            // 空项保留子网格原本的材质。
+                            Ref<Material> material;
+                            if (matNode.size())
+                            {
+                                material = Material::Create();
+                                const Material* original = nullptr;
+                                if (matNode["ModelMaps"])
+                                {
+                                    if (!mr.ModelAsset) mr.ModelAsset = AssetManager::Load<Model>(mr.ModelID);
+                                    if (!mr.ModelAsset || i >= mr.ModelAsset->GetSubMeshes().size())
+                                        throw std::runtime_error("Cannot restore material textures from " + mr.FilePath);
+                                    original = mr.ModelAsset->GetSubMeshes()[i].Mat.get();
+                                }
+                                ReadMaterial(matNode, *material, original);
+                            }
+                            mr.OverrideMaterials.push_back(material);
                         }
                     }
                     // 向后兼容旧格式 (单一覆盖材质)

@@ -1,5 +1,7 @@
 #include "rfpch.h"
 #include "Redflag/Core/Log.h"
+#include "Redflag/Assets/AssetManager.h"
+#include "Redflag/Renderer/Model.h"
 #include "Redflag/Renderer/Framebuffer.h"
 #include "Redflag/Renderer/RenderCommand.h"
 #include "Redflag/Renderer/Renderer2D.h"
@@ -7,6 +9,8 @@
 #include "Redflag/Renderer/SceneRenderer.h"
 #include "Redflag/Renderer/Shader.h"
 #include "Redflag/Scene/Scene.h"
+#include "Redflag/Scene/Entity.h"
+#include "Redflag/Scene/SceneSerializer.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
@@ -21,6 +25,80 @@ static void Check(bool condition, const char* name)
     s_Failures += !condition;
 }
 
+static void CheckGlassScene()
+{
+    const char* path = "../bin-int/Tests/glass-materials.redflag";
+    Ref<Scene> scene = CreateRef<Scene>();
+    Entity pane = scene->CreateEntity("Glass");
+    Ref<Material> glass = Material::Create({ .3f, .6f, .9f, .4f });
+    glass->Alpha = AlphaMode::Blend;
+    glass->DoubleSided = true;
+    glass->RefractionIndex = 1.5f;
+    glass->Thickness = .125f;
+    pane.AddComponent<MeshRendererComponent>().Mat = glass;
+
+    Entity model = scene->CreateEntity("Frame");
+    ModelRendererComponent& frame = model.AddComponent<ModelRendererComponent>();
+    frame.FilePath = "assets/models/Primitives/Plane.obj";
+    frame.OverrideMaterials = { nullptr, glass->Clone() };
+    frame.OverrideMaterials[1]->Alpha = AlphaMode::Mask;
+    frame.OverrideMaterials[1]->AlphaCutoff = .25f;
+    SceneSerializer(scene).Serialize(path);
+
+    Ref<Scene> restored = CreateRef<Scene>();
+    const bool loaded = SceneSerializer(restored).Deserialize(path);
+    Check(loaded, "reopen a scene containing transparent materials");
+    if (!loaded) return;
+    const Material& surface = *restored->GetEntityByUUID(pane.GetUUID()).GetComponent<MeshRendererComponent>().Mat;
+    Check(surface.Alpha == AlphaMode::Blend && surface.BaseColor == glass->BaseColor &&
+          surface.DoubleSided && surface.RefractionIndex == 1.5f && surface.Thickness == .125f,
+          "glass keeps its color, sidedness, index of refraction and thickness");
+    const auto& parts = restored->GetEntityByUUID(model.GetUUID()).GetComponent<ModelRendererComponent>().OverrideMaterials;
+    Check(parts.size() == 2 && !parts[0] && parts[1] && parts[1]->Alpha == AlphaMode::Mask &&
+          parts[1]->AlphaCutoff == .25f, "empty override inherits the model; mask keeps its threshold");
+}
+
+static void CheckLampScene()
+{
+    const char* path = "../bin-int/Tests/lamp-material.redflag";
+    Ref<Scene> scene = CreateRef<Scene>();
+    Entity entity = scene->CreateEntity("Lamp");
+    auto& lamp = entity.AddComponent<ModelRendererComponent>();
+    lamp.FilePath = "assets/models/LightPanel/LightPanel.gltf";
+    lamp.ModelID = AssetManager::Add<Model>(lamp.FilePath);
+    lamp.ModelAsset = AssetManager::Load<Model>(lamp.ModelID);
+    const Ref<Material>& original = lamp.ModelAsset->GetSubMeshes().at(0).Mat;
+    Ref<Material> cover = original->Clone();
+    lamp.OverrideMaterials = {cover};
+    for (glm::vec3 emission : { glm::vec3(3, .5f, .1f), glm::vec3(0) })
+    {
+        cover->Emission = emission;
+        SceneSerializer(scene).Serialize(path);
+        Ref<Scene> restored = CreateRef<Scene>();
+        Check(SceneSerializer(restored).Deserialize(path), "reopen a lamp edited in the inspector");
+        const auto& edited = restored->GetEntityByUUID(entity.GetUUID()).GetComponent<ModelRendererComponent>();
+        const Ref<Material>& material = edited.OverrideMaterials.at(0);
+        Check(material->Emission == emission && original->EmissiveMap &&
+              material->EmissiveMap == original->EmissiveMap, "lamp keeps its embedded stripes, including after turning it off");
+    }
+    // 从磁盘选一张替换图，再移除它。重开场景后分别检查这两种选择。
+    const std::filesystem::path file = std::filesystem::absolute("../bin-int/Tests/lamp.ppm");
+    std::ofstream(file, std::ios::binary) << "P6\n1 1\n255\n" << "RGB";
+    cover->Emission = glm::vec3(1);
+    for (bool useFile : {true, false})
+    {
+        cover->EmissiveMap = useFile ? Texture2D::Create(file.string()) : nullptr;
+        SceneSerializer(scene).Serialize(path);
+        Ref<Scene> restored = CreateRef<Scene>();
+        Check(SceneSerializer(restored).Deserialize(path), "reopen a lamp after changing its emission texture");
+        const auto& parts = restored->GetEntityByUUID(entity.GetUUID()).GetComponent<ModelRendererComponent>().OverrideMaterials;
+        const Ref<Texture2D>& map = parts.at(0)->EmissiveMap;
+        Check(useFile ? map && std::filesystem::equivalent(map->GetPath(), file) && std::filesystem::path(map->GetPath()).is_relative() : !map,
+              "replacement image uses a relative path; removing it keeps the panel uniformly lit");
+    }
+    AssetManager::Unload<Model>(lamp.ModelID);
+}
+
 static int ReadHistoryReset()
 {
     GLint buffer;
@@ -28,6 +106,86 @@ static int ReadHistoryReset()
     int reset;
     glGetNamedBufferSubData(buffer, 132, sizeof(reset), &reset);
     return reset;
+}
+
+static void CheckEmission()
+{
+    FramebufferSpecification spec;
+    spec.Width = 64; spec.Height = 16;
+    spec.Attachments = {FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RED_INTEGER,
+        FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::DEPTH32F};
+    auto target = Framebuffer::Create(spec);
+    SceneRenderer::SetMainSceneColorTarget(target->GetColorAttachmentRendererID(), 64, 16);
+    auto mesh = Mesh::CreateCube();
+    const uint8_t pattern[] = {128, 64, 255, 0};
+    auto stripe = Texture2D::Create(1, 1);
+    stripe->SetData((void*)pattern, sizeof(pattern));
+    auto green = Texture2D::Create(1, 1);
+    uint8_t greenPixel[] = {0, 255, 0, 0};
+    green->SetData(greenPixel, sizeof(greenPixel));
+
+    // 前两块共用贴图，只换各自的发光颜色。后两块用不同贴图或无贴图，单独绘制。
+    const glm::vec3 emission[] = {{1,2,3}, {3,1,.25f}, {4,.5f,2}, {7,2.5f,5}};
+    const Ref<Texture2D> textures[] = {stripe, stripe, {}, green};
+    Scene scene;
+    std::array<int,4> ids;
+    for (int i=0; i<4; ++i)
+    {
+        auto entity = scene.CreateEntity("Panel");
+        ids[i] = int((entt::entity)entity);
+        auto& transform = entity.GetComponent<TransformComponent>();
+        transform.Translation.x = float(i)-1.5f;
+        transform.Scale = {.8f,.8f,.1f};
+        auto& component = entity.AddComponent<MeshRendererComponent>();
+        component.MeshData = mesh;
+        component.Mat = Material::Create(glm::vec4(0,0,0,1));
+        component.Mat->Emission = emission[i];
+        component.Mat->EmissiveMap = textures[i];
+    }
+    target->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    target->ClearAttachment(1,-1);
+    auto projection = glm::ortho(-2.f,2.f,-.5f,.5f,.1f,8.f);
+    SceneRenderer::RenderRuntime(scene, projection, glm::translate(glm::mat4(1),{0,0,2}));
+    target->Bind(); // 后处理已切换绘制目标，拾取要读原来那张实体编号图。
+
+    // 输入字节 128、64 对应线性 0.21586、0.05127。发光图的 alpha 不影响模型拾取。
+    glm::vec3 patternRGB(.21586f,.05127f,1);
+    const glm::vec3 expected[] = {emission[0]*patternRGB, emission[1]*patternRGB, emission[2], {0,2.5f,0}};
+    for (int i=0; i<4; ++i)
+    {
+        glm::vec4 pixel;
+        glGetTextureSubImage(target->GetColorAttachmentRendererID(),0,8+16*i,8,0,1,1,1,
+            GL_RGBA,GL_FLOAT,sizeof(pixel),&pixel);
+        std::cout << "OpenGL light panel " << i << " HDR: " << pixel.r << ", " << pixel.g << ", " << pixel.b << '\n';
+        Check(glm::length(glm::vec3(pixel)-expected[i]) < .012f, "unlit emission matches the material and sRGB texel");
+        Check(target->ReadPixel(1,8+16*i,8) == ids[i], "emissive pixels keep their own entity IDs");
+    }
+    auto& calls = Renderer3D::GetDrawCallLog();
+    auto count=std::count_if(calls.begin(),calls.end(),[](const auto& draw){
+        return draw.Pass == Renderer3D::DrawCallInfo::PassType::Main;
+    });
+    Check(count == 3, "only panels sharing the same emission map are instanced together");
+    Check(glGetError() == GL_NO_ERROR, "OpenGL emission texture views are valid");
+
+    Scene imported;
+    auto panel = imported.CreateEntity("Lamp");
+    panel.GetComponent<TransformComponent>().Rotation.x = glm::radians(180.f);
+    auto& source = panel.AddComponent<ModelRendererComponent>();
+    source.ModelAsset = Model::Load("../tests/fixtures/EmissivePanel.gltf");
+    target->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    SceneRenderer::RenderRuntime(imported, projection, glm::translate(glm::mat4(1), {0, 0, 2}));
+
+    // 底图的 UV 固定在红色。发光图用另一套 UV，才会在右半边读到绿色。
+    glm::vec4 left, right;
+    const auto image = target->GetColorAttachmentRendererID();
+    glGetTextureSubImage(image, 0, 27, 8, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(left), &left);
+    glGetTextureSubImage(image, 0, 37, 8, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(right), &right);
+    std::cout << "OpenGL glTF UV1: left red " << left.r << ", right green " << right.g << '\n';
+    Check(left.r > 3.98f && left.g < .01f && right.r < .01f && std::abs(right.g - .4317f) < .01f,
+          "imported emitter uses its own glTF texture coordinates");
+    target->Unbind();
 }
 
 static void CheckRSMSamples(int count)
@@ -49,7 +207,8 @@ static void CheckRSMSamples(int count)
 
 static void TestTemporalProjection()
 {
-    // 当前中心为 .25，邻域覆盖 [0,1]，让 .75 的历史色通过颜色限制，单独检验重投影。
+    // 本帧中心像素的值是 0.25，周围有 0 和 1。上一帧的 0.75 落在这个范围里，可以直接混合。
+    // 上一帧占九成时，中心应读到 0.25 × 0.1 + 0.75 × 0.9 = 0.70。
     float current[9] = { 0, 1, 0, 1, .25f, 1, 0, 1, 0 };
     float history[9], depth[9];
     std::fill_n(history, 9, .75f);
@@ -144,10 +303,13 @@ int main()
     Renderer2D::Init();
     Renderer3D::Init();
     SceneRenderer::Init();
+    CheckGlassScene();
+    CheckLampScene();
     SceneRenderer::GetIBLEnabled() = false;
     SceneRenderer::GetShadowEnabled() = false;
     SceneRenderer::GetRSMSettings().Enabled = false;
     SceneRenderer::GetBloomSettings().Enabled = false;
+    CheckEmission();
     {
         FramebufferSpecification spec;
         spec.Width = 33; spec.Height = 17;

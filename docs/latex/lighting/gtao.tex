@@ -1,0 +1,59 @@
+% 前置知识
+龙身在地上投出一道向右延伸的长影。换成右图，长影的位置几乎是白的，龙爪贴地的地方却有几小块深灰。长影只要挡住从点光源射来的那束光就能形成；紧挨龙爪的地面向四周望去，有好几个方向都被龙身挡住了。GTAO 要估算的，就是每块表面还能从哪些方向收到环境光。
+
+\begin{center}
+\begin{minipage}{.48\linewidth}\centering
+\includegraphics[width=\linewidth]{figures/dragon-direct.png}\\[-1pt]
+{\small 点光源照出的龙与投影}
+\end{minipage}\hfill
+\begin{minipage}{.48\linewidth}\centering
+\includegraphics[width=\linewidth]{figures/dragon-visibility.png}\\[-1pt]
+{\small GTAO 可见度，白色为 1，黑色为 0}
+\end{minipage}\\[4pt]
+{\footnotesize\color{quiet}Stanford Dragon，Redflag Vulkan，同一机位的 $288\times192$ 输出。蓝灰色区域没有模型。}
+\end{center}
+
+相机看向龙爪边的地面，深度图只记录每个像素最先看到的表面。LearnOpenGL 的 SSAO 教程在这一点周围取样，对照深度图估计有多少处被遮住。GTAO 仍然用到这些表面，但会沿几个方向分别寻找遮挡物的轮廓。想象用一张竖纸同时切过相机和地板上的点，龙爪便在纸上留下一条轮廓线。把这张纸绕观察方向转几次，每次找到轮廓的最高处，就能估计表面总共还能看到多大一片天空。
+
+% 公式推导
+沿刚才的纸面来看这小块地板。取从地板指向相机的单位方向 $v$，截面上与 $v$ 垂直的单位向量 $t$。纸面上任一入射方向可写成 $\omega=v\cos u+t\sin u$，其中 $u$ 从相机方向开始量。法线 $n$ 受光的余弦是 $n\cdot\omega$，球面上这段圆弧对应的面积还含 $\sin u$。可见弧从 $0$ 延伸到遮挡角 $h$，也要在法线所在半球的边缘停下。找到遮挡轮廓后，剩下这段积分就能直接算出。
+
+% 公式
+设 $a=n\cdot v,\ b=n\cdot t$，单侧截面的照明贡献为
+\[
+  I(h)=\int_0^h(a\cos u+b\sin u)\sin u\,du
+      =\frac{a}{2}\sin^2 h+b\left(\frac h2-\frac{\sin(2h)}4\right).
+\]
+若地板正对观察者，$a=1,b=0$。无遮挡时 $h=\pi/2$，每侧贡献 0.5，两侧正好得到一整份可见度。$h$ 降到 $\pi/4$，这一侧贡献就降到 0.25。这个例子能检查半球归一化的系数。
+\clearpage
+% 逐行伪代码
+\subsection{在深度图上寻找遮挡}
+\noindent{\small\color{quiet}按 GLSL 整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/GTAO.comp}{\texttt{GTAO.comp}}}\par\nopagebreak
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+for slice in fourHalfTurns:
+    for side in [left, right]:
+        h = angleWhereThisSideLeavesNormalHemisphere()
+        for step in eightDistancesWithinRadius:
+            q = project(worldPosition + tangent * step)
+            neighbor = visibleSurfaceAt(q)
+            if neighbor is above surface and inside radius:
+                (*@{\footnotesize\color{quiet}在这一侧留下最能挡住天空的轮廓。}@*)
+                h = min(h, fadedHorizonAngle(neighbor))
+        sum += visibleArc(h, dot(normal, view), dot(normal, tangent))
+ao = pow(clamp(sum / fourSlices, 0, 1), intensity)
+\end{lstlisting}
+沿平面本身遇到的邻居不应遮住天空，所以先看它比当前表面高多少。位于半径最外侧的轮廓逐渐淡出，防止半径边界突然出现一道黑圈。
+
+默认半径 0.65 是归一化走廊中的一个场景长度，换用厘米建模的走廊就需要换算。四个截面乘两侧、每侧最多检查八个距离，合计最多 64 次深度邻居查询。改半径时保持这些数不变，就能先观察影响范围；要查条带是否来自步数不足，再单独增加步数。
+
+% 接口与数据结构
+\begin{fields}
+\texttt{GISurface} & 可见表面的世界位置、法线和底色。当前实现直接读世界位置，省去从深度图还原位置的一步。\\
+\texttt{AORadius} & 世界单位。半径越大越能看到远处遮挡物，固定八步也会变得更稀。\\
+\texttt{AOIntensity} & 对可见度施加指数。输出第四通道保留遮蔽系数，可把它只乘在间接漫反射上。\\
+\end{fields}
+
+% 验证标准
+在 Sponza 固定相机处，用正常半径与近乎零的半径比较可见度。缩小半径时，平面上的点应接近 1。墙角和柱脚在正常半径下应变暗。基准只读屏幕可见的第一层表面，所以镜头外的柱子不会投下这种遮蔽。GTAO 原技术报告及 SIGGRAPH 课件未列 DOI，可在材料索引直接阅读。
+
+实测可见像素的平均可见度为 \measured{ao_mean}，把半径缩小到 0.0001 后为 \measured{ao_negligible_radius_mean}。

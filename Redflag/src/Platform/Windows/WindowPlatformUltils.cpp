@@ -37,7 +37,7 @@ namespace Redflag {
 	// 保存文件对话框函数
 	// filter: 文件过滤器，格式如 "Text Files\0*.txt\0All Files\0*.*\0"
 	// 返回值: 选中的保存路径，如果取消则返回空字符串
-	std::string FileDialogs::SaveFile(const char* filter)
+	std::string FileDialogs::SaveFile(const char* filter, const char* defaultExtension)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -49,6 +49,7 @@ namespace Redflag {
 		ofn.nMaxFile = sizeof(szFile);
 		ofn.lpstrFilter = filter;
 		ofn.nFilterIndex = 1;
+		ofn.lpstrDefExt = defaultExtension;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 		if (GetSaveFileNameA(&ofn) == TRUE)

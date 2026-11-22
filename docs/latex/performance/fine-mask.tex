@@ -1,0 +1,66 @@
+\newpage
+\begingroup
+\setlength{\parindent}{2em}
+\ctexset{section/afterindent=true,subsection/afterindent=true}
+\fancyhead[R]{\sffamily\small\color{Muted}Vulkan / 镂空边缘}
+\section{贴图缩小后，哪些孔会消失}
+
+Sponza 的一张镂空贴图有 $1024\times1024$ 个像素。每个像素除了颜色，还存有透明度。沿着光线找到叶片时，着色器在命中位置读取透明度。读数小于 0.5，光线就穿过叶片，继续检查后面的物体。
+
+旧版把颜色和透明度一起缩到 $512\times512$。原图里相邻四个像素只留下一个，窄孔可能恰好落在另外三个位置。新版保留原尺寸的透明度，颜色仍用小图。两版使用相同的取样方法，位置落在四个像素之间时，离它近的像素占更大权重。
+
+\begin{figure}[H]\centering
+\begin{minipage}{.86\linewidth}\centering
+\includegraphics[width=\linewidth]{fine-mask/mask-centers.png}\\[-1pt]
+\makebox[.315\linewidth]{\small 原图}\hfill
+\makebox[.315\linewidth]{\small 旧版取样}\hfill
+\makebox[.315\linewidth]{\small 新版取样}
+\end{minipage}
+\caption{Sponza 材质 0 的同一块 $64\times64$ 区域。深绿表示挡光，浅色表示透光。中图的红色是旧版挡住的孔，橙色是旧版漏过的实体。三图在原图像素中心取样，放大时保持像素原形。为了看清差别，选取了这张图中错判最多的一块。}
+\end{figure}
+
+从实际截帧中读出材质数据，在 CPU 上逐一检查三张贴图的每个像素中心。表中的一次错判指同一个位置在源图与截帧里分别得到“挡光”和“透光”。原图坐标只计一次，同一片叶子出现在画面上多少次都不影响这里的计数。
+
+{\smalltable\noindent\begin{tabularx}{\linewidth}{@{}Xrrrr@{}}\toprule
+glTF 材质编号 & 使用它的三角形 & 旧版多挡的孔 & 旧版漏过的实体 & 新版错判数\\\midrule
+0 & 31,436 & 10,692 & 10,893 & 0\\
+3 & 3,472 & 3,931 & 4,061 & 0\\
+20 & 32 & 1,750 & 2,142 & 0\\\bottomrule
+\end{tabularx}\par}
+
+在 3,145,728 个位置中，旧版共判错 33,469 处。新版从 GPU 读回来的三张透明度图逐字节与源图一致。画面中能看到多少差别，还取决于相机与光源的位置。将两个版本第 24 帧的面板图按每通道 256 级比较，94,464 个像素中有 616 个发生变化，最大相差 11 级。
+
+\readings{\href{run:../profiling/fine-mask/mask-centers.json}{贴图文件、逐图结果和取样位置}\quad
+\href{run:../../tests/sample_fine_masks.py}{取样与作图源码}\quad
+\href{run:../profiling/fine-mask/sponza-frame.png}{同机位面板图与差值}\quad
+\refitem{https://github.com/KhronosGroup/glTF-Sample-Assets/blob/e124e8d8d7330a5372bc2b4d00d39a4a9d7997ea/Models/Sponza/LICENSE.md}{Crytek Sponza 模型与许可}}
+
+\newpage
+\section{原尺寸透明度的存储与耗时}
+
+三张图各保留 $1024\times1024$ 个透明度值，每个值用一个字节。每张图的开头再用八个字节保存宽和高。存放材质像素的 GPU 缓冲区从 50,331,712 字节增至 53,477,464 字节，差值恰好是 $3\times(1024^2+8)$。14 条材质记录共享这些贴图，仍合计 448 字节。两版的三角形与贴图坐标各占 16,785,088 字节，加速求交的树占 5,371,344 字节。这里统计 Vulkan 缓冲区长度，驱动分配的整块显存可能更大。
+
+两版 Debug x64 编辑器使用同一机位，光照图均为 $384\times246$。用 RTX 5070 Ti Laptop GPU 捕获第 24 帧，保持分簇点光源、DDGI、GTAO、场景反射、8 步体积雾与 TAA 开启。RenderDoc 1.47 在旧、新、新、旧四轮中各预热一次，再测六次，每个版本留下 12 个样本。两帧均有 228 次绘制和 12 次计算调度。
+
+{\smalltable\noindent\begin{tabularx}{\linewidth}{@{}Xrrrrr@{}}\toprule
+GPU 命令 & 事件 &\multicolumn{2}{c}{旧版（ms）}&\multicolumn{2}{c}{新版（ms）}\\
+\cmidrule(lr){3-4}\cmidrule(l){5-6}
+& & 中位数 & P10--P90 & 中位数 & P10--P90\\\midrule
+\fineGpuRows
+\bottomrule\end{tabularx}\par}
+
+P10--P90 表示中间八成样本的用时范围。复制表面位置和法线的命令没有取样透明度，耗时仍有波动。两版的反射和雾都测到了彼此重叠的用时范围。
+
+{\smalltable\noindent\begin{tabularx}{\linewidth}{@{}Xrr@{}}\toprule
+编辑器计时 & 旧版 & 新版\\\midrule
+\fineCpuRows
+\bottomrule\end{tabularx}\par}
+
+关闭 RenderDoc 和 Vulkan 验证层，交替启动两个版本共六次。每版有 72 帧重画场景，另有 48 帧沿用已有面板图。重画一帧的中位用时增加了 1.19 ms，其中包含等待显卡与显示窗口的时间。进程 CPU 时间由 Windows 累加所有线程从启动到退出的用时，包含导入模型和运行 56 帧。队列提交耗时取自两份截帧，各只有一帧。
+
+\readings{\href{run:../profiling/fine-mask/gpu.json}{GPU 事件、缓冲区长度和逐次用时}\quad
+\href{run:../profiling/fine-mask/editor.json}{独立进程与逐帧记录}\quad
+\href{run:../profiling/fine-mask/final-frame.json}{最终版同机位复核}\\
+计时版本为 \code{532eca6d7921} 和 \code{7c1c4c8e2382}。最终版 \code{435a0ada6466} 单独核对材质与输出图。}
+\clearpage
+\endgroup

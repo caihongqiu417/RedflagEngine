@@ -1,0 +1,28 @@
+{
+  "results": {
+    "same": false,
+    "moved": false,
+    "empty": false,
+    "edited_asset": true,
+    "read_only_reported_success": true,
+    "read_only_preserved_files": false,
+    "original_probes_preserved": true,
+    "settings_failure_reported_scene_written": false,
+    "settings_failure_preserved_target": true,
+    "retry_saved_original_scene": true
+  },
+  "reference_sha256": "bafb16b5a5fc91705500fe8e202929228aa01b0108caec771567e4c582bfd8e3",
+  "exe_sha256": "9e48ab1fee7f12e442e2c25de9d7dfdd7c47c3ea775f75b17bcb3d1453714159",
+  "scene": "Light-Studio.redflag",
+  "views": {
+    "same": "Base color",
+    "moved": "Base color",
+    "empty": "Base color",
+    "edited_asset": "Lit"
+  },
+  "probe_bytes": 96792,
+  "keys": "Ctrl+Shift+S opens Save As. Ctrl+S retries after a failed Save As.",
+  "comparison": "True under same/moved/empty/edited_asset means the destination received the original probe bytes.",
+  "source_scene_error": null,
+  "target_settings_error": null
+}

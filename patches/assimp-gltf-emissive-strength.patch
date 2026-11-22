@@ -1,0 +1,12 @@
+diff --git a/code/glTF2Asset.inl b/code/glTF2Asset.inl
+--- a/code/glTF2Asset.inl
++++ b/code/glTF2Asset.inl
+@@ -849,2 +849,8 @@ inline void Material::Read(Value& material, Asset& r)
+     if (Value* extensions = FindObject(material, "extensions")) {
++        if (Value* emission = FindObject(*extensions, "KHR_materials_emissive_strength")) {
++            float strength = 1.0f;
++            ReadMember(*emission, "emissiveStrength", strength);
++            for (float& channel : emissiveFactor)
++                channel *= strength;
++        }
+         if (r.extensionsUsed.KHR_materials_pbrSpecularGlossiness) {

@@ -1,0 +1,48 @@
+{
+  "width": 160,
+  "height": 90,
+  "visible_pixels": 14256,
+  "seeds": [
+    137,
+    293,
+    587,
+    811
+  ],
+  "results": [
+    {
+      "method": "direct-1spp",
+      "historical_mse": 0.16608818322980712,
+      "current_mse": 0.16608817817984473
+    },
+    {
+      "method": "direct-8spp",
+      "historical_mse": 0.02152065602866311,
+      "current_mse": 0.021520655473386743
+    },
+    {
+      "method": "restir-di",
+      "historical_mse": 0.01131754242521296,
+      "current_mse": 0.011317542204988224
+    },
+    {
+      "method": "indirect-1spp",
+      "historical_mse": 0.02237896734046726,
+      "current_mse": 0.02237897022787013
+    },
+    {
+      "method": "indirect-8spp",
+      "historical_mse": 0.0018101838897534137,
+      "current_mse": 0.0018101839377348183
+    },
+    {
+      "method": "ddgi",
+      "historical_mse": 4.102484848025232e-05,
+      "current_mse": 4.102484784667314e-05
+    },
+    {
+      "method": "restir-gi",
+      "historical_mse": 0.00036780450269614676,
+      "current_mse": 0.00036780449853225904
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+% 左侧每行代表一个场景实体，右侧只有一个加载好的模型对象。
+\begin{tikzpicture}[x=1mm,y=1mm,
+  every node/.style={font=\sffamily\fontsize{10}{13}\selectfont,text=Ink,inner sep=0pt},
+  head/.style={anchor=west,font=\sffamily\bfseries\fontsize{10.7}{13}\selectfont},
+  box/.style={rounded corners=1.4mm,line width=.65pt},
+  arrow/.style={line width=.7pt,draw=Teal,-{Stealth[length=2mm]}}]
+  \definecolor{DoorBlue}{HTML}{345F84}
+  \draw[box,draw=Ink!70] (0,0) rectangle (157,44);
+  \draw[box,draw=DoorBlue!80,fill=DoorBlue!6] (3,3) rectangle (66,41);
+  \node[head,text=DoorBlue] at (6,35.8) {场景里摆了两扇门};
+  \draw[DoorBlue!25] (6,30.8)--(62,30.8);
+  \node[anchor=west] at (6,23.8) {左门　实体 17　模型 503};
+  \node[anchor=west] at (6,11.5) {右门　实体 42　模型 503};
+  \draw[box,draw=Teal!80,fill=Soft] (93,3) rectangle (154,41);
+  \node[head,text=Teal] at (97,35.8) {模型缓存里只有一份};
+  \draw[Teal!30] (97,30.8)--(150,30.8);
+  \node[anchor=west] at (97,23.8) {\texttt{503} 对应的 \texttt{Model}};
+  \node[anchor=west] at (97,11.5) {门板和把手的网格、材质};
+  \draw[draw=Teal,line width=.7pt] (66,23.8)--(75,23.8)--(75,11.5)--(66,11.5);
+  \fill[Teal] (75,17.7) circle (.7mm);
+  \draw[arrow] (75,17.7)--(92.5,17.7);
+\end{tikzpicture}

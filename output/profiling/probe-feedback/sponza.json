@@ -1,0 +1,90 @@
+{
+  "scene": "assets/scenes/Sponza-Atrium.redflag",
+  "samples_per_probe_face": 8,
+  "frame": 24,
+  "size": [
+    800,
+    513
+  ],
+  "backend": "Vulkan, Debug x64",
+  "device": "RTX 5070 Ti Laptop GPU",
+  "mode": "DDGI standalone, indirect only",
+  "captures": {
+    "single": {
+      "file": "output/captures/local/DDGI-Sponza-single-24.rdc",
+      "sha256": "8a96b1c8c9574bca9026ab11e9a01cf04c8e2083d504d3097f6c9cdab4adda08",
+      "update_event": 11,
+      "gather_event": 23,
+      "display_event": 35,
+      "messages": [],
+      "mean_linear_indirect_rgb": [
+        0.012729860065505885,
+        0.008149751265891576,
+        0.0040926904046000466
+      ]
+    },
+    "multi": {
+      "file": "output/captures/local/DDGI-Sponza-multi-24.rdc",
+      "sha256": "84d9f2f1c178e665818d7b64b048a73c978e9225403fc5692714fc85d4abc049",
+      "update_event": 11,
+      "gather_event": 23,
+      "display_event": 35,
+      "messages": [],
+      "mean_linear_indirect_rgb": [
+        0.014011632842706737,
+        0.008815770663588633,
+        0.004340640906725277
+      ]
+    }
+  },
+  "pixels": [
+    {
+      "xy": [
+        418,
+        417
+      ],
+      "single": [
+        0.02347012236714363,
+        0.01574588753283024,
+        0.0077577377669513226
+      ],
+      "multi": [
+        0.026907527819275856,
+        0.017645874992012978,
+        0.008513404987752438
+      ]
+    },
+    {
+      "xy": [
+        393,
+        230
+      ],
+      "single": [
+        0.001207918394356966,
+        0.0007813730044290423,
+        0.0005684067727997899
+      ],
+      "multi": [
+        0.0017237134743481874,
+        0.001067659235559404,
+        0.0007092570886015892
+      ]
+    },
+    {
+      "xy": [
+        290,
+        355
+      ],
+      "single": [
+        0.031631018966436386,
+        0.020638540387153625,
+        0.011479025706648827
+      ],
+      "multi": [
+        0.034658461809158325,
+        0.02214493229985237,
+        0.01215767115354538
+      ]
+    }
+  ]
+}

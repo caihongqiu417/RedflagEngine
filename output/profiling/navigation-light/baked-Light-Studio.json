@@ -1,0 +1,36 @@
+{
+  "scene": "Light-Studio.redflag",
+  "preview_width": 160,
+  "application_frames": 48,
+  "exe_sha256": "d0180005a4f627736b86bcf10e492192af3da2220acdc8cf639a830d4489022c",
+  "cases": {
+    "baked": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    },
+    "baked-taa": {
+      "startup_before_last_resize": 1,
+      "drawn": 32,
+      "cached": 15,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting accumulation": 31,
+        "Lighting cached": 15
+      }
+    },
+    "baked-ddgi": {
+      "startup_before_last_resize": 1,
+      "drawn": 1,
+      "cached": 46,
+      "events": {
+        "Lighting camera motion": 1,
+        "Lighting cached": 46
+      }
+    }
+  }
+}

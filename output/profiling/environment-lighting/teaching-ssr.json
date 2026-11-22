@@ -1,0 +1,24 @@
+{
+  "scene": "Sponza",
+  "projection": "perspective",
+  "extent": [
+    161,
+    91
+  ],
+  "mode": "standalone teaching SSR, without scene IBL",
+  "cases": {
+    "0.08": {
+      "hits_before": 5269,
+      "hits_after": 5269,
+      "hit_mask_changed": 0,
+      "max_absolute_RGBA_error": 1.7881393432617188e-07
+    },
+    "0.65": {
+      "hits_before": 3073,
+      "hits_after": 3073,
+      "hit_mask_changed": 0,
+      "max_absolute_RGBA_error": 1.1920928955078125e-07
+    }
+  },
+  "same_seed_max_absolute_RGBA_error": 0.0
+}

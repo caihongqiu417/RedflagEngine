@@ -1,0 +1,137 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\input{../rhi/layout}
+\geometry{a4paper,left=23mm,right=23mm,top=22mm,bottom=22mm}
+\setlength{\headwidth}{\textwidth}
+\fancyhead[R]{\small\sffamily\color{Muted}源码阅读 · 常用接口}
+\hypersetup{pdftitle={Redflag 源码阅读：引擎与图形库接口}}
+\ctexset{section={afterindent=true},subsection={afterindent=true,beforeskip=10pt,afterskip=4pt}}
+\newcommand{\src}[2]{\href{run:../../#1}{\textsf{#2}}}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{document}
+\fontsize{12.7}{20}\selectfont\setlength{\parindent}{2\ccwd}\setlength{\parskip}{8pt}
+
+\section{中庭模型与拾取}
+在 Sponza 的场景视图里点一下石柱，右侧属性显示的是整座中庭。再点旁边的拱门，仍然选中同一个物体。中庭是作为一个模型导入的。它的石柱、地板和挂毯分属不同的网格和材质，场景里却只有一个建筑实体。画进屏幕的像素可以有千百种颜色，写给鼠标拾取的都是这个实体的编号。
+
+\begin{figure}[H]\centering
+\includegraphics[height=42mm]{../editor-guide/figures/atrium.png}
+\caption{编辑器实拍。走廊两侧的拱门、柱面和布帘都来自同一份中庭模型。}
+\end{figure}
+
+场景文件用一个资产编号指代中庭的模型。加载时，\code{AssetManager::Load<Model>(id)} 根据编号取回模型。尖括号里的 \code{Model} 是 C++ 模板实参，告诉函数这次需要哪种对象。第一次从文件读取，以后再打开就可以从缓存取得它。网格保存顶点和索引，材质保存底色和贴图。两个实体摆放同一模型时，各自保存位置，共用模型数据。查登记与加载，打开 \src{Redflag/src/Redflag/Assets/AssetManager.h}{AssetManager.h}；要追踪谁交出顶点，打开 \src{Redflag/src/Redflag/Renderer/Mesh.cpp}{Mesh.cpp}。
+
+模型留在内存里，接下来的许多帧都能继续画它。窗口可绘制时，引擎在 \code{Application::Run} 中开始一帧。\code{BeginFrame} 成功后，各层依次进入更新与界面绘制。对应的方法叫 \code{OnUpdate} 和 \code{OnImGuiRender}。编辑器在后一个入口排出面板，得到场景图该画多大，再录制画场景与显示界面的工作。窗口的 \code{OnUpdate} 调用 GLFW 的 \code{glfwPollEvents()} 处理待派送的输入事件，也调用当前图形上下文的 \code{SwapBuffers}。在 Vulkan 实现中还能找到负责提交与呈现的调用。查一帧的顺序，打开 \src{Redflag/src/Redflag/Core/Application.cpp}{Application.cpp}。
+
+到了绘制这一步，\code{SceneRenderer::DrawGeometry} 从同一个建筑实体取出网格和材质，配上各自的变换。画石柱和画挂毯时，它把同一个实体编号交给命令列表。\code{RenderDevice::CreateMesh} 提供可重复使用的几何资源，\code{CommandList::DrawIndexed} 则描述这一次使用哪份网格、贴图、相机与模型矩阵。跟进命令列表里的函数，会看到 OpenGL 与 Vulkan 两种写法。\par
+\readings{\src{Redflag/src/Redflag/Renderer/SceneRenderer.cpp}{SceneRenderer.cpp}\quad
+\src{Redflag/src/Redflag/Renderer/RHI/CommandList.h}{CommandList.h}\quad
+\href{https://www.glfw.org/docs/3.3/quick_guide.html}{GLFW 作者指南}\quad
+\href{run:../api/index.html}{离线 API 索引}}
+
+\clearpage
+\section{三角形的索引}
+暂时把建筑简化成一面正方形的墙。它有四个顶点，编号为 $0,1,2,3$。索引数组按 $0,1,2,\,2,3,0$ 排列，每三个数构成一个三角形。因此本次绘制传入的索引数是 6。顶点 0 和 2 被取了两次，数组里仍只存一份该顶点的位置与贴图坐标。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1mm,y=1mm,every node/.style={font=\small\sffamily,text=Ink}]
+  \draw[rounded corners=1.4mm,draw=Rule] (0,0) rectangle (144,36);
+  \filldraw[fill=Teal!14,draw=Teal] (12,5)--(40,5)--(40,31)--cycle;
+  \filldraw[fill=Rust!12,draw=Rust] (12,5)--(40,31)--(12,31)--cycle;
+  \foreach \x/\y/\t in {8/5/0,44/5/1,44/31/2,8/31/3}{\node at (\x,\y){\t};}
+  \node[anchor=west,text=Teal] at (53,24){第一个三角形\qquad 0\quad 1\quad 2};
+  \node[anchor=west,text=Rust] at (53,12){第二个三角形\qquad 2\quad 3\quad 0};
+\end{tikzpicture}
+\caption{两片三角形共用对角线上的顶点 0 和 2。数字是顶点在数组里的序号。}
+\end{figure}
+
+在 \code{OpenGLCommandList::DrawIndexed} 里，先选用材质着色器，写入相机与模型矩阵、底色和实体编号。贴图的 \code{Bind(0)} 最终调用 \code{glBindTextureUnit}，即让着色器从编号为 0 的纹理单元读当前这张图。绑定网格后，\code{RenderCommand} 把请求送到 \src{Redflag/src/Platform/OpenGL/OpenGLRendererAPI.cpp}{OpenGLRendererAPI.cpp} 的 \code{DrawIndexed}。
+\begin{lstlisting}
+// (*@这里传索引个数。墙上两个三角形共用六个索引。@*)
+glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+\end{lstlisting}
+驱动读到这条命令时，\code{count} 给出要取的索引个数，\code{GL\_UNSIGNED\_INT} 指每个索引用一个 32 位无符号整数。最后的空指针在绑定了索引缓冲区的前提下表示从第 0 字节开始读。另一个常见函数 \code{glNamedBufferSubData} 直接按缓冲区的 OpenGL 名称写入数据。\code{offset} 与 \code{size} 都按字节计算。哪个着色器会看到这份数据，还取决于绘制时它能从哪里读取。
+
+换到 Vulkan，同样六个索引仍然画出这面墙。在 \src{Redflag/src/Platform/Vulkan/VulkanDraw.cpp}{VulkanDraw.cpp} 的 \code{DrawIndexed} 里能找到同一笔绘制。
+\begin{lstlisting}
+// (*@录入 cmd；后端提交它后，显卡才会画这面墙。@*)
+vkCmdDrawIndexed(cmd, mesh.IndexCount, 1, 0, 0, 0);
+\end{lstlisting}
+\code{cmd} 保存正在录制的命令；本例索引数为 6、实例数为 1。后三个 0 分别指定从第 0 个索引开始、顶点编号不额外偏移、实例序号从 0 开始。前面的 \code{vkCmdBindVertexBuffers}、\code{vkCmdBindIndexBuffer} 和 \code{vkCmdBindDescriptorSets} 分别指定读哪份顶点、索引和材质贴图。后端用 \code{vkCmdPushConstants} 把本次绘制的矩阵、颜色与实体编号记入命令，稍后 \code{vkQueueSubmit} 才把录好的工作交给队列。
+\readings{\src{Redflag/src/Platform/OpenGL/OpenGLCommandList.cpp}{OpenGLCommandList.cpp}\quad
+\src{Redflag/src/Platform/Vulkan/VulkanDraw.cpp}{VulkanDraw.cpp}\\
+\href{https://github.com/KhronosGroup/OpenGL-Refpages/blob/main/gl4/glDrawElements.xml}{Khronos · glDrawElements}\quad
+\href{https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdDrawIndexed.html}{Khronos · vkCmdDrawIndexed}}
+
+\clearpage
+\section{实时效果与计算着色器}
+在「实时效果」中勾选 GTAO，再看 Sponza 柱脚与地面的交界。合成视图会用一个可见度值压暗周围遮住的间接光。如果这里一直和开关前一样亮，可以从复选框跟到那张可见度图，看改变停在哪一步。
+
+\code{ImGui::Checkbox(label, \&m\_AO)} 的第一个参数是显示文字，第二个参数指向保存开关的布尔变量。函数返回值表示用户本次是否改变了选项，变量本身表示改变之后的开关状态。界面合并多个控件的变化后重置历史，否则上一种设置算出的颜色还会混进来。要找这些开关，打开 \src{RedflagForge/src/LightingPreview.cpp}{LightingPreview.cpp}。
+
+\begin{figure}[H]\centering
+\includegraphics[width=.43\linewidth]{../../../output/screen-effects/direct.png}\hspace{4mm}
+\includegraphics[width=.43\linewidth]{../../../output/screen-effects/ao-visibility.png}
+\caption{同一机位。左边是给表面着色后的走廊，右边只显示 GTAO 算出的可见度，可沿拱门内圈和柱脚对照。}
+\end{figure}
+
+到了下一次绘制，\code{LightingPreview::RenderLit} 读到这份设置，组合光照时按需要调用 \code{ScreenEffects::Render}。GTAO 从逐像素的场景表面数据判断附近遮挡，再参与颜色合成。切换到单项预览时，面板可以直接显示用于观察算法的结果。用同一机位看可见度图，地面开阔处接近白，柱脚处会变暗。有了这张图，就能单独检查遮挡算得对不对，再看最终光照用的是哪份结果。
+
+\begin{lstlisting}
+uint32_t gx = (width + 7) / 8;  // (*@最右侧不足八列也分一组。@*)
+uint32_t gy = (height + 7) / 8;
+device.Dispatch(pipeline, resources, nullptr, gx, gy);
+\end{lstlisting}
+这段伪代码节选并简化了 \src{Redflag/src/Redflag/Renderer/ScreenSpace/ScreenEffects.cpp}{ScreenEffects.cpp} 中 \code{ScreenEffects::Render} 的调度。着色器按 $8\times8$ 像素分组。一幅 $17\times9$ 的图需要横向 3 组、纵向 2 组。最右和最下的一些位置落在图外，着色器先检查像素位置。传入的 \code{resources} 按着色器约定的顺序给出要读写的资源，示例的空指针表示这次没有附加的小块常量。Vulkan 实现绑定计算管线与资源，录下 \code{vkCmdDispatch}，提交后等待完成。项目当前这个同步接口返回时，后续计算或 CPU 读回能使用结果。
+\readings{\src{Redflag/src/Redflag/Renderer/ScreenSpace/ScreenEffects.cpp}{ScreenEffects.cpp}\quad
+\src{Redflag/src/Platform/Vulkan/VulkanComputePipeline.cpp}{VulkanComputePipeline.cpp}\quad
+\href{https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdDispatch.html}{Khronos · 调度工作组}}
+
+\clearpage
+\section{场景视口与鼠标坐标}
+在层级里选中一盏灯，右边属性窗口会显示灯的参数。两块面板共享当前选中的实体。如果从画面中点击选取，程序还得把鼠标在窗口中的位置换算成图像中的像素。
+
+先看这个面板是怎样出现的。\code{Begin} 和 \code{End} 标出属于一个窗口的控件，两者每帧配对。项目用 \code{IsItemHovered()} 判断鼠标是否悬停在刚创建的控件上，\code{IsItemClicked()} 则判断该控件是否被点击。在面板里，\code{ImGui::Image(texture, size)} 添加一条界面绘制记录。\code{size} 是屏幕上留给图片的宽高；增大这个尺寸会把图放大，真正增加画面细节要让引擎同时重建更多像素的输出图。
+
+点击时，\code{GetMousePos()} 取到的是鼠标在屏幕上的位置。减去 \code{GetItemRectMin()} 返回的图像左上角，才知道点落在面板里的哪里。假设把下面这张宽 1393 像素的图缩到 696.5 个界面单位，点 A 距图像左缘 205 个单位。换回原图，横坐标便是 $205\times1393/696.5=410$。纵坐标同样换算；两者都从左上角开始数。
+
+\begin{figure}[H]\centering
+\input{figures/picking}
+\caption{Sponza 中庭的底色图，白点标出取样位置。沿 A、B 看，布和石头的 RGB 相差很大，编号却相同。C 穿过屋顶开口，读到背景的 $-1$。图与读数取自同一帧的两张输出图。\href{run:../../docs/latex/source-guide/figures/SOURCES.md}{RenderDoc 第 10 帧，事件 638。}}
+\end{figure}
+
+\code{ReadPixel(410, 205)} 从同一帧取出 A 的颜色和编号。这里的 4 是本次运行中庭实体的编号；编辑器用它更新选中项，读到 $-1$ 就取消选择。面板上只需显示颜色图。Vulkan 通过 \code{ImGui\_ImplVulkan\_AddTexture} 登记这张图，返回的描述符集合供本项目作为 \code{ImTextureID} 传给 ImGui。控件的绘图数据由 \code{ImGui::Render()} 汇总。Vulkan 后端再调用 \code{ImGui\_ImplVulkan\_RenderDrawData} 把这些数据写进图形命令。最后 \code{vkQueuePresentKHR} 请求窗口系统显示这一帧。读到纹理标识时要对照当前后端；OpenGL 路径交给 ImGui 的是 OpenGL 纹理名称。
+\readings{\src{RedflagForge/src/VulkanForgeLayer.cpp}{VulkanForgeLayer.cpp}\quad
+\src{Redflag/src/Redflag/ImGui/VulkanImGui.cpp}{VulkanImGui.cpp}\quad
+\src{Redflag/vendor/imgui/imgui.h}{项目使用的 imgui.h}\quad
+\href{https://github.com/ocornut/imgui/blob/master/docs/FAQ.md}{Dear ImGui FAQ}}
+
+\clearpage
+\section{共享贴图与像素存储}
+\begin{lstlisting}
+auto shared = texture;           // (*@两者指向同一张贴图。@*)
+frame.Textures.push_back(shared);
+\end{lstlisting}
+这是 \src{Redflag/src/Platform/Vulkan/VulkanDraw.cpp}{VulkanDraw.cpp} 中 \code{DrawIndexed} 的简写。这里的 \code{texture} 是共享指针。两行代码各留下一个指向同一贴图的引用。即使局部变量离开作用域，工作帧仍保存它，纹理像素也只占一份显存。这正是 \code{VulkanDraw::DrawIndexed} 将本次贴图留在工作帧中的用途。换成 \code{Scope<T>} 就不能这样复制了。它代表独占，交出所有权时用移动。面试里常见的“传引用和传值有什么区别”，在这里就是调用一次到底会不会多留下一个持有者。GPU 何时用完还由完成信号判断。
+
+指针的拷贝很轻，整张颜色图的拷贝就不同了。每个 RGBA32F 像素包含红、绿、蓝、透明度四个 32 位浮点数，总共 16 字节。一幅宽 $W$ 的线性数组按行存放，像素 $(x,y)$ 的首字节偏移是 $16(yW+x)$。例如宽为 4 时，$(1,2)$ 的偏移是 144 字节，右边的 $(2,2)$ 紧接着就是 160 字节。\code{ComputeDevice::CreateImage} 和 \code{Readback} 的接口约定了 CPU 侧的这种排列，驱动可以另外安排 GPU 图像的内部存储。
+
+\begin{figure}[H]\centering
+\input{figures/pixel-rows}
+\caption{以每行 4 个 RGBA32F 像素为例。跳过两行共 $2\times4\times16=128$ 字节；再向右一个像素，A 正好从第 144 字节开始。B 紧跟在 A 的四个颜色分量之后。}
+\end{figure}
+
+沿一行像素往右读，下一项紧挨着刚读过的地址。这种访问方式有空间局部性。一段时间里反复拿同一组三角形求交，又会多次用到刚读过的数据，这叫时间局部性。CS:APP 第六章用数组访问来讲这两个概念。计算缓冲实际落在系统内存还是显卡本地内存则要看 Vulkan 报告的内存类型。项目在同一中庭、同一画幅上测了两种放置方式，原始时间与条件见\href{run:Redflag-Rendering-Performance.pdf}{《渲染性能实测》}。
+
+\href{run:../api/index.html}{离线 API 手册}可按 \code{CreateBuffer}、\code{ReadPixel}、\code{SetCamera} 等名字检索重载和参数。读源文件时先看谁创建对象，再看一帧里谁引用它；最后到工作帧或退出路径确认它最后一次被使用的时刻。
+\readings{\href{https://www.informit.com/content/images/9780321714114/samplepages/0321714113.pdf}{《C++ Primer》第五版 · 动态内存}\quad
+\href{https://csapp.cs.cmu.edu/3e/pieces/preface3e.pdf}{CS:APP 第三版 · 第 6 章目录}\quad
+\href{https://csapp.cs.cmu.edu/3e/labs.html}{作者的 Cache Lab}\quad
+\href{run:Redflag-RHI-Vulkan-Plan.pdf}{架构册 · 贴图的持有与释放}}
+\input{raster-surfaces}
+\input{glass}
+\input{material-channels}
+\input{environment}
+\input{emission}
+\input{cutout-material}
+\end{document}

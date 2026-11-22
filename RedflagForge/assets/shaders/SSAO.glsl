@@ -27,7 +27,7 @@ layout(std140, binding = 4) uniform SSAOParams
 {
     mat4 u_Projection;
     mat4 u_InvProjection;
-    vec4 u_Params;        // x 是采样半径，y 是深度比较的余量，z 控制阴影深浅，w 是样本数。
+    vec4 u_Params;        // x、y 分别是采样半径和判断遮挡所需的深度差，都用场景单位。z 调整阴影深浅，w 是样本数。
     vec4 u_NoiseScale;    // 按视口大小平铺 4×4 噪声图，让相邻像素采用不同的采样方向。
     vec4 u_Kernel[64];
 };
@@ -86,14 +86,14 @@ void main()
         offset.xyz /= offset.w;
         offset.xy  = offset.xy * 0.5 + 0.5;
 
-        // 屏幕外没有深度可查。它仍占一个样本数，所以画面边缘的遮挡会弱一些。
+        // 落在屏幕外的测试点按没有遮挡计算，所以画面边缘的阴影可能偏浅。
         if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0)
             continue;
 
         float sampleDepth01 = texture(u_Depth, offset.xy).r;
         float sceneZ = ReconstructViewPos(offset.xy /* 测试点所在的屏幕位置 */, sampleDepth01).z;
 
-        // 屏幕上相邻的像素可能相隔很远。减小这种深度跳变的影响，轮廓周围才不易出现黑圈。
+        // 物体轮廓旁的像素可能落在远处的墙上。两者深度相差超过采样半径时，让这个点少算一些遮挡，以免轮廓多出一圈暗边。
         // 相机朝向负 Z，sceneZ 越大代表看到的表面越近。
         float rangeCheck = smoothstep(0.0, 1.0, radius / max(abs(viewPos.z - sceneZ), 0.0001));
 

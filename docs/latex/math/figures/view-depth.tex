@@ -1,0 +1,39 @@
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small,>=Stealth]
+  \definecolor{depthgreen}{HTML}{226A63}
+  \draw[rounded corners=3pt,draw=line] (0,0) rectangle (15,3.65);
+  \draw[line] (7.55,.26) -- (7.55,3.39);
+  \node[anchor=west,font=\bfseries] at (.23,3.27) {一个像素只留下最前面的表面};
+  \node[anchor=west,font=\bfseries] at (7.80,3.27) {深度值与相机前方的距离};
+
+  % 俯视相机；图像平面、小盒和后墙上的三个点在同一条视线上。
+  \draw[draw=muted,fill=pale] (.45,1.25) rectangle (.86,1.58);
+  \draw[draw=muted,fill=pale] (.86,1.42) -- (1.10,1.61) -- (1.10,1.23) -- cycle;
+  \draw[draw=blue,line width=1.1pt] (2.18,.94) -- (2.18,2.41);
+  \draw[fill=depthgreen!12,draw=depthgreen,rounded corners=1pt] (4.18,1.10) rectangle (4.97,2.40);
+  \draw[draw=muted,fill=ink!12] (6.22,.96) rectangle (6.38,2.82);
+  \draw[draw=depthgreen,line width=1.05pt] (1.10,1.42) -- (4.18,2.036);
+  \draw[draw=muted,densely dashed] (4.18,2.036) -- (6.22,2.444);
+  \fill[blue] (2.18,1.636) circle (2pt);
+  \fill[depthgreen] (4.18,2.036) circle (2.2pt);
+  \node[below] at (.80,.88) {相机};
+  \node[below] at (2.18,.88) {成像平面};
+  \node[below] at (4.55,.88) {矮盒};
+  \node[below] at (6.30,.88) {后墙};
+
+  % n=1、f=9 的 OpenGL 透视深度 d=9/8*(1-1/z)，z 为正的前向距离。
+  \begin{scope}[shift={(8.40,.72)},x=.66cm,y=1.85cm]
+    \draw[->,draw=muted] (1,0) -- (9.80,0);
+    \draw[->,draw=muted] (1,0) -- (1,1.20);
+    \foreach \z in {1,5,9} {
+      \draw[muted] (\z,0) -- ++(0,-.035) node[below,font=\footnotesize] {\z};
+    }
+    \foreach \d in {0,0.5,1} {
+      \draw[muted] (1,\d) -- ++(-.09,0) node[left,font=\footnotesize] {\d};
+    }
+    \draw[depthgreen!65,densely dashed] (5,0) -- (5,.90);
+    \draw[depthgreen,thick,domain=1:9,samples=55] plot (\x,{1.125*(1-1/\x)});
+    \fill[depthgreen] (5,.90) circle (2pt);
+    \node[anchor=north west,font=\footnotesize,text=depthgreen] at (5.1,.83) {深度 $0.90$};
+    \node[anchor=east,font=\footnotesize] at (9.90,.15) {距离};
+  \end{scope}
+\end{tikzpicture}

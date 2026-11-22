@@ -1,0 +1,169 @@
+Scene: 中庭雕塑展
+Entities:
+- Entity: 4
+  TagComponent:
+    Tag: 主相机
+  TransformComponent:
+    Translation: [-5.45, -2.26, 0.3]
+    Rotation: [-0.0681, -1.5051, 0]
+    Scale: [1, 1, 1]
+  CameraComponent:
+    Camera:
+      ProjectionType: 0
+      PerspectiveFov: 0.89
+      PerspectiveNear: 0.0500000007
+      PerspectiveFar: 100
+      OrthographicSize: 10
+      OrthographicNear: -1
+      OrthographicFar: 100
+    Primary: true
+    FixedAspectRatio: false
+- Entity: 3
+  TagComponent:
+    Tag: 主灯
+  TransformComponent:
+    Translation: [-3.35, -1.18, -0.61]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.84, 0.7]
+    Intensity: 14
+    Radius: 20
+    CastShadow: false
+- Entity: 2
+  TagComponent:
+    Tag: 中庭灯
+  TransformComponent:
+    Translation: [1.5, 1.1, -0.65]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.85, 0.74]
+    Intensity: 24
+    Radius: 18
+    CastShadow: false
+- Entity: 5
+  TagComponent:
+    Tag: 侧灯
+  TransformComponent:
+    Translation: [-0.7, -1.05, 1.45]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [0.67, 0.81, 1]
+    Intensity: 8
+    Radius: 12
+    CastShadow: false
+- Entity: 1
+  TagComponent:
+    Tag: 中庭
+  TransformComponent:
+    Translation: [0.325295836, -3.50185919, 0.207966045]
+    Rotation: [0, 0, 0]
+    Scale: [0.671888709, 0.671888709, 0.671888709]
+  ModelRendererComponent:
+    ModelID: 14269338671407101124
+    FilePath: assets/models/reference/Sponza/Sponza.gltf
+    Color: [1, 1, 1, 1]
+- Entity: 20
+  TagComponent:
+    Tag: 龙
+  TransformComponent:
+    Translation: [-2.127522, -3.447445, 0.032928]
+    Rotation: [0, -1.42, 0]
+    Scale: [7.804938, 7.804938, 7.804938]
+  ModelRendererComponent:
+    ModelID: 6122188709592601978
+    FilePath: assets/models/reference/StanfordDragon/dragon_vrip_res4.ply
+    Color: [1, 1, 1, 1]
+    OverrideMaterials:
+    - BaseColor: [0.31, 0.62, 0.48, 1]
+      Metallic: 0
+      Roughness: 0.54
+      AO: 1
+- Entity: 21
+  TagComponent:
+    Tag: 龙展台
+  TransformComponent:
+    Translation: [-2.1, -3.275, -0.02]
+    Rotation: [0, 0, 0]
+    Scale: [0.95, 0.48, 1.72]
+  MeshRendererComponent:
+    Color: [1, 1, 1, 1]
+    MeshType: Cube
+    BaseColor: [0.17, 0.18, 0.185, 1]
+    Metallic: 0
+    Roughness: 0.82
+    AO: 1
+- Entity: 22
+  TagComponent:
+    Tag: 兔子
+  TransformComponent:
+    Translation: [-2.640384, -3.112758, -0.750455]
+    Rotation: [0, -1.12, 0]
+    Scale: [5.024342, 5.024342, 5.024342]
+  ModelRendererComponent:
+    ModelID: 17135308193928371761
+    FilePath: assets/models/reference/StanfordBunny/bun_zipper_res2.ply
+    Color: [1, 1, 1, 1]
+    OverrideMaterials:
+    - BaseColor: [0.72, 0.39, 0.24, 1]
+      Metallic: 0
+      Roughness: 0.54
+      AO: 1
+- Entity: 23
+  TagComponent:
+    Tag: 兔子展台
+  TransformComponent:
+    Translation: [-2.67, -3.23, -0.83]
+    Rotation: [0, 0, 0]
+    Scale: [0.78, 0.57, 0.83]
+  MeshRendererComponent:
+    Color: [1, 1, 1, 1]
+    MeshType: Cube
+    BaseColor: [0.17, 0.18, 0.185, 1]
+    Metallic: 0
+    Roughness: 0.82
+    AO: 1
+- Entity: 24
+  TagComponent:
+    Tag: 佛像
+  TransformComponent:
+    Translation: [-2.607088, -3.131354, 0.915769]
+    Rotation: [0, -1.93, 0]
+    Scale: [5.720908, 5.720908, 5.720908]
+  ModelRendererComponent:
+    ModelID: 3990453198303663497
+    FilePath: assets/models/reference/HappyBuddha/happy_vrip_res4.ply
+    Color: [1, 1, 1, 1]
+    OverrideMaterials:
+    - BaseColor: [0.76, 0.55, 0.29, 1]
+      Metallic: 0
+      Roughness: 0.54
+      AO: 1
+- Entity: 25
+  TagComponent:
+    Tag: 佛像展台
+  TransformComponent:
+    Translation: [-2.56, -3.18, 0.9]
+    Rotation: [0, 0, 0]
+    Scale: [0.77, 0.67, 0.8]
+  MeshRendererComponent:
+    Color: [1, 1, 1, 1]
+    MeshType: Cube
+    BaseColor: [0.17, 0.18, 0.185, 1]
+    Metallic: 0
+    Roughness: 0.82
+    AO: 1
+- Entity: 30
+  TagComponent:
+    Tag: 补光灯
+  TransformComponent:
+    Translation: [-4.4, -1.92, 0.18]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.96, 0.91]
+    Intensity: 11
+    Radius: 12
+    CastShadow: false
