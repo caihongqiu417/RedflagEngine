@@ -1,0 +1,42 @@
+{
+  "build": "24b730699a2c5412f1b388667f028bdfa9294a36100c74302df6d601225c843f",
+  "capture": "output/captures/local/mirrors-tinted-24b730699a2c-480-f8/studio_frame8.rdc",
+  "sha256": "0aa2f62221c10b6249b8bf0e89ae6751f5cfada3acc5eb2333fd1cc08f45161e",
+  "renderdoc": "1.47",
+  "frame": 8,
+  "size": [
+    480,
+    308
+  ],
+  "camera_draws": 25,
+  "input_rgb": [
+    1.3356680028664414e-06,
+    1.3356680028664414e-06,
+    1.3356680028664414e-06
+  ],
+  "output_rgb": [
+    0.8051744699478149,
+    0.24000324308872223,
+    0.03006695955991745
+  ],
+  "reflection": {
+    "event": 132,
+    "scene_trace": true,
+    "environment": false,
+    "gpu_ms": [
+      0.227616,
+      0.22064,
+      0.221632,
+      0.22288,
+      0.220128,
+      0.221248,
+      0.234272,
+      0.219968,
+      0.220224,
+      0.222624,
+      0.220192
+    ],
+    "median_gpu_ms": 0.221248,
+    "bounces": 2
+  }
+}

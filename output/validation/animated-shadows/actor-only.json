@@ -1,0 +1,15 @@
+{
+  "renderdoc": "1.47",
+  "frame": 8,
+  "stages": {
+    "camera_surfaces": 114,
+    "direct": 126
+  },
+  "draws": 42,
+  "dispatches": 10,
+  "messages": [],
+  "case": "actor-only",
+  "exe": "598e4cf1c8e8e45329f8df37b1c84e8ae7cb47ed03fb21bd4f72953d52f5a547",
+  "capture": "D:\\Cdev\\Redflag\\output\\captures\\local\\shadow-actor-only-598e4cf1c8e8-600-f8\\studio_frame8.rdc",
+  "sha256": "1a24b53f39cf2f7470d775a060a5cfcb569a6b30675ebc0dfcf87f344abb7f75"
+}

@@ -1,0 +1,15 @@
+{
+  "renderdoc": "1.47",
+  "frame": 8,
+  "stages": {
+    "camera_surfaces": 119,
+    "direct": 143
+  },
+  "draws": 44,
+  "dispatches": 11,
+  "messages": [],
+  "case": "cluster",
+  "exe": "2cef91f7132f5cc36c4b8c6865d55f3e526fc2ede781388ee75c511dd7aab780",
+  "capture": "D:\\Cdev\\Redflag\\output\\captures\\local\\shadow-cluster-2cef91f7132f-600-f8\\studio_frame8.rdc",
+  "sha256": "4152a6438ad3939e45b95656979a0820e5007c529c9cd11241e2aa4e89b227da"
+}

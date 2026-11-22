@@ -124,5 +124,8 @@ def measure(base, out, version):
         summary["gpu_ms_11_replays"] = dict(window=timings[0].tolist(), scene=timings[1].tolist(),
                                            hud=timings[background:].sum(axis=0).tolist(),
                                            window_scene_hud=timings.sum(axis=0).tolist())
+    trace = json.loads((hud / "RedflagProfile-Runtime.json").read_text())["traceEvents"]
+    end_ui = [v["dur"] for v in trace if "ImGuiLayer::End(" in v.get("name","")]
+    summary["cpu_imgui_end_us_after_frame_16"] = end_ui[16:]
     (out / "summary.json").write_text(json.dumps(summary,indent=2)+"\n")
     return summary

@@ -1,0 +1,38 @@
+\clearpage
+\section{两面镜子里的灯牌}
+
+把一面镜子斜放在相机面前，在它右侧再放一面。下图从上往下看，角色和物体的高度暂时省略。相机看到第一面镜子中央的那个点，沿这道视线找过去会先向右，再向上，最后到达一块橙色灯牌。灯牌发出的光沿着相反方向到达相机。
+
+\begin{center}
+\begin{tikzpicture}[x=1.65cm,y=.80cm,>=stealth,font=\small]
+\draw[rounded corners,gray!50] (-1,-.85) rectangle (3.85,3.85);
+\draw[very thick,blue!65!black] (-.32,.32)--(.32,-.32);
+\draw[very thick,blue!65!black] (1.68,-.32)--(2.32,.32);
+\draw[very thick,orange!80!black] (1.74,2)--(2.26,2);
+\fill (0,3) circle (2pt);
+\draw[->,thick] (0,2.85)--(0,.14);
+\draw[->,thick] (.08,0)--(1.9,0);
+\draw[->,thick] (2,.15)--(2,1.86);
+\node[above] at (0,3){相机};
+\node[below] at (0,-.32){第一面镜子};
+\node[right] at (2.32,0){第二面镜子};
+\node[above] at (2,2){画外灯牌};
+\end{tikzpicture}
+\end{center}
+
+设 $\mathbf d$ 是指向镜面的单位向量，$\mathbf n$ 是镜面的单位法线。把 $\mathbf d$ 按垂直于镜面和平行于镜面拆开。垂直分量为 $(\mathbf d\cdot\mathbf n)\mathbf n$。反射后，平行分量保持原来的方向，垂直分量调头。所以在原向量上减掉两倍的垂直分量，就是光线离开镜面的方向：
+\[
+    \mathbf r=\mathbf d-2(\mathbf d\cdot\mathbf n)\mathbf n .
+\]
+在上图的水平面里，取坐标 $(x,z)$。第一段方向为 $(0,-1)$，第一面镜子的法线为 $(1,1)/\sqrt{2}$。代入得到 $(1,0)$，光线确实向右。第二面镜子的法线为 $(-1,1)/\sqrt{2}$。用刚算出的 $(1,0)$ 再算一次，得到 $(0,1)$，这条射线便能碰到灯牌。
+
+镜子还能改变传回来的颜色。假设某一方向上，第一面镜子反回红光的比例为 $F_1$，第二面为 $F_2$。若灯牌的线性红色辐亮度为 $L$，通过两面镜子送到眼前的红色贡献为 $F_1 F_2 L$。绿色、蓝色也各自计算。程序用 \texttt{throughput} 保存目前这些比例的乘积；理想白镜的比例接近 1。粗糙材质会从多个可能方向中取样，这时乘进去的权重还包含取样概率和表面朝向。可对照 \href{https://pbr-book.org/4ed/Light_Transport_I_Surface_Reflection/A_Better_Path_Tracer}{PBRT 第四版 §13.4 中 PathIntegrator 的 beta 更新}。
+
+\begin{verbatim}
+// StochasticSSR.comp，reflectScenePath，Vulkan 镜面反射计算阶段。
+throughput *= weight;          // 这一面镜子还会反回多少红、绿、蓝光
+origin = hit.p.xyz + n * EPS;  // 从刚碰到的表面出发，避开原三角形
+direction = next;              // 下一次求交沿新的反射方向
+\end{verbatim}
+
+这条路径和 DDGI 中的漫反射可以同时存在。漫反射把墙面收到的光向许多方向分散，探针记录周围送来的光，下一轮探针还能收到墙面反射回来的颜色。镜子要保留灯牌的清楚形状，因此每次都要沿具体方向找下一次交点。IBL 则从环境图取得某个方向的颜色。当镜面光线离开场景几何，Redflag 可用这张图补上远处的倒影。

@@ -1,0 +1,15 @@
+{
+  "renderdoc": "1.47",
+  "frame": 8,
+  "stages": {
+    "camera_surfaces": 119,
+    "direct": 131
+  },
+  "draws": 44,
+  "dispatches": 10,
+  "messages": [],
+  "case": "left-on",
+  "exe": "2cef91f7132f5cc36c4b8c6865d55f3e526fc2ede781388ee75c511dd7aab780",
+  "capture": "D:\\Cdev\\Redflag\\output\\captures\\local\\shadow-left-on-2cef91f7132f-600-f8\\studio_frame8.rdc",
+  "sha256": "324df9d5e8cbd0f4a56b2876e367d4cfc3b64e75396050a47085b03eea132d8e"
+}

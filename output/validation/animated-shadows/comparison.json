@@ -1,0 +1,34 @@
+{
+  "left": {
+    "floor_pixels": 2047,
+    "self_shadow_pixels": 2677,
+    "centroid_world_x": -0.038422755897045135,
+    "ambient_difference_max": 4.76837158203125e-07,
+    "ambient_in_shadow": 0.8494994044303894
+  },
+  "right": {
+    "floor_pixels": 1906,
+    "self_shadow_pixels": 2985,
+    "centroid_world_x": 1.7737525701522827,
+    "ambient_difference_max": 9.5367431640625e-07,
+    "ambient_in_shadow": 0.8521982431411743
+  },
+  "left-off_lamp-off": {
+    "max_direct_difference": 0.0
+  },
+  "left-on_cluster": {
+    "max_direct_difference": 8.940696716308594e-08
+  },
+  "restir": {
+    "max_direct_difference": 0.3114957809448242,
+    "mean_direct_difference": 8.653782424516976e-05,
+    "dark_floor_pixels": 1938
+  },
+  "two_lamps": {
+    "only_red_blocked": 1799,
+    "only_blue_blocked": 1955
+  },
+  "actor_only": {
+    "shadowed_pixels": 2677
+  }
+}

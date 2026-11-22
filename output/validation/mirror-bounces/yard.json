@@ -1,0 +1,134 @@
+{
+  "1": {
+    "scene_sha256": "68e52b49e36c1d7e6ed9d66319af63d8766bf40862d5b1fe59e31b49c8268b89",
+    "settings_sha256": "5b8bb3e591f2481f166da36fbf483859539b9ea5dec24d6c64271d6400376783",
+    "capture": "output/captures/local/yard-fixed-1-9a2526bd6e20-480-f8/studio_frame8.rdc",
+    "reflection": {
+      "event": 813,
+      "scene_trace": true,
+      "environment": true,
+      "gpu_ms": [
+        0.8465280000000001,
+        0.8364159999999999,
+        0.8518399999999999,
+        0.8459519999999999,
+        0.843296,
+        0.860224,
+        0.8568640000000001,
+        0.849696,
+        0.839744,
+        0.83856,
+        2.0686400000000003
+      ],
+      "median_gpu_ms": 0.8465280000000001,
+      "alpha_mask": true,
+      "filter": {
+        "event": 825,
+        "gpu_ms": [
+          0.043456,
+          0.043359999999999996,
+          0.043488,
+          0.043808,
+          0.043359999999999996,
+          0.04496,
+          0.044544,
+          0.043392,
+          0.043872,
+          0.043615999999999995,
+          0.054079999999999996
+        ],
+        "median_gpu_ms": 0.043615999999999995
+      }
+    }
+  },
+  "2": {
+    "scene_sha256": "68e52b49e36c1d7e6ed9d66319af63d8766bf40862d5b1fe59e31b49c8268b89",
+    "settings_sha256": "6f952a4ecbe9e67f873fef7c731d7f4991552a68560328bc11932ec7672320c7",
+    "capture": "output/captures/local/yard-fixed-2-9a2526bd6e20-480-f8/studio_frame8.rdc",
+    "reflection": {
+      "event": 813,
+      "scene_trace": true,
+      "environment": true,
+      "gpu_ms": [
+        2.174976,
+        2.326976,
+        1.48848,
+        2.482304,
+        1.485536,
+        1.589504,
+        2.589824,
+        1.498016,
+        1.484,
+        2.326752,
+        1.4970560000000002
+      ],
+      "median_gpu_ms": 1.589504,
+      "bounces": 2,
+      "alpha_mask": true,
+      "filter": {
+        "event": 825,
+        "gpu_ms": [
+          0.044384,
+          0.045056,
+          0.044095999999999996,
+          0.044288,
+          0.055008,
+          0.046208,
+          0.045184,
+          0.043968,
+          0.044095999999999996,
+          0.044288,
+          0.044416000000000004
+        ],
+        "median_gpu_ms": 0.044384
+      }
+    }
+  },
+  "reflection-in": {
+    "mean_rgb_abs": 0.0,
+    "identical_pixels": 1.0,
+    "p50_p90_p99": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "maximum": 0.0
+  },
+  "reflection-out": {
+    "mean_rgb_abs": 0.0007144715636968613,
+    "identical_pixels": 0.8659564393939394,
+    "p50_p90_p99": [
+      0.0,
+      0.00043288320302963283,
+      0.014357550358399376
+    ],
+    "maximum": 1.3026225566864014
+  },
+  "display": {
+    "mean_rgb_abs": 0.0008820630027912557,
+    "identical_pixels": 0.05955762987012987,
+    "p50_p90_p99": [
+      0.00015380233526229858,
+      0.0022916257381439212,
+      0.018128504753112507
+    ],
+    "maximum": 0.2600598931312561,
+    "more_than_2_over_255": 0.03116883116883117
+  },
+  "surface": {
+    "mean_rgb_abs": 0.0,
+    "identical_pixels": 1.0,
+    "p50_p90_p99": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "maximum": 0.0
+  },
+  "same_inputs": {
+    "pixels": 147840,
+    "total": 147840,
+    "over_two_display_steps": 0.03116883116883117
+  },
+  "camera": "Watt-Station saved primary camera, 480 x 308, frame 8, character animation paused at t=0 in fixture"
+}

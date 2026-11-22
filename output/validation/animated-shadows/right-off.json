@@ -1,0 +1,15 @@
+{
+  "renderdoc": "1.47",
+  "frame": 8,
+  "stages": {
+    "camera_surfaces": 119,
+    "direct": 131
+  },
+  "draws": 44,
+  "dispatches": 10,
+  "messages": [],
+  "case": "right-off",
+  "exe": "2cef91f7132f5cc36c4b8c6865d55f3e526fc2ede781388ee75c511dd7aab780",
+  "capture": "D:\\Cdev\\Redflag\\output\\captures\\local\\shadow-right-off-2cef91f7132f-600-f8\\studio_frame8.rdc",
+  "sha256": "55a0bec052db56d7529dfc34aca8f8d4cf0b5ddb2c6d27be2dcf52351c8ea93e"
+}
