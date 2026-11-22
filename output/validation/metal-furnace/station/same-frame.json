@@ -1,0 +1,9 @@
+{
+  "event": 1439,
+  "shader": "MultiReflectionAlphaMask.comp.inc",
+  "baseline": "18a014d",
+  "current_spirv_sha256": "c3041cd2b3594d86f3fa3b5401f04789396605b374451d19965f3b39a8563dc6",
+  "old_spirv_sha256": "bb84e8c3098c0d1bb998c2d1196c17c88ff65896edde2173120c3e35e299a8f8",
+  "renderdoc": "1.47",
+  "capture": "output/captures/local/metal-furnace/station/45eef074c3ef/rack-current/studio_frame12.rdc"
+}

@@ -17,15 +17,23 @@ def main():
     cli.add_argument("variant", choices=("original", "normal", "current"))
     cli.add_argument("--exe", type=Path, default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
     cli.add_argument("--renderdoc", type=Path, default=ROOT/"tmp/tools/renderdoc/RenderDoc_1.47_64")
+    cli.add_argument("--study", type=Path, help="Keep a separate capture and report directory for each executable")
     cli.add_argument("--replay", action="store_true")
     cli.add_argument("--time", action="store_true")
+    cli.add_argument("--linear", action="store_true", help="Read the game color before exposure and tone mapping")
     args = cli.parse_args()
     exe, rd = args.exe.resolve(strict=True), args.renderdoc.resolve(strict=True)
     label = args.view + "-" + args.variant
     version = hashlib.sha256(exe.read_bytes()).hexdigest()
     collection = "station-tracks" if args.view == "tracks" else "station-materials"
+    if args.study:
+        if args.study.is_absolute() or ".." in args.study.parts:
+            cli.error("--study must name a directory under output/validation")
+        collection = args.study
     work = ROOT/"tmp"/collection/version[:12]/label
     out = ROOT/"output/validation"/collection
+    if args.study:
+        out = out/version[:12]
     out.mkdir(parents=True, exist_ok=True)
     source = ROOT/"RedflagForge/assets/scenes/Watt-Station.redflag"
     rdc = ROOT/"output/captures/local"/collection/version[:12]/label/"game.rdc"
@@ -71,7 +79,7 @@ def main():
         run_renderdoc(rd, ROOT/"tests/capture_material_studio.py", ROOT, env)
     file = Path((work/"frame-path.txt").read_text(encoding="utf8").strip())
     env = dict(os.environ, RF_RELIEF_RDC=str(file), RF_RELIEF_WORK=str(work), RF_RELIEF_LABEL=label,
-               RF_RELIEF_TIME=str(int(args.time)), RF_RELIEF_OUT=str(out))
+               RF_RELIEF_TIME=str(int(args.time)), RF_RELIEF_OUT=str(out), RF_RELIEF_LINEAR=str(int(args.linear)))
     run_renderdoc(rd, ROOT/"tests/replay_station_materials.py", ROOT, env)
     data = json.loads((out/(label+".json")).read_text(encoding="utf8"))
     assert data["size"] == [1920,1080] and data["frame"] == 12

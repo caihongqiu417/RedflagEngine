@@ -90,6 +90,20 @@ def run(frame):
                   draws=len(draws),dispatches=len(dispatches),capture=str(file.relative_to(Path.cwd())),
                   messages=[m.description for m in frame.GetDebugMessages()
                             if m.severity in (rd.MessageSeverity.High,rd.MessageSeverity.Medium)])
+    if os.environ.get("RF_RELIEF_LINEAR") == "1":
+        # 最后一次计算读取线性光照，应用曝光和显示曲线，写出游戏面板图。
+        event = dispatches[-1]
+        frame.SetFrameEvent(event, True)
+        state = frame.GetPipelineState()
+        stage = rd.ShaderStage.Compute
+        resources = [r.descriptor.resource for r in state.GetReadWriteResources(stage)]
+        source, = [r for r in resources if r not in textures]
+        panel, = [textures[r] for r in resources if r in textures]
+        options = bytes(frame.GetVulkanPipelineState().pushconsts)
+        _, samples, mapping, exposure = struct.unpack_from("<IIIf", options)
+        assert samples == 1 and [panel.width,panel.height] == result["size"]
+        (work/"light.f32").write_bytes(frame.GetBufferData(source,0,panel.width*panel.height*16))
+        result["linear_light"] = {"event": event, "exposure_multiplier": exposure, "tone_mapping": mapping}
     if os.environ["RF_RELIEF_TIME"] == "1":
         counter = rd.GPUCounter.EventGPUDuration
         frame.FetchCounters([counter])

@@ -1,0 +1,92 @@
+{
+  "builds": {
+    "before": {
+      "executable_sha256": "bc21b15c820bd4f420aee19a396c936f7da43fa4abecfad6d3500058029da87d",
+      "scene_sha256": "8e0e9a7bac5b8c28437fc3e94b2137fc733b72448764018cddac89936201a28f",
+      "render_settings_sha256": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+      "rdc_sha256": "d0b7cd7255c1aff1c6673ca36d2ed8d538c9d282e6bee504217fd7e18309f98b",
+      "png_sha256": "14e215f4f108d2321fa267ffb5eb53fcc8f7b31f38ea20b1e43aa81341261848",
+      "visible_rack_pixels": 242618,
+      "frame": 12,
+      "draw_event": 552,
+      "display": {
+        "event": 1513,
+        "exposure_multiplier": 0.784584105014801,
+        "tone_mapping": 1
+      },
+      "capture": "output\\captures\\local\\metal-furnace\\station\\bc21b15c820b\\rack-current\\studio_frame12.rdc"
+    },
+    "after": {
+      "executable_sha256": "45eef074c3efe08864b56ef0415d0809af9aaecaac1f90f1de62e48aa0499ce3",
+      "scene_sha256": "8e0e9a7bac5b8c28437fc3e94b2137fc733b72448764018cddac89936201a28f",
+      "render_settings_sha256": "240640063b923adc873010223f1632486d632ea3b25b84e84b6a7c8a0dbb4485",
+      "rdc_sha256": "02b8db576dc39b12c4c77d80a9e0576d19e4939a3800f027f0bf53b055251c46",
+      "png_sha256": "87fcc48eaa532e4b46205cd0c8d841213e2801d12deb1f45fcb4fa7a93c8f8c7",
+      "visible_rack_pixels": 243334,
+      "frame": 12,
+      "draw_event": 550,
+      "display": {
+        "event": 1511,
+        "exposure_multiplier": 0.784584105014801,
+        "tone_mapping": 1
+      },
+      "capture": "output\\captures\\local\\metal-furnace\\station\\45eef074c3ef\\rack-current\\studio_frame12.rdc"
+    },
+    "common_rack_pixels": 242586,
+    "different_visibility": 780,
+    "identical_matrix": true,
+    "identical_common_albedo": true,
+    "linear_luminance": {
+      "before": 0.07273832109261522,
+      "after": 0.0656780109513561,
+      "mean_change": -0.007060310141259115,
+      "percent_of_before": -9.706451888364956,
+      "median_change": -0.006964520394057035,
+      "p95_change": -7.64001959934809e-05
+    },
+    "display_luma_0_255": {
+      "before": 61.512389466828246,
+      "after": 56.14145301377655,
+      "mean_change": -5.370936453051701,
+      "percent_of_before": -8.73147100869506,
+      "median_change": -4.787400000000005,
+      "p95_change": 0.0
+    }
+  },
+  "shader_only": {
+    "same_input_bytes": true,
+    "matches_recorded_color": true,
+    "rack_pixels": 243334,
+    "event": 1439,
+    "linear_luminance": {
+      "before": 0.06543620265788873,
+      "after": 0.06554240524809116,
+      "mean_change": 0.00010620259020241566,
+      "percent_of_before": 0.1622994395895195,
+      "median_change": 1.116201356052976e-05,
+      "p95_change": 0.000440040024444467
+    },
+    "display_luma_0_255": {
+      "before": 55.97020485012369,
+      "after": 56.031686595379185,
+      "mean_change": 0.061481745255492444,
+      "percent_of_before": 0.10984727574274113,
+      "median_change": 0.0,
+      "p95_change": 0.7151999999999958
+    },
+    "reflection_pass_luminance": {
+      "before": 0.06594117002790685,
+      "after": 0.06604917220912403,
+      "mean_change": 0.0001080021812171708,
+      "percent_of_before": 0.16378566102400574,
+      "median_change": 1.0047666728144056e-08,
+      "p95_change": 0.0004751917339861464
+    }
+  },
+  "crop_xyxy": [
+    624,
+    420,
+    1184,
+    832
+  ]
+}
