@@ -35,6 +35,17 @@ namespace Redflag
 			if (!(data.SearchStep >= 0.f && std::isfinite(data.SearchStep))) { error = "SearchStep 需要填写非负米数"; return false; }
 			data.TurnSpeed = file["TurnSpeed"].as<float>(data.TurnSpeed);
 			data.ObserveWorld = file["ObserveWorld"].as<bool>(true);
+			std::set<std::pair<std::string, std::string>> watched;
+			for (const YAML::Node& row : file["Watch"])
+			{
+				NpcCue cue{row["Team"].as<std::string>(), row["Clip"].as<std::string>(), row["Message"].as<std::string>()};
+				if (cue.Team.empty() || cue.Clip.empty() || cue.Message.empty() || !watched.emplace(cue.Team, cue.Clip).second)
+				{
+					error = "主动观察需要队伍、动作和提醒文字；同队伍的同一动作只写一次";
+					return false;
+				}
+				data.Watch.push_back(std::move(cue));
+			}
 			data.Remember = file["Remember"].as<bool>(true);
 			const YAML::Node memory = file["Memory"];
 			if (memory && !memory.IsMap()) { error = "Memory 需要填写角色记忆设置"; return false; }

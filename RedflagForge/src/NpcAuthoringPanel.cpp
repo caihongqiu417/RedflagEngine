@@ -46,6 +46,16 @@ namespace Redflag
         data["Sight"] = npc.Sight;
         data["SearchStep"] = npc.SearchStep;
         data["SearchRadius"] = npc.SearchRadius;
+        YAML::Node watch(YAML::NodeType::Sequence);
+        for (const NpcCue& cue : npc.Watch)
+        {
+            YAML::Node row;
+            row["Team"] = cue.Team;
+            row["Clip"] = cue.Clip;
+            row["Message"] = cue.Message;
+            watch.push_back(row);
+        }
+        data["Watch"] = watch;
         YAML::Node rows(YAML::NodeType::Sequence);
         for (const NpcIntent& intent : npc.Intents)
         {
@@ -337,6 +347,23 @@ namespace Redflag
         ImGui::InputFloat("观察距离（米）", &m_Draft.Sight);
         ImGui::InputFloat("沿照片方向前进（米）", &m_Draft.SearchStep);
         ImGui::InputFloat("距标记多远停下查看（米）", &m_Draft.SearchRadius);
+        if (ImGui::TreeNode("主动报点"))
+        {
+            for (size_t i = 0; i < m_Draft.Watch.size();)
+            {
+                ImGui::PushID(static_cast<int>(i));
+                NpcCue& cue = m_Draft.Watch[i];
+                Edit("目标队伍", cue.Team);
+                Edit("看到的动作", cue.Clip);
+                Edit("电台提醒", cue.Message);
+                const bool remove = ImGui::SmallButton("移除这条观察");
+                ImGui::PopID();
+                if (remove) m_Draft.Watch.erase(m_Draft.Watch.begin() + i);
+                else ++i;
+            }
+            if (ImGui::Button("添加观察")) m_Draft.Watch.emplace_back();
+            ImGui::TreePop();
+        }
     }
 
     // ---- 候选行与电子表格 ----

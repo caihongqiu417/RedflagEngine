@@ -1,0 +1,139 @@
+{
+  "model": "Qwen3-VL-2B-Instruct",
+  "host_sha256": "dcdc85be9f9eab5694611b6d784ec85c704fdbb34be7c3d0db381900e57eb55f",
+  "profile_sha256": "f84ee97cdc0ad57daf82276f65283b80cef918a46a3b894bf4bcc4fee0987b7d",
+  "tree_sha256": "277e0be83b5d15d05557eb664ec60378982e31b7157774a847e449de2a00508f",
+  "cases": {
+    "watch-announce": {
+      "checks": [
+        "load actual Watt Station",
+        "actual guard script played its cue and damaged the player",
+        "watching does not interrupt the current action",
+        "the same sustained display produced one decision matching the listener preference"
+      ],
+      "events": [
+        {
+          "game_step": 0,
+          "kind": "主动观察",
+          "text": "故障巡检机正在放电。",
+          "target": "1103",
+          "speech": ""
+        },
+        {
+          "game_step": 1,
+          "kind": "主动报点",
+          "text": "故障巡检机正在放电。",
+          "target": "1103",
+          "speech": "故障巡检机正在放电。"
+        }
+      ],
+      "measurements": {
+        "health": "100->88",
+        "seen": "1",
+        "spoken": "1",
+        "quiet": "0",
+        "withdrawn": "0",
+        "action": "follow"
+      }
+    },
+    "watch-quiet": {
+      "checks": [
+        "load actual Watt Station",
+        "set the listener's session preference",
+        "actual guard script played its cue and damaged the player",
+        "watching does not interrupt the current action",
+        "the same sustained display produced one decision matching the listener preference"
+      ],
+      "events": [
+        {
+          "game_step": 0,
+          "kind": "主动观察",
+          "text": "故障巡检机正在放电。",
+          "target": "1103",
+          "speech": ""
+        },
+        {
+          "game_step": 1,
+          "kind": "静默观察",
+          "text": "故障巡检机正在放电。",
+          "target": "1103",
+          "speech": ""
+        }
+      ],
+      "measurements": {
+        "health": "100->88",
+        "seen": "1",
+        "spoken": "0",
+        "quiet": "1",
+        "withdrawn": "0",
+        "action": "follow"
+      }
+    },
+    "watch-wall": {
+      "checks": [
+        "load actual Watt Station",
+        "actual guard script played its cue and damaged the player",
+        "watching does not interrupt the current action",
+        "an occluded or out-of-view performance was not observed"
+      ],
+      "events": [],
+      "measurements": {
+        "health": "100->88",
+        "seen": "0",
+        "spoken": "0",
+        "quiet": "0",
+        "withdrawn": "0",
+        "action": "follow"
+      }
+    },
+    "watch-back": {
+      "checks": [
+        "load actual Watt Station",
+        "actual guard script played its cue and damaged the player",
+        "watching does not interrupt the current action",
+        "an occluded or out-of-view performance was not observed"
+      ],
+      "events": [],
+      "measurements": {
+        "health": "100->88",
+        "seen": "0",
+        "spoken": "0",
+        "quiet": "0",
+        "withdrawn": "0",
+        "action": "follow"
+      }
+    },
+    "watch-lost": {
+      "checks": [
+        "load actual Watt Station",
+        "actual guard script played its cue and damaged the player",
+        "watching does not interrupt the current action",
+        "discarded the observation after the clip ended"
+      ],
+      "events": [
+        {
+          "game_step": 0,
+          "kind": "主动观察",
+          "text": "故障巡检机正在放电。",
+          "target": "1103",
+          "speech": ""
+        },
+        {
+          "game_step": 1,
+          "kind": "观察结束",
+          "text": "没有再次看见刚才的动作，未发出提醒。",
+          "target": "1103",
+          "speech": ""
+        }
+      ],
+      "measurements": {
+        "health": "100->88",
+        "seen": "1",
+        "spoken": "0",
+        "quiet": "0",
+        "withdrawn": "1",
+        "action": "follow"
+      }
+    }
+  }
+}

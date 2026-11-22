@@ -23,11 +23,19 @@ namespace Redflag
 		uint64_t Sequence;
 	};
 
+	struct NpcWatch
+	{
+		float NextScan = 0.f;
+		uint64_t Request = 0, Target = 0;
+		std::map<uint64_t, std::string> SeenClips; // 同一物体保持这个动作时只问一次。
+	};
+
 	/* 每个角色各自保存模型正在回答的问题、执行中的动作和游戏回执。角色定义可以共享。 */
 	struct NpcState
 	{
 		BehaviorBlackboard Blackboard;
 		NpcMemory Memory;
+		NpcWatch Watch;
 		BehaviorTrace Trace;
 		std::vector<NpcCandidate> Candidates;
 		std::deque<NpcEvent> Events;
@@ -79,6 +87,7 @@ namespace Redflag
 		void Accept(uint64_t actor, NpcState& state, const DecisionResult& result);
 		void Execute(uint64_t actor, NpcState& state, float seconds);
 		void FollowClue(uint64_t actor, NpcState& state, float seconds);
+		void Observe(uint64_t actor, NpcState& state, const NpcDefinition& role, float seconds);
 		void Stop(uint64_t actor, NpcState& state);
 		/// <summary>让角色朝目标走一步。目标在交互距离内且两者之间没有遮挡时停步。</summary>
 		/// <param name="range">这次动作允许的距离，单位为米。</param>

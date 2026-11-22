@@ -36,6 +36,16 @@ namespace Redflag
 		}
 	}
 
+	void NpcMemory::LoseSight(uint64_t target)
+	{
+		auto entry = std::find_if(m_Evidence.begin(), m_Evidence.end(), [target](const NpcEvidence& note) {
+			return note.Target == target && note.Source == EvidenceSource::Seen;
+		});
+		if (entry == m_Evidence.end()) return;
+		if (m_Policy.KeepSight) entry->Source = EvidenceSource::LastSeen;
+		else m_Evidence.erase(entry);
+	}
+
 	bool NpcMemory::See(uint64_t target, const std::string& text, double seconds, const std::string& image)
 	{
 		return m_Policy.Sight && Write({EvidenceSource::Seen, target, text, image, seconds});

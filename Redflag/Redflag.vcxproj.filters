@@ -1931,6 +1931,9 @@
     <ClCompile Include="src\Redflag\AI\NpcSystem.cpp">
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcWatch.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\AI\PhotoQuestion.cpp">
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>

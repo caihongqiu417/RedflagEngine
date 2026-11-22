@@ -784,6 +784,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\AI\NpcMemory.cpp" />
     <ClCompile Include="src\Redflag\AI\NpcQuery.cpp" />
     <ClCompile Include="src\Redflag\AI\NpcSystem.cpp" />
+    <ClCompile Include="src\Redflag\AI\NpcWatch.cpp" />
     <ClCompile Include="src\Redflag\AI\PhotoQuestion.cpp" />
     <ClCompile Include="src\Redflag\AI\SpeechInput.cpp" />
     <ClCompile Include="src\Redflag\AI\SpeechPlayback.cpp" />

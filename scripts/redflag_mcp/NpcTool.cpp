@@ -15,6 +15,16 @@ static YAML::Node Inspect(const NpcDefinition& npc)
     result["model"] = npc.Model;
     result["remember"] = npc.Remember;
     result["observe_world"] = npc.ObserveWorld;
+    YAML::Node watch(YAML::NodeType::Sequence);
+    for (const NpcCue& cue : npc.Watch)
+    {
+        YAML::Node row;
+        row["team"] = cue.Team;
+        row["clip"] = cue.Clip;
+        row["message"] = cue.Message;
+        watch.push_back(row);
+    }
+    result["watch"] = watch;
     result["idle"] = npc.IdleClip;
     result["walk"] = npc.WalkClip;
     result["sight"] = npc.Sight;

@@ -184,6 +184,12 @@ namespace Redflag
 	{
 		CancelTraversal(m_Scene, actor);
 		state.Look = 0;
+		if (state.Watch.Request)
+		{
+			m_Client.Cancel(state.Watch.Request);
+			m_Cancelled.push_back(state.Watch.Request);
+			state.Watch.Request = 0;
+		}
 		if (state.Request)
 		{
 			Record(state, "中止", "取消尚未回答的请求");
@@ -590,7 +596,7 @@ namespace Redflag
 			NpcState& state = m_Actors[id];
 			if (owner.HasComponent<HealthComponent>() && owner.GetComponent<HealthComponent>().Current <= 0)
 			{
-				if (state.Request || !state.Action.empty()) Stop(id, state);
+				if (state.Request || state.Watch.Request || !state.Action.empty()) Stop(id, state);
 				state.Started = false;
 				continue;
 			}
@@ -611,6 +617,9 @@ namespace Redflag
 				if (const auto result = m_Client.Take(state.Request)) Accept(id, state, *result);
 			}
 			if (!state.Action.empty()) Execute(id, state, seconds);
+			if (!down && state.Started)
+				if (const NpcDefinition* role = GetDefinition(id); role && (state.Watch.Request || !role->Watch.empty()))
+					Observe(id, state, *role, seconds);
 		}
 	}
 }

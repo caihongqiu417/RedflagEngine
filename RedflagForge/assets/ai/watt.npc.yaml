@@ -22,6 +22,10 @@ SearchRadius: 1
 Speed: 2.8
 Reach: 2
 ObserveWorld: true
+Watch:
+  - {Team: fault, Clip: Cannon_Fire_Recoil, Message: 故障巡检机正在放电。}
+Memory:
+  Preferences: {提醒方式: session}
 Intents:
   - {Key: gather, Description: 去捡一份医疗包, Target: pickup, Item: medkit, Reply: 拿到医疗包了。}
   - {Key: reserve, Description: 医疗包预留：仅用于玩家说自己稍后来领取药品, Target: promise, Item: medkit, Reply: 留给你的医疗包，收好。}

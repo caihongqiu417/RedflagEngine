@@ -24,16 +24,16 @@ def save(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def run_cases(port, exe, work):
+def run_cases(port, exe, work, names):
     check = ROOT / "bin-int/Tests/StationCompanionTests.exe"
     env = dict(os.environ, PATH=str(exe.parent) + os.pathsep + os.environ["PATH"])
     cases = {}
-    for case in ("race", "deliver", "reserve"):
-        if case == "race":
+    for case in names:
+        if case == names[0]:
             command = [os.environ["COMSPEC"], "/d", "/c", "tests\\run_scene_tests.cmd", "--station-companion", str(port), case]
         else:
             command = [check, "--station-companion", str(port), case]
-        result = subprocess.run(command, cwd=ROOT if case == "race" else PROJECT, env=env, capture_output=True, timeout=95)
+        result = subprocess.run(command, cwd=ROOT if case == names[0] else PROJECT, env=env, capture_output=True, timeout=95)
         log = (result.stdout + result.stderr).decode("utf-8", errors="replace")
         (work / (case + ".log")).write_text(log, encoding="utf-8")
         if result.returncode:
@@ -45,7 +45,10 @@ def run_cases(port, exe, work):
             elif line.startswith("EVENT\t"):
                 _, seq, kind, text, target = line.split("\t")
                 events.append(dict(seq=int(seq), kind=kind, text=text, target=target))
-            elif line.startswith("DISTANCE\t"):
+            elif line.startswith("WATCH\t"):
+                _, frame, kind, text, target, speech = line.split("\t")
+                events.append(dict(game_step=int(frame), kind=kind, text=text, target=target, speech=speech))
+            elif line.startswith(("DISTANCE\t", "WORLD\t")):
                 distances = dict(item.split("=") for item in line.split("\t")[2:])
         cases[case] = dict(checks=checks, events=events, measurements=distances)
     return cases, digest(check)
@@ -77,16 +80,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8716)
     parser.add_argument("--exe", type=Path, default=ROOT / "bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
+    parser.add_argument("--watch", action="store_true", help="用正在运行的巡检机脚本检查主动观察、静默偏好、遮挡和过时的报点")
     args = parser.parse_args()
     exe = args.exe.resolve(strict=True)
     (ROOT / "tmp").mkdir(exist_ok=True)
     work = Path(tempfile.mkdtemp(dir=ROOT / "tmp", prefix="station-companion-"))
     with urlopen(f"http://127.0.0.1:{args.port}/v1/health", timeout=5) as response:
         model = json.load(response)["model"]
-    cases, host = run_cases(args.port, exe, work)
+    cases = ("watch-announce", "watch-quiet", "watch-wall", "watch-back", "watch-lost") if args.watch else ("race", "deliver", "reserve")
+    results, host = run_cases(args.port, exe, work, cases)
     OUT.mkdir(parents=True, exist_ok=True)
-    save(OUT / "decisions.json", dict(model=model, host_sha256=host, profile_sha256=digest(PROJECT / "assets/ai/watt.npc.yaml"),
-                                      tree_sha256=digest(PROJECT / "assets/ai/watt.tree.yaml"), cases=cases))
+    save(OUT / ("watch.json" if args.watch else "decisions.json"),
+         dict(model=model, host_sha256=host, profile_sha256=digest(PROJECT / "assets/ai/watt.npc.yaml"),
+              tree_sha256=digest(PROJECT / "assets/ai/watt.tree.yaml"), cases=results))
+    if args.watch:
+        print(f"PASS {len(cases)} observation cases. Output: {OUT}. Full logs: {work}")
+        return
     save(OUT / "game.json", run_game(exe, work))
     print(f"PASS 3 model scenarios and 160 game frames. Output: {OUT}. Full session: {work}")
 

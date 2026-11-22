@@ -53,6 +53,7 @@ namespace Redflag
 
 		// 一次观察从 BeginSight 开始。上次见过、这次没有再次看到的物体保留上次的记录时间。
 		void BeginSight();
+		void LoseSight(uint64_t target);
 		bool See(uint64_t target, const std::string& text, double seconds, const std::string& image = {});
 		bool Report(uint64_t target, const std::string& text, double seconds, const std::string& image = {},
 			std::optional<glm::vec3> place = {});

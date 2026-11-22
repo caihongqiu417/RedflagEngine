@@ -18,6 +18,70 @@ static void Check(bool condition, const char* message)
     std::cout << "PASS " << message << std::endl;
 }
 
+static void Watch(Scene& scene, uint16_t port, const std::string& scenario)
+{
+    Entity guard = scene.GetEntityByUUID(1103), player = scene.GetEntityByUUID(1101), watt = scene.GetEntityByUUID(1102);
+    auto& pose = watt.GetComponent<TransformComponent>();
+    const glm::vec3 machine = guard.GetComponent<TransformComponent>().Translation;
+    // 用同一个存档摆三个人的起点。放电动作和实际扣血都交给正式 StationGuard 脚本。
+    player.GetComponent<TransformComponent>().Translation = machine + glm::vec3(-1.50f, 0.f, .95f);
+    pose.Translation = machine + glm::vec3(-.60f, 0.f, 2.35f);
+    pose.Rotation.y = std::atan2(.60f, -2.35f);
+    if (scenario == "watch-back") pose.Rotation.y += glm::pi<float>();
+    if (scenario == "watch-wall")
+    {
+        Entity wall = scene.CreateEntity("遮挡观察的隔板");
+        wall.GetComponent<TransformComponent>().Translation = machine + glm::vec3(-.30f, 1.2f, 1.18f);
+        wall.AddComponent<RigidBody3DComponent>();
+        wall.AddComponent<BoxCollider3DComponent>().HalfSize = {.42f, 1.4f, .12f};
+    }
+    scene.OnRuntimeStart(port);
+    NpcSystem& npcs = *scene.GetNpcs();
+    if (scenario == "watch-quiet")
+        Check(npcs.GetMemory(1102)->SetPreference("提醒方式", "不用电台说话，看见任何情况都保持安静，只记在记录里。"),
+            "set the listener's session preference");
+
+    const float before = player.GetComponent<HealthComponent>().Current;
+    int seen = 0, spoken = 0, quiet = 0, withdrawn = 0;
+    bool active = false;
+    uint64_t cursor = 0;
+    for (int frame = 0; frame < 200; ++frame)
+    {
+        scene.UpdateGame(1.f / 60.f);
+        active |= guard.GetComponent<ModelAnimationComponent>().Clip == "Cannon_Fire_Recoil";
+        while (const NpcEvent* event = npcs.NextEvent(1102, cursor))
+        {
+            if (event->Target != 1103) continue;
+            std::cout << "WATCH\t" << frame << '\t' << event->Kind << '\t' << event->Text << '\t'
+                      << event->Target << '\t' << event->Speech << std::endl;
+            seen += event->Kind == "主动观察";
+            spoken += event->Kind == "主动报点" && !event->Speech.empty();
+            quiet += event->Kind == "静默观察" && event->Speech.empty();
+            withdrawn += event->Kind == "观察结束" && event->Speech.empty();
+            if (scenario == "watch-lost" && event->Kind == "主动观察")
+                player.GetComponent<TransformComponent>().Translation = {-6.9f, .08f, 1.4f};
+        }
+        // 对局按固定步长继续；留出真实墙钟时间给本机推理服务，不让高速测试先走完几分钟游戏。
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        if (frame >= 48 && (spoken || quiet || withdrawn)) break;
+        if (frame >= 48 && (scenario == "watch-wall" || scenario == "watch-back")) break;
+    }
+    const float after = player.GetComponent<HealthComponent>().Current;
+    std::cout << "WORLD\t" << scenario << "\thealth=" << before << "->" << after << "\tseen=" << seen
+              << "\tspoken=" << spoken << "\tquiet=" << quiet << "\twithdrawn=" << withdrawn
+              << "\taction=" << npcs.Inspect(1102)->Action << std::endl;
+    Check(active && after < before, "actual guard script played its cue and damaged the player");
+    Check(npcs.Inspect(1102)->Action == "follow", "watching does not interrupt the current action");
+    if (scenario == "watch-wall" || scenario == "watch-back")
+        Check(!seen && !spoken && !quiet, "an occluded or out-of-view performance was not observed");
+    else if (scenario == "watch-lost")
+        Check(seen == 1 && withdrawn == 1 && !spoken && !quiet, "discarded the observation after the clip ended");
+    else
+        Check(seen == 1 && (scenario == "watch-quiet" ? quiet == 1 && !spoken : spoken == 1 && !quiet),
+              "the same sustained display produced one decision matching the listener preference");
+    scene.OnRuntimeStop();
+}
+
 static void Run(Scene& scene, uint16_t port, const std::string& scenario)
 {
     constexpr uint64_t robot = 1102, player = 1101, supply = 1112;
@@ -157,9 +221,15 @@ try
     Ref<Scene> scene = CreateRef<Scene>();
     scene->OnViewportResize(640, 400);
     Check(SceneSerializer(scene).Deserialize("assets/scenes/Watt-Station.redflag"), "load actual Watt Station");
-    scene->OnSimulationStart();
-    Run(*scene, argc > 2 ? static_cast<uint16_t>(std::stoi(argv[2])) : 8716, argc > 3 ? argv[3] : "race");
-    scene->OnSimulationStop();
+    const uint16_t port = argc > 2 ? static_cast<uint16_t>(std::stoi(argv[2])) : 8716;
+    const std::string scenario = argc > 3 ? argv[3] : "race";
+    if (scenario.find("watch-") == 0) Watch(*scene, port, scenario);
+    else
+    {
+        scene->OnSimulationStart();
+        Run(*scene, port, scenario);
+        scene->OnSimulationStop();
+    }
     scene.reset();
     context.WaitIdle();
     AssetManager::ClearAll();

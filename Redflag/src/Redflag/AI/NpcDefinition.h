@@ -11,6 +11,12 @@ namespace Redflag
 		std::string Key, Description, Target, Item, Reply;
 	};
 
+	/* 作者选定角色能认出的表演。看到指定队伍正在播放这个动作时，才有这条观察。 */
+	struct NpcCue
+	{
+		std::string Team, Clip, Message;
+	};
+
 	struct NpcDefinition
 	{
 		std::string Name, Instructions, Model, Voice, IdleClip, WalkClip;
@@ -25,6 +31,7 @@ namespace Redflag
 		bool Remember = true; // 提问时附上这个角色记在黑板里的事情。
 		MemoryPolicy Memory;
 		std::vector<NpcIntent> Intents;
+		std::vector<NpcCue> Watch;
 		std::filesystem::path TreeFile;
 		std::filesystem::path AnimatorFile;
 		AnimationController Controller;
