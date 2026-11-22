@@ -1,0 +1,27 @@
+\clearpage
+\section{模拟期间增删 2D 刚体}
+
+在场景开始模拟后创建一个球，给它添加 2D 动态刚体和圆形碰撞体。下一次物理更新应该能接着算它往下落了多少。在旧代码里，Box2D 只在按下“模拟”时为已有物体创建刚体。后来添加的组件没有对应的 Box2D 对象，读取位置的代码却直接使用了组件里保存的指针。
+
+\begin{Code}
+// a1b7e7f，Scene.cpp，OnUpdateSimulation
+b2Body* body = (b2Body*)rb2d.RuntimeBody;
+const auto& position = body->GetPosition();
+\end{Code}
+
+如果复制的是已经开始模拟的球，又会遇到相反的情况。复制组件也复制了指针，两个球读的是同一个 Box2D 刚体。删掉场景里的地面时，仅删除了组件，世界里的碰撞形状还可能继续托住球。只在读位置前检查指针能避开一次空指针访问，但新球仍不会下落，旧地面也仍可能参与碰撞。
+
+现在，Box2D 的刚体和碰撞形状由当前正在模拟的 Scene 管理。场景开始一个物理步前，先查看哪些实体带 2D 刚体组件。在场景自己的表里找不到这个实体，就按它当前的位置、刚体类型与碰撞体尺寸创建。这样在属性面板里新建组件后，程序读到的是刚填好的数值。复制实体只复制这些数值，得到另一个实体编号的球会单独创建刚体。实体或碰撞组件删除时，场景也把对应对象从 Box2D 中移除。
+
+\begin{Code}
+// Scene.cpp，OnUpdatePhysics 节选
+SyncPhysics2D();   // 为刚加入场景的实体创建刚体和形状
+m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+// 物理步结束后，将每个刚体的位置和旋转写回它自己的实体
+\end{Code}
+
+回归测试先使两个球落到同一个地面上，再在其中一个球内添加半高 $0.15$ 米的方形碰撞体。只移除这个球的圆形碰撞体，它会下落到小方形能托住它的高度，另一只球仍由自己的圆形托住。再删除地面，两球都应继续下落。测试还在模拟中复制场景，分别停止、重新启动并移动球，检查两个世界能各自推进。
+
+\loc{Redflag/src/Redflag/Scene/Scene.cpp}
+\loc{tests/ScenePhysicsTests.h}
+在仓库根目录运行 \texttt{tests/run\_scene\_tests.cmd\ \mbox{-{}-physics}}。这些检查与旧场景重开、PhysX 三维箱子、遮挡和拿取测试一同执行。

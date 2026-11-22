@@ -7,4 +7,4 @@ if not exist "%forge%" (
     pause
     exit /b 1
 )
-start "" "%forge%" --vulkan
+start "" "%forge%" --vulkan %*

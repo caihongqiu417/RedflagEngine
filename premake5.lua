@@ -148,6 +148,7 @@ project "Redflag"
     --告诉头文件要去这些地方找
     includedirs {
         "%{prj.name}/src",
+        "bin-int/dependencies/PhysX/include",
         "%{prj.name}/src/Redflag",
         "%{IncludeDir.Box2D}",
         "%{IncludeDir.spdlog}", 
@@ -175,6 +176,8 @@ project "Redflag"
     -- 基础链接库 (所有配置共用)
     links {
         "Box2D",
+        "PhysX_static_64", "PhysXCommon_static_64", "PhysXFoundation_static_64",
+        "PhysXExtensions_static_64", "PhysXPvdSDK_static_64",
         "GLFW",
         "Glad",
         "ImGui",
@@ -186,6 +189,9 @@ project "Redflag"
 
     filter "files:**/vendor/ImGuizmo/**.cpp"
         flags { "NoPCH" }
+
+    filter { "configurations:Release or Dist", "files:**/PhysicsWorld.cpp or **/Ragdoll.cpp" }
+        defines { "NDEBUG" }
 
     filter "files:**/vendor/tinyexr/deps/miniz/miniz.c"
         flags { "NoPCH" }
@@ -214,6 +220,8 @@ project "Redflag"
     
     -- Debug 配置
     filter "configurations:Debug"
+        libdirs { "bin-int/dependencies/PhysX/lib/debug" }
+        defines { "PX_DEBUG=1", "PX_CHECKED=1" }
         defines "RF_DEBUG"
         runtime "Debug"
         symbols "On"
@@ -242,6 +250,7 @@ project "Redflag"
         
     -- Release 配置
     filter "configurations:Release"
+        libdirs { "bin-int/dependencies/PhysX/lib/release" }
         defines "RF_RELEASE"
         runtime "Release"
         optimize "On"
@@ -271,6 +280,7 @@ project "Redflag"
         
     -- Dist 配置
     filter "configurations:Dist"
+        libdirs { "bin-int/dependencies/PhysX/lib/release" }
         defines "RF_DIST"
         runtime "Release"
         optimize "On"

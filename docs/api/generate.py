@@ -71,7 +71,8 @@ def group_for(path):
     if "Panel" in parts:
         return "编辑器"
     return {"Assets":"资源", "Scene":"场景", "Renderer":"渲染", "Events":"事件", "Debug":"调试",
-            "ParticleSystem":"粒子", "Scripting":"脚本运行时", "Core":"核心", "Math":"数学"}.get(parts[3] if len(parts) > 3 else "", "核心")
+            "Physics":"物理", "Network":"联网", "Animation":"角色动画", "ParticleSystem":"粒子",
+            "Scripting":"脚本运行时", "Core":"核心", "Math":"数学"}.get(parts[3] if len(parts) > 3 else "", "核心")
 
 
 def declarator_name(node):

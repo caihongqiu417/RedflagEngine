@@ -47,6 +47,7 @@ namespace Redflag
 		// 场景、属性面板和资源缓存都可能留着网格。先释放它们对网格的引用，销毁网格时还能调用 Vulkan 设备。
 		m_Hierarchy.SetContext(nullptr);
 		m_Scene.reset();
+		m_EditScene.reset();
 		AssetManager::ClearAll();
 		RenderDevice::SetCurrent(nullptr);
 		m_Draw.reset();
@@ -72,6 +73,7 @@ namespace Redflag
 
 	void VulkanForgeLayer::NewScene()
 	{
+		if (m_EditScene) ToggleSimulation();
 		m_Scene = CreateRef<Scene>();
 		auto extent = m_Draw->GetExtent();
 		if (!extent.width) extent = GetWindowContext().GetExtent();
@@ -88,6 +90,7 @@ namespace Redflag
 
 	void VulkanForgeLayer::SaveScene(bool choosePath)
 	{
+		if (m_EditScene) return;
 		auto path = m_ScenePath;
 		if (choosePath || path.empty())
 			path = FileDialogs::SaveFile("Redflag Scene (*.redflag)\0*.redflag\0");
@@ -137,6 +140,7 @@ namespace Redflag
 			Report("Could not open scene: " + path.u8string());
 			return false;
 		}
+		if (m_EditScene) ToggleSimulation();
 		m_Scene = scene;
 		m_ScenePath = path;
 		m_Hierarchy.SetContext(scene);
@@ -193,8 +197,30 @@ namespace Redflag
 		}
 	}
 
+	void VulkanForgeLayer::ToggleSimulation()
+	{
+		if (m_EditScene)
+		{
+			m_Scene->OnSimulationStop();
+			m_Scene = std::move(m_EditScene);
+		}
+		else
+		{
+			// 在副本里让箱子落地，点“停止模拟”就能回到原来的摆放位置。
+			Ref<Scene> simulation = Scene::Copy(m_Scene);
+			simulation->OnSimulationStart();
+			m_EditScene = std::move(m_Scene);
+			m_Scene = std::move(simulation);
+		}
+		m_Hierarchy.SetContext(m_Scene);
+		m_Lighting->ResetHistory();
+		m_HasSceneImage = false;
+	}
+
 	void VulkanForgeLayer::OnUpdate(Timestep ts)
 	{
+		if (m_EditScene)
+			m_Scene->OnUpdatePhysics(ts);
 		if (m_Hovered && !m_GameView)
 			m_Camera.OnUpdate(ts);
 	}
@@ -216,8 +242,8 @@ namespace Redflag
 			if (ImGui::MenuItem("导入模型…"))
 				ImportModel(FileDialogs::OpenFile("3D Model (*.obj;*.fbx;*.gltf;*.glb;*.ply)\0*.obj;*.fbx;*.gltf;*.glb;*.ply\0"));
 			ImGui::Separator();
-			if (ImGui::MenuItem("保存", "Ctrl+S")) SaveScene(false);
-			if (ImGui::MenuItem("另存为…", "Ctrl+Shift+S")) SaveScene(true);
+			if (ImGui::MenuItem("保存", "Ctrl+S", false, !m_EditScene)) SaveScene(false);
+			if (ImGui::MenuItem("另存为…", "Ctrl+Shift+S", false, !m_EditScene)) SaveScene(true);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("环境贴图"))
@@ -272,6 +298,8 @@ namespace Redflag
 			ImGui::EndMenu();
 		}
 		ImGui::Separator();
+		if (ImGui::MenuItem(m_EditScene ? "停止模拟" : "模拟物理")) ToggleSimulation();
+		m_NpcVision.Draw(m_Scene, m_ScenePath, bool(m_EditScene), m_Camera.GetPosition());
 		ImGui::TextDisabled("%s   /   Vulkan", m_ScenePath.empty() ? "未命名" : m_ScenePath.stem().u8string().c_str());
 		ImGui::EndMenuBar();
 		if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
@@ -335,7 +363,7 @@ namespace Redflag
 		ImGui::End();
 
 		m_Hierarchy.OnImguiRender("层级  Hierarchy", "属性  Inspector");
-		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings();
+		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings(!m_EditScene);
 		ImGui::End();
 		auto asset = m_Project.Draw();
 		if (!asset.empty())

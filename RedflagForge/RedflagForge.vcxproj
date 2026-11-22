@@ -143,12 +143,14 @@
   <ItemGroup>
     <ClInclude Include="src\ForgeLayer.h" />
     <ClInclude Include="src\LightingPreview.h" />
+    <ClInclude Include="src\NpcVisionPanel.h" />
     <ClInclude Include="src\ProjectPanel.h" />
     <ClInclude Include="src\VulkanForgeLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ForgeLayer.cpp" />
     <ClCompile Include="src\LightingPreview.cpp" />
+    <ClCompile Include="src\NpcVisionPanel.cpp" />
     <ClCompile Include="src\ProjectPanel.cpp" />
     <ClCompile Include="src\RedflagForgeApp.cpp" />
     <ClCompile Include="src\VulkanForgeLayer.cpp" />

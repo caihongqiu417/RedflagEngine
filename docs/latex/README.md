@@ -28,5 +28,6 @@
 | 技术选型 | [decisions/main.tex](decisions/main.tex) | `./decisions/build.ps1` |
 | 渲染性能实测 | [performance/main.tex](performance/main.tex) | `./performance/build.ps1`（需 Python 3） |
 | 经典场景实测 | [scenes/main.tex](scenes/main.tex) | `./scenes/build.ps1` |
+| 角色动画 | [animation/main.tex](animation/main.tex) | 进入 animation 目录，运行两次 `xelatex main.tex` |
 
 架构图可以直接在 LaTeX 中修改。数学册中的[核验脚本](math/verify.py)会复算书中的数值例，并逐段对照引用的着色器或 C++ 源文件。从仓库根目录运行 `python docs/latex/math/verify.py` 即可。实测使用的场景截图、RenderDoc 回放结果和 CPU 采样记录分别保存在 [scenes](../../output/scenes/)、[captures](../../output/captures/) 和 [profiling](../../output/profiling/) 目录。

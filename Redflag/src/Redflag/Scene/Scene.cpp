@@ -32,16 +32,28 @@ namespace Redflag {
 
 	Scene::Scene()
 	{
-
+        m_Registry.on_destroy<RigidBody2DComponent>().connect<&Scene::RemoveBody2D>(*this);
+        m_Registry.on_destroy<BoxCollider2DComponent>().connect<&Scene::RemoveFixture2D<BoxCollider2DComponent>>(*this);
+        m_Registry.on_destroy<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
+        m_Registry.on_update<BoxCollider2DComponent>().connect<&Scene::RemoveFixture2D<BoxCollider2DComponent>>(*this);
+        m_Registry.on_update<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
+        m_Registry.on_destroy<RigidBody3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
+        m_Registry.on_destroy<BoxCollider3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
 	}
 
 	Scene::~Scene()
 	{
-
+        m_Registry.on_destroy<RigidBody2DComponent>().disconnect(this);
+        m_Registry.on_destroy<BoxCollider2DComponent>().disconnect(this);
+        m_Registry.on_destroy<CircleCollider2DComponent>().disconnect(this);
+        m_Registry.on_update<BoxCollider2DComponent>().disconnect(this);
+        m_Registry.on_update<CircleCollider2DComponent>().disconnect(this);
+        m_Registry.on_destroy<RigidBody3DComponent>().disconnect(this);
+        m_Registry.on_destroy<BoxCollider3DComponent>().disconnect(this);
 	}
 
     template<typename Component>
-    static void CopyComponent(entt::registry& dst,entt::registry& src,const std::unordered_map<UUID,entt::entity> enttMap)
+    static void CopyComponent(entt::registry& dst,entt::registry& src,const std::unordered_map<UUID,entt::entity>& enttMap)
     {
         auto view = src.view<Component>();
         for (auto e : view)
@@ -51,8 +63,11 @@ namespace Redflag {
 
             entt::entity dstEnttID=enttMap.at(uuid);
 
-            auto& component = src.get<Component>(e);
-            dst.emplace_or_replace<Component>(dstEnttID,component);
+            // “可拿取”只记录实体有没有这个标记，没有字段可复制。
+            if constexpr (entt::component_traits<Component>::page_size == 0)
+                dst.emplace_or_replace<Component>(dstEnttID);
+            else
+                dst.emplace_or_replace<Component>(dstEnttID, src.get<Component>(e));
         }
     }
 
@@ -60,7 +75,12 @@ namespace Redflag {
     static void CopyComponentIfExist(Entity dst, Entity src)
     {
         if (src.HasComponent<Component>())
-            dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+        {
+            if constexpr (entt::component_traits<Component>::page_size == 0)
+                dst.AddOrReplaceComponent<Component>();
+            else
+                dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+        }
     }
 
     Ref<Scene> Scene::Copy(Ref<Scene> other)
@@ -94,6 +114,9 @@ namespace Redflag {
         CopyComponent<ScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -135,6 +158,7 @@ namespace Redflag {
     void Scene::OnRuntimeStart()
     {
         OnPhysics2DStart();
+        SyncPhysics3D();
 
         //脚本系统
         {
@@ -176,6 +200,7 @@ namespace Redflag {
 
     void Scene::OnRuntimeStop()
     {
+        StopPhysics3D();
         OnPhysics2DStop();
 
         ScriptEngine::OnRuntimeStop();
@@ -198,10 +223,12 @@ namespace Redflag {
     void Scene::OnSimulationStart()
     {
         OnPhysics2DStart();
+        SyncPhysics3D();
     }
 
     void Scene::OnSimulationStop()
     {
+        StopPhysics3D();
         OnPhysics2DStop();
     }
 
@@ -298,26 +325,7 @@ namespace Redflag {
             }
         }
 
-        {
-            const int32_t velocityIterations = 6;
-            const int32_t positionIterations = 2;
-            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
-
-            auto view = m_Registry.view<RigidBody2DComponent>();
-            for (auto e : view)
-            {
-                Entity entity = { e,this };
-                auto& transform = entity.GetComponent<TransformComponent>();
-                auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-                
-                // 取出之前存储并更新的刚体指针，用刚体指针将物理引擎的位置/角度同步回 Transform
-                b2Body* body = (b2Body*)rb2d.RuntimeBody;
-                const auto& position = body->GetPosition();
-                transform.Translation.x = position.x;
-                transform.Translation.y = position.y;
-                transform.Rotation.z = body->GetAngle();
-            }
-        }
+        OnUpdatePhysics(ts);
 
         Camera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -344,29 +352,7 @@ namespace Redflag {
 
     void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
     {
-        // 步进物理（不执行 NativeScript，这是与 OnUpdateRuntime 的核心区别）
-        {
-            const int32_t velocityIterations = 6;
-            const int32_t positionIterations = 2;
-            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
-
-            // 将 Box2D 计算结果同步回 TransformComponent
-            auto view = m_Registry.view<RigidBody2DComponent>();
-            for (auto e : view)
-            {
-                Entity entity = { e, this };
-                auto& transform = entity.GetComponent<TransformComponent>();
-                auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-                b2Body* body = (b2Body*)rb2d.RuntimeBody;
-                const auto& position = body->GetPosition();
-                transform.Translation.x = position.x;
-                transform.Translation.y = position.y;
-                transform.Rotation.z = body->GetAngle();
-            }
-        }
-
-        // 用 EditorCamera 渲染（与 OnUpdateEditor 相同的渲染路径）
+        OnUpdatePhysics(ts);
         OnUpdateEditor(ts, camera);
     }
 
@@ -390,12 +376,15 @@ namespace Redflag {
     {
         Entity newEntity = CreateEntity(entity.GetName());
 
-        CopyComponentIfExist<TransformComponent>(newEntity, entity);
+        newEntity.GetComponent<TransformComponent>() = entity.GetComponent<TransformComponent>();
         CopyComponentIfExist<SpriteRendererComponent>(newEntity, entity);
         CopyComponentIfExist<CircleRendererComponent>(newEntity, entity);
         CopyComponentIfExist<CameraComponent>(newEntity, entity);
         CopyComponentIfExist<RigidBody2DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
+        CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
+        CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
+        CopyComponentIfExist<PickupComponent>(newEntity, entity);
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<ScriptComponent>(newEntity, entity);
@@ -443,173 +432,208 @@ namespace Redflag {
         return{};
     }
 
+    // ---- 物理模拟与空间查询 ----
+
+    void Scene::OnUpdatePhysics(Timestep ts)
+    {
+        SyncPhysics2D();
+        const int32_t velocityIterations = 6, positionIterations = 2;
+        m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+        for (const auto& [handle, runtime] : m_Bodies2D)
+        {
+            TransformComponent& transform = m_Registry.get<TransformComponent>(handle);
+            const b2Vec2& position = runtime.Body->GetPosition();
+            transform.Translation.x = position.x;
+            transform.Translation.y = position.y;
+            transform.Rotation.z = runtime.Body->GetAngle();
+        }
+
+        SyncPhysics3D();
+        if (m_Boxes3D.empty())
+            return;
+
+        m_Physics3D->Step(ts.GetSeconds());
+        for (const auto& [handle, box] : m_Boxes3D)
+        {
+            if (box.Type != BodyType3D::Dynamic)
+                continue;
+            TransformComponent& transform = m_Registry.get<TransformComponent>(handle);
+            glm::quat rotation;
+            if (m_Physics3D->GetPose(box.Entity, transform.Translation, rotation))
+                transform.Rotation = glm::eulerAngles(rotation);
+        }
+    }
+
+    void Scene::SyncPhysics3D()
+    {
+        auto boxes = m_Registry.view<IDComponent, TransformComponent, RigidBody3DComponent, BoxCollider3DComponent>();
+        for (entt::entity handle : boxes)
+        {
+            const auto& [id, transform, rigidBody, collider] = boxes.get(handle);
+            BoxBody3D box{ id.ID, rigidBody.Type, transform.Translation, glm::quat(transform.Rotation),
+                glm::abs(transform.Scale) * collider.HalfSize, rigidBody.Density };
+
+            // 压扁到零厚度的盒子没有体积。恢复尺寸后，下次物理步会重新加入它。
+            if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))) ||
+                (box.Type != BodyType3D::Static && !(box.Density > 0.f)) ||
+                m_Registry.any_of<RigidBody2DComponent>(handle))
+            {
+                RemovePhysicsBody(handle);
+                continue;
+            }
+
+            auto existing = m_Boxes3D.find(handle);
+            if (existing != m_Boxes3D.end())
+            {
+                BoxBody3D& old = existing->second;
+                // 动态箱子的位置由 PhysX 算。每帧按新位置重建它，会把下落速度清零。
+                const bool moved = box.Position != old.Position || box.Rotation != old.Rotation;
+                if (old.Type == box.Type && old.HalfSize == box.HalfSize && old.Density == box.Density &&
+                    !(box.Type == BodyType3D::Static && moved))
+                {
+                    if (box.Type == BodyType3D::Kinematic && moved)
+                    {
+                        m_Physics3D->SetKinematicTarget(box.Entity, box.Position, box.Rotation);
+                        old.Position = box.Position;
+                        old.Rotation = box.Rotation;
+                    }
+                    continue;
+                }
+                RemovePhysicsBody(handle);
+            }
+
+            if (!m_Physics3D)
+                m_Physics3D = CreateScope<PhysicsWorld>();
+            m_Physics3D->AddBox(box);
+            m_Boxes3D.emplace(handle, box);
+        }
+    }
+
+    void Scene::RemovePhysicsBody(entt::entity handle)
+    {
+        auto existing = m_Boxes3D.find(handle);
+        if (existing != m_Boxes3D.end())
+        {
+            m_Physics3D->Remove(existing->second.Entity);
+            m_Boxes3D.erase(existing);
+        }
+    }
+
+    void Scene::StopPhysics3D()
+    {
+        m_Boxes3D.clear();
+        m_Physics3D.reset();
+    }
+
+    std::optional<RayHit3D> Scene::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const
+    {
+        if (!m_Physics3D)
+            return std::nullopt;
+        return m_Physics3D->Raycast(origin, direction, maxDistance);
+    }
+
+    std::vector<uint64_t> Scene::OverlapSphere(glm::vec3 center, float radius) const
+    {
+        if (!m_Physics3D)
+            return {};
+        return m_Physics3D->OverlapSphere(center, radius);
+    }
+
     void Scene::OnPhysics2DStart()
     {
-        m_PhysicsWorld = new b2World({ 0.f,-9.8f });
-        auto view = m_Registry.view<RigidBody2DComponent>();
-        for (auto e : view)
+        m_Bodies2D.clear();
+        m_PhysicsWorld = CreateScope<b2World>(b2Vec2(0.f, -9.8f));
+        SyncPhysics2D();
+    }
+
+    template<typename Collider>
+    static b2Fixture* CreateFixture2D(b2Body& body, const Collider& collider, const b2Shape& shape)
+    {
+        b2FixtureDef fixture;
+        fixture.shape = &shape;
+        fixture.density = collider.Density;
+        fixture.friction = collider.Friction;
+        fixture.restitution = collider.Restitution;
+        fixture.restitutionThreshold = collider.RestitutionThreshold;
+        return body.CreateFixture(&fixture);
+    }
+
+    void Scene::SyncPhysics2D()
+    {
+        // 添加组件后，调用者还要填写类型和尺寸。到物理步开始时再创建刚体和碰撞形状。
+        auto bodies = m_Registry.view<RigidBody2DComponent, TransformComponent>();
+        for (entt::entity handle : bodies)
         {
-            Entity entity = { e,this };
-            auto& transform = entity.GetComponent<TransformComponent>();
-            auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-            b2BodyDef bodyDef;
-            bodyDef.type = RigidBodyTypeToBox2DBody(rb2d.Type);
-            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-            bodyDef.angle = transform.Rotation.z;
-
-            b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
-            body->SetFixedRotation(rb2d.FixedRotation);
-
-            if (entity.HasComponent<BoxCollider2DComponent>())
+            const auto& [rigidBody, transform] = bodies.get(handle);
+            Body2D& runtime = m_Bodies2D[handle];
+            b2BodyType type = RigidBodyTypeToBox2DBody(rigidBody.Type);
+            if (!runtime.Body)
             {
-                auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
-                b2PolygonShape boxShape;
-                boxShape.SetAsBox(transform.Scale.x * bc2d.Size.x, transform.Scale.y * bc2d.Size.y);
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &boxShape;
-                fixtureDef.density = bc2d.Density;
-                fixtureDef.friction = bc2d.Friction;
-                fixtureDef.restitution = bc2d.Restitution;
-                fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
+                b2BodyDef def;
+                def.type = type;
+                def.position.Set(transform.Translation.x, transform.Translation.y);
+                def.angle = transform.Rotation.z;
+                def.fixedRotation = rigidBody.FixedRotation;
+                runtime.Body = m_PhysicsWorld->CreateBody(&def);
+            }
+            else
+            {
+                runtime.Body->SetType(type);
+                runtime.Body->SetFixedRotation(rigidBody.FixedRotation);
             }
 
-            if (entity.HasComponent<CircleCollider2DComponent>())
+            const BoxCollider2DComponent* box = m_Registry.try_get<BoxCollider2DComponent>(handle);
+            if (box && !runtime.Box)
             {
-                auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
-
-                b2CircleShape circleShape;
-                // 圆心偏移（局部空间，Box2D 单位与 Transform 一致）
-                circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
-                // 半径需乘以实体的均匀缩放（取 x/y 中的较大值以保持碰撞形状合理）
-                circleShape.m_radius = glm::max(transform.Scale.x, transform.Scale.y) * cc2d.Radius;
-
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &circleShape;
-                fixtureDef.density = cc2d.Density;
-                fixtureDef.friction = cc2d.Friction;
-                fixtureDef.restitution = cc2d.Restitution;
-                fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
+                b2PolygonShape shape;
+                shape.SetAsBox(transform.Scale.x * box->Size.x, transform.Scale.y * box->Size.y);
+                runtime.Box = CreateFixture2D(*runtime.Body, *box, shape);
             }
 
-            rb2d.RuntimeBody = body;
+            const CircleCollider2DComponent* circle = m_Registry.try_get<CircleCollider2DComponent>(handle);
+            if (circle && !runtime.Circle)
+            {
+                b2CircleShape shape;
+                shape.m_p.Set(circle->Offset.x, circle->Offset.y);
+                shape.m_radius = glm::max(transform.Scale.x, transform.Scale.y) * circle->Radius;
+                runtime.Circle = CreateFixture2D(*runtime.Body, *circle, shape);
+            }
+        }
+    }
+
+    void Scene::RemoveBody2D(entt::entity handle)
+    {
+        auto body = m_Bodies2D.find(handle);
+        if (body != m_Bodies2D.end())
+        {
+            // Box2D 删除刚体时也会删除附着在它上面的所有形状。
+            m_PhysicsWorld->DestroyBody(body->second.Body);
+            m_Bodies2D.erase(body);
+        }
+    }
+
+    template<typename Collider>
+    void Scene::RemoveFixture2D(entt::entity handle)
+    {
+        auto body = m_Bodies2D.find(handle);
+        if (body == m_Bodies2D.end())
+            return;
+        b2Fixture*& fixture = std::is_same_v<Collider, BoxCollider2DComponent> ? body->second.Box : body->second.Circle;
+        if (fixture)
+        {
+            body->second.Body->DestroyFixture(fixture);
+            fixture = nullptr;
         }
     }
 
     void Scene::OnPhysics2DStop()
     {
-        delete m_PhysicsWorld;
-        m_PhysicsWorld = nullptr;
+        m_Bodies2D.clear();
+        m_PhysicsWorld.reset();
     }
 
-    template<typename T>
-    void OnComponentAdded(Entity entity, T& component)
-    {
-       // static_assert(false);
-    }
-
-    template<>
-    void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+    void Scene::OnCameraAdded(CameraComponent& component)
     {
         component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
     }
-
-    template<>
-    void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<RigidBody2DComponent>(Entity entity, RigidBody2DComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<MeshRendererComponent>(Entity entity, MeshRendererComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<ParticleEmitterComponent>(Entity entity, ParticleEmitterComponent& component)
-    {
-
-    }
-
-    template<>
-    void Scene::OnComponentAdded<TextureAnimationComponent>(Entity entity, TextureAnimationComponent& component)
-    {
-
-    }
-
 }

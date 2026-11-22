@@ -570,7 +570,7 @@ namespace Redflag
 		ImGui::EndPopup();
 	}
 
-	void LightingPreview::DrawSettings()
+	void LightingPreview::DrawSettings(bool allowBake)
 	{
 		int mode = int(Mode);
 		ImGui::TextUnformatted("显示模式");
@@ -629,15 +629,17 @@ namespace Redflag
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("开启后，上轮到达墙面的反光可以再照亮邻近表面。烘焙会从第一轮重新计算。");
 				if (!m_GI) ImGui::TextUnformatted("DDGI 探针：等待场景模型");
 				else ImGui::TextUnformatted(baked ? "DDGI 探针：已烘焙" : "DDGI 探针：实时更新");
-				ImGui::BeginDisabled(m_ProbeFile.empty() || !m_GI);
+				bool canBake = allowBake && !m_ProbeFile.empty() && m_GI;
+				ImGui::BeginDisabled(!canBake);
 				const auto& io = ImGui::GetIO();
 				bool shortcut = io.KeyCtrl && io.KeyShift && !io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_B, false);
-				if ((ImGui::Button(baked ? "重新烘焙探针" : "烘焙探针") || shortcut) && m_GI && !m_ProbeFile.empty())
+				if ((ImGui::Button(baked ? "重新烘焙探针" : "烘焙探针") || shortcut) && canBake)
 					m_BakeRequested = true;
 				ImGui::EndDisabled();
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 				{
-					if (!m_GI) ImGui::SetTooltip("场景中需要有可绘制的模型。");
+					if (!allowBake) ImGui::SetTooltip("停止模拟后，可以烘焙编辑场景的光照。");
+					else if (!m_GI) ImGui::SetTooltip("场景中需要有可绘制的模型。");
 					else if (m_ProbeFile.empty()) ImGui::SetTooltip("先保存场景，再烘焙探针。");
 					else ImGui::SetTooltip("保存当前场景的间接光。下次打开场景时可继续使用。Ctrl+Shift+B");
 				}

@@ -12,6 +12,12 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 ## 编辑器与引擎代码
 
+要试 3D 物理，可以在 Vulkan 编辑器的项目面板打开 `Physics-Workshop.redflag`，也可以在仓库根目录运行 `Open-Vulkan-Editor.cmd --scene assets/scenes/Physics-Workshop.redflag`。点击菜单栏的“模拟物理”，红箱子会落到地台上，点“停止模拟”恢复初始位置。房间还配有两个已经重建的观察机位，可以让本机视觉模型从图里寻找物体，再由场景检查是否能拿取。[NPC 图片与操作说明](output/npc-vision/README.md) · [编辑器手册](output/pdf/Redflag-Editor-Guide.pdf)
+
+双击 [Open-Character-Animation.cmd](Open-Character-Animation.cmd) 可以打开角色动画演示。用同一个 Vulkan 窗口观察骨架姿势、移动角色、改变手要够到的位置，或者让布娃娃开始行走。[角色动画图解](output/pdf/Redflag-Character-Animation.pdf) · [六种模式的实机画面与测量](output/validation/character-animation)
+
+物理状态也可以交给另一台客户端显示。把带有 `world_server.cpp` 的 REDFServer 检出到 Redflag 的同级目录，运行 `tests\run_world_session.cmd` 即可启动服务端并连接三个真实客户端。测试会故意丢弃一次确认，让主机重发，再核对两个观看端的箱子位置。游戏里使用的入口是 `WorldClient` 和 `NetworkScene`。[常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
+
 用 Visual Studio 打开 `Redflag.sln`。编辑器交互在 `RedflagForge/src`，场景、资源和图形实现位于 `Redflag/src`。C# 的引擎接口放在 `Redflag-ScriptCore`，对应的游戏脚本在 `SandboxProject`。工程由根目录的 `premake5.lua` 生成。
 
 ## 从场景到画面

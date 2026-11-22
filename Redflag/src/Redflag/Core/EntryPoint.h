@@ -9,7 +9,11 @@
 
 extern Redflag::Application* Redflag::CreateApplication();
 #ifdef RF_FORGE
-namespace Redflag { void BakeSceneProbes(const std::filesystem::path& scene); }
+namespace Redflag
+{
+	void BakeSceneProbes(const std::filesystem::path& scene);
+	Application* OpenVulkanEditor(const std::filesystem::path& scene);
+}
 #endif
 int main(int argc, char** argv)
 {
@@ -17,6 +21,7 @@ int main(int argc, char** argv)
 	unsigned frames = 0;
 #ifdef RF_FORGE
 	std::filesystem::path bakeScene;
+	std::filesystem::path startupScene;
 #endif
 	for (int i = 1; i < argc; ++i)
 	{
@@ -26,14 +31,14 @@ int main(int argc, char** argv)
 #ifdef RF_FORGE
 		else if (option == "--vulkan")
 			Redflag::RendererAPI::SetAPI(Redflag::RendererAPI::API::Vulkan);
-		else if (option == "--bake-probes")
+		else if (option == "--bake-probes" || option == "--scene")
 		{
 			if (++i == argc || !*argv[i])
 			{
-				RF_CORE_ERROR("--bake-probes requires a scene file");
+				RF_CORE_ERROR("{0} requires a scene file", option);
 				return 2;
 			}
-			bakeScene = argv[i];
+			(option == "--bake-probes" ? bakeScene : startupScene) = argv[i];
 		}
 #endif
 		else if (option == "--frames" && i + 1 < argc)
@@ -64,7 +69,12 @@ int main(int argc, char** argv)
 		}
 #endif
 		RF_PROFILE_BEGIN_SESSION("Startup", "RedflagProfile-Startup.json");
+#ifdef RF_FORGE
+		std::unique_ptr<Redflag::Application> app(startupScene.empty() ? Redflag::CreateApplication()
+			: Redflag::OpenVulkanEditor(startupScene));
+#else
 		std::unique_ptr<Redflag::Application> app(Redflag::CreateApplication());
+#endif
 		RF_PROFILE_END_SESSION();
 		RF_PROFILE_BEGIN_SESSION("Runtime", "RedflagProfile-Runtime.json");
 		app->Run(frames);

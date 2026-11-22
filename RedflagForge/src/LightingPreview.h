@@ -23,7 +23,7 @@ namespace Redflag
 		VkDescriptorSet Render(Scene& scene, const glm::mat4& projection, const glm::mat4& view,
 			glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating);
 		void ResetHistory();
-		void DrawSettings();
+		void DrawSettings(bool allowBake = true);
 		void DrawEffectsMenu();
 		void Load(const std::filesystem::path& scene);
 		void Save(const std::filesystem::path& path, Scene& scene);

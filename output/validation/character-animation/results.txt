@@ -1,0 +1,13 @@
+Windows x64 Debug | PhysX 5.6.1 CPU | Vulkan | tests/run_character_animation.cmd
+[11:29:41] REDFLAG : Vulkan device: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+BVH: 20 joints, walk 100 frames, idle 200 frames; travel: 2 m; wrist miss before/after IK: 0.643292 / 1.19209e-07 m
+PhysX walk 6 s: z=2.85774 m; min pelvis height=0.860468 m, min up.y=0.980506; foot height differences=0.0733733/0.0643254 m; swings=4/4
+Foot within 5 mm of plane, out of 330 frames: 243/244
+After 2 s with zero input, pelvis drift: 0.286229 m
+Released pelvis y: 1.91 -> 0.504477 m
+Vulkan pose 0, ID at (48,32)/(77,32): 39/-1
+Vulkan pose 1, ID at (48,32)/(77,32): -1/39
+Vulkan / ImGui --sequence: 360 frames, six modes, exit 0.
+Interactive --demo: key 2 through 6 selected IK, move, skin, ragdoll and walk. Holding W changed the viewport.
+Library SHA-256: 31FD82A32B84A6A7C27D2B0EFEC60BB8BE1B500E712A6606BB40BE408CBABDA2
+Demo SHA-256: 91FF4D0F514E7B022AD5C9CA7A7E99E5493F54A528947BBF3CCE80A742AF1F00

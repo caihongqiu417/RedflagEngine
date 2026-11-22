@@ -1,11 +1,7 @@
 #pragma once
-#include"entt.hpp"
-#include"Redflag/Core/UUID.h"
-#include"Components.h"
+#include "Scene.h"
 
 namespace Redflag {
-
-    class Scene;
 
     class Entity
     {
@@ -14,21 +10,30 @@ namespace Redflag {
         Entity(entt::entity handle, Scene* scene);
 
         template<typename T, typename... Args>
-        T& AddComponent(Args&&... args)
+        decltype(auto) AddComponent(Args&&... args)
         {
             RF_CORE_ASSERT(!HasComponent<T>(), "Entity already has that component");
-            T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
-            m_Scene->OnComponentAdded<T>(*this,component);
-            return component;
+            if constexpr (std::is_same_v<T, CameraComponent>)
+            {
+                T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+                m_Scene->OnCameraAdded(component);
+                return component;
+            }
+            else
+                return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        T& AddOrReplaceComponent(Args&&... args)
+        decltype(auto) AddOrReplaceComponent(Args&&... args)
         {
-            RF_CORE_ASSERT(!HasComponent<T>(), "Entity already has that component");
-            T& component = m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandle, std::forward<Args>(args)...);
-            m_Scene->OnComponentAdded<T>(*this, component);
-            return component;
+            if constexpr (std::is_same_v<T, CameraComponent>)
+            {
+                T& component = m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandle, std::forward<Args>(args)...);
+                m_Scene->OnCameraAdded(component);
+                return component;
+            }
+            else
+                return m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandle, std::forward<Args>(args)...);
         }
 
         template<typename T>
@@ -44,17 +49,17 @@ namespace Redflag {
         }
 
         template<typename T>
-        T& GetComponent()
+        decltype(auto) GetComponent()
         {
             RF_CORE_ASSERT(HasComponent<T>(), "Entity does not have that component!");
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
         }
 
         template<typename T>
-        const T& GetComponent() const
+        decltype(auto) GetComponent() const
         {
             RF_CORE_ASSERT(HasComponent<T>(), "Entity does not have that component!");
-            return m_Scene->m_Registry.get<T>(m_EntityHandle);
+            return m_Scene->m_Registry.get<const T>(m_EntityHandle);
         }
 
         template<typename T>

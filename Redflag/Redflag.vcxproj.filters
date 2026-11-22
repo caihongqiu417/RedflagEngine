@@ -19,6 +19,9 @@
     <Filter Include="src\Redflag">
       <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Animation">
+      <UniqueIdentifier>{60DEF928-CC4A-B523-953E-4D81016AD78B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Assets">
       <UniqueIdentifier>{F3F9669F-DFDD-27F5-483E-224834411277}</UniqueIdentifier>
     </Filter>
@@ -37,8 +40,14 @@
     <Filter Include="src\Redflag\Math">
       <UniqueIdentifier>{AA1F597F-9618-78D1-BF4A-5D56ABA257DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\Network">
+      <UniqueIdentifier>{AAF76E54-1659-4C62-9FC6-92140B278321}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\ParticleSystem">
       <UniqueIdentifier>{F979AE25-E589-5AF6-4E43-BF143A72498F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Physics">
+      <UniqueIdentifier>{A318BBF5-0F7A-9803-98E7-DEB50448CFC2}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag\Renderer">
       <UniqueIdentifier>{F7FEF883-E38D-824D-8CAC-9648781A93F3}</UniqueIdentifier>
@@ -165,6 +174,21 @@
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\AnimationClip.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\CharacterController.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\Ragdoll.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\Skeleton.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\SkinnedMesh.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Assets\Asset.h">
       <Filter>src\Redflag\Assets</Filter>
     </ClInclude>
@@ -237,8 +261,17 @@
     <ClInclude Include="src\Redflag\Math\Math.h">
       <Filter>src\Redflag\Math</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Network\NetworkScene.h">
+      <Filter>src\Redflag\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Network\WorldClient.h">
+      <Filter>src\Redflag\Network</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\ParticleSystem\ParticleSystem.h">
       <Filter>src\Redflag\ParticleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Physics\PhysicsWorld.h">
+      <Filter>src\Redflag\Physics</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Buffer.h">
       <Filter>src\Redflag\Renderer</Filter>
@@ -364,6 +397,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Entity.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\NpcVision.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h">
@@ -1733,6 +1769,21 @@
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\CharacterController.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\Ragdoll.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\Skeleton.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\SkinnedMesh.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Assets\AssetLibrary.cpp">
       <Filter>src\Redflag\Assets</Filter>
     </ClCompile>
@@ -1766,8 +1817,17 @@
     <ClCompile Include="src\Redflag\Math\Math.cpp">
       <Filter>src\Redflag\Math</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Network\NetworkScene.cpp">
+      <Filter>src\Redflag\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Network\WorldClient.cpp">
+      <Filter>src\Redflag\Network</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\ParticleSystem\ParticleSystem.cpp">
       <Filter>src\Redflag\ParticleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Physics\PhysicsWorld.cpp">
+      <Filter>src\Redflag\Physics</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp">
       <Filter>src\Redflag\Renderer</Filter>
@@ -1860,6 +1920,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Entity.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\NpcVision.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Panel\ContentBrowserPanel.cpp">

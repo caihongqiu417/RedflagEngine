@@ -76,8 +76,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;PX_DEBUG=1;PX_CHECKED=1;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -90,15 +90,17 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;vulkan-1.lib;shaderc_sharedd.lib;spirv-cross-cored.lib;spirv-cross-glsld.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PhysX_static_64.lib;PhysXCommon_static_64.lib;PhysXFoundation_static_64.lib;PhysXExtensions_static_64.lib;PhysXPvdSDK_static_64.lib;opengl32.lib;vulkan-1.lib;shaderc_sharedd.lib;spirv-cross-cored.lib;spirv-cross-glsld.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;..\bin-int\dependencies\PhysX\lib\debug;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
+      <Command>IF NOT EXIST ..\bin\Debug-windows-x86_64\RedflagForge (mkdir ..\bin\Debug-windows-x86_64\RedflagForge)
+IF NOT EXIST ..\bin\Debug-windows-x86_64\Sandbox (mkdir ..\bin\Debug-windows-x86_64\Sandbox)
+IF EXIST ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\Redflag\Redflag.lib ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_sharedd.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Debug-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)
 IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Debug-windows-x86_64\RedflagForge\mono &gt; nul) ELSE (xcopy /Q /Y /I ..\RedflagForge\mono ..\bin\Debug-windows-x86_64\RedflagForge\mono &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -108,7 +110,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\De
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -125,15 +127,17 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\De
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;vulkan-1.lib;shaderc_shared.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PhysX_static_64.lib;PhysXCommon_static_64.lib;PhysXFoundation_static_64.lib;PhysXExtensions_static_64.lib;PhysXPvdSDK_static_64.lib;opengl32.lib;vulkan-1.lib;shaderc_shared.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;..\bin-int\dependencies\PhysX\lib\release;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Release-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
+      <Command>IF NOT EXIST ..\bin\Release-windows-x86_64\RedflagForge (mkdir ..\bin\Release-windows-x86_64\RedflagForge)
+IF NOT EXIST ..\bin\Release-windows-x86_64\Sandbox (mkdir ..\bin\Release-windows-x86_64\Sandbox)
+IF EXIST ..\bin\Release-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\Redflag\Redflag.lib ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Release-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Release-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Release-windows-x86_64\Sandbox &gt; nul)
 IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Release-windows-x86_64\RedflagForge\mono &gt; nul) ELSE (xcopy /Q /Y /I ..\RedflagForge\mono ..\bin\Release-windows-x86_64\RedflagForge\mono &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -143,7 +147,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Re
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -160,15 +164,17 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Re
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;vulkan-1.lib;shaderc_shared.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PhysX_static_64.lib;PhysXCommon_static_64.lib;PhysXFoundation_static_64.lib;PhysXExtensions_static_64.lib;PhysXPvdSDK_static_64.lib;opengl32.lib;vulkan-1.lib;shaderc_shared.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;..\bin-int\dependencies\PhysX\lib\release;vendor\mono\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
+      <Command>IF NOT EXIST ..\bin\Dist-windows-x86_64\RedflagForge (mkdir ..\bin\Dist-windows-x86_64\RedflagForge)
+IF NOT EXIST ..\bin\Dist-windows-x86_64\Sandbox (mkdir ..\bin\Dist-windows-x86_64\Sandbox)
+IF EXIST ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Redflag\Redflag.lib ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
 IF EXIST C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll\ (xcopy /Q /E /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I C:\VulkanSDK\1.3.275.0\Bin\shaderc_shared.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
-IF EXIST ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Dist-windows-x86_64\RedflagForge &gt; nul)
+IF EXIST "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I "..\Redflag\vendor\mono\lib\Release\mono-2.0-sgen.dll" ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)
 IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Dist-windows-x86_64\RedflagForge\mono &gt; nul) ELSE (xcopy /Q /Y /I ..\RedflagForge\mono ..\bin\Dist-windows-x86_64\RedflagForge\mono &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -194,6 +200,11 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Platform\Vulkan\VulkanTexture2D.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Redflag.h" />
+    <ClInclude Include="src\Redflag\Animation\AnimationClip.h" />
+    <ClInclude Include="src\Redflag\Animation\CharacterController.h" />
+    <ClInclude Include="src\Redflag\Animation\Ragdoll.h" />
+    <ClInclude Include="src\Redflag\Animation\Skeleton.h" />
+    <ClInclude Include="src\Redflag\Animation\SkinnedMesh.h" />
     <ClInclude Include="src\Redflag\Assets\Asset.h" />
     <ClInclude Include="src\Redflag\Assets\AssetLibrary.h" />
     <ClInclude Include="src\Redflag\Assets\AssetManager.h" />
@@ -218,7 +229,10 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Redflag\ImGui\VulkanImGui.h" />
     <ClInclude Include="src\Redflag\Math\Math.h" />
+    <ClInclude Include="src\Redflag\Network\NetworkScene.h" />
+    <ClInclude Include="src\Redflag\Network\WorldClient.h" />
     <ClInclude Include="src\Redflag\ParticleSystem\ParticleSystem.h" />
+    <ClInclude Include="src\Redflag\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Redflag\Renderer\Buffer.h" />
     <ClInclude Include="src\Redflag\Renderer\Camera.h" />
     <ClInclude Include="src\Redflag\Renderer\EditorCamera.h" />
@@ -261,6 +275,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h" />
     <ClInclude Include="src\Redflag\Scene\Components.h" />
     <ClInclude Include="src\Redflag\Scene\Entity.h" />
+    <ClInclude Include="src\Redflag\Scene\NpcVision.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h" />
     <ClInclude Include="src\Redflag\Scene\Scene.h" />
@@ -718,6 +733,14 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Platform\Windows\WindowsFileSystem.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp" />
+    <ClCompile Include="src\Redflag\Animation\CharacterController.cpp" />
+    <ClCompile Include="src\Redflag\Animation\Ragdoll.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\Skeleton.cpp" />
+    <ClCompile Include="src\Redflag\Animation\SkinnedMesh.cpp" />
     <ClCompile Include="src\Redflag\Assets\AssetLibrary.cpp" />
     <ClCompile Include="src\Redflag\Core\Application.cpp" />
     <ClCompile Include="src\Redflag\Core\Layer.cpp" />
@@ -729,7 +752,13 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\ImGui\ImGuiVulkanBuild.cpp" />
     <ClCompile Include="src\Redflag\ImGui\VulkanImGui.cpp" />
     <ClCompile Include="src\Redflag\Math\Math.cpp" />
+    <ClCompile Include="src\Redflag\Network\NetworkScene.cpp" />
+    <ClCompile Include="src\Redflag\Network\WorldClient.cpp" />
     <ClCompile Include="src\Redflag\ParticleSystem\ParticleSystem.cpp" />
+    <ClCompile Include="src\Redflag\Physics\PhysicsWorld.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\EnvironmentLighting.cpp" />
@@ -761,6 +790,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp" />
     <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
+    <ClCompile Include="src\Redflag\Scene\NpcVision.cpp" />
     <ClCompile Include="src\Redflag\Scene\Panel\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp" />
     <ClCompile Include="src\Redflag\Scene\Scene.cpp" />

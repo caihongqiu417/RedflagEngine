@@ -9,8 +9,11 @@ RedflagForge 使用 Visual Studio 2022 的 C++17 编译器。请在 Visual Studi
 ```bat
 git clone --recurse-submodules https://github.com/caihongqiu417/RedflagEngine.git
 cd RedflagEngine
+powershell -ExecutionPolicy Bypass -File scripts\BuildPhysX.ps1
 GenerateProjects.bat
 ```
+
+物理库使用 NVIDIA PhysX 5.6.1。上面的脚本会核对源码压缩包并在本机编译 CPU 版本，需在 Visual Studio Installer 中安装“用于 Windows 的 C++ CMake 工具”。以后切换到 Release 或 Dist，先用同一个脚本加上 `-Configuration Release` 构建对应的库。所需头文件和静态库保存在 `bin-int/dependencies/PhysX`。[NVIDIA PhysX 源码](https://github.com/NVIDIA-Omniverse/PhysX/tree/5ca9f472105a90d70d957c243cb0ef36fe251a9f)
 
 用 Visual Studio 打开生成的 `Redflag.sln`，选择 `Debug | x64` 后生成解决方案。也可以在 VS 2022 的 x64 开发者命令提示符中，从仓库根目录运行以下命令。
 

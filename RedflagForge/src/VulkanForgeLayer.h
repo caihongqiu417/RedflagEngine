@@ -6,6 +6,7 @@
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "LightingPreview.h"
 #include "ProjectPanel.h"
+#include "NpcVisionPanel.h"
 
 #include <deque>
 #include <filesystem>
@@ -22,11 +23,12 @@ namespace Redflag
 		void OnEvent(Event& event) override;
 		void OnImGuiRender() override;
 		void OpenDefaultScene();
+		bool OpenScene(const std::filesystem::path& path);
 		void BakeScene(const std::filesystem::path& path);
 
 	private:
-		bool OpenScene(const std::filesystem::path& path);
 		void NewScene();
+		void ToggleSimulation();
 		void SaveScene(bool choosePath);
 		void AddCamera();
 		void Report(const std::string& message);
@@ -39,9 +41,11 @@ namespace Redflag
 		Scope<VulkanDraw> m_Draw;
 		Scope<LightingPreview> m_Lighting;
 		ProjectPanel m_Project;
+		NpcVisionPanel m_NpcVision;
 		VkDescriptorSet m_PanelTexture = VK_NULL_HANDLE;
 		EditorCamera m_Camera{ 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f };
 		Ref<Scene> m_Scene;
+		Ref<Scene> m_EditScene;
 		SceneHierachyPanel m_Hierarchy;
 		std::filesystem::path m_ScenePath;
 		std::deque<std::string> m_Messages;

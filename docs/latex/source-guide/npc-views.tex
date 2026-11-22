@@ -1,0 +1,20 @@
+\clearpage
+\section{NPC 的图片与场景查询}
+
+物理实验台上方有一个红箱子。离线工具从 32 个标定好的机位读取场景的图像。“标定好”指我们知道相机放在哪里、朝向哪里，以及一米宽的物体会在图上投影成多宽。这样，几张照片里不同位置的红色像素，就能一起用来估计同一只箱子在空间中的位置。
+
+Brush 用许多带有位置、大小、方向、颜色和透明度的三维高斯来表示场景。可以把一个高斯理解成中心较实、四周逐渐变淡的小色斑。换一个机位，它投影到图上的位置和形状也会改变。训练时，程序把这些色斑画到各个输入机位，与原图逐像素比较，再据此调整高斯。实验台的输入图由测试程序按场景尺寸生成，另给出一份只从训练机位取样的稀疏点云作为初值。如果换成实拍素材，需要先准备多视角照片、相机标定与初始点云。
+
+\begin{center}
+\includegraphics[width=.34\linewidth]{../../../output/npc-vision/4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a/val-00.png}\hspace{5mm}
+\includegraphics[width=.34\linewidth]{../../../output/npc-vision/4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a/val-01.png}
+\end{center}
+这两张是重建结果。两个机位都没有参与训练，图中的箱子仍悬在烘焙时的位置。对两个机位分别与留出的原图比较，每个 RGB 分量先除以 255，再计算平方误差的平均值 $E$。按 $-10\log_{10} E$ 换算，分别为 31.64 和 31.86 dB。这个数衡量像素颜色的接近程度。箱子后来有没有落地，则需要在游戏运行时查证。
+
+游戏调用 \code{AskNpcVision} 时给出场景名称和问题。视觉服务先根据机位的关键词选取至多两张图，再把图片、物体名称及编号交给视觉模型。示例中的名称与编号由关卡作者标注。服务只接受这几张图里列出的编号。候选列表用于缩小搜索范围，照片中不在列表里的物体需要先在资料中补上。
+
+模型作答耗时可能跨越好几个物理步。游戏可以继续更新，等异步结果准备好，再在场景线程调用 \code{CanPickUp}。引擎按编号查找物体，检查“可拿取”组件，并从手的位置向物体发出一条长度有限的射线。如果中间已多了一面墙，射线会先碰到墙。如果箱子已被别人拿走，查实体时就会失败。这里返回的是此次查询的结果，游戏随后决定怎样改变物品栏或场景。
+
+\readings{\href{https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/}{Kerbl 等，3D Gaussian Splatting，SIGGRAPH 2023}\quad
+\href{https://github.com/ArthurBrussee/brush/releases/tag/v0.3.0}{Brush 0.3.0}\quad
+\href{https://nvidia-omniverse.github.io/PhysX/physx/5.6.1/docs/SceneQueries.html}{PhysX 场景查询}}

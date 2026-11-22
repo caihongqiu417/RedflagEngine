@@ -11,6 +11,7 @@
 #include "Redflag/Scene/Scene.h"
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Scene/SceneSerializer.h"
+#include "ScenePhysicsTests.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
@@ -287,9 +288,20 @@ static void TestTemporalProjection()
     Check(glGetError() == GL_NO_ERROR, "temporal projection fixtures produce no GL errors");
 }
 
-int main()
+#include "NpcPickupTests.h"
+
+int main(int argc, char** argv)
 {
     Log::Init();
+    if (argc == 3 && std::string(argv[1]) == "--npc-vision")
+    {
+        CheckNpcPickup(Check, static_cast<uint16_t>(std::stoi(argv[2])));
+        return s_Failures ? 1 : 0;
+    }
+    CheckNpcPickup(Check, 0);
+    CheckPhysicsScene(Check);
+    if (argc == 2 && std::string(argv[1]) == "--physics")
+        return s_Failures ? 1 : 0;
     if (!glfwInit()) return 1;
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

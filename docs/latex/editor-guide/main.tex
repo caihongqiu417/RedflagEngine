@@ -194,4 +194,46 @@ $forge = '..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe'
 \ui{SSAA 2×2} 默认关闭。如果界面提示降低分辨率，先在上方选较小的宽度。点击物体时，编辑器用单独的一张图查询鼠标位置的实体编号。像素边上带了一点铁丝颜色，仍有可能点到后面的墙。
 
 按 \ui{Ctrl + S} 保存开关。想留下练习副本，可用\ui{文件 → 另存为}。
+\clearpage
+\section{刚体与碰撞}
+
+从项目面板打开 \texttt{Physics-Workshop.redflag}，红箱子悬在地台上方。点击菜单栏的\ui{模拟物理}，箱子会在重力作用下落到台面上。点\ui{停止模拟}，就能回到原来的摆放位置。模拟期间，编辑器把每个物体的位置保存在一份场景副本里，所以可以反复调整箱子的起点，观察它落在哪里。
+
+在层级中选中红箱子。它的 3D 刚体决定由谁移动它，盒形碰撞体决定它从哪里开始接触别的物体。地台采用静态刚体，箱子采用动态刚体。想做一块由游戏驱动的升降台，可以给它选择运动学刚体，再由脚本改变目标位置。属性中的盒子半尺寸按模型自己的坐标填写，物体缩放时，碰撞盒也跟着缩放。
+
+\begin{center}
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small]
+\foreach \x/\y/\label in {0/3/开始,4/1.73/半秒后,8/0.5/落稳后}{
+  \fill[Muted!22] (\x-.95,-.17) rectangle (\x+.95,0);
+  \draw[Muted] (\x-.95,0)--(\x+.95,0);
+  \filldraw[draw=red!55!black,fill=red!28] (\x-.5,\y-.5) rectangle (\x+.5,\y+.5);
+  \node at (\x,-.52) {\label};}
+\end{tikzpicture}
+\end{center}
+\captionline{图中每格箱子高一米。相同尺寸的物理测试从中心高度 3 米放手，落稳后读得约 0.5 米。此时箱底和地台顶面都在零米处。}
+
+游戏需要知道“伸手会先碰到谁”时，可以从手的位置沿伸手方向调用 \texttt{Scene::Raycast}，传入最多能够到达的距离。返回值含实体编号、接触位置和距离。若需要找出手边有哪些东西，\texttt{OverlapSphere} 会返回与这个球形范围相交的物体。两种查询都使用当前的碰撞体，即使没有渲染窗口，也能查到结果。
+
+\clearpage
+\section{NPC 观察}
+
+在物理实验台打开\ui{模拟物理}，再点菜单栏的\ui{NPC 观察}。这里把编辑相机当作 NPC 的眼睛和手。输入“找一下红箱子”，点\ui{查询图片}。等待回答时仍可以移动相机。实验台有两张事先烘焙的图片，模型从中找出红箱子，编辑器再查询它现在的位置。
+
+\begin{center}
+\includegraphics[width=\linewidth]{../../../output/npc-vision/editor.png}
+\end{center}
+\captionline{Vulkan 编辑器实拍。箱子已经落到地台上方。此时相机离它较远，菜单左上方的结果显示“红箱子：当前位置无法拿取”。}
+
+\begin{center}
+\resizebox{.57\linewidth}{!}{\begin{tikzpicture}
+  \clip (3.07,7.34) rectangle (6.90,9);
+  \node[anchor=south west,inner sep=0pt] at (0,0)
+    {\includegraphics[width=16cm]{../../../output/npc-vision/editor.png}};
+\end{tikzpicture}}
+\end{center}
+
+菜单中的可达距离默认是 1.5 米。把相机移近，或增大可达距离，再查一次。引擎从这次的位置向物体发射一条有限长度的射线；射线先碰到箱子、而且箱子勾选了“可拿取”，结果才会变成可以拿取。即使两次查询使用完全相同的照片，离物体的距离也会改变结果。
+
+先在本机启动支持图片的视觉模型，再从仓库根目录运行 \code{scripts/npc\_vision.py}，让它读取 \code{output/npc-vision/index.json}。\href{run:../npc-vision/README.md}{图片服务的启动说明}给出了完整命令和复测办法。
+
 \end{document}

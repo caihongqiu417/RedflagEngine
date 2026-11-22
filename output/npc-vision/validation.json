@@ -1,0 +1,27 @@
+{
+  "scene": "Physics-Workshop",
+  "dataset": "calibrated synthetic reference views",
+  "training_views": 32,
+  "held_out_views": 2,
+  "iterations": 800,
+  "brush_version": "0.3.0",
+  "spherical_harmonic_degree": 0,
+  "gaussians": 3214,
+  "model_sha256": "4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a",
+  "evaluation": [
+    {
+      "camera": "val-00",
+      "image": "4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a/val-00.png",
+      "pixels": 20480,
+      "mse_rgb": 0.0006853859292900166,
+      "psnr_db": 31.64064815713605
+    },
+    {
+      "camera": "val-01",
+      "image": "4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a/val-01.png",
+      "pixels": 20480,
+      "mse_rgb": 0.0006517495274253492,
+      "psnr_db": 31.85919275060497
+    }
+  ]
+}

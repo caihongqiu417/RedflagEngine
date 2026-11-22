@@ -1003,7 +1003,10 @@ namespace Redflag {
         }
         if (open)
         {
-            uiFunction(entity.GetComponent<T>());
+            if constexpr (entt::component_traits<T>::page_size == 0)
+                uiFunction();
+            else
+                uiFunction(entity.GetComponent<T>());
             ImGui::TreePop();
         }
         if (remove) entity.RemoveComponent<T>();
@@ -1100,6 +1103,13 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
+            if (!entity.HasComponent<RigidBody2DComponent>() && AddComponentItem<RigidBody3DComponent>(entity, "3D 刚体"))
+            {
+                if (!entity.HasComponent<BoxCollider3DComponent>())
+                    entity.AddComponent<BoxCollider3DComponent>();
+            }
+            AddComponentItem<BoxCollider3DComponent>(entity, "3D 盒形碰撞体");
+            AddComponentItem<PickupComponent>(entity, "可拿取");
 
             const char* extra = RendererAPI::GetAPI() == RendererAPI::API::Vulkan ? "其他组件（OpenGL 预览）" : "更多组件";
             if (ImGui::BeginMenu(extra))
@@ -1108,7 +1118,8 @@ namespace Redflag {
                 AddComponentItem<ScriptComponent>(entity, "脚本");
                 AddComponentItem<SpriteRendererComponent>(entity, "2D 精灵");
                 AddComponentItem<CircleRendererComponent>(entity, "2D 圆形");
-                AddComponentItem<RigidBody2DComponent>(entity, "2D 刚体");
+                if (!entity.HasComponent<RigidBody3DComponent>())
+                    AddComponentItem<RigidBody2DComponent>(entity, "2D 刚体");
                 AddComponentItem<BoxCollider2DComponent>(entity, "2D 方形碰撞体");
                 AddComponentItem<CircleCollider2DComponent>(entity, "2D 圆形碰撞体");
                 AddComponentItem<ParticleEmitterComponent>(entity, "2D 粒子发射器");
@@ -1405,6 +1416,37 @@ namespace Redflag {
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
                 ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.f, 1.f);
                 ImGui::DragFloat("Fade", &component.Fade, 0.0025f, 2.f, 1.f);
+            });
+
+        DrawComponent<PickupComponent>("可拿取", entity, []()
+            {
+                ImGui::TextUnformatted("允许角色在接近这个物体后拿起它。");
+            });
+
+        DrawComponent<RigidBody3DComponent>("3D 刚体", entity, [](RigidBody3DComponent& body)
+            {
+                const char* types[] = { "静态", "动态", "运动学" };
+                int selected = static_cast<int>(body.Type);
+                if (ImGui::Combo("类型", &selected, types, IM_ARRAYSIZE(types)))
+                    body.Type = static_cast<BodyType3D>(selected);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("静态用于地面，动态物体会掉落，运动学物体跟随场景设置的位置和旋转。");
+                if (body.Type == BodyType3D::Dynamic)
+                {
+                    float density = body.Density;
+                    if (ImGui::DragFloat("密度（kg/m³）", &density, 0.1f) && density > 0.f)
+                        body.Density = density;
+                }
+            });
+
+        DrawComponent<BoxCollider3DComponent>("3D 盒形碰撞体", entity, [](BoxCollider3DComponent& box)
+            {
+                glm::vec3 size = box.HalfSize * 2.f;
+                if (ImGui::DragFloat3("尺寸 XYZ（米）", glm::value_ptr(size), 0.01f) &&
+                    glm::all(glm::greaterThan(size, glm::vec3(0))))
+                    box.HalfSize = size * .5f;
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("三个数分别沿本地 X、Y、Z 轴。模拟时还会乘以物体的缩放。");
             });
 
         // Rigidbody2D 组件

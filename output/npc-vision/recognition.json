@@ -1,0 +1,132 @@
+{
+  "scene": "Physics-Workshop",
+  "index": "output/npc-vision/index.json",
+  "image_size": [
+    160,
+    128
+  ],
+  "image_sha256": {
+    "val-00.png": "2c412c1feb15920b4d6878eff6260743197972debb761a5b4227b28ec953e49f",
+    "val-01.png": "f909e12ac042f7904e2317983f4069446ea2f36c07a15518537709e806bd6bb2"
+  },
+  "tool": {
+    "server": "llama.cpp b10887, Windows x64 Vulkan",
+    "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b10887",
+    "zip_sha256": "f68eab8f393ad14501e26c4d80aca986eba2b329e47083beba1afc729c529ec9",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "temperature": 0,
+    "context_tokens": 4096
+  },
+  "models": {
+    "SmolVLM": {
+      "source": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/tree/72e986006ef53e37cdd3f6d4241c90b0f01df376",
+      "files_sha256": {
+        "SmolVLM-500M-Instruct-Q8_0.gguf": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4",
+        "mmproj-SmolVLM-500M-Instruct-Q8_0.gguf": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150"
+      },
+      "correct": 4,
+      "cases": 8
+    },
+    "Qwen3VL": {
+      "source": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/d38d39f5972e27cd58023f9b1e9f994b0c85ca47",
+      "files_sha256": {
+        "Qwen3VL-2B-Instruct-Q4_K_M.gguf": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae",
+        "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf": "f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82"
+      },
+      "correct": 8,
+      "cases": 8
+    }
+  },
+  "tests": [
+    {
+      "input": "usual",
+      "question": "红箱子是哪一个？",
+      "expected_entity": "103",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "103",
+      "Qwen3VL_entity": "103"
+    },
+    {
+      "input": "usual",
+      "question": "灰色地台是哪一个？",
+      "expected_entity": "102",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "102",
+      "Qwen3VL_entity": "102"
+    },
+    {
+      "input": "usual",
+      "question": "Which visible object is the red crate?",
+      "expected_entity": "103",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "103",
+      "Qwen3VL_entity": "103"
+    },
+    {
+      "input": "usual",
+      "question": "Which visible object is the wide gray platform?",
+      "expected_entity": "102",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "102",
+      "Qwen3VL_entity": "102"
+    },
+    {
+      "input": "reversed",
+      "question": "红箱子是哪一个？",
+      "expected_entity": "103",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "103",
+      "Qwen3VL_entity": "103"
+    },
+    {
+      "input": "reversed",
+      "question": "灰色地台是哪一个？",
+      "expected_entity": "102",
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "102",
+      "Qwen3VL_entity": "102"
+    },
+    {
+      "input": "absent",
+      "question": "Is there a red crate clearly visible in these pictures? If absent, reply none.",
+      "expected_entity": null,
+      "SmolVLM_reply": "None.",
+      "SmolVLM_entity": null,
+      "Qwen3VL_reply": "none",
+      "Qwen3VL_entity": null
+    },
+    {
+      "input": "absent",
+      "question": "照片上能看到红箱子吗？如果箱子不在照片里请回答 none。",
+      "expected_entity": null,
+      "SmolVLM_reply": "103.",
+      "SmolVLM_entity": "103",
+      "Qwen3VL_reply": "none",
+      "Qwen3VL_entity": null
+    }
+  ],
+  "controls": {
+    "reversed": "两张图的实体候选均调换排列顺序；名字、编号和像素不变。",
+    "absent": "将实际图片第 0–64 行（含两端）涂黑，抹去箱子。地台仍可见，提示文字仍列出箱子和地台。",
+    "limits": "只测一间有两个物体的房间。模型看的是离线画面；答对候选不代表此刻物体仍在原地或允许拿取。模型误选同样可拿取的实体时，距离与遮挡检查无法替用户辨别意图。"
+  },
+  "repeat": "python tests/check_npc_recognition.py --model <本机模型别名> --endpoint http://127.0.0.1:<端口>/v1/chat/completions",
+  "second_bake": {
+    "camera_files": [
+      "val-00.png",
+      "val-01.png"
+    ],
+    "sha256": [
+      "a7f38be15c5361cbd5053efb48cee9c23c303c2be35e3df4ff289d6c436d3676",
+      "aea1fc08c73c3b50917a9397de894508e4a59b1e02dfaca09ab64dc689a49f7e"
+    ],
+    "Qwen3VL_correct": 8,
+    "cases": 8
+  }
+}

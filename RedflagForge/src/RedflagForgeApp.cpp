@@ -12,14 +12,15 @@ namespace Redflag{
 	class RedflagForge :public Application
 	{
 	public:
-		RedflagForge()
+		explicit RedflagForge(const std::filesystem::path& scene = {})
 			:Application("Redflag Forge")
 		{
 			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 			{
 				VulkanForgeLayer* editor = new VulkanForgeLayer();
 				PushLayer(editor);
-				editor->OpenDefaultScene();
+				if (scene.empty()) editor->OpenDefaultScene();
+				else if (!editor->OpenScene(scene)) throw std::runtime_error("Cannot open scene: " + scene.u8string());
 			}
 			else
 				PushLayer(new ForgeLayer());
@@ -34,6 +35,12 @@ namespace Redflag{
 	Application* CreateApplication()
 	{
 		return new RedflagForge();
+	}
+
+	Application* OpenVulkanEditor(const std::filesystem::path& scene)
+	{
+		RendererAPI::SetAPI(RendererAPI::API::Vulkan);
+		return new RedflagForge(scene);
 	}
 
 	void BakeSceneProbes(const std::filesystem::path& scene)

@@ -112,24 +112,20 @@ namespace Redflag {
 		return out;
 	}
 
-    static std::string RigidBody2DBodyTypeToString(RigidBody2DComponent::BodyType bodyType)
+    template<typename BodyType>
+    static const char* BodyTypeName(BodyType type)
     {
-        switch (bodyType)
-        {
-        case RigidBody2DComponent::BodyType::Static:    return "Static";
-        case RigidBody2DComponent::BodyType::Dynamic:   return "Dynamic";
-        case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
-        default:                                        return "Static";
-        }
+        if (type == BodyType::Dynamic) return "Dynamic";
+        if (type == BodyType::Kinematic) return "Kinematic";
+        return "Static";
     }
 
-    static RigidBody2DComponent::BodyType RigidBody2DBodyTypeFromString(const std::string& bodyTypeString)
+    template<typename BodyType>
+    static BodyType ReadBodyType(const std::string& name)
     {
-        if (bodyTypeString == "Static")    return RigidBody2DComponent::BodyType::Static;
-        if (bodyTypeString == "Dynamic")   return RigidBody2DComponent::BodyType::Dynamic;
-        if (bodyTypeString == "Kinematic") return RigidBody2DComponent::BodyType::Kinematic;
-
-        return RigidBody2DComponent::BodyType::Static;
+        if (name == "Dynamic") return BodyType::Dynamic;
+        if (name == "Kinematic") return BodyType::Kinematic;
+        return BodyType::Static;
     }
 
     static const char* ScriptFieldTypeToString(ScriptFieldType type)
@@ -520,10 +516,30 @@ namespace Redflag {
             out << YAML::BeginMap;
 
             auto& rb2dComponent = entity.GetComponent<RigidBody2DComponent>();
-            out << YAML::Key << "Body Type" << YAML::Value <<RigidBody2DBodyTypeToString(rb2dComponent.Type);
+            out << YAML::Key << "Body Type" << YAML::Value << BodyTypeName(rb2dComponent.Type);
             out << YAML::Key << "Fixed Rotation" << YAML::Value << rb2dComponent.FixedRotation;
 
             out << YAML::EndMap; 
+        }
+
+        if (entity.HasComponent<PickupComponent>())
+            out << YAML::Key << "PickupComponent" << YAML::Value << YAML::BeginMap << YAML::EndMap;
+
+        if (entity.HasComponent<RigidBody3DComponent>())
+        {
+            const RigidBody3DComponent& body = entity.GetComponent<RigidBody3DComponent>();
+            out << YAML::Key << "RigidBody3DComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "BodyType" << YAML::Value << BodyTypeName(body.Type);
+            out << YAML::Key << "Density" << YAML::Value << body.Density;
+            out << YAML::EndMap;
+        }
+
+        if (entity.HasComponent<BoxCollider3DComponent>())
+        {
+            const BoxCollider3DComponent& box = entity.GetComponent<BoxCollider3DComponent>();
+            out << YAML::Key << "BoxCollider3DComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "HalfSize" << YAML::Value << box.HalfSize;
+            out << YAML::EndMap;
         }
 
         if (entity.HasComponent<BoxCollider2DComponent>())
@@ -777,8 +793,30 @@ namespace Redflag {
                     auto rbNode = entity["RigidBodyComponent"];
                     auto& rb2d = deserializedEntity.AddComponent<RigidBody2DComponent>();
 
-                    rb2d.Type = RigidBody2DBodyTypeFromString(rbNode["Body Type"].as<std::string>());
+                    rb2d.Type = ReadBodyType<RigidBody2DComponent::BodyType>(rbNode["Body Type"].as<std::string>());
                     rb2d.FixedRotation = rbNode["Fixed Rotation"].as<bool>();
+                }
+
+                if (entity["PickupComponent"])
+                    deserializedEntity.AddComponent<PickupComponent>();
+
+                if (const YAML::Node bodyNode = entity["RigidBody3DComponent"])
+                {
+                    if (deserializedEntity.HasComponent<RigidBody2DComponent>())
+                        throw std::runtime_error("An entity cannot use both a 2D and a 3D rigid body");
+                    RigidBody3DComponent& body = deserializedEntity.AddComponent<RigidBody3DComponent>();
+                    body.Type = ReadBodyType<BodyType3D>(bodyNode["BodyType"].as<std::string>());
+                    body.Density = bodyNode["Density"].as<float>();
+                    if (!(body.Density > 0.f))
+                        throw std::runtime_error("3D rigid body density must be positive");
+                }
+
+                if (const YAML::Node boxNode = entity["BoxCollider3DComponent"])
+                {
+                    BoxCollider3DComponent& box = deserializedEntity.AddComponent<BoxCollider3DComponent>();
+                    box.HalfSize = boxNode["HalfSize"].as<glm::vec3>();
+                    if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))))
+                        throw std::runtime_error("3D collision box half sizes must be positive");
                 }
 
                 //BoxCollider2DComponent

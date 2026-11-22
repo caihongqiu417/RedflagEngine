@@ -1,0 +1,61 @@
+\clearpage
+\section{多客户端的实体位置}
+
+打开同一场游戏的两个观看窗口，箱子应该在同一处落地。这个箱子只在主机场景里有动态刚体。主机让 PhysX 向前算一步，\code{Scene::OnUpdatePhysics} 把结果写入实体的位置和旋转。主机随即把这六个数和实体编号发给服务端。两个观看窗口各自在场景里保留一个相同编号的实体，渲染器从它的 Transform 读位置。观看者没有收到新位置时，箱子就留在上次收到的位置。
+
+\begin{center}
+\begin{tikzpicture}[
+    unit/.style={draw=Teal!60,fill=Teal!5,rounded corners=2pt,
+    minimum height=1cm,text width=3.55cm,align=center,font=\small\sffamily},
+    signal/.style={-{Stealth[length=2mm]},draw=Muted,line width=.8pt}]
+    \node[unit] (host) at (0,0) {物理主机\\生成箱子的姿态};
+    \node[unit,draw=Rust!60,fill=Rust!5] (server) at (5,0) {场景服务端\\保存已接受的实体列表};
+    \node[unit] (one) at (10,.72) {观看者 A 的场景};
+    \node[unit] (two) at (10,-.72) {观看者 B 的场景};
+    \draw[signal] (host) -- (server);
+    \draw[signal] (server.east) -- (one.west);
+    \draw[signal] (server.east) -- (two.west);
+    \begin{scope}[on background layer]
+        \node[draw=Muted!35,rounded corners=3pt,inner sep=8pt,fit=(host)(server)(one)(two)] {};
+    \end{scope}
+\end{tikzpicture}
+\end{center}
+
+游戏通过 \code{WorldClient::Connect} 连接服务端，传入 IPv4 地址、端口和角色。主机选择
+\code{WorldRole::Host}，观看端选择 \code{WorldRole::Viewer}。连接后每帧调用 \code{Update} 收消息，\code{Ready()} 为真表示服务端已接受这个角色。主机保存要公开的实体 UUID 列表，在物理步之后收集它们的位置。列表中某个实体已经删除时，这份快照会少一条记录。
+
+\begin{lstlisting}
+// (*@主机游戏层节选。初始化时调用一次 OnSimulationStart。@*)
+scene.OnUpdatePhysics(dt);
+if (host.Update() && host.Ready()) {
+    // (*@上一份仍在等确认时，Publish 返回 false。下次再采集当时的位置。@*)
+    host.Publish(CapturePoses(scene, entityIDs));
+}
+\end{lstlisting}
+
+实际接口在 \src{Redflag/src/Redflag/Network/WorldClient.h}{WorldClient.h} 和
+\src{Redflag/src/Redflag/Network/NetworkScene.cpp}{NetworkScene.cpp}。引擎用 UUID 跨进程认出同一个箱子。每个实体占 32 字节，包括 8 字节 UUID 和六个 4 字节浮点数。物理场景中的位置以米为单位，三个旋转角以弧度为单位。贴图和网格仍由游戏加载，可以在观看端按实体编号设置外观。
+
+\clearpage
+\subsection{场景版本与确认}
+
+观看端在游戏层里持有一个 \code{NetworkScene}，构造时传入要展示远端物体的场景。每份快照列出当前全部实体。第一次收到某个编号就新建实体，以后沿用同一个对象更新位置，所以游戏给它设置的模型会保留下来。某个编号从列表消失时移除该对象。如果远端编号与场景里的本地实体冲突，\code{Apply} 会返回 \code{false}，整份快照都不写入。销毁 \code{NetworkScene} 时会移除它创建的展示实体，传入的 Scene 应比它活得久。
+
+\begin{lstlisting}
+// (*@观看端游戏层节选。displayed 是成员变量，连接时置零。@*)
+if (!viewer.Update()) {
+    remote.Apply({});        // (*@断线后清空这次连接的展示实体。@*)
+    displayed = 0;
+} else if (displayed != viewer.Revision()) {
+    if (remote.Apply(viewer.Poses()))
+        displayed = viewer.Revision();
+}
+\end{lstlisting}
+
+\src{Redflag/src/Redflag/Network/WorldClient.cpp}{WorldClient.cpp} 在收到一份完整快照、检查并保存其姿态数组后发出确认。这个确认表示客户端已经读完这份数据。上面的游戏代码随后才将它写进场景。服务端为每个观看者分别记下它已确认的版本。某个观看者落后时，其他窗口仍可收到新位置。落后的观看者读完手上那份，接着就能收到最新的一份。
+
+TCP 会按顺序送达字节。应用另外确认的是“整份实体位置已经接收”。例如主机提交第 1 份位置后，确认若迟迟没有传回来，主机默认等 500 毫秒再发同一份。服务端认得这个提交序号，只再回一次确认。窗口会继续显示原来的版本。默认持续 10 秒收不到确认，会话才断开。服务端运行方式、消息字段和可调时间见同级 REDFServer 仓库的 \code{WorldSession.md}。
+
+从 Redflag 根目录运行 \path{tests/run_world_session.cmd} 即可复查。2026 年 11 月 22 日的 Windows Debug 联测中，一台主机让两个方块各走 180 次物理步，每步 $1/60$ 秒。PhysX 方块的中心高度为 $0.4999990$ 米，Box2D 方块为 $0.5149972$ 米。两个观看端的三个位置和三个旋转分量分别与各自主机原值逐位相同。测试故意扣下第一次确认，主机实际发出的序号是 $1,1,2,3$，服务端只接受三次。测试与转发确认的代码分别在
+\src{tests/WorldSessionTests.cpp}{WorldSessionTests.cpp} 和
+\src{tests/check_world_session.py}{check\_world\_session.py}。

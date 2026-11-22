@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Assets/Asset.h"
+#include "Redflag/Physics/PhysicsWorld.h"
 
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
@@ -127,9 +128,6 @@ namespace Redflag {
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 
-		//存储Box2D信息
-		void* RuntimeBody = nullptr;
-
 		RigidBody2DComponent() = default;
 		RigidBody2DComponent(const RigidBody2DComponent&) = default;
 	};
@@ -144,9 +142,6 @@ namespace Redflag {
 		float Friction = 0.5f;
 		float Restitution = 0.f;
 		float RestitutionThreshold = 0.5f; //碰撞时取两个物体设置中较小的值。沿接触面法线靠近得比它快，才计算反弹（米/秒）。
-
-		//存储Box2D信息
-		void* RuntimeFixture = nullptr;
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
@@ -174,12 +169,23 @@ namespace Redflag {
 		// 两个碰撞体取各自设置中较小的值。沿接触面法线相互靠近的速度超过它时，Box2D 才计算反弹（米/秒）。
 		float RestitutionThreshold = 0.5f;
 
-		// 碰撞形状由 Box2D 刚体持有。当前创建形状时，这个指针保持为空。
-		void* RuntimeFixture = nullptr;
-
 		CircleCollider2DComponent() = default;
 		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
+
+	struct RigidBody3DComponent
+	{
+		BodyType3D Type = BodyType3D::Static;
+		float Density = 1.0f; // kg/m³。动态刚体的质量等于密度乘以碰撞盒的体积。
+	};
+
+	struct BoxCollider3DComponent
+	{
+		glm::vec3 HalfSize{ 0.5f }; // 从中心到各面的距离，单位为米，场景缩放另算。
+	};
+
+	/* 带此标记的实体允许被拿起。碰撞范围由它的碰撞体决定。 */
+	struct PickupComponent {};
 
 	// 3D 网格渲染组件
 	struct MeshRendererComponent

@@ -1,0 +1,7 @@
+{
+  "scene": "Physics-Workshop",
+  "views": [
+    {"camera": "val-00", "tags": ["箱子", "红箱子", "box", "crate"], "entities": {"103": "红箱子", "102": "地台"}},
+    {"camera": "val-01", "tags": ["地台", "平台", "platform", "箱子", "crate"], "entities": {"103": "红箱子", "102": "地台"}}
+  ]
+}
