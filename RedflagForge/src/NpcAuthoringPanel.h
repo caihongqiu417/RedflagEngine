@@ -7,6 +7,8 @@
 
 namespace Redflag
 {
+    class ModelAnimation;
+
     /* 编辑角色定义。保存角色属性时，行为树连线仍由行为树面板单独保存。 */
     class NpcAuthoringPanel
     {
@@ -14,7 +16,7 @@ namespace Redflag
         ~NpcAuthoringPanel();
 
         bool Draw(std::string& definitionPath, const BehaviorTrace* trace = nullptr, const std::string& stage = {},
-                  const std::vector<std::string>& modelClips = {});
+                  const std::vector<std::string>& modelClips = {}, const ModelAnimation* model = nullptr);
 
     private:
         void Open(const std::filesystem::path& path);
@@ -22,7 +24,7 @@ namespace Redflag
         void DrawProfile();
         void DrawIntents();
         void DrawAnimations(const std::string& stage, const std::vector<std::string>& modelClips);
-        void DrawAnimationEvents();
+        void DrawAnimationEvents(const ModelAnimation* model);
         void SaveAnimations();
         void DrawTables();
         void DrawPreview();
@@ -32,6 +34,8 @@ namespace Redflag
         NpcDefinition m_Saved, m_Draft;
         std::vector<AnimationState> m_States;
         std::string m_EventState;
+        int m_PreviewEvent = -1;
+        bool m_PreviewEnd = false;
         std::future<YAML::Node> m_Task;
         DecisionClient m_Client;
         uint64_t m_Request = 0;

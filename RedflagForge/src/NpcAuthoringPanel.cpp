@@ -1,6 +1,7 @@
 #include "rfpch.h"
 #include "NpcAuthoringPanel.h"
 #include "NpcAuthoringFiles.h"
+#include "AnimationPoseView.h"
 #include <imgui.h>
 #include <mmsystem.h>
 
@@ -59,7 +60,10 @@ namespace Redflag
     void NpcAuthoringPanel::Open(const fs::path& path)
     {
         if (m_Path != path)
+        {
             StopAudio();
+            m_PreviewEvent = -1;
+        }
         m_Path = path;
         m_Message.clear();
         m_Loaded = !path.empty() && m_Saved.Load(path, m_Message);
@@ -86,7 +90,7 @@ namespace Redflag
     }
 
     bool NpcAuthoringPanel::Draw(std::string& definitionPath, const BehaviorTrace* trace, const std::string& stage,
-                                 const std::vector<std::string>& modelClips)
+                                 const std::vector<std::string>& modelClips, const ModelAnimation* model)
     {
         bool changed = false;
         const fs::path selected = fs::u8path(definitionPath);
@@ -237,7 +241,7 @@ namespace Redflag
                 }
                 if (ImGui::BeginTabItem("动画事件"))
                 {
-                    DrawAnimationEvents();
+                    DrawAnimationEvents(model);
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("表格"))
@@ -387,7 +391,7 @@ namespace Redflag
         return list;
     }
 
-    void NpcAuthoringPanel::DrawAnimationEvents()
+    void NpcAuthoringPanel::DrawAnimationEvents(const ModelAnimation* model)
     {
         if (m_States.empty())
         {
@@ -398,13 +402,23 @@ namespace Redflag
         {
             for (const AnimationState& row : m_States)
                 if (ImGui::Selectable(row.ID.c_str(), row.ID == m_EventState))
+                {
                     m_EventState = row.ID;
+                    m_PreviewEvent = -1;
+                }
             ImGui::EndCombo();
         }
         AnimationState& state = *std::find_if(m_States.begin(), m_States.end(),
             [&](const AnimationState& row) { return row.ID == m_EventState; });
         ImGui::Text("剪辑   %s", state.Clip.c_str());
         ImGui::TextWrapped("时间从剪辑开头算起。填一个时刻会通知脚本一次，填一段时间会分别通知开始和结束。");
+        if (model && m_PreviewEvent >= 0 && m_PreviewEvent < (int)state.Events.size())
+        {
+            const AnimationMarker& event = state.Events[m_PreviewEvent];
+            DrawAnimationPose(*model, *m_Saved.Controller.Find(state.ID), state, event, m_PreviewEnd && event.End.has_value());
+            if (ImGui::SmallButton("收起姿势对照"))
+                m_PreviewEvent = -1;
+        }
         ImGui::Separator();
         ImGui::PushID(state.ID.c_str());
 
@@ -416,11 +430,32 @@ namespace Redflag
             ImGui::InputFloat(event.End ? "开始（秒）" : "时刻（秒）", &event.Start, 0, 0, "%.4f");
             if (event.End)
                 ImGui::InputFloat("结束（秒）", &*event.End, 0, 0, "%.4f");
+            if (model)
+            {
+                if (ImGui::SmallButton(event.End ? "查看开始姿势" : "查看姿势"))
+                {
+                    m_PreviewEvent = i;
+                    m_PreviewEnd = false;
+                }
+                if (event.End)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("查看结束姿势"))
+                    {
+                        m_PreviewEvent = i;
+                        m_PreviewEnd = true;
+                    }
+                }
+                ImGui::SameLine();
+            }
             const bool remove = ImGui::SmallButton("删除事件");
             ImGui::PopID();
             ImGui::Separator();
             if (remove)
+            {
                 state.Events.erase(state.Events.begin() + i);
+                m_PreviewEvent = -1;
+            }
             else
                 ++i;
         }

@@ -1,5 +1,6 @@
 #include "NpcAuthoringPanel.h"
 #include "NpcAuthoringFiles.h"
+#include "Redflag/Animation/ModelAnimation.h"
 #include "imgui_internal.h"
 #include <iostream>
 #include <stdexcept>
@@ -21,8 +22,9 @@ int main(int argc, char** argv)
 {
     try
     {
-        if (argc > 2 && (argc != 3 || std::string(argv[1]) != "--events-image"))
-            throw std::runtime_error("Use [profile.png] or --events-image events.png");
+        const bool poseCapture = argc == 3 && std::string(argv[1]) == "--pose-image";
+        if (argc > 2 && (argc != 3 || (!poseCapture && std::string(argv[1]) != "--events-image")))
+            throw std::runtime_error("Use [profile.png], --events-image events.png, or --pose-image pose.png");
         const fs::path data = "RedflagForge/assets/ai";
         const fs::path dir = fs::absolute("tmp/npc-authoring-panel");
         fs::create_directories(dir);
@@ -47,11 +49,13 @@ int main(int argc, char** argv)
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
         {
             NpcAuthoringPanel panel;
+            const Ref<ModelAnimation> model = ModelAnimation::Load("RedflagForge/assets/game/station/crew/Operator.glb");
+            Check(bool(model), "Could not load the operator model");
             auto frame = [&]() {
                 ImGui::NewFrame();
                 ImGui::SetNextWindowPos({0, 0});
                 ImGui::SetNextWindowSize(io.DisplaySize);
-                bool changed = panel.Draw(role);
+                bool changed = panel.Draw(role, nullptr, {}, {}, model.get());
                 ImGui::Render();
                 return changed;
             };
@@ -107,6 +111,25 @@ int main(int argc, char** argv)
             frame();
             io.AddKeyEvent(ImGuiKey_Enter, false);
             frame();
+            const int editorVertices = ImGui::GetDrawData()->TotalVtxCount;
+            ImGui::ActivateItem(ImHashStr("查看结束姿势", 0, row));
+            frame();
+            frame();
+            Check(ImGui::GetDrawData()->TotalVtxCount > editorVertices + 100, "The pose button did not show both skeleton drawings");
+            const auto& clips = model->GetClips();
+            auto clip = std::find_if(clips.begin(), clips.end(), [](const auto& c) { return c.Name=="jump_5_hardlanding"; });
+            Check(clip != clips.end(), "Missing operator landing clip");
+            const auto savedPose = model->SampleBones(clip-clips.begin(), .20833333f);
+            const auto editedPose = model->SampleBones(clip-clips.begin(), .30f);
+            float difference = 0;
+            for (size_t i=0; i<savedPose.size(); ++i)
+                difference = std::max(difference, glm::distance(savedPose[i].second, editedPose[i].second));
+            Check(savedPose.size()>10 && difference>.01f, "Two actual poses were expected to differ");
+            std::cout << "PASS: actual GLB, " << savedPose.size() << " bone segments, largest change " << difference << " m\n";
+            if (poseCapture) SavePanelCapture(argv[2]);
+            ImGui::ActivateItem(ImHashStr("收起姿势对照", 0, animation));
+            frame();
+            frame();
             ImGui::ActivateItem(ImHashStr("保存动作表", 0, animation));
             frame();
             saved = false;
@@ -119,7 +142,7 @@ int main(int argc, char** argv)
             const auto& events = reopened.Controller.Find("land")->Events;
             Check(events.size() == 2 && events[1].End == .30f && events[0].Name == "KneeBend",
                   "Recovery window or knee marker was not saved");
-            if (argc == 3)
+            if (argc == 3 && !poseCapture)
             {
                 io.DisplaySize = {800, 660};
                 frame();

@@ -20,3 +20,11 @@ python tests/check_watt_station.py --animation-actors --animator tmp/npc-authori
 ```
 
 [原生时间线测试](timeline.txt)包含单帧跨过两个循环、跨越起止端点、同一通知只读一次、切换动作和两名角色分别读取消息。
+
+## 保存前看两帧姿势
+
+在 Recovery 的「结束（秒）」填 0.30，点「查看结束姿势」。左侧用磁盘动作表的 0.2083 秒，右侧用编辑器草稿的 0.30 秒。面板调用实际 Operator GLB 的动作采样，用同一比例绘出关节。[修改前后的姿势对照](forge-pose.png)
+
+初版连上模型列出的全部 145 个关节。身体以外的 IK 控制器把预览的显示范围撑大了。现在根据导入后真正带动顶点的权重选关节，将它们连接为 99 段骨头。两次采样中位移最大的骨段末端相差 0.350447 米。测试同时操作了界面按钮，核对了实际产生的两幅图，再保存、重读原动作表。
+
+从仓库根目录运行 `tests/run_behavior_tree.cmd --pose-image output/validation/animation-events/forge-pose.png`。这项测试使用同一份 Forge 窗口代码和 Dear ImGui 的 DX11 测试后端。游戏中的事件回执另由上面的 Vulkan Play 验证。

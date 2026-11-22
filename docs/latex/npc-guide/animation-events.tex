@@ -34,3 +34,17 @@ while (Animator.TryRead(id, out notice))
 引擎在 \code{AnimationTimeline::Advance} 中比较这次更新前后的剪辑时间。循环动作走到结尾时，先发完本轮最后的事件，再处理下一轮第零秒的事件。实测用两名角色播放同一份动作表，一名播完，一名在第零秒改播待机。前者依次收到恢复开始、屈膝和恢复结束，后者只收到开始和被打断的结束。输出在 \code{output/validation/animation-events/}。
 
 \picturecaption{可对照 Epic 的 \href{https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine}{Animation Notifies} 中的 Notify 与 Notify State。Redflag 提供时刻、区间起止和区间查询，使用秒数在表单中编辑。}
+
+\clearpage
+\section*{保存前检查角色姿势}
+
+假设有人建议把落地恢复延长到 0.30 秒。在\button{动画事件}页改好数值，先点 \code{Recovery} 下面的\button{查看结束姿势}。左边的蓝色骨架是这张动作表已经保存的 0.2083 秒，右边的橙色骨架是输入框里的 0.30 秒。两幅图使用相同的投影和比例。可以先沿着脚踝、膝盖和髋部看腿有没有伸直，再看摆臂到了哪里。
+
+\begin{center}
+\includegraphics[width=.91\linewidth,trim=0 220 0 85,clip]{../../../output/validation/animation-events/forge-pose.png}
+\end{center}
+\picturecaption{实际角色创作面板。两边取自同一个 Operator 模型的着地剪辑，蓝图和橙图共用地面位置。橙色一侧的髋部、肩部比原时刻更高，右侧的手也往身体方向收回。}
+
+想检查区间开始时角色在哪里，就点\button{查看开始姿势}。单一时刻则点\button{查看姿势}。新增一个事件时，左边会说明这项记录还没有保存。预览只读当前选中的模型；队友仍按自己的动作播放。认可修改后点\button{保存动作表}，要放弃草稿可以点\button{重新读取}。
+
+预览图只连真正带动网格顶点的关节。这个模型还有位于身体外的动画控制器，作者用它们摆放手肘和膝盖。如果也把控制器画成骨头，图里就会出现几根长过整个人物的线。筛选以后，面板显示 99 段骨骼。测试逐个比较同一个骨段末端在两个时刻的三维位置，最远的一处移动了约 0.350 米。这是一个关节在模型中的移动距离。

@@ -85,7 +85,8 @@ namespace Redflag
 			return glm::mix(value(prev), value(next), t);
 		}
 
-		std::unique_ptr<SkinnedMesh> ReadSkin(const cgltf_primitive& primitive, size_t jointCount)
+		std::unique_ptr<SkinnedMesh> ReadSkin(const cgltf_primitive& primitive, const std::vector<size_t>& jointNodes,
+			std::vector<bool>& deforming)
 		{
 			auto attribute = [&](cgltf_attribute_type type, int set = 0) {
 				return Read(cgltf_find_accessor(&primitive, type, set));
@@ -137,6 +138,8 @@ namespace Redflag
 				float sum = std::accumulate(skin.Weights.begin(), skin.Weights.end(), 0.f);
 				if (!(sum > 0.f)) throw std::runtime_error("Vertex has no skin weights");
 				for (float& weight : skin.Weights) weight /= sum;
+				for (size_t i = 0; i < skin.Weights.size(); ++i)
+					if (skin.Weights[i] > 0.f) deforming[jointNodes.at(skin.Joints[i])] = true;
 			}
 			// 没有法线时，按 glTF 约定每个三角形使用自己的面法线，棱角处不能共用顶点。
 			if (normals.empty())
@@ -168,7 +171,7 @@ namespace Redflag
 					a.Tangent += t; b.Tangent += t; c.Tangent += t;
 				}
 			}
-			return std::make_unique<SkinnedMesh>(jointCount, std::move(vertices), std::move(weights), std::move(indices));
+			return std::make_unique<SkinnedMesh>(jointNodes.size(), std::move(vertices), std::move(weights), std::move(indices));
 		}
 	}
 
@@ -213,6 +216,7 @@ namespace Redflag
 				data.Rest.push_back({ glm::make_vec3(node.translation), glm::make_vec3(node.scale), Rotation(glm::make_vec4(node.rotation)) });
 				data.Nodes.push_back({ node.parent ? int(node.parent-file->nodes) : -1, glm::make_mat4(node.matrix), bool(node.has_matrix) });
 			}
+			std::vector<bool> deforming(data.Nodes.size());
 			std::function<void(const cgltf_node&, bool)> visit = [&](const cgltf_node& node, bool active) {
 				size_t index = &node - file->nodes;
 				data.Order.push_back(index);
@@ -228,7 +232,7 @@ namespace Redflag
 							part.Joints.push_back(node.skin->joints[j] - file->nodes);
 							part.InverseBind.push_back(inverse.empty() ? glm::mat4(1.f) : glm::make_mat4(&inverse[16*j]));
 						}
-						part.Skin = ReadSkin(primitive, part.Joints.size());
+						part.Skin = ReadSkin(primitive, part.Joints, deforming);
 					}
 					data.Parts.push_back(std::move(part));
 				}
@@ -239,14 +243,11 @@ namespace Redflag
 			for (size_t i = 0; i < file->nodes_count; ++i)
 				if (!file->nodes[i].parent && std::find(data.Order.begin(), data.Order.end(), i) == data.Order.end())
 					visit(file->nodes[i], !scene);
-			// 网格可以共用关节。每根骨头只连一次，跳过骨架中单纯用来转换坐标的父节点。
-			std::vector<bool> joints(data.Nodes.size());
-			for (const Primitive& part : data.Parts)
-				for (size_t joint : part.Joints) joints[joint] = true;
-			for (size_t child = 0; child < joints.size(); ++child) {
-				if (!joints[child]) continue;
+			// 预览只连实际带动顶点的关节。动画师布在身体外面的 IK 控制器不属于人物轮廓。
+			for (size_t child = 0; child < deforming.size(); ++child) {
+				if (!deforming[child]) continue;
 				int parent = data.Nodes[child].Parent;
-				while (parent >= 0 && !joints[parent]) parent = data.Nodes[parent].Parent;
+				while (parent >= 0 && !deforming[parent]) parent = data.Nodes[parent].Parent;
 				if (parent >= 0) data.Bones.emplace_back(parent,child);
 			}
 
