@@ -201,3 +201,4 @@ RSM 检查彩色反光时固定相机和强度，先看方向光是否真的照�
 - 公式使用 LaTeX。不同教材的方向、坐标系、PDF（概率密度）、BRDF 和粗糙度等约定不可直接混用。比较时明确符号对应关系。
 - RTR 固定第四版。PBRT 和 Fundamentals of Computer Graphics 的用户版次尚未指定。PBRT 可优先查公开第四版并标明版次，不能混用不同版次的页码。Vulkan 的 latest 页面会变化，使用前核对 API、语言与 SDK 版本。
 - 资料库目前是来源索引和讲解约定，不表示已下载或全文阅读所有书籍。未拿到原文时不编造引用、页码或图号。
+- 将资源加载、ECS 或游戏脚本改成异步之前，用同一输入比较同步、后台任务和分帧执行。计入首次启动、排队、依赖等待、结果写回，同时检查游戏行为。只有实测目标改善时才在正式路径启用。项目 skill 见 [.agents/skills/redflag-async-performance/SKILL.md](.agents/skills/redflag-async-performance/SKILL.md)。

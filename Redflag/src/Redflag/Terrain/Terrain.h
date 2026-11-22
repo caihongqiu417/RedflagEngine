@@ -6,6 +6,7 @@
 
 namespace Redflag
 {
+	class JobSystem;
 	struct TerrainSurface
 	{
 		float Height;
@@ -34,8 +35,12 @@ namespace Redflag
 		std::optional<TerrainSurface> SampleSurface(float x, float z, float cellSize, float heightScale) const;
 		std::vector<TerrainChunk> BuildChunks(float cellSize, float heightScale, uint32_t chunkCells,
 			float uvScaleMeters = 1.f) const;
+		std::vector<TerrainChunk> BuildChunks(float cellSize, float heightScale, uint32_t chunkCells,
+			float uvScaleMeters, JobSystem* jobs) const;
 
 	private:
+		void BuildChunk(TerrainChunk& chunk, uint32_t x, uint32_t z, uint32_t chunkCells,
+			float cellSize, float heightScale, float uvScaleMeters) const;
 		uint32_t m_Width = 0, m_Depth = 0;
 		std::vector<uint16_t> m_Heights;
 	};

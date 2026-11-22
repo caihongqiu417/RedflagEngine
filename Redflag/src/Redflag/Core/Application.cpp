@@ -58,6 +58,7 @@ namespace Redflag
 	{
 		RF_PROFILE_FUNCTION();
 		
+		if (m_Jobs) m_Jobs->Drain();
 		m_LayerStack.Clear();
 		ScriptEngine::Shutdown();
 		AssetManager::ClearAll();
@@ -82,6 +83,12 @@ namespace Redflag
 
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
+	}
+
+	JobSystem& Application::GetJobs()
+	{
+		if (!m_Jobs) m_Jobs = CreateScope<JobSystem>();
+		return *m_Jobs;
 	}
 
 	void Application::Close()
@@ -121,9 +128,11 @@ namespace Redflag
 			RF_CORE_ERROR("Event category check: Window resize should not be in input category"); 
 		}
 
+		m_LastFrameTime = static_cast<float>(glfwGetTime());
 		while (m_Running)
 		{
 			RF_PROFILE_SCOPE("RunLoop");
+			if (m_Jobs) m_Jobs->Pump();
 
 			//计算每帧时间步长
 			float time = (float)glfwGetTime();

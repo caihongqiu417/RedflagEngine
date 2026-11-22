@@ -267,6 +267,9 @@
     <ClInclude Include="src\Redflag\Core\Application.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Assets\AssetUpdate.h">
+      <Filter>src\Redflag\Assets</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Core\Core.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
@@ -277,6 +280,12 @@
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core\KeyCode.h">
+      <Filter>src\Redflag\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Core\Job.h">
+      <Filter>src\Redflag\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Core\JobSystem.h">
       <Filter>src\Redflag\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Core\Layer.h">
@@ -1977,6 +1986,9 @@
       <Filter>src\Redflag\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Core\UUID.cpp">
+      <Filter>src\Redflag\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Core\JobSystem.cpp">
       <Filter>src\Redflag\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Debug\PlaytestAudio.cpp">

@@ -129,6 +129,12 @@ namespace Redflag
             session->SaveStatus("running");
             session->SaveOwner();
             session->Event(0, "play", "start");
+            if (Application* app = Application::Current())
+            {
+                session->m_Jobs = &app->GetJobs();
+                session->m_JobsFrom = info.Seq + 1;
+                session->m_Jobs->Trace(true);
+            }
             s_Active = session.get();
             return session;
         }
@@ -148,6 +154,8 @@ namespace Redflag
     {
         if (s_Active == this)
         {
+            SaveJobs();
+            if (m_Jobs) m_Jobs->Trace(false);
             s_Active = nullptr;
             m_Input.Clear();
             if (ImGui::GetCurrentContext()) m_Input.SendToGui(false);
@@ -334,8 +342,29 @@ namespace Redflag
         if (!written) throw std::runtime_error("Cannot write playtest feedback");
     }
 
+    void PlaytestSession::SaveJobs()
+    {
+        if (!m_Jobs) return;
+        const std::vector<JobTiming> jobs = m_Jobs->TakeTimings();
+        if (jobs.empty()) return;
+        std::ofstream log(m_Info.Directory / "jobs.jsonl", std::ios::binary | std::ios::app);
+        for (const JobTiming& job : jobs)
+        {
+            YAML::Emitter out;
+            Json(out);
+            out << YAML::BeginMap << "seq" << m_Info.Seq << "run" << m_JobsFrom << "id" << job.ID << "name" << job.Name
+                << "lane" << (job.Lane == JobThread::Main ? "main" : "worker") << "thread" << std::to_string(job.Thread)
+                << "queued_us" << job.QueuedUs << "start_us" << job.StartUs << "end_us" << job.EndUs
+                << "file" << job.File << "line" << job.Line << "failed" << job.Failed << "depends" << YAML::BeginSeq;
+            for (uint64_t dependency : job.Dependencies) out << dependency;
+            out << YAML::EndSeq << YAML::EndMap;
+            log << out.c_str() << '\n';
+        }
+    }
+
     void PlaytestSession::RecordScene(Scene &scene)
     {
+        SaveJobs();
         YAML::Emitter out;
         Json(out);
         out << YAML::BeginMap << "seq" << m_Info.Seq << "seconds" << m_Info.Seconds << "frame_ms" << m_Info.FrameMs

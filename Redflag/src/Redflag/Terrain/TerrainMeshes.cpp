@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "TerrainMeshes.h"
+#include "Redflag/Core/Application.h"
 
 namespace Redflag
 {
@@ -23,8 +24,15 @@ namespace Redflag
 			result->m_Meshes = previous->m_Meshes;
 		}
 		else
+		{
+			// 维修站的 129×129 高度图重算时能用上已有的工作线程。首次加载单为这幅图创建线程并未加快就绪。
+			Application* app = Application::Current();
+			JobSystem* jobs = app ? app->ExistingJobs() : nullptr;
+			const bool measuredSize = source->GetWidth() >= 129 && source->GetDepth() >= 129;
 			result->m_Chunks = CreateRef<std::vector<TerrainChunk>>(source->BuildChunks(
-				component.CellSize, component.HeightScale, component.ChunkCells, component.UVScaleMeters));
+				component.CellSize, component.HeightScale, component.ChunkCells, component.UVScaleMeters,
+				measuredSize && component.ChunkCells <= 32 ? jobs : nullptr));
+		}
 
 		result->m_Texture = component.BaseColorTexture;
 		result->m_Material = Material::Create();

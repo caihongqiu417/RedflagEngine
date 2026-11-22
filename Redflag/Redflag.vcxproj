@@ -228,10 +228,13 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Assets\AssetLibrary.h" />
     <ClInclude Include="src\Redflag\Assets\AssetManager.h" />
     <ClInclude Include="src\Redflag\Core\Application.h" />
+    <ClInclude Include="src\Redflag\Assets\AssetUpdate.h" />
     <ClInclude Include="src\Redflag\Core\Core.h" />
     <ClInclude Include="src\Redflag\Core\EntryPoint.h" />
     <ClInclude Include="src\Redflag\Core\Input.h" />
     <ClInclude Include="src\Redflag\Core\KeyCode.h" />
+    <ClInclude Include="src\Redflag\Core\Job.h" />
+    <ClInclude Include="src\Redflag\Core\JobSystem.h" />
     <ClInclude Include="src\Redflag\Core\Layer.h" />
     <ClInclude Include="src\Redflag\Core\LayerStack.h" />
     <ClInclude Include="src\Redflag\Core\Log.h" />
@@ -803,6 +806,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Core\LayerStack.cpp" />
     <ClCompile Include="src\Redflag\Core\Log.cpp" />
     <ClCompile Include="src\Redflag\Core\UUID.cpp" />
+    <ClCompile Include="src\Redflag\Core\JobSystem.cpp" />
     <ClCompile Include="src\Redflag\Debug\PlaytestAudio.cpp" />
     <ClCompile Include="src\Redflag\Debug\PlaytestInput.cpp" />
     <ClCompile Include="src\Redflag\Debug\PlaytestSession.cpp" />

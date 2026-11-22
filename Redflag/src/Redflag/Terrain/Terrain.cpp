@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "TerrainComponent.h"
+#include "Redflag/Core/JobSystem.h"
 #include <limits>
 // 高度图总是从顶行开始读取。使用独立的 PNG 解码器，不改变材质贴图的翻转设置。
 #define STB_IMAGE_STATIC
@@ -55,43 +56,73 @@ namespace Redflag
 		return TerrainSurface{(a + sx*dx + sz*dz) * unit, glm::normalize(glm::vec3(-sx*unit, cellSize, -sz*unit))};
 	}
 
+	void Terrain::BuildChunk(TerrainChunk& chunk, uint32_t x, uint32_t z, uint32_t chunkCells,
+		float cellSize, float heightScale, float uvScaleMeters) const
+	{
+		const float unit = heightScale / 65535.f;
+		const uint32_t rows = std::min(chunkCells, m_Depth - 1 - z);
+		const uint32_t cols = std::min(chunkCells, m_Width - 1 - x);
+		chunk.Vertices.reserve(size_t(cols + 1) * (rows + 1));
+		chunk.Indices.reserve(size_t(cols) * rows * 6);
+		for (uint32_t j = z; j <= z + rows; ++j)
+			for (uint32_t i = x; i <= x + cols; ++i)
+			{
+				// 在整幅图上求坡度。即使复制了块边界的顶点，两侧的法线也完全相同。
+				const uint32_t l = i ? i-1 : i, r = std::min(i+1, m_Width-1);
+				const uint32_t t = j ? j-1 : j, b = std::min(j+1, m_Depth-1);
+				const float dx = (GetHeight(r,j)-GetHeight(l,j))*unit / ((r-l)*cellSize);
+				const float dz = (GetHeight(i,b)-GetHeight(i,t))*unit / ((b-t)*cellSize);
+				const glm::vec3 position(i*cellSize, GetHeight(i,j)*unit, j*cellSize);
+				chunk.Vertices.push_back({position, glm::normalize(glm::vec3(-dx,1,-dz)),
+					glm::vec2(position.x,position.z)/uvScaleMeters, glm::normalize(glm::vec3(1,dx,0))});
+			}
+		for (uint32_t j = 0; j < rows; ++j)
+			for (uint32_t i = 0; i < cols; ++i)
+			{
+				const uint32_t a = j*(cols+1)+i, b = a+1, c = a+cols+1, d = c+1;
+				chunk.Indices.insert(chunk.Indices.end(), {a,c,d, a,d,b});
+			}
+	}
+
 	std::vector<TerrainChunk> Terrain::BuildChunks(float cellSize, float heightScale, uint32_t chunkCells, float uvScaleMeters) const
 	{
-		std::vector<TerrainChunk> chunks;
-		if (!(cellSize > 0.f && uvScaleMeters > 0.f) || !chunkCells) return chunks;
-		const float unit = heightScale / 65535.f;
+		return BuildChunks(cellSize, heightScale, chunkCells, uvScaleMeters, nullptr);
+	}
 
-		for (uint32_t z = 0; z < m_Depth - 1; )
+	std::vector<TerrainChunk> Terrain::BuildChunks(float cellSize, float heightScale, uint32_t chunkCells,
+		float uvScaleMeters, JobSystem* jobs) const
+	{
+		if (!(cellSize > 0.f && uvScaleMeters > 0.f) || !chunkCells) return {};
+		const uint32_t columns = 1 + (m_Width - 2) / chunkCells;
+		const uint32_t rows = 1 + (m_Depth - 2) / chunkCells;
+		std::vector<TerrainChunk> chunks(size_t(columns) * rows);
+
+		// 先定下每块的存放位置。同一片交界处的两个顶点仍从原高度图取样，线程间不交换顶点。
+		auto build = [&](size_t index) {
+			const uint32_t x = uint32_t(index % columns) * chunkCells;
+			const uint32_t z = uint32_t(index / columns) * chunkCells;
+			BuildChunk(chunks[index], x, z, chunkCells, cellSize, heightScale, uvScaleMeters);
+		};
+		if (!jobs || chunks.size() == 1)
 		{
-			const uint32_t rows = std::min(chunkCells, m_Depth - 1 - z);
-			for (uint32_t x = 0; x < m_Width - 1; )
-			{
-				const uint32_t cols = std::min(chunkCells, m_Width - 1 - x);
-				TerrainChunk& chunk = chunks.emplace_back();
-				chunk.Vertices.reserve(size_t(cols + 1) * (rows + 1));
-				chunk.Indices.reserve(size_t(cols) * rows * 6);
-				for (uint32_t j = z; j <= z + rows; ++j)
-					for (uint32_t i = x; i <= x + cols; ++i)
-					{
-						// 在整幅图上求坡度。即使复制了块边界的顶点，两侧的法线也完全相同。
-						const uint32_t l = i ? i-1 : i, r = std::min(i+1, m_Width-1);
-						const uint32_t t = j ? j-1 : j, b = std::min(j+1, m_Depth-1);
-						const float dx = (GetHeight(r,j)-GetHeight(l,j))*unit / ((r-l)*cellSize);
-						const float dz = (GetHeight(i,b)-GetHeight(i,t))*unit / ((b-t)*cellSize);
-						const glm::vec3 position(i*cellSize, GetHeight(i,j)*unit, j*cellSize);
-						chunk.Vertices.push_back({position, glm::normalize(glm::vec3(-dx,1,-dz)),
-							glm::vec2(position.x,position.z)/uvScaleMeters, glm::normalize(glm::vec3(1,dx,0))});
-					}
-				for (uint32_t j = 0; j < rows; ++j)
-					for (uint32_t i = 0; i < cols; ++i)
-					{
-						const uint32_t a = j*(cols+1)+i, b = a+1, c = a+cols+1, d = c+1;
-						chunk.Indices.insert(chunk.Indices.end(), {a,c,d, a,d,b});
-					}
-				x += cols;
-			}
-			z += rows;
+			for (size_t i = 0; i < chunks.size(); ++i) build(i);
+			return chunks;
 		}
+
+		std::vector<Job> pending;
+		const size_t batches = std::min<size_t>(chunks.size(), jobs->Workers());
+		for (size_t b = 0; b < batches; ++b)
+		{
+			const size_t begin = chunks.size() * b / batches;
+			const size_t end = chunks.size() * (b + 1) / batches;
+			pending.push_back(jobs->Submit(RF_JOB("Terrain vertices and indices"), JobThread::Worker, [&, begin, end] {
+				for (size_t i = begin; i < end; ++i) build(i);
+			}));
+		}
+
+		// 即使某个工作线程失败，其他线程也先离开 chunks，再把异常交给调用者。
+		Job complete = jobs->Submit(RF_JOB("Terrain mesh ready"), JobThread::Main, [] {}, pending);
+		jobs->Wait(complete);
 		return chunks;
 	}
 

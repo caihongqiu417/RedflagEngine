@@ -1,0 +1,174 @@
+{
+  "build": "MSVC x64 /O2 C++17",
+  "units": "microseconds",
+  "cpu": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+  "scene_sha256": "371db2eccad492573b61a985304e52b53b2ec59e03509583347852df449eb629",
+  "heightmap_sha256": "1be63851de500ed4f7a9b53e714349efcf43591bcc1e45a0bc6a12d54cb1152b",
+  "groups": [
+    {
+      "case": "terrain",
+      "chunk_cells": 8,
+      "workers": 2,
+      "pairs": 60,
+      "parallel_faster_pairs": 49,
+      "timing": {
+        "serial_us": {
+          "p50": 627.9,
+          "p95": 819.8
+        },
+        "parallel_us": {
+          "p50": 508.6,
+          "p95": 789.8
+        },
+        "decode_us": {
+          "p50": 328.75,
+          "p95": 410.1
+        }
+      }
+    },
+    {
+      "case": "terrain",
+      "chunk_cells": 32,
+      "workers": 2,
+      "pairs": 60,
+      "parallel_faster_pairs": 48,
+      "timing": {
+        "serial_us": {
+          "p50": 521.5,
+          "p95": 641.6
+        },
+        "parallel_us": {
+          "p50": 460.8,
+          "p95": 596.0
+        },
+        "decode_us": {
+          "p50": 317.6,
+          "p95": 413.4
+        }
+      }
+    },
+    {
+      "case": "terrain",
+      "chunk_cells": 128,
+      "workers": 2,
+      "pairs": 60,
+      "parallel_faster_pairs": 33,
+      "timing": {
+        "serial_us": {
+          "p50": 253.3,
+          "p95": 402.4
+        },
+        "parallel_us": {
+          "p50": 262.4,
+          "p95": 397.3
+        },
+        "decode_us": {
+          "p50": 350.1,
+          "p95": 391.7
+        }
+      }
+    },
+    {
+      "case": "terrain",
+      "chunk_cells": 8,
+      "workers": 4,
+      "pairs": 60,
+      "parallel_faster_pairs": 58,
+      "timing": {
+        "serial_us": {
+          "p50": 578.0,
+          "p95": 760.8
+        },
+        "parallel_us": {
+          "p50": 405.5,
+          "p95": 507.5
+        },
+        "decode_us": {
+          "p50": 321.79999999999995,
+          "p95": 459.7
+        }
+      }
+    },
+    {
+      "case": "terrain",
+      "chunk_cells": 32,
+      "workers": 4,
+      "pairs": 60,
+      "parallel_faster_pairs": 57,
+      "timing": {
+        "serial_us": {
+          "p50": 526.5,
+          "p95": 803.2
+        },
+        "parallel_us": {
+          "p50": 307.79999999999995,
+          "p95": 455.8
+        },
+        "decode_us": {
+          "p50": 305.65,
+          "p95": 523.7
+        }
+      }
+    },
+    {
+      "case": "terrain",
+      "chunk_cells": 128,
+      "workers": 4,
+      "pairs": 60,
+      "parallel_faster_pairs": 19,
+      "timing": {
+        "serial_us": {
+          "p50": 195.1,
+          "p95": 254.5
+        },
+        "parallel_us": {
+          "p50": 195.8,
+          "p95": 291.3
+        },
+        "decode_us": {
+          "p50": 227.5,
+          "p95": 277.8
+        }
+      }
+    },
+    {
+      "case": "ecs",
+      "entities": 73,
+      "pairs": 60,
+      "parallel_faster_pairs": 0,
+      "timing": {
+        "serial_us": {
+          "p50": 8.5,
+          "p95": 11.6
+        },
+        "parallel_us": {
+          "p50": 34.3,
+          "p95": 66.7
+        },
+        "load_sync_us": {
+          "p50": 287.85,
+          "p95": 525.0
+        },
+        "load_job_us": {
+          "p50": 321.35,
+          "p95": 528.0
+        }
+      }
+    },
+    {
+      "case": "first-load",
+      "pairs": 60,
+      "parallel_faster_pairs": 35,
+      "timing": {
+        "serial_us": {
+          "p50": 482.45,
+          "p95": 831.4
+        },
+        "parallel_us": {
+          "p50": 508.95000000000005,
+          "p95": 793.3
+        }
+      }
+    }
+  ]
+}

@@ -11,6 +11,7 @@ namespace Redflag
 {
     class Scene;
     class Event;
+    class JobSystem;
 
     struct PlaytestInfo
     {
@@ -47,6 +48,9 @@ namespace Redflag
         void Command();
         void SaveStatus(const char *state);
         void SaveOwner();
+        void SaveJobs();
+        JobSystem* m_Jobs = nullptr;
+        uint64_t m_JobsFrom = 0;
         struct Entry
         {
             std::string Entity, Kind, Text;
