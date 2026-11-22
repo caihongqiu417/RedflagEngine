@@ -156,22 +156,27 @@ namespace Redflag {
         case Output::Emission: loadStage(0, emissionVertex); loadStage(1, emissionFragment); break;
         }
 
-        VkVertexInputBindingDescription binding{0, sizeof(MeshVertex), VK_VERTEX_INPUT_RATE_VERTEX};
-        VkVertexInputAttributeDescription attributes[] = {
+        VkVertexInputBindingDescription bindings[] = {
+            {0, sizeof(MeshVertex), VK_VERTEX_INPUT_RATE_VERTEX},
+            {1, sizeof(glm::mat4), VK_VERTEX_INPUT_RATE_INSTANCE}
+        };
+        VkVertexInputAttributeDescription attributes[8] = {
             {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MeshVertex, Position)},
             {1, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(MeshVertex, TexCoord)},
             {2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MeshVertex, Normal)},
             {3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(MeshVertex, EmissiveUVOffset)}
         };
         VkPipelineVertexInputStateCreateInfo vertices{VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
-        vertices.vertexBindingDescriptionCount = 1;
-        vertices.pVertexBindingDescriptions = &binding;
+        vertices.vertexBindingDescriptionCount = 2;
+        vertices.pVertexBindingDescriptions = bindings;
         vertices.vertexAttributeDescriptionCount = transparent ? 4 : surfaces ? 3 : 2;
         if (Mode == Output::Emission)
         {
             attributes[2] = attributes[3]; // 灯牌使用自己的贴图坐标，这一遍不读取法线。
             vertices.vertexAttributeDescriptionCount = 3;
         }
+        for (uint32_t col = 0; col < 4; ++col)
+            attributes[vertices.vertexAttributeDescriptionCount++] = {4 + col, 1, VK_FORMAT_R32G32B32A32_SFLOAT, col * 16};
         vertices.pVertexAttributeDescriptions = attributes;
         VkPipelineInputAssemblyStateCreateInfo assembly{VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
         assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

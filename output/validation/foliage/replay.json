@@ -1,0 +1,282 @@
+{
+  "renderdoc": "1.47",
+  "units": "microseconds",
+  "order": [
+    "instanced",
+    "separate",
+    "separate",
+    "instanced"
+  ],
+  "cases": {
+    "instanced": {
+      "capture": "instanced_capture.rdc",
+      "sha256": "9ba778b7d789fd3e11ee0734c83e6f12ec72a94132b2bcd9688492c8d1378e3d",
+      "draws": [
+        {
+          "id": 16,
+          "indices": 6,
+          "instances": 1
+        },
+        {
+          "id": 21,
+          "indices": 4464,
+          "instances": 36
+        }
+      ],
+      "foliage_us": [
+        24.352,
+        23.968,
+        24.64,
+        24.16,
+        24.448,
+        24.256,
+        24.032,
+        23.456,
+        24.64,
+        24.448,
+        23.648,
+        24.288
+      ],
+      "all_draws_us": [
+        31.296,
+        31.136,
+        31.648,
+        31.52,
+        31.68,
+        31.328,
+        31.264,
+        30.752,
+        31.424,
+        31.072,
+        31.232,
+        31.328
+      ],
+      "warnings": [],
+      "median_foliage_us": 24.272,
+      "median_all_draws_us": 31.311999999999998
+    },
+    "separate": {
+      "capture": "separate_capture.rdc",
+      "sha256": "3d22acaed9f88d9e2a274b3f4d43114b149a00a6faf795c9b9115270cfa03051",
+      "draws": [
+        {
+          "id": 15,
+          "indices": 6,
+          "instances": 1
+        },
+        {
+          "id": 20,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 25,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 30,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 35,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 40,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 45,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 50,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 55,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 60,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 65,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 70,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 75,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 80,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 85,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 90,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 95,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 100,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 105,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 110,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 115,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 120,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 125,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 130,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 135,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 140,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 145,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 150,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 155,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 160,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 165,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 170,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 175,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 180,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 185,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 190,
+          "indices": 4464,
+          "instances": 1
+        },
+        {
+          "id": 195,
+          "indices": 4464,
+          "instances": 1
+        }
+      ],
+      "foliage_us": [
+        22.400000000000013,
+        22.784000000000013,
+        23.392000000000014,
+        23.392000000000014,
+        22.976000000000013,
+        23.744000000000014,
+        23.648000000000014,
+        23.23200000000001,
+        23.264000000000014,
+        23.968000000000014,
+        22.94400000000001,
+        23.616000000000014
+      ],
+      "all_draws_us": [
+        29.98400000000002,
+        30.78400000000002,
+        31.040000000000017,
+        30.81600000000002,
+        30.208000000000016,
+        31.488000000000017,
+        30.880000000000017,
+        30.944000000000017,
+        31.232000000000017,
+        31.648000000000014,
+        30.720000000000017,
+        31.040000000000017
+      ],
+      "warnings": [],
+      "median_foliage_us": 23.328000000000014,
+      "median_all_draws_us": 30.912000000000017
+    }
+  },
+  "api": "GraphicsAPI.Vulkan"
+}

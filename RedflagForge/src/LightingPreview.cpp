@@ -62,6 +62,8 @@ namespace Redflag
 		std::vector<glm::vec4> Glass;
 		std::vector<std::pair<Ref<SampledTexture>, bool>> Surfaces;
 		std::vector<std::pair<uint64_t, float>> LODs;
+		std::vector<FoliageState> Plants;
+		bool WindMoving = false;
 		bool HasAnimatedModel = false;
 	};
 
@@ -127,6 +129,19 @@ namespace Redflag
 		registry.view<TransformComponent, ModelRendererComponent>().each([&](auto entity, auto& transform, auto& model) {
 			if (!model.ModelAsset && model.ModelID) model.ModelAsset = AssetManager::Load<Model>(model.ModelID);
 			if (!model.ModelAsset) return;
+			if (FoliageComponent* patch = registry.try_get<FoliageComponent>(entity))
+			{
+				Foliage* grass = patch->Visible ? patch->Get() : nullptr;
+				if (grass && grass->Count)
+				{
+					geometry.HasAnimatedModel = true;
+					geometry.WindMoving |= patch->Wind && grass->Frequency != 0 && grass->Lean != 0 && grass->Direction != glm::vec2(0);
+					geometry.Plants.emplace_back(uint32_t(entity), uint64_t(model.ModelID), patch->Revision,
+						patch->Wind, transform.GetTransform(), model.Color);
+				}
+				// 每株位置已包含在实例绘制中。静态探针不能把源模型再算作地块中央的一株。
+				return;
+			}
 			// 烘焙静态房间时跳过会动的模型。误加播放组件的静态模型仍然参与遮挡。
 			if (registry.all_of<ModelAnimationComponent>(entity) && model.ModelAsset->GetAnimation())
 			{
@@ -335,6 +350,7 @@ namespace Redflag
 			ResetHistory();
 		}
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
+		if (geometry.Plants != m_Foliage) { m_Foliage = std::move(geometry.Plants); ResetHistory(); }
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
 		if (geometry.Glass != m_GlassSettings) { m_GlassSettings = std::move(geometry.Glass); ResetHistory(); }
 		// 换了法线贴图，墙面的明暗就要重画。探针使用三角形的法线，原来的烘焙仍可用。
@@ -458,7 +474,7 @@ namespace Redflag
 			}
 		}
 		const bool cameraMoved = projection * view != m_LastViewProjection;
-		if (cameraMoved) m_StillFrames = 0;
+		if (cameraMoved || geometry.WindMoving) m_StillFrames = 0;
 
 		// 镜头固定时，普通直接光只需算一帧。TAA 等效果会用到前几帧的结果，面板最多算 32 帧，然后沿用最后一张图。
 		// 32 是编辑器选用的帧数。调大它，TAA 能多取几次样，显卡也要多画几帧。
@@ -479,7 +495,7 @@ namespace Redflag
 		glm::mat4 sampleProjection = useTAA
 			? ScreenEffects::JitterProjection(projection, m_Frame, width, height) : projection;
 		const glm::mat4 sampleVP = sampleProjection * view;
-		const bool redraw = geometryChanged || resized || m_Frame == 0 || sampleVP != m_GI->GetViewProjection();
+		const bool redraw = geometryChanged || geometry.WindMoving || resized || m_Frame == 0 || sampleVP != m_GI->GetViewProjection();
 		m_GI->SetRasterCamera(sampleVP, eye, cameraMoved);
 		if (redraw)
 		{
@@ -509,7 +525,7 @@ namespace Redflag
 				m_GI->GetSurfaces()}, &inverseVP, (width + 7) / 8, (height + 7) / 8);
 			m_Decals.Draw(m_GI->GetSurfaces(), sampleVP, {width, height});
 			// 相机移动或 TAA 更换像素采样位置，灯看到的角色并没有变。姿势、灯和场景设置改变时会重置 m_Frame。
-			if (m_Frame == 0) DrawAnimatedShadows(scene, lights);
+			if (m_Frame == 0 || geometry.WindMoving) DrawAnimatedShadows(scene, lights);
 		}
 		ScreenEffectSettings& settings = m_Effects->GetSettings();
 		settings = m_Settings;

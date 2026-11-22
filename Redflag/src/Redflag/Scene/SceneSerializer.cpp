@@ -501,6 +501,14 @@ namespace Redflag {
                 << YAML::Key << "MaxAngle" << YAML::Value << decal.MaxAngle << YAML::Key << "Order" << YAML::Value << decal.Order
                 << YAML::EndMap;
         }
+        if (entity.HasComponent<FoliageComponent>())
+        {
+            const FoliageComponent& plants = entity.GetComponent<FoliageComponent>();
+            out << YAML::Key << "FoliageComponent" << YAML::Value << YAML::BeginMap
+                << YAML::Key << "Profile" << YAML::Value << plants.Profile
+                << YAML::Key << "Visible" << YAML::Value << plants.Visible
+                << YAML::Key << "Wind" << YAML::Value << plants.Wind << YAML::EndMap;
+        }
         if (entity.HasComponent<TerrainComponent>())
         {
             const TerrainComponent& ground = entity.GetComponent<TerrainComponent>();
@@ -1074,6 +1082,13 @@ namespace Redflag {
                     decal.Metallic=data["Metallic"].as<float>(decal.Metallic);
                     decal.MaxAngle=data["MaxAngle"].as<float>(decal.MaxAngle);
                     decal.Order=data["Order"].as<int>(decal.Order);
+                }
+                if (const YAML::Node data = entity["FoliageComponent"])
+                {
+                    FoliageComponent& plants = deserializedEntity.AddComponent<FoliageComponent>();
+                    plants.Profile = data["Profile"].as<std::string>();
+                    plants.Visible = data["Visible"].as<bool>(true);
+                    plants.Wind = data["Wind"].as<bool>(true);
                 }
                 if (const YAML::Node data = entity["TerrainComponent"])
                 {

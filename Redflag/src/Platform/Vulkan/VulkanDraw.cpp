@@ -11,6 +11,11 @@ namespace Redflag {
     {
         m_Data->CreatePass();
         m_Data->CreatePipeline();
+        m_Data->IdentityInstance = Vulkan::CreateBuffer(context, sizeof(glm::mat4), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        const glm::mat4 identity(1.f);
+        std::memcpy(m_Data->IdentityInstance->Map(), &identity, sizeof(identity));
+        m_Data->IdentityInstance->Unmap();
         VkSamplerCreateInfo sampler{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
         sampler.minFilter = sampler.magFilter = VK_FILTER_LINEAR;
         sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
@@ -137,6 +142,7 @@ namespace Redflag {
         auto& frame = m_Data->Frames[m_Data->Context.GetFrameIndex()];
         frame.Meshes.clear();
         frame.Textures.clear();
+        frame.UsedBatches = 0;
         auto& target = *m_Data->Target;
         m_Data->HasBlend = false;
         m_Data->HasEmission = false;
@@ -167,7 +173,8 @@ namespace Redflag {
     }
 
     void VulkanDraw::DrawIndexed(const Ref<MeshGeometry>& geometry, const Ref<SampledTexture>& texture,
-        const glm::mat4& viewProjection, const glm::mat4& transform, const glm::vec4& color, int entityID, const SurfaceMaterial& surface)
+        const glm::mat4& viewProjection, const glm::mat4& transform, const glm::vec4& color, int entityID,
+        const SurfaceMaterial& surface, const std::vector<glm::mat4>* instances)
     {
         auto& context = m_Data->Context;
         VkCommandBuffer cmd = m_Data->Recording;
@@ -201,8 +208,27 @@ namespace Redflag {
         if (surface.Opacity) frame.Textures.push_back(opacity);
         if (lighting && surface.MetallicRoughnessMap) frame.Textures.push_back(materialMap);
 
-        const VkDeviceSize offset = 0;
-        vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.Vertices->Handle, &offset);
+        VkBuffer matrices = m_Data->IdentityInstance->Handle;
+        const uint32_t instanceCount = instances ? static_cast<uint32_t>(instances->size()) : 1u;
+        if (!instanceCount) return;
+        if (instances)
+        {
+            // 一帧中的不同草地各占一份矩阵。回到同一帧槽时，围栏已经确认上次绘制结束。
+            if (frame.UsedBatches == frame.Batches.size()) frame.Batches.emplace_back();
+            auto& batch = frame.Batches[frame.UsedBatches++];
+            if (batch.Capacity < instanceCount)
+            {
+                batch.Buffer = Vulkan::CreateBuffer(context, instances->size() * sizeof(glm::mat4), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                batch.Capacity = instanceCount;
+            }
+            std::memcpy(batch.Buffer->Map(), instances->data(), instances->size() * sizeof(glm::mat4));
+            batch.Buffer->Unmap();
+            matrices = batch.Buffer->Handle;
+        }
+        const VkBuffer buffers[] = {mesh.Vertices->Handle, matrices};
+        const VkDeviceSize offsets[] = {0, 0};
+        vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
         vkCmdBindIndexBuffer(cmd, mesh.Indices->Handle, 0, VK_INDEX_TYPE_UINT32);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Data->PipelineLayout,
             0, lighting ? 4u : 3u, textures, 0, nullptr);
@@ -210,6 +236,7 @@ namespace Redflag {
         if (emission) object.Color = glm::vec4(surface.Emission, color.a);
         object.AlphaCutoff = surface.AlphaCutoff;
         object.MaterialFlags = (surface.Normal ? 1u : 0u) | ((surface.Blend || emission) && !surface.DoubleSided ? 2u : 0u);
+        if (instances) object.MaterialFlags |= 64u;
         if (m_Data->SubpixelMask && (lighting || emission) && color.a > 0.f && surface.AlphaCutoff == .5f * color.a)
         {
             using Channel = Vulkan::Texture::Channel;
@@ -238,7 +265,7 @@ namespace Redflag {
         }
         vkCmdPushConstants(cmd, m_Data->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             0, sizeof(object), &object);
-        vkCmdDrawIndexed(cmd, mesh.IndexCount, 1, 0, 0, 0);
+        vkCmdDrawIndexed(cmd, mesh.IndexCount, instanceCount, 0, 0, 0);
 
         if (transparent && emitting)
         {
@@ -249,7 +276,7 @@ namespace Redflag {
             object.MaterialFlags |= 8u;
             vkCmdPushConstants(cmd, m_Data->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0, sizeof(object), &object);
-            vkCmdDrawIndexed(cmd, mesh.IndexCount, 1, 0, 0, 0);
+            vkCmdDrawIndexed(cmd, mesh.IndexCount, instanceCount, 0, 0, 0);
         }
     }
 

@@ -384,6 +384,9 @@
     <ClInclude Include="src\Redflag\Renderer\Frustum.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\Foliage.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\GI\FogSettings.h">
       <Filter>src\Redflag\Renderer\GI</Filter>
     </ClInclude>
@@ -2041,6 +2044,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\GI\GITexture.cpp">
       <Filter>src\Redflag\Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\Foliage.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\GI\GlobalIllumination.cpp">
       <Filter>src\Redflag\Renderer\GI</Filter>

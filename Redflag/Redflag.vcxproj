@@ -267,6 +267,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Renderer\EnvironmentLighting.h" />
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Redflag\Renderer\Frustum.h" />
+    <ClInclude Include="src\Redflag\Renderer\Foliage.h" />
     <ClInclude Include="src\Redflag\Renderer\GI\FogSettings.h" />
     <ClInclude Include="src\Redflag\Renderer\GI\GIScene.h" />
     <ClInclude Include="src\Redflag\Renderer\GI\GITexture.h" />
@@ -827,6 +828,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\GI\GIScene.cpp" />
     <ClCompile Include="src\Redflag\Renderer\GI\GITexture.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\Foliage.cpp" />
     <ClCompile Include="src\Redflag\Renderer\GI\GlobalIllumination.cpp" />
     <ClCompile Include="src\Redflag\Renderer\GI\ProbeBake.cpp" />
     <ClCompile Include="src\Redflag\Renderer\IBLArchive.cpp" />

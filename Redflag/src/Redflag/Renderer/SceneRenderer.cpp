@@ -862,7 +862,7 @@ namespace Redflag {
 			const Frustum visible = Frustum::FromViewProjection(lodViewProjection * world);
 			for (const Ref<Mesh>& mesh : surface->GetMeshes())
 				if (visible.IntersectsAABB(mesh->GetAABBMin(), mesh->GetAABBMax()))
-					draw(mesh, world, surface->GetMaterial(), static_cast<int>(entity), terrain.Tint);
+					draw(mesh, world, surface->GetMaterial(), static_cast<int>(entity), terrain.Tint, nullptr);
 		});
 
 		// 直接创建的单个网格用组件上的材质、贴图或颜色。
@@ -874,7 +874,7 @@ namespace Redflag {
 			auto material = mesh.Mat;
 			if (!material)
 				material = mesh.Texture ? Material::Create(mesh.Texture) : Material::Create(mesh.Color);
-			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), glm::vec4(1));
+			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), glm::vec4(1), nullptr);
 		});
 
 		registry.view<TransformComponent, SkeletonAnimationComponent>().each(
@@ -888,7 +888,7 @@ namespace Redflag {
 			}
 			const glm::mat4 world = transform.GetTransform();
 			for (const glm::mat4& bone : player.Bones)
-				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), glm::vec4(1));
+				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), glm::vec4(1), nullptr);
 		});
 
 		registry.view<RagdollComponent>().each([&](entt::entity entity, RagdollComponent& character) {
@@ -898,7 +898,7 @@ namespace Redflag {
 				character.LimbMaterial = Material::Create(glm::vec4(.84f, .52f, .22f, 1.f));
 			}
 			for (const glm::mat4& limb : scene.GetRagdollMeshes(entity))
-				draw(character.LimbMesh, limb, character.LimbMaterial, static_cast<int>(entity), glm::vec4(1));
+				draw(character.LimbMesh, limb, character.LimbMaterial, static_cast<int>(entity), glm::vec4(1), nullptr);
 		});
 
 		// 文件导入的模型可能含多个部件，实体的变换对它们全部生效。
@@ -914,7 +914,11 @@ namespace Redflag {
 			auto* player = registry.try_get<ModelAnimationComponent>(entity);
 			if (player) player->Update(component.ModelAsset, 0.f);
 			const bool posed = player && !player->GetMeshes().empty();
-			if (animatedOnly && !posed) return;
+			FoliageComponent* patch = registry.try_get<FoliageComponent>(entity);
+			Foliage* foliage = patch && patch->Visible ? patch->Get() : nullptr;
+			if (patch && (!foliage || !foliage->Count)) return;
+			if (animatedOnly && !posed && !foliage) return;
+			const std::vector<glm::mat4>* placements = foliage ? &patch->Placements() : nullptr;
 			const auto& model = posed ? *component.ModelAsset : *SelectModel(component, lodViewProjection * world);
 			const auto& parts = model.GetSubMeshes();
 			Ref<Material> fallback;
@@ -933,8 +937,15 @@ namespace Redflag {
 				if (material && material->Alpha != AlphaMode::Mask) tint.a = 1.0f;
 				const Ref<Mesh>& mesh = posed ? player->GetMeshes()[i] : part.MeshData;
 				const glm::mat4& local = posed ? player->GetTransform(i) : part.LocalTransform;
-				draw(mesh, world * local, material ? material : fallback,
-					static_cast<int>(entity), tint);
+				if (placements)
+				{
+					// 材质和网格相同，只把各丛草的位置、朝向和本次倾斜交给显卡。
+					std::vector<glm::mat4> instances;
+					instances.reserve(placements->size());
+					for (const glm::mat4& placement : *placements) instances.push_back(placement * local);
+					draw(mesh, world, material ? material : fallback, static_cast<int>(entity), tint, &instances);
+				}
+				else draw(mesh, world * local, material ? material : fallback, static_cast<int>(entity), tint, nullptr);
 			}
 		});
 	}
@@ -942,7 +953,7 @@ namespace Redflag {
 	static void CollectGeometry(Scene& scene, const glm::mat4& viewProjection)
 	{
 		ForEachMesh(scene, viewProjection, [](const Ref<Mesh>& mesh, const glm::mat4& world,
-			const Ref<Material>& material, int id, glm::vec4 tint)
+			const Ref<Material>& material, int id, glm::vec4 tint, const std::vector<glm::mat4>* instances)
 		{
 			Ref<Material> drawMaterial = material;
 			if (tint != glm::vec4(1))
@@ -951,7 +962,9 @@ namespace Redflag {
 				drawMaterial = material->Clone();
 				drawMaterial->BaseColor *= tint;
 			}
-			Renderer3D::DrawMesh(mesh, world, drawMaterial, id);
+			if (instances)
+				for (const glm::mat4& instance : *instances) Renderer3D::DrawMesh(mesh, world * instance, drawMaterial, id);
+			else Renderer3D::DrawMesh(mesh, world, drawMaterial, id);
 		});
 	}
 
@@ -960,15 +973,21 @@ namespace Redflag {
 		minimum = glm::vec3(std::numeric_limits<float>::max());
 		maximum = -minimum;
 		ForEachMesh(scene, glm::mat4(1), [&](const Ref<Mesh>& mesh, const glm::mat4& world, const Ref<Material>& material,
-			int, glm::vec4) {
+			int, glm::vec4, const std::vector<glm::mat4>* instances) {
 			if (material->Alpha == AlphaMode::Blend) return;
 			const glm::vec3 center = (mesh->GetAABBMin() + mesh->GetAABBMax()) * .5f;
 			const glm::vec3 half = (mesh->GetAABBMax() - mesh->GetAABBMin()) * .5f;
-			const glm::vec3 at = world * glm::vec4(center, 1);
-			const glm::vec3 extent = glm::abs(glm::vec3(world[0])) * half.x + glm::abs(glm::vec3(world[1])) * half.y
-				+ glm::abs(glm::vec3(world[2])) * half.z;
-			minimum = glm::min(minimum, at - extent);
-			maximum = glm::max(maximum, at + extent);
+			auto include = [&](const glm::mat4& transform)
+			{
+				const glm::vec3 at = transform * glm::vec4(center, 1);
+				const glm::vec3 extent = glm::abs(glm::vec3(transform[0])) * half.x + glm::abs(glm::vec3(transform[1])) * half.y
+					+ glm::abs(glm::vec3(transform[2])) * half.z;
+				minimum = glm::min(minimum, at - extent);
+				maximum = glm::max(maximum, at + extent);
+			};
+			if (instances)
+				for (const glm::mat4& instance : *instances) include(world * instance);
+			else include(world);
 		}, true);
 		return minimum.x <= maximum.x;
 	}
@@ -977,7 +996,7 @@ namespace Redflag {
 		const glm::mat4* lodViewProjection, bool animatedOnly)
 	{
 		ForEachMesh(scene, lodViewProjection ? *lodViewProjection : viewProjection, [&](const Ref<Mesh>& mesh, const glm::mat4& world,
-			const Ref<Material>& material, int id, glm::vec4 tint)
+			const Ref<Material>& material, int id, glm::vec4 tint, const std::vector<glm::mat4>* instances)
 		{
 			const auto texture = material->BaseColorMap ? material->BaseColorMap->GetSampledTexture() : nullptr;
 			SurfaceMaterial surface;
@@ -994,7 +1013,7 @@ namespace Redflag {
 			surface.Thickness = material->Thickness;
 			if (material->Alpha == AlphaMode::Mask) surface.AlphaCutoff = material->AlphaCutoff;
 			const glm::vec4 color = material->BaseColor * tint;
-			commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection, world, color, id, surface);
+			commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection, world, color, id, surface, instances);
 		}, animatedOnly);
 	}
 

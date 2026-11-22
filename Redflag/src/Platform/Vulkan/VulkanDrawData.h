@@ -123,6 +123,7 @@ namespace Redflag {
         Ref<Vulkan::Sampler> Sampler;
         Ref<Vulkan::TexturePool> TexturePool;
         Ref<SampledTexture> White;
+        Scope<Vulkan::Buffer> IdentityInstance;
         Scope<Vulkan::SceneTarget> Target;
 
         // 显卡还在画这一帧时，网格和贴图都得留着。等该帧的围栏发出完成信号，才可清掉这些引用。
@@ -130,6 +131,9 @@ namespace Redflag {
         {
             std::vector<Ref<MeshGeometry>> Meshes;
             std::vector<Ref<SampledTexture>> Textures;
+            struct Batch { size_t Capacity = 0; Scope<Vulkan::Buffer> Buffer; };
+            std::vector<Batch> Batches;
+            size_t UsedBatches = 0;
         };
         std::array<FrameResources,2> Frames;
     };

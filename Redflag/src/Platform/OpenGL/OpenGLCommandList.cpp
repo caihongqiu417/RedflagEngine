@@ -19,8 +19,14 @@ namespace Redflag
 
 	void OpenGLCommandList::DrawIndexed(const Ref<MeshGeometry>& mesh, const Ref<SampledTexture>& texture,
 		const glm::mat4& viewProjection, const glm::mat4& transform,
-		const glm::vec4& color, int entityID, const SurfaceMaterial&)
+		const glm::vec4& color, int entityID, const SurfaceMaterial& surface, const std::vector<glm::mat4>* instances)
 	{
+		if (instances)
+		{
+			for (const glm::mat4& instance : *instances)
+				DrawIndexed(mesh, texture, viewProjection, transform * instance, color, entityID, surface);
+			return;
+		}
 		m_Shader->Bind();
 		m_Shader->SetMat4("u_ViewProjectionModel", viewProjection * transform);
 		m_Shader->SetFloat4("u_Color", color);

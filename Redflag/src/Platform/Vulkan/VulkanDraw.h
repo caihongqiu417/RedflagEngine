@@ -38,7 +38,8 @@ namespace Redflag {
         void BeginScene(bool transparentBackground = false);
         void DrawIndexed(const Ref<MeshGeometry>& mesh, const Ref<SampledTexture>& texture,
             const glm::mat4& viewProjection, const glm::mat4& transform,
-            const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {}) override;
+            const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {},
+            const std::vector<glm::mat4>* instances = nullptr) override;
         void EndScene();
 
         // 光照按本次相机的采样位置读取底色、表面方向和深度。

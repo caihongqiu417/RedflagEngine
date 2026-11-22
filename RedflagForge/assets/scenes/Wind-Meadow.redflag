@@ -1,0 +1,24 @@
+Scene: 风中的草地
+Environment: ../textures/sky/daylight.hdr
+SkyVisible: true
+Entities:
+  - Entity: 101
+    TagComponent: {Tag: 主相机}
+    TransformComponent: {Translation: [0, 2.05, 8.8], Rotation: [-0.21, 0, 0], Scale: [1, 1, 1]}
+    CameraComponent:
+      Camera: {ProjectionType: 0, PerspectiveFov: 0.76, PerspectiveNear: 0.1, PerspectiveFar: 60, OrthographicSize: 6, OrthographicNear: 0.1, OrthographicFar: 60}
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 102
+    TagComponent: {Tag: 草地}
+    TransformComponent: {Translation: [0, 0.002, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+    FoliageComponent: {Profile: assets/game/station/salvage-kit/DryGrass.foliage.yaml, Visible: true, Wind: true}
+  - Entity: 103
+    TagComponent: {Tag: 土地}
+    TransformComponent: {Translation: [0, 0, 0], Rotation: [-1.5707963, 0, 0], Scale: [100, 100, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/ground/Gravel.gltf, Color: [0.80, 0.76, 0.66, 1]}
+  - Entity: 104
+    TagComponent: {Tag: 日光}
+    TransformComponent: {Translation: [0, 4, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    DirectionalLightComponent: {Direction: [-0.4, -0.75, 0.5], Color: [1, 0.91, 0.76], Intensity: 1.6, CastShadow: true}

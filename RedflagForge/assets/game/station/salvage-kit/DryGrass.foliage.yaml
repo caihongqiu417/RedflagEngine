@@ -1,0 +1,10 @@
+# 范围和根部高度以米为单位。Lean 为一米高处的最大水平位移。
+Count: 36
+Seed: 17
+Size: [12, 7]
+Scale: 0.42
+Root: 0
+Direction: [1, 0.35]
+Lean: 0.28
+Frequency: 0.55
+Wavelength: 6

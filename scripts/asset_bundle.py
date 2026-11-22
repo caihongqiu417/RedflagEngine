@@ -112,6 +112,8 @@ class AssetBundle:
                 self.add(self.root / value["Texture"], name)
             elif field == "TerrainComponent":
                 for image in ("Heightmap", "BaseColorTexture"):
+            elif field == "FoliageComponent" and value.get("Profile"):
+                self.add(self.root / value["Profile"], name)
                     if value.get(image): self.add(self.root / value[image], name)
             elif field == "HudComponent" and value.get("Layout"):
                 self.add(self.root / value["Layout"], name)

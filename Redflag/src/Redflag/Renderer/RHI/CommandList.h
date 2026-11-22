@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Renderer/RHI/SurfaceMaterial.h"
+#include <vector>
 
 namespace Redflag
 {
@@ -17,6 +18,7 @@ namespace Redflag
 		/// <param name="transform">从网格的局部坐标变到世界坐标，模型部件的变换也应算在其中。</param>
 		virtual void DrawIndexed(const Ref<MeshGeometry>& mesh, const Ref<SampledTexture>& texture,
 			const glm::mat4& viewProjection, const glm::mat4& transform,
-			const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {}) = 0;
+			const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {},
+			const std::vector<glm::mat4>* instances = nullptr /* 每份相对 transform 的变换 */) = 0;
 	};
 }

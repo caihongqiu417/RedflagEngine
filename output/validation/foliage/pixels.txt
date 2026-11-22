@@ -1,0 +1,8 @@
+resolution 960x540
+plants 36
+max_root_displacement_m 0
+max_tip_displacement_m_at_one_model_m 0.11746
+plant_id_pixels 60884
+instanced_vs_separate_id_mismatch 0
+calm_vs_045_changed_RGBA8 71863
+045_vs_090_changed_RGBA8 71990

@@ -1115,8 +1115,9 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
-            AddComponentItem<DecalComponent>(entity, "贴花");
+            AddComponentItem<FoliageComponent>(entity, "植被");
             AddComponentItem<TerrainComponent>(entity, "地形");
+            AddComponentItem<DecalComponent>(entity, "贴花");
             AddComponentItem<EnvironmentZoneComponent>(entity, "环境区域");
             AddComponentItem<ModelAnimationComponent>(entity, "模型动画");
             AddComponentItem<SkeletonAnimationComponent>(entity, "骨骼动画");
@@ -1809,6 +1810,46 @@ namespace Redflag {
             ImGui::InputInt("叠放顺序", &decal.Order);
             ImGui::TextDisabled("默认向下投影。在变换组件中旋转，可将图案投到墙上。");
         });
+
+        DrawComponent<FoliageComponent>("植被", entity, [](FoliageComponent& patch)
+        {
+            ImGui::TextWrapped("使用同一实体上“模型绘制”选定的模型。");
+            ImGui::Checkbox("显示植被", &patch.Visible);
+            ImGui::SameLine();
+            ImGui::Checkbox("风吹植被", &patch.Wind);
+            if (ImGui::Button("选择植被配置"))
+            {
+                const std::string file = FileDialogs::OpenFile("Foliage YAML\0*.foliage.yaml;*.yaml\0");
+                if (!file.empty()) patch.Profile = std::filesystem::relative(std::filesystem::u8path(file)).generic_u8string();
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(std::filesystem::u8path(patch.Profile).filename().u8string().c_str());
+            Foliage* grass = patch.Get();
+            if (grass)
+            {
+                bool changed = false;
+                int count = int(grass->Count);
+                if (ImGui::DragInt("株数", &count, 1.f, 0, 65536, "%d", ImGuiSliderFlags_AlwaysClamp))
+                {
+                    grass->Count = uint32_t(count);
+                    changed = true;
+                }
+                changed |= ImGui::InputScalar("分布种子", ImGuiDataType_U32, &grass->Seed);
+                changed |= ImGui::DragFloat2("覆盖范围（米）", &grass->Size.x, .1f, 0.f, 10000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                changed |= ImGui::DragFloat("植株缩放", &grass->Scale, .01f, .001f, 100.f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+                changed |= ImGui::DragFloat("模型中根部的高度", &grass->Root, .01f);
+                changed |= ImGui::DragFloat2("风向（X、Z）", &grass->Direction.x, .02f);
+                changed |= ImGui::DragFloat("每米植株的摆幅（米）", &grass->Lean, .01f, 0.f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                changed |= ImGui::DragFloat("每秒摆动次数", &grass->Frequency, .01f, 0.f, 20.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                changed |= ImGui::DragFloat("两阵风的间距（米）", &grass->Wavelength, .1f, .01f, 10000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                if (changed) ++patch.Revision;
+                if (ImGui::Button("保存植被配置")) grass->Save(std::filesystem::u8path(patch.Profile), patch.Error);
+                ImGui::SameLine();
+            }
+            if (!patch.Profile.empty() && ImGui::Button("重新读取配置")) patch.Reload();
+            if (!patch.Error.empty()) ImGui::TextWrapped("%s", patch.Error.c_str());
+        });
+
         DrawComponent<TerrainComponent>("地形", entity, [](TerrainComponent& ground)
         {
             auto choose = [](const char* label, std::string& path, const char* filter)

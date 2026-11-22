@@ -149,6 +149,7 @@ namespace Redflag {
         CopyComponent<NpcComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<DecalComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<TerrainComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<FoliageComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<EnvironmentZoneComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RagdollComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SkeletonAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -328,6 +329,11 @@ namespace Redflag {
 
     void Scene::OnUpdateAnimations(Timestep ts, std::optional<glm::vec2> movement)
     {
+        for (entt::entity id : m_Registry.view<FoliageComponent>())
+        {
+            FoliageComponent& patch = m_Registry.get<FoliageComponent>(id);
+            if (patch.Visible && patch.Wind) patch.Seconds += ts.GetSeconds();
+        }
         if (movement && glm::length(*movement) > 1.f) *movement = glm::normalize(*movement);
         m_Registry.view<TransformComponent, SkeletonAnimationComponent>().each([&](TransformComponent& transform, SkeletonAnimationComponent& player) {
             if (movement && player.HasControl())
@@ -521,6 +527,7 @@ namespace Redflag {
         CopyComponentIfExist<NpcComponent>(newEntity, entity);
         CopyComponentIfExist<DecalComponent>(newEntity, entity);
         CopyComponentIfExist<TerrainComponent>(newEntity, entity);
+        CopyComponentIfExist<FoliageComponent>(newEntity, entity);
         CopyComponentIfExist<EnvironmentZoneComponent>(newEntity, entity);
         CopyComponentIfExist<RagdollComponent>(newEntity, entity);
         CopyComponentIfExist<SkeletonAnimationComponent>(newEntity, entity);

@@ -6,9 +6,13 @@
 #include "Redflag/Renderer/GI/GlobalIllumination.h"
 #include "Redflag/Renderer/ScreenSpace/ScreenEffects.h"
 #include <vulkan/vulkan.h>
+#include <tuple>
 
 namespace Redflag
 {
+	// 实体、模型、配置版本、风开关、世界变换和颜色共同决定植被是否需要重画。
+	using FoliageState = std::tuple<uint32_t, uint64_t, uint32_t, bool, glm::mat4, glm::vec4>;
+
 	class Scene;
 	class Mesh;
 	class VulkanContext;
@@ -74,6 +78,7 @@ namespace Redflag
 		Ref<ComputeResource> m_TransparentColor;
 		std::vector<glm::vec4> m_GlassSettings;
 		std::vector<std::pair<Ref<SampledTexture>, bool>> m_SurfaceSettings;
+		std::vector<FoliageState> m_Foliage;
 		std::vector<std::pair<uint64_t, float>> m_LODSettings;
 		std::vector<glm::mat4> m_Bones;
 		std::vector<Ref<Mesh>> m_AnimatedMeshes;

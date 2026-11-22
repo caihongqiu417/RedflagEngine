@@ -13,7 +13,8 @@ namespace Redflag
 
 		void DrawIndexed(const Ref<MeshGeometry>& mesh, const Ref<SampledTexture>& texture,
 			const glm::mat4& viewProjection, const glm::mat4& transform,
-			const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {}) override;
+			const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {},
+			const std::vector<glm::mat4>* instances = nullptr) override;
 	private:
 		Ref<Shader> m_Shader;
 		Ref<SampledTexture> m_WhiteTexture;
