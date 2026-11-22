@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "NpcAuthoringPanel.h"
+#include "Redflag/AI/NpcQuery.h"
 #include "NpcAuthoringFiles.h"
 #include "AnimationPoseView.h"
 #include <imgui.h>
@@ -107,8 +108,19 @@ namespace Redflag
         m_Message = "正在处理…";
     }
 
+    void NpcAuthoringPanel::DrawTeammateCheck(const NpcIntent& intent, const NpcTeammateCheck& check)
+    {
+        ImGui::TextWrapped("当前场景 · %s", intent.Key.c_str());
+        if (check.Reason)
+            ImGui::TextWrapped("%s · 不可选。%s", intent.Description.c_str(), check.Reason);
+        else
+            ImGui::TextWrapped("%s · 可选，距离 %.1f 米。", check.Candidate.Description.c_str(), check.Candidate.Distance);
+        ImGui::Separator();
+    }
+
     bool NpcAuthoringPanel::Draw(std::string& definitionPath, const BehaviorTrace* trace, const std::string& stage,
-                                 const std::vector<std::string>& modelClips, const ModelAnimation* model)
+                                 const std::vector<std::string>& modelClips, const ModelAnimation* model,
+                                 const std::function<void()>& drawSceneCheck)
     {
         bool changed = false;
         const fs::path selected = fs::u8path(definitionPath);
@@ -251,6 +263,7 @@ namespace Redflag
                 }
                 if (ImGui::BeginTabItem("候选"))
                 {
+                    if (drawSceneCheck) drawSceneCheck();
                     DrawIntents();
                     ImGui::EndTabItem();
                 }

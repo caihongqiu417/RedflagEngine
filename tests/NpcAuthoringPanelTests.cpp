@@ -1,5 +1,6 @@
 #include "NpcAuthoringPanel.h"
 #include "NpcAuthoringFiles.h"
+#include "Redflag/AI/NpcQuery.h"
 #include "Redflag/Animation/ModelAnimation.h"
 #include "imgui_internal.h"
 #include <iostream>
@@ -23,8 +24,10 @@ int main(int argc, char** argv)
     try
     {
         const bool poseCapture = argc == 3 && std::string(argv[1]) == "--pose-image";
-        if (argc > 2 && (argc != 3 || (!poseCapture && std::string(argv[1]) != "--events-image")))
-            throw std::runtime_error("Use [profile.png], --events-image events.png, or --pose-image pose.png");
+        const bool eventCapture = argc == 3 && std::string(argv[1]) == "--events-image";
+        const bool candidateCapture = argc == 3 && std::string(argv[1]) == "--candidate-image";
+        if (argc > 2 && !poseCapture && !eventCapture && !candidateCapture)
+            throw std::runtime_error("Use [profile.png] or --events-image/--pose-image/--candidate-image output.png");
         const fs::path data = "RedflagForge/assets/ai";
         const fs::path dir = fs::absolute("tmp/npc-authoring-panel");
         fs::create_directories(dir);
@@ -51,11 +54,19 @@ int main(int argc, char** argv)
             NpcAuthoringPanel panel;
             const Ref<ModelAnimation> model = ModelAnimation::Load("RedflagForge/assets/game/station/crew/Operator.glb");
             Check(bool(model), "Could not load the operator model");
+            NpcIntent rescue{"revive", "扶起倒地的队友", "teammate"};
+            NpcTeammateCheck current{{}, "目标尚未倒地，这项交互只在倒地时可用。"};
+            std::string displayed;
             auto frame = [&]() {
                 ImGui::NewFrame();
                 ImGui::SetNextWindowPos({0, 0});
                 ImGui::SetNextWindowSize(io.DisplaySize);
-                bool changed = panel.Draw(role, nullptr, {}, {}, model.get());
+                bool changed = panel.Draw(role, nullptr, {}, {}, model.get(), [&] {
+                    ImGui::LogToBuffer();
+                    NpcAuthoringPanel::DrawTeammateCheck(rescue, current);
+                    displayed = GImGui->LogBuffer.c_str();
+                    ImGui::LogFinish();
+                });
                 ImGui::Render();
                 return changed;
             };
@@ -65,6 +76,26 @@ int main(int argc, char** argv)
                 SavePanelCapture(argv[1]);
             ImGuiWindow* window = ImGui::FindWindowByName("角色创作");
             Check(window, "Missing authoring panel");
+            ImGuiTabBar* bar = GImGui->TabBars.GetByKey(window->GetID("创作"));
+            auto checkCandidates = [&] {
+                Check(displayed.empty(), "Scene checks should run only while the candidate tab is visible");
+                const ImGuiID candidates = ImHashStr("候选", 0, window->GetID("创作"));
+                ImGui::TabBarQueueFocus(bar, ImGui::TabBarFindTabByID(bar, candidates));
+                frame();
+                frame();
+                Check(displayed.find("目标尚未倒地") != std::string::npos, "Missing current unavailability reason");
+                if (candidateCapture) SavePanelCapture(argv[2]);
+                current = {{"revive", "revive", "扶起倒地的队友 / 队友", {}, 1101, 5.f}};
+                frame();
+                Check(displayed.find("可选，距离 5.0 米") != std::string::npos, "Missing current eligible target and distance");
+                std::cout << "PASS: candidate tab shows current standing and downed states without sending a request\n";
+            };
+            if (candidateCapture)
+            {
+                checkCandidates();
+                ImGui::DestroyContext();
+                return 0;
+            }
             const ImGuiID tab = ImHashStr("角色", 0, window->GetID("创作"));
             ImGui::ActivateItem(ImHashStr("提问时带上角色记下的事", 0, tab));
             frame();
@@ -92,7 +123,6 @@ int main(int argc, char** argv)
 
             // 键盘改动真实 InputFloat，再用面板按钮保存。和角色共用动作表的主角下次打开就读到新值。
             const ImGuiID animation = ImHashStr("动画事件", 0, window->GetID("创作"));
-            ImGuiTabBar* bar = GImGui->TabBars.GetByKey(window->GetID("创作"));
             ImGui::TabBarQueueFocus(bar, ImGui::TabBarFindTabByID(bar, animation));
             frame();
             frame();
@@ -142,7 +172,7 @@ int main(int argc, char** argv)
             const auto& events = reopened.Controller.Find("land")->Events;
             Check(events.size() == 2 && events[1].End == .30f && events[0].Name == "KneeBend",
                   "Recovery window or knee marker was not saved");
-            if (argc == 3 && !poseCapture)
+            if (eventCapture)
             {
                 io.DisplaySize = {800, 660};
                 frame();
@@ -150,6 +180,8 @@ int main(int argc, char** argv)
                 frame();
                 SavePanelCapture(argv[2]);
             }
+
+            checkCandidates();
         }
         ImGui::DestroyContext();
         std::cout << "PASS: real authoring panel, toggle memory, native save/reopen, independent link edit survives\n"

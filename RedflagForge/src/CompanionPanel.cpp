@@ -99,7 +99,7 @@ namespace Redflag
 				else if (!state->Action.empty()) ImGui::Text("正在执行  %s", state->Action.c_str());
 				if (!state->Stage.empty()) ImGui::Text("当前动作  %s", state->Stage.c_str());
 				if (state->Use.IsRunning()) ImGui::ProgressBar(state->Use.Progress());
-				if (ImGui::CollapsingHeader("现场候选"))
+				if (ImGui::CollapsingHeader("最近一次提问的候选"))
 					for (const NpcCandidate& c : state->Candidates)
 						ImGui::TextWrapped("%s   %s   %.1f 米", c.ID.c_str(), c.Description.c_str(), c.Distance);
 
@@ -149,7 +149,17 @@ namespace Redflag
 					for (const auto& clip : animation->GetClips()) clips.push_back(clip.Name);
 				}
 			}
-			if (m_Author.Draw(npc.Definition, state ? &state->Trace : nullptr, state ? state->Stage : "", clips, animation))
+			// 「候选」页按当前场景检查。上方通讯记录仍显示提问当时留下的选项。
+			auto drawSceneCheck = [&] {
+				if (!definition) return;
+				for (const NpcIntent& intent : definition->Intents)
+				{
+					if (intent.Target != "teammate") continue;
+					NpcTeammateCheck check = CheckTeammateIntent(scene, m_Actor, *definition, intent);
+					m_Author.DrawTeammateCheck(intent, check);
+				}
+			};
+			if (m_Author.Draw(npc.Definition, state ? &state->Trace : nullptr, state ? state->Stage : "", clips, animation, drawSceneCheck))
 				m_Path.clear();
 		}
 	}

@@ -18,6 +18,52 @@ static void Check(bool condition, const char* message)
     std::cout << "PASS " << message << std::endl;
 }
 
+static void CheckRescueCandidates()
+{
+    Scene scene;
+    Entity actor = scene.CreateEntityWithUUID(1102, "瓦特");
+    Entity teammate = scene.CreateEntityWithUUID(1101, "队友");
+    actor.AddComponent<NpcComponent>().Leader = teammate.GetUUID();
+    teammate.GetComponent<TransformComponent>().Translation = {3.f, 0.f, 4.f};
+    auto& health = teammate.AddComponent<HealthComponent>();
+    auto& interaction = teammate.AddComponent<InteractionComponent>();
+    interaction.OnlyWhenDown = true;
+
+    NpcDefinition role;
+    std::string error;
+    Check(role.Load("assets/ai/watt.npc.yaml", error), "load Watt's configured rescue intent");
+    const auto intent = std::find_if(role.Intents.begin(), role.Intents.end(),
+        [&](const NpcIntent& entry) { return entry.Key == role.RescueIntent && entry.Target == "teammate"; });
+    Check(intent != role.Intents.end(), "role selects a teammate for rescue");
+    interaction.Action = intent->Key;
+    NpcMemory memory;
+    auto rescue = [&](const std::vector<NpcCandidate>& list) {
+        return std::any_of(list.begin(), list.end(), [&](const NpcCandidate& c) { return c.Intent == intent->Key; });
+    };
+    auto unavailable = [&](const char* message) {
+        NpcTeammateCheck check = CheckTeammateIntent(scene, actor.GetUUID(), role, *intent);
+        Check(check.Reason && std::string(check.Reason) == message, "current check explains the missing target");
+        Check(!rescue(FindCandidates(scene, actor.GetUUID(), role, memory, false)), "model cannot select unavailable rescue");
+        std::cout << check.Reason << '\n';
+    };
+
+    health.Current = health.Maximum;
+    unavailable("目标尚未倒地，这项交互只在倒地时可用。");
+    health.Current = 0.f;
+    const std::vector<NpcCandidate> previous = FindCandidates(scene, actor.GetUUID(), role, memory, false);
+    const NpcTeammateCheck down = CheckTeammateIntent(scene, actor.GetUUID(), role, *intent);
+    Check(!down.Reason && down.Candidate.Target == 1101 && down.Candidate.Distance == 5.f && rescue(previous),
+          "downed teammate is selectable at 5 m");
+
+    health.Current = health.Maximum;
+    unavailable("目标尚未倒地，这项交互只在倒地时可用。");
+    Check(rescue(previous), "a new scene check leaves the previous request intact");
+    scene.DestroyEntity(teammate);
+    unavailable("指定的队友已不在当前场景中。");
+    role.ObserveWorld = false;
+    unavailable("角色未开启场景观察。");
+}
+
 static void Watch(Scene& scene, uint16_t port, const std::string& scenario)
 {
     Entity guard = scene.GetEntityByUUID(1103), player = scene.GetEntityByUUID(1101), watt = scene.GetEntityByUUID(1102);
@@ -213,6 +259,11 @@ int main(int argc, char** argv)
 try
 {
     Log::Init();
+    if (argc > 3 && std::string(argv[3]) == "candidates")
+    {
+        CheckRescueCandidates();
+        return 0;
+    }
     RendererAPI::SetAPI(RendererAPI::API::Vulkan);
     Application app("Station companion tests", false);
     auto& context = static_cast<VulkanContext&>(app.GetWindow().GetGraphicsContext());

@@ -2,12 +2,14 @@
 
 #include "Redflag/AI/DecisionClient.h"
 #include "Redflag/AI/NpcDefinition.h"
+#include <functional>
 #include <future>
 #include <yaml-cpp/yaml.h>
 
 namespace Redflag
 {
     class ModelAnimation;
+    struct NpcTeammateCheck;
 
     /* 编辑角色定义。保存角色属性时，行为树连线仍由行为树面板单独保存。 */
     class NpcAuthoringPanel
@@ -15,8 +17,11 @@ namespace Redflag
     public:
         ~NpcAuthoringPanel();
 
+        static void DrawTeammateCheck(const NpcIntent& intent, const NpcTeammateCheck& check);
+
         bool Draw(std::string& definitionPath, const BehaviorTrace* trace = nullptr, const std::string& stage = {},
-                  const std::vector<std::string>& modelClips = {}, const ModelAnimation* model = nullptr);
+                  const std::vector<std::string>& modelClips = {}, const ModelAnimation* model = nullptr,
+                  const std::function<void()>& drawSceneCheck = {});
 
     private:
         void Open(const std::filesystem::path& path);

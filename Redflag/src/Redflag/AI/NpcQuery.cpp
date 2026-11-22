@@ -13,6 +13,42 @@ namespace Redflag
 		return found != items.end() ? found->second : 0;
 	}
 
+	// ---- 交互条件 ----
+
+	static const char* InteractionUnavailable(Entity target, const NpcIntent& intent)
+	{
+		if (!target.HasComponent<InteractionComponent>()) return "目标没有交互组件。";
+		if (!target.HasComponent<HealthComponent>()) return "目标没有生命值组件。";
+
+		const auto& use = target.GetComponent<InteractionComponent>();
+		const auto& health = target.GetComponent<HealthComponent>();
+		if (use.Action != intent.Key) return "目标的交互动作与这项候选不同。";
+		if (use.OnlyWhenDown && !(health.Current <= 0.f)) return "目标尚未倒地，这项交互只在倒地时可用。";
+		if (!(health.Current < health.Maximum)) return "目标的生命值已满。";
+		return nullptr;
+	}
+
+	NpcTeammateCheck CheckTeammateIntent(Scene& scene, uint64_t actor, const NpcDefinition& role, const NpcIntent& intent)
+	{
+		if (!role.ObserveWorld) return {{}, "角色未开启场景观察。"};
+		Entity self = scene.GetEntityByUUID(actor);
+		if (!self || !self.HasComponent<NpcComponent>()) return {{}, "当前场景找不到这个 AI 角色。"};
+		uint64_t id = self.GetComponent<NpcComponent>().Leader;
+		if (!id) return {{}, "角色还没有指定队友。"};
+		if (id == actor) return {{}, "角色把自己设成了队友。"};
+
+		Entity target = scene.GetEntityByUUID(id);
+		if (!target) return {{}, "指定的队友已不在当前场景中。"};
+		if (!target.HasComponent<TransformComponent>()) return {{}, "指定的队友没有场景位置。"};
+		if (const char* reason = InteractionUnavailable(target, intent)) return {{}, reason};
+
+		float distance = glm::distance(self.GetComponent<TransformComponent>().Translation,
+			target.GetComponent<TransformComponent>().Translation);
+		return {{intent.Key, intent.Key, intent.Description + " / " + target.GetName(), intent.Item, id, distance}};
+	}
+
+	// ---- 当前可选动作 ----
+
 	std::vector<NpcCandidate> FindCandidates(Scene& scene, uint64_t actor, const NpcDefinition& definition, const NpcMemory& memory, bool hasCamera)
 	{
 		Entity self = scene.GetEntityByUUID(actor);
@@ -26,6 +62,12 @@ namespace Redflag
 			if (intent.Target == "self")
 			{
 				choices.push_back({intent.Key, intent.Key, intent.Description, {}, actor, 0.f});
+				continue;
+			}
+			if (intent.Target == "teammate")
+			{
+				NpcTeammateCheck check = CheckTeammateIntent(scene, actor, definition, intent);
+				if (!check.Reason) choices.push_back(std::move(check.Candidate));
 				continue;
 			}
 			if (intent.Target == "surroundings")
@@ -72,13 +114,8 @@ namespace Redflag
 						offered = !pickup.Item.empty() && (intent.Item.empty() || pickup.Item == intent.Item) && pickup.Count > 0;
 					}
 				}
-				else if (target.HasComponent<InteractionComponent>() && target.HasComponent<HealthComponent>())
-				{
-					const InteractionComponent& use = target.GetComponent<InteractionComponent>();
-					const HealthComponent& health = target.GetComponent<HealthComponent>();
-					offered = (intent.Target == "interaction" || (intent.Target == "teammate" && teammate)) &&
-						use.Action == intent.Key && health.Current < health.Maximum && (!use.OnlyWhenDown || health.Current <= 0);
-				}
+				else if (intent.Target == "interaction")
+					offered = !InteractionUnavailable(target, intent);
 				if (!offered) continue;
 				const float distance = glm::distance(origin, target.GetComponent<TransformComponent>().Translation);
 				if (!teammate && !CanReach(scene, actor, id, definition.Sight)) continue;
