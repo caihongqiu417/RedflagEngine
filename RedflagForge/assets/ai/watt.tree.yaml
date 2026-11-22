@@ -1,9 +1,9 @@
 Root: 1
-NextID: 16
+NextID: 17
 Nodes:
   - {ID: 1, Kind: ModelSelector, Name: 瓦特的选择, Position: [40, 210]}
   - {ID: 2, Kind: Subtree, Name: 补给, Position: [310, 60]}
-  - {ID: 3, Kind: ModelSelector, Name: 选择补给动作, Position: [540, 60]}
+  - {ID: 3, Kind: ModelSelector, Name: 选择补给动作, Question: 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。, Position: [540, 60]}
   - {ID: 4, Kind: Action, Name: 收集物资, Action: gather, Position: [810, 30]}
   - {ID: 5, Kind: Action, Name: 分享物资, Action: share, Position: [810, 130]}
   - {ID: 6, Kind: Subtree, Name: 支援, Position: [310, 235]}
@@ -16,12 +16,14 @@ Nodes:
   - {ID: 13, Kind: Action, Name: 转告线索, Action: report, Position: [310, 685]}
   - {ID: 14, Kind: Action, Name: 到附近查看, Action: investigate, Position: [310, 785]}
   - {ID: 15, Kind: Action, Name: 观察周围, Action: look, Position: [310, 885]}
+  - {ID: 16, Kind: Action, Name: 原地待命, Action: wait, Position: [310, 985]}
 Edges:
   - {From: 1, Key: gather, To: 2}
   - {From: 1, Key: share, To: 2}
   - {From: 2, To: 3}
   - {From: 3, Key: gather, To: 4}
   - {From: 3, Key: share, To: 5}
+  - {From: 3, Key: reserve, To: 12}
   - {From: 1, Key: revive, To: 6}
   - {From: 1, Key: repair, To: 6}
   - {From: 6, To: 7}
@@ -29,7 +31,8 @@ Edges:
   - {From: 7, Key: repair, To: 9}
   - {From: 1, Key: follow, To: 10}
   - {From: 1, Key: mark, To: 11}
-  - {From: 1, Key: reserve, To: 12}
+  - {From: 1, Key: reserve, To: 2}
   - {From: 1, Key: report, To: 13}
   - {From: 1, Key: investigate, To: 14}
   - {From: 1, Key: look, To: 15}
+  - {From: 1, Key: wait, To: 16}

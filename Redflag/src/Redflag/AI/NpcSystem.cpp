@@ -104,10 +104,11 @@ namespace Redflag
 		return true;
 	}
 
-	void NpcSystem::Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images)
+	void NpcSystem::Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images, uint32_t selector)
 	{
 		NpcDefinition* definition = GetDefinition(actor);
 		if (!definition) { Record(state, "配置", m_LoadError); return; }
+		if (!selector) state.Trace = {};
 		state.Memory.Configure(definition->Memory);
 		state.Candidates = FindCandidates(m_Scene, actor, *definition, state.Memory, bool(TakeLook));
 		// 当面认出的实体单独记为「现场看见」。照片和转述保留原来的来源。
@@ -128,10 +129,26 @@ namespace Redflag
 					state.Memory.See(id, m_Scene.GetEntityByUUID(id).GetName(), seconds);
 			}
 		}
+		if (selector)
+		{
+			// 子树只提供自己连出的动作。上次提问后物品可能已经交到了别人手里。
+			auto& choices = state.Candidates;
+			choices.erase(std::remove_if(choices.begin(), choices.end(), [&](const NpcCandidate& choice) {
+				return !definition->Tree.Offers(selector, choice.Intent);
+			}), choices.end());
+			if (choices.empty())
+			{
+				Ask(actor, state, "这项任务的候选已不可用，请从现在可以做的事情中重选。");
+				return;
+			}
+		}
 		if (state.Candidates.empty()) { Record(state, "等待", "当前没有可执行的动作"); return; }
 
 		DecisionRequest request;
 		request.Prompt = state.Instruction.empty() ? "根据现在的队伍情况，选一件你应该做的事。" : state.Instruction;
+		const BehaviorNode* node = definition->Tree.Find(selector ? selector : definition->Tree.GetRoot());
+		if (node && !node->Question.empty())
+			request.Prompt += "\n" + node->Question;
 		request.Instructions = definition->Instructions;
 		request.Model = definition->Model;
 		request.Images = std::move(images);
@@ -159,7 +176,8 @@ namespace Redflag
 			request.Candidates.push_back({choice.ID, choice.Description});
 
 		state.Request = m_Client.Start(std::move(request));
-		Record(state, "提问", event.empty() ? state.Instruction : event);
+		if (selector) Record(state, "子树提问", node->Name + " " + node->Question);
+		else Record(state, "提问", event.empty() ? state.Instruction : event);
 	}
 
 	void NpcSystem::Stop(uint64_t actor, NpcState& state)
@@ -199,11 +217,58 @@ namespace Redflag
 		const auto valid = std::find_if(current.begin(), current.end(), [&](const NpcCandidate& c) {
 			return c.Intent == picked->Intent && c.Target == picked->Target && c.Item == picked->Item && c.Note == picked->Note;
 		});
-		if (valid == current.end()) { Ask(actor, state, "刚才选择的对象已不可用，请重新选择。"); return; }
-		state.Goal = *valid;
-		state.Trace = def.Tree.Tick(state.Blackboard, picked->Intent);
+		Record(state, "模型选择", picked->ID + " / " + picked->Description, picked->Target);
+		if (valid == current.end()) { TargetLost(actor, state, *picked); return; }
+		Select(actor, state, *valid);
+	}
+
+	// 作者写明的日常工作和紧急救助可以立即开始，玩家发出的自由指令仍由模型选择。
+	bool NpcSystem::BeginRoutine(uint64_t actor, NpcState& state, const std::string& intent, const std::string& event)
+	{
+		if (intent.empty()) return false;
+		const NpcDefinition& definition = *GetDefinition(actor);
+		const auto choices = FindCandidates(m_Scene, actor, definition, state.Memory, bool(TakeLook));
+		const auto choice = std::find_if(choices.begin(), choices.end(), [&](const NpcCandidate& item) { return item.Intent == intent; });
+		if (choice == choices.end()) return false;
+
+		state.Trace = {};
+		Record(state, "队伍约定", event + " " + choice->Description, choice->Target);
+		Select(actor, state, *choice);
+		return true;
+	}
+
+	void NpcSystem::TargetLost(uint64_t actor, NpcState& state, NpcCandidate lost)
+	{
+		Stop(actor, state);
+		const std::string event = lost.Description + "：原定的目标现在不可用。";
+		Record(state, "目标变化", event, lost.Target);
+		const NpcDefinition& definition = *GetDefinition(actor);
+		if (!definition.MissingTargetIntent.empty() && lost.Target && !m_Scene.GetEntityByUUID(lost.Target))
+		{
+			const auto choices = FindCandidates(m_Scene, actor, definition, state.Memory, bool(TakeLook));
+			const bool hasReplacement = std::any_of(choices.begin(), choices.end(), [&](const NpcCandidate& item) {
+				return item.Intent == lost.Intent && item.Item == lost.Item;
+			});
+			if (!hasReplacement && BeginRoutine(actor, state, definition.MissingTargetIntent, "现场没有同类目标。"))
+			{
+				state.Instruction.clear();
+				return;
+			}
+		}
+		Ask(actor, state, event + "请从现有目标中重新选择。");
+	}
+
+	void NpcSystem::Select(uint64_t actor, NpcState& state, const NpcCandidate& choice)
+	{
+		GetDefinition(actor)->Tree.Advance(state.Blackboard, choice.Intent, state.Trace);
+		if (state.Trace.Waiting)
+		{
+			Ask(actor, state, "已进入子树，请查看现有候选。", {}, state.Trace.Waiting);
+			return;
+		}
+		state.Goal = choice;
 		state.Action = state.Trace.Action;
-		Record(state, "选择", picked->ID + " → " + state.Action, picked->Target);
+		Record(state, "选择", choice.ID + " → " + state.Action, choice.Target);
 		if (state.Action.empty()) Record(state, "行为树", "这个候选还没有接到动作");
 	}
 
@@ -317,6 +382,11 @@ namespace Redflag
 			Ask(actor, state, "物品已经放进背包。请继续处理队友先前的要求。");
 		else if (!success)
 			Ask(actor, state, "上次动作没有完成，请根据现状重新选择。");
+		else if (action != "investigate" && !definition.IdleIntent.empty())
+		{
+			state.Instruction.clear();
+			BeginRoutine(actor, state, definition.IdleIntent, "先前的工作已完成。");
+		}
 	}
 
 	//========== 转告线索与实地查看 ==========
@@ -397,8 +467,7 @@ namespace Redflag
 		Entity target = m_Scene.GetEntityByUUID(state.Goal.Target);
 		if (!target && !state.ContactMade)
 		{
-			Stop(actor, state);
-			Ask(actor, state, "目标已从现场消失。");
+			TargetLost(actor, state, state.Goal);
 			return;
 		}
 
@@ -410,6 +479,11 @@ namespace Redflag
 			Ref<NpcScriptAction> script = state.Script;
 			const ActionResult result = script ? script->Tick(actor, state.Goal.Target, seconds) : ActionResult::Unavailable;
 			if (state.Script == script && result != ActionResult::Running) Finish(actor, state, result);
+			return;
+		}
+		if (state.Action == "wait")
+		{
+			Enter(actor, state, "idle");
 			return;
 		}
 		if (state.Action == "follow")
@@ -525,7 +599,10 @@ namespace Redflag
 			if (!state.Started || (down && !state.LeaderDown))
 			{
 				Stop(id, state);
-				Ask(id, state, down ? "队友刚刚倒下了。" : "游戏开始，队友还没有说话。");
+				const NpcDefinition* definition = GetDefinition(id);
+				const std::string event = down ? "队友刚刚倒下了。" : "游戏开始，队友还没有说话。";
+				if (!definition || !BeginRoutine(id, state, down ? definition->RescueIntent : definition->IdleIntent, event))
+					Ask(id, state, event);
 				state.Started = true;
 			}
 			state.LeaderDown = down;

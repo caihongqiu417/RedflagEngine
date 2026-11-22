@@ -58,6 +58,12 @@ namespace Redflag
             node->Name = name;
     }
 
+    void BehaviorTree::SetQuestion(uint32_t id, const std::string& question)
+    {
+        if (BehaviorNode* node = Edit(id); node && node->Kind == BehaviorKind::ModelSelector)
+            node->Question = question;
+    }
+
     void BehaviorTree::SetAction(uint32_t id, const std::string& action)
     {
         if (BehaviorNode* node = Edit(id); node && node->Kind == BehaviorKind::Action)
@@ -179,39 +185,58 @@ namespace Redflag
 
     // ---- 角色的执行路径 ----
 
-    BehaviorTrace BehaviorTree::Tick(BehaviorBlackboard& actor, const std::string& candidate) const
+    const BehaviorEdge* BehaviorTree::Branch(const BehaviorNode& node, const std::string& candidate) const
     {
-        BehaviorTrace trace;
+        const BehaviorEdge* fallback = nullptr;
+        for (const BehaviorEdge& edge : m_Edges)
+        {
+            if (edge.From != node.ID) continue;
+            if (node.Kind == BehaviorKind::Subtree || edge.Key == candidate) return &edge;
+            if (edge.Key == "*") fallback = &edge;
+        }
+        return fallback;
+    }
+
+    bool BehaviorTree::Offers(uint32_t selector, const std::string& candidate) const
+    {
+        const BehaviorNode* node = Find(selector);
+        return node && Branch(*node, candidate);
+    }
+
+    void BehaviorTree::Advance(BehaviorBlackboard& actor, const std::string& candidate, BehaviorTrace& trace) const
+    {
+        const BehaviorNode* node = Find(trace.Waiting ? trace.Waiting : m_Root);
+        if (node && trace.Nodes.empty()) trace.Nodes.push_back(node->ID);
+        trace.Waiting = 0;
         actor.Candidate = candidate;
-        const BehaviorNode* node = Find(m_Root);
         while (node)
         {
-            trace.Nodes.push_back(node->ID);
             if (node->Kind == BehaviorKind::Action)
             {
                 trace.Action = node->Action;
-                if (!trace.Action.empty())
-                    actor.LastAction = trace.Action;
+                actor.LastAction = trace.Action;
                 break;
             }
-            const BehaviorEdge* next = nullptr;
-            for (const BehaviorEdge& edge : m_Edges)
-            {
-                if (edge.From != node->ID)
-                    continue;
-                if (node->Kind == BehaviorKind::Subtree || edge.Key == candidate)
-                {
-                    next = &edge;
-                    break;
-                }
-                if (edge.Key == "*")
-                    next = &edge;
-            }
-            if (!next)
-                break;
+            const BehaviorEdge* next = Branch(*node, candidate);
+            if (!next) break;
             trace.Edges.push_back(*next);
             node = Find(next->To);
+            if (!node) break;
+            trace.Nodes.push_back(node->ID);
+            // 到达填写了问题的节点就暂停。下一次 Advance 从这里使用新的回答，不再从根重走。
+            if (!node->Question.empty())
+            {
+                trace.Waiting = node->ID;
+                break;
+            }
         }
+    }
+
+    BehaviorTrace BehaviorTree::Tick(BehaviorBlackboard& actor, const std::string& candidate) const
+    {
+        BehaviorTrace trace;
+        // 编辑器试跑只给了一个候选键。逐段沿这个键预览完整路径，不向模型发请求。
+        do { Advance(actor, candidate, trace); } while (trace.Waiting);
         return trace;
     }
 
@@ -240,6 +265,7 @@ namespace Redflag
                                   {pos[0].as<float>(), pos[1].as<float>()}};
                 if (!std::isfinite(node.Position.x) || !std::isfinite(node.Position.y))
                     throw std::runtime_error("节点位置必须是有限数值。");
+                if (node.Kind == BehaviorKind::ModelSelector) node.Question = data["Question"].as<std::string>("");
                 loaded.m_Nodes.push_back(std::move(node));
                 loaded.m_NextID = std::max(loaded.m_NextID, id + 1);
             }
@@ -283,6 +309,7 @@ namespace Redflag
                 data["Name"] = node.Name;
                 if (node.Kind == BehaviorKind::Action)
                     data["Action"] = node.Action;
+                if (!node.Question.empty()) data["Question"] = node.Question;
                 data["Position"].push_back(node.Position.x);
                 data["Position"].push_back(node.Position.y);
                 data["Position"].SetStyle(YAML::EmitterStyle::Flow);

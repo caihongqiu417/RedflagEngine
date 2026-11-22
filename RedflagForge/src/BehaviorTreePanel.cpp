@@ -25,6 +25,7 @@ namespace Redflag
     {
         m_Selected = node.ID;
         std::snprintf(m_Name, sizeof(m_Name), "%s", node.Name.c_str());
+        std::snprintf(m_Question, sizeof(m_Question), "%s", node.Question.c_str());
         std::snprintf(m_Action, sizeof(m_Action), "%s", node.Action.c_str());
     }
 
@@ -228,6 +229,9 @@ namespace Redflag
             return;
         if (ImGui::InputText("节点名称", m_Name, sizeof(m_Name)))
             tree.Rename(node->ID, m_Name);
+        if (node->Kind == BehaviorKind::ModelSelector &&
+            ImGui::InputTextWithHint("模型问题", "留空沿用上次回答", m_Question, sizeof(m_Question)))
+            tree.SetQuestion(node->ID, m_Question);
         if (node->Kind == BehaviorKind::Action && ImGui::InputText("动作键", m_Action, sizeof(m_Action)))
             tree.SetAction(node->ID, m_Action);
         if (node->Kind == BehaviorKind::Action && ImGui::BeginCombo("项目脚本", "选择 C# 动作"))

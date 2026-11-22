@@ -19,6 +19,9 @@ namespace Redflag
 			data.Name = file["Name"].as<std::string>();
 			data.Instructions = file["Instructions"].as<std::string>();
 			data.LeaderRelationship = file["LeaderRelationship"].as<std::string>("");
+			data.IdleIntent = file["IdleIntent"].as<std::string>("");
+			data.RescueIntent = file["RescueIntent"].as<std::string>("");
+			data.MissingTargetIntent = file["MissingTargetIntent"].as<std::string>("");
 			data.Model = file["Model"].as<std::string>("");
 			data.Voice = file["Voice"].as<std::string>("");
 			data.IdleClip = file["IdleClip"].as<std::string>("");
@@ -81,6 +84,8 @@ namespace Redflag
 				}
 				data.Intents.push_back(std::move(intent));
 			}
+			for (const std::string& rule : {data.IdleIntent, data.RescueIntent, data.MissingTargetIntent})
+				if (!rule.empty() && !keys.count(rule)) { error = "队伍约定中的动作没有登记：" + rule; return false; }
 			*this = std::move(data);
 			return true;
 		}

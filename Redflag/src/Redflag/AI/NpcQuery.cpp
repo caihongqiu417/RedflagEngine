@@ -23,6 +23,11 @@ namespace Redflag
 
 		for (const NpcIntent& intent : definition.Intents)
 		{
+			if (intent.Target == "self")
+			{
+				choices.push_back({intent.Key, intent.Key, intent.Description, {}, actor, 0.f});
+				continue;
+			}
 			if (intent.Target == "surroundings")
 			{
 				if (hasCamera && definition.Memory.Pictures)

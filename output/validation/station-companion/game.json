@@ -1,0 +1,63 @@
+{
+  "exe_sha256": "cd5eba03dbbeb45687896314743de76f61bf73ffc0d29bf5593f47a10640523e",
+  "frames": 160,
+  "actor": "1102",
+  "leader": "1101",
+  "events": [
+    {
+      "entity": "1102",
+      "kind": "动作",
+      "text": "idle"
+    },
+    {
+      "entity": "1102",
+      "kind": "队伍约定",
+      "text": "游戏开始，队友还没有说话。 离开待命位置跟随队友一起走 / 玩家"
+    },
+    {
+      "entity": "1102",
+      "kind": "选择",
+      "text": "follow → follow"
+    },
+    {
+      "entity": "1102",
+      "kind": "动作",
+      "text": "walk"
+    },
+    {
+      "entity": "1102",
+      "kind": "动作",
+      "text": "idle"
+    }
+  ],
+  "first": {
+    "id": "1102",
+    "name": "瓦特",
+    "position": [
+      -5.19999981,
+      0.0799999982,
+      -0.600000024
+    ],
+    "health": 100,
+    "inventory": {
+      "medkit": 1
+    }
+  },
+  "last": {
+    "id": "1102",
+    "name": "瓦特",
+    "position": [
+      -5.60470295,
+      0.0799999982,
+      -0.123878464
+    ],
+    "health": 100,
+    "inventory": {
+      "medkit": 1
+    },
+    "action": "follow",
+    "stage": "idle"
+  },
+  "distance_before_m": 2.6248811405471457,
+  "distance_after_m": 2.000000054721495
+}

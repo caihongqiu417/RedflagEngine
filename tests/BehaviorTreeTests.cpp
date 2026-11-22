@@ -72,6 +72,14 @@ int main()
             Check(tree.Tick(watt, key).Action == key, "Missing route " + key);
         BehaviorTrace initial = tree.Tick(watt, "gather");
         Check(initial.Nodes == std::vector<uint32_t>({1, 2, 3, 4}) && initial.Edges.size() == 3, "Subtree trace");
+        BehaviorTrace live;
+        tree.Advance(watt, "gather", live);
+        Check(live.Waiting == 3 && live.Action.empty() && tree.Offers(3,"gather") && !tree.Offers(3,"repair"),
+              "A nested question receives only its connected options");
+        tree.Advance(watt, "share", live);
+        Check(!live.Waiting && live.Action == "share" && live.Nodes == std::vector<uint32_t>({1,2,3,5}),
+              "A different second answer resumes exactly once from the supply node");
+        tree.Tick(watt,"gather");
         other.Values["target"] = "crate";
         tree.Tick(other, "follow");
         Check(watt.LastAction == "gather" && watt.Values.empty() && other.LastAction == "follow",
@@ -89,9 +97,9 @@ int main()
         BehaviorTree reopened;
         Check(reopened.Load(file, error), error);
         Check(reopened.Tick(other, "gather").Action == "repair" &&
-                  reopened.Find(9)->Position == glm::vec2(850, 360),
+                  reopened.Find(9)->Position == glm::vec2(850, 360) && reopened.Find(3)->Question == tree.Find(3)->Question,
               "Round trip");
-        Check(reopened.Tick(watt, "reserve").Nodes == std::vector<uint32_t>({1, 12}), "Reserve route");
+        Check(reopened.Tick(watt, "reserve").Nodes == std::vector<uint32_t>({1, 2, 3, 12}), "Reserve route");
         Check(reopened.Connect(1, "reserve", 5, error) && reopened.Save(file, error) && reopened.Load(file, error),
               error);
         Check(reopened.Tick(watt, "reserve").Action == "share" &&

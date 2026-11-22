@@ -71,7 +71,10 @@ namespace Redflag
 		std::chrono::steady_clock::time_point SessionStart() const { return m_Start; }
 
 	private:
-		void Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images = {});
+		void Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images = {}, uint32_t selector = 0);
+		bool BeginRoutine(uint64_t actor, NpcState& state, const std::string& intent, const std::string& event);
+		void TargetLost(uint64_t actor, NpcState& state, NpcCandidate lost);
+		void Select(uint64_t actor, NpcState& state, const NpcCandidate& choice);
 		// 同一种动作可以有几个候选。用提问时的物体或线索编号认回目标，再沿该角色的行为树选择执行方法。
 		void Accept(uint64_t actor, NpcState& state, const DecisionResult& result);
 		void Execute(uint64_t actor, NpcState& state, float seconds);

@@ -1,0 +1,584 @@
+{
+  "model": "Qwen3-VL-2B-Instruct",
+  "host_sha256": "f8988668b8b51f67975473be8227febc96c9259888250ed18afce8cc61c2782c",
+  "profile_sha256": "37b5c066013c0b874762ca662860a7054bdede4052050b8aaa347542378e9ea8",
+  "tree_sha256": "277e0be83b5d15d05557eb664ec60378982e31b7157774a847e449de2a00508f",
+  "cases": {
+    "race": {
+      "checks": [
+        "load actual Watt Station",
+        "silent companion walks toward the player",
+        "submit hold command",
+        "real model picks wait",
+        "wait holds position while player walks to supply",
+        "submit follow command",
+        "real model resumes follow",
+        "Watt sees the supply from its real position",
+        "submit gather command",
+        "the supply subtree asks the model again",
+        "player physically takes the target before the second reply",
+        "the companion replans from remaining options",
+        "vanished target never credits a second pickup",
+        "submit a new order before rescue",
+        "game damage downs the player",
+        "downed player interrupts the outstanding order",
+        "timed interaction revives player and then resumes follow",
+        "rescue applies the scene-authored 50 health exactly once",
+        "explicit cancel stops an outstanding model request",
+        "cancelled replies cannot restart the old order"
+      ],
+      "events": [
+        {
+          "seq": 1,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 2,
+          "kind": "队伍约定",
+          "text": "游戏开始，队友还没有说话。 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 3,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 4,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 5,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 6,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 7,
+          "kind": "玩家",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 8,
+          "kind": "提问",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 9,
+          "kind": "模型选择",
+          "text": "wait / 停在当前位置等待，队友离开时也留在原地",
+          "target": "1102"
+        },
+        {
+          "seq": 10,
+          "kind": "选择",
+          "text": "wait → wait",
+          "target": "1102"
+        },
+        {
+          "seq": 11,
+          "kind": "中止",
+          "text": "wait",
+          "target": "1102"
+        },
+        {
+          "seq": 12,
+          "kind": "玩家",
+          "text": "跟我走。",
+          "target": "0"
+        },
+        {
+          "seq": 13,
+          "kind": "提问",
+          "text": "跟我走。",
+          "target": "0"
+        },
+        {
+          "seq": 14,
+          "kind": "模型选择",
+          "text": "follow / 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 15,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 16,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 17,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 18,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 19,
+          "kind": "玩家",
+          "text": "去捡地上的急救工具箱，把它装到你自己的背包里。",
+          "target": "0"
+        },
+        {
+          "seq": 20,
+          "kind": "提问",
+          "text": "去捡地上的急救工具箱，把它装到你自己的背包里。",
+          "target": "0"
+        },
+        {
+          "seq": 21,
+          "kind": "模型选择",
+          "text": "gather / 去捡一份医疗包 / 急救工具箱",
+          "target": "1112"
+        },
+        {
+          "seq": 22,
+          "kind": "子树提问",
+          "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。",
+          "target": "0"
+        },
+        {
+          "seq": 23,
+          "kind": "模型选择",
+          "text": "gather / 去捡一份医疗包 / 急救工具箱",
+          "target": "1112"
+        },
+        {
+          "seq": 24,
+          "kind": "目标变化",
+          "text": "去捡一份医疗包 / 急救工具箱：原定的目标现在不可用。",
+          "target": "1112"
+        },
+        {
+          "seq": 25,
+          "kind": "队伍约定",
+          "text": "现场没有同类目标。 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 26,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 27,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 28,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 29,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 30,
+          "kind": "玩家",
+          "text": "现在请原地待命。",
+          "target": "0"
+        },
+        {
+          "seq": 31,
+          "kind": "提问",
+          "text": "现在请原地待命。",
+          "target": "0"
+        },
+        {
+          "seq": 32,
+          "kind": "中止",
+          "text": "取消尚未回答的请求",
+          "target": "0"
+        },
+        {
+          "seq": 33,
+          "kind": "队伍约定",
+          "text": "队友刚刚倒下了。 扶起倒地的队友 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 34,
+          "kind": "选择",
+          "text": "revive → revive",
+          "target": "1101"
+        },
+        {
+          "seq": 35,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 36,
+          "kind": "动作",
+          "text": "revive",
+          "target": "1101"
+        },
+        {
+          "seq": 37,
+          "kind": "完成",
+          "text": "revive",
+          "target": "1101"
+        },
+        {
+          "seq": 38,
+          "kind": "动作",
+          "text": "idle",
+          "target": "1101"
+        },
+        {
+          "seq": 39,
+          "kind": "队伍约定",
+          "text": "先前的工作已完成。 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 40,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 41,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 42,
+          "kind": "玩家",
+          "text": "先在这里等我。",
+          "target": "0"
+        },
+        {
+          "seq": 43,
+          "kind": "提问",
+          "text": "先在这里等我。",
+          "target": "0"
+        },
+        {
+          "seq": 44,
+          "kind": "中止",
+          "text": "取消尚未回答的请求",
+          "target": "0"
+        }
+      ],
+      "measurements": {}
+    },
+    "deliver": {
+      "checks": [
+        "load actual Watt Station",
+        "silent companion walks toward the player",
+        "submit hold command",
+        "real model picks wait",
+        "start with the characters at least five metres apart",
+        "send the player's exact order",
+        "model distinguishes delivery from a reservation",
+        "one pack physically transfers to the player",
+        "only the requested character approached for the handoff"
+      ],
+      "events": [
+        {
+          "seq": 1,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 2,
+          "kind": "队伍约定",
+          "text": "游戏开始，队友还没有说话。 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 3,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 4,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 5,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 6,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 7,
+          "kind": "玩家",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 8,
+          "kind": "提问",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 9,
+          "kind": "模型选择",
+          "text": "wait / 停在当前位置等待，队友离开时也留在原地",
+          "target": "1102"
+        },
+        {
+          "seq": 10,
+          "kind": "选择",
+          "text": "wait → wait",
+          "target": "1102"
+        },
+        {
+          "seq": 11,
+          "kind": "中止",
+          "text": "wait",
+          "target": "1102"
+        },
+        {
+          "seq": 12,
+          "kind": "玩家",
+          "text": "请把你背包里的一份医疗包送到我手上。",
+          "target": "0"
+        },
+        {
+          "seq": 13,
+          "kind": "提问",
+          "text": "请把你背包里的一份医疗包送到我手上。",
+          "target": "0"
+        },
+        {
+          "seq": 14,
+          "kind": "模型选择",
+          "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 15,
+          "kind": "子树提问",
+          "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。",
+          "target": "0"
+        },
+        {
+          "seq": 16,
+          "kind": "模型选择",
+          "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 17,
+          "kind": "选择",
+          "text": "share → share",
+          "target": "1101"
+        },
+        {
+          "seq": 18,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 19,
+          "kind": "动作",
+          "text": "give",
+          "target": "1101"
+        },
+        {
+          "seq": 20,
+          "kind": "库存",
+          "text": "物品已交到队友手中",
+          "target": "1101"
+        }
+      ],
+      "measurements": {
+        "start_m": "5.82998",
+        "robot_m": "3.82998",
+        "player_m": "0",
+        "robot_stock": "1->0",
+        "player_stock": "1->2"
+      }
+    },
+    "reserve": {
+      "checks": [
+        "load actual Watt Station",
+        "silent companion walks toward the player",
+        "submit hold command",
+        "real model picks wait",
+        "start with the characters at least five metres apart",
+        "send the player's exact order",
+        "model distinguishes delivery from a reservation",
+        "reservation holds both inventory and position for three seconds",
+        "one pack physically transfers to the player",
+        "only the requested character approached for the handoff"
+      ],
+      "events": [
+        {
+          "seq": 1,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 2,
+          "kind": "队伍约定",
+          "text": "游戏开始，队友还没有说话。 离开待命位置跟随队友一起走 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 3,
+          "kind": "选择",
+          "text": "follow → follow",
+          "target": "1101"
+        },
+        {
+          "seq": 4,
+          "kind": "动作",
+          "text": "walk",
+          "target": "1101"
+        },
+        {
+          "seq": 5,
+          "kind": "中止",
+          "text": "follow",
+          "target": "1101"
+        },
+        {
+          "seq": 6,
+          "kind": "动作",
+          "text": "idle",
+          "target": "0"
+        },
+        {
+          "seq": 7,
+          "kind": "玩家",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 8,
+          "kind": "提问",
+          "text": "在这里等我，不要跟过来。",
+          "target": "0"
+        },
+        {
+          "seq": 9,
+          "kind": "模型选择",
+          "text": "wait / 停在当前位置等待，队友离开时也留在原地",
+          "target": "1102"
+        },
+        {
+          "seq": 10,
+          "kind": "选择",
+          "text": "wait → wait",
+          "target": "1102"
+        },
+        {
+          "seq": 11,
+          "kind": "中止",
+          "text": "wait",
+          "target": "1102"
+        },
+        {
+          "seq": 12,
+          "kind": "玩家",
+          "text": "帮我留一份医疗包，等我过来再给我。",
+          "target": "0"
+        },
+        {
+          "seq": 13,
+          "kind": "提问",
+          "text": "帮我留一份医疗包，等我过来再给我。",
+          "target": "0"
+        },
+        {
+          "seq": 14,
+          "kind": "模型选择",
+          "text": "reserve / 医疗包预留：仅用于玩家说自己稍后来领取药品 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 15,
+          "kind": "子树提问",
+          "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。",
+          "target": "0"
+        },
+        {
+          "seq": 16,
+          "kind": "模型选择",
+          "text": "reserve / 医疗包预留：仅用于玩家说自己稍后来领取药品 / 玩家",
+          "target": "1101"
+        },
+        {
+          "seq": 17,
+          "kind": "选择",
+          "text": "reserve → reserve",
+          "target": "1101"
+        },
+        {
+          "seq": 18,
+          "kind": "动作",
+          "text": "wait",
+          "target": "1101"
+        },
+        {
+          "seq": 19,
+          "kind": "动作",
+          "text": "give",
+          "target": "1101"
+        },
+        {
+          "seq": 20,
+          "kind": "库存",
+          "text": "物品已交到队友手中",
+          "target": "1101"
+        }
+      ],
+      "measurements": {
+        "start_m": "5.82998",
+        "robot_m": "0",
+        "player_m": "4.455",
+        "robot_stock": "1->0",
+        "player_stock": "1->2"
+      }
+    }
+  }
+}

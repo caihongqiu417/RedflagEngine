@@ -32,6 +32,9 @@ namespace Redflag
         YAML::Node data;
         data["Name"] = npc.Name;
         data["Instructions"] = npc.Instructions;
+        data["IdleIntent"] = npc.IdleIntent;
+        data["RescueIntent"] = npc.RescueIntent;
+        data["MissingTargetIntent"] = npc.MissingTargetIntent;
         data["LeaderRelationship"] = npc.LeaderRelationship;
         data["Voice"] = npc.Voice;
         data["Model"] = npc.Model;
@@ -146,8 +149,10 @@ namespace Redflag
                 else if (result->Status == DecisionStatus::Completed)
                 {
                     BehaviorBlackboard actor;
-                    const BehaviorTrace preview = m_Draft.Tree.Tick(actor, result->Choice);
-                    m_Message = "模型选择 " + result->Choice + "，行为树动作 " + preview.Action;
+                    BehaviorTrace preview;
+                    m_Draft.Tree.Advance(actor, result->Choice, preview);
+                    m_Message = "模型选择 " + result->Choice + (preview.Waiting ? "，下一步会问：" +
+                        m_Draft.Tree.Find(preview.Waiting)->Question : "，行为树动作 " + preview.Action);
                 }
                 else
                     m_Message = result->Status == DecisionStatus::Cancelled ? "已停止试答。" : result->Error;
@@ -289,6 +294,16 @@ namespace Redflag
         Edit("##Instructions", m_Draft.Instructions, true);
         ImGui::TextUnformatted("与指定队友的约定");
         Edit("##LeaderRelationship", m_Draft.LeaderRelationship, true);
+        auto routine = [&](const char* label, std::string& key) {
+            if (!ImGui::BeginCombo(label, key.empty() ? "交给模型选择" : key.c_str())) return;
+            if (ImGui::Selectable("交给模型选择", key.empty())) key.clear();
+            for (const NpcIntent& intent : m_Draft.Intents)
+                if (ImGui::Selectable(intent.Key.c_str(), key == intent.Key)) key = intent.Key;
+            ImGui::EndCombo();
+        };
+        routine("无人发令时", m_Draft.IdleIntent);
+        routine("队友倒地时", m_Draft.RescueIntent);
+        routine("最后一个目标消失时", m_Draft.MissingTargetIntent);
         Edit("决策模型", m_Draft.Model);
         if (m_Draft.Model.empty())
             ImGui::TextDisabled("留空使用决策服务的默认模型。");
@@ -358,7 +373,7 @@ namespace Redflag
             }
         }
         ImGui::EndTable();
-        ImGui::TextWrapped("pickup 找可拿的物品，leader 找队友。clue 可以转告一条消息，search_area 可以到消息指的地方查看，surroundings 允许角色原地拍照。");
+        ImGui::TextWrapped("pickup 找可拿的物品，leader 找队友，self 选自己（例如原地待命）。clue 可以转告一条消息，search_area 可以到消息指的地方查看，surroundings 允许角色原地拍照。");
     }
 
     void NpcAuthoringPanel::DrawTables()

@@ -16,7 +16,7 @@ namespace Redflag
 
         uint32_t m_Selected = 0, m_From = 0;
         glm::vec2 m_Pan{0, 0};
-        char m_Name[256]{}, m_Action[128]{}, m_Key[128] = "gather";
+        char m_Question[512]{}, m_Name[256]{}, m_Action[128]{}, m_Key[128] = "gather";
         BehaviorTrace m_Preview;
         std::string m_FromKey;
         bool m_ShowPreview = false;
