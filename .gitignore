@@ -517,4 +517,9 @@ thesis/
 /output/packages/
 **/captures/playtests/
 **/captures/changes/
+**/captures/context/
+!Redflag/src/Redflag/Debug/
+!RedflagForge/assets/game/station/salvage/rack-detail/BaseColor.jpg
+!RedflagForge/assets/game/station/salvage/rack-detail/Normal.png
+!RedflagForge/assets/game/station/salvage/rim-detail/Height.png
 !RedflagForge/assets/playtests/*.json
