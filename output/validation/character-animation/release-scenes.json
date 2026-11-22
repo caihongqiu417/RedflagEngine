@@ -1,0 +1,60 @@
+{
+  "configuration": "Release x64; --vulkan --frames 48; Khronos validation errors and warnings enabled",
+  "exe_sha256": "29db5eac6294804b43a7c5f74916d9db99a6eba95f226e1bea1b621d3ebd3451",
+  "scenes": {
+    "Character-Fox": {
+      "scene_sha256": "b23b4deccc0b1402de765ef7fd0b1d927329400a08f6b73dc2c13a0050e9bdbc",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "exit_code": 0,
+      "validation_errors": [],
+      "validation_warnings": [
+        "[13:21:04] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)"
+      ],
+      "loader_warnings": [],
+      "frames": 48,
+      "rasterize_surfaces": 48,
+      "reuse_lighting": 0
+    },
+    "Character-Physics": {
+      "scene_sha256": "b395a4cf64d0b9e009c020dc0470ac5423fe2238fae3a0cbfd5c01af04bf3fb3",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "exit_code": 0,
+      "validation_errors": [],
+      "validation_warnings": [
+        "[13:21:05] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)"
+      ],
+      "loader_warnings": [],
+      "frames": 48,
+      "rasterize_surfaces": 14,
+      "reuse_lighting": 34,
+      "input": "F5 during the 48-frame run"
+    },
+    "Character-Walk": {
+      "scene_sha256": "6f093b49f20e95335bfc908aacdff35e0b1077184b91ff10207e6193b4b083db",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "exit_code": 0,
+      "validation_errors": [],
+      "validation_warnings": [
+        "[13:21:07] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)"
+      ],
+      "loader_warnings": [],
+      "frames": 48,
+      "rasterize_surfaces": 48,
+      "reuse_lighting": 0
+    },
+    "Camera-Studio": {
+      "scene_sha256": "0f6ad70c92d2b7234ce828c523a2017091cba5edb23fa8a1a134250980a5220b",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "exit_code": 0,
+      "validation_errors": [],
+      "validation_warnings": [
+        "[13:21:08] REDFLAG : Vulkan: Removing layer VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan32.json) because it is a duplicate of VK_LAYER_WEOBS_HOOK (C:\\ProgramData\\obs-studio-hook\\we-obs-vulkan64.json)"
+      ],
+      "loader_warnings": [],
+      "frames": 48,
+      "rasterize_surfaces": 33,
+      "reuse_lighting": 15,
+      "baked_probe_sha256": "150d92851a901e1851e1988877debb5178336a1eedcadda72b96a412125cc665"
+    }
+  }
+}
