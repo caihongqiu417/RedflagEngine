@@ -16,6 +16,8 @@
 
 希望外部 Agent 和自己一起改项目时，可以让它先查支持的组件，做一项改动，再在 Forge 的「试玩回放」查看操作和状态。独立工具要调用模型，可以直接解压 `Redflag-AI-Runtime-SDK.zip`，运行其中的控制台示例，或在自己的 C# 程序中引用程序集。[MCP 接入](../scripts/redflag_mcp/README.md) · [Forge 试玩与审查](Creation-Review.md) · [SDK 用法](AI-SDK-Package.md)
 
+瓦特没来扶人时，在 Forge 的「AI 队友 → 角色创作 → 候选」查看救援一项。玩家仍站着时，这里会显示「目标尚未倒地」。玩家倒地后再看，可以读到目标和距离。「最近一次提问的候选」保留发问时的那一刻，方便对照当时的决定和现在的局势。[Forge 实机界面](../output/validation/teammate-candidates/README.md)
+
 ## 验收记录
 
 完整试玩在开发机上从新目录解包，逐项校验清单，通过游戏窗口输入中文、移动和重新开局。离线服务另用三个空闲端口启动，确认使用的是包内的模型、解释器和语音识别程序。SDK 的独立测试也做了真实的文字、图像和语音调用。第二台 Windows 电脑的安装及实际操作手感仍待试玩。[游戏运行文件](../output/validation/packaged-watt/release-runtime.json) · [独立 SDK 测试](../output/validation/runtime-ai/portable-sdk.json)
