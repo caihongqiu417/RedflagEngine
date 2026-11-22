@@ -156,6 +156,9 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Vulkan\VulkanCascadeMaps.h">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Vulkan\VulkanComputeData.h">
       <Filter>src\Platform\Vulkan</Filter>
     </ClInclude>
@@ -484,6 +487,9 @@
       <Filter>src\Redflag\Renderer\ScreenSpace</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\Shader.h">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Renderer\ShadowCascades.h">
       <Filter>src\Redflag\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h">
@@ -1874,6 +1880,9 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\Vulkan\VulkanCascadeMaps.cpp">
+      <Filter>src\Platform\Vulkan</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Vulkan\VulkanComputeDevice.cpp">
       <Filter>src\Platform\Vulkan</Filter>
     </ClCompile>
@@ -2121,6 +2130,9 @@
       <Filter>src\Redflag\Renderer\ScreenSpace</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp">
+      <Filter>src\Redflag\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Renderer\ShadowCascades.cpp">
       <Filter>src\Redflag\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp">

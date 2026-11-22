@@ -1,5 +1,6 @@
 // 灯编号指向这一盏方向光的矩阵、图宽、每格的世界尺寸，以及逐像素的角色深度。
 layout(std430, binding = RF_VISIBILITY_BINDING) readonly buffer AnimatedShadows { uint shadowWords[]; };
+#include "CascadeVisibility.glsl"
 
 float compareShadow(uint first, int side, ivec2 p, float receiver)
 {
@@ -10,6 +11,7 @@ float compareShadow(uint first, int side, ivec2 p, float receiver)
 
 float animatedVisibility(uint lamp, vec3 world, vec3 normal, vec3 toLight)
 {
+    if (usesCascades(lamp)) return cascadeVisibility(lamp,world,normal,toLight);
     uint first = shadowWords[lamp];
     mat4 lightVP;
     for (int c=0; c<4; ++c)

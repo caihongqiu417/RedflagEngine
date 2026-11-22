@@ -20,7 +20,7 @@ $source = Join-Path $PSScriptRoot 'Mesh.vert'
 if ($LASTEXITCODE -ne 0) { throw "编译失败：$source" }
 & $compiler '--target-env=vulkan1.1' '-DEMISSIVE_UV' '-DLIGHTING_SURFACES' '-O' '-mfmt=c' $source '-o' (Join-Path $PSScriptRoot 'Transparency.vert.inc')
 if ($LASTEXITCODE -ne 0) { throw "编译失败：$source" }
-foreach ($shader in 'PackSurfaces.comp', 'CompositeTransparency.comp') {
+foreach ($shader in 'PackSurfaces.comp', 'CompositeTransparency.comp', 'StoreCascade.comp') {
     $source = Join-Path $PSScriptRoot $shader
     & $compiler '--target-env=vulkan1.1' '-O' '-mfmt=c' $source '-o' "$source.inc"
     if ($LASTEXITCODE -ne 0) { throw "编译失败：$source" }

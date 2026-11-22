@@ -191,6 +191,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Platform\OpenGL\OpenGLTransparencyPass.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
+    <ClInclude Include="src\Platform\Vulkan\VulkanCascadeMaps.h" />
     <ClInclude Include="src\Platform\Vulkan\VulkanComputeData.h" />
     <ClInclude Include="src\Platform\Vulkan\VulkanComputeDevice.h" />
     <ClInclude Include="src\Platform\Vulkan\VulkanContext.h" />
@@ -301,6 +302,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Renderer\SceneRenderer.h" />
     <ClInclude Include="src\Redflag\Renderer\ScreenSpace\ScreenEffects.h" />
     <ClInclude Include="src\Redflag\Renderer\Shader.h" />
+    <ClInclude Include="src\Redflag\Renderer\ShadowCascades.h" />
     <ClInclude Include="src\Redflag\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Redflag\Renderer\Texture.h" />
     <ClInclude Include="src\Redflag\Renderer\UniformBuffer.h" />
@@ -765,6 +767,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Platform\OpenGL\OpenGLTransparencyPass.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
+    <ClCompile Include="src\Platform\Vulkan\VulkanCascadeMaps.cpp" />
     <ClCompile Include="src\Platform\Vulkan\VulkanComputeDevice.cpp" />
     <ClCompile Include="src\Platform\Vulkan\VulkanComputePipeline.cpp" />
     <ClCompile Include="src\Platform\Vulkan\VulkanContext.cpp" />
@@ -854,6 +857,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Renderer\SceneRenderer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\ScreenSpace\ScreenEffects.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\ShadowCascades.cpp" />
     <ClCompile Include="src\Redflag\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Texture.cpp" />
     <ClCompile Include="src\Redflag\Renderer\UniformBuffer.cpp" />

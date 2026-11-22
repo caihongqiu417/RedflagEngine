@@ -849,7 +849,8 @@ namespace Redflag {
 
 	// 编辑器和游戏相机共用这次查询。第一次遇到模型时加载，以后直接用组件里的引用。
 	template<typename Draw>
-	static void ForEachMesh(Scene& scene, const glm::mat4& lodViewProjection, Draw draw, bool animatedOnly = false)
+	static void ForEachMesh(Scene& scene, const glm::mat4& lodViewProjection, Draw draw,
+		bool animatedOnly, const glm::mat4* terrainView)
 	{
 		auto& registry = scene.GetRegistry();
 
@@ -859,9 +860,11 @@ namespace Redflag {
 			const Ref<TerrainMeshes> surface = TerrainMeshes::Get(terrain);
 			if (!surface) return;
 			const glm::mat4 world = transform.GetTransform();
-			const Frustum visible = Frustum::FromViewProjection(lodViewProjection * world);
+			// 画阴影时地形按灯光的视野筛选。统计整场景的投影范围时则保留所有地块。
+			Frustum visible;
+			if (terrainView) visible = Frustum::FromViewProjection(*terrainView * world);
 			for (const Ref<Mesh>& mesh : surface->GetMeshes())
-				if (visible.IntersectsAABB(mesh->GetAABBMin(), mesh->GetAABBMax()))
+				if (!terrainView || visible.IntersectsAABB(mesh->GetAABBMin(), mesh->GetAABBMax()))
 					draw(mesh, world, surface->GetMaterial(), static_cast<int>(entity), terrain.Tint, nullptr);
 		});
 
@@ -965,18 +968,26 @@ namespace Redflag {
 			if (instances)
 				for (const glm::mat4& instance : *instances) Renderer3D::DrawMesh(mesh, world * instance, drawMaterial, id);
 			else Renderer3D::DrawMesh(mesh, world, drawMaterial, id);
-		});
+		}, false, &viewProjection);
 	}
 
 	bool SceneRenderer::GetAnimatedBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum)
 	{
+		return GetShadowBounds(scene, minimum, maximum, true, glm::mat4(1));
+	}
+
+	bool SceneRenderer::GetShadowBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum, bool animatedOnly,
+		const glm::mat4& lodViewProjection)
+	{
 		minimum = glm::vec3(std::numeric_limits<float>::max());
 		maximum = -minimum;
-		ForEachMesh(scene, glm::mat4(1), [&](const Ref<Mesh>& mesh, const glm::mat4& world, const Ref<Material>& material,
+		ForEachMesh(scene, lodViewProjection, [&](const Ref<Mesh>& mesh, const glm::mat4& world, const Ref<Material>& material,
 			int, glm::vec4, const std::vector<glm::mat4>* instances) {
 			if (material->Alpha == AlphaMode::Blend) return;
 			const glm::vec3 center = (mesh->GetAABBMin() + mesh->GetAABBMax()) * .5f;
-			const glm::vec3 half = (mesh->GetAABBMax() - mesh->GetAABBMin()) * .5f;
+			glm::vec3 half = (mesh->GetAABBMax() - mesh->GetAABBMin()) * .5f;
+			if (material->HeightMode == HeightMapping::Displacement && material->HeightMap)
+				half += glm::vec3(std::abs(material->HeightScale));
 			auto include = [&](const glm::mat4& transform)
 			{
 				const glm::vec3 at = transform * glm::vec4(center, 1);
@@ -988,7 +999,7 @@ namespace Redflag {
 			if (instances)
 				for (const glm::mat4& instance : *instances) include(world * instance);
 			else include(world);
-		}, true);
+		}, animatedOnly, nullptr);
 		return minimum.x <= maximum.x;
 	}
 
@@ -1020,7 +1031,7 @@ namespace Redflag {
 			if (material->Alpha == AlphaMode::Mask) surface.AlphaCutoff = material->AlphaCutoff;
 			const glm::vec4 color = material->BaseColor * tint;
 			commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection, world, color, id, surface, instances);
-		}, animatedOnly);
+		}, animatedOnly, &viewProjection);
 	}
 
 	// ---- 编辑器帧 ----

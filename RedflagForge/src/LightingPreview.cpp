@@ -3,6 +3,7 @@
 #include "LightingPreview.h"
 #include "Platform/Vulkan/VulkanContext.h"
 #include "Platform/Vulkan/VulkanDraw.h"
+#include "Platform/Vulkan/VulkanCascadeMaps.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/SceneRenderer.h"
 #include "Redflag/Scene/Scene.h"
@@ -261,6 +262,33 @@ namespace Redflag
 			first += 18 + side * side;
 		}
 		m_GI->SetAnimatedVisibility(m_ShadowMaps);
+	}
+
+	void LightingPreview::DrawCascadeShadows(Scene& scene, const std::vector<GILight>& lights,
+		const glm::mat4& projection, const glm::mat4& view)
+	{
+		glm::vec3 low, high;
+		const glm::mat4 cameraVP = projection * view;
+		const bool hasSun = std::any_of(lights.begin(), lights.end(), [](const GILight& lamp) { return lamp.Position.w == -1.f; });
+		if (!hasSun || !SceneRenderer::GetShadowBounds(scene, low, high, false, cameraVP))
+		{
+			m_GI->SetAnimatedVisibility(nullptr);
+			m_CascadeMaps.reset();
+			return;
+		}
+
+		if (!m_CascadeMaps)
+		{
+			m_ShadowDraw.reset();
+			m_ShadowMaps.reset();
+			m_ShadowWords = 0;
+			m_CascadeMaps = CreateScope<VulkanCascadeMaps>(m_Context, m_Device);
+		}
+		Ref<ComputeResource> maps = m_CascadeMaps->Draw(projection, view, lights, low, high, m_CascadeCount, m_CascadeSize,
+			m_ShadowDistance, m_SunRadius, [&](CommandList& commands, const glm::mat4& lightVP) {
+				SceneRenderer::DrawGeometry(scene, commands, lightVP, &cameraVP);
+			});
+		m_GI->SetAnimatedVisibility(maps);
 	}
 
 	static const ModelRendererComponent* MissingBakeModel(Scene& scene)
@@ -526,8 +554,17 @@ namespace Redflag
 			m_Device.Dispatch(m_PackSurfaces, {m_SurfaceDraw->GetAlbedo(), m_SurfaceDraw->GetNormalDepth(),
 				m_GI->GetSurfaces()}, &inverseVP, (width + 7) / 8, (height + 7) / 8);
 			m_Decals.Draw(m_GI->GetSurfaces(), sampleVP, {width, height});
-			// 相机移动或 TAA 更换像素采样位置，灯看到的角色并没有变。姿势、灯和场景设置改变时会重置 m_Frame。
-			if (m_Frame == 0 || geometry.WindMoving) DrawAnimatedShadows(scene, lights);
+			// 分层范围跟随相机。TAA 只改变像素里的取样点，仍可沿用上次的阴影图。
+			if (m_CascadeCount)
+			{
+				if (cameraMoved || m_Frame == 0 || geometry.WindMoving)
+					DrawCascadeShadows(scene, lights, projection, view);
+			}
+			else if (m_Frame == 0 || geometry.WindMoving)
+			{
+				m_CascadeMaps.reset();
+				DrawAnimatedShadows(scene, lights);
+			}
 		}
 		ScreenEffectSettings& settings = m_Effects->GetSettings();
 		settings = m_Settings;
@@ -747,6 +784,7 @@ namespace Redflag
 		changed |= ImGui::Combo("##Direct", &m_DirectLight, s_DirectLabels, IM_ARRAYSIZE(s_DirectLabels));
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("“全部光源”逐盏计算场景中的点光源和方向光。");
 		const std::string shadowWidth = m_ShadowSize ? std::to_string(m_ShadowSize) : "关闭";
+		ImGui::BeginDisabled(m_CascadeCount > 0);
 		if (ImGui::BeginCombo("角色阴影", shadowWidth.c_str())) {
 			for (int side : {0, 256, 512, 1024}) {
 				const std::string name = side ? std::to_string(side) : "关闭";
@@ -754,7 +792,23 @@ namespace Redflag
 			}
 			ImGui::EndCombo();
 		}
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("每盏开启投影的方向光都绘制角色深度。图越宽，阴影轮廓越清楚，占用显存越多。");
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip(m_CascadeCount ? "级联阴影已包含角色。每层分辨率决定角色投影的精细程度。"
+				: "每盏开启投影的方向光都绘制角色深度。图越宽，阴影轮廓越清楚，占用显存越多。");
+		if (ImGui::TreeNode("级联阴影 CSM"))
+		{
+			changed |= ImGui::SliderInt("级联层数", &m_CascadeCount, 0, 4);
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("0 沿用原阴影。开启后按离相机的距离分层绘制，近处的阴影纹素更密。");
+			if (m_CascadeCount)
+			{
+				changed |= ImGui::SliderInt("每层分辨率", &m_CascadeSize, 128, 2048);
+				changed |= ImGui::SliderFloat("阴影距离", &m_ShadowDistance, 1.f, 250.f, "%.1f m");
+				changed |= ImGui::SliderFloat("太阳角半径", &m_SunRadius, 0.f, 5.f, "%.2f°");
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("设为 0 时只有阴影图的边缘过滤。增大角半径，离地越高的物体会投下越宽的半影。");
+			}
+			ImGui::TreePop();
+		}
 		ImGui::TextUnformatted("间接光");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("光先照到其他表面，再反射到这里。");
 		ImGui::SetNextItemWidth(-1);
@@ -953,6 +1007,10 @@ namespace Redflag
 		m_Fog = {};
 		m_Samples = 1;
 		m_ShadowSize = 512;
+		m_CascadeCount = 0;
+		m_CascadeSize = 1024;
+		m_ShadowDistance = 40.f;
+		m_SunRadius = .27f;
 		m_PreviewWidth = 0;
 		m_Supersampling = false;
 		m_Filmic = scene.empty();
@@ -973,6 +1031,10 @@ namespace Redflag
 		m_ExposureEV = std::clamp(data["ExposureEV"].as<float>(0.f), -4.f, 4.f);
 		m_Samples = std::clamp(data["Samples"].as<int>(1), 1, 8);
 		m_ShadowSize = std::clamp(data["AnimatedShadowSize"].as<int>(512), 0, 2048);
+		m_CascadeCount = std::clamp(data["ShadowCascades"].as<int>(0), 0, 4);
+		m_CascadeSize = std::clamp(data["CascadeResolution"].as<int>(1024), 128, 2048);
+		m_ShadowDistance = std::clamp(data["ShadowDistance"].as<float>(40.f), 1.f, 250.f);
+		m_SunRadius = std::clamp(data["SunRadiusDegrees"].as<float>(.27f), 0.f, 5.f);
 		m_ProbeFeedback = data["DDGIProbeFeedback"].as<bool>(true);
 		FastNavigation = data["FastNavigation"].as<bool>(FastNavigation);
 		m_Settings.AORadius = data["AORadius"].as<float>(m_Settings.AORadius);
@@ -1009,6 +1071,10 @@ namespace Redflag
 		data["ExposureEV"] = m_ExposureEV;
 		data["Samples"] = m_Samples;
 		data["AnimatedShadowSize"] = m_ShadowSize;
+		data["ShadowCascades"] = m_CascadeCount;
+		data["CascadeResolution"] = m_CascadeSize;
+		data["ShadowDistance"] = m_ShadowDistance;
+		data["SunRadiusDegrees"] = m_SunRadius;
 		data["DDGIProbeFeedback"] = m_ProbeFeedback;
 		data["FastNavigation"] = FastNavigation;
 		data["AORadius"] = m_Settings.AORadius;

@@ -1,0 +1,38 @@
+#version 450
+layout(local_size_x=8,local_size_y=8) in;
+layout(rgba32f,binding=0) readonly uniform image2D normalDepth;
+layout(std430,binding=1) writeonly buffer Maps { uint words[]; };
+layout(push_constant) uniform Light
+{
+    mat4 lightVP;
+    vec4 cameraDepth;
+    uint lamp, first, layer, count;
+    float farDepth, texel, depthRange, sourceSlope;
+};
+
+void main()
+{
+    ivec2 p=ivec2(gl_GlobalInvocationID.xy);
+    uint side=uint(imageSize(normalDepth).x);
+    if (any(greaterThanEqual(p,ivec2(side)))) return;
+    uint table=first+7u+count+layer*(18u+side*side);
+    if (all(equal(p,ivec2(0))))
+    {
+        if (layer==0u)
+        {
+            // 最高位区分按相机距离选择的整场景深度图和包住动画角色的一张图。
+            words[lamp]=0x80000000u | first;
+            words[first]=count;
+            words[first+1u]=side;
+            words[first+2u]=floatBitsToUint(sourceSlope);
+            for (int c=0; c<4; ++c) words[first+3u+uint(c)]=floatBitsToUint(cameraDepth[c]);
+        }
+        words[first+7u+layer]=floatBitsToUint(farDepth);
+        for (int c=0;c<4;++c)
+            for (int r=0;r<4;++r) words[table+uint(4*c+r)]=floatBitsToUint(lightVP[c][r]);
+        words[table+16u]=floatBitsToUint(texel);
+        words[table+17u]=floatBitsToUint(depthRange);
+    }
+    vec4 value=imageLoad(normalDepth,p);
+    words[table+18u+uint(p.y)*side+uint(p.x)] = all(equal(value.xyz,vec3(0))) ? 0x7f800000u : floatBitsToUint(value.w);
+}

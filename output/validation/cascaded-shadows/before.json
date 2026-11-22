@@ -1,0 +1,43 @@
+{
+  "program_sha256": "c0e0ece44f3e3a0c748e50396ccf1de9007a89278b28dd3c5a6e5ce90200b55e",
+  "captures": {
+    "sun-off": {
+      "path": "output\\captures\\local\\cascade-sun-off-c0e0ece44f3e-600-f8\\studio_frame8.rdc",
+      "sha256": "12b0a6a8cffad6a822e7065648efe28c6e14deda24d147eac4803ab313d8e491",
+      "frame": 8,
+      "size": [
+        1920,
+        1080
+      ],
+      "display_event": 102,
+      "surface_event": 54
+    },
+    "hard": {
+      "path": "output\\captures\\local\\cascade-hard-c0e0ece44f3e-600-f8\\studio_frame8.rdc",
+      "sha256": "ca54ecb7dd63f98c103c30e1305a2d1fe6bb1581c959683d20841d243691a14e",
+      "frame": 8,
+      "size": [
+        1920,
+        1080
+      ],
+      "display_event": 102,
+      "surface_event": 54
+    },
+    "soft": {
+      "path": "output\\captures\\local\\cascade-soft-c0e0ece44f3e-600-f8\\studio_frame8.rdc",
+      "sha256": "bc65b1952d053e20355118bfac97b7cbaa5fcdf25db4c98eea9cb289554b8761",
+      "frame": 8,
+      "size": [
+        1920,
+        1080
+      ],
+      "display_event": 102,
+      "surface_event": 54
+    }
+  },
+  "threshold_linear_rgb": 0.02,
+  "shadow_pixels": 849174,
+  "soft_edge_pixels": 722313,
+  "open_ground_samples": 248832,
+  "open_ground_changed_fraction": 0.6264507780349794
+}

@@ -16,6 +16,7 @@ namespace Redflag
 	class Scene;
 	class Mesh;
 	class VulkanContext;
+	class VulkanCascadeMaps;
 	class VulkanDraw;
 	struct SampledTexture;
 
@@ -57,6 +58,7 @@ namespace Redflag
 		Ref<ComputeResource> RenderLit(const glm::mat4& projection, const glm::mat4& view, bool directOnly);
 		void DrawSky(const Ref<ComputeResource>& color, const glm::mat4& projection, const glm::mat4& view);
 		void DrawAnimatedShadows(Scene& scene, const std::vector<GILight>& lights);
+		void DrawCascadeShadows(Scene& scene, const std::vector<GILight>& lights, const glm::mat4& projection, const glm::mat4& view);
 		VkDescriptorSet Display(const Ref<ComputeResource>& color);
 
 		VulkanContext& m_Context;
@@ -68,6 +70,9 @@ namespace Redflag
 		Scope<VulkanDraw> m_SurfaceDraw, m_TransparentDraw;
 		Scope<VulkanDraw> m_EmissionDraw;
 		Scope<VulkanDraw> m_ShadowDraw;
+		Scope<VulkanCascadeMaps> m_CascadeMaps;
+		int m_CascadeCount = 0, m_CascadeSize = 1024;
+		float m_ShadowDistance = 40.f, m_SunRadius = .27f;
 		Ref<ComputePipeline> m_StoreShadow;
 		Ref<ComputeResource> m_ShadowMaps;
 		size_t m_ShadowWords = 0, m_MaxShadowWords = 0;

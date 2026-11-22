@@ -86,6 +86,8 @@ namespace Redflag {
 		static void DrawGeometry(Scene& scene, CommandList& commands, const glm::mat4& viewProjection,
 			const glm::mat4* lodViewProjection = nullptr /* TAA 时传入未偏移的相机矩阵 */, bool animatedOnly = false);
 		static bool GetAnimatedBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum);
+		static bool GetShadowBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum,
+			bool animatedOnly, const glm::mat4& lodViewProjection);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform /* 相机到世界空间 */);
 
 		// ---- 渲染参数 ----

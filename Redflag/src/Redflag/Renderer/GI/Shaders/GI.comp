@@ -115,7 +115,12 @@ vec3 direct(Surface s, uint id, bool diffuseOnly)
     float cosine = dot(s.n.xyz, wi);
     if (cosine <= 0. || attenuation == 0.)
         return vec3(0);
-    if (lightCastsShadow(light.p) && surfaceInShadow(s.p.xyz, s.n.xyz, wi, r))
+    bool traceShadow=lightCastsShadow(light.p);
+#ifdef RF_ANIMATED_SHADOWS
+    // 全场景级联已画入静态物体和角色。再追一次中心光线会把半影中的受光部分也擦掉。
+    if (light.p.w == -1. && usesCascades(id)) traceShadow=false;
+#endif
+    if (traceShadow && surfaceInShadow(s.p.xyz, s.n.xyz, wi, r))
         return vec3(0);
     vec3 response = diffuseReflectance(s.rho.rgb, s.rho.w) * (cosine / PI);
     if (!diffuseOnly && gridOrigin.w == 0.) {

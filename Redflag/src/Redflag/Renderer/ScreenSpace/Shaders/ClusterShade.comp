@@ -61,6 +61,9 @@ void main()
 
             // 漫反射对照里的点光源只检查分簇。方向光仍按场景设置投下阴影。
             bool checkShadow = !diffuseReference || isDirectionalLight(light.position);
+#ifdef RF_ANIMATED_SHADOWS
+            if (light.position.w == -1. && usesCascades(lamp)) checkShadow=false;
+#endif
             if (checkShadow && lightCastsShadow(light.position) && surfaceInShadow(s.position.xyz, s.normal.xyz, L, r)) continue;
 
             vec3 response = diffuseReference ? s.albedo.rgb * max(dot(s.normal.xyz, L), 0.) / PI

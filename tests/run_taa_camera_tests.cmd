@@ -14,6 +14,11 @@ if errorlevel 1 exit /b 1
 if not exist "bin-int\Tests" mkdir "bin-int\Tests"
 set "rasterTest=TAACameraTests"
 if defined RF_WIRE_RASTER set "rasterTest=WireRasterTests"
+if defined RF_CASCADE_TEST (
+    set "rasterTest=CascadeShadowTests"
+    "%VULKAN_SDK%\Bin\glslc.exe" --target-env=vulkan1.1 -O -I Redflag\src\Redflag\Renderer\GI\Shaders tests\fixtures\ShadowReceiver.comp -o bin-int\Tests\ShadowReceiver.spv
+    if errorlevel 1 exit /b 1
+)
 cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE ^
  /I Redflag\vendor\stb_image /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
  /I "%VULKAN_SDK%\Include" /I Redflag\vendor\fmt\include /I Redflag\vendor\glm /I Redflag\vendor\Glad\include /I Redflag\vendor\GLFW\include ^
@@ -24,7 +29,7 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
 if errorlevel 1 exit /b 1
 set RF_VULKAN_VALIDATION=1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
-if not "%~2"=="" (
+if not "%~2"=="" if not "%~2"=="--profile" (
     set "VK_ADD_LAYER_PATH=%~dp2"
     set "VK_INSTANCE_LAYERS=VK_LAYER_RENDERDOC_Capture"
 )
