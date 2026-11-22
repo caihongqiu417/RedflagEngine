@@ -1,0 +1,23 @@
+{
+  "executable_sha256": "22698a6b887d9b9b8d744fe2aed33e8eeb8a4904b5bb02d0d246ee45d0688470",
+  "scene": "Character-Walk.redflag",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "viewport_pixels": [
+    1391,
+    892
+  ],
+  "input": [
+    "F5",
+    "Left down",
+    "Left up",
+    "F5"
+  ],
+  "actor_centroid_x_pixels": {
+    "idle": 686.51,
+    "walking": 555.11,
+    "released": 512.21,
+    "stopped": 680.06
+  },
+  "validation_errors": [],
+  "exit_code": 0
+}
