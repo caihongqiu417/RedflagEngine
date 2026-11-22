@@ -1,0 +1,132 @@
+{
+  "scene": "Watt-Station.redflag",
+  "npc": 1102,
+  "client": [
+    640,
+    360
+  ],
+  "exe_sha256": "63b8cec29f1b1f51fa6e4793b6f85576ff182c6b57680348e9f4bd8e63ab973e",
+  "endpoint": "local gateway",
+  "trials": [
+    {
+      "trial": 1,
+      "status": "queued",
+      "input_to_request_ms": 0.144,
+      "observed_updates": 0
+    },
+    {
+      "trial": 2,
+      "status": "queued",
+      "input_to_request_ms": 0.111,
+      "observed_updates": 0
+    },
+    {
+      "trial": 3,
+      "status": "queued",
+      "input_to_request_ms": 0.127,
+      "observed_updates": 0
+    },
+    {
+      "trial": 4,
+      "status": "queued",
+      "input_to_request_ms": 0.128,
+      "observed_updates": 0
+    },
+    {
+      "trial": 5,
+      "status": "queued",
+      "input_to_request_ms": 0.137,
+      "observed_updates": 0
+    },
+    {
+      "trial": 6,
+      "status": "queued",
+      "input_to_request_ms": 0.113,
+      "observed_updates": 0
+    },
+    {
+      "trial": 7,
+      "status": "queued",
+      "input_to_request_ms": 0.128,
+      "observed_updates": 0
+    },
+    {
+      "trial": 8,
+      "status": "queued",
+      "input_to_request_ms": 0.139,
+      "observed_updates": 0
+    },
+    {
+      "trial": 9,
+      "status": "queued",
+      "input_to_request_ms": 0.106,
+      "observed_updates": 0
+    },
+    {
+      "trial": 10,
+      "status": "queued",
+      "input_to_request_ms": 0.121,
+      "observed_updates": 0
+    },
+    {
+      "trial": 11,
+      "status": "queued",
+      "input_to_request_ms": 0.133,
+      "observed_updates": 0
+    },
+    {
+      "trial": 12,
+      "status": "queued",
+      "input_to_request_ms": 0.11,
+      "observed_updates": 0
+    },
+    {
+      "trial": 13,
+      "status": "queued",
+      "input_to_request_ms": 0.093,
+      "observed_updates": 0
+    },
+    {
+      "trial": 14,
+      "status": "queued",
+      "input_to_request_ms": 0.121,
+      "observed_updates": 0
+    },
+    {
+      "trial": 15,
+      "status": "queued",
+      "input_to_request_ms": 0.137,
+      "observed_updates": 0
+    },
+    {
+      "trial": 16,
+      "status": "queued",
+      "input_to_request_ms": 0.117,
+      "observed_updates": 0
+    },
+    {
+      "trial": 17,
+      "status": "queued",
+      "input_to_request_ms": 0.135,
+      "observed_updates": 0
+    },
+    {
+      "trial": 18,
+      "status": "queued",
+      "input_to_request_ms": 0.149,
+      "observed_updates": 0
+    },
+    {
+      "trial": 19,
+      "status": "queued",
+      "input_to_request_ms": 0.131,
+      "observed_updates": 0
+    },
+    {
+      "trial": 20,
+      "status": "queued",
+      "input_to_request_ms": 0.156,
+      "observed_updates": 0
+    }
+  ]
+}

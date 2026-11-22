@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--exe",type=Path,default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
     parser.add_argument("--preview",action="store_true",help="只截正式游戏的开场画面")
     parser.add_argument("--npc-motion",action="store_true",help="通过游戏脚本要求队友取药和递药，记录第三人称窗口")
-    parser.add_argument("--latency",choices=("reserve","walk"),help="在正式游戏内记录发令到保留库存或位置改变的耗时")
+    parser.add_argument("--latency",choices=("reserve","walk","dispatch"),help="在正式游戏内记录请求入队、保留库存或位置改变的耗时")
     parser.add_argument("--recorded-speech",type=Path,help="把本局的队友回执和中断证据另存在这个目录")
     parser.add_argument("--trials",type=int,default=20)
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
@@ -101,7 +101,8 @@ def main():
             TransformComponent=dict(Translation=[0,0,0],Rotation=[0,0,0],Scale=[1,1,1]),
             ScriptComponent=dict(Class="StationTest.Latency",ScriptFields=[
                 dict(Name="Technician", Type="Entity", Value=1102),dict(Name="Count",Type="Int",Value=args.trials),
-                dict(Name="Moving", Type="Bool", Value=args.latency=="walk")])))
+                dict(Name="Moving", Type="Bool", Value=args.latency=="walk"),
+                dict(Name="DispatchOnly", Type="Bool", Value=args.latency=="dispatch")])))
     sample = work/"assets/scenes/Watt-Station.redflag"
     sample.write_text(yaml.safe_dump(scene,allow_unicode=True,sort_keys=False),encoding="utf8")
     shutil.copy2(str(source)+".render.yaml",str(sample)+".render.yaml")
@@ -157,6 +158,10 @@ def main():
             _,_,cw,ch=win32gui.GetClientRect(hwnd)
             trials=[dict(trial=int(i),status=status,decision=choice,choice_ms=float(answer),action_ms=float(action),
                          observed_updates=int(frames)) for i,status,choice,answer,action,frames in samples()]
+            if args.latency=="dispatch":
+                trials=[dict(trial=t["trial"],status=t["status"],input_to_request_ms=t["choice_ms"],
+                             observed_updates=t["observed_updates"]) for t in trials]
+                assert all(t["status"]=="queued" for t in trials)
             target=ROOT/"output/validation/runtime-ai"/("forge-"+args.latency+"-latency.json")
             note=dict(scene=source.name,npc=1102,client=[cw,ch],exe_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),
                       endpoint="local gateway", trials=trials)

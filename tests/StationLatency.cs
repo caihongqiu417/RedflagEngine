@@ -11,6 +11,7 @@ namespace StationTest
         public Entity Technician;
         public int Count;
         public bool Moving;
+        public bool DispatchOnly;
         private readonly long epoch = DateTime.UtcNow.Ticks;
         private double Milliseconds { get { return (DateTime.UtcNow.Ticks - epoch) / 10000.0; } }
         private double started, next = 2500, choice;
@@ -45,6 +46,19 @@ namespace StationTest
                 started = Milliseconds;
                 if (!Npc.Submit(Technician.Id, Moving ? "带着医疗包，马上走到我身边把它给我。" : "帮我留一份医疗包，等我过来再给我。"))
                     Finish("submit_failed");
+                else if (DispatchOnly)
+                {
+                    // 两个时刻均取自主机事件。到“提问”时请求已交给后台，尚未等模型回答。
+                    double recorded = -1, queued = -1;
+                    while (Npc.TryReadEvent(Technician.Id, ref cursor, out entry))
+                    {
+                        if (entry.Kind == "玩家") recorded = entry.Time;
+                        if (entry.Kind == "提问") queued = entry.Time;
+                    }
+                    choice = 1000 * (queued - recorded);
+                    result = "player_to_request";
+                    Finish(recorded >= 0 && queued >= recorded ? "queued" : "missing_event");
+                }
                 return;
             }
 

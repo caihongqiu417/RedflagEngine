@@ -97,6 +97,7 @@ def run(args):
                DELIVERY_AI_DIALOGUE_LOG="1", DELIVERY_TTS_SHELL="powershell.exe", PYTHONUTF8="1",
                PYTHONIOENCODING="utf8", PYTHONDONTWRITEBYTECODE="1")
     logpath = folder/"game.log"
+    logpath.unlink(missing_ok=True)
     engine = [str(exe),"/Game/Level/TestForCharacter","-unattended","-NoSteam","-nosplash","-windowed",
               "-ResX=640","-ResY=360","-RenderOffscreen",f"-abslog={logpath}",f"-userdir={folder/'user'}",
               "-ini:Game:[/Script/Delivery.DeliveryAiSettings]:bEnabled=True",
@@ -142,6 +143,11 @@ runpy.run_path(str(tools/'server.py'),run_name='__main__')"""
                 deadline = time.monotonic()+args.seconds
                 while host.poll() is None and time.monotonic()<deadline:
                     time.sleep(.2)
+                    if args.dispatch_only and logpath.is_file():
+                        log=logpath.read_bytes()
+                        begin=log.rfind(b"ResidentConversation accepted:")
+                        if begin>=0 and re.search(rb"stage=http_start player=1\b",log[begin:]):
+                            break
             finally:
                 stop(host)
         finally:
@@ -185,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("--port",type=int,default=18765)
     parser.add_argument("--seconds",type=int,default=22)
     parser.add_argument("--null-rhi",action="store_true")
+    parser.add_argument("--dispatch-only",action="store_true",help="读到本轮玩家发言的 http_start 后即可结束宿主试验")
     parser.add_argument("--guide-format",action="store_true",help="独立诊断：在模型端限定首条回答格式，和原样运行的数据分别记录")
     parser.add_argument("--out",type=Path,required=True)
     options = parser.parse_args()

@@ -1,0 +1,102 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_ResidentShrewd_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "fixture",
+  "model": "Qwen3-VL-2B-Instruct",
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T16:42:34.040000",
+      "engine_frame": 2,
+      "message": "LogTemp: NpcLatency request=6DF022B242B833F4C1587685592FF775 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:34.161000",
+      "engine_frame": 3,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=6DF022B242B833F4C1587685592FF775 stage=approved"
+    },
+    {
+      "utc": "2026-11-22T16:42:34.161000",
+      "engine_frame": 3,
+      "message": "LogTemp: NpcLatency request=6DF022B242B833F4C1587685592FF775 stage=model_done sentences=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:34.161000",
+      "engine_frame": 3,
+      "message": "LogTemp: NpcLatency request=5A7434A341DE1EAA26510FA65978A42D stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:34.189000",
+      "engine_frame": 4,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=5A7434A341DE1EAA26510FA65978A42D stage=approved"
+    },
+    {
+      "utc": "2026-11-22T16:42:34.189000",
+      "engine_frame": 4,
+      "message": "LogTemp: NpcLatency request=5A7434A341DE1EAA26510FA65978A42D stage=model_done sentences=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:35.927000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=7E65B6084E8F6D2E76A336BBE0E4D1EA stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:35.927000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=7E65B6084E8F6D2E76A336BBE0E4D1EA stage=listening"
+    },
+    {
+      "utc": "2026-11-22T16:42:35.927000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=7E65B6084E8F6D2E76A336BBE0E4D1EA pending=1 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:35.927000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_ResidentShrewd_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T16:42:35.937000",
+      "engine_frame": 101,
+      "message": "LogTemp: NpcLatency request=9A8DCEC34CAE3117CB82588A0C4A8A19 stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T16:42:36.189000",
+      "engine_frame": 116,
+      "message": "LogTemp: NpcLatency request=0B763E5A45BB81BC278EB5A71FA20747 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:36.202000",
+      "engine_frame": 117,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=0B763E5A45BB81BC278EB5A71FA20747 stage=approved"
+    },
+    {
+      "utc": "2026-11-22T16:42:36.202000",
+      "engine_frame": 117,
+      "message": "LogTemp: NpcLatency request=0B763E5A45BB81BC278EB5A71FA20747 stage=model_done sentences=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:36.203000",
+      "engine_frame": 117,
+      "message": "LogTemp: NpcLatency request=512239C0468DFF6D8A9A5B9339D8AC8F stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:38.221000",
+      "engine_frame": 238,
+      "message": "LogTemp: NpcLatency request=EF978AB943D339CBE8D9CDB4633BEE61 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:42:42.254000",
+      "engine_frame": 461,
+      "message": "LogTemp: NpcLatency request=C3A8F3BD4B99A1EA6216E1960DA05D52 stage=http_start player=0"
+    }
+  ],
+  "model_calls": [],
+  "raw_log_sha256": "5df581c377aabb58a51661d21b43aa95726fdef9516d7ab5976dbf2ca5910005"
+}

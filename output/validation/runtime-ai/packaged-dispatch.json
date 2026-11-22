@@ -1,0 +1,100 @@
+{
+  "stage": "input accepted to handoff to the host request client; excludes model, audio and action",
+  "text": "帮我留一份医疗包，等我过来再给我。",
+  "window": [
+    640,
+    360
+  ],
+  "unreal_exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "unreal_provider": "fixture",
+  "unreal": [
+    {
+      "accepted": {
+        "utc": "2026-11-22T22:12:40.508000",
+        "engine_frame": 100,
+        "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=64E5690F4412BDF3DF2E00B2051FF1C8 pending=1 activeAction=0"
+      },
+      "request": {
+        "utc": "2026-11-22T22:12:40.517000",
+        "engine_frame": 101,
+        "message": "LogTemp: NpcLatency request=9A207AE040E3AB7517EAB6B4528E9CDE stage=http_start player=1"
+      },
+      "input_to_request_ms": 9.0,
+      "frames": 1,
+      "request_id": "9A207AE040E3AB7517EAB6B4528E9CDE"
+    },
+    {
+      "accepted": {
+        "utc": "2026-11-22T22:12:48.731000",
+        "engine_frame": 100,
+        "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=AD2CC76A49DCABEE97E17E96F42C4635 pending=1 activeAction=0"
+      },
+      "request": {
+        "utc": "2026-11-22T22:12:48.740000",
+        "engine_frame": 101,
+        "message": "LogTemp: NpcLatency request=D9B574B1496A23F211988B98C99D3177 stage=http_start player=1"
+      },
+      "input_to_request_ms": 9.0,
+      "frames": 1,
+      "request_id": "D9B574B1496A23F211988B98C99D3177"
+    },
+    {
+      "accepted": {
+        "utc": "2026-11-22T22:12:56.843000",
+        "engine_frame": 100,
+        "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=7B2DD3584F736412E2F9AAB0BF15E9AD pending=1 activeAction=0"
+      },
+      "request": {
+        "utc": "2026-11-22T22:12:56.852000",
+        "engine_frame": 101,
+        "message": "LogTemp: NpcLatency request=8753FA254E026644B7CF2F94C5C0085F stage=http_start player=1"
+      },
+      "input_to_request_ms": 9.0,
+      "frames": 1,
+      "request_id": "8753FA254E026644B7CF2F94C5C0085F"
+    },
+    {
+      "accepted": {
+        "utc": "2026-11-22T22:13:04.211000",
+        "engine_frame": 100,
+        "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=02B08B10462E269A502997B9A3BE110E pending=1 activeAction=0"
+      },
+      "request": {
+        "utc": "2026-11-22T22:13:04.220000",
+        "engine_frame": 101,
+        "message": "LogTemp: NpcLatency request=38E53C8645C4533448867B9EC53F4D22 stage=http_start player=1"
+      },
+      "input_to_request_ms": 9.0,
+      "frames": 1,
+      "request_id": "38E53C8645C4533448867B9EC53F4D22"
+    },
+    {
+      "accepted": {
+        "utc": "2026-11-22T22:13:11.262000",
+        "engine_frame": 100,
+        "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=8ABAB8DE490AF900D93D5DAA98BBD6EF pending=1 activeAction=0"
+      },
+      "request": {
+        "utc": "2026-11-22T22:13:11.274000",
+        "engine_frame": 101,
+        "message": "LogTemp: NpcLatency request=ED19499045DCB8A7AF431D951C9636AC stage=http_start player=1"
+      },
+      "input_to_request_ms": 12.0,
+      "frames": 1,
+      "request_id": "ED19499045DCB8A7AF431D951C9636AC"
+    }
+  ],
+  "redflag_file": "forge-dispatch-latency.json",
+  "stats": {
+    "redflag": {
+      "n": 20,
+      "p50_ms": 0.128,
+      "p95_ms": 0.149
+    },
+    "unreal": {
+      "n": 5,
+      "p50_ms": 9.0,
+      "p95_ms": 11.4
+    }
+  }
+}

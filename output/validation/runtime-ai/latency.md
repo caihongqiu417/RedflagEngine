@@ -47,6 +47,14 @@ Windows 上启动 Debug 版 RedflagForge，运行 Vulkan 的正式 Watt-Station 
 
 这份地图里，居民这次可选的是等待、看向人物、走动等现场反应，清单里没有用于为队友保留药品的命令。格式对照中模型选的是 `Wait`。维修站的队友本来就有库存和递药动作，两边这条输入所能触发的功能并不等价。依据上述结果不能给出两款引擎在完整留药任务上的速度比。
 
+## 两个游戏何时开始请求模型
+
+在模型读到文字之前，可以先量游戏自己何时把问题交给请求客户端。两款 Windows 游戏包均在同一台机器绘制 640 × 360 的窗口，收到同一句“帮我留一份医疗包，等我过来再给我”。维修站使用发布包的可执行文件，关卡副本多挂一个 C# 计时脚本。脚本从 NPC 事件里读出“玩家”与“提问”的时间。前一条记录表明游戏已经登记原话，后一条记录出现在角色找到现场候选、启动请求的后台线程之后。20 次都在登记当帧完成。中位数为 0.128 毫秒，P95 为 0.149 毫秒。[逐次时间、窗口尺寸及程序校验值](forge-dispatch-latency.json)
+
+Delivery 的打包居民地图每次从新进程开始。游戏在第 100 帧登记同一句话，第 101 帧写下该玩家的 `http_start` 标记，随后将请求交给 Unreal 的 HTTP 模块。五次间隔分别为 9、9、9、9、12 毫秒；样本中位数为 9 毫秒，P95 插值为 11.4 毫秒。每次只取 `player=1` 的请求，忽略居民此前自行发起的后台决策。引擎各自的终点略有不同，而且 UE 每轮重启，Redflag 在同一局内重复发令。这组证据能定位到两种调度时机；计算 GPU 负载、语音识别、模型生成、可见动作或可听回复的性能，还需要相应阶段自己的记录。[两个程序的原始标记与统计](packaged-dispatch.json)
+
+早先的固定回答试验只保留下一个实际发出的玩家请求。随后回报 `model_done` 的是其他请求编号。向另一张地图里的伙伴“二狗”说话时，游戏登记了发言，但没有录到这个玩家请求的有效动作。两份都是文本入口。此处未向 UE 游戏重放同一段 WAV，无法把它当作语音接收、停声或首个有声样本的对照。[原固定回答记录](ue-fixture.json) · [二狗的原记录](ue-companion.json)
+
 ## 复测
 
 从 Redflag 仓库根目录启动本机语音服务、模型与正式 Debug 构建。正式窗口使用已启动的本机 8716 和 8717；独立语音宿主另起仅在测试期间存在的决策网关，将它指向与 UE 相同的模型实例。UE 命令的两个本地输入目录分别指向已打好的 Windows 游戏包和它对应的 DeliveryAI 工具目录。
@@ -59,4 +67,6 @@ bin-int/Tests/Decision/SpeechPlaybackTests.exe 8717 20 > output/validation/runti
 tmp/ai-media-venv/Scripts/python.exe tests/benchmark_speech_stop.py --out output/validation/runtime-ai/webrtc-stop-20.json
 python tests/benchmark_packaged_ue.py --windows $Package --delivery-tools $DeliveryAI --model-endpoint http://127.0.0.1:18158/v1/chat/completions --seconds 34 --out output/validation/runtime-ai/ue-format-8k.json
 python tests/summarize_npc_latency.py
+python tests/check_watt_station.py --exe output/releases/Watt-Station-Win64/RedflagForge.exe --latency dispatch --trials 20
+python tests/compare_packaged_dispatch.py --windows $Package --delivery-tools $DeliveryAI --trials 5
 ```

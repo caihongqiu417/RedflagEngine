@@ -1,0 +1,214 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_Companion_Ergou_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "llm",
+  "model": "Qwen3-VL-2B-Instruct",
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T16:39:42.214000",
+      "engine_frame": 1,
+      "message": "LogTemp: NpcLatency request=4C1648274FBA7CC8E8569484E8DE8038 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:42.396000",
+      "engine_frame": 3,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A13449D1445ACE0045FC7C9A6F13FE7E request=4C1648274FBA7CC8E8569484E8DE8038 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:42.396000",
+      "engine_frame": 3,
+      "message": "LogTemp: NpcLatency request=1FC5407349A9130008F5E5B6CD792028 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:42.446000",
+      "engine_frame": 5,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=6708C3684332669DBCB763ADD58B3B28 request=1FC5407349A9130008F5E5B6CD792028 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.194000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=C2C59D3D47F82E74B4573AB4DFF1F194 stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.194000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=C2C59D3D47F82E74B4573AB4DFF1F194 stage=listening"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.194000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_Companion_Ergou_C_0 speech=C2C59D3D47F82E74B4573AB4DFF1F194 pending=0 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.194000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_Companion_Ergou_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.388000",
+      "engine_frame": 109,
+      "message": "LogTemp: NpcLatency request=69AA8AB04EA3DA822CD81CBF3C46CADA stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.444000",
+      "engine_frame": 112,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A13449D1445ACE0045FC7C9A6F13FE7E request=69AA8AB04EA3DA822CD81CBF3C46CADA accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.444000",
+      "engine_frame": 112,
+      "message": "LogTemp: NpcLatency request=8CFD91714A140218465A5CA04F1E3AE0 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.501000",
+      "engine_frame": 115,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=6708C3684332669DBCB763ADD58B3B28 request=8CFD91714A140218465A5CA04F1E3AE0 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.903000",
+      "engine_frame": 138,
+      "message": "LogTemp: NpcLatency request=C8711CDD48495473B161E7A79EEC395B stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:44.953000",
+      "engine_frame": 141,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=6708C3684332669DBCB763ADD58B3B28 request=C8711CDD48495473B161E7A79EEC395B accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:46.957000",
+      "engine_frame": 261,
+      "message": "LogTemp: NpcLatency request=F222B61D45D0D28B48E9218E72A0F812 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:47.006000",
+      "engine_frame": 264,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=6708C3684332669DBCB763ADD58B3B28 request=F222B61D45D0D28B48E9218E72A0F812 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:48.454000",
+      "engine_frame": 350,
+      "message": "LogTemp: NpcLatency request=D29089FD42B26F007CB457B5FAC957A9 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:48.521000",
+      "engine_frame": 354,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A13449D1445ACE0045FC7C9A6F13FE7E request=D29089FD42B26F007CB457B5FAC957A9 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T16:39:51.023000",
+      "engine_frame": 502,
+      "message": "LogTemp: NpcLatency request=B3D8F0E44E525934BA78879494D16323 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T16:39:51.059000",
+      "engine_frame": 504,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=6708C3684332669DBCB763ADD58B3B28 request=B3D8F0E44E525934BA78879494D16323 accepted=0 reason=TransportFailure"
+    }
+  ],
+  "model_calls": [
+    {
+      "status": 400,
+      "request_bytes": 35590,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4677,
+        "message": "request (4677 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 61.7
+    },
+    {
+      "status": 400,
+      "request_bytes": 36491,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4868,
+        "message": "request (4868 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 25.8
+    },
+    {
+      "status": 400,
+      "request_bytes": 35590,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4677,
+        "message": "request (4677 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 33.8
+    },
+    {
+      "status": 400,
+      "request_bytes": 36158,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4744,
+        "message": "request (4744 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 25.8
+    },
+    {
+      "status": 400,
+      "request_bytes": 36492,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4869,
+        "message": "request (4869 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 22.3
+    },
+    {
+      "status": 400,
+      "request_bytes": 36492,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4869,
+        "message": "request (4869 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 31.9
+    },
+    {
+      "status": 400,
+      "request_bytes": 35590,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4677,
+        "message": "request (4677 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 33.0
+    },
+    {
+      "status": 400,
+      "request_bytes": 36492,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4869,
+        "message": "request (4869 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 21.3
+    }
+  ],
+  "raw_log_sha256": "9fdd5bee3d844acb1ba50fba549934da30d64627135f25d26ee8b8334c7ff6b6"
+}
