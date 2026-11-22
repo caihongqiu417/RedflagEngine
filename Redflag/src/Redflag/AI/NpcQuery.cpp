@@ -13,7 +13,7 @@ namespace Redflag
 		return found != items.end() ? found->second : 0;
 	}
 
-	std::vector<NpcCandidate> FindCandidates(Scene& scene, uint64_t actor, const NpcDefinition& definition)
+	std::vector<NpcCandidate> FindCandidates(Scene& scene, uint64_t actor, const NpcDefinition& definition, const NpcMemory& memory, bool hasCamera)
 	{
 		Entity self = scene.GetEntityByUUID(actor);
 		if (!self || !self.HasComponent<NpcComponent>()) return {};
@@ -23,7 +23,29 @@ namespace Redflag
 
 		for (const NpcIntent& intent : definition.Intents)
 		{
-			// 同一个动作可能有几个目标。先检查库存或交互条件，再检查能否看见物体。
+			if (intent.Target == "surroundings")
+			{
+				if (hasCamera && definition.Memory.Pictures)
+					choices.push_back({intent.Key, intent.Key, intent.Description, {}, 0, 0.f});
+				continue;
+			}
+
+			// 这些动作针对一条消息或照片。物体还在不在，要等角色到了再看。
+			if (intent.Target == "clue" || intent.Target == "search_area")
+			{
+				for (const NpcEvidence& note : memory.GetEvidence())
+				{
+					if (note.Source != EvidenceSource::Photo && note.Source != EvidenceSource::Reported) continue;
+					if (intent.Target == "search_area" && (!note.Place || note.Visited)) continue;
+					const std::string source = note.Source == EvidenceSource::Photo ? "照片中的判断：" : "队友转述：";
+					// 两条消息可以都没有实体编号。模型按消息编号选择，换了排列顺序也能找回同一条。
+					choices.push_back({intent.Key + std::to_string(note.Number), intent.Key, intent.Description + " / " + source + note.Text,
+						{}, 0, note.Place ? glm::distance(origin, *note.Place) : 0.f, note.Number, note.Place});
+				}
+				continue;
+			}
+
+			// 拿取、维修等操作需要具体实体。在附近找符合条件的物品或设备，等实际接触时还要复查。
 			const size_t start = choices.size();
 			for (entt::entity handle : scene.GetRegistry().view<IDComponent, TransformComponent>())
 			{

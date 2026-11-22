@@ -59,6 +59,13 @@ namespace Redflag
 			return system && system->Report(actor, target, Text(text), Text(image));
 		}
 
+		bool ReportPlace(uint64_t actor, const glm::vec3* place, MonoString* text)
+		{
+			NpcSystem* system = Actors();
+			NpcMemory* notes = Notes(actor);
+			return notes && notes->Report(0, Text(text), system->SessionSeconds(), {}, *place);
+		}
+
 		bool Read(uint64_t actor, int index, int* source, uint64_t* target, MonoString** text, MonoString** image, double* seconds)
 		{
 			NpcMemory* notes = Notes(actor);
@@ -103,6 +110,7 @@ namespace Redflag
 	{
 		mono_add_internal_call("Redflag.NpcSense::ReadEnvironment", (const void*)ReadEnvironment);
 		mono_add_internal_call("Redflag.NpcNotes::Report", (const void*)Report);
+		mono_add_internal_call("Redflag.NpcNotes::ReportPlace", (const void*)ReportPlace);
 		mono_add_internal_call("Redflag.NpcNotes::Read", (const void*)Read);
 		mono_add_internal_call("Redflag.NpcNotes::SetPreference", (const void*)SetPreference);
 		mono_add_internal_call("Redflag.NpcNotes::GetPreference", (const void*)GetPreference);

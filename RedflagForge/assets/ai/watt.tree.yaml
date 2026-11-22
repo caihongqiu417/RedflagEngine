@@ -1,5 +1,5 @@
 Root: 1
-NextID: 13
+NextID: 16
 Nodes:
   - {ID: 1, Kind: ModelSelector, Name: 瓦特的选择, Position: [40, 210]}
   - {ID: 2, Kind: Subtree, Name: 补给, Position: [310, 60]}
@@ -13,6 +13,9 @@ Nodes:
   - {ID: 10, Kind: Action, Name: 跟随队友, Action: follow, Position: [310, 385]}
   - {ID: 11, Kind: Action, Name: 标记目标, Action: mark, Position: [310, 485]}
   - {ID: 12, Kind: Action, Name: 等待队友取药, Action: reserve, Position: [310, 585]}
+  - {ID: 13, Kind: Action, Name: 转告线索, Action: report, Position: [310, 685]}
+  - {ID: 14, Kind: Action, Name: 到附近查看, Action: investigate, Position: [310, 785]}
+  - {ID: 15, Kind: Action, Name: 观察周围, Action: look, Position: [310, 885]}
 Edges:
   - {From: 1, Key: gather, To: 2}
   - {From: 1, Key: share, To: 2}
@@ -27,3 +30,6 @@ Edges:
   - {From: 1, Key: follow, To: 10}
   - {From: 1, Key: mark, To: 11}
   - {From: 1, Key: reserve, To: 12}
+  - {From: 1, Key: report, To: 13}
+  - {From: 1, Key: investigate, To: 14}
+  - {From: 1, Key: look, To: 15}

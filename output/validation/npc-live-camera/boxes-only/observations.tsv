@@ -1,0 +1,6 @@
+file	observer	captured_seconds	x	y	z	dx	dy	dz	prompt	answer	entity	world_receipt	photo_id	remembered
+01.png	42	0.0037285	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	lit	0	已记录拍摄时的画面	42-9622018325748416141	1
+02.png	42	1.55536	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	dark	0	已记录拍摄时的画面	42-2358269875067567536	1
+03.png	42	1.85788	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	region1	60	当前可见	42-11484940346418075904	1
+04.png	42	2.20281	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	region1	60	当前可见	42-220246975797539928	1
+05.png	42	2.51554	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	region1	60	当前可见	42-4025654978375629610	1

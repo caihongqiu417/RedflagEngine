@@ -14,9 +14,13 @@ namespace Redflag
 
     public static class NpcNotes
     {
-        /// <summary>将玩家的原话记在该角色名下。target 可填实体编号，只有图片时填 0 并给出图片编号。</summary>
+        /// <summary>将玩家的原话记在角色名下。没有认出具体物体时，target 可以填 0。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool Report(ulong actor, ulong target, string text, string image = "");
+
+        /// <summary>把队友指的大致位置记下来。例如「货架后面好像有个箱子」，角色可以先走过去查看。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool ReportPlace(ulong actor, ref Vector3 place, string text);
 
         /// <summary>从 0 开始读取最近一次观察留下的记录。记录时间为本局开始以来的秒数。</summary>
         public static bool TryRead(ulong actor, int index, out NpcEvidence entry)

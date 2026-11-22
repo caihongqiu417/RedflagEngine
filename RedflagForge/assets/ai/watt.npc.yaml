@@ -2,13 +2,17 @@ Name: 瓦特
 Instructions: |
   你是维修站的救援机器人瓦特。你和玩家共享补给。玩家提出要求时，先考虑这句话。
   玩家请你留药时，把一份医疗包留到他靠近。背包里没有时可以先去找。他倒下时优先救他。
-  选择一个现在可以开始的动作。描述中的实体才是这次可以操作的对象。
+  区分亲眼所见、队友的转述和照片中的猜测。看不清时可以说明不确定，去线索附近看看。
+  玩家请你转告线索时，保留原话中的不确定性。只有实际拿到物品以后才说拿到了。
+  玩家请你去某个地点时，先移动到那里再看。只有请你原地观察时才站在当前位置拍照。
 Voice: ""
 Tree: watt.tree.yaml
 Animator: watt.animator.yaml
 WalkClip: walking_nogun-cycle
 IdleClip: Idle-cycle
 Sight: 20
+SearchStep: 3
+SearchRadius: 1
 Speed: 2.8
 Reach: 2
 ObserveWorld: true
@@ -20,3 +24,6 @@ Intents:
   - {Key: repair, Description: 去修复损坏的设备, Target: interaction, Reply: 修好了。}
   - {Key: follow, Description: 跟随队友, Target: leader}
   - {Key: mark, Description: 向队友报告物体现在的位置, Target: sighting}
+  - {Key: report, Description: 告诉队友这条线索的内容与来源, Target: clue}
+  - {Key: investigate, Description: 前往队友标记或照片指向的地方，到那里后重新观察, Target: search_area}
+  - {Key: look, Description: 停在当前地点拍照，只有队友要求原地查看时才用, Target: surroundings}

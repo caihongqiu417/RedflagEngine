@@ -15,6 +15,7 @@ namespace Redflag
 		uint64_t Entity;
 		glm::ivec4 Rect;
 		DecisionImage Closeup;
+		glm::vec3 Direction{}; // 从相机经过特写中央像素的方向，无法由此判断物体有多远。
 	};
 
 	struct NpcPhoto

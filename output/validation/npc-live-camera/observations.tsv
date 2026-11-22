@@ -1,0 +1,8 @@
+file	observer	captured_seconds	x	y	z	dx	dy	dz	prompt	answer	entity	world_receipt	photo_id	remembered
+01.png	42	0.0031405	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	lit	0	已记录拍摄时的画面	42-11159741802168285835	1
+02.png	42	0.346449	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	dark	0	已记录拍摄时的画面	42-15995235251653998622	1
+03.png	42	0.662863	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	当前可见	42-1515671960860140453	1
+06.png	42	1.27719	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	当前位置看不到该物体	42-8281473470876349547	0
+04.png	42	1.83076	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	照片中的物体已离开场景	42-15978205262474759700	0
+05.png	42	2.41534	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	absent	0	照片里没有找到目标	42-12937313712773340080	1
+station.png	1102	2.40807	-5.38038	1.63	-0.385844	-0.644218	0	0.764842	请用两三句中文描述眼前可见的地表、设施和光线，看不清的不要推测。	地表是棕色的，看起来像是干燥的泥土。在画面的左侧，有一个黑色的金属架子，上面放着一个红色的油桶。在架子旁边，有一个蓝色的桶，桶上有一个蓝色的圆形标志。在地面上，散落着许多白色的、类似蛋的物体。在画面的右侧，有一个机器人，它的头部是一个圆柱形的蓝色物体，上面有蓝色的圆形标志。背景是远处的树林和天空。	0	已记录拍摄时的画面	1102-13759013473411273782	1

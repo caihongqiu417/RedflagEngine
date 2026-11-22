@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "NpcAuthoringFiles.h"
+#include "ForgeTool.h"
 #include <commdlg.h>
 
 #pragma comment(lib, "comdlg32.lib")
@@ -31,7 +32,7 @@ namespace Redflag
         return path;
     }
 
-    YAML::Node RunNpcAuthoringTool(const YAML::Node& request)
+    YAML::Node RunForgeTool(const char* scriptName, const YAML::Node& request)
     {
         fs::path temporary;
         YAML::Node result;
@@ -41,12 +42,12 @@ namespace Redflag
             wchar_t executable[MAX_PATH];
             GetModuleFileNameW(nullptr, executable, MAX_PATH);
             fs::path root = fs::path(executable).parent_path();
-            while (root != root.root_path() && !fs::is_regular_file(root / "scripts/redflag_mcp/forge_authoring.py"))
+            while (root != root.root_path() && !fs::is_regular_file(root / "scripts/redflag_mcp" / scriptName))
                 root = root.parent_path();
             fs::path python = root / "bin-int/redflag-mcp/Scripts/python.exe";
-            fs::path script = root / "scripts/redflag_mcp/forge_authoring.py";
+            fs::path script = root / "scripts/redflag_mcp" / scriptName;
             if (!fs::is_regular_file(python) || !fs::is_regular_file(script))
-                throw std::runtime_error("请按 scripts/redflag_mcp/README.md 准备角色工具的 Python 环境。");
+                throw std::runtime_error("请按 scripts/redflag_mcp/README.md 准备 Forge 工具的 Python 环境。");
 
             temporary = NpcTemporaryFile();
             {
@@ -62,14 +63,14 @@ namespace Redflag
             PROCESS_INFORMATION process{};
             if (!CreateProcessW(python.c_str(), command.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr,
                                 root.c_str(), &startup, &process))
-                throw std::runtime_error("启动角色工具失败。");
+                throw std::runtime_error("启动 Forge 工具失败。");
             CloseHandle(process.hThread);
             WaitForSingleObject(process.hProcess, INFINITE);
             DWORD code = 0;
             GetExitCodeProcess(process.hProcess, &code);
             CloseHandle(process.hProcess);
             if (code != 0)
-                throw std::runtime_error("角色工具运行失败，请检查本地 Python 环境。");
+                throw std::runtime_error("Forge 工具运行失败，请检查本地 Python 环境。");
             std::ifstream reply(temporary);
             result = YAML::Load(reply);
         }
@@ -84,5 +85,10 @@ namespace Redflag
             fs::remove(temporary, error);
         }
         return result;
+    }
+
+    YAML::Node RunNpcAuthoringTool(const YAML::Node& request)
+    {
+        return RunForgeTool("forge_authoring.py", request);
     }
 }

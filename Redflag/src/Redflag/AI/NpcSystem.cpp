@@ -108,15 +108,16 @@ namespace Redflag
 	{
 		NpcDefinition* definition = GetDefinition(actor);
 		if (!definition) { Record(state, "配置", m_LoadError); return; }
-		state.Candidates = FindCandidates(m_Scene, actor, *definition);
-		// 重新检查这次能操作的目标和以前提到的实体。玩家对它的描述不能替代场景里的名字与遮挡检查。
 		state.Memory.Configure(definition->Memory);
+		state.Candidates = FindCandidates(m_Scene, actor, *definition, state.Memory, bool(TakeLook));
+		// 当面认出的实体单独记为「现场看见」。照片和转述保留原来的来源。
 		if (definition->Memory.Sight)
 		{
 			std::set<uint64_t> targets;
-			for (const NpcCandidate& choice : state.Candidates) targets.insert(choice.Target);
+			for (const NpcCandidate& choice : state.Candidates)
+				if (choice.Target) targets.insert(choice.Target);
 			for (const NpcEvidence& entry : state.Memory.GetEvidence())
-				if (entry.Target && (entry.Source == EvidenceSource::Reported || definition->Memory.KeepSight))
+				if (entry.Target && entry.Source != EvidenceSource::Photo && (entry.Source == EvidenceSource::Reported || definition->Memory.KeepSight))
 					targets.insert(entry.Target);
 
 			state.Memory.BeginSight();
@@ -138,13 +139,13 @@ namespace Redflag
 		state.Memory.AddTo(request);
 		if (!event.empty()) request.Observations.push_back({"event", event});
 		Entity owner = m_Scene.GetEntityByUUID(actor);
-		if (owner.HasComponent<InventoryComponent>())
 		if (!definition->LeaderRelationship.empty())
 		{
 			Entity leader = m_Scene.GetEntityByUUID(owner.GetComponent<NpcComponent>().Leader);
 			if (leader)
 				request.Observations.push_back({"与队友" + leader.GetName() + "的约定", definition->LeaderRelationship});
 		}
+		if (owner.HasComponent<InventoryComponent>())
 		{
 			std::string stock;
 			for (const auto& item : owner.GetComponent<InventoryComponent>().Items)
@@ -164,6 +165,7 @@ namespace Redflag
 	void NpcSystem::Stop(uint64_t actor, NpcState& state)
 	{
 		CancelTraversal(m_Scene, actor);
+		state.Look = 0;
 		if (state.Request)
 		{
 			Record(state, "中止", "取消尚未回答的请求");
@@ -193,9 +195,9 @@ namespace Redflag
 
 		// 两个物体可能共用同一种动作。复查原来选中的实体，不能用重新排序后的编号替代它。
 		NpcDefinition& def = *GetDefinition(actor);
-		const auto current = FindCandidates(m_Scene, actor, def);
+		const auto current = FindCandidates(m_Scene, actor, def, state.Memory, bool(TakeLook));
 		const auto valid = std::find_if(current.begin(), current.end(), [&](const NpcCandidate& c) {
-			return c.Intent == picked->Intent && c.Target == picked->Target && c.Item == picked->Item;
+			return c.Intent == picked->Intent && c.Target == picked->Target && c.Item == picked->Item && c.Note == picked->Note;
 		});
 		if (valid == current.end()) { Ask(actor, state, "刚才选择的对象已不可用，请重新选择。"); return; }
 		state.Goal = *valid;
@@ -243,10 +245,10 @@ namespace Redflag
 		}
 	}
 
-	bool NpcSystem::Face(uint64_t actor, uint64_t target, float seconds)
+	bool NpcSystem::Face(uint64_t actor, glm::vec3 position, float seconds)
 	{
 		auto& transform = m_Scene.GetEntityByUUID(actor).GetComponent<TransformComponent>();
-		const glm::vec3 offset = m_Scene.GetEntityByUUID(target).GetComponent<TransformComponent>().Translation - transform.Translation;
+		const glm::vec3 offset = position - transform.Translation;
 		if (offset.x == 0.f && offset.z == 0.f) return true;
 
 		// 取较短的方向转身。准备递东西时，即使队友在身后也不会瞬间掉头。
@@ -259,7 +261,6 @@ namespace Redflag
 
 	bool NpcSystem::Approach(uint64_t actor, NpcState& state, float range, float seconds)
 	{
-		NpcDefinition& def = *GetDefinition(actor);
 		Entity owner = m_Scene.GetEntityByUUID(actor);
 		const auto* motion = m_Scene.GetRegistry().try_get<TerrainTraversal>(static_cast<entt::entity>(owner));
 		if ((!motion || !motion->InAir()) && CanReach(m_Scene, actor, state.Goal.Target, range))
@@ -267,20 +268,25 @@ namespace Redflag
 			return true;
 		}
 
-		// 目标给出行走方向。脚下的坡面、台阶和可以攀上的平台由角色的物理查询决定。
-		TransformComponent& transform = owner.GetComponent<TransformComponent>();
-		const TransformComponent& target = m_Scene.GetEntityByUUID(state.Goal.Target).GetComponent<TransformComponent>();
-		glm::vec3 offset = target.Translation - transform.Translation;
+		const glm::vec3 place = m_Scene.GetEntityByUUID(state.Goal.Target).GetComponent<TransformComponent>().Translation;
+		const float height = place.y - owner.GetComponent<TransformComponent>().Translation.y;
+		const float stopDistance = std::sqrt(std::max(0.f, range * range - height * height));
+		WalkTo(actor, state, place, stopDistance, seconds);
+		return false;
+	}
+
+	void NpcSystem::WalkTo(uint64_t actor, NpcState& state, glm::vec3 place, float stopDistance, float seconds)
+	{
+		Entity owner = m_Scene.GetEntityByUUID(actor);
+		const TransformComponent& transform = owner.GetComponent<TransformComponent>();
+		glm::vec3 offset = place - transform.Translation;
 		offset.y = 0.0f;
 
 		const float distance = glm::length(offset);
 		const glm::vec3 direction = distance > 0.f ? offset / distance : glm::vec3(0.f);
-		// 一帧过长时也只走到交互范围内。目标与角色有高度差时，把允许的距离换算到地面上。
-		const float height = target.Translation.y - transform.Translation.y;
-		const float reachOnGround = std::sqrt(std::max(0.f, range * range - height * height));
-		const float remaining = std::max(0.f, distance - std::nextafter(reachOnGround, 0.f));
-		const float step = std::min(remaining, def.Speed * seconds);
-		Face(actor, state.Goal.Target, seconds);
+		const float remaining = std::max(0.f, distance - std::nextafter(stopDistance, 0.f));
+		const float step = std::min(remaining, GetDefinition(actor)->Speed * seconds);
+		Face(actor, place, seconds);
 		const glm::vec3 forward(std::sin(transform.Rotation.y), 0.0f, std::cos(transform.Rotation.y));
 		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
 			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(transform.Scale.x) : .30f;
@@ -288,7 +294,6 @@ namespace Redflag
 		const TraversalMode mode = MoveCharacter(m_Scene, actor, delta, radius, seconds, TraversalInput::Automatic);
 		Enter(actor, state, mode == TraversalMode::Jump ? "jump" : mode == TraversalMode::Climb ? "climb" :
 			mode == TraversalMode::Blocked ? "blocked" : "walk");
-		return false;
 	}
 
 	void NpcSystem::Finish(uint64_t actor, NpcState& state, ActionResult result)
@@ -314,8 +319,81 @@ namespace Redflag
 			Ask(actor, state, "上次动作没有完成，请根据现状重新选择。");
 	}
 
+	//========== 转告线索与实地查看 ==========
+
+	void NpcSystem::FollowClue(uint64_t actor, NpcState& state, float seconds)
+	{
+		if (state.Look) return;
+		const auto& notes = state.Memory.GetEvidence();
+		const auto note = std::find_if(notes.begin(), notes.end(),
+			[&](const NpcEvidence& entry) { return entry.Number == state.Goal.Note; });
+		if (note == notes.end())
+		{
+			Finish(actor, state, ActionResult::Unavailable);
+			return;
+		}
+
+		if (state.Action == "report")
+		{
+			const std::string speech = (note->Source == EvidenceSource::Photo ? "从刚才的照片看，" : "队友提到，") + note->Text;
+			Record(state, "报点", speech, 0, speech);
+			Finish(actor, state, ActionResult::Completed);
+			return;
+		}
+		if (state.Action != "investigate" || !state.Goal.Place)
+		{
+			Finish(actor, state, ActionResult::Unavailable);
+			return;
+		}
+
+		const glm::vec3 place = *state.Goal.Place;
+		const glm::vec3 here = m_Scene.GetEntityByUUID(actor).GetComponent<TransformComponent>().Translation;
+		const float distance = glm::length(glm::vec2(place.x - here.x, place.z - here.z));
+		const NpcDefinition& definition = *GetDefinition(actor);
+		if (distance > definition.SearchRadius)
+		{
+			WalkTo(actor, state, place, definition.SearchRadius, seconds);
+			if (state.Stage != "blocked") return;
+		}
+
+		// 遇到墙也可以就地再看。到这里没有更改任何物品的库存或归属。
+		state.Memory.MarkVisited(note->Number);
+		const std::string outcome = distance <= definition.SearchRadius ? "到了线索提到的地方。" : "通往线索的路上有障碍。";
+		Enter(actor, state, "idle");
+		Record(state, "查看", outcome);
+		state.Look = m_NextLook++;
+		if (definition.Memory.Pictures && TakeLook && TakeLook(actor, state.Look)) return;
+		FinishLook(actor, state.Look, outcome + "这次没有取得新照片。", false);
+	}
+
+	void NpcSystem::FinishLook(uint64_t actor, uint64_t look, const std::string& observation, bool receivedImage)
+	{
+		const auto found = m_Actors.find(actor);
+		if (found == m_Actors.end() || !look || found->second.Look != look) return;
+		NpcState& state = found->second;
+		state.Look = 0;
+		const bool wasLooking = state.Action == "look";
+		Record(state, receivedImage ? "复看" : "观察未完成", observation, 0, observation);
+		Finish(actor, state, receivedImage ? ActionResult::Completed : ActionResult::Unavailable);
+		if (receivedImage && !wasLooking) Ask(actor, state, observation);
+	}
+
 	void NpcSystem::Execute(uint64_t actor, NpcState& state, float seconds)
 	{
+		if (state.Action == "look")
+		{
+			if (state.Look) return;
+			state.Look = m_NextLook++;
+			if (TakeLook && TakeLook(actor, state.Look)) return;
+			state.Look = 0;
+			Finish(actor, state, ActionResult::Unavailable);
+			return;
+		}
+		if (state.Goal.Note)
+		{
+			FollowClue(actor, state, seconds);
+			return;
+		}
 		Entity target = m_Scene.GetEntityByUUID(state.Goal.Target);
 		if (!target && !state.ContactMade)
 		{
@@ -355,7 +433,7 @@ namespace Redflag
 			if (!state.Use.IsRunning())
 			{
 				const float range = target.GetComponent<InteractionComponent>().Range;
-				if (!Approach(actor, state, range, seconds) || !Face(actor, state.Goal.Target, seconds)) return;
+				if (!Approach(actor, state, range, seconds) || !Face(actor, target.GetComponent<TransformComponent>().Translation, seconds)) return;
 				Enter(actor, state, state.Action);
 				const ActionResult start = state.Use.Start(m_Scene, actor, state.Goal.Target, state.Action);
 				if (start != ActionResult::Running)
@@ -390,7 +468,7 @@ namespace Redflag
 			}
 			else if (!Approach(actor, state, definition.Reach, seconds)) return;
 
-			if (!Face(actor, state.Goal.Target, seconds)) return;
+			if (!Face(actor, target.GetComponent<TransformComponent>().Translation, seconds)) return;
 			Enter(actor, state, stage);
 		}
 

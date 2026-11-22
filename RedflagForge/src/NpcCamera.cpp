@@ -101,7 +101,10 @@ namespace Redflag
 					if (entities[source] == id) cut[size_t(y)*size.x+x] = pixels[source];
 				}
 			Entity item(static_cast<entt::entity>(id), &scene);
-			photo.Regions.push_back({item.GetUUID(),rect,EncodePng(std::string(1,char('A'+i)),cut,size)});
+			const glm::vec2 center{(rect.x + rect.z + 1.f) / photo.Size.x - 1.f, 1.f - (rect.y + rect.w + 1.f) / photo.Size.y};
+			const glm::vec4 ray = glm::inverse(projection * view) * glm::vec4(center, 1.f, 1.f);
+			photo.Regions.push_back({item.GetUUID(),rect,EncodePng(std::string(1,char('A'+i)),cut,size),
+				glm::normalize(glm::vec3(ray) / ray.w - photo.Eye)});
 		}
 		return photo;
 	}

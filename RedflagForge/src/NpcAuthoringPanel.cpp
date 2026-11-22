@@ -41,6 +41,8 @@ namespace Redflag
         data["ObserveWorld"] = npc.ObserveWorld;
         data["ObservePictures"] = npc.Memory.Pictures;
         data["Sight"] = npc.Sight;
+        data["SearchStep"] = npc.SearchStep;
+        data["SearchRadius"] = npc.SearchRadius;
         YAML::Node rows(YAML::NodeType::Sequence);
         for (const NpcIntent& intent : npc.Intents)
         {
@@ -50,6 +52,8 @@ namespace Redflag
             row["Target"] = intent.Target;
             if (!intent.Item.empty())
                 row["Item"] = intent.Item;
+            if (!intent.Reply.empty())
+                row["Reply"] = intent.Reply;
             rows.push_back(row);
         }
         data["Intents"] = rows;
@@ -283,12 +287,12 @@ namespace Redflag
         Edit("名称", m_Draft.Name);
         ImGui::TextUnformatted("性格及行动约定");
         Edit("##Instructions", m_Draft.Instructions, true);
+        ImGui::TextUnformatted("与指定队友的约定");
+        Edit("##LeaderRelationship", m_Draft.LeaderRelationship, true);
         Edit("决策模型", m_Draft.Model);
         if (m_Draft.Model.empty())
             ImGui::TextDisabled("留空使用决策服务的默认模型。");
         Edit("音色", m_Draft.Voice);
-        ImGui::TextUnformatted("与指定队友的约定");
-        Edit("##LeaderRelationship", m_Draft.LeaderRelationship, true);
         if (m_Draft.Voice.empty())
         {
             if (m_DefaultVoice.empty())
@@ -316,6 +320,8 @@ namespace Redflag
         ImGui::Checkbox("观察场景中的物体", &m_Draft.ObserveWorld);
         ImGui::Checkbox("允许用角色相机拍照", &m_Draft.Memory.Pictures);
         ImGui::InputFloat("观察距离（米）", &m_Draft.Sight);
+        ImGui::InputFloat("沿照片方向前进（米）", &m_Draft.SearchStep);
+        ImGui::InputFloat("距标记多远停下查看（米）", &m_Draft.SearchRadius);
     }
 
     // ---- 候选行与电子表格 ----
@@ -352,7 +358,7 @@ namespace Redflag
             }
         }
         ImGui::EndTable();
-        ImGui::TextWrapped("候选键连接行为树。目标来源决定游戏去哪里找对象，例如 pickup 找可拿的物品，leader 找队友。");
+        ImGui::TextWrapped("pickup 找可拿的物品，leader 找队友。clue 可以转告一条消息，search_area 可以到消息指的地方查看，surroundings 允许角色原地拍照。");
     }
 
     void NpcAuthoringPanel::DrawTables()
@@ -594,14 +600,14 @@ namespace Redflag
             DecisionRequest request;
             request.Prompt = m_Prompt;
             request.Instructions = m_Draft.Instructions;
+            if (!m_Draft.LeaderRelationship.empty())
+                request.Observations.push_back({"与指定队友的约定", m_Draft.LeaderRelationship});
             request.Model = m_Draft.Model;
             for (const NpcIntent& intent : m_Draft.Intents)
                 request.Candidates.push_back({intent.Key, intent.Description});
             m_Request = m_Client.Start(std::move(request));
             m_RequestOwner = m_Path;
             m_Message = "正在等待模型选择…";
-            if (!m_Draft.LeaderRelationship.empty())
-                request.Observations.push_back({"与指定队友的约定", m_Draft.LeaderRelationship});
         }
         if (m_Request && ImGui::Button("停止试答"))
             m_Client.Cancel(m_Request);

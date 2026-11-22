@@ -5,28 +5,32 @@
 
 namespace Redflag
 {
+	//========== 拍照时的视角与问题 ==========
+
 	glm::vec3 NpcEyePosition(const TransformComponent& transform, const NpcDefinition& npc)
 	{
 		return transform.Translation + glm::quat(transform.Rotation) * glm::vec3(0,npc.EyeHeight,npc.EyeForward);
 	}
 
-	bool PhotoQuestion::Start(const Ref<Scene>& scene, NpcPhoto photo, PhotoSubject subject, const std::string& question)
+	bool PhotoQuestion::Start(const Ref<Scene>& scene, NpcPhoto photo, PhotoSubject subject, const std::string& question, bool suggestPlace)
 	{
 		Clear();
 		NpcSystem* npcs = scene->GetNpcs();
 		NpcDefinition* npc = npcs ? npcs->GetDefinition(photo.Observer) : nullptr;
 		if (!npc || !npc->Memory.Pictures || photo.Image.Bytes.empty() || question.empty())
 			return false;
+
 		m_Scene = scene;
 		m_Session = npcs->SessionStart();
 		m_Photo = std::move(photo);
 		m_Subject = subject;
 		m_SearchText = question;
+		m_SuggestPlace = suggestPlace;
 
 		DecisionRequest request;
 		request.Model = npc->Model;
 		request.Prompt = question;
-		request.Instructions = "Use the attached photographs only. For an object, inspect each individual close-up. If none shows the requested object, choose absent.";
+		request.Instructions = "Describe what the attached photographs suggest. Say when you are unsure. A photograph shows an earlier moment. For an object, choose a close-up, uncertain, or absent.";
 		request.Images.push_back(m_Photo.Image);
 		if (subject == PhotoSubject::Object)
 		{
@@ -36,6 +40,7 @@ namespace Redflag
 				request.Candidates.push_back({region.Closeup.ID, "object in close-up image " + region.Closeup.ID});
 			}
 			request.Candidates.push_back({"absent", "none of the photographed objects matches the request"});
+			request.Candidates.push_back({"uncertain", "something might match, but the photograph is unclear"});
 		}
 		if (subject == PhotoSubject::Lighting)
 			request.Candidates = {{"lit", "brightly illuminated surfaces"}, {"dark", "dark or unlit surfaces"}, {"uncertain", "unclear or mixed illumination"}};
@@ -49,20 +54,32 @@ namespace Redflag
 		const auto result = m_Client.Take(m_Request);
 		if (!result) return false;
 		m_Request = 0;
-		if (result->Status != DecisionStatus::Completed) { m_Receipt = result->Error; return true; }
+		if (result->Status != DecisionStatus::Completed)
+		{
+			m_Receipt = result->Error;
+			return true;
+		}
+
+		// 玩家可能已停止 Play 并重新进入同一场景。上一局的照片仍属于上一局的角色。
 		const Ref<Scene> scene = m_Scene.lock();
 		NpcSystem* npcs = scene ? scene->GetNpcs() : nullptr;
 		const NpcDefinition* npc = npcs && npcs->SessionStart() == m_Session ? npcs->GetDefinition(m_Photo.Observer) : nullptr;
-		if (!npc || !npc->Memory.Pictures) { m_Receipt = "本次观察已结束"; return true; }
-		if (!m_Verifying)
-			m_Answer = m_Subject == PhotoSubject::Description ? result->Text : result->Choice;
-		else if (result->Choice == "absent")
+		if (!npc || !npc->Memory.Pictures)
 		{
-			m_Target = 0;
-			m_Answer = "absent";
+			m_Receipt = "本次观察已结束";
+			return true;
 		}
 
-		if (m_Subject == PhotoSubject::Object && !m_Verifying && m_Answer != "absent")
+		if (!m_Verifying)
+			m_Answer = m_Subject == PhotoSubject::Description ? result->Text : result->Choice;
+		else if (result->Choice != "present")
+		{
+			m_Target = 0;
+			m_Answer = result->Choice;
+		}
+
+		glm::vec3 direction = m_Photo.Forward;
+		if (m_Subject == PhotoSubject::Object && !m_Verifying && m_Answer != "absent" && m_Answer != "uncertain")
 		{
 			// 仅凭总览，模型有时把墙面误认为墙前已拿走的物品。让它单独检查选中物体的像素。
 			const auto selected = std::find_if(m_Photo.Regions.begin(),m_Photo.Regions.end(),
@@ -73,35 +90,33 @@ namespace Redflag
 			check.Prompt = "Does this single object close-up show the object requested below? If the object is not actually visible, select absent. Original question: " + m_SearchText;
 			check.Instructions = "Look at the pixels of the close-up only.";
 			check.Images.push_back(selected->Closeup);
-			check.Candidates = {{"absent","the object sought is missing, different, or unclear"},{"present","this visible object matches the object being sought"}};
+			check.Candidates = {{"absent","the object sought is missing or different"},{"uncertain","the close-up is inconclusive"},{"present","this visible object appears to match"}};
 			m_Verifying = true;
 			m_Request = m_Client.Start(std::move(check));
 			return false;
 		}
 
 		std::string evidence = m_Answer;
-		if (m_Subject == PhotoSubject::Object && m_Answer != "absent")
+		if (m_Subject == PhotoSubject::Object)
 		{
-			Entity target = scene->GetEntityByUUID(m_Target);
-			if (!target) { m_Receipt = "照片中的物体已离开场景"; return true; }
-			const Entity observer = scene->GetEntityByUUID(m_Photo.Observer);
-			const glm::vec3 eye = NpcEyePosition(observer.GetComponent<TransformComponent>(), *npc);
-			const glm::vec3 delta = target.GetComponent<TransformComponent>().Translation - eye;
-			const float distance = glm::length(delta);
-			const auto hit = scene->Raycast(eye, delta, distance, m_Photo.Observer);
-			if (distance > npc->Sight || (hit && hit->Entity != m_Target)) { m_Receipt = "当前位置看不到该物体"; return true; }
-			evidence = target.GetName();
-			m_Receipt = "当前可见";
-			if (target.HasComponent<PickupComponent>())
+			evidence = "查找「" + m_SearchText + "」：";
+			if (m_Answer == "absent") evidence += "当时的照片里没有辨认出来";
+			else if (m_Answer == "uncertain") evidence += "看不清，需要换个位置再看";
+			else
 			{
-				const PickupComponent& item = target.GetComponent<PickupComponent>();
-				if (!item.Item.empty() && item.Count > 0 && CanReach(*scene,m_Photo.Observer,m_Target,npc->Reach))
-					m_Receipt = "当前在拿取范围内";
+				evidence += "照片的 " + m_Answer + " 区域看起来相似";
+				const auto region = std::find_if(m_Photo.Regions.begin(), m_Photo.Regions.end(),
+					[&](const PhotoRegion& r) { return r.Entity == m_Target; });
+				if (region != m_Photo.Regions.end()) direction = region->Direction;
 			}
 		}
-		else if (m_Subject == PhotoSubject::Object) m_Receipt = evidence = "照片里没有找到目标";
-		else m_Receipt = "已记录拍摄时的画面";
-		npcs->GetMemory(m_Photo.Observer)->RememberPhoto(m_Target, evidence, m_Photo.Seconds, m_Photo.Image.ID);
+		// 照片只给出方向。沿地面往那个方向迈几步，留给角色换角度重看的机会。
+		std::optional<glm::vec3> place;
+		direction.y = 0.f;
+		if (m_SuggestPlace && m_Answer != "absent" && npc->SearchStep > 0.f && glm::length(direction) > 0.f)
+			place = m_Photo.Eye + glm::normalize(direction) * npc->SearchStep;
+		m_Receipt = npcs->GetMemory(m_Photo.Observer)->RememberPhoto(m_Target, evidence, m_Photo.Seconds, m_Photo.Image.ID, place)
+			? "已记录拍摄时的判断" : "角色当前不保留照片";
 		return true;
 	}
 

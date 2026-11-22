@@ -1,0 +1,8 @@
+file	observer	captured_seconds	x	y	z	dx	dy	dz	prompt	answer	entity	world_receipt	photo_id	remembered
+01.png	42	0.0032332	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	lit	0	已记录拍摄时的判断	42-8789617981089596832	1
+02.png	42	0.34564	0	1.55	0.28	0	0	1	Is the wall in front of this camera bright and illuminated or very dark? Judge its visible surface.	dark	0	已记录拍摄时的判断	42-11936040584144941624	1
+03.png	42	0.637424	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	已记录拍摄时的判断	42-5398822677117020399	1
+06.png	42	1.15796	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	已记录拍摄时的判断	42-1902316375698415632	1
+04.png	42	1.65973	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	B	61	已记录拍摄时的判断	42-10548946213412019208	1
+05.png	42	2.24462	0	1.55	0.28	0	0	1	Which candidate region corresponds to the small vivid red cube, if visible? The white wall is not the requested object.	uncertain	0	已记录拍摄时的判断	42-17958147691726165770	1
+station.png	1102	2.63449	-5.38038	1.63	-0.385844	-0.644218	0	0.764842	请用两三句中文描述眼前可见的地表、设施和光线，看不清的不要推测。	画面中，一个机器人站在一片开阔的沙地上，其周围散落着许多白色的小物件，旁边有一个蓝色的桶和一个金属架子。背景是远处的树林和天空。光线来自上方，整体环境明亮。	0	已记录拍摄时的判断	1102-9396940900046753841	1

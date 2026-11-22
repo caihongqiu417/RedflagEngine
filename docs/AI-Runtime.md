@@ -4,6 +4,8 @@
 
 ## 角色和设备
 
+第一次读源码，可以先跟一次玩家发话。游戏脚本调用 `Npc.Submit`，场景中的 `NpcSystem::Ask` 把当前能做的动作和这个角色记得的事情放进请求。网络请求返回时，`Accept` 认回提问时的那条候选，让行为树选出接下来要执行的动作。之后每帧由 `Execute` 推进。想弄清瓦特为什么选了箱子，先看提问时的候选和连线。想弄清伸手以后有没有拿到，才需要看交互和背包。[玩家发话到动作执行](../Redflag/src/Redflag/AI/NpcSystem.cpp) · [收集候选](../Redflag/src/Redflag/AI/NpcQuery.cpp) · [世界中的拿取与交付](../Redflag/src/Redflag/Gameplay/WorldActions.cpp)
+
 把 `NpcComponent` 加在维修员身上，让 `Definition` 指向角色 YAML。示例只给维修员一种工作。配置中的 `Target: interaction` 表示寻找场景里提供交互的设备，`Key: repair` 要与设备的 `InteractionComponent.Action` 对应。行为树把模型选中的 `repair` 连到执行维修的动作。角色定义里的 `Tree` 相对于这份 YAML 查找。为电梯添加 `HealthComponent` 和 `InteractionComponent` 后，游戏就能知道要修多久、能修多少。[维修员的定义](../examples/npc-runtime/technician.npc.yaml) · [两节点的行为树](../examples/npc-runtime/technician.tree.yaml) · [示例中创建实体的代码](../tests/NpcRuntimeSmoke.h)
 
 引擎默认向本机 8716 端口的决策服务提交请求。已有兼容聊天接口时，在仓库根目录用下面的命令启动。把地址和模型名换成自己的服务实际提供的值。这个例子只读取文字。启动器的 `-RequireAll` 让命令在所需服务启动失败时返回错误，以便宿主显示故障。模型已按项目脚本的默认目录安装时，也可以用 `.\scripts\Start-NpcServices.ps1 -SkipSpeech -RequireAll` 启动。[服务参数和本机默认模型路径](../scripts/Start-NpcServices.ps1)
@@ -83,6 +85,17 @@ Qwen3-VL-2B 在这张图上认出了裸露的棕色地面、金属架和机器�
 
 「找画面中的物体」还会读取拍照时每个像素上的实体编号。比如墙前有一个红色立方体，立方体背后的墙也占着同一片屏幕区域。若只告诉模型两个外框的坐标，它曾经把墙选作答案。现在引擎会把同一物体的可见像素裁成一张特写，留下物体原有的颜色，把旁边物体的像素涂灰。模型选中一张特写后，还要单独看这张图，确认里面确实有想找的物体。画面复杂时每次最多发送八张特写，按画面中实际占据的像素数选取。照片太小、遮挡严重或物体未进入候选时都可能漏认。[特写与实体对应](../RedflagForge/src/NpcCamera.cpp) · [模型确认与物理查询](../Redflag/src/Redflag/AI/PhotoQuestion.cpp)
 
-模型回答期间，角色和物体都可能移动。引擎用拍照时记下的实体编号查当前场景，再从角色此刻的眼睛向目标原点发一条物理射线。有墙挡住会返回「当前位置看不到该物体」，物体已删除会返回「照片中的物体已离开场景」。能看见还要再检查物体能否拿取、与角色的距离以及中间的阻挡。面积很大的物体可能只露出一角，而它的原点在墙后；这版查询在这种情况下会回答看不到。[现场验证的照片与回执](../output/validation/npc-live-camera/README.md)
+拍到红色物体以后，队友可能在模型回答前搬走它。瓦特仍然可以说「刚才照片里有一块红色的东西」。这句话的依据是那张照片，拿取则要等瓦特伸手时，由场景检查物体还在不在、手够不够远、中间有没有挡板。模型把草丛看错也会留下原话，创作者可以回到照片核对。[相机测试与原图](../output/validation/npc-live-camera/README.md)
+
+队友也可以只提供大致地点。例如玩家说「前面像有一箱补给，也可能只是个空架子」。把玩家指的地方和原话交给角色，游戏可以完全没有那个箱子的实体编号。玩家请瓦特转告别人时，它能原地复述这条线索。要求过去看看时，它走向标记，从新位置拍照并回答。角色真的拿到东西时，背包数量才会改变。
+
+```csharp
+// Redflag-ScriptCore/Source/AI/NpcNotes.cs。在游戏脚本里，marker 是玩家放下的标记。
+Vector3 place = marker.GetComponent<TransformComponent>().Translation;
+NpcNotes.ReportPlace(companion.Id, ref place, "前面像有一箱补给，也可能只是个空架子。");
+Npc.Submit(companion.Id, "去我标记的地方重新看看。");
+```
+
+照片能给出方向，单张照片里的箱子究竟有多远往往看不出来。瓦特的动作表里可以选择「到附近查看」。角色设置的 `SearchStep` 决定先沿这个方向走多少米，维修站使用 3 米。走到距标记 1 米时就停下观察，这个距离由 `SearchRadius` 决定。玩家直接给了标记时，就去标记附近。遇到走不过的障碍，瓦特会停在可到达的位置再看。玩家改令后，先前的看图回复不能重新启动旧动作。[角色设置](../RedflagForge/assets/ai/watt.npc.yaml) · [角色脚本接口](../Redflag-ScriptCore/Source/AI/NpcNotes.cs)
 
 角色定义中的 `ObserveWorld` 控制它能否收到作者配置的地貌等场景信息。`ObservePictures` 控制相机拍照和照片记录，可在「角色创作 → 角色 → 允许用角色相机拍照」修改。公开的 C++ 接口 `PhotoQuestion::Start` 接收宿主给的 PNG 和候选物体；`Update` 在游戏线程收取答复。Forge 自带的 `NpcCamera::Take` 会填写观察者、拍摄时间、眼睛位置、朝向和实体编号。默认眼睛位于角色原点上方 1.55 米、前方 0.28 米，垂直视角 65 度。体型不同的角色可在各自的 `.npc.yaml` 中配置，如 `Eyes: {Height: 0.65, Forward: 0.12, VerticalFov: 60}`。[照片数据](../Redflag/src/Redflag/AI/NpcPhoto.h) · [C++ 提问入口](../Redflag/src/Redflag/AI/PhotoQuestion.h)

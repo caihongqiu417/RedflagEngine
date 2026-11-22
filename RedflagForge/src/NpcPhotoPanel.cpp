@@ -6,6 +6,47 @@
 
 namespace Redflag
 {
+	void NpcPhotoPanel::Connect(VulkanContext& context, const Ref<Scene>& scene, const std::filesystem::path& path)
+	{
+		m_Scene = scene;
+		scene->GetNpcs()->TakeLook = [this, &context, path](uint64_t actor, uint64_t ticket) {
+			const Ref<Scene> current = m_Scene.lock();
+			if (!current) return false;
+			Look& look = m_Looks[actor];
+			look.Ticket = ticket;
+			try
+			{
+				if (!m_Camera) m_Camera = CreateScope<NpcCamera>(context);
+				NpcPhoto image = m_Camera->Take(*current, actor, path, false);
+				const NpcState& state = *current->GetNpcs()->Inspect(actor);
+				const std::string question = state.Instruction + "\n请用一句中文说明这张照片里看到了什么，看不清可以直接说明。";
+				return look.Question.Start(current, std::move(image), PhotoSubject::Description, question, state.Action == "look");
+			}
+			catch (const std::exception& error) { RF_CORE_ERROR("NPC camera: {0}", error.what()); return false; }
+		};
+	}
+
+	void NpcPhotoPanel::Update()
+	{
+		m_Question.Update();
+		const Ref<Scene> scene = m_Scene.lock();
+		if (!scene || !scene->GetNpcs()) return;
+		NpcSystem& npcs = *scene->GetNpcs();
+		for (auto entry = m_Looks.begin(); entry != m_Looks.end(); )
+		{
+			const uint64_t actor = entry->first;
+			Look& look = entry->second;
+			const NpcState* state = npcs.Inspect(actor);
+			if (state && state->Look == look.Ticket && look.Question.Pending())
+			{
+				if (!look.Question.Update()) { ++entry; continue; }
+				const std::string& answer = look.Question.Answer();
+				npcs.FinishLook(actor, look.Ticket, answer.empty() ? look.Question.Receipt() : answer, !answer.empty());
+			}
+			entry = m_Looks.erase(entry);
+		}
+	}
+
 	void NpcPhotoPanel::Draw(VulkanContext& context, const Ref<Scene>& scene, const std::filesystem::path& path, uint64_t actor)
 	{
 		if (!ImGui::CollapsingHeader("从队友眼中观察")) return;
@@ -55,6 +96,10 @@ namespace Redflag
 
 	void NpcPhotoPanel::Stop()
 	{
+		const Ref<Scene> scene = m_Scene.lock();
+		if (scene && scene->GetNpcs()) scene->GetNpcs()->TakeLook = {};
+		m_Scene.reset();
+		m_Looks.clear();
 		m_Question.Clear();
 		m_Camera.reset();
 		m_Error.clear();

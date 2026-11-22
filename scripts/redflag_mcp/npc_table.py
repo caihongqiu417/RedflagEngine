@@ -10,7 +10,8 @@ PROFILE = {"名称": ("Name", "name"), "角色说明": ("Instructions", "instruc
            "与指定队友的约定": ("LeaderRelationship", "leader_relationship"),
            "决策模型": ("Model", "model"), "待机动画": ("IdleClip", "idle"), "行走动画": ("WalkClip", "walk"),
            "使用角色记忆": ("Remember", "remember"), "观察场景物体": ("ObserveWorld", "observe_world"),
-           "观察距离（米）": ("Sight", "sight")}
+           "观察距离（米）": ("Sight", "sight"), "沿照片方向前进（米）": ("SearchStep", "search_step"),
+           "距标记多远停下查看（米）": ("SearchRadius", "search_radius")}
 INTENTS = {"动作说明": ("Description", "description"), "目标来源": ("Target", "target"), "物品": ("Item", "item")}
 
 
@@ -73,7 +74,7 @@ def apply(name: str, table: str, path: Path) -> dict:
                 if value.lower() not in ("true", "false"):
                     raise ValueError(f"{key[1]} 请填写 True 或 False。")
                 value = value.lower() == "true"
-            if field == "Sight":
+            if field in ("Sight", "SearchStep", "SearchRadius"):
                 value = float(value)
             values[field] = value
         return npc_assets.update(name, values)

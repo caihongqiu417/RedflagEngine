@@ -26,6 +26,10 @@ namespace Redflag
 			data.Sight = file["Sight"].as<float>(data.Sight);
 			data.Speed = file["Speed"].as<float>(data.Speed);
 			data.Reach = file["Reach"].as<float>(data.Reach);
+			data.SearchStep = file["SearchStep"].as<float>(data.SearchStep);
+			data.SearchRadius = file["SearchRadius"].as<float>(data.SearchRadius);
+			if (!(data.SearchRadius > 0.f && std::isfinite(data.SearchRadius))) { error = "SearchRadius 需要填写正米数"; return false; }
+			if (!(data.SearchStep >= 0.f && std::isfinite(data.SearchStep))) { error = "SearchStep 需要填写非负米数"; return false; }
 			data.TurnSpeed = file["TurnSpeed"].as<float>(data.TurnSpeed);
 			data.ObserveWorld = file["ObserveWorld"].as<bool>(true);
 			data.Remember = file["Remember"].as<bool>(true);

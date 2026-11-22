@@ -41,29 +41,39 @@ namespace Redflag
 		return m_Policy.Sight && Write({EvidenceSource::Seen, target, text, image, seconds});
 	}
 
-	bool NpcMemory::Report(uint64_t target, const std::string& text, double seconds, const std::string& image)
+	bool NpcMemory::Report(uint64_t target, const std::string& text, double seconds, const std::string& image,
+		std::optional<glm::vec3> place)
 	{
-		return m_Policy.Reports && Write({EvidenceSource::Reported, target, text, image, seconds});
+		return m_Policy.Reports && Write({EvidenceSource::Reported, target, text, image, seconds, place});
 	}
 
 	bool NpcMemory::Write(NpcEvidence entry)
 	{
-		if ((!entry.Target && entry.Image.empty()) || entry.Text.empty() || !m_Policy.Limit) return false;
+		if (entry.Text.empty() || !m_Policy.Limit) return false;
 		auto found = std::find_if(m_Evidence.begin(), m_Evidence.end(), [&](const NpcEvidence& old) {
 			if (entry.Source == EvidenceSource::Photo || old.Source == EvidenceSource::Photo)
 				return entry.Source == old.Source && old.Image == entry.Image;
 			bool sameSource = (old.Source == EvidenceSource::Reported) == (entry.Source == EvidenceSource::Reported);
+			if (!entry.Target && entry.Image.empty()) return false;
 			return sameSource && old.Target == entry.Target && (entry.Target || old.Image == entry.Image);
 		});
 		if (found != m_Evidence.end()) m_Evidence.erase(found);
 		if (m_Evidence.size() == m_Policy.Limit) m_Evidence.erase(m_Evidence.begin());
+		entry.Number = m_NextNumber++;
 		m_Evidence.push_back(std::move(entry));
 		return true;
 	}
 
-	bool NpcMemory::RememberPhoto(uint64_t target, const std::string& text, double capturedAt, const std::string& image)
+	bool NpcMemory::RememberPhoto(uint64_t target, const std::string& text, double capturedAt, const std::string& image,
+		std::optional<glm::vec3> place)
 	{
-		return m_Policy.Pictures && !image.empty() && Write({EvidenceSource::Photo, target, text, image, capturedAt});
+		return m_Policy.Pictures && !image.empty() && Write({EvidenceSource::Photo, target, text, image, capturedAt, place});
+	}
+
+	void NpcMemory::MarkVisited(uint64_t number)
+	{
+		for (NpcEvidence& entry : m_Evidence)
+			if (entry.Number == number) { entry.Visited = true; return; }
 	}
 
 	// ---- 偏好与玩家存档 ----
@@ -128,7 +138,7 @@ namespace Redflag
 			if (e.Source == EvidenceSource::Photo)
 			{
 				source = "photo";
-				title = "拍摄时的画面";
+				title = "对当时照片的判断，可能认错";
 			}
 			else if (e.Source == EvidenceSource::Seen)
 			{
@@ -140,10 +150,13 @@ namespace Redflag
 				source = "last_seen";
 				title = "上次看见，当前未确认";
 			}
-			const std::string id = e.Source == EvidenceSource::Photo || !e.Target ? "image/" + e.Image : "entity/" + std::to_string(e.Target);
+			std::string id = "note/" + std::to_string(e.Number);
+			if (!e.Image.empty()) id = "image/" + e.Image;
+			if (e.Target && e.Source != EvidenceSource::Photo) id = "entity/" + std::to_string(e.Target);
 			std::ostringstream text;
 			text << title << " | " << std::fixed << std::setprecision(2) << e.Seconds << " s | " << e.Text;
 			if (!e.Image.empty()) text << " | 图片 " << e.Image;
+			if (e.Visited) text << " | 已尝试前往查看";
 			request.Observations.push_back({std::string(source) + "/" + id, text.str()});
 		}
 		for (const auto& [key, value] : m_Preferences)

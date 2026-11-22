@@ -1,0 +1,48 @@
+{
+  "archive_sha256": "8fbab633674ab478c00ac2d6acb0a523e030367b140457c896d2647e37ece041",
+  "file_count": 23,
+  "release_dll_sha256": "263df32333d5c5da61f38342b317b4abc27e27c4d9bad7f6dff2343ed0b8af3d",
+  "runtime": "Windows .NET Framework",
+  "model": "Qwen3-VL-2B-Instruct",
+  "clean_extraction": true,
+  "manifest_matches": true,
+  "health": {
+    "protocol": 1,
+    "model": "Qwen3-VL-2B-Instruct",
+    "models": [
+      "Qwen3-VL-2B-Instruct"
+    ],
+    "text": true,
+    "images": true,
+    "capabilities": [
+      "decisions",
+      "replies"
+    ]
+  },
+  "replies": [
+    {
+      "question": "请用一句中文介绍储物柜的钥匙，必须保留钥匙一词。",
+      "text": "钥匙是用于开启储物柜的工具。"
+    },
+    {
+      "question": "这张图是什么颜色？请用中文只说一种颜色。",
+      "text": "红色"
+    }
+  ],
+  "decision": {
+    "status": "completed",
+    "choice": "key"
+  },
+  "speech": {
+    "voices": {
+      "default_voice": "Microsoft Huihui Desktop",
+      "voices": [
+        "Microsoft Huihui Desktop",
+        "Microsoft Zira Desktop"
+      ]
+    },
+    "voice_requested": "Microsoft Huihui Desktop",
+    "wav_bytes": 145804,
+    "text": "帮我留一份医疗包等我过来再给我"
+  }
+}

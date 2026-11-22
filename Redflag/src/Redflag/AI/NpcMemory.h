@@ -1,7 +1,9 @@
 #pragma once
 
 #include "DecisionClient.h"
+#include <glm/vec3.hpp>
 #include <map>
+#include <optional>
 
 namespace Redflag
 {
@@ -38,6 +40,9 @@ namespace Redflag
 		uint64_t Target;
 		std::string Text, Image;
 		double Seconds; // 从本局开始到观察或转述发生时经过的秒数。
+		std::optional<glm::vec3> Place; // 可以去查看的位置，未必是物体的位置。
+		uint64_t Number = 0;
+		bool Visited = false;
 	};
 
 	/* 宿主提供亲眼所见的物体和玩家的原话。两种来源各自保留，相同物体可以同时有两条记录。 */
@@ -49,8 +54,11 @@ namespace Redflag
 		// 一次观察从 BeginSight 开始。上次见过、这次没有再次看到的物体保留上次的记录时间。
 		void BeginSight();
 		bool See(uint64_t target, const std::string& text, double seconds, const std::string& image = {});
-		bool Report(uint64_t target, const std::string& text, double seconds, const std::string& image = {});
-		bool RememberPhoto(uint64_t target, const std::string& text, double capturedAt, const std::string& image);
+		bool Report(uint64_t target, const std::string& text, double seconds, const std::string& image = {},
+			std::optional<glm::vec3> place = {});
+		bool RememberPhoto(uint64_t target, const std::string& text, double capturedAt, const std::string& image,
+			std::optional<glm::vec3> place = {});
+		void MarkVisited(uint64_t number);
 		const std::vector<NpcEvidence>& GetEvidence() const { return m_Evidence; }
 
 		// ---- 偏好与玩家存档 ----
@@ -64,6 +72,7 @@ namespace Redflag
 		bool Write(NpcEvidence entry);
 		MemoryPolicy m_Policy;
 		std::vector<NpcEvidence> m_Evidence;
+		uint64_t m_NextNumber = 1;
 		std::map<std::string, std::string> m_Preferences;
 	};
 } // namespace Redflag

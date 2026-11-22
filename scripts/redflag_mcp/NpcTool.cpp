@@ -18,6 +18,8 @@ static YAML::Node Inspect(const NpcDefinition& npc)
     result["idle"] = npc.IdleClip;
     result["walk"] = npc.WalkClip;
     result["sight"] = npc.Sight;
+    result["search_step"] = npc.SearchStep;
+    result["search_radius"] = npc.SearchRadius;
     result["tree"] = npc.TreeFile.filename().u8string();
     result["root"] = npc.Tree.GetRoot();
     result["animator"] = npc.AnimatorFile.filename().u8string();

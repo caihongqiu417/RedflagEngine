@@ -7,6 +7,7 @@
 #include "Redflag/Animation/AnimationTimeline.h"
 #include <deque>
 #include <chrono>
+#include <functional>
 
 namespace Redflag
 {
@@ -35,6 +36,7 @@ namespace Redflag
 		AnimationTimeline ActionEvents;
 		Ref<NpcScriptAction> Script;
 		uint64_t Request = 0;
+		uint64_t Look = 0;
 		std::string Instruction, Action;
 		std::string Stage;
 		float PhaseTime = 0.0f;
@@ -52,7 +54,12 @@ namespace Redflag
 		/// <summary>先停止这个角色的旧动作，再把玩家的新话和角色现在可以做的事交给模型。</summary>
 		bool Submit(uint64_t actor, const std::string& text, std::vector<DecisionImage> images = {});
 		bool Cancel(uint64_t actor);
+		// 场景每帧调用。先接收已返回的模型选择，再推进该角色的行走、交互或观察。
 		void Update(float seconds);
+
+		// 宿主可接入自己的相机。拍照与模型回答之间允许玩家改令，用本次观察编号认回结果。
+		std::function<bool(uint64_t actor, uint64_t look)> TakeLook;
+		void FinishLook(uint64_t actor, uint64_t look, const std::string& observation, bool receivedImage = true);
 
 		/// <param name="cursor">每个读者为每个角色保存一个编号。初值为零，读到事件时会前进。</param>
 		const NpcEvent* NextEvent(uint64_t actor, uint64_t& cursor) const;
@@ -65,15 +72,18 @@ namespace Redflag
 
 	private:
 		void Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images = {});
+		// 同一种动作可以有几个候选。用提问时的物体或线索编号认回目标，再沿该角色的行为树选择执行方法。
 		void Accept(uint64_t actor, NpcState& state, const DecisionResult& result);
 		void Execute(uint64_t actor, NpcState& state, float seconds);
+		void FollowClue(uint64_t actor, NpcState& state, float seconds);
 		void Stop(uint64_t actor, NpcState& state);
 		/// <summary>让角色朝目标走一步。目标在交互距离内且两者之间没有遮挡时停步。</summary>
 		/// <param name="range">这次动作允许的距离，单位为米。</param>
 		/// <returns>此时已经够到目标才返回 true。还在走或被墙挡住时返回 false。</returns>
 		bool Approach(uint64_t actor, NpcState& state, float range, float seconds);
+		void WalkTo(uint64_t actor, NpcState& state, glm::vec3 place, float stopDistance, float seconds);
 		void Enter(uint64_t actor, NpcState& state, const std::string& stage);
-		bool Face(uint64_t actor, uint64_t target, float seconds);
+		bool Face(uint64_t actor, glm::vec3 position, float seconds);
 		void Finish(uint64_t actor, NpcState& state, ActionResult result);
 		void Record(NpcState& state, const std::string& kind, const std::string& text, uint64_t target = 0, const std::string& speech = {});
 
@@ -85,5 +95,6 @@ namespace Redflag
 		std::string m_LoadError;
 		std::chrono::steady_clock::time_point m_Start;
 		uint64_t m_NextEvent = 1;
+		uint64_t m_NextLook = 1;
 	};
 }

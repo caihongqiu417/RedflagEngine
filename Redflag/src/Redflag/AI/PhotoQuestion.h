@@ -10,12 +10,12 @@ namespace Redflag
 
 	enum class PhotoSubject { Object, Lighting, Description };
 
-	/* 图片和请求由本次观察持有。Update 收到模型选择后，在游戏线程重新查询对应实体。 */
+	/* 保留拍摄时的照片和模型的判断。特写里的实体编号只用于追溯当时的画面。 */
 	class PhotoQuestion
 	{
 	public:
 		explicit PhotoQuestion(uint16_t port = 8716) : m_Client(port) {}
-		bool Start(const Ref<Scene>& scene, NpcPhoto photo, PhotoSubject subject, const std::string& question);
+		bool Start(const Ref<Scene>& scene, NpcPhoto photo, PhotoSubject subject, const std::string& question, bool suggestPlace = true);
 		bool Update();
 		bool Pending() const { return m_Request != 0; }
 		const NpcPhoto& GetPhoto() const { return m_Photo; }
@@ -33,5 +33,6 @@ namespace Redflag
 		uint64_t m_Request = 0, m_Target = 0;
 		std::string m_SearchText, m_Answer, m_Receipt;
 		bool m_Verifying = false;
+		bool m_SuggestPlace = true;
 	};
 }

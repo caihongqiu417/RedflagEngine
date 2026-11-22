@@ -68,7 +68,7 @@ int main()
         std::string error;
         Check(tree.Load(source, error), error);
         BehaviorBlackboard watt, other;
-        for (const std::string& key : {"gather", "share", "revive", "repair", "follow", "mark", "reserve"})
+        for (const std::string& key : {"gather", "share", "revive", "repair", "follow", "mark", "reserve", "report", "investigate", "look"})
             Check(tree.Tick(watt, key).Action == key, "Missing route " + key);
         BehaviorTrace initial = tree.Tick(watt, "gather");
         Check(initial.Nodes == std::vector<uint32_t>({1, 2, 3, 4}) && initial.Edges.size() == 3, "Subtree trace");
