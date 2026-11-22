@@ -22,7 +22,10 @@
 
 动作文件保存每个关节相对父关节的变化。\code{SkeletonAnimationComponent::Seek} 先在相邻动作帧间插值，再把各关节换算到角色坐标中。绘制时，一块细长的立方体连接两个相邻关节，19 根骨段都使用角色的拾取编号。这样，点中手或脚，属性面板都选中同一角色。在 Vulkan 光照视图里，骨段移动只需重画相机看到的表面。房间的烘焙仍可用，光线查询静态遮挡时只考虑房间里的静态模型。
 
-场景文件分别保存动作路径、播放开关和秒数。动作路径相对于场景文件，另存时重新计算。复制场景后，两份角色可以共用读入的动作，各自暂停或继续。实现见 \href{run:../../Redflag/src/Redflag/Animation/SkeletonAnimation.cpp}{\code{SkeletonAnimation.cpp}}。在仓库根目录运行 \path{tests/run_lighting_preview_edits.cmd}，加上 \code{--skeleton} 选项，可以重做保存、重开与拾取验证。下面的六项操作使用独立示例，其中带皮肤的角色和由关节力驱动的平地行走都在该示例中体验。
+场景文件分别保存动作路径、播放开关和秒数。动作路径相对于场景文件，另存时重新计算。复制场景后，两份角色可以共用读入的动作，各自暂停或继续。实现见 \href{run:../../Redflag/src/Redflag/Animation/SkeletonAnimation.cpp}{\code{SkeletonAnimation.cpp}}。在仓库根目录运行 \path{tests/run_lighting_preview_edits.cmd}，加上 \code{--skeleton} 选项，可以重做保存、重开与拾取验证。接下来可以在正式场景中播放带皮肤的狐狸，或切换到由关节力驱动的双腿。后面的独立示例将各个计算步骤拆开，便于逐项观察。
+
+\clearpage
+\input{scene-players}
 
 \clearpage
 \section{角色与骨架}
@@ -112,7 +115,7 @@ Pose walk = m_Walk.Sample(m_WalkTime);
 \[
              p'=\sum_j w_j\,[\,R_j(p-b_j)+t_j\,].
 \]
-测试中一个顶点有 25\% 随第一块骨头，75\% 随第二块。第一块不动，第二块沿 $X$ 移动 0.8 米，顶点便移动 $0.75\times0.8=0.6$ 米。表面法线只跟着旋转。混合后的向量长度会变，所以还要把非零法线重新归一化。
+测试中一个顶点有 25\% 随第一块骨头，75\% 随第二块。第一块不动，第二块沿 $X$ 移动 0.8 米，顶点便移动 $0.75\times0.8=0.6$ 米。这个例子只有平移，所以表面法线不变。遇到旋转和缩放时，法线随切平面的方向变化，最后将非零法线重新归一化。
 
 \codewhere{示例}{examples/CharacterAnimation/CharacterDemo.cpp}{Demo::Draw，省去材质和视图代码}
 \begin{lstlisting}[style=besidetext]

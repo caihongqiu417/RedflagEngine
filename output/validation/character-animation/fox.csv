@@ -1,0 +1,2 @@
+scene,clip,seconds,vertices,triangles,actor_pixels,changed_pixels,paused_roundtrip,independent_copy
+Character-Fox,Walk,0.2,1728,576,703,220,pass,pass

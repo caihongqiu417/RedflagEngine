@@ -1,0 +1,57 @@
+\section{狐狸的模型与动作}
+从仓库根目录运行下面的命令。狐狸模型和贴图已经放进项目。左边层级中选“狐狸”，右边“模型绘制”指定它的外形和材质，“模型动画”决定它现在做哪个动作。在“动作”里把 \code{Walk} 换成 \code{Survey}，能看到它停下来四处张望。取消“播放”，拖动“时间（秒）”可以逐帧观察。保存场景会记住选中的动作、播放位置和开关。
+
+\begin{lstlisting}[style=besidetext]
+Open-Vulkan-Editor.cmd --scene assets/scenes/Character-Fox.redflag
+\end{lstlisting}
+
+\shot{fox.png}{狐狸的 Walk 动作。正式 Vulkan 编辑器经 RenderDoc 1.47 回放第 24 帧，画幅 640×410。注意左侧前爪的抬起，以及后腿与身体接合处的三角面。狐狸模型与动画来自 Khronos 示例，作者见本节末。}
+
+一个模型文件可以存许多姿势，网格只需保存一次。狐狸的 \code{Fox.glb} 包含 576 个三角形、24 个参与蒙皮的关节，以及 \code{Survey}、\code{Walk}、\code{Run} 三段动作。材质照常由 \code{Model} 导入。实体上有播放组件时，\code{Model::GetAnimation} 才通过 cgltf 读取关键帧与关节权重。多个实体引用相同模型时，共用这份只读数据。玩家可以让一只狐狸奔跑，另一只停在走路的第 0.2 秒。
+
+网格里每个顶点原先画在狐狸的什么位置，用列向量 $p=(x,y,z,1)$ 表示。用下标 $s$ 表示肩膀，$e$ 表示肘部。要让顶点随肩膀运动，先用文件给的逆绑定矩阵 $B_s^{-1}$，求出它相对于初始肩关节的位置。再用肩关节此刻在角色中的矩阵 $G_s(t)$，把它带到现在的位置。肘部通常也拉着附近的皮肤。若文件给肩、肘的两个权重分别是 0.3、0.7，最终位置是
+\[
+p'(t)=0.3\,G_s(t)B_s^{-1}p+
+      0.7\,G_e(t)B_e^{-1}p .
+\]
+两块骨头不动时，两项都指向原来的顶点，权重相加为一，皮肤就能回到原位。三角形编号和贴图坐标仍用原来那份，狐狸的花纹会跟着皮肤一起移动。
+
+\clearpage
+\section{游戏中的动作播放}
+游戏从实体取出 \code{ModelAnimationComponent}。例如想让狐狸跑起来，写入动作名称和起始时间。下一次场景更新调用 \code{Update}，用本帧秒数推进进度。相邻关键帧之间，位移和缩放可以直接插值。方向记录为四元数；在线性旋转轨道上，沿两个朝向间的短弧旋转，头部就能平稳转向。另支持保持上一关键帧的阶梯插值，以及用文件内切线计算的三次样条。
+
+\codewhere{用法}{Redflag/src/Redflag/Animation/ModelAnimationPlayer.h}{组件字段，由 Scene::OnUpdateAnimations 更新}
+\begin{lstlisting}[style=besidetext]
+ModelAnimationComponent& player =
+    fox.GetComponent<ModelAnimationComponent>();
+player.Clip = "Run";
+player.Time = 0.f;    // (*@\rhicomment{从这段动作的第 0 秒起播。}@*)
+player.Playing = true;
+\end{lstlisting}
+
+\code{ModelAnimation::Sample} 先沿父子关系求出每个关节的 $G_j(t)$，再把各关节的 $G_j(t)B_j^{-1}$ 交给 \code{SkinnedMesh::Deform}。后者最多使用影响最大的四个权重，并把它们的总和重新归一到一。遇到非均匀缩放，表面法线要保持垂直于变形后的切面，不能直接当顶点方向相乘。调用 \code{Sample} 得到的是 CPU 顶点，可用于数值测试。场景中的播放器用这些顶点创建当前姿势的网格，绘制和鼠标拾取沿用 \code{SceneRenderer} 的材质与实体编号。暂停时继续使用上一次的网格。播放时每次变形都会上传顶点和索引，大量角色同屏的带宽与帧率尚未测量。
+
+在狐狸的 \code{Walk} 第 0.2 秒，按资产中的关键帧、关节与权重独立计算，第 900 号顶点的位置约为 $(0.243,52.558,-46.161)$。这是乘场景缩放之前的模型坐标。回归先比较顶点，再让 Vulkan 和 OpenGL 在同一机位分别输出 48×48 的实体编号。两个后端的结果一致。第 0.2 秒有 703 个像素属于狐狸，与第 0 秒相比有 220 个像素在狐狸和背景之间发生变化。暂停后再推进两秒，轮廓逐像素相同。另测了保存重开，以及复制后只让第二只狐狸切到 \code{Run}。在仓库根目录运行 \path{tests/run_lighting_preview_edits.cmd} 加 \code{--model-animation} 可以复测 Vulkan；运行 \path{tests/run_scene_tests.cmd} 则可复测 OpenGL 游戏绘制。
+
+这条路径支持 glTF 2.0 的三角网格、关节蒙皮及节点动作。狐狸的三段动作驱动同一副骨架。换人形 BVH、需要表情变形目标或给简化模型重绑权重时，都要另做适配。目前角色参与相机绘制与拾取；Vulkan 的房间探针和静态遮挡不计入移动角色，避免把它的某个姿势烘进地面。
+
+\readings{\href{https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html}{Khronos glTF 2.0，第 3.7.3 节 Skins 与 3.11 节 Animations}。\href{https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Fox}{Fox 模型及署名}。PixelMannen 制作模型（CC0），tomkranis 制作骨架与动作，AsoboStudio 和 scurest 转换 glTF（CC BY 4.0）。\href{https://github.com/jkuhlmann/cgltf/releases/tag/v1.15}{cgltf v1.15} 以 MIT 许可随引擎分发。}
+
+\clearpage
+\section{角色输入与物理行走}
+打开 \path{Character-Walk.redflag}，按 F5 开始模拟，再点一下场景或游戏视口。方向键沿地面移动角色，同时把待机与行走的 BVH 姿势混合起来。松开方向键，角色停在当前位置；再次按 F5，编辑器回到进入模拟前的场景。选“角色”可在“骨骼动画”中更换动作并设置速度。若从游戏代码提供输入，\code{Scene::OnUpdateRuntime} 的第二个参数是 $XZ$ 平面的二维移动方向，水平轴对应 $X$，竖直轴对应 $Z$。同时按下两个方向时先单位化，所以斜着跑和直着跑一样快。速度设为 1.2 米/秒，持续输入 0.4 秒，回归中量到 0.48 米。
+
+若希望由地面、重力与关节决定双脚落在哪里，打开 \path{Character-Physics.redflag}。运行前可以拖动整个角色，把骨盆放在地面上方。选“角色 → 物理角色（双腿）”，勾选“行走驱动”，把“速度（米/秒）”设为 0.8。开始模拟后，两条腿绕关节转动并和地面接触。速度调为零会停步，负值会倒着走。关闭行走驱动，骨盆与腿之间仍有关节连接，但角色失去支撑、倒在地上。场景只保存步态开关与目标速度。停止模拟会销毁运行时的刚体和关节；再次进入时从场景中保存的位置建立新的角色。
+
+\begin{figure}[H]\centering
+\includegraphics[width=.475\linewidth]{control-walking.png}\hfill
+\includegraphics[width=.475\linewidth]{physics-walk-simulated.png}
+\caption{两次正式 Vulkan 编辑器实拍。左图中方向键驱动 BVH 角色，手脚位置来自混合后的动作。右图中每一段橙色肢体跟随对应的刚体，脚接触地面后支撑身体。}
+\end{figure}
+这套平地行走用七个盒子表示下半身。骨盆居中，左右各有大腿、小腿和脚。游戏通过 \code{Scene::GetRagdoll} 取得运行时角色，\code{Ragdoll::GetPose} 按肢段返回世界坐标的位置和旋转。三秒平地测试中，0.8 米/秒是控制器的目标速度，角色实际前进 1.426 米；速度改为零后两秒内又走了 0.344 米。步态包含扶正骨盆的辅助力，具体约束和每次物理步的做法见后面的“肢体落地与物理行走”。狐狸用文件录制的动作变形，双腿示例则读取碰撞解算后的姿势。两种组件可独立加入场景。
+
+\codewhere{入口}{tests/RagdollSceneCheck.h}{CheckRagdollScene，以下为仓库根目录的回归命令}
+\begin{lstlisting}[style=besidetext]
+tests\run_lighting_preview_edits.cmd --skeleton
+tests\run_lighting_preview_edits.cmd --ragdoll
+\end{lstlisting}

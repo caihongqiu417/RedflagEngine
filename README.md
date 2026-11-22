@@ -14,7 +14,9 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 要试 3D 物理，可以在 Vulkan 编辑器的项目面板打开 `Physics-Workshop.redflag`，也可以在仓库根目录运行 `Open-Vulkan-Editor.cmd --scene assets/scenes/Physics-Workshop.redflag`。点击菜单栏的“模拟物理”，红箱子会落到地台上，点“停止模拟”恢复初始位置。房间还配有两个已经重建的观察机位，可以让本机视觉模型从图里寻找物体，再由场景检查是否能拿取。[NPC 图片与操作说明](output/npc-vision/README.md) · [编辑器手册](output/pdf/Redflag-Editor-Guide.pdf)
 
-双击 [Open-Character-Animation.cmd](Open-Character-Animation.cmd) 可以打开角色动画演示。用同一个 Vulkan 窗口观察骨架姿势、移动角色、改变手要够到的位置，或者让布娃娃开始行走。[角色动画图解](output/pdf/Redflag-Character-Animation.pdf) · [六种模式的实机画面与测量](output/validation/character-animation)
+在仓库根目录运行 `Open-Vulkan-Editor.cmd --scene assets/scenes/Character-Fox.redflag` 可以打开有皮肤和贴图的狐狸。选“狐狸 → 模型动画”，可在 Walk、Run、Survey 之间切换，暂停后拖动秒数查看姿势。模型与动作随仓提供。[示例模型与署名](RedflagForge/assets/models/reference/Fox/SOURCE.md)
+
+同一条命令换成 `Character-Walk.redflag`，按 F5，点击视口后就能用方向键控制 BVH 角色。打开 `Character-Physics.redflag` 则可在“角色 → 物理角色（双腿）”调目标速度，观察脚落地以及停止驱动后的下落。要单独练习 FK、IK 和蒙皮，可以双击 [Open-Character-Animation.cmd](Open-Character-Animation.cmd)。[角色动画图解](output/pdf/Redflag-Character-Animation.pdf) · [实机画面与测量](output/validation/character-animation)
 
 要观察箱子怎样从物理主机同步到另一台游戏进程，把含有 `world_server.cpp` 的 REDFServer 放在 Redflag 的同级目录。运行 `Open-World-Session.cmd server`，在另两个终端分别运行 `Open-World-Session.cmd watch`，最后在第四个终端运行 `Open-World-Session.cmd host`。两个观看者会逐行显示箱子的高度。运行 `tests\run_world_session.cmd` 还能检查漏收确认后的重传、超时和实体移除。游戏里使用的入口是 `WorldClient` 和 `NetworkScene`。[游戏示例](examples/Network/WorldWorkshop.cpp) · [常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
 
