@@ -1,0 +1,148 @@
+{
+  "archive": "Redflag-CompanionRuntime-Win64.zip",
+  "archive_sha256": "d28cd061b979610e39db484bc8b4ee9ff80a73d0c7266eaac566f3d59fa3d586",
+  "startup_seconds": 20.19,
+  "ports": [
+    11281,
+    11282,
+    11283
+  ],
+  "runtime_sha256": {
+    "CompanionRuntime/models/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf": "f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82",
+    "CompanionRuntime/models/Qwen3VL-2B-Instruct-Q4_K_M.gguf": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae",
+    "CompanionRuntime/speech/models/decoder.onnx": "53aee85802b4d57237457382aa92ceb18811b3333650ef008e3864be59abf7ff",
+    "CompanionRuntime/speech/models/encoder.int8.onnx": "da5009f42dd5af5a26cca798cd9365aafcd5fd85e377df1fcc8a75624ebc2108",
+    "CompanionRuntime/speech/models/joiner.int8.onnx": "478a56c0d7bc25eaee4f70af5909f836a910da1bae19d41c669a0863e5fee05a",
+    "CompanionRuntime/speech/DeliverySpeechRuntime.dll": "6554d6e6c3251ac21272feadb5cb1335f810cd7a717c10dad945829d04f33d8e",
+    "CompanionRuntime/llama/llama-server.exe": "1a0112e7f95a1a2c232c6fb2d9db1f458e05cef14cd13bfd705d82abb3a696c9",
+    "CompanionRuntime/python/python.exe": "a2a4eff8d0b0c845284c607d50a3b5b966ac5a3121736a2e38e165bd6644d9fe"
+  },
+  "services": {
+    "decision": {
+      "exe": "CompanionRuntime/python/python.exe",
+      "args": [
+        "PROJECT\\CompanionRuntime\\python\\python.exe",
+        "PROJECT\\scripts\\decision_service.py",
+        "--model",
+        "Qwen3-VL-2B-Instruct",
+        "--endpoint",
+        "http://127.0.0.1:11283/v1/chat/completions",
+        "--port",
+        "11281",
+        "--images"
+      ]
+    },
+    "speech": {
+      "exe": "CompanionRuntime/python/python.exe",
+      "args": [
+        "PROJECT\\CompanionRuntime\\python\\python.exe",
+        "PROJECT\\scripts\\speech_service.py",
+        "--runtime",
+        "PROJECT\\CompanionRuntime/speech",
+        "--port",
+        "11282"
+      ]
+    },
+    "llama": {
+      "exe": "CompanionRuntime/llama/llama-server.exe",
+      "args": [
+        "PROJECT\\CompanionRuntime\\llama\\llama-server.exe",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "11283",
+        "-m",
+        "PROJECT\\CompanionRuntime\\models\\Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+        "--mmproj",
+        "PROJECT\\CompanionRuntime\\models\\mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf",
+        "-ngl",
+        "99",
+        "-c",
+        "4096",
+        "--alias",
+        "Qwen3-VL-2B-Instruct"
+      ]
+    }
+  },
+  "processes_stopped": 3,
+  "scripts": {
+    "Start-NpcServices.ps1": "4699e5c1ddb0ab3e56f029ade8747e4e78497b96e2758c5789c1045e26a55fae",
+    "decision_service.py": "d4ac6142d52d29b475877d61b42df22c7204664b2ae65c0f91879f7c1f139f14",
+    "speech_runtime.py": "142a5aa30feb095e0040490549f25a76c8f747700b0720d8f2db70fda18c0516",
+    "speech_service.py": "2664fd5deca5b3270b29eb8a06a73ab186bac5bdddd4ef9edafd2169906e4d86",
+    "speech_synthesize.ps1": "2d7264ba5ffa38042cb7c131fde519d9e27c747eae678f8c3c45d2f78939dc2d",
+    "speech_room.html": "8472e475e0887d7aad2fcda075ecb9e9d30f9a8113edb91ef45fcbd02acb020d",
+    "speech_client.py": "f840aafe93fe042195cd569143df97d2bb7fc33a9d7cca00436bbe247d359937",
+    "requirements-speech.txt": "6d5282c3d8b0d19aefaa7f0241eb506c96bdb9367735574a68b0ae3ad428ca92"
+  },
+  "health": {
+    "protocol": 1,
+    "model": "Qwen3-VL-2B-Instruct",
+    "models": [
+      "Qwen3-VL-2B-Instruct"
+    ],
+    "text": true,
+    "images": true,
+    "capabilities": [
+      "decisions",
+      "replies"
+    ]
+  },
+  "decision": {
+    "prompt": "柜门锁着。请把能开锁的那件东西交给我。",
+    "candidates": [
+      {
+        "id": "mug",
+        "description": "杯子，用来喝水"
+      },
+      {
+        "id": "key",
+        "description": "钥匙，用来打开柜门"
+      }
+    ],
+    "reply": {
+      "status": "completed",
+      "choice": "key"
+    }
+  },
+  "vision": {
+    "source": "output/npc-vision/4d4c8917622509ff51e06db391ab30b0c5af04dd86da6f865a96bfdb9482c96a/val-00.png",
+    "prompt": "图中小箱子是什么颜色？用一个中文颜色词回答。",
+    "images": [
+      {
+        "sha256": "2c412c1feb15920b4d6878eff6260743197972debb761a5b4227b28ec953e49f",
+        "expected": "红",
+        "reply": {
+          "status": "completed",
+          "text": "红色"
+        }
+      },
+      {
+        "sha256": "b05fd0e1554f2aca8fb6e12ca29114b43576c472f9d1f05b57f1d599fd257755",
+        "expected": "蓝",
+        "reply": {
+          "status": "completed",
+          "text": "蓝色"
+        }
+      }
+    ]
+  },
+  "speech": {
+    "voices": {
+      "default_voice": "Microsoft Huihui Desktop",
+      "voices": [
+        "Microsoft Huihui Desktop",
+        "Microsoft Zira Desktop"
+      ]
+    },
+    "voice": "Microsoft Huihui Desktop",
+    "sentence": "请打开仓库的门。",
+    "samples": 39760,
+    "sample_rate": 16000,
+    "peak_pcm": 21547,
+    "wav_sha256": "44b7f82f7c3e8f32130a78de36af15b299742761267372abbe630bcff4e2fe50",
+    "transcript": {
+      "text": "请打开仓库的门口"
+    }
+  }
+}
