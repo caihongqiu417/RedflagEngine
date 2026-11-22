@@ -1,0 +1,19 @@
+Shading: Lit
+ToneMapping: ACES
+ExposureEV: -0.35
+Samples: 1
+Direct: All point lights
+Indirect: DDGI
+DDGIProbeFeedback: true
+GTAO: true
+TAA: true
+SSR: true
+SceneReflections: true
+ReflectionBounces: 2
+DenoiseReflections: true
+SpecularIBL: true
+VolumetricFog: true
+FogDensity: 0.009
+FogDistance: 55
+FogAlbedo: 0.86
+FogSteps: 12

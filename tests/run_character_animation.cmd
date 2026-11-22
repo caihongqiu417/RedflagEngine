@@ -18,7 +18,7 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
  /Fe:"%OUT%\CharacterAnimationTests.exe" /Fo:"%OUT%\\" /link ^
  bin\Debug-windows-x86_64\Redflag\Redflag.lib bin\Debug-windows-x86_64\GLFW\GLFW.lib bin\Debug-windows-x86_64\Glad\Glad.lib ^
  Redflag\vendor\imgui\bin\Debug-windows-x86_64\ImGui\ImGui.lib ^
- /LIBPATH:"%SDK%\lib\debug" PhysX_static_64.lib PhysXExtensions_static_64.lib PhysXCommon_static_64.lib PhysXFoundation_static_64.lib PhysXPvdSDK_static_64.lib ^
+ /LIBPATH:"%SDK%\lib\debug" PhysX_static_64.lib PhysXExtensions_static_64.lib PhysXCommon_static_64.lib PhysXFoundation_static_64.lib PhysXPvdSDK_static_64.lib PhysXCooking_static_64.lib ^
  /LIBPATH:"%VULKAN_SDK%\Lib" vulkan-1.lib opengl32.lib user32.lib gdi32.lib shell32.lib /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCPMTD
 if errorlevel 1 exit /b 1
 set RF_VULKAN_VALIDATION=1

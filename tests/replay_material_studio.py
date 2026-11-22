@@ -44,9 +44,10 @@ def measure_reflections(frame, dispatches, directory, pixels):
             continue
         if len(slots) not in (5, 13, 14) or set(slots) != set(range(len(slots))):
             continue
-        option_size = 12 if len(slots) == 5 else 20
-        if constants != [option_size]:
+        sizes = (12,) if len(slots) == 5 else (20,24)
+        if len(constants)!=1 or constants[0] not in sizes:
             continue
+        option_size=constants[0]
         push = bytes(frame.GetVulkanPipelineState().pushconsts)
         material, trace_screen, sky = struct.unpack_from("<3I", push)
         if material == 1 and trace_screen == 1:
@@ -84,6 +85,7 @@ def measure_reflections(frame, dispatches, directory, pixels):
             series.append(values[event])
     info = dict(event=trace, scene_trace=len(inputs) >= 13, environment=bool(struct.unpack_from("<3I", options)[2]),
                 gpu_ms=timings[trace], median_gpu_ms=median(timings[trace]))
+    if len(options)==24: info["bounces"]=struct.unpack_from("<I",options,20)[0]
     if len(inputs) == 14:
         info["alpha_mask"] = True
     if filtered:

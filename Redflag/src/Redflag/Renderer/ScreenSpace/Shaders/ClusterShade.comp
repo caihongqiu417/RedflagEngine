@@ -23,6 +23,10 @@ layout(std430, binding = 6) readonly buffer Triangles { Triangle tri[]; };
 #endif
 const float EPS = .001;
 #include "../../GI/Shaders/Trace.glsl"
+#ifdef RF_ANIMATED_SHADOWS
+#define RF_VISIBILITY_BINDING 10
+#include "../../GI/Shaders/AnimatedVisibility.glsl"
+#endif
 void main()
 {
     ivec2 p = ivec2(gl_GlobalInvocationID.xy);
@@ -61,6 +65,9 @@ void main()
 
             vec3 response = diffuseReference ? s.albedo.rgb * max(dot(s.normal.xyz, L), 0.) / PI
                 : reflectedLight(s.albedo.rgb, s.normal.w, s.albedo.w, s.normal.xyz, V, L);
+#ifdef RF_ANIMATED_SHADOWS
+            if (light.position.w == -1.) attenuation *= animatedVisibility(lamp, s.position.xyz, s.normal.xyz, L);
+#endif
             sum += response * light.intensity.rgb * attenuation;
         }
     }

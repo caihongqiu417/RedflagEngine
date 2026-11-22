@@ -84,7 +84,8 @@ namespace Redflag {
 		static void RenderScene(Scene& scene, const EditorCamera& camera);
 		// 用场景里的模型、材质底色和实体编号绘制当前目标。
 		static void DrawGeometry(Scene& scene, CommandList& commands, const glm::mat4& viewProjection,
-			const glm::mat4* lodViewProjection = nullptr /* TAA 时传入未偏移的相机矩阵 */);
+			const glm::mat4* lodViewProjection = nullptr /* TAA 时传入未偏移的相机矩阵 */, bool animatedOnly = false);
+		static bool GetAnimatedBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum);
 		static void RenderRuntime(Scene& scene, const glm::mat4& projection, const glm::mat4& cameraTransform /* 相机到世界空间 */);
 
 		// ---- 渲染参数 ----

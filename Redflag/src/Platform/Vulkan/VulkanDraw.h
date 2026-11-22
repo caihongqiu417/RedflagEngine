@@ -23,6 +23,8 @@ namespace Redflag {
         Ref<MeshGeometry> CreateMesh(const std::vector<MeshVertex>& vertices,
             const std::vector<uint32_t>& indices) override;
         Ref<SampledTexture> CreateTexture(uint32_t width, uint32_t height, const void* rgba8) override;
+        // ImGui 和模型底色都从一张图读取像素。界面沿用 PNG 文件里的显示颜色。
+        VkDescriptorSet GetPreviewTexture(const Ref<SampledTexture>& texture);
 
         // ---- 面板绘制 ----
         bool Resize(uint32_t width, uint32_t height);
@@ -56,6 +58,8 @@ namespace Redflag {
         /// <param name="y">从面板图像的上边起算的像素行，最上行为 0。</param>
         /// <returns>这个像素的颜色和实体编号。背景的实体编号为 -1。</returns>
         Pixel ReadPixel(uint32_t x, uint32_t y);
+        /// <summary>一次取回同一张图中的颜色与实体编号。两个数组各有 width × height 个元素，首行是画面顶部。</summary>
+        void ReadRegion(uint32_t x, uint32_t y, uint32_t width, uint32_t height, glm::u8vec4* colors, int* entities);
     private:
         bool ResizeTarget(uint32_t width, uint32_t height, const VulkanDraw* opaque);
         void BeginScene(VkCommandBuffer cmd, bool transparentBackground = false);

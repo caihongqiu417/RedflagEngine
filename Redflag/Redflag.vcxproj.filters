@@ -19,6 +19,9 @@
     <Filter Include="src\Redflag">
       <UniqueIdentifier>{317405A8-9D29-7E9D-261E-787492D274A1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Redflag\AI">
+      <UniqueIdentifier>{2AA39CA5-1671-90AB-FF04-01D2EB716C10}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Redflag\Animation">
       <UniqueIdentifier>{60DEF928-CC4A-B523-953E-4D81016AD78B}</UniqueIdentifier>
     </Filter>
@@ -33,6 +36,9 @@
     </Filter>
     <Filter Include="src\Redflag\Events">
       <UniqueIdentifier>{F55EEAA8-E142-ABFE-4AA3-A55136A69580}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Gameplay">
+      <UniqueIdentifier>{50C4FE26-3C53-88F0-E571-9CEBD1DF9896}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag\ImGui">
       <UniqueIdentifier>{1B8A3A6A-87A0-3800-D017-C4213C6D0988}</UniqueIdentifier>
@@ -69,6 +75,9 @@
     </Filter>
     <Filter Include="src\Redflag\Scripting">
       <UniqueIdentifier>{739A6CDF-DF06-28DA-A8FA-BF3714264A42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Redflag\Terrain">
+      <UniqueIdentifier>{95382522-019A-0230-8A07-49E2F66739EF}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Redflag\Utils">
       <UniqueIdentifier>{5116186B-BD2C-1601-06A4-A12272F9E688}</UniqueIdentifier>
@@ -174,7 +183,55 @@
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\AI\BehaviorTree.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\DecisionClient.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\EnvironmentSense.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\LocalService.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcComponent.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcDefinition.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcMemory.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcPhoto.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcQuery.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\NpcSystem.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\PhotoQuestion.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\SpeechInput.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\AI\SpeechPlayback.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\ActorAnimator.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Animation\AnimationClip.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\AnimationController.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\AnimationTimeline.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Animation\CharacterController.h">
@@ -260,6 +317,21 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Events\MouseEvent.h">
       <Filter>src\Redflag\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\GameHud.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\GameplayComponents.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\TerrainTraversal.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\TraversalRig.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\WorldActions.h">
+      <Filter>src\Redflag\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\ImGui\ImGuiLayer.h">
       <Filter>src\Redflag\ImGui</Filter>
@@ -408,7 +480,7 @@
     <ClInclude Include="src\Redflag\Scene\Entity.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Scene\NpcVision.h">
+    <ClInclude Include="src\Redflag\Scene\EnvironmentZoneComponent.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h">
@@ -416,6 +488,9 @@
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h">
       <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Pickup.h">
+      <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Scene.h">
       <Filter>src\Redflag\Scene</Filter>
@@ -429,11 +504,35 @@
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\AnimatorBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\GameplayBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\NpcBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\NpcMemoryBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\NpcScriptAction.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\ScriptEngine.h">
       <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\ScriptGlue.h">
       <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Terrain\Terrain.h">
+      <Filter>src\Redflag\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Terrain\TerrainComponent.h">
+      <Filter>src\Redflag\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Terrain\TerrainMeshes.h">
+      <Filter>src\Redflag\Terrain</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Utils\FileSystem.h">
       <Filter>src\Redflag\Utils</Filter>
@@ -1778,7 +1877,49 @@
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\AI\BehaviorTree.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\DecisionClient.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\EnvironmentSense.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\LocalService.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcDefinition.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcMemory.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcQuery.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcSystem.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\PhotoQuestion.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\SpeechInput.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\SpeechPlayback.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\ActorAnimator.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\AnimationController.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\AnimationTimeline.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\CharacterController.cpp">
@@ -1819,6 +1960,15 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Core\UUID.cpp">
       <Filter>src\Redflag\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Gameplay\TerrainTraversal.cpp">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Gameplay\TraversalRig.cpp">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Gameplay\WorldActions.cpp">
+      <Filter>src\Redflag\Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\ImGui\ImGuiBuild.cpp">
       <Filter>src\Redflag\ImGui</Filter>
@@ -1940,14 +2090,14 @@
     <ClCompile Include="src\Redflag\Scene\Entity.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Scene\NpcVision.cpp">
-      <Filter>src\Redflag\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Panel\ContentBrowserPanel.cpp">
       <Filter>src\Redflag\Scene\Panel</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp">
       <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\Pickup.cpp">
+      <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Scene.cpp">
       <Filter>src\Redflag\Scene</Filter>
@@ -1958,11 +2108,32 @@
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\AnimatorBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\GameplayBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\NpcBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\NpcMemoryBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\NpcScriptAction.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\ScriptEngine.cpp">
       <Filter>src\Redflag\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\ScriptGlue.cpp">
       <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Terrain\Terrain.cpp">
+      <Filter>src\Redflag\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Terrain\TerrainMeshes.cpp">
+      <Filter>src\Redflag\Terrain</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\rfpch.cpp">
       <Filter>src\Redflag</Filter>

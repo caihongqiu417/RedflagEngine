@@ -279,11 +279,20 @@ namespace Redflag {
     // ---- 颜色和实体编号读回 ----
     VulkanDraw::Pixel VulkanDraw::ReadPixel(uint32_t x, uint32_t y)
     {
+        Pixel pixel;
+        ReadRegion(x, y, 1, 1, &pixel.Color, &pixel.EntityID);
+        return pixel;
+    }
+
+    void VulkanDraw::ReadRegion(uint32_t x, uint32_t y, uint32_t width, uint32_t height, glm::u8vec4* colors, int* entities)
+    {
         auto& context = m_Data->Context;
         auto& target = *m_Data->Target;
-        if (x >= target.Extent.width || y >= target.Extent.height)
-            throw std::out_of_range("Pixel outside scene target");
-        auto readback = Vulkan::CreateBuffer(context, 8, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        if (!width || !height || x >= target.Extent.width || y >= target.Extent.height ||
+            width > target.Extent.width - x || height > target.Extent.height - y)
+            throw std::out_of_range("Pixel region outside scene target");
+        const size_t bytes = size_t(width) * height * 4;
+        auto readback = Vulkan::CreateBuffer(context, 2 * bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         context.ImmediateSubmit([&](VkCommandBuffer cmd) {
             VkImageMemoryBarrier color{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
@@ -300,9 +309,9 @@ namespace Redflag {
             VkBufferImageCopy pixel{};
             pixel.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
             pixel.imageOffset = {static_cast<int>(x), static_cast<int>(y), 0};
-            pixel.imageExtent = {1, 1, 1};
+            pixel.imageExtent = {width, height, 1};
             vkCmdCopyImageToBuffer(cmd, target.Color->Handle, color.newLayout, readback->Handle, 1, &pixel);
-            pixel.bufferOffset = 4; // 前四个字节是 RGBA，后四个是同一位置的实体编号。
+            pixel.bufferOffset = bytes; // RGBA 像素之后，按相同的行序保存每个像素的实体编号。
             vkCmdCopyImageToBuffer(cmd, target.EntityIDs->Handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                 readback->Handle, 1, &pixel);
 
@@ -316,11 +325,9 @@ namespace Redflag {
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_HOST_BIT, 0, 1, &cpu, 0, nullptr, 1, &color);
         });
-        const auto bytes = static_cast<const uint8_t*>(readback->Map());
-        Pixel result;
-        result.Color = {bytes[0], bytes[1], bytes[2], bytes[3]};
-        memcpy(&result.EntityID, bytes + 4, 4);
+        const auto* mapped = static_cast<const uint8_t*>(readback->Map());
+        memcpy(colors, mapped, bytes);
+        memcpy(entities, mapped + bytes, bytes);
         readback->Unmap();
-        return result;
     }
 }

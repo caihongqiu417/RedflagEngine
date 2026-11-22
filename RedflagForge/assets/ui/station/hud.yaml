@@ -1,15 +1,28 @@
-# Position 和 Size 以 1920 × 1080 游戏画面为准。Anchor 是画面上的位置比例。
+# 布局用 1920 × 1080 的像素坐标。Anchor 确定贴住哪个屏幕角落，Position 是从那里量起的距离。
 Sprites:
-  panel: Panel.png
-  plate: Plate.png
   bar: Bar.png
   reticle: Crosshair.png
+  ticket: ServiceTicket.png
+
+TextShadow: {Offset: [1.5, 1.5], Color: [26, 36, 42, 245]}
+
 Elements:
-  - {Sprite: panel, Anchor: [0, 0], Position: [28, 25], Size: [510, 100], Color: [38, 59, 59, 245]}
-  - {Text: title, Anchor: [0, 0], Position: [53, 39], Font: 28, Color: [162, 238, 197, 255]}
-  - {Text: objective, Anchor: [0, 0], Position: [53, 83], Font: 20}
-  - {Sprite: panel, Anchor: [0, 1], Position: [28, -134], Size: [860, 104], Color: [37, 53, 55, 247]}
-  - {Text: status, Anchor: [0, 1], Position: [54, -117], Font: 21}
-  - {Text: controls, Anchor: [0, 1], Position: [54, -74], Font: 18, Color: [209, 227, 222, 255]}
-  - {Sprite: reticle, Anchor: [0.5, 0.5], Position: [-12, -12], Size: [24, 24], DuringPlay: true}
-Nameplates: {Background: plate, HealthBar: bar, Font: 18, Color: [33, 45, 46, 248]}
+  # 左上角的工单图标跟随当前任务。字下的短线给标题和目标分行。
+  - {Sprite: ticket, Anchor: [0, 0], Position: [44, 41], Size: [40, 40]}
+  - {Text: title, Anchor: [0, 0], Position: [101, 39], Font: 22, Color: [255, 220, 159, 255]}
+  - {Sprite: bar, Anchor: [0, 0], Position: [103, 68], Size: [35, 2], Color: [255, 212, 141, 255]}
+  - {Text: objective, Anchor: [0, 0], Position: [100, 78], Font: 27}
+
+  # 角色状态。一行生命值和生命条，下一行是同伴与物资。
+  - {Text: life, Anchor: [0, 1], Position: [56, -119], Font: 23}
+  - {Text: equipment, Anchor: [0, 1], Position: [240, -117], Font: 20, Color: [255, 203, 129, 255]}
+  - {Sprite: bar, Anchor: [0, 1], Position: [56, -89], Size: [266, 4], Color: [78, 90, 94, 255]}
+  - {Sprite: bar, Meter: health, Anchor: [0, 1], Position: [56, -89], Size: [266, 4], Color: [157, 219, 217, 255]}
+  - {Text: supplies, Anchor: [0, 1], Position: [56, -74], Font: 20, Color: [224, 231, 230, 255]}
+
+  # 操作说明由 F1 展开。附近有可用物品时才显示中央提示。
+  - {Text: controls, Anchor: [1, 1], Position: [-327, -70], Font: 20}
+  - {Text: help, Anchor: [1, 1], Position: [-379, -169], Font: 21}
+  - {Text: status, Anchor: [0.5, 1], Position: [-110, -138], Font: 21}
+  - {Sprite: reticle, Anchor: [0.5, 0.5], Position: [-10, -10], Size: [20, 20], DuringPlay: true}
+Nameplates: {HealthBar: bar, Font: 18}

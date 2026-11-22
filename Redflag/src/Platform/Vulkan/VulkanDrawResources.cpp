@@ -234,6 +234,11 @@ namespace Redflag {
         }
     }
 
+    VkDescriptorSet VulkanDraw::GetPreviewTexture(const Ref<SampledTexture>& texture)
+    {
+        return m_Data->MaterialTexture(texture, VK_FORMAT_R8G8B8A8_UNORM);
+    }
+
     VkDescriptorSet VulkanDraw::Data::MaterialTexture(const Ref<SampledTexture>& map, VkFormat format)
     {
         auto& texture = static_cast<Vulkan::Texture&>(*map);

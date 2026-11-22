@@ -14,6 +14,12 @@ namespace Redflag
 		return state == GLFW_PRESS || state == GLFW_REPEAT;   
 	}
 	
+	void Input::CaptureCursor(bool capture)
+	{
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		glfwSetInputMode(window, GLFW_CURSOR, capture ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	}
+
 	bool Input::IsMouseButtonPressed(int button)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());

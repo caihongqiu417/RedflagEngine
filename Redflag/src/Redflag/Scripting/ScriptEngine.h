@@ -79,28 +79,29 @@ namespace Redflag {
 	{
 	public:
 		ScriptInstance(Ref<ScriptClass> ScriptClass, Entity entity);
+		~ScriptInstance();
+		MonoObject* GetManagedObject() const;
 
 		bool GetFieldValue(const ScriptField& field, void* buffer) const;
 		bool SetFieldValue(const ScriptField& field, const void* value);
 
 		void InvokeOnCreate();
 		void InvokeOnUpdate(float ts);
+		void InvokeOnDestroy();
 
 	private:
 		Ref<ScriptClass> m_ScriptClass;
 
-		MonoObject* m_Instance = nullptr;
+		uint32_t m_Handle = 0;
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
+		MonoMethod* m_OnDestroyMethod = nullptr;
 	};
 
 	class ScriptEngine
 	{
 	public:
-		// 属性面板按字段名保存你给这个实体填的值。点击播放后，引擎把这些值写进新建的 C# 脚本对象。
-		using EntityScriptFieldMap = std::unordered_map<std::string, std::vector<uint8_t>>;
-
 		static void Init();
 
 		static void Shutdown();
@@ -118,7 +119,8 @@ namespace Redflag {
 
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity,float ts);
-		static void OnDestroyEntity(UUID entityUUID);
+		static void OnDestroyEntity(Scene& scene, UUID entityUUID);
+		static void OnRemoveScript(Scene& scene, UUID id);
 
 		static Scene* GetSceneContext();
 
@@ -126,7 +128,6 @@ namespace Redflag {
 		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
 
 		// 属性面板通过这张表读写脚本字段。第一次访问某个实体时，会为它建一张空表。
-		static EntityScriptFieldMap& GetScriptFieldCache(UUID entityUUID);
 
 	private:
 		static void InitMono();

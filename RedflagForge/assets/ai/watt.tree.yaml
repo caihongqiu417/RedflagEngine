@@ -1,0 +1,29 @@
+Root: 1
+NextID: 13
+Nodes:
+  - {ID: 1, Kind: ModelSelector, Name: 瓦特的选择, Position: [40, 210]}
+  - {ID: 2, Kind: Subtree, Name: 补给, Position: [310, 60]}
+  - {ID: 3, Kind: ModelSelector, Name: 选择补给动作, Position: [540, 60]}
+  - {ID: 4, Kind: Action, Name: 收集物资, Action: gather, Position: [810, 30]}
+  - {ID: 5, Kind: Action, Name: 分享物资, Action: share, Position: [810, 130]}
+  - {ID: 6, Kind: Subtree, Name: 支援, Position: [310, 235]}
+  - {ID: 7, Kind: ModelSelector, Name: 选择支援动作, Position: [540, 235]}
+  - {ID: 8, Kind: Action, Name: 救助队友, Action: revive, Position: [810, 230]}
+  - {ID: 9, Kind: Action, Name: 修理设施, Action: repair, Position: [810, 330]}
+  - {ID: 10, Kind: Action, Name: 跟随队友, Action: follow, Position: [310, 385]}
+  - {ID: 11, Kind: Action, Name: 标记目标, Action: mark, Position: [310, 485]}
+  - {ID: 12, Kind: Action, Name: 等待队友取药, Action: reserve, Position: [310, 585]}
+Edges:
+  - {From: 1, Key: gather, To: 2}
+  - {From: 1, Key: share, To: 2}
+  - {From: 2, To: 3}
+  - {From: 3, Key: gather, To: 4}
+  - {From: 3, Key: share, To: 5}
+  - {From: 1, Key: revive, To: 6}
+  - {From: 1, Key: repair, To: 6}
+  - {From: 6, To: 7}
+  - {From: 7, Key: revive, To: 8}
+  - {From: 7, Key: repair, To: 9}
+  - {From: 1, Key: follow, To: 10}
+  - {From: 1, Key: mark, To: 11}
+  - {From: 1, Key: reserve, To: 12}

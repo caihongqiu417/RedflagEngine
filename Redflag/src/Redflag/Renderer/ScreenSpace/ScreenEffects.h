@@ -26,6 +26,7 @@ namespace Redflag
         float LightRange = 4.0f; // 漫反射对照测试中各灯共用的照明半径，按场景长度计。编辑器读取每盏灯自己的半径。
         bool TraceReflections = true, SpecularEnvironment = true;
         bool TraceScene = false; // SSR 在画面里找不到物体时，继续查场景里的三角形。
+        int ReflectionBounces = 1; // 1 表示从眼前的镜面反射一次。取 2 时还能看到第二面镜子照见的物体。
         bool DiffuseEnvironment = true, ReflectProbeLight = false;
         bool DenoiseReflections = false; // 用附近同一表面的倒影减轻粗糙材质上的噪点。
     };

@@ -41,7 +41,9 @@ namespace Redflag
 
 	void VulkanForgeLayer::OnDetach()
 	{
+		if (m_EditScene) StopScene();
 		GetWindowContext().WaitIdle();
+		m_Hud = {};
 		if (m_PanelTexture)
 			ImGui_ImplVulkan_RemoveTexture(m_PanelTexture);
 		m_Lighting.reset();
@@ -75,7 +77,7 @@ namespace Redflag
 
 	void VulkanForgeLayer::NewScene()
 	{
-		if (m_EditScene) ToggleSimulation();
+		if (m_EditScene) StopScene();
 		m_Scene = CreateRef<Scene>();
 		m_Scene->SetEnvironment(DefaultSky);
 		auto extent = m_Draw->GetExtent();
@@ -145,7 +147,7 @@ namespace Redflag
 			Report("Could not open scene: " + path.u8string());
 			return false;
 		}
-		if (m_EditScene) ToggleSimulation();
+		if (m_EditScene) StopScene();
 		m_Scene = scene;
 		m_ScenePath = path;
 		m_Hierarchy.SetContext(scene);
@@ -202,30 +204,57 @@ namespace Redflag
 		}
 	}
 
-	void VulkanForgeLayer::ToggleSimulation()
+	// ---- 游戏播放与物理模拟 ----
+	void VulkanForgeLayer::PlayGame()
 	{
-		if (m_EditScene)
-		{
-			m_Scene->OnSimulationStop();
-			m_Scene = std::move(m_EditScene);
-		}
-		else
-		{
-			// 在副本里让箱子落地，点“停止模拟”就能回到原来的摆放位置。
-			Ref<Scene> simulation = Scene::Copy(m_Scene);
-			simulation->OnSimulationStart();
-			m_EditScene = std::move(m_Scene);
-			m_Scene = std::move(simulation);
-			ImGui::SetWindowFocus("场景视口");
+		m_Standalone = m_GameView = true;
+		StartScene(true);
+	}
+
+	void VulkanForgeLayer::StartScene(bool play)
+	{
+		Entity selected = m_Hierarchy.GetSelectedEntity();
+		m_EditSelection = selected ? selected.GetUUID() : UUID(0);
+		m_EditGameView = m_GameView;
+		m_EditScene = m_Scene;
+		m_Scene = Scene::Copy(m_EditScene);
+		m_Playing = play;
+		if (play) {
+			m_Scene->OnRuntimeStart();
+			m_SelectGameTab = true;
+		} else {
+			m_Scene->OnSimulationStart();
 		}
 		m_Hierarchy.SetContext(m_Scene);
+		m_Hierarchy.SetSelectedEntity(m_Scene->GetEntityByUUID(m_EditSelection));
+		m_Lighting->ResetHistory();
+		m_HasSceneImage = false;
+		if (!m_Standalone) ImGui::SetWindowFocus("场景视口");
+	}
+
+	void VulkanForgeLayer::StopScene()
+	{
+		m_Photos.Stop();
+		m_Companions.Stop();
+		if (m_Playing) m_Scene->OnRuntimeStop();
+		else m_Scene->OnSimulationStop();
+		m_Playing = false;
+		m_Scene = std::move(m_EditScene);
+		m_Hierarchy.SetContext(m_Scene);
+		m_Hierarchy.SetSelectedEntity(m_Scene->GetEntityByUUID(m_EditSelection));
+		m_SelectGameTab = m_EditGameView;
+		m_SelectSceneTab = !m_EditGameView;
 		m_Lighting->ResetHistory();
 		m_HasSceneImage = false;
 	}
 
 	void VulkanForgeLayer::OnUpdate(Timestep ts)
 	{
-		if (m_EditScene)
+		if (m_Playing) {
+			auto hud = m_Scene->GetRegistry().view<GameHud>();
+			if (hud.empty() || !hud.get<GameHud>(hud.front()).Finished) m_Scene->UpdateGame(ts);
+		}
+		else if (m_EditScene)
 		{
 			m_Scene->OnUpdateAnimations(ts, ReadCharacterMovement(m_ViewportFocused));
 			m_Scene->OnUpdatePhysics(ts);
@@ -314,11 +343,18 @@ namespace Redflag
 			ImGui::EndMenu();
 		}
 		ImGui::Separator();
-		if (ImGui::MenuItem(m_EditScene ? "停止模拟" : "模拟物理", "F5") ||
-			(!ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_F5, false)))
-			ToggleSimulation();
-		if (m_NpcVision.Draw(m_Scene, m_ScenePath, bool(m_EditScene), m_Camera))
-			m_SelectSceneTab = true;
+		const bool shortcuts = !ImGui::GetIO().WantTextInput;
+		if (!m_EditScene) {
+			if (ImGui::MenuItem("播放", "F6") || (shortcuts && ImGui::IsKeyPressed(ImGuiKey_F6, false)))
+				StartScene(true);
+			else if (ImGui::MenuItem("模拟物理", "F5") || (shortcuts && ImGui::IsKeyPressed(ImGuiKey_F5, false)))
+				StartScene(false);
+		} else if (ImGui::MenuItem(m_Playing ? "停止播放" : "停止模拟", m_Playing ? "F6" : "F5") ||
+			(shortcuts && ImGui::IsKeyPressed(m_Playing ? ImGuiKey_F6 : ImGuiKey_F5, false))) {
+			StopScene();
+		}
+		m_Decisions.Draw(m_Scene);
+		m_Companions.DrawMenu();
 		ImGui::TextDisabled("%s   /   Vulkan", m_ScenePath.empty() ? "未命名" : m_ScenePath.stem().u8string().c_str());
 		ImGui::EndMenuBar();
 		if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
@@ -339,10 +375,19 @@ namespace Redflag
 
 	void VulkanForgeLayer::OnImGuiRender()
 	{
+		m_Photos.Update();
+		const auto photoPanel = [&](uint64_t actor) { m_Photos.Draw(GetWindowContext(), m_Scene, m_ScenePath, actor); };
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
+		if (m_Standalone) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			DrawViewport();
+			ImGui::PopStyleVar();
+			m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
+			return;
+		}
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::Begin("Vulkan Workspace", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
@@ -399,6 +444,7 @@ namespace Redflag
 		}
 		ImGui::End();
 		DrawViewport();
+		m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
 	}
 
 	void VulkanForgeLayer::DrawTransformTools()
@@ -469,9 +515,22 @@ namespace Redflag
 	void VulkanForgeLayer::DrawViewport()
 	{
 		m_Hovered = false;
-		bool visible = ImGui::Begin("场景视口", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+		if (m_Standalone)
+		{
+			flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings;
+			const ImVec2 window = ImGui::GetMainViewport()->WorkSize;
+			const ImVec2 margin = m_GameViewport.Fit(window, ImGui::GetIO().DisplayFramebufferScale, true).Offset;
+			// 场景铺满窗口时省去被它盖住的底色。留有黑边的窗口继续按主题绘制。
+			if (margin.x == 0.f && margin.y == 0.f) ImGui::SetNextWindowBgAlpha(0.f);
+		}
+		bool visible = ImGui::Begin(m_Standalone ? "Redflag Player" : "场景视口", nullptr, flags);
 		m_ViewportFocused = visible && ImGui::IsWindowFocused();
-		if (visible && ImGui::BeginTabBar("Cameras"))
+		if (m_Playing && m_GameView && m_ViewportFocused && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_R, false)) {
+			StopScene();
+			StartScene(true);
+		}
+		if (visible && !m_Standalone && ImGui::BeginTabBar("Cameras"))
 		{
 			const bool previous = m_GameView;
 			if (ImGui::BeginTabItem("场景 Scene", nullptr, m_SelectSceneTab ? ImGuiTabItemFlags_SetSelected : 0))
@@ -480,7 +539,11 @@ namespace Redflag
 				m_SelectSceneTab = false;
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("主相机 Game")) { m_GameView = true; ImGui::EndTabItem(); }
+			if (ImGui::BeginTabItem("主相机 Game", nullptr, m_SelectGameTab ? ImGuiTabItemFlags_SetSelected : 0)) {
+				m_GameView = true;
+				m_SelectGameTab = false;
+				ImGui::EndTabItem();
+			}
 			ImGui::EndTabBar();
 			if (m_GameView != previous) { m_Lighting->ResetHistory(); m_HasSceneImage = false; }
 			if (!m_GameView) { DrawTransformTools(); ImGui::SameLine(); }
@@ -564,6 +627,7 @@ namespace Redflag
 			m_Hovered = ImGui::IsItemHovered();
 			const bool clicked = ImGui::IsItemClicked();
 			const auto corner = ImGui::GetItemRectMin();
+			if (m_GameView && m_Playing) m_Hud.Draw(*m_Scene, *m_Draw, projection * view, corner, size);
 			bool gizmo = !m_GameView && DrawSceneGizmos(projection, view, corner, size);
 			if (!m_GameView && !gizmo && m_HasSceneImage && clicked && !ImGui::GetIO().KeyAlt)
 			{

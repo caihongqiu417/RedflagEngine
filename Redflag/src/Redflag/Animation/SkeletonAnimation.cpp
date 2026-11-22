@@ -38,6 +38,7 @@ namespace Redflag
 
 	void SkeletonAnimationComponent::RestartControl()
 	{
+		Movement.reset();
 		if (m_Idle) m_Control.emplace(*m_Idle, *Clip);
 	}
 

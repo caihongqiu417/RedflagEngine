@@ -398,7 +398,7 @@ namespace Redflag {
             out << YAML::BeginMap;
             out << YAML::Key << "Class" << YAML::Value << scriptComponent.ClassName;  
 
-            auto& fieldCache = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
+            auto& fieldCache = scriptComponent.Fields;
             auto scriptClasses = ScriptEngine::GetEntityClasses();
             auto scriptClassIt = scriptClasses.find(scriptComponent.ClassName);
             if (scriptClassIt != scriptClasses.end() && !fieldCache.empty())
@@ -474,9 +474,36 @@ namespace Redflag {
             const ModelAnimationComponent& player = entity.GetComponent<ModelAnimationComponent>();
             out << YAML::Key << "ModelAnimationComponent" << YAML::Value << YAML::BeginMap
                 << YAML::Key << "Clip" << YAML::Value << player.Clip << YAML::Key << "Time" << YAML::Value << player.Time
+                << YAML::Key << "BlendSeconds" << YAML::Value << player.BlendSeconds
+                << YAML::Key << "Loop" << YAML::Value << player.Loop
                 << YAML::Key << "Playing" << YAML::Value << player.Playing << YAML::EndMap;
         }
 
+        if (entity.HasComponent<EnvironmentZoneComponent>())
+        {
+            const EnvironmentZoneComponent& zone = entity.GetComponent<EnvironmentZoneComponent>();
+            out << YAML::Key << "EnvironmentZoneComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "HalfSize" << YAML::Value << zone.HalfSize;
+            out << YAML::Key << "Landform" << YAML::Value << zone.Landform;
+            out << YAML::Key << "Vegetation" << YAML::Value << zone.Vegetation;
+            out << YAML::Key << "Landmark" << YAML::Value << zone.Landmark;
+            out << YAML::Key << "Lights" << YAML::Value << YAML::Flow << YAML::BeginSeq;
+            for (uint64_t id : zone.Lights) out << id;
+            out << YAML::EndSeq << YAML::EndMap;
+        }
+        if (entity.HasComponent<TerrainComponent>())
+        {
+            const TerrainComponent& ground = entity.GetComponent<TerrainComponent>();
+            out << YAML::Key << "TerrainComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Heightmap" << YAML::Value << ground.Heightmap;
+            out << YAML::Key << "CellSize" << YAML::Value << ground.CellSize;
+            out << YAML::Key << "HeightScale" << YAML::Value << ground.HeightScale;
+            out << YAML::Key << "ChunkCells" << YAML::Value << ground.ChunkCells;
+            out << YAML::Key << "BaseColorTexture" << YAML::Value << ground.BaseColorTexture;
+            out << YAML::Key << "UVScaleMeters" << YAML::Value << ground.UVScaleMeters;
+            out << YAML::Key << "Tint" << YAML::Value << ground.Tint;
+            out << YAML::Key << "Collision" << YAML::Value << ground.Collision << YAML::EndMap;
+        }
         if (entity.HasComponent<ModelRendererComponent>())
         {
             out << YAML::Key << "ModelRendererComponent";
@@ -531,7 +558,47 @@ namespace Redflag {
         }
 
         if (entity.HasComponent<PickupComponent>())
-            out << YAML::Key << "PickupComponent" << YAML::Value << YAML::BeginMap << YAML::EndMap;
+        {
+            const auto& pickup = entity.GetComponent<PickupComponent>();
+            out << YAML::Key << "PickupComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Item" << YAML::Value << pickup.Item;
+            out << YAML::Key << "Count" << YAML::Value << pickup.Count << YAML::EndMap;
+        }
+        if (entity.HasComponent<HealthComponent>())
+        {
+            const auto& health = entity.GetComponent<HealthComponent>();
+            out << YAML::Key << "HealthComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Current" << YAML::Value << health.Current;
+            out << YAML::Key << "Maximum" << YAML::Value << health.Maximum;
+            out << YAML::Key << "Team" << YAML::Value << health.Team << YAML::EndMap;
+        }
+        if (entity.HasComponent<NpcComponent>())
+        {
+            const auto& npc = entity.GetComponent<NpcComponent>();
+            out << YAML::Key << "NpcComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Definition" << YAML::Value << npc.Definition;
+            out << YAML::Key << "Leader" << YAML::Value << npc.Leader;
+            out << YAML::Key << "VoiceOverride" << YAML::Value << npc.VoiceOverride << YAML::EndMap;
+        }
+        if (entity.HasComponent<HudComponent>())
+            out << YAML::Key << "HudComponent" << YAML::Value << YAML::BeginMap
+                << YAML::Key << "Layout" << YAML::Value << entity.GetComponent<HudComponent>().Layout << YAML::EndMap;
+
+        if (entity.HasComponent<InventoryComponent>())
+        {
+            out << YAML::Key << "InventoryComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Items" << YAML::Value << entity.GetComponent<InventoryComponent>().Items << YAML::EndMap;
+        }
+        if (entity.HasComponent<InteractionComponent>())
+        {
+            const auto& use = entity.GetComponent<InteractionComponent>();
+            out << YAML::Key << "InteractionComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Action" << YAML::Value << use.Action;
+            out << YAML::Key << "Range" << YAML::Value << use.Range;
+            out << YAML::Key << "Seconds" << YAML::Value << use.Seconds;
+            out << YAML::Key << "Restore" << YAML::Value << use.Restore;
+            out << YAML::Key << "OnlyWhenDown" << YAML::Value << use.OnlyWhenDown << YAML::EndMap;
+        }
 
         if (entity.HasComponent<SkeletonAnimationComponent>())
         {
@@ -573,6 +640,7 @@ namespace Redflag {
             const BoxCollider3DComponent& box = entity.GetComponent<BoxCollider3DComponent>();
             out << YAML::Key << "BoxCollider3DComponent" << YAML::Value << YAML::BeginMap;
             out << YAML::Key << "HalfSize" << YAML::Value << box.HalfSize;
+            if (box.Center != glm::vec3(0)) out << YAML::Key << "Center" << YAML::Value << box.Center;
             out << YAML::EndMap;
         }
 
@@ -783,7 +851,7 @@ namespace Redflag {
 
                     if (scNode["ScriptFields"])
                     {
-                        auto& fieldCache = ScriptEngine::GetScriptFieldCache(deserializedEntity.GetUUID());
+                        auto& fieldCache = sc.Fields;
                         for (auto fieldNode : scNode["ScriptFields"])
                         {
                             if (!fieldNode["Name"] || !fieldNode["Type"] || !fieldNode["Value"])
@@ -834,8 +902,42 @@ namespace Redflag {
                     rb2d.FixedRotation = rbNode["Fixed Rotation"].as<bool>();
                 }
 
-                if (entity["PickupComponent"])
-                    deserializedEntity.AddComponent<PickupComponent>();
+                if (const YAML::Node n = entity["PickupComponent"])
+                {
+                    auto& pickup = deserializedEntity.AddComponent<PickupComponent>();
+                    pickup.Item = n["Item"].as<std::string>("");
+                    pickup.Count = n["Count"].as<int>(1);
+                }
+                if (const YAML::Node n = entity["HealthComponent"])
+                {
+                    auto& health = deserializedEntity.AddComponent<HealthComponent>();
+                    health.Maximum = n["Maximum"].as<float>(health.Maximum);
+                    health.Current = n["Current"].as<float>(health.Maximum);
+                    health.Team = n["Team"].as<std::string>("");
+                }
+                if (const YAML::Node n = entity["HudComponent"])
+                    deserializedEntity.AddComponent<HudComponent>().Layout = n["Layout"].as<std::string>();
+                if (const YAML::Node n = entity["InventoryComponent"])
+                {
+                    auto& inventory = deserializedEntity.AddComponent<InventoryComponent>();
+                    if (n["Items"]) inventory.Items = n["Items"].as<std::map<std::string, int>>();
+                }
+                if (const YAML::Node n = entity["NpcComponent"])
+                {
+                    auto& npc = deserializedEntity.AddComponent<NpcComponent>();
+                    npc.Definition = n["Definition"].as<std::string>();
+                    npc.Leader = n["Leader"].as<uint64_t>(0);
+                    npc.VoiceOverride = n["VoiceOverride"].as<std::string>("");
+                }
+                if (const YAML::Node n = entity["InteractionComponent"])
+                {
+                    auto& use = deserializedEntity.AddComponent<InteractionComponent>();
+                    use.Action = n["Action"].as<std::string>(use.Action);
+                    use.Range = n["Range"].as<float>(use.Range);
+                    use.Seconds = n["Seconds"].as<float>(use.Seconds);
+                    use.Restore = n["Restore"].as<float>(use.Restore);
+                    use.OnlyWhenDown = n["OnlyWhenDown"].as<bool>(use.OnlyWhenDown);
+                }
 
                 if (const YAML::Node animation = entity["SkeletonAnimationComponent"])
                 {
@@ -886,6 +988,7 @@ namespace Redflag {
                 {
                     BoxCollider3DComponent& box = deserializedEntity.AddComponent<BoxCollider3DComponent>();
                     box.HalfSize = boxNode["HalfSize"].as<glm::vec3>();
+                    box.Center = boxNode["Center"].as<glm::vec3>(glm::vec3(0));
                     if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))))
                         throw std::runtime_error("3D collision box half sizes must be positive");
                 }
@@ -936,10 +1039,33 @@ namespace Redflag {
                 {
                     ModelAnimationComponent& player = deserializedEntity.AddComponent<ModelAnimationComponent>();
                     player.Clip = animation["Clip"].as<std::string>("");
+                    player.BlendSeconds = animation["BlendSeconds"].as<float>(player.BlendSeconds);
+                    player.Loop = animation["Loop"].as<bool>(true);
                     player.Time = animation["Time"].as<float>(0.f);
                     player.Playing = animation["Playing"].as<bool>(true);
                 }
 
+                if (const YAML::Node data = entity["EnvironmentZoneComponent"])
+                {
+                    EnvironmentZoneComponent& zone = deserializedEntity.AddComponent<EnvironmentZoneComponent>();
+                    zone.HalfSize = data["HalfSize"].as<glm::vec3>(zone.HalfSize);
+                    zone.Landform = data["Landform"].as<std::string>("");
+                    zone.Vegetation = data["Vegetation"].as<std::string>("");
+                    zone.Landmark = data["Landmark"].as<std::string>("");
+                    for (const YAML::Node& light : data["Lights"]) zone.Lights.insert(light.as<uint64_t>());
+                }
+                if (const YAML::Node data = entity["TerrainComponent"])
+                {
+                    TerrainComponent& ground = deserializedEntity.AddComponent<TerrainComponent>();
+                    ground.Heightmap = data["Heightmap"].as<std::string>("");
+                    ground.BaseColorTexture = data["BaseColorTexture"].as<std::string>("");
+                    ground.CellSize = data["CellSize"].as<float>(ground.CellSize);
+                    ground.HeightScale = data["HeightScale"].as<float>(ground.HeightScale);
+                    ground.ChunkCells = data["ChunkCells"].as<uint32_t>(ground.ChunkCells);
+                    ground.UVScaleMeters = data["UVScaleMeters"].as<float>(ground.UVScaleMeters);
+                    ground.Tint = data["Tint"].as<glm::vec4>(ground.Tint);
+                    ground.Collision = data["Collision"].as<bool>(ground.Collision);
+                }
                 // ModelRendererComponent
                 if (entity["ModelRendererComponent"])
                 {
@@ -1016,7 +1142,7 @@ namespace Redflag {
                     pl.Color      = plNode["Color"].as<glm::vec3>();
                     pl.Intensity  = plNode["Intensity"].as<float>();
                     pl.Radius     = plNode["Radius"].as<float>();
-                    pl.CastShadow = plNode["CastShadow"].as<bool>();
+                    pl.CastShadow = plNode["CastShadow"].as<bool>(pl.CastShadow);
                 }
 
                 // ParticleEmitterComponent

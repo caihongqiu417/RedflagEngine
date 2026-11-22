@@ -1,14 +1,12 @@
 """按场景和关键词选取 NPC 拍过的图，返回图中候选实体或区域。"""
 import argparse
 import base64
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 import json
 import math
 import os
 from pathlib import Path
 import re
-from urllib.error import URLError
 from urllib.request import Request, urlopen
 from PIL import Image
 
@@ -98,41 +96,12 @@ def candidate(index_path, scene, question, endpoint, model):
     return find_candidate(index_path, scene, question, endpoint, model, include_regions=False)["entity"]
 
 
-def create_server(index, port, endpoint, model):
-    class Handler(BaseHTTPRequestHandler):
-        def do_POST(self):
-            if self.path != "/candidate":
-                self.send_error(404)
-                return
-            try:
-                length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 16384:
-                    raise ValueError("invalid request size")
-                query = json.loads(self.rfile.read(length))
-                result = find_candidate(index, query["scene"], query["question"], endpoint, model,
-                                        include_regions=query.get("include_regions", False))
-                data = json.dumps(result, ensure_ascii=False).encode("utf-8")
-            except (KeyError, TypeError, ValueError) as error:
-                self.send_error(400, str(error))
-                return
-            except (OSError, URLError) as error:
-                self.send_error(502, str(error))
-                return
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
-
-    return ThreadingHTTPServer(("127.0.0.1", port), Handler)
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description="从已经拍好的视角图中复查一次识别")
     parser.add_argument("index", type=Path)
-    parser.add_argument("--port", type=int, default=8715)
+    parser.add_argument("scene")
+    parser.add_argument("question")
     parser.add_argument("--endpoint", default="http://127.0.0.1:8080/v1/chat/completions")
     parser.add_argument("--model", required=True)
     args = parser.parse_args()
-    with create_server(args.index, args.port, args.endpoint, args.model) as server:
-        server.serve_forever()
+    print(json.dumps(find_candidate(args.index, args.scene, args.question, args.endpoint, args.model), ensure_ascii=False))

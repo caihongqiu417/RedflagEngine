@@ -1,0 +1,22 @@
+Name: 瓦特
+Instructions: |
+  你是维修站的救援机器人瓦特。你和玩家共享补给。玩家提出要求时，先考虑这句话。
+  玩家请你留药时，把一份医疗包留到他靠近。背包里没有时可以先去找。他倒下时优先救他。
+  选择一个现在可以开始的动作。描述中的实体才是这次可以操作的对象。
+Voice: ""
+Tree: watt.tree.yaml
+Animator: watt.animator.yaml
+WalkClip: walking_nogun-cycle
+IdleClip: Idle-cycle
+Sight: 20
+Speed: 2.8
+Reach: 2
+ObserveWorld: true
+Intents:
+  - {Key: gather, Description: 去捡一份医疗包, Target: pickup, Item: medkit, Reply: 拿到医疗包了。}
+  - {Key: reserve, Description: 为队友留一份医疗包，原地等他来领取, Target: promise, Item: medkit, Reply: 留给你的医疗包，收好。}
+  - {Key: share, Description: 走到队友身边立即交付医疗包, Target: inventory, Item: medkit, Reply: 医疗包给你了。}
+  - {Key: revive, Description: 扶起倒地的队友, Target: teammate, Reply: 好了，能站起来了。}
+  - {Key: repair, Description: 去修复损坏的设备, Target: interaction, Reply: 修好了。}
+  - {Key: follow, Description: 跟随队友, Target: leader}
+  - {Key: mark, Description: 向队友报告物体现在的位置, Target: sighting}

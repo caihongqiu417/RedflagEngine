@@ -1,0 +1,362 @@
+Scene: 潮汐维修站
+Environment: ../game/station/salvage/industrial_sunset_02.hdr
+SkyVisible: true
+Entities:
+  - Entity: 1100
+    TagComponent: {Tag: 主相机}
+    TransformComponent: {Translation: [-11.46, 2.62, 1.4], Rotation: [-0.14, -1.5707963, 0], Scale: [1, 1, 1]}
+    CameraComponent:
+      Camera: {ProjectionType: 0, PerspectiveFov: 0.98, PerspectiveNear: 0.08, PerspectiveFar: 175, OrthographicSize: 13.3, OrthographicNear: 0.1, OrthographicFar: 85}
+      Primary: true
+      FixedAspectRatio: false
+    ScriptComponent:
+      Class: Sandbox.ThirdPersonCamera
+      ScriptFields:
+        - {Name: Target, Type: Entity, Value: 1101}
+  - Entity: 1101
+    TagComponent: {Tag: 玩家}
+    HudComponent: {Layout: assets/ui/station/hud.yaml}
+    TransformComponent: {Translation: [-6.9, 0.08, 1.4], Rotation: [0, 1.57, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.36, 0.45, 0.53, 1]}
+    ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
+    RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.35, 0.92, 0.35], Center: [0, 0.92, 0]}
+    HealthComponent: {Current: 100, Maximum: 100, Team: crew}
+    InventoryComponent: {Items: {medkit: 1}}
+    InteractionComponent: {Action: revive, Range: 2, Seconds: 2, Restore: 50, OnlyWhenDown: true}
+    ScriptComponent:
+      Class: Sandbox.StationPlayer
+      ScriptFields:
+        - {Name: Camera, Type: Entity, Value: 1100}
+        - {Name: Watt, Type: Entity, Value: 1102}
+        - {Name: Guard, Type: Entity, Value: 1103}
+        - {Name: Relay, Type: Entity, Value: 1110}
+        - {Name: Exit, Type: Entity, Value: 1111}
+        - {Name: Supply, Type: Entity, Value: 1112}
+  - Entity: 1102
+    TagComponent: {Tag: 瓦特}
+    TransformComponent: {Translation: [-5.2, 0.08, -0.6], Rotation: [0, -0.7, 0], Scale: [0.96, 0.96, 0.96]}
+    ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.67, 0.39, 0.14, 1]}
+    ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
+    RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.35, 0.92, 0.35], Center: [0, 0.92, 0]}
+    HealthComponent: {Current: 100, Maximum: 100, Team: crew}
+    InventoryComponent: {Items: {medkit: 1}}
+    NpcComponent: {Definition: assets/ai/watt.npc.yaml, Leader: 1101}
+    InteractionComponent: {Action: revive, Range: 2, Seconds: 2, Restore: 50, OnlyWhenDown: true}
+  - Entity: 1103
+    TagComponent: {Tag: 故障巡检机}
+    TransformComponent: {Translation: [4.1, 0.08, -1.7], Rotation: [0, -1.1, 0], Scale: [0.86, 0.86, 0.86]}
+    ModelRendererComponent: {FilePath: assets/game/station/crew/Sentinel.glb, Color: [1, 0.65, 0.43, 1]}
+    ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
+    RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.9, 1.05, 1.1], Center: [0, 1.05, 0]}
+    HealthComponent: {Current: 75, Maximum: 75, Team: fault}
+    ScriptComponent:
+      Class: Sandbox.StationGuard
+      ScriptFields:
+        - {Name: Player, Type: Entity, Value: 1101}
+        - {Name: Watt, Type: Entity, Value: 1102}
+  - Entity: 1110
+    TagComponent: {Tag: 应急发电机}
+    TransformComponent: {Translation: [7, 0.08, 1.4], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/portable_generator.glb, Color: [1, 1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.6, 0.75, 0.38]}
+    HealthComponent: {Current: 0, Maximum: 100, Team: station}
+    InteractionComponent: {Action: repair, Range: 2, Seconds: 2, Restore: 100, OnlyWhenDown: false}
+  - Entity: 1111
+    TagComponent: {Tag: 出站闸}
+    TransformComponent: {Translation: [-8.1, 0.08, -2.05], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+  - Entity: 1112
+    TagComponent: {Tag: 急救工具箱}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.39, 0.23, 0.30], Center: [0, 0.23, 0]}
+    TransformComponent: {Translation: [-3.4, 0.08, 2.15], Rotation: [0, -0.24, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/metal_tool_chest.glb, Color: [1, 1, 1, 1]}
+    PickupComponent: {Item: medkit, Count: 1}
+  - Entity: 1113
+    TagComponent: {Tag: 电网}
+    TransformComponent: {Translation: [0, 0.08, 0.15], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ScriptComponent:
+      Class: Sandbox.ArcFloor
+      ScriptFields:
+        - {Name: Player, Type: Entity, Value: 1101}
+        - {Name: Watt, Type: Entity, Value: 1102}
+        - {Name: Signal, Type: Entity, Value: 1224}
+  - Entity: 1114
+    TagComponent: {Tag: 警示灯架}
+    TransformComponent: {Translation: [0, 0, -5.55], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Floodlight.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1120
+    TagComponent: {Tag: 维修场路面}
+    TransformComponent: {Translation: [0, 0, 0], Rotation: [0, 0, 0], Scale: [1.12, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1121
+    TagComponent: {Tag: 甲板地面}
+    TransformComponent: {Translation: [0, -0.14, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [10, 0.15, 5.8]}
+  - Entity: 1122
+    TagComponent: {Tag: 北侧护栏}
+    TransformComponent: {Translation: [0, 0.4, -5.6], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [10, 0.45, 0.12]}
+  - Entity: 1123
+    TagComponent: {Tag: 南侧护栏}
+    TransformComponent: {Translation: [0, 0.4, 5.6], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [10, 0.45, 0.12]}
+  - Entity: 1124
+    TagComponent: {Tag: 西侧护栏}
+    TransformComponent: {Translation: [-9.7, 0.4, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.12, 0.45, 5.8]}
+  - Entity: 1125
+    TagComponent: {Tag: 东棚侧墙}
+    TransformComponent: {Translation: [10.3, 1.3, 0.8], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [0.12, 1.3, 1.7]}
+  - Entity: 1126
+    TagComponent: {Tag: 西侧设备舱}
+    TransformComponent: {Translation: [-6.9, 0.6, -4.2], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [1.45, 0.8, 0.94]}
+  - Entity: 1127
+    TagComponent: {Tag: 东侧设备舱}
+    TransformComponent: {Translation: [6.9, 0.6, -4.2], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [1.45, 0.8, 0.94]}
+  - Entity: 1130
+    TagComponent: {Tag: 日光}
+    TransformComponent: {Translation: [0, 6, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    DirectionalLightComponent: {Direction: [0.34, -0.44, 0.83], Color: [1, 0.83, 0.66], Intensity: 2.0, CastShadow: true}
+  - Entity: 1200
+    TagComponent: {Tag: 西棚货柜}
+    TransformComponent: {Translation: [-6.9, 0, -4.2], Rotation: [0, 1.57, 0], Scale: [0.78, 0.88, 0.58]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Container.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1201
+    TagComponent: {Tag: 东棚货柜}
+    TransformComponent: {Translation: [6.9, 0, -4.65], Rotation: [0, 1.57, 0], Scale: [0.74, 0.85, 0.63]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Container.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1206
+    TagComponent: {Tag: 北侧管廊}
+    TransformComponent: {Translation: [1.9, -0.24, -10.6], Rotation: [0, 0.1, 0], Scale: [0.94, 0.85, 0.8]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Pipework.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1207
+    TagComponent: {Tag: 卸货区}
+    TransformComponent: {Translation: [15.3, -0.09, 1.8], Rotation: [0, 1.57, 0], Scale: [1.5, 1, 1.18]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1208
+    TagComponent: {Tag: 仓前堆场}
+    TransformComponent: {Translation: [2.5, -0.085, 12.7], Rotation: [0, 0.0, 0], Scale: [1.17, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1209
+    TagComponent: {Tag: 岔路}
+    TransformComponent: {Translation: [-16.7, -0.08, -0.5], Rotation: [0, 0, 0], Scale: [0.85, 1, 1.1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1210
+    TagComponent: {Tag: 站后车道}
+    TransformComponent: {Translation: [1.4, -0.1, -12.4], Rotation: [0, 0, 0], Scale: [1.25, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1211
+    TagComponent: {Tag: 装卸货柜}
+    TransformComponent: {Translation: [9.9, 0, 7.5], Rotation: [0, 0.27, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Container.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1212
+    TagComponent: {Tag: 周转箱}
+    TransformComponent: {Translation: [10.2, 0, 4.4], Rotation: [0, -0.32, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Cargo.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1213
+    TagComponent: {Tag: 器材架}
+    TransformComponent: {Translation: [-6.3, 0, 5.05], Rotation: [0, -0.48, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/worn_metal_rack.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1214
+    TagComponent: {Tag: 旧油桶}
+    TransformComponent: {Translation: [-4.75, 0, 4.83], Rotation: [0, 0.38, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/barrel_03.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1215
+    TagComponent: {Tag: 备用轮毂}
+    TransformComponent: {Translation: [-5.83, 0, 4.0], Rotation: [0, -0.4, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/rusted_wheel_rim_01.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1216
+    TagComponent: {Tag: 汽油桶}
+    TransformComponent: {Translation: [-6.66, 0, 4.46], Rotation: [0, 0.26, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/metal_jerrycan.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1217
+    TagComponent: {Tag: 场灯}
+    TransformComponent: {Translation: [14.2, 0, 6.4], Rotation: [0, -2.6, 0], Scale: [0.93, 0.93, 0.93]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Floodlight.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1220
+    TagComponent: {Tag: 备件箱}
+    TransformComponent: {Translation: [-4.25, 0, -4.0], Rotation: [0, 1.5, 0], Scale: [0.74, 0.74, 0.74]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Cargo.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1221
+    TagComponent: {Tag: 工具台}
+    TransformComponent: {Translation: [6.6, 0, 3.3], Rotation: [0, 1.45, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/worn_metal_rack.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1222
+    TagComponent: {Tag: 砂石地面}
+    TransformComponent: {Translation: [9, -0.025, 0], Rotation: [-1.5707963, 0, 0], Scale: [100, 100, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/ground/Gravel.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1229
+    TagComponent: {Tag: 场外砂石路基}
+    TransformComponent: {Translation: [9, -0.525, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    RigidBody3DComponent: {BodyType: Static, Density: 1}
+    BoxCollider3DComponent: {HalfSize: [50, 0.5, 50]}
+  - Entity: 1223
+    TagComponent: {Tag: 维修棚工作灯}
+    TransformComponent: {Translation: [7.18, 2.12, 1.15], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    PointLightComponent: {Color: [1, 0.62, 0.30], Intensity: 38, Radius: 5.5, CastShadow: true}
+  - Entity: 1224
+    TagComponent: {Tag: 电网警示灯}
+    TransformComponent: {Translation: [0, 0.7, -1.0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    PointLightComponent: {Color: [1, 0.17, 0.04], Intensity: 0, Radius: 4, CastShadow: false}
+  - Entity: 1225
+    TagComponent: {Tag: 铁皮维修棚}
+    TransformComponent: {Translation: [8.4, 0, 1.4], Rotation: [0, -1.57, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/ScrapShanty.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1226
+    TagComponent: {Tag: 装卸行车}
+    TransformComponent: {Translation: [14.5, 6.7, -1.1], Rotation: [0, 1.57, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/overhead_crane.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1227
+    TagComponent: {Tag: 棚内吊灯}
+    TransformComponent: {Translation: [7.18, 3.15, 1.15], Rotation: [0, 0, 0], Scale: [0.75, 0.75, 0.75]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/hanging_industrial_lamp.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1228
+    TagComponent: {Tag: 零件推车}
+    TransformComponent: {Translation: [-6.6, 0, -2.65], Rotation: [0, 0.35, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/industrial_storage_cart.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1230
+    TagComponent: {Tag: 旧采石坡}
+    TransformComponent: {Translation: [105, -2.8, 54], Rotation: [0, 3.14159265, 0], Scale: [1, 1, 1]}
+    TerrainComponent:
+      Heightmap: assets/terrain/quarry/quarry-height.png
+      CellSize: 0.65
+      HeightScale: 24
+      ChunkCells: 32
+      Collision: true
+      BaseColorTexture: assets/terrain/quarry/rocky-terrain.jpg
+      UVScaleMeters: 42
+      Tint: [0.88, 0.86, 0.82, 1]
+  - Entity: 1231
+    TagComponent: {Tag: 行车北柱}
+    TransformComponent: {Translation: [14.5, 3.33, -7.12], Rotation: [-1.5707963, 0, 0], Scale: [0.58, 0.8, 0.62]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/SteelBeam.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1232
+    TagComponent: {Tag: 行车南柱}
+    TransformComponent: {Translation: [14.5, 3.33, 4.92], Rotation: [-1.5707963, 0, 0], Scale: [0.58, 0.8, 0.62]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/SteelBeam.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1233
+    TagComponent: {Tag: 焊接气瓶}
+    TransformComponent: {Translation: [5.3, 0, 3.8], Rotation: [0, -0.5, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/GasBottles.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1234
+    TagComponent: {Tag: 工位卷管器}
+    TransformComponent: {Translation: [5.4, 0, 4.6], Rotation: [0, -0.85, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/yard/Hose.gltf, Color: [1, 1, 1, 1]}
+  - Entity: 1240
+    TagComponent: {Tag: 东侧仓库}
+    TransformComponent: {Translation: [37, 0.0, 17.7], Rotation: [0, -1.8, 0], Scale: [0.72, 0.72, 0.72]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Warehouse.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1241
+    TagComponent: {Tag: 旧值班塔}
+    TransformComponent: {Translation: [22, 0, -12], Rotation: [0, 0.75, 0], Scale: [0.91, 0.91, 0.91]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Watchtower.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1242
+    TagComponent: {Tag: 管廊检修台}
+    TransformComponent: {Translation: [0.65, -0.025, -5.2], Rotation: [0, -0.13, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/LoadingBay.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1243
+    TagComponent: {Tag: 路肩碎砖}
+    TransformComponent: {Translation: [-4.75, -0.105, -3.4], Rotation: [0, 0.73, 0], Scale: [0.67, 0.67, 0.67]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Rubble.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1244
+    TagComponent: {Tag: 棚后拆下的混凝土}
+    TransformComponent: {Translation: [13, -0.08, 5.83], Rotation: [0, -1.15, 0], Scale: [1.05, 1.05, 1.05]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Rubble.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1245
+    TagComponent: {Tag: 采石路碎块}
+    TransformComponent: {Translation: [26, -0.10500000000000001, -4], Rotation: [0, -0.32, 0], Scale: [1.1, 1.1, 1.1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Rubble.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1250
+    TagComponent: {Tag: 旧桶旁的干草}
+    TransformComponent: {Translation: [-6.4, -0.045, 3.65], Rotation: [0, 0.6, 0], Scale: [0.56, 0.56, 0.56]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1251
+    TagComponent: {Tag: 推车旁的草簇}
+    TransformComponent: {Translation: [-5.8, -0.045, -3.65], Rotation: [0, -0.8, 0], Scale: [0.52, 0.52, 0.52]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1252
+    TagComponent: {Tag: 检修台下的旱草}
+    TransformComponent: {Translation: [-0.5, -0.045, -4.4], Rotation: [0, -0.65, 0], Scale: [0.72, 0.72, 0.72]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1253
+    TagComponent: {Tag: 路肩刺灌}
+    TransformComponent: {Translation: [-2.35, -0.045, -4.7], Rotation: [0, 0.96, 0], Scale: [0.52, 0.52, 0.52]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Thornbush.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1254
+    TagComponent: {Tag: 路肩草丛}
+    TransformComponent: {Translation: [1.1, -0.045, -3.84], Rotation: [0, 1.45, 0], Scale: [0.69, 0.69, 0.69]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1255
+    TagComponent: {Tag: 棚边矮草}
+    TransformComponent: {Translation: [4.15, -0.045, 4.67], Rotation: [0, -1.1, 0], Scale: [0.63, 0.63, 0.63]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1256
+    TagComponent: {Tag: 棚边刺灌}
+    TransformComponent: {Translation: [7.92, -0.045, 5.37], Rotation: [0, -0.28, 0], Scale: [0.52, 0.52, 0.52]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Thornbush.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1257
+    TagComponent: {Tag: 废料堆旁的草}
+    TransformComponent: {Translation: [11.35, -0.045, 5.98], Rotation: [0, 0.45, 0], Scale: [0.85, 0.85, 0.85]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1258
+    TagComponent: {Tag: 塔下刺灌}
+    TransformComponent: {Translation: [17.8, -0.045, -8.3], Rotation: [0, -1.12, 0], Scale: [0.8, 0.8, 0.8]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Thornbush.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1259
+    TagComponent: {Tag: 塔下草甸}
+    TransformComponent: {Translation: [16.3, -0.045, -7.12], Rotation: [0, 0.7, 0], Scale: [1.05, 1.05, 1.05]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1260
+    TagComponent: {Tag: 坡脚蓬草}
+    TransformComponent: {Translation: [25, -0.045, -4.3], Rotation: [0, -1.9, 0], Scale: [1.17, 1.17, 1.17]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1261
+    TagComponent: {Tag: 坡脚刺灌}
+    TransformComponent: {Translation: [27, -0.045, -5.3], Rotation: [0, 1.72, 0], Scale: [0.98, 0.98, 0.98]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Thornbush.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1262
+    TagComponent: {Tag: 石坡矮丛}
+    TransformComponent: {Translation: [33, -0.045, -7.4], Rotation: [0, -0.2, 0], Scale: [0.82, 0.82, 0.82]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/Thornbush.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1263
+    TagComponent: {Tag: 坡道干草}
+    TransformComponent: {Translation: [34.8, -0.045, -6.5], Rotation: [0, 0.8, 0], Scale: [1.2, 1.2, 1.2]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage-kit/DryGrass.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1265
+    TagComponent: {Tag: 检修台吊灯}
+    TransformComponent: {Translation: [0.62, 2.63, -5.18], Rotation: [0, 0, 0], Scale: [0.52, 0.52, 0.52]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/hanging_industrial_lamp.glb, Color: [1, 1, 1, 1]}
+  - Entity: 1266
+    TagComponent: {Tag: 检修台冷光灯}
+    TransformComponent: {Translation: [0.62, 1.88, -5.18], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    PointLightComponent: {Color: [0.48, 0.74, 1], Intensity: 22, Radius: 4.2, CastShadow: true}
+  - Entity: 1270
+    TagComponent: {Tag: 西侧砂石路}
+    TransformComponent: {Translation: [-4.8, 0.6, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    EnvironmentZoneComponent: {HalfSize: [5.2, 2.1, 5.5], Landform: 压实的砂石车道, Vegetation: 车道中部留空，两侧路肩有零散干草, Landmark: 零件推车和旧油桶}
+  - Entity: 1271
+    TagComponent: {Tag: 维修棚工位}
+    TransformComponent: {Translation: [7.8, 1.4, 1.45], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    EnvironmentZoneComponent: {HalfSize: [3.2, 2.4, 2.75], Landform: 平整的砂石工位, Landmark: 铁皮棚和应急发电机, Lights: [1223]}
+  - Entity: 1272
+    TagComponent: {Tag: 北侧检修平台}
+    TransformComponent: {Translation: [0.7, 1.4, -5.1], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    EnvironmentZoneComponent: {HalfSize: [2.9, 2.6, 1.9], Landform: 管廊下的碎石路肩, Vegetation: 枯草和刺灌, Landmark: 装卸脚手架, Lights: [1266]}
+  - Entity: 1273
+    TagComponent: {Tag: 采石坡脚}
+    TransformComponent: {Translation: [36, 2, -5], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    EnvironmentZoneComponent: {HalfSize: [13, 5, 5], Landform: 砂石路逐渐升为裸岩斜坡, Vegetation: 坡脚有成簇旱草和刺灌, Landmark: 旧值班塔}

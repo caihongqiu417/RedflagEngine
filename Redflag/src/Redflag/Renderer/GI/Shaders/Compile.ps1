@@ -8,6 +8,7 @@ function Compile([string]$source, [string]$output, [string[]]$defines = @()) {
 Compile 'GI' 'GI'
 Compile 'GI' 'GIEmission' @('-DRF_EMISSION')
 Compile 'GI' 'GIAlphaMask' @('-DRF_ALPHA_MASK')
+Compile 'GI' 'AnimatedDirect' @('-DRF_ALPHA_MASK', '-DRF_ANIMATED_SHADOWS')
 Compile 'GI' 'GIEmissionAlphaMask' @('-DRF_EMISSION', '-DRF_ALPHA_MASK')
 Compile 'GI' 'ProbeSky' @('-DRF_PROBE_SKY', '-DRF_EMISSION', '-DRF_ALPHA_MASK')
 Compile 'SkyVisibility' 'SkyVisibility'

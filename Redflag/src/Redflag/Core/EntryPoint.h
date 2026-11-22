@@ -12,7 +12,7 @@ extern Redflag::Application* Redflag::CreateApplication();
 namespace Redflag
 {
 	void BakeSceneProbes(const std::filesystem::path& scene);
-	Application* CreateForgeEditor(const std::filesystem::path& scene, bool visible);
+	Application* CreateForgeEditor(const std::filesystem::path& scene, bool visible, bool play);
 }
 #endif
 int main(int argc, char** argv)
@@ -23,6 +23,7 @@ int main(int argc, char** argv)
 	std::filesystem::path bakeScene;
 	std::filesystem::path startupScene;
 	bool visible = true;
+	bool play = false;
 #endif
 	for (int i = 1; i < argc; ++i)
 	{
@@ -34,7 +35,7 @@ int main(int argc, char** argv)
 			Redflag::RendererAPI::SetAPI(Redflag::RendererAPI::API::Vulkan);
 		else if (option == "--hidden")
 			visible = false;
-		else if (option == "--bake-probes" || option == "--scene")
+		else if (option == "--bake-probes" || option == "--scene" || option == "--play")
 		{
 			if (++i == argc || !*argv[i])
 			{
@@ -42,6 +43,7 @@ int main(int argc, char** argv)
 				return 2;
 			}
 			(option == "--bake-probes" ? bakeScene : startupScene) = argv[i];
+			play = option == "--play";
 		}
 #endif
 		else if (option == "--frames" && i + 1 < argc)
@@ -73,7 +75,7 @@ int main(int argc, char** argv)
 #endif
 		RF_PROFILE_BEGIN_SESSION("Startup", "RedflagProfile-Startup.json");
 #ifdef RF_FORGE
-		std::unique_ptr<Redflag::Application> app(Redflag::CreateForgeEditor(startupScene, visible));
+		std::unique_ptr<Redflag::Application> app(Redflag::CreateForgeEditor(startupScene, visible, play));
 #else
 		std::unique_ptr<Redflag::Application> app(Redflag::CreateApplication());
 #endif

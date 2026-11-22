@@ -30,11 +30,16 @@ vec3 emittedAtHit;
 #include "../../GI/Shaders/ProbeAxes.glsl"
 #include "../../GI/Shaders/ProbeSample.glsl"
 
+#ifdef RF_MULTI_REFLECTION
+vec3 hitLighting(Surface hit, vec3 direction)
+{
+    vec3 incoming;
+#else
 bool sceneReflection(vec3 origin, vec3 direction, float distance, out vec3 incoming)
 {
     Surface hit = raySurface(origin, direction, distance);
     if (hit.p.w == 0.) return false;
-
+#endif
     // 镜子里看到的是物体朝镜面送来的光。算高光时，视线沿反射光线返回镜面。
     vec3 n = hit.n.xyz, v = -direction;
     incoming = emittedAtHit;
@@ -61,7 +66,13 @@ bool sceneReflection(vec3 origin, vec3 direction, float distance, out vec3 incom
         vec3 f0 = mix(vec3(.04), hit.rho.rgb, hit.rho.w);
         vec3 ks = environmentFresnel(f0, nv, hit.n.w);
         if (useDiffuseSky != 0) incoming += (1. - ks) * diffuse * cubeLight(n, 0, diffuseSize);
+#ifndef RF_MULTI_REFLECTION
         if (useEnvironment != 0) incoming += specularEnvironment(reflect(-v, n), nv, hit.n.w, ks);
+#endif
     }
+#ifdef RF_MULTI_REFLECTION
+    return incoming;
+#else
     return true;
+#endif
 }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redflag · 同伴语音</title>
+<style>
+body{margin:0;background:#242326;color:#f4efed;font:18px/1.6 "Microsoft YaHei",sans-serif}
+main{max-width:32rem;margin:8vh auto;padding:2rem}h1{font-size:1.8rem}
+button{padding:.7em 1.4em;border:1px solid #b5898a;border-radius:4px;background:#703d44;color:white;font:inherit;cursor:pointer}
+button:disabled{opacity:.5} output{display:block;margin:1em 0;color:#d6cbca}li{margin:.4em 0}
+</style>
+<main><h1>同伴语音</h1><p>连接麦克风后，按住说话。松开后，文字会送给游戏中打开这个房间的同伴。</p>
+<button id="connect">连接麦克风</button> <button disabled id="talk">按住说话</button>
+<output id="status" role="status">等待连接</output><ol id="words"></ol><audio id="speaker" autoplay></audio></main>
+<script>
+const room=location.pathname.split('/').pop(), statusView=document.getElementById('status');
+const connect=document.getElementById('connect'), talk=document.getElementById('talk');
+const words=document.getElementById('words'), speaker=document.getElementById('speaker');
+let peer, input, channel;
+async function connectRoom(){
+  try{
+    connect.disabled=true;
+    input=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true},video:false});
+    const mic=input.getAudioTracks()[0]; mic.enabled=false;
+    peer=new RTCPeerConnection({iceServers:[]});peer.addTrack(mic,input);
+    peer.ontrack=e=>speaker.srcObject=e.streams[0]||new MediaStream([e.track]);
+    peer.onconnectionstatechange=()=>{if(['closed','failed','disconnected'].includes(peer.connectionState)){
+      mic.stop();talk.disabled=true;statusView.textContent='语音房已断开，请从游戏重新打开。';}};
+    channel=peer.createDataChannel('speech');
+    channel.onopen=()=>{talk.disabled=false;statusView.textContent='已连接，可以按住说话。';};
+    channel.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='transcript'){
+      const line=document.createElement('li');line.textContent=m.text;words.append(line);statusView.textContent='文字已送回游戏。';}};
+    await peer.setLocalDescription(await peer.createOffer());
+    if(peer.iceGatheringState!=='complete')await new Promise(ok=>peer.onicegatheringstatechange=()=>{if(peer.iceGatheringState==='complete')ok();});
+    const response=await fetch('/v1/speech/offer',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...peer.localDescription.toJSON(),room})});
+    if(!response.ok)throw Error('这个语音房已经关闭。');
+    await peer.setRemoteDescription(await response.json());
+  } catch(error){input?.getTracks().forEach(t=>t.stop());peer?.close();connect.disabled=false;statusView.textContent=error.message;}
+}
+function press(){if(input&&!talk.disabled&&!input.getAudioTracks()[0].enabled){channel.send(JSON.stringify({type:'listen_start'}));input.getAudioTracks()[0].enabled=true;statusView.textContent='正在录音…';}}
+function release(){if(input&&!talk.disabled&&input.getAudioTracks()[0].enabled){input.getAudioTracks()[0].enabled=false;channel.send(JSON.stringify({type:'listen_end'}));statusView.textContent='正在识别…';}}
+connect.onclick=connectRoom;talk.onpointerdown=e=>{talk.setPointerCapture(e.pointerId);press();};
+talk.onpointerup=release;talk.onpointercancel=release;window.onblur=release;
+talk.onkeydown=e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();press();}};
+talk.onkeyup=e=>{if(e.code==='Space'){e.preventDefault();release();}};
+window.onpagehide=()=>{input?.getTracks().forEach(t=>t.stop());peer?.close();};
+</script></html>

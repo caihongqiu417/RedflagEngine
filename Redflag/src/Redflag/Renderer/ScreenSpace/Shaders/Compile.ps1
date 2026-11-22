@@ -12,4 +12,7 @@ foreach ($source in Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.comp') {
 
 Compile 'StochasticSSR' 'StochasticSceneSSR' @('-DRF_SCENE_REFLECTION')
 Compile 'StochasticSSR' 'StochasticSceneSSRAlphaMask' @('-DRF_SCENE_REFLECTION', '-DRF_ALPHA_MASK')
+Compile 'StochasticSSR' 'MultiReflection' @('-DRF_SCENE_REFLECTION', '-DRF_MULTI_REFLECTION')
+Compile 'StochasticSSR' 'MultiReflectionAlphaMask' @('-DRF_SCENE_REFLECTION', '-DRF_MULTI_REFLECTION', '-DRF_ALPHA_MASK')
 Compile 'ClusterShade' 'ClusterShadeAlphaMask' @('-DRF_ALPHA_MASK')
+Compile 'ClusterShade' 'AnimatedClusterShade' @('-DRF_ALPHA_MASK', '-DRF_ANIMATED_SHADOWS')

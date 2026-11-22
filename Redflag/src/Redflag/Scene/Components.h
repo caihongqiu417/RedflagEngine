@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Redflag/Assets/Asset.h"
+#include "Redflag/Gameplay/GameplayComponents.h"
+#include "Redflag/AI/NpcComponent.h"
+#include "Redflag/Scene/EnvironmentZoneComponent.h"
+#include "Redflag/Terrain/TerrainComponent.h"
 #include "Redflag/Animation/ModelAnimationPlayer.h"
 #include "Redflag/Animation/SkeletonAnimation.h"
 #include "Redflag/Physics/PhysicsWorld.h"
@@ -91,7 +95,9 @@ namespace Redflag {
 
 	struct ScriptComponent
 	{
+		using FieldMap = std::unordered_map<std::string, std::vector<uint8_t>>;
 		std::string ClassName;
+		FieldMap Fields; // 场景中填写的初值；播放副本和编辑场景各持一份。
 
 		ScriptComponent() = default;
 		ScriptComponent(const ScriptComponent& other) = default;
@@ -116,7 +122,7 @@ namespace Redflag {
 				};
 
 			DestroyScript = [](NativeScriptComponent* nsc) {
-				delete static_cast<ScriptableEntity*>(nsc->Instance);
+				delete static_cast<T*>(nsc->Instance);
 				nsc->Instance = nullptr;
 				};
 		}
@@ -184,10 +190,10 @@ namespace Redflag {
 	struct BoxCollider3DComponent
 	{
 		glm::vec3 HalfSize{ 0.5f }; // 从中心到各面的距离，单位为米，场景缩放另算。
+		glm::vec3 Center{0}; // 角色模型的原点常在脚底，身体碰撞盒的中心在它上方。
 	};
 
 	/* 带此标记的实体允许被拿起。碰撞范围由它的碰撞体决定。 */
-	struct PickupComponent {};
 
 	/* 变换的位置是骨盆中心。运行时的七个碰撞盒和关节由场景持有。 */
 	struct RagdollComponent

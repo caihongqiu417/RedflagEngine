@@ -1,4 +1,6 @@
 #include "rfpch.h"
+#include "Redflag/Terrain/TerrainMeshes.h"
+#include "Redflag/Renderer/Frustum.h"
 #include "SceneRenderer.h"
 
 #include "Redflag/Scene/Scene.h"
@@ -847,12 +849,24 @@ namespace Redflag {
 
 	// 编辑器和游戏相机共用这次查询。第一次遇到模型时加载，以后直接用组件里的引用。
 	template<typename Draw>
-	static void ForEachMesh(Scene& scene, const glm::mat4& lodViewProjection, Draw draw)
+	static void ForEachMesh(Scene& scene, const glm::mat4& lodViewProjection, Draw draw, bool animatedOnly = false)
 	{
 		auto& registry = scene.GetRegistry();
 
+		if (!animatedOnly) registry.view<TransformComponent, TerrainComponent>().each(
+			[&](entt::entity entity, TransformComponent& transform, TerrainComponent& terrain)
+		{
+			const Ref<TerrainMeshes> surface = TerrainMeshes::Get(terrain);
+			if (!surface) return;
+			const glm::mat4 world = transform.GetTransform();
+			const Frustum visible = Frustum::FromViewProjection(lodViewProjection * world);
+			for (const Ref<Mesh>& mesh : surface->GetMeshes())
+				if (visible.IntersectsAABB(mesh->GetAABBMin(), mesh->GetAABBMax()))
+					draw(mesh, world, surface->GetMaterial(), static_cast<int>(entity), terrain.Tint);
+		});
+
 		// 直接创建的单个网格用组件上的材质、贴图或颜色。
-		registry.view<TransformComponent, MeshRendererComponent>().each(
+		if (!animatedOnly) registry.view<TransformComponent, MeshRendererComponent>().each(
 			[&](auto entity, TransformComponent& transform, MeshRendererComponent& mesh)
 		{
 			if (!mesh.MeshData)
@@ -860,7 +874,7 @@ namespace Redflag {
 			auto material = mesh.Mat;
 			if (!material)
 				material = mesh.Texture ? Material::Create(mesh.Texture) : Material::Create(mesh.Color);
-			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), 1.0f);
+			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), glm::vec4(1));
 		});
 
 		registry.view<TransformComponent, SkeletonAnimationComponent>().each(
@@ -874,7 +888,7 @@ namespace Redflag {
 			}
 			const glm::mat4 world = transform.GetTransform();
 			for (const glm::mat4& bone : player.Bones)
-				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), 1.f);
+				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), glm::vec4(1));
 		});
 
 		registry.view<RagdollComponent>().each([&](entt::entity entity, RagdollComponent& character) {
@@ -884,7 +898,7 @@ namespace Redflag {
 				character.LimbMaterial = Material::Create(glm::vec4(.84f, .52f, .22f, 1.f));
 			}
 			for (const glm::mat4& limb : scene.GetRagdollMeshes(entity))
-				draw(character.LimbMesh, limb, character.LimbMaterial, static_cast<int>(entity), 1.f);
+				draw(character.LimbMesh, limb, character.LimbMaterial, static_cast<int>(entity), glm::vec4(1));
 		});
 
 		// 文件导入的模型可能含多个部件，实体的变换对它们全部生效。
@@ -900,6 +914,7 @@ namespace Redflag {
 			auto* player = registry.try_get<ModelAnimationComponent>(entity);
 			if (player) player->Update(component.ModelAsset, 0.f);
 			const bool posed = player && !player->GetMeshes().empty();
+			if (animatedOnly && !posed) return;
 			const auto& model = posed ? *component.ModelAsset : *SelectModel(component, lodViewProjection * world);
 			const auto& parts = model.GetSubMeshes();
 			Ref<Material> fallback;
@@ -914,11 +929,12 @@ namespace Redflag {
 				if (!material && !fallback)
 					fallback = Material::Create(component.Color);
 
-				const float instanceAlpha = material && material->Alpha == AlphaMode::Mask ? component.Color.a : 1.0f;
+				glm::vec4 tint = material ? component.Color : glm::vec4(1);
+				if (material && material->Alpha != AlphaMode::Mask) tint.a = 1.0f;
 				const Ref<Mesh>& mesh = posed ? player->GetMeshes()[i] : part.MeshData;
 				const glm::mat4& local = posed ? player->GetTransform(i) : part.LocalTransform;
 				draw(mesh, world * local, material ? material : fallback,
-					static_cast<int>(entity), instanceAlpha);
+					static_cast<int>(entity), tint);
 			}
 		});
 	}
@@ -926,24 +942,42 @@ namespace Redflag {
 	static void CollectGeometry(Scene& scene, const glm::mat4& viewProjection)
 	{
 		ForEachMesh(scene, viewProjection, [](const Ref<Mesh>& mesh, const glm::mat4& world,
-			const Ref<Material>& material, int id, float instanceAlpha)
+			const Ref<Material>& material, int id, glm::vec4 tint)
 		{
 			Ref<Material> drawMaterial = material;
-			if (instanceAlpha != 1.0f)
+			if (tint != glm::vec4(1))
 			{
-				// 两个实体可以共用树叶材质。只改这次绘制的透明度，贴图仍共用。
+				// 两个角色可以共用模型材质。各自的颜色只影响这一次绘制。
 				drawMaterial = material->Clone();
-				drawMaterial->BaseColor.a *= instanceAlpha;
+				drawMaterial->BaseColor *= tint;
 			}
 			Renderer3D::DrawMesh(mesh, world, drawMaterial, id);
 		});
 	}
 
+	bool SceneRenderer::GetAnimatedBounds(Scene& scene, glm::vec3& minimum, glm::vec3& maximum)
+	{
+		minimum = glm::vec3(std::numeric_limits<float>::max());
+		maximum = -minimum;
+		ForEachMesh(scene, glm::mat4(1), [&](const Ref<Mesh>& mesh, const glm::mat4& world, const Ref<Material>& material,
+			int, glm::vec4) {
+			if (material->Alpha == AlphaMode::Blend) return;
+			const glm::vec3 center = (mesh->GetAABBMin() + mesh->GetAABBMax()) * .5f;
+			const glm::vec3 half = (mesh->GetAABBMax() - mesh->GetAABBMin()) * .5f;
+			const glm::vec3 at = world * glm::vec4(center, 1);
+			const glm::vec3 extent = glm::abs(glm::vec3(world[0])) * half.x + glm::abs(glm::vec3(world[1])) * half.y
+				+ glm::abs(glm::vec3(world[2])) * half.z;
+			minimum = glm::min(minimum, at - extent);
+			maximum = glm::max(maximum, at + extent);
+		}, true);
+		return minimum.x <= maximum.x;
+	}
+
 	void SceneRenderer::DrawGeometry(Scene& scene, CommandList& commands, const glm::mat4& viewProjection,
-		const glm::mat4* lodViewProjection)
+		const glm::mat4* lodViewProjection, bool animatedOnly)
 	{
 		ForEachMesh(scene, lodViewProjection ? *lodViewProjection : viewProjection, [&](const Ref<Mesh>& mesh, const glm::mat4& world,
-			const Ref<Material>& material, int id, float instanceAlpha)
+			const Ref<Material>& material, int id, glm::vec4 tint)
 		{
 			const auto texture = material->BaseColorMap ? material->BaseColorMap->GetSampledTexture() : nullptr;
 			SurfaceMaterial surface;
@@ -959,10 +993,9 @@ namespace Redflag {
 			surface.RefractionIndex = material->RefractionIndex;
 			surface.Thickness = material->Thickness;
 			if (material->Alpha == AlphaMode::Mask) surface.AlphaCutoff = material->AlphaCutoff;
-			glm::vec4 color = material->BaseColor;
-			color.a *= instanceAlpha;
+			const glm::vec4 color = material->BaseColor * tint;
 			commands.DrawIndexed(mesh->GetGeometry(), texture, viewProjection, world, color, id, surface);
-		});
+		}, animatedOnly);
 	}
 
 	// ---- 编辑器帧 ----

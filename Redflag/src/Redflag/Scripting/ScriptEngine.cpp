@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "ScriptEngine.h"
+#include "NpcScriptAction.h"
 
 #include "mono/jit/jit.h"
 #include"mono/metadata/assembly.h"
@@ -172,9 +173,6 @@ namespace Redflag {
 
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
 
-		// 编辑器模式下用户填的字段默认值，进入 Play 时复制到 ScriptInstance
-		std::unordered_map<UUID, ScriptEngine::EntityScriptFieldMap> ScriptFieldCache;
-
 		//运行时
 		Scene* SceneContext = nullptr;
 		std::string AssemblyStatusMessage;
@@ -190,6 +188,7 @@ namespace Redflag {
 
 		static void ResetAssemblyData()
 		{
+			NpcScriptAction::ClearTypes();
 			s_Data->CoreAssembly = nullptr;
 			s_Data->CoreAssemblyImage = nullptr;
 			s_Data->AppAssembly = nullptr;
@@ -203,6 +202,7 @@ namespace Redflag {
 
 		static void DestroyAppDomain()
 		{
+			s_Data->EntityInstances.clear();
 			if (s_Data->AppDomain)
 			{
 				if (s_Data->RootDomain)
@@ -407,8 +407,9 @@ namespace Redflag {
 
 	void ScriptEngine::OnRuntimeStop()
 	{
-		s_Data->SceneContext = nullptr;
+		for (const auto& [id, instance] : s_Data->EntityInstances) instance->InvokeOnDestroy();
 		s_Data->EntityInstances.clear();
+		s_Data->SceneContext = nullptr;
 	}
 
 	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
@@ -428,20 +429,11 @@ namespace Redflag {
 
 			// 把编辑器面板里设置的字段默认值应用到实例
 			// 必须在 InvokeOnCreate 之前执行，否则用户在 OnCreate 里读到的就是未覆盖的旧值
-			auto cacheIt = s_Data->ScriptFieldCache.find(entity.GetUUID());
-			if (cacheIt != s_Data->ScriptFieldCache.end())
+			for (const auto& [name, bytes] : sc.Fields)
 			{
-				for (const auto& [fieldName, bytes] : cacheIt->second)
-				{
-					if (bytes.empty())
-						continue;
-					if (const ScriptField* field = scriptClass->GetField(fieldName))
-					{
-						if (bytes.size() != ScriptFieldTypeSize(field->Type))
-							continue;
-						instance->SetFieldValue(*field, bytes.data());
-					}
-				}
+				const ScriptField* field = scriptClass->GetField(name);
+				if (field && bytes.size() == ScriptFieldTypeSize(field->Type))
+					instance->SetFieldValue(*field, bytes.data());
 			}
 
 			//调用函数
@@ -453,53 +445,48 @@ namespace Redflag {
 	{
 		UUID entityUUID = entity.GetUUID();
 		auto instanceIt = s_Data->EntityInstances.find(entityUUID);
-		if (instanceIt == s_Data->EntityInstances.end())
-			return;
+		if (instanceIt == s_Data->EntityInstances.end()) {
+			OnCreateEntity(entity);
+			instanceIt = s_Data->EntityInstances.find(entityUUID);
+			if (instanceIt == s_Data->EntityInstances.end()) return;
+		}
 
 		Ref<ScriptInstance> instance = instanceIt->second;
 
 		instance->InvokeOnUpdate(ts);
 	}
 
-	void ScriptEngine::OnDestroyEntity(UUID entityUUID)
+	void ScriptEngine::OnRemoveScript(Scene& scene, UUID id)
 	{
-		if (!s_Data)
-			return;
+		if (!s_Data || s_Data->SceneContext != &scene) return;
+		auto instance = s_Data->EntityInstances.find(id);
+		if (instance == s_Data->EntityInstances.end()) return;
+		instance->second->InvokeOnDestroy();
+		s_Data->EntityInstances.erase(instance);
+	}
 
-		s_Data->EntityInstances.erase(entityUUID);
-		s_Data->ScriptFieldCache.erase(entityUUID);
-
-		const uint64_t deletedEntityID = entityUUID;
-		for (auto& [ownerEntityID, fieldCache] : s_Data->ScriptFieldCache)
-		{
-			for (auto& [fieldName, bytes] : fieldCache)
-			{
-				if (bytes.size() != sizeof(uint64_t))
-					continue;
-
-				bool isEntityField = false;
-				for (const auto& [className, scriptClass] : s_Data->EntityClasses)
-				{
-					const ScriptField* field = scriptClass->GetField(fieldName);
-					if (field && field->Type == ScriptFieldType::Entity)
-					{
-						isEntityField = true;
-						break;
-					}
+	void ScriptEngine::OnDestroyEntity(Scene& scene, UUID id)
+	{
+		if (!s_Data) return;
+		const bool playing = s_Data->SceneContext == &scene;
+		// 只清除这个场景里指向已删除实体的字段。编辑场景里的同编号物体仍然存在。
+		scene.GetRegistry().view<IDComponent, ScriptComponent>().each([&](IDComponent& owner, ScriptComponent& script) {
+			auto type = s_Data->EntityClasses.find(script.ClassName);
+			if (type == s_Data->EntityClasses.end()) return;
+			Ref<ScriptInstance> instance = playing ? GetEntityScriptInstance(owner.ID) : nullptr;
+			for (const ScriptField& field : type->second->GetFields()) {
+				if (field.Type != ScriptFieldType::Entity) continue;
+				const uint64_t empty = 0;
+				uint64_t target = 0;
+				auto value = script.Fields.find(field.Name);
+				if (value != script.Fields.end() && value->second.size() == sizeof(target)) {
+					std::memcpy(&target, value->second.data(), sizeof(target));
+					if (target == uint64_t(id)) std::memcpy(value->second.data(), &empty, sizeof(empty));
 				}
-
-				if (!isEntityField)
-					continue;
-
-				uint64_t referencedEntityID = 0;
-				memcpy(&referencedEntityID, bytes.data(), sizeof(referencedEntityID));
-				if (referencedEntityID == deletedEntityID)
-				{
-					referencedEntityID = 0;
-					memcpy(bytes.data(), &referencedEntityID, sizeof(referencedEntityID));
-				}
+				if (instance && instance->GetFieldValue(field, &target) && target == uint64_t(id))
+					instance->SetFieldValue(field, &empty);
 			}
-		}
+		});
 	}
 
 	Scene* ScriptEngine::GetSceneContext()
@@ -521,11 +508,7 @@ namespace Redflag {
 		return s_Data->EntityClasses;
 	}
 
-	ScriptEngine::EntityScriptFieldMap& ScriptEngine::GetScriptFieldCache(UUID entityUUID)
-	{
-		// 第一次访问这个实体时，operator[] 会为它创建一张空的脚本字段表。
-		return s_Data->ScriptFieldCache[entityUUID];
-	}
+
 
 	size_t ScriptFieldTypeSize(ScriptFieldType type)
 	{
@@ -562,7 +545,7 @@ namespace Redflag {
 	{
 		//加载程序集
 		//去 mono/lib 文件夹找 C# 的核心系统库(如mscorlib.dll、System.dll）
-		mono_set_assemblies_path("mono/lib");
+		mono_set_dirs("mono/lib", "mono/etc");
 
 		//创建RootDomain
 		//Mono虚拟机所在
@@ -592,6 +575,8 @@ namespace Redflag {
 		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 
 		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Redflag", "Entity");
+		MonoClass* actionClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Redflag", "NpcAction");
+		if (actionClass) NpcScriptAction::SetBaseType(actionClass);
 		RF_CORE_ASSERT(entityClass, "Failed to find script base class Redflag.Entity while loading assembly classes");
 
 		//遍历游戏脚本程序集中的所有类型
@@ -613,6 +598,11 @@ namespace Redflag {
 			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
 			if (monoClass == nullptr)
 				continue;
+
+			if (actionClass && mono_class_is_subclass_of(monoClass, actionClass, false) &&
+				!(mono_class_get_flags(monoClass) & MONO_TYPE_ATTR_ABSTRACT) &&
+				!std::strchr(name, '`') && mono_class_get_method_from_name(monoClass, ".ctor", 0))
+				NpcScriptAction::Register(fullName, monoClass);
 
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
 			if (isEntity)
@@ -745,28 +735,47 @@ namespace Redflag {
 		:m_ScriptClass(ScriptClass)
 	{
 		//在AppDomain上分配MonoObject内存
-		m_Instance = ScriptClass->Instantiate();
+		m_Handle = mono_gchandle_new(ScriptClass->Instantiate(), false);
 		
 		//获取方法并存入函数指针
 		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = ScriptClass->GetMethod("OnCreate", 0);
 		m_OnUpdateMethod = ScriptClass->GetMethod("OnUpdate", 1);
+		m_OnDestroyMethod = ScriptClass->GetMethod("OnDestroy", 0);
 		
 		//调用实体的C#构造函数，传入UUID
 		uint64_t entityID = entity.GetUUID();
 		void* param = &entityID;
-		m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
+		m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_Constructor, &param);
+	}
+
+	MonoObject* ScriptInstance::GetManagedObject() const
+	{
+		return m_Handle ? mono_gchandle_get_target(m_Handle) : nullptr;
+	}
+
+	ScriptInstance::~ScriptInstance()
+	{
+		if (m_Handle) mono_gchandle_free(m_Handle);
+	}
+
+	void ScriptInstance::InvokeOnDestroy()
+	{
+		if (m_OnDestroyMethod)
+			m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_OnDestroyMethod, nullptr);
+		mono_gchandle_free(m_Handle);
+		m_Handle = 0;
 	}
 
 	bool ScriptInstance::GetFieldValue(const ScriptField& field, void* buffer) const
 	{
-		if (!m_Instance || !field.ClassField || !buffer)
+		if (!m_Handle || !field.ClassField || !buffer)
 			return false;
 
 		if (field.Type == ScriptFieldType::Entity)
 		{
 			MonoObject* entityObject = nullptr;
-			mono_field_get_value(m_Instance, field.ClassField, &entityObject);
+			mono_field_get_value(mono_gchandle_get_target(m_Handle), field.ClassField, &entityObject);
 
 			uint64_t entityID = 0;
 			if (entityObject && s_Data->EntityIDField)
@@ -776,13 +785,13 @@ namespace Redflag {
 			return true;
 		}
 
-		mono_field_get_value(m_Instance, field.ClassField, buffer);
+		mono_field_get_value(mono_gchandle_get_target(m_Handle), field.ClassField, buffer);
 		return true;
 	}
 
 	bool ScriptInstance::SetFieldValue(const ScriptField& field, const void* value)
 	{
-		if (!m_Instance || !field.ClassField || !value)
+		if (!m_Handle || !field.ClassField || !value)
 			return false;
 
 		if (field.Type == ScriptFieldType::Entity)
@@ -805,11 +814,11 @@ namespace Redflag {
 				}
 			}
 
-			mono_field_set_value(m_Instance, field.ClassField, entityObject);
+			mono_field_set_value(mono_gchandle_get_target(m_Handle), field.ClassField, entityObject);
 			return true;
 		}
 
-		mono_field_set_value(m_Instance, field.ClassField, const_cast<void*>(value));
+		mono_field_set_value(mono_gchandle_get_target(m_Handle), field.ClassField, const_cast<void*>(value));
 		return true;
 	}
 
@@ -819,7 +828,7 @@ namespace Redflag {
 		if (!m_OnCreateMethod)
 			return;
 
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod,nullptr);
+		m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_OnCreateMethod,nullptr);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts)
@@ -829,7 +838,7 @@ namespace Redflag {
 
 		void* param = &ts;
 
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		m_ScriptClass->InvokeMethod(mono_gchandle_get_target(m_Handle), m_OnUpdateMethod, &param);
 	}
 
 }

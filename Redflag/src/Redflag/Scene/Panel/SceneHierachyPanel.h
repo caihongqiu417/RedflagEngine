@@ -28,6 +28,7 @@ namespace Redflag {
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;
+		std::string m_NewItem;
 		Entity m_EntityToDelete;
 	};
 }

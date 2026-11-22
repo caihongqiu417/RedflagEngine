@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 import sys
 from time import monotonic
+from tempfile import NamedTemporaryFile
 
 from mcp import ClientSession, StdioServerParameters, stdio_client
 
@@ -19,7 +20,8 @@ async def main():
         assert handshake.server_info.name == "redflag"
         print("initialize:", handshake.server_info.name, handshake.protocol_version)
         tools = {t.name for t in (await session.list_tools()).tools}
-        assert tools == {"get_capabilities", "list_scenes", "inspect_scene", "get_render_settings", "check_scene"}
+        assert {"get_capabilities", "list_scenes", "inspect_scene", "get_render_settings", "check_scene",
+                "list_npcs", "inspect_npc", "copy_npc", "update_npc_role", "set_npc_voice", "rewire_npc"} <= tools
         print("tools/list:", ", ".join(sorted(tools)))
 
         async def call(name, **args):
@@ -31,6 +33,23 @@ async def main():
         assert (await call("get_capabilities"))["editor_exists"]
         scenes = (await call("list_scenes"))["scenes"]
         assert name in scenes
+        environment = await call("inspect_environment", scene="Watt-Station.redflag")
+        zones = {r["name"]: r for r in environment["zones"]}
+        assert zones["维修棚工位"]["settings"]["Lights"] == ["1223"]
+        assert any(r["id"] == "1223" for r in environment["lights"])
+        # 在独立场景补写文字，再模拟作者改过同一项。只对照这一次编辑涉及的字节。
+        with NamedTemporaryFile(dir=FORGE / "assets/scenes", suffix=".redflag", delete=False) as stream:
+            example = Path(stream.name)
+            stream.write(b"Scene: Test\nEntities:\n  - Entity: 91\n    EnvironmentZoneComponent: {HalfSize: [1,1,1]} # keep\n")
+        try:
+            args = dict(scene=example.name, entity="91", field="Landmark", previous="")
+            await call("set_zone_description", **args, text="旧水塔")
+            assert 'Landmark: "旧水塔"} # keep' in example.read_text(encoding="utf8")
+            assert (await session.call_tool("set_zone_description", {**args, "text": "塔"})).is_error
+            after = await call("inspect_environment", scene=example.name)
+            assert after["zones"][0]["settings"]["Landmark"] == "旧水塔"
+        finally:
+            example.unlink(missing_ok=True)
         info = await call("inspect_scene", scene=name, limit=1)
         assert info["sky_visible"] and info["environment"] == "../textures/sky/daylight.hdr"
         assert info["next_offset"] == 1 and len(info["entities"]) == 1

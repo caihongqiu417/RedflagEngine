@@ -18,6 +18,9 @@ namespace Redflag
         constexpr uint32_t MaskedShadeShader[] =
 #include "Shaders/ClusterShadeAlphaMask.comp.inc"
             ;
+        constexpr uint32_t AnimatedShadeShader[] =
+#include "Shaders/AnimatedClusterShade.comp.inc"
+            ;
         constexpr uint32_t ReflectionShader[] =
 #include "Shaders/StochasticSSR.comp.inc"
             ;
@@ -26,6 +29,12 @@ namespace Redflag
             ;
         constexpr uint32_t MaskedReflectionShader[] =
 #include "Shaders/StochasticSceneSSRAlphaMask.comp.inc"
+            ;
+        constexpr uint32_t MultiReflectionShader[] =
+#include "Shaders/MultiReflection.comp.inc"
+            ;
+        constexpr uint32_t MaskedMultiReflectionShader[] =
+#include "Shaders/MultiReflectionAlphaMask.comp.inc"
             ;
         constexpr uint32_t ReflectionFilterShader[] =
 #include "Shaders/ReflectionFilter.comp.inc"
@@ -60,8 +69,9 @@ namespace Redflag
         ComputeDevice& Device;
         uint32_t Width, Height;
         ScreenEffectSettings Settings;
-        Ref<ComputePipeline> AO, Cull, Shade, Reflections, SceneReflections, Temporal, Diffuse;
-        Ref<ComputePipeline> MaskedShade, MaskedSceneReflections;
+        Ref<ComputePipeline> AO, Cull, Shade, Reflections, Temporal, Diffuse;
+        Ref<ComputePipeline> MaskedShade, AnimatedShade;
+        Ref<ComputePipeline> SceneReflections[2][2]; // 依次按是否续追反射、是否有镂空材质选管线。
         Ref<ComputePipeline> ReflectionFilter;
         Ref<ComputeResource> Environment, DiffuseLight, RawReflections;
         Ref<ComputeResource> Frame, Output, Intermediate, Lights, Masks, History[2], Positions[2];
@@ -112,6 +122,13 @@ namespace Redflag
             Device.Dispatch(Cull, {Frame, surfaces, Lights, Masks}, nullptr, (entries + 63) / 64);
             GIReflectionResources geometry = scene.GetReflectionResources();
             std::vector<Ref<ComputeResource>> inputs{Frame, surfaces, Lights, Masks, Output, geometry.Nodes, geometry.Triangles};
+            if (scene.GetAnimatedVisibility()) {
+                inputs.insert(inputs.end(), {geometry.TextureFaces, geometry.Pixels, geometry.Masks ? geometry.Masks : geometry.TextureFaces,
+                    scene.GetAnimatedVisibility()});
+                if (!AnimatedShade) AnimatedShade = LoadPass(Device, AnimatedShadeShader, uint32_t(inputs.size()));
+                Device.Dispatch(AnimatedShade, inputs, nullptr, (Width + 7) / 8, (Height + 7) / 8);
+                return;
+            }
             if (geometry.Masks)
             {
                 inputs.insert(inputs.end(), {geometry.TextureFaces, geometry.Pixels, geometry.Masks});
@@ -264,14 +281,21 @@ namespace Redflag
                 std::vector<Ref<ComputeResource>> inputs = {d.Frame, surfaces, color, traced, sky,
                     scene.Nodes, scene.Triangles, scene.Lights, scene.SceneInfo, scene.TextureFaces,
                     scene.Pixels, scene.Emitters, scene.Probes ? scene.Probes : d.Frame};
-                Ref<ComputePipeline>& pipeline = scene.Masks ? d.MaskedSceneReflections : d.SceneReflections;
+                const uint32_t bounces = uint32_t(std::clamp(settings.ReflectionBounces, 1, 4));
+                const bool multi = bounces > 1, masked = bool(scene.Masks);
+                Ref<ComputePipeline>& pipeline = d.SceneReflections[multi][masked];
                 if (scene.Masks) inputs.push_back(scene.Masks);
-                if (!pipeline)
-                    pipeline = d.Device.CreatePipeline(scene.Masks ? MaskedReflectionShader : SceneReflectionShader,
-                        scene.Masks ? sizeof(MaskedReflectionShader) : sizeof(SceneReflectionShader),
-                        std::vector<ComputeBinding>(inputs.size(), ComputeBinding::Buffer), 5 * sizeof(uint32_t));
+                if (!pipeline) {
+                    struct Program { const uint32_t* Words; size_t Bytes; };
+                    static constexpr Program programs[2][2]{
+                        {{SceneReflectionShader,sizeof(SceneReflectionShader)}, {MaskedReflectionShader,sizeof(MaskedReflectionShader)}},
+                        {{MultiReflectionShader,sizeof(MultiReflectionShader)}, {MaskedMultiReflectionShader,sizeof(MaskedMultiReflectionShader)}}};
+                    const Program& shader=programs[multi][masked];
+                    pipeline=d.Device.CreatePipeline(shader.Words,shader.Bytes,std::vector<ComputeBinding>(inputs.size(),ComputeBinding::Buffer),
+                        (multi ? 6 : 5) * sizeof(uint32_t));
+                }
                 const uint32_t options[] = {material, traceScreen, specularSky,
-                    settings.ReflectProbeLight && scene.Probes, settings.DiffuseEnvironment && d.Environment};
+                    settings.ReflectProbeLight && scene.Probes, settings.DiffuseEnvironment && d.Environment, bounces};
                 d.Device.Dispatch(pipeline, inputs, options, gx, gy);
             }
             else

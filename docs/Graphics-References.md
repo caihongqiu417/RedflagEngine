@@ -1,5 +1,13 @@
 # 图形学与引擎教材
 
+## 单机游戏的界面设计
+
+《死亡搁浅》的界面设计师 Casey Matsumoto 在作品页展示了实际界面，也列出了他参与的生命、任务和进度显示。可以先看图标本身，再看数字和文字如何靠近它。同一项任务的几个部分即使直接放在画面上，也要让人一眼认出它们属于同一组。维修站把工单图标、任务名和下一步操作排在左上角，生命、装备和物资另放在左下角。[设计师的作品和工作说明](https://www.caseymatsumoto.com/death-stranding/)
+
+《地平线 西之绝境》的开发团队 Guerrilla 介绍了玩家如何选择 HUD 上哪些信息可见，以及何时显示。拿维修站试这个思路，可以从急救工具箱旁走过一次。走近时中央提示告诉玩家能按 E 做什么，离开后同一个位置让给场景。队友的名字和生命条跟着角色移动，屏幕边缘则留给本局任务。[Guerrilla 的界面与操作介绍](https://blog.playstation.com/2022/02/10/accessibility-features-in-horizon-forbidden-west/)
+
+《战神 诸神黄昏》的官方手册把常显、按手势查看和隐藏列为多种 HUD 元素的选项。这里值得借鉴的是玩家想查时能随时找回来。维修站的右下角保留 F1 提示，按住能看到完整按键，松开继续看场景。这是维修站采用的键鼠操作。改字号、颜色或文字阴影时，在天空、浅墙和棚内各看一次，尤其留意细小的中文笔画。[Santa Monica Studio 的 HUD 设置说明](https://www.playstation.com/en-us/games/god-of-war-ragnarok/accessibility/) · [维修站布局和图片来源](../RedflagForge/assets/ui/station/README.md)
+
 ## 实时光照的交叉阅读
 
 同一根石柱可以连接几门课。FCG 的相机变换和 GAMES101 的投影解释石柱的边缘落在哪个像素；Karis 的课程接着说明怎样跨帧使用这些采样。项目的 TAA 笔记把两步放在一起，推导出“显示像素的运动 = 两次稳定投影的位置差”。PBRT 第四版 §2.1 的两灯估计解释选中一盏灯后为什么要除以概率；ReSTIR DI 把这项权重带进蓄水池，ReSTIR GI 再用 §2.4 的概率换元，把反射方向变成柱面上的二次交点。[每章的仓库、论文、课程和源码入口](latex/lighting/README.md) · [PBRT 的概率换元](https://pbr-book.org/4ed/Monte_Carlo_Integration/Transforming_between_Distributions) · [Karis 的 SIGGRAPH 课程](https://advances.realtimerendering.com/s2014/)

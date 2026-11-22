@@ -5,6 +5,27 @@ namespace Redflag
     internal static class InternalCalls
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool TerrainComponent_GetSurface(ulong id, float x, float z, out float height, out Vector3 normal);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern float PointLightComponent_GetIntensity(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void PointLightComponent_SetIntensity(ulong id, float value);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Entity_Exists(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern Entity Entity_GetScript(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool SkeletonAnimationComponent_Move(ulong id, ref Vector3 direction);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool SkeletonAnimationComponent_Face(ulong id, ref Vector3 direction);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void NativeLog(string text, int parameter);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -24,5 +45,14 @@ namespace Redflag
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsKeyDown(KeyCode keycode);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Input_IsMouseButtonDown(int button);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Input_MousePosition(out float x, out float y);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Input_CaptureCursor(bool capture);
     }
 }

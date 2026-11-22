@@ -11,12 +11,6 @@ namespace Redflag
 {
 	namespace
 	{
-		struct NodePose
-		{
-			glm::vec3 Position, Scale;
-			glm::quat Rotation;
-		};
-
 		struct Track
 		{
 			size_t Node;
@@ -188,6 +182,8 @@ namespace Redflag
 		};
 		std::vector<NodePose> Rest;
 		std::vector<Node> Nodes;
+		std::vector<std::pair<size_t, size_t>> Bones;
+		std::unordered_map<std::string, size_t> NamedNodes;
 		std::vector<size_t> Order;
 		std::vector<Primitive> Parts;
 		std::vector<std::vector<Track>> Tracks;
@@ -213,6 +209,7 @@ namespace Redflag
 			// 只留下每帧需要的关节、顶点和动作。GLB 里原始的图像与文件字节在 Load 返回时释放。
 			for (size_t i = 0; i < file->nodes_count; ++i) {
 				const cgltf_node& node = file->nodes[i];
+				if (node.name) data.NamedNodes.emplace(node.name, i);
 				data.Rest.push_back({ glm::make_vec3(node.translation), glm::make_vec3(node.scale), Rotation(glm::make_vec4(node.rotation)) });
 				data.Nodes.push_back({ node.parent ? int(node.parent-file->nodes) : -1, glm::make_mat4(node.matrix), bool(node.has_matrix) });
 			}
@@ -242,6 +239,17 @@ namespace Redflag
 			for (size_t i = 0; i < file->nodes_count; ++i)
 				if (!file->nodes[i].parent && std::find(data.Order.begin(), data.Order.end(), i) == data.Order.end())
 					visit(file->nodes[i], !scene);
+			// 网格可以共用关节。每根骨头只连一次，跳过骨架中单纯用来转换坐标的父节点。
+			std::vector<bool> joints(data.Nodes.size());
+			for (const Primitive& part : data.Parts)
+				for (size_t joint : part.Joints) joints[joint] = true;
+			for (size_t child = 0; child < joints.size(); ++child) {
+				if (!joints[child]) continue;
+				int parent = data.Nodes[child].Parent;
+				while (parent >= 0 && !joints[parent]) parent = data.Nodes[parent].Parent;
+				if (parent >= 0) data.Bones.emplace_back(parent,child);
+			}
+
 			for (size_t a = 0; a < file->animations_count; ++a)
 			{
 				const cgltf_animation& animation = file->animations[a];
@@ -290,7 +298,17 @@ namespace Redflag
 
 	std::vector<ModelAnimation::Part> ModelAnimation::Sample(size_t clip, float seconds) const
 	{
-		std::vector<NodePose> local = m_Data->Rest;
+		std::vector<NodePose> local;
+		SamplePose(clip, seconds, local);
+		std::vector<glm::mat4> world;
+		return BuildParts(local, world);
+	}
+
+	//========== 动作采样与姿势过渡 ==========
+
+	void ModelAnimation::SamplePose(size_t clip, float seconds, std::vector<NodePose>& local) const
+	{
+		local = m_Data->Rest;
 		for (const Track& track : m_Data->Tracks.at(clip))
 		{
 			glm::vec4 value = SampleTrack(track, seconds);
@@ -301,7 +319,48 @@ namespace Redflag
 				case cgltf_animation_path_type_scale: pose.Scale = value; break;
 			}
 		}
-		std::vector<glm::mat4> world(local.size());
+	}
+
+	std::vector<std::pair<glm::vec3, glm::vec3>> ModelAnimation::SampleBones(size_t clip, float seconds) const
+	{
+		std::vector<NodePose> local;
+		std::vector<glm::mat4> world;
+		SamplePose(clip, seconds, local);
+		GetModelTransforms(local, world);
+		std::vector<std::pair<glm::vec3, glm::vec3>> bones;
+		bones.reserve(m_Data->Bones.size());
+		for (const auto& [parent, child] : m_Data->Bones)
+			bones.emplace_back(world[parent][3], world[child][3]);
+		return bones;
+	}
+
+	void ModelAnimation::BlendPose(const std::vector<NodePose>& from, float weight, std::vector<NodePose>& to)
+	{
+		for (size_t i = 0; i < to.size(); ++i)
+		{
+			to[i].Position = glm::mix(from[i].Position, to[i].Position, weight);
+			to[i].Scale = glm::mix(from[i].Scale, to[i].Scale, weight);
+			to[i].Rotation = glm::normalize(glm::slerp(from[i].Rotation, to[i].Rotation, weight));
+		}
+	}
+
+	bool ModelAnimation::GetNodeTransform(const std::string& name, const std::vector<glm::mat4>& modelSpace, glm::mat4& result) const
+	{
+		const auto node = m_Data->NamedNodes.find(name);
+		if (node == m_Data->NamedNodes.end() || node->second >= modelSpace.size()) return false;
+		result = modelSpace[node->second];
+		return true;
+	}
+
+	void ModelAnimation::PinMovementRoot(std::vector<NodePose>& local, const std::string& node) const
+	{
+		const auto found = m_Data->NamedNodes.find(node);
+		if (found != m_Data->NamedNodes.end()) local[found->second].Position = m_Data->Rest[found->second].Position;
+	}
+
+	void ModelAnimation::GetModelTransforms(const std::vector<NodePose>& local, std::vector<glm::mat4>& world) const
+	{
+		world.resize(local.size());
 		for (size_t i : m_Data->Order) {
 			const Data::Node& node = m_Data->Nodes[i];
 			const NodePose& pose = local[i];
@@ -309,6 +368,45 @@ namespace Redflag
 				glm::translate(glm::mat4(1.f), pose.Position) * glm::mat4_cast(pose.Rotation) * glm::scale(glm::mat4(1.f), pose.Scale);
 			world[i] = node.Parent < 0 ? transform : world[node.Parent] * transform;
 		}
+	}
+
+	bool ModelAnimation::SolveLimb(std::vector<NodePose>& local, const std::vector<glm::mat4>& world,
+		const Limb& limb, glm::vec3 target) const
+	{
+		const auto upper = m_Data->NamedNodes.find(limb.Upper), lower = m_Data->NamedNodes.find(limb.Lower),
+			tip = m_Data->NamedNodes.find(limb.Tip);
+		if (upper == m_Data->NamedNodes.end() || lower == m_Data->NamedNodes.end() || tip == m_Data->NamedNodes.end()) return false;
+		const size_t a = upper->second, b = lower->second, c = tip->second;
+		auto ancestor = [&](size_t child, size_t parent) {
+			for (int p = m_Data->Nodes[child].Parent; p >= 0; p = m_Data->Nodes[p].Parent)
+				if (size_t(p) == parent) return true;
+			return false;
+		};
+		if (!ancestor(b,a) || !ancestor(c,b)) return false;
+
+		auto orientation = [&](int index) {
+			if (index < 0) return glm::quat(1.f,0.f,0.f,0.f);
+			glm::mat3 axes(world[index]);
+			for (int i=0;i<3;++i) axes[i]=glm::normalize(axes[i]);
+			return glm::normalize(glm::quat_cast(axes));
+		};
+		const glm::vec3 start(world[a][3]), middle(world[b][3]), end(world[c][3]);
+		const glm::quat first = orientation(int(a)), second = orientation(int(b));
+		// 模型可能在前臂或小腿中间多放一根扭转骨。只取收到配置的三个关节，保留中间骨原本的姿势。
+		static const Skeleton chain{{{"upper",-1,{}}, {"lower",0,{}}, {"tip",1,{}}}};
+		Pose pose{{start, first}, {glm::inverse(first)*(middle-start), glm::inverse(first)*second},
+			{glm::inverse(second)*(end-middle), glm::quat(1.f,0.f,0.f,0.f)}};
+		chain.SolveTwoBone(pose, 2, target, middle);
+		const glm::quat upperTurn = pose[0].Rotation * glm::inverse(first);
+		local[a].Rotation = glm::normalize(glm::inverse(orientation(m_Data->Nodes[a].Parent)) * pose[0].Rotation);
+		local[b].Rotation = glm::normalize(glm::inverse(upperTurn * orientation(m_Data->Nodes[b].Parent)) *
+			pose[0].Rotation * pose[1].Rotation);
+		return true;
+	}
+
+	std::vector<ModelAnimation::Part> ModelAnimation::BuildParts(const std::vector<NodePose>& local, std::vector<glm::mat4>& world) const
+	{
+		GetModelTransforms(local, world);
 		std::vector<Part> result;
 		for (const Primitive& part : m_Data->Parts)
 		{

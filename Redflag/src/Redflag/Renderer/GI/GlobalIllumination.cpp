@@ -25,6 +25,8 @@ namespace Redflag
         ComputeDevice &Device;
         Ref<ComputePipeline> Pipeline;
         Ref<ComputePipeline> FogPipeline;
+        Ref<ComputePipeline> AnimatedDirect;
+        Ref<ComputeResource> AnimatedVisibility;
         Ref<ComputeResource> FogColor;
         std::vector<Ref<ComputeResource>> Bindings;
         std::vector<GILight> Lights;
@@ -70,8 +72,11 @@ namespace Redflag
             // w 为 1 时，测试场景只算漫反射。这样换一种选灯方法，仍能用同一面墙的亮度比较结果。
             Info.GridOrigin = glm::vec4(scene.Min + .5f * step, normalize ? 1.f : 0.f);
             Info.GridStep = glm::vec4(step, 0);
-            Bindings[0] = device.CreateBuffer(scene.Nodes.size() * sizeof(GINode), scene.Nodes.data());
-            Bindings[1] = device.CreateBuffer(scene.Triangles.size() * sizeof(GITriangle), scene.Triangles.data());
+            // Vulkan 要求缓冲区至少一个字节。空场景存一个字，让着色器读取到长度为零的节点数组。
+            Bindings[0] = scene.Nodes.empty() ? device.CreateBuffer(sizeof(uint32_t))
+                : device.CreateBuffer(scene.Nodes.size() * sizeof(GINode), scene.Nodes.data());
+            Bindings[1] = scene.Triangles.empty() ? device.CreateBuffer(sizeof(uint32_t))
+                : device.CreateBuffer(scene.Triangles.size() * sizeof(GITriangle), scene.Triangles.data());
             Bindings[3] = device.CreateBuffer(sizeof(GILight));
             Bindings[4] = device.CreateBuffer(size_t(grid.x) * grid.y * grid.z * 6 * 2 * sizeof(glm::vec4));
             Bindings[13] = device.CreateBuffer(size_t(grid.x) * grid.y * grid.z * 6 * 2 * sizeof(glm::vec4));
@@ -161,7 +166,20 @@ namespace Redflag
         {
             Work work{stage, Frame, samples, base, Seed};
             uint32_t count = Info.ImageSize.x * Info.ImageSize.y;
-            Device.Dispatch(Pipeline, Bindings, &work, (count + 63) / 64);
+            if (AnimatedVisibility && (stage == 1 || stage == 3 || stage == 5 || stage == 7)) {
+                // 这些阶段只计算相机看到的直接光，探针继续使用静态场景。
+                std::vector<Ref<ComputeResource>> inputs(Bindings.begin(), Bindings.begin()+14);
+                inputs.push_back(Masks ? Masks : Empty);
+                inputs.push_back(AnimatedVisibility);
+                if (!AnimatedDirect) {
+                    static constexpr uint32_t shader[] =
+#include "Shaders/AnimatedDirect.comp.inc"
+                    ;
+                    AnimatedDirect = Device.CreatePipeline(shader, sizeof(shader),
+                        std::vector<ComputeBinding>(inputs.size(), ComputeBinding::Buffer), sizeof(Work));
+                }
+                Device.Dispatch(AnimatedDirect, inputs, &work, (count + 63) / 64);
+            } else Device.Dispatch(Pipeline, Bindings, &work, (count + 63) / 64);
         }
 
         uint32_t ProbeFaces() const { return Info.GridSize.x * Info.GridSize.y * Info.GridSize.z * 6; }
@@ -498,6 +516,13 @@ namespace Redflag
     }
 
     bool GlobalIllumination::HasBakedProbes() const { return !m_Data->BakedProbes.empty(); }
+
+    void GlobalIllumination::SetAnimatedVisibility(const Ref<ComputeResource>& visibility)
+    {
+        m_Data->AnimatedVisibility = visibility;
+    }
+
+    const Ref<ComputeResource>& GlobalIllumination::GetAnimatedVisibility() const { return m_Data->AnimatedVisibility; }
 
     void GlobalIllumination::RenderDirect(bool useReSTIR)
     {

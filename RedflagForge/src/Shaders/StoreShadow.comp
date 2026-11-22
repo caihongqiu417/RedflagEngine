@@ -1,0 +1,27 @@
+#version 450
+
+layout(local_size_x=8, local_size_y=8) in;
+layout(rgba32f, binding=0) readonly uniform image2D normalDepth;
+layout(std430, binding=1) writeonly buffer ShadowMaps { uint shadowWords[]; };
+layout(push_constant) uniform Light { mat4 lightVP; uint lamp, first; float texel; };
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    int side = imageSize(normalDepth).x;
+    if (any(greaterThanEqual(p,ivec2(side)))) return;
+
+    if (all(equal(p,ivec2(0)))) {
+        shadowWords[lamp] = first;
+        for (int c=0; c<4; ++c)
+            for (int r=0; r<4; ++r)
+                shadowWords[first + uint(4*c+r)] = floatBitsToUint(lightVP[c][r]);
+        shadowWords[first+16u] = uint(side);
+        shadowWords[first+17u] = floatBitsToUint(texel);
+    }
+
+    // 空背景的法线为零。存为正无穷，使远处的地面也能收到未被角色挡住的光。
+    vec4 sampleValue = imageLoad(normalDepth,p);
+    uint depth = all(equal(sampleValue.xyz,vec3(0))) ? 0x7f800000u : floatBitsToUint(sampleValue.w);
+    shadowWords[first+18u + uint(p.y*side+p.x)] = depth;
+}

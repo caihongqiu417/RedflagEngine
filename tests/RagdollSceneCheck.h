@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Scene/SceneSerializer.h"
+#include "GameRuntimeCheck.h"
 
 static void CheckRagdollScene(VulkanContext& context, VulkanDraw& draw, const fs::path& work, std::ostream& report)
 {
@@ -127,6 +128,7 @@ static void CheckRagdollScene(VulkanContext& context, VulkanDraw& draw, const fs
     for (int frame = 0; frame < 180; ++frame) game->OnUpdatePhysics(1.f/60.f);
     const glm::vec3 gamePose = gameActor.GetComponent<TransformComponent>().Translation;
     game->OnRuntimeStop();
+    CheckRuntimeCopy();
     ScriptEngine::Shutdown();
     fs::current_path(previous);
     Check(glm::distance(gamePose, walked) < .02f && !game->GetRagdoll(gameActor), "Game start or stop differs from simulation");

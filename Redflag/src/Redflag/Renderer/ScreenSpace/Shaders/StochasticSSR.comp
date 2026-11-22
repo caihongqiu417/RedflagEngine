@@ -13,6 +13,9 @@ layout(std430, binding = 4) readonly buffer LightingEnvironment { vec4 environme
 layout(push_constant) uniform ReflectionOptions { uint useMaterial, traceScreen, useEnvironment;
 #ifdef RF_SCENE_REFLECTION
     uint useProbes, useDiffuseSky;
+#ifdef RF_MULTI_REFLECTION
+    uint maxBounces;
+#endif
 #endif
 };
 #include "Environment.glsl"
@@ -60,6 +63,57 @@ bool sampleReflection(vec3 n, vec3 v, float nv, float roughness, vec3 f0, uint p
     return true;
 }
 
+#ifdef RF_MULTI_REFLECTION
+// 第一段可见的运动物体来自本帧深度图。后面的镜子可以位于屏幕外，沿世界空间中的反射方向查找。
+bool reflectScenePath(vec3 origin, vec3 direction, uint pixel, int screenPixel, float thickness, out vec3 incoming)
+{
+    vec3 throughput = vec3(1.), sky = vec3(0.);
+    incoming = vec3(0.);
+    for (uint bounce = 0u; bounce < maxBounces; ++bounce)
+    {
+        float distance = material.w;
+        Surface hit = raySurface(origin, direction, distance);
+        bool fromScreen = false;
+        if (bounce == 0u && screenPixel >= 0)
+        {
+            ScreenSurface visible = surfaces[screenPixel];
+            if (hit.p.w == 0. || length(visible.position.xyz - origin) + thickness < distance)
+            {
+                hit = Surface(visible.position, visible.normal, visible.albedo);
+                fromScreen = true;
+            }
+        }
+        if (hit.p.w == 0.)
+        {
+            incoming += sky;
+            return bounce > 0u;
+        }
+
+        // 本段终点发出的光、灯光和漫反射只加一次。throughput 是通往这里的各面镜子反射比例的乘积。
+        incoming += throughput * (fromScreen ? colors[screenPixel].rgb : hitLighting(hit, direction));
+        vec3 n = hit.n.xyz, v = -direction;
+        float nv = clamp(dot(n, v), 0., 1.), roughness = hit.n.w;
+        vec3 f0 = mix(vec3(.04), hit.rho.rgb, hit.rho.w);
+        sky = vec3(0.);
+        if (useEnvironment != 0u)
+        {
+            vec3 ks = environmentFresnel(f0, nv, roughness);
+            sky = throughput * specularEnvironment(reflect(direction, n), nv, roughness, ks);
+        }
+
+        vec3 next, weight;
+        // 最后一面镜子或后续未命中场景时，保留这面镜子的环境倒影。
+        if (bounce + 1u == maxBounces || !sampleReflection(n, v, nv, roughness, f0, pixel + bounce + 1u, next, weight))
+            break;
+        throughput *= weight;
+        origin = hit.p.xyz + n * EPS;
+        direction = next;
+    }
+    incoming += sky;
+    return true;
+}
+#endif
+
 void main()
 {
     ivec2 p = ivec2(gl_GlobalInvocationID.xy);
@@ -88,6 +142,9 @@ void main()
     // 沿反射方向前进。一旦采样点比该像素的可见表面更远，就在前后两步之间对半查找，看光线是否碰到了表面。
     float last = 0., bias = max(.008, .001 * depthOf(s.position.xyz));
     vec3 origin = s.position.xyz + n * bias;
+#ifdef RF_MULTI_REFLECTION
+    int screenPixel = -1;
+#endif
     // 每条光线最多向前查 64 次。加大次数能查得更密，每个像素也要多读几次深度。
     for (int step = 1; step <= 64; ++step)
     {
@@ -136,15 +193,24 @@ void main()
         if (target.position.w != 0. && abs(depthOf(ray) - depthOf(target.position.xyz)) < max(.04, 2. * bias) &&
             dot(target.normal.xyz, -l) > 0.)
         {
+#ifdef RF_MULTI_REFLECTION
+            screenPixel = int(indexOf(q));
+            break;
+#else
             result[i] = vec4(colors[i].rgb + colors[indexOf(q)].rgb * weight, 1);
             return;
+#endif
         }
         break;
     }
 #ifdef RF_SCENE_REFLECTION
     // 深度图里找不到倒影时，从镜面沿同一方向找最近的三角形。射线没有碰到模型，就保留先前算好的环境光。
     vec3 incoming;
+#ifdef RF_MULTI_REFLECTION
+    if (reflectScenePath(s.position.xyz + n * EPS, l, i, screenPixel, max(.04, 2. * bias), incoming))
+#else
     if (sceneReflection(s.position.xyz + n * EPS, l, material.w, incoming))
+#endif
     {
         result[i] = vec4(colors[i].rgb + incoming * weight, 1);
     }

@@ -141,19 +141,37 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\BehaviorTreePanel.h" />
     <ClInclude Include="src\CharacterInput.h" />
+    <ClInclude Include="src\CompanionPanel.h" />
+    <ClInclude Include="src\DecisionPanel.h" />
+    <ClInclude Include="src\EditorEnvironment.h" />
     <ClInclude Include="src\ForgeLayer.h" />
+    <ClInclude Include="src\GameViewport.h" />
     <ClInclude Include="src\LightingPreview.h" />
-    <ClInclude Include="src\NpcVisionPanel.h" />
+    <ClInclude Include="src\NpcAuthoringFiles.h" />
+    <ClInclude Include="src\NpcAuthoringPanel.h" />
+    <ClInclude Include="src\NpcCamera.h" />
+    <ClInclude Include="src\NpcPhotoPanel.h" />
     <ClInclude Include="src\ProjectPanel.h" />
+    <ClInclude Include="src\UI\GameHudView.h" />
+    <ClInclude Include="src\VoicePanel.h" />
     <ClInclude Include="src\VulkanForgeLayer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\BehaviorTreePanel.cpp" />
+    <ClCompile Include="src\CompanionPanel.cpp" />
+    <ClCompile Include="src\DecisionPanel.cpp" />
     <ClCompile Include="src\ForgeLayer.cpp" />
     <ClCompile Include="src\LightingPreview.cpp" />
-    <ClCompile Include="src\NpcVisionPanel.cpp" />
+    <ClCompile Include="src\NpcAuthoringFiles.cpp" />
+    <ClCompile Include="src\NpcAuthoringPanel.cpp" />
+    <ClCompile Include="src\NpcCamera.cpp" />
+    <ClCompile Include="src\NpcPhotoPanel.cpp" />
     <ClCompile Include="src\ProjectPanel.cpp" />
     <ClCompile Include="src\RedflagForgeApp.cpp" />
+    <ClCompile Include="src\UI\GameHudView.cpp" />
+    <ClCompile Include="src\VoicePanel.cpp" />
     <ClCompile Include="src\VulkanForgeLayer.cpp" />
   </ItemGroup>
   <ItemGroup>

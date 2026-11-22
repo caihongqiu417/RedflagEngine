@@ -1,6 +1,10 @@
 #include"rfpch.h"
 #include"Scene.h"
 #include "Redflag/Assets/AssetManager.h"
+#include "Redflag/AI/NpcSystem.h"
+#include "Redflag/Gameplay/TerrainTraversal.h"
+#include "Redflag/Gameplay/TraversalRig.h"
+#include "Redflag/Animation/ActorAnimator.h"
 
 #include"Redflag/Renderer/SceneRenderer.h"
 
@@ -33,6 +37,9 @@ namespace Redflag {
 
 	Scene::Scene()
 	{
+        m_Registry.on_destroy<ScriptComponent>().connect<&Scene::RemoveScript>(*this);
+        m_Registry.on_destroy<NativeScriptComponent>().connect<&Scene::DestroyNativeScript>(*this);
+        m_Registry.on_destroy<ParticleEmitterComponent>().connect<&Scene::DestroyEmitter>(*this);
         m_Registry.on_destroy<RigidBody2DComponent>().connect<&Scene::RemoveBody2D>(*this);
         m_Registry.on_destroy<BoxCollider2DComponent>().connect<&Scene::RemoveFixture2D<BoxCollider2DComponent>>(*this);
         m_Registry.on_destroy<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
@@ -40,11 +47,15 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
         m_Registry.on_destroy<RigidBody3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
         m_Registry.on_destroy<BoxCollider3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
+        m_Registry.on_destroy<TerrainComponent>().connect<&Scene::RemoveTerrain>(*this);
         m_Registry.on_destroy<RagdollComponent>().connect<&Scene::RemoveRagdoll>(*this);
 	}
 
 	Scene::~Scene()
 	{
+        m_Registry.on_destroy<ScriptComponent>().disconnect(this);
+        m_Registry.on_destroy<NativeScriptComponent>().disconnect(this);
+        m_Registry.on_destroy<ParticleEmitterComponent>().disconnect(this);
         m_Registry.on_destroy<RigidBody2DComponent>().disconnect(this);
         m_Registry.on_destroy<BoxCollider2DComponent>().disconnect(this);
         m_Registry.on_destroy<CircleCollider2DComponent>().disconnect(this);
@@ -52,8 +63,18 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().disconnect(this);
         m_Registry.on_destroy<RigidBody3DComponent>().disconnect(this);
         m_Registry.on_destroy<BoxCollider3DComponent>().disconnect(this);
+        m_Registry.on_destroy<TerrainComponent>().disconnect(this);
         m_Registry.on_destroy<RagdollComponent>().disconnect(this);
 	}
+
+    template<typename Component>
+    static Component CopySettings(const Component& source)
+    {
+        Component copy = source;
+        if constexpr (std::is_same_v<Component, NativeScriptComponent>) copy.Instance = nullptr;
+        if constexpr (std::is_same_v<Component, ParticleEmitterComponent>) copy.RuntimeParticleSystem = nullptr;
+        return copy;
+    }
 
     template<typename Component>
     static void CopyComponent(entt::registry& dst,entt::registry& src,const std::unordered_map<UUID,entt::entity>& enttMap)
@@ -70,7 +91,7 @@ namespace Redflag {
             if constexpr (entt::component_traits<Component>::page_size == 0)
                 dst.emplace_or_replace<Component>(dstEnttID);
             else
-                dst.emplace_or_replace<Component>(dstEnttID, src.get<Component>(e));
+                dst.emplace_or_replace<Component>(dstEnttID, CopySettings(src.get<Component>(e)));
         }
     }
 
@@ -82,7 +103,7 @@ namespace Redflag {
             if constexpr (entt::component_traits<Component>::page_size == 0)
                 dst.AddOrReplaceComponent<Component>();
             else
-                dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+                dst.AddOrReplaceComponent<Component>(CopySettings(src.GetComponent<Component>()));
         }
     }
 
@@ -121,6 +142,13 @@ namespace Redflag {
         CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<HealthComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<InventoryComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<HudComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<InteractionComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<NpcComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<TerrainComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<EnvironmentZoneComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RagdollComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SkeletonAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -131,6 +159,19 @@ namespace Redflag {
         CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ParticleEmitterComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<TextureAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+        // 属性面板可以在播放时改材质。复制可编辑的材质，原本共用一份材质的实体在副本里仍然共用。
+        std::unordered_map<Material*, Ref<Material>> materials;
+        auto copyMaterial = [&](Ref<Material>& material) {
+            if (!material) return;
+            Ref<Material>& copy = materials[material.get()];
+            if (!copy) copy = material->Clone();
+            material = copy;
+        };
+        dstSceneRegistry.view<MeshRendererComponent>().each([&](MeshRendererComponent& mesh) { copyMaterial(mesh.Mat); });
+        dstSceneRegistry.view<ModelRendererComponent>().each([&](ModelRendererComponent& model) {
+            for (Ref<Material>& material : model.OverrideMaterials) copyMaterial(material);
+        });
 
         return newScene;
     }
@@ -157,16 +198,19 @@ namespace Redflag {
     void Scene::DestroyEntity(Entity entity)
     {
 		UUID entityID = entity.GetUUID();
-		ScriptEngine::OnDestroyEntity(entityID);
+		ScriptEngine::OnDestroyEntity(*this, entityID);
+        if (entity.HasComponent<ScriptComponent>()) entity.RemoveComponent<ScriptComponent>();
+        if (entity.HasComponent<NativeScriptComponent>()) entity.RemoveComponent<NativeScriptComponent>();
         m_Registry.destroy(entity);
 		m_EntityMap.erase(entityID);
     }
 
-    void Scene::OnRuntimeStart()
+    void Scene::OnRuntimeStart(uint16_t decisionPort)
     {
         ResetCharacterControls();
         OnPhysics2DStart();
         SyncPhysics3D();
+        m_Npcs = CreateScope<NpcSystem>(*this, decisionPort);
 
         //脚本系统
         {
@@ -206,26 +250,35 @@ namespace Redflag {
         }
     }
 
+    void Scene::RemoveScript(entt::entity handle)
+    {
+        ScriptEngine::OnRemoveScript(*this, m_Registry.get<IDComponent>(handle).ID);
+    }
+
+    void Scene::DestroyNativeScript(entt::entity handle)
+    {
+        NativeScriptComponent& script = m_Registry.get<NativeScriptComponent>(handle);
+        if (!script.Instance) return;
+        script.Instance->OnDestroy();
+        script.DestroyScript(&script);
+    }
+
+    void Scene::DestroyEmitter(entt::entity handle)
+    {
+        ParticleEmitterComponent& emitter = m_Registry.get<ParticleEmitterComponent>(handle);
+        delete static_cast<ParticleSystem*>(emitter.RuntimeParticleSystem);
+        emitter.RuntimeParticleSystem = nullptr;
+    }
+
     void Scene::OnRuntimeStop()
     {
+        m_Npcs.reset();
+        for (entt::entity handle : m_Registry.view<NativeScriptComponent>()) DestroyNativeScript(handle);
+        ScriptEngine::OnRuntimeStop();
+        for (entt::entity handle : m_Registry.view<ParticleEmitterComponent>()) DestroyEmitter(handle);
+
         StopPhysics3D();
         OnPhysics2DStop();
-
-        ScriptEngine::OnRuntimeStop();
-
-        // 销毁粒子系统运行时实例
-        {
-            auto view = m_Registry.view<ParticleEmitterComponent>();
-            for (auto e : view)
-            {
-                auto& emitter = m_Registry.get<ParticleEmitterComponent>(e);
-                if (emitter.RuntimeParticleSystem)
-                {
-                    delete (ParticleSystem*)emitter.RuntimeParticleSystem;
-                    emitter.RuntimeParticleSystem = nullptr;
-                }
-            }
-        }
     }
 
     void Scene::OnSimulationStart()
@@ -249,7 +302,27 @@ namespace Redflag {
 
     void Scene::ResetCharacterControls()
     {
+        m_Registry.clear<TerrainTraversal>();
+        m_Registry.clear<ActorAnimator>();
         m_Registry.view<SkeletonAnimationComponent>().each([](SkeletonAnimationComponent& player) { player.RestartControl(); });
+    }
+
+    bool Scene::SetCharacterMovement(UUID id, glm::vec2 direction)
+    {
+        Entity actor = GetEntityByUUID(id);
+        if (!actor || !actor.HasComponent<SkeletonAnimationComponent>()) return false;
+        SkeletonAnimationComponent& player = actor.GetComponent<SkeletonAnimationComponent>();
+        if (!player.HasControl()) return false;
+        player.Movement = glm::length(direction) > 1.f ? glm::normalize(direction) : direction;
+        return true;
+    }
+
+    bool Scene::FaceCharacter(UUID id, glm::vec2 direction)
+    {
+        Entity actor = GetEntityByUUID(id);
+        if (!actor || !actor.HasComponent<SkeletonAnimationComponent>() || direction == glm::vec2(0)) return false;
+        actor.GetComponent<TransformComponent>().Rotation.y = std::atan2(direction.x, direction.y);
+        return true;
     }
 
     void Scene::OnUpdateAnimations(Timestep ts, std::optional<glm::vec2> movement)
@@ -258,7 +331,7 @@ namespace Redflag {
         m_Registry.view<TransformComponent, SkeletonAnimationComponent>().each([&](TransformComponent& transform, SkeletonAnimationComponent& player) {
             if (movement && player.HasControl())
             {
-                const glm::vec2 velocity = *movement * player.MoveSpeed;
+                const glm::vec2 velocity = player.Movement.value_or(*movement) * player.MoveSpeed;
                 const glm::vec3 world(velocity.x, 0.f, velocity.y);
                 transform.Translation += world * ts.GetSeconds();
 
@@ -270,18 +343,27 @@ namespace Redflag {
                 player.Seek(player.Time + ts.GetSeconds());
         });
 
-        m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](ModelRendererComponent& renderer, ModelAnimationComponent& player) {
+        m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](entt::entity handle, ModelRendererComponent& renderer, ModelAnimationComponent& player) {
             if (!renderer.ModelAsset && renderer.ModelID) renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
-            player.Update(renderer.ModelAsset, ts.GetSeconds());
+            const auto* rig = m_Registry.try_get<TraversalRig>(handle);
+            const auto* motion = m_Registry.try_get<TerrainTraversal>(handle);
+            if (rig && motion) {
+                Entity owner(handle,this);
+                player.Update(renderer.ModelAsset, ts.GetSeconds(), [&](const ModelAnimation& animation, std::vector<ModelAnimation::NodePose>& pose) {
+                    AdjustTerrainPose(*this,owner.GetUUID(),owner.GetComponent<TransformComponent>(),*rig,*motion,animation,pose);
+                });
+            } else player.Update(renderer.ModelAsset, ts.GetSeconds());
+            if (auto* animator = m_Registry.try_get<ActorAnimator>(handle)) {
+                if (player.Clip != animator->Clip || !player.Playing) animator->Timeline.Cancel();
+                else animator->Timeline.Advance(ts.GetSeconds());
+            }
         });
     }
 
-    //runtime
-    void Scene::OnUpdateRuntime(Timestep ts, glm::vec2 movement)
+    // ---- 游戏脚本、动画与物理 ----
+    void Scene::UpdateGame(Timestep ts, glm::vec2 movement)
     {
-        OnUpdateAnimations(ts, movement);
-        // Scripts
-        // ----------
+        // 脚本先给各自的角色设置方向，本帧骨骼和物理使用刚收到的输入。
         {
             auto view = m_Registry.view<ScriptComponent>();
             for (auto e : view)
@@ -292,8 +374,6 @@ namespace Redflag {
 
             m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
             {
-                    // entity: 当前遍历到的实体
-                     // nsc: 这个实体上的 NativeScriptComponent
                 if (!nsc.Instance)
                 {
                     nsc.Instance = nsc.InstantiateScript();
@@ -304,9 +384,7 @@ namespace Redflag {
             });
         }
 
-        // ----------
-        // 更新粒子发射器
-        // ----------
+        // ---- 粒子发射 ----
         {
             auto view = m_Registry.view<TransformComponent, ParticleEmitterComponent>();
             for (auto e : view)
@@ -365,7 +443,16 @@ namespace Redflag {
             }
         }
 
+        if (m_Npcs)
+            m_Npcs->Update(ts);
+
+        OnUpdateAnimations(ts, movement);
         OnUpdatePhysics(ts);
+    }
+
+    void Scene::OnUpdateRuntime(Timestep ts, glm::vec2 movement)
+    {
+        UpdateGame(ts, movement);
 
         Camera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -426,13 +513,18 @@ namespace Redflag {
         CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
         CopyComponentIfExist<PickupComponent>(newEntity, entity);
+        CopyComponentIfExist<HealthComponent>(newEntity, entity);
+        CopyComponentIfExist<InventoryComponent>(newEntity, entity);
+        CopyComponentIfExist<HudComponent>(newEntity, entity);
+        CopyComponentIfExist<InteractionComponent>(newEntity, entity);
+        CopyComponentIfExist<NpcComponent>(newEntity, entity);
+        CopyComponentIfExist<TerrainComponent>(newEntity, entity);
+        CopyComponentIfExist<EnvironmentZoneComponent>(newEntity, entity);
         CopyComponentIfExist<RagdollComponent>(newEntity, entity);
         CopyComponentIfExist<SkeletonAnimationComponent>(newEntity, entity);
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<ScriptComponent>(newEntity, entity);
-		if (newEntity.HasComponent<ScriptComponent>())
-			ScriptEngine::GetScriptFieldCache(newEntity.GetUUID()) = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
         CopyComponentIfExist<MeshRendererComponent>(newEntity, entity);
         if (newEntity.HasComponent<MeshRendererComponent>())
         {
@@ -532,12 +624,12 @@ namespace Redflag {
         {
             const auto& [id, transform, rigidBody, collider] = boxes.get(handle);
             BoxBody3D box{ id.ID, rigidBody.Type, transform.Translation, glm::quat(transform.Rotation),
-                glm::abs(transform.Scale) * collider.HalfSize, rigidBody.Density };
+                glm::abs(transform.Scale) * collider.HalfSize, rigidBody.Density, transform.Scale * collider.Center };
 
             // 压扁到零厚度的盒子没有体积。恢复尺寸后，下次物理步会重新加入它。
             if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))) ||
                 (box.Type != BodyType3D::Static && !(box.Density > 0.f)) ||
-                m_Registry.any_of<RigidBody2DComponent>(handle))
+                m_Registry.any_of<RigidBody2DComponent, TerrainComponent>(handle))
             {
                 RemovePhysicsBody(handle);
                 continue;
@@ -549,7 +641,7 @@ namespace Redflag {
                 BoxBody3D& old = existing->second;
                 // 动态箱子的位置由 PhysX 算。每帧按新位置重建它，会把下落速度清零。
                 const bool moved = box.Position != old.Position || box.Rotation != old.Rotation;
-                if (old.Type == box.Type && old.HalfSize == box.HalfSize && old.Density == box.Density &&
+                if (old.Type == box.Type && old.HalfSize == box.HalfSize && old.Center == box.Center && old.Density == box.Density &&
                     !(box.Type == BodyType3D::Static && moved))
                 {
                     if (box.Type == BodyType3D::Kinematic && moved)
@@ -572,7 +664,7 @@ namespace Redflag {
         auto characters = m_Registry.view<IDComponent, TransformComponent, RagdollComponent>();
         for (entt::entity handle : characters)
         {
-            if (m_Registry.any_of<RigidBody2DComponent, RigidBody3DComponent>(handle))
+            if (m_Registry.any_of<RigidBody2DComponent, RigidBody3DComponent, TerrainComponent>(handle))
             {
                 RemoveRagdoll(handle);
                 continue;
@@ -588,6 +680,44 @@ namespace Redflag {
             uint64_t owner = characters.get<IDComponent>(handle).ID;
             m_Ragdolls.emplace(handle, CreateScope<Ragdoll>(*m_Physics3D, limbs, feet, rotation, owner));
         }
+        SyncTerrain();
+    }
+
+    void Scene::SyncTerrain()
+    {
+        auto ground = m_Registry.view<IDComponent, TransformComponent, TerrainComponent>();
+        for (entt::entity handle : ground)
+        {
+            const TerrainComponent& field = ground.get<TerrainComponent>(handle);
+            const TransformComponent& pose = ground.get<TransformComponent>(handle);
+            Ref<Terrain> data = field.Collision ? field.GetTerrain() : nullptr;
+            if (!data || field.CellSize <= 0.f || field.HeightScale <= 0.f ||
+                glm::any(glm::lessThanEqual(pose.Scale, glm::vec3(0.f))))
+            {
+                RemoveTerrain(handle);
+                continue;
+            }
+
+            const auto found = m_TerrainBodies.find(handle);
+            if (found != m_TerrainBodies.end())
+            {
+                const TerrainBody& old = found->second;
+                if (old.Data == data && old.Position == pose.Translation && old.Rotation == pose.Rotation &&
+                    old.Scale == pose.Scale && old.CellSize == field.CellSize && old.HeightScale == field.HeightScale) continue;
+            }
+            if (!m_Physics3D) m_Physics3D = CreateScope<PhysicsWorld>();
+            const uint64_t id = ground.get<IDComponent>(handle).ID;
+            m_Physics3D->AddTerrain(id, *data, pose.Translation, glm::quat(pose.Rotation), pose.Scale, field.CellSize, field.HeightScale);
+            m_TerrainBodies[handle] = {id, std::move(data), pose.Translation, pose.Rotation, pose.Scale, field.CellSize, field.HeightScale};
+        }
+    }
+
+    void Scene::RemoveTerrain(entt::entity handle)
+    {
+        const auto found = m_TerrainBodies.find(handle);
+        if (found == m_TerrainBodies.end()) return;
+        m_Physics3D->Remove(found->second.Entity);
+        m_TerrainBodies.erase(found);
     }
 
     void Scene::RemovePhysicsBody(entt::entity handle)
@@ -604,6 +734,7 @@ namespace Redflag {
     {
         m_Ragdolls.clear();
         m_Boxes3D.clear();
+        m_TerrainBodies.clear();
         m_Physics3D.reset();
     }
 
@@ -635,11 +766,16 @@ namespace Redflag {
         return meshes;
     }
 
-    std::optional<RayHit3D> Scene::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const
+    std::optional<RayHit3D> Scene::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, std::optional<uint64_t> ignore) const
     {
         if (!m_Physics3D)
             return std::nullopt;
-        return m_Physics3D->Raycast(origin, direction, maxDistance);
+        return m_Physics3D->Raycast(origin, direction, maxDistance, ignore);
+    }
+
+    float Scene::SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore) const
+    {
+        return m_Physics3D ? m_Physics3D->SweepSphere(center, direction, radius, distance, ignore) : distance;
     }
 
     std::vector<uint64_t> Scene::OverlapSphere(glm::vec3 center, float radius) const

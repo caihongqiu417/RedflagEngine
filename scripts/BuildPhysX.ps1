@@ -67,14 +67,14 @@ $options = @('-G', 'Ninja', "-DCMAKE_BUILD_TYPE=$mode", '-DTARGET_BUILD_PLATFORM
     '-DPX_BUILDSNIPPETS=OFF', '-DPX_BUILDPVDRUNTIME=OFF', '-DPX_GENERATE_GPU_PROJECTS=OFF')
 & cmake -S "$sdk/compiler/public" -B $build @options
 if ($LASTEXITCODE) { throw 'PhysX CMake configuration failed.' }
-& cmake --build $build --target PhysXExtensions --parallel $Jobs
+& cmake --build $build --target PhysXExtensions PhysXCooking --parallel $Jobs
 if ($LASTEXITCODE) { throw "PhysX $Configuration build failed." }
 
 $lib = Join-Path $install "lib/$mode"
 New-Item -ItemType Directory -Force -Path $lib | Out-Null
 Copy-Item -LiteralPath "$sdk/include" -Destination $install -Recurse -Force
 Copy-Item -LiteralPath "$source/LICENSE.md" -Destination $install -Force
-foreach ($name in 'PhysX', 'PhysXCommon', 'PhysXFoundation', 'PhysXExtensions', 'PhysXPvdSDK') {
+foreach ($name in 'PhysX', 'PhysXCommon', 'PhysXFoundation', 'PhysXExtensions', 'PhysXPvdSDK', 'PhysXCooking') {
     Copy-Item -LiteralPath "$work/bin/win.x86_64.vc143.md/$mode/${name}_static_64.lib" -Destination $lib -Force
 }
 Write-Output "PhysX 5.6.1 $Configuration x64 is ready at $install."

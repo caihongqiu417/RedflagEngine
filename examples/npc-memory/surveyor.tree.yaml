@@ -1,0 +1,9 @@
+Root: 1
+NextID: 4
+Nodes:
+  - {ID: 1, Kind: ModelSelector, Name: 选择巡检动作, Position: [0, 80]}
+  - {ID: 2, Kind: Action, Name: 向队友确认, Action: mark, Position: [240, 0]}
+  - {ID: 3, Kind: Action, Name: 跟随队友, Action: follow, Position: [240, 160]}
+Edges:
+  - {From: 1, Key: confirm, To: 2}
+  - {From: 1, Key: revisit, To: 3}

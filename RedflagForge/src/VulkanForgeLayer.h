@@ -6,8 +6,11 @@
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "LightingPreview.h"
 #include "GameViewport.h"
+#include "UI/GameHudView.h"
 #include "ProjectPanel.h"
-#include "NpcVisionPanel.h"
+#include "DecisionPanel.h"
+#include "CompanionPanel.h"
+#include "NpcPhotoPanel.h"
 
 #include <deque>
 #include <filesystem>
@@ -24,12 +27,14 @@ namespace Redflag
 		void OnEvent(Event& event) override;
 		void OnImGuiRender() override;
 		void OpenDefaultScene();
+		void PlayGame();
 		bool OpenScene(const std::filesystem::path& path);
 		void BakeScene(const std::filesystem::path& path);
 
 	private:
 		void NewScene();
-		void ToggleSimulation();
+		void StartScene(bool play);
+		void StopScene();
 		void SaveScene(bool choosePath);
 		void AddCamera();
 		void Report(const std::string& message);
@@ -42,7 +47,9 @@ namespace Redflag
 		Scope<VulkanDraw> m_Draw;
 		Scope<LightingPreview> m_Lighting;
 		ProjectPanel m_Project;
-		NpcVisionPanel m_NpcVision;
+		DecisionPanel m_Decisions;
+		CompanionPanel m_Companions;
+		NpcPhotoPanel m_Photos;
 		VkDescriptorSet m_PanelTexture = VK_NULL_HANDLE;
 		EditorCamera m_Camera{ 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f };
 		Ref<Scene> m_Scene;
@@ -52,7 +59,13 @@ namespace Redflag
 		std::deque<std::string> m_Messages;
 		bool m_GameView = false;
 		GameViewport m_GameViewport;
+		GameHudView m_Hud;
 		bool m_SelectSceneTab = false;
+		bool m_SelectGameTab = false;
+		bool m_Playing = false;
+		bool m_Standalone = false;
+		bool m_EditGameView = false;
+		UUID m_EditSelection{0};
 		bool m_ResetLayout = false;
 		bool m_Hovered = false;
 		bool m_ViewportFocused = false;

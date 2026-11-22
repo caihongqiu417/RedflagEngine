@@ -416,16 +416,51 @@ static void TestTemporalProjection()
 }
 
 #include "NpcPickupTests.h"
+#include "NpcWorldTests.h"
+#include "NpcRuntimeSmoke.h"
+#include "NpcMotionTests.h"
+#include "TerrainTests.h"
+#include "TerrainTraversalTests.h"
+#include "AnimationNotifyTests.h"
 
 int main(int argc, char** argv)
 {
     Log::Init();
-    if (argc == 3 && std::string(argv[1]) == "--npc-vision")
+    if (argc == 2 && std::string(argv[1]) == "--animation-events")
     {
-        CheckNpcPickup(Check, static_cast<uint16_t>(std::stoi(argv[2])));
+        CheckAnimationEvents();
         return s_Failures ? 1 : 0;
     }
-    CheckNpcPickup(Check, 0);
+    if (argc == 2 && std::string(argv[1]) == "--traversal")
+    {
+        CheckTraversal();
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--terrain")
+    {
+        CheckTerrain();
+        CheckQuarryTerrain();
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 4 && std::string(argv[1]) == "--terrain-resave")
+    {
+        ResaveTerrain(argv[2], argv[3]);
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--npc-animation")
+    {
+        CheckNpcMotion();
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 4 && std::string(argv[1]) == "--npc-sdk")
+    {
+        CheckNpcRuntime(static_cast<uint16_t>(std::stoi(argv[2])), std::filesystem::u8path(argv[3]));
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 4 && std::string(argv[1]) == "--npc-game")
+        return CheckCompanionGame(static_cast<uint16_t>(std::stoi(argv[2])), std::string(argv[3]) == "stocked") ? 0 : 1;
+    CheckWorldActions(Check);
+    CheckNpcPickup(Check);
     CheckPhysicsScene(Check);
     if (argc == 2 && std::string(argv[1]) == "--physics")
         return s_Failures ? 1 : 0;

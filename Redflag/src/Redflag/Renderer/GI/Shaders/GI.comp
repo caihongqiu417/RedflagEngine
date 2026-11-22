@@ -102,6 +102,10 @@ vec3 hemisphere(vec3 n)
 }
 #include "Trace.glsl"
 #include "RaySurface.glsl"
+#ifdef RF_ANIMATED_SHADOWS
+#define RF_VISIBILITY_BINDING 15
+#include "AnimatedVisibility.glsl"
+#endif
 vec3 direct(Surface s, uint id, bool diffuseOnly)
 {
     Light light = lights[id];
@@ -118,6 +122,9 @@ vec3 direct(Surface s, uint id, bool diffuseOnly)
         vec3 V = inverseVP[2].w == 0. ? normalize(-inverseVP[2].xyz) : normalize(eye.xyz - s.p.xyz);
         response = reflectedLight(s.rho.rgb, s.n.w, s.rho.w, s.n.xyz, V, wi);
     }
+#ifdef RF_ANIMATED_SHADOWS
+    if (light.p.w == -1.) attenuation *= animatedVisibility(id, s.p.xyz, s.n.xyz, wi);
+#endif
     return response * light.intensity.rgb * attenuation;
 }
 uint lightID()

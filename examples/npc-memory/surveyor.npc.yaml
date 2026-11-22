@@ -1,0 +1,12 @@
+Name: 巡检员
+Instructions: 巡检员须亲眼看见阀门才能向队友确认（confirm）。如果只有以前看过的记录、玩家转述，或根本没有阀门记录，就与队友重新检查（revisit）。
+Tree: surveyor.tree.yaml
+Sight: 6
+Memory:
+  Limit: 12
+  LastSeen: true
+  Reports: true
+  Preferences: {route: session, language: saved}
+Intents:
+  - {Key: confirm, Description: 确认眼前这件备件的颜色, Target: sighting, Item: valve}
+  - {Key: revisit, Description: 跟随队友重新检查, Target: leader}

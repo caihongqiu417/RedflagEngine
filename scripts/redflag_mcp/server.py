@@ -1,6 +1,8 @@
-"""Redflag 的本地 MCP，只接受场景目录里已有的场景名称。"""
+"""读取项目场景，编辑角色资产，并用本地 Redflag 构建检查结果。"""
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from threading import Lock
+import json
 import os
 import shutil
 import subprocess
@@ -9,14 +11,18 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from ruamel.yaml import YAML
+import npc_assets
+import image_assets
+from project import ENGINE, PROJECT
 
 
-ROOT = Path(__file__).resolve().parents[2]
-FORGE = ROOT / "RedflagForge"
+ROOT = ENGINE
+FORGE = PROJECT
 SCENES = FORGE / "assets/scenes"
 EDITOR = ROOT / "bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe"
 app = MCPServer("redflag")
 READ_ONLY = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
+SCENE_EDIT = Lock()
 SHARED_FORMATS = {".gltf", ".glb", ".obj", ".fbx", ".bin", ".ply", ".mtl", ".png", ".jpg",
                   ".jpeg", ".tga", ".bmp", ".hdr", ".ktx2", ".ttf", ".otf", ".dll"}
 
@@ -56,6 +62,9 @@ def json_ids(value):
         return value
     result = {}
     for key, item in value.items():
+        if key == "Lights" and isinstance(item, list):
+            result[key] = [str(light) for light in item]
+            continue
         is_id = key.endswith("ID") or key == "Entity" or (key == "Value" and value.get("Type") == "Entity")
         result[key] = str(item) if is_id and type(item) is int else json_ids(item)
     return result
@@ -63,10 +72,82 @@ def json_ids(value):
 
 @app.tool(annotations=READ_ONLY)
 def get_capabilities() -> dict[str, object]:
-    """说明数据来源、可执行文件及验证范围。查看已保存的文件无需启动编辑器。"""
-    return {"source": "saved project files", "scene_directory": "RedflagForge/assets/scenes",
+    """查看本机可用的检查工具、可编辑的资产和数据来源。"""
+    return {"source": "saved project files", "project": FORGE.as_posix(), "scene_directory": "assets/scenes",
             "editor": EDITOR.relative_to(ROOT).as_posix(), "editor_exists": EDITOR.is_file(),
-            "live_editor": False, "can_edit": False, "check_backend": "Vulkan", "check_frames": 2}
+            "live_editor": False, "can_edit": True,
+            "environment": {"source": "saved scene", "tools": ["inspect_environment", "set_zone_description"]},
+            "editable_assets": ["environment zone descriptions", "UI images and source records"] +
+                              (["NPC profile", "NPC behavior links", "NPC animation states"] if npc_assets.TOOL.is_file() else []),
+            "npc_tool": npc_assets.TOOL.relative_to(ROOT).as_posix(), "npc_tool_exists": npc_assets.TOOL.is_file(),
+            "check_backend": "Vulkan", "check_frames": 2}
+
+
+# 美术离线工具
+
+@app.tool()
+def import_ui_image(collection: str, name: str, file: str, creator: str = "", prompt: str = "",
+                    model: str = "", original: str = "", processing: str = "") -> dict[str, object]:
+    """把本地 PNG 登记到当前项目 assets/ui/图集。已加工图片可另附原图路径与加工说明。"""
+    try:
+        return image_assets.import_png(FORGE, collection, name, file, creator, prompt, model, original, processing)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool()
+def generate_ui_image(collection: str, name: str, prompt: str) -> dict[str, object]:
+    """调用用户配置的 Images 服务，并把返回的 PNG 及提示词登记到当前项目。"""
+    try:
+        return image_assets.generate(FORGE, collection, name, prompt)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+# 角色表和行为树
+
+@app.tool(annotations=READ_ONLY)
+def list_npcs() -> dict[str, list[str]]:
+    """列出项目角色表中的文件名，可直接用于 inspect_npc。"""
+    return {"files": npc_assets.list_roles()}
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_npc(npc: str) -> dict[str, object]:
+    """查看已保存的角色设定、音色、节点及连线，以及每个候选在本机构建中走过的节点。"""
+    return npc_assets.inspect(npc)
+
+
+@app.tool()
+def copy_npc(npc: str, new_file: str, display_name: str) -> dict[str, object]:
+    """复制为独立角色。new_file 使用新的 *.npc.yaml 文件名，复制后的角色拥有独立的行为树。"""
+    return npc_assets.copy(npc, new_file, display_name)
+
+
+@app.tool()
+def update_npc_role(npc: str, name: str | None = None, instructions: str | None = None) -> dict[str, object]:
+    """修改角色名称或角色描述，只写入这次指定的字段。"""
+    return npc_assets.update(npc, {k: v for k, v in (("Name", name), ("Instructions", instructions)) if v is not None})
+
+
+@app.tool()
+def set_npc_voice(npc: str, voice: str) -> dict[str, object]:
+    """更换角色的 Voice 字段。可用音色取决于实际连接的语音服务。"""
+    return npc_assets.update(npc, {"Voice": voice})
+
+
+@app.tool()
+def rewire_npc(npc: str, source: int, key: str, target: int) -> dict[str, object]:
+    """将已有连线接到另一个节点。source 和 target 是图中的节点编号，key 是该连线的候选键。"""
+    return npc_assets.update_links(npc, {(source, key): target})
+
+
+@app.tool()
+def set_npc_animation(npc: str, state: str, clip: str | None = None, loop: bool | None = None,
+                      blend: float | None = None, contact: float | None = None, seconds: float | None = None) -> dict[str, object]:
+    """按状态 ID 编辑动画。blend、seconds 以秒计，contact 是本段动作的接触时刻（0 到 1）。"""
+    fields = {"Clip": clip, "Loop": loop, "Blend": blend, "Contact": contact, "Seconds": seconds}
+    return npc_assets.edit_states(npc, {state: {k: v for k, v in fields.items() if v is not None}})
 
 
 @app.tool(annotations=READ_ONLY)
@@ -89,6 +170,60 @@ def inspect_scene(scene: str, offset: int = 0, limit: int = 50) -> dict[str, obj
     return {"scene": scene, "title": data["Scene"], "sky_visible": data.get("SkyVisible", True),
             "environment": data.get("Environment"), "total_entities": len(entities), "entities": page,
             "next_offset": offset + limit if offset + limit < len(entities) else None}
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_environment(scene: str) -> dict[str, object]:
+    """列出已保存的地形、环境区域和灯。实际运行中的亮度、遮挡和队友照片需在局内查看。"""
+    entities = read_yaml(scene_file(scene))["Entities"]
+    groups = {"terrains": [], "zones": [], "lights": []}
+    kinds = {"TerrainComponent": "terrains", "EnvironmentZoneComponent": "zones",
+             "PointLightComponent": "lights", "DirectionalLightComponent": "lights"}
+    for entry in entities:
+        for component, group in kinds.items():
+            if component in entry:
+                groups[group].append({"id": str(entry["Entity"]), "name": entry.get("TagComponent", {}).get("Tag", ""),
+                                      "transform": entry.get("TransformComponent"), "component": component,
+                                      "settings": json_ids(entry[component])})
+    return {"scene": scene, "source": "saved scene", **groups}
+
+
+@app.tool()
+def set_zone_description(scene: str, entity: str, field: str, previous: str, text: str) -> dict[str, str]:
+    """编辑区域的地貌、植被或地标。previous 填读到的原文，尚未填写的项传空字符串。"""
+    if field not in ("Landform", "Vegetation", "Landmark"):
+        raise ToolError("可修改地貌 Landform、植被 Vegetation 或地标 Landmark。")
+    with SCENE_EDIT:
+        return edit_zone_text(scene_file(scene), entity, field, previous, text)
+
+
+def edit_zone_text(path: Path, entity: str, field: str, previous: str, text: str) -> dict[str, str]:
+    original = npc_assets.read(path)
+    parsed = YAML(typ="safe").compose(original)
+    for item in npc_assets.fields(parsed)["Entities"].value:
+        fields = npc_assets.fields(item)
+        if fields["Entity"].value != entity or "EnvironmentZoneComponent" not in fields:
+            continue
+        node = fields["EnvironmentZoneComponent"]
+        zone = npc_assets.fields(node)
+        if (zone[field].value if field in zone else "") != previous:
+            raise ToolError("区域说明已变化，请重新读取。")
+        if field in zone:
+            edited = npc_assets.replace_value(original, zone[field], text)
+        else:
+            attribute = field + ": " + json.dumps(text, ensure_ascii=False)
+            if node.flow_style:
+                at = node.end_mark.index - 1
+                insert = (", " if zone else "") + attribute
+            else:
+                start = node.start_mark
+                at = start.index
+                newline = "\r\n" if "\r\n" in original else "\n"
+                insert = attribute + newline + " " * start.column
+            edited = original[:at] + insert + original[at:]
+        npc_assets.replace_file(path, original, edited)
+        return {"scene": path.name, "entity": entity, "field": field, "value": text}
+    raise ToolError("所选实体没有环境区域组件。")
 
 
 @app.tool(annotations=READ_ONLY)
@@ -124,7 +259,10 @@ def check_scene(scene: str) -> dict[str, object]:
         work = Path(directory)
         # 编辑器会在当前目录保存 ImGui 布局、计时记录和资源缓存。在副本里启动也保护了模型旁的元数据。
         for name in ("Resources", "mono"):
-            shutil.copytree(FORGE / name, work / name, copy_function=copy_asset)
+            source = FORGE / name
+            if not source.is_dir():
+                source = ROOT / "RedflagForge" / name
+            shutil.copytree(source, work / name, copy_function=copy_asset)
         shutil.copytree(FORGE / "assets", work / "assets", ignore=shutil.ignore_patterns("scenes", "cache"),
                         copy_function=copy_asset)
         scenes = work / "assets/scenes"

@@ -1,4 +1,5 @@
 #include "rfpch.h"
+#include "Redflag/Terrain/TerrainMeshes.h"
 #include "LightingPreview.h"
 #include "Platform/Vulkan/VulkanContext.h"
 #include "Platform/Vulkan/VulkanDraw.h"
@@ -8,6 +9,7 @@
 #include "Redflag/Utils/FileSystem.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include <yaml-cpp/yaml.h>
 
 namespace Redflag
@@ -31,6 +33,7 @@ namespace Redflag
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(context.GetPhysicalDevice(), &properties);
 		const VkPhysicalDeviceLimits& limits = properties.limits;
+		m_MaxShadowWords = limits.maxStorageBufferRange / sizeof(uint32_t);
 		m_MaxExtent = { std::min(limits.maxFramebufferWidth, limits.maxImageDimension2D),
 		                std::min(limits.maxFramebufferHeight, limits.maxImageDimension2D) };
 		// 每个 ReSTIR 样点最多写四个 vec4，一组计算线程处理 64 个样点。
@@ -159,6 +162,16 @@ namespace Redflag
 				input.MaterialMaps[0].BaseColor = mesh.Texture->GetPath();
 			geometry.Models.push_back(std::move(input));
 		});
+		registry.view<TransformComponent, TerrainComponent>().each([&](entt::entity entity, TransformComponent& transform, TerrainComponent& terrain)
+		{
+			const Ref<TerrainMeshes> surface = TerrainMeshes::Get(terrain);
+			if (!surface || surface->GetChunks()->empty()) return;
+			GIModel input{ {}, transform.GetTransform(), glm::vec3(terrain.Tint) };
+			input.EntityID = registry.get<IDComponent>(entity).ID;
+			input.TerrainChunks = surface->GetChunks();
+			inspect(input, 0, surface->GetMaterial(), nullptr, 1.f);
+			geometry.Models.push_back(std::move(input));
+		});
 		return geometry;
 	}
 
@@ -174,6 +187,63 @@ namespace Redflag
 				lights.push_back(GILight::Directional(direction, light.Color * light.Intensity, light.CastShadow));
 		});
 		return lights;
+	}
+
+	// ---- 动画角色的方向光阴影 ----
+	void LightingPreview::DrawAnimatedShadows(Scene& scene, const std::vector<GILight>& lights)
+	{
+		const size_t count = std::count_if(lights.begin(), lights.end(), [](const GILight& light) {
+			return light.Position.w == -1.f;
+		});
+		glm::vec3 minimum, maximum;
+		if (!m_ShadowSize || !count || !SceneRenderer::GetAnimatedBounds(scene, minimum, maximum))
+		{
+			m_GI->SetAnimatedVisibility(nullptr);
+			m_ShadowMaps.reset();
+			m_ShadowWords = 0;
+			m_ShadowDraw.reset();
+			return;
+		}
+
+		// 开头每盏灯占一个索引。每张图前面有 16 个矩阵元素、图宽和每格的世界尺寸。
+		uint32_t side = uint32_t(m_ShadowSize);
+		auto words = [&] { return lights.size() + count * (18 + size_t(side) * side); };
+		while (side > 1 && words() > m_MaxShadowWords) side /= 2;
+		if (words() > m_MaxShadowWords) throw std::runtime_error("Directional shadow maps exceed the GPU buffer size");
+		if (words() != m_ShadowWords) {
+			m_ShadowWords = words();
+			m_ShadowMaps = m_Device.CreateBuffer(m_ShadowWords * sizeof(uint32_t));
+		}
+
+		struct ShadowView { glm::mat4 VP; uint32_t Lamp, First; float Texel; };
+		if (!m_StoreShadow) {
+			static constexpr uint32_t code[] =
+#include "Shaders/StoreShadow.comp.inc"
+			;
+			m_StoreShadow = m_Device.CreatePipeline(code, sizeof(code), {ComputeBinding::Image, ComputeBinding::Buffer}, sizeof(ShadowView));
+		}
+		if (!m_ShadowDraw) m_ShadowDraw = CreateScope<VulkanDraw>(m_Context, VulkanDraw::Output::LightingSurfaces);
+		m_ShadowDraw->Resize(side, side);
+
+		// 角色离开相机以后，影子仍可能落在画面里。从光源一侧包住本帧所有角色。
+		const glm::vec3 center = (minimum + maximum) * .5f;
+		const float radius = std::max(glm::length(maximum - minimum) * .5f, .001f);
+		const float half = radius * (1.f + 2.f / side);
+		const glm::mat4 projection = glm::ortho(-half, half, -half, half, 0.f, 2.f * half);
+		uint32_t first = uint32_t(lights.size());
+		for (uint32_t i = 0; i < lights.size(); ++i)
+		{
+			if (lights[i].Position.w != -1.f) continue;
+			const glm::vec3 toLight(lights[i].Position);
+			const glm::vec3 up = std::abs(toLight.y) < .99f ? glm::vec3(0,1,0) : glm::vec3(1,0,0);
+			const ShadowView light{projection * glm::lookAt(center + half * toLight, center, up), i, first, 2.f * half / side};
+			m_ShadowDraw->DrawSurfaces([&](CommandList& commands) {
+				SceneRenderer::DrawGeometry(scene, commands, light.VP, nullptr, true);
+			});
+			m_Device.Dispatch(m_StoreShadow, {m_ShadowDraw->GetNormalDepth(), m_ShadowMaps}, &light, (side+7)/8, (side+7)/8);
+			first += 18 + side * side;
+		}
+		m_GI->SetAnimatedVisibility(m_ShadowMaps);
 	}
 
 	static const ModelRendererComponent* MissingBakeModel(Scene& scene)
@@ -261,8 +331,7 @@ namespace Redflag
 		if (meshes != m_AnimatedMeshes || bones != m_Bones) {
 			m_AnimatedMeshes = std::move(meshes);
 			m_Bones = std::move(bones);
-			// 只有角色时，姿势由面板里的角色图更新；天空不用重画。
-			if (!geometry.Models.empty()) ResetHistory();
+			ResetHistory();
 		}
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
@@ -275,8 +344,11 @@ namespace Redflag
 			m_SkyVisible = scene.IsSkyVisible();
 			ResetHistory();
 		}
-		const bool emptyScene = geometry.Models.empty();
-		m_OverlayModels = emptyScene && (geometry.HasAnimatedModel || !m_Bones.empty());
+		const std::vector<GILight> lights = CollectLights(scene);
+		const bool hasActor = geometry.HasAnimatedModel || !m_Bones.empty();
+		// 只放角色、尚未布光时，沿用材质底色来预览动作。加灯或选择环境后按正常光照绘制。
+		m_OverlayModels = geometry.Models.empty() && hasActor && lights.empty() && !m_Environment;
+		const bool emptyScene = geometry.Models.empty() && (!hasActor || m_OverlayModels);
 		if (emptyScene)
 		{
 			// 场景里已经没有可绘制的模型。清掉场景的光照探针，取消尚未开始的烘焙。
@@ -288,7 +360,7 @@ namespace Redflag
 				m_BakeRequested = false;
 				ResetHistory();
 			}
-			// 没有静态模型时只在这里画天空。动画角色由场景面板叠在前面，仍用原来的底色和贴图。
+			// 没有需要照亮的表面时，面板只需一张天空图。
 			if (Mode != Shading::Lit || !m_SkyVisible || !m_Environment)
 				return VK_NULL_HANDLE;
 		}
@@ -324,7 +396,7 @@ namespace Redflag
 		}
 
 		auto sameModel = [](const GIModel& a, const GIModel& b) {
-			return a.Path == b.Path && a.Transform == b.Transform && a.Tint == b.Tint && a.MaterialColors == b.MaterialColors &&
+			return a.Path == b.Path && a.Transform == b.Transform && a.Tint == b.Tint && a.TerrainChunks == b.TerrainChunks && a.MaterialColors == b.MaterialColors &&
 				a.MaterialFactors == b.MaterialFactors && a.MaterialEmissions == b.MaterialEmissions &&
 				a.EmissionOverrides == b.EmissionOverrides && a.TransparentParts == b.TransparentParts &&
 				a.MaterialMaps == b.MaterialMaps && a.MaterialMasks == b.MaterialMasks;
@@ -349,7 +421,6 @@ namespace Redflag
 			m_Effects = CreateScope<ScreenEffects>(m_Device, width, height);
 		}
 
-		const std::vector<GILight> lights = CollectLights(scene);
 		const auto& previousLights = m_GI->GetLights();
 		const bool sameLights = std::equal(lights.begin(), lights.end(), previousLights.begin(), previousLights.end(),
 			[](const GILight& a, const GILight& b) { return a.Position == b.Position && a.Intensity == b.Intensity; });
@@ -435,6 +506,8 @@ namespace Redflag
 			const glm::mat4 inverseVP = glm::inverse(sampleVP);
 			m_Device.Dispatch(m_PackSurfaces, {m_SurfaceDraw->GetAlbedo(), m_SurfaceDraw->GetNormalDepth(),
 				m_GI->GetSurfaces()}, &inverseVP, (width + 7) / 8, (height + 7) / 8);
+			// 相机移动或 TAA 更换像素采样位置，灯看到的角色并没有变。姿势、灯和场景设置改变时会重置 m_Frame。
+			if (m_Frame == 0) DrawAnimatedShadows(scene, lights);
 		}
 		ScreenEffectSettings& settings = m_Effects->GetSettings();
 		settings = m_Settings;
@@ -476,6 +549,18 @@ namespace Redflag
 		// 运动帧混有重投影的旧颜色。等镜头真正停下，再取完整的 32 个样本。
 		if (useTAA && cameraMoved && m_Frame > 1) m_StillFrames = 0;
 		return texture;
+	}
+
+	std::vector<glm::u8vec4> LightingPreview::ReadDisplayPixels()
+	{
+		const size_t count = size_t(m_Width / m_SampleSide) * (m_Height / m_SampleSide);
+		std::vector<glm::vec4> display(count);
+		m_Device.Readback(m_Image, display.data(), count * sizeof(glm::vec4));
+
+		std::vector<glm::u8vec4> pixels(count);
+		for (size_t i = 0; i < count; ++i)
+			pixels[i] = glm::u8vec4(glm::round(glm::clamp(display[i], 0.f, 1.f) * 255.f));
+		return pixels;
 	}
 
 	VkDescriptorSet LightingPreview::Display(const Ref<ComputeResource>& color)
@@ -641,6 +726,15 @@ namespace Redflag
 		ImGui::SetNextItemWidth(-1);
 		changed |= ImGui::Combo("##Direct", &m_DirectLight, s_DirectLabels, IM_ARRAYSIZE(s_DirectLabels));
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("“全部光源”逐盏计算场景中的点光源和方向光。");
+		const std::string shadowWidth = m_ShadowSize ? std::to_string(m_ShadowSize) : "关闭";
+		if (ImGui::BeginCombo("角色阴影", shadowWidth.c_str())) {
+			for (int side : {0, 256, 512, 1024}) {
+				const std::string name = side ? std::to_string(side) : "关闭";
+				if (ImGui::Selectable(name.c_str(), m_ShadowSize == side)) { m_ShadowSize = side; changed = true; }
+			}
+			ImGui::EndCombo();
+		}
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("每盏开启投影的方向光都绘制角色深度。图越宽，阴影轮廓越清楚，占用显存越多。");
 		ImGui::TextUnformatted("间接光");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("光先照到其他表面，再反射到这里。");
 		ImGui::SetNextItemWidth(-1);
@@ -659,6 +753,8 @@ namespace Redflag
 		changed |= ImGui::Checkbox("屏幕外反射", &m_Settings.TraceScene);
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 			ImGui::SetTooltip("开启 SSR 后，若在画面里找不到倒影，就沿反射方向查找场景里的模型。");
+		if (m_Settings.TraceScene) changed |= ImGui::SliderInt("镜面反射次数", &m_Settings.ReflectionBounces, 1, 4);
+		if (m_Settings.TraceScene && ImGui::IsItemHovered()) ImGui::SetTooltip("1 次可照见物体，2 次可照见第二面镜子里的物体。每多一次，显卡最多再追一段光路。");
 		changed |= ImGui::Checkbox("反射降噪", &m_Settings.DenoiseReflections);
 		ImGui::EndDisabled();
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
@@ -792,6 +888,7 @@ namespace Redflag
 				if (Mode == Shading::Reflections)
 				{
 					changed |= ImGui::Checkbox("屏幕外反射", &m_Settings.TraceScene);
+					if (m_Settings.TraceScene) changed |= ImGui::SliderInt("镜面反射次数", &m_Settings.ReflectionBounces, 1, 4);
 					changed |= ImGui::Checkbox("反射降噪", &m_Settings.DenoiseReflections);
 					changed |= ImGui::SliderFloat("示例粗糙度", &m_Settings.Roughness, 0.f, 1.f);
 				}
@@ -835,6 +932,7 @@ namespace Redflag
 		m_FogEnabled = false;
 		m_Fog = {};
 		m_Samples = 1;
+		m_ShadowSize = 512;
 		m_PreviewWidth = 0;
 		m_Supersampling = false;
 		m_Filmic = scene.empty();
@@ -854,6 +952,7 @@ namespace Redflag
 		m_Filmic = data["ToneMapping"].as<std::string>("Reinhard") == "ACES";
 		m_ExposureEV = std::clamp(data["ExposureEV"].as<float>(0.f), -4.f, 4.f);
 		m_Samples = std::clamp(data["Samples"].as<int>(1), 1, 8);
+		m_ShadowSize = std::clamp(data["AnimatedShadowSize"].as<int>(512), 0, 2048);
 		m_ProbeFeedback = data["DDGIProbeFeedback"].as<bool>(true);
 		FastNavigation = data["FastNavigation"].as<bool>(FastNavigation);
 		m_Settings.AORadius = data["AORadius"].as<float>(m_Settings.AORadius);
@@ -868,6 +967,7 @@ namespace Redflag
 		m_AO = data["GTAO"].as<bool>(true);
 		m_Reflections = data["SSR"].as<bool>(false);
 		m_Settings.TraceScene = data["SceneReflections"].as<bool>(false);
+		m_Settings.ReflectionBounces = std::clamp(data["ReflectionBounces"].as<int>(1), 1, 4);
 		m_Settings.DenoiseReflections = data["DenoiseReflections"].as<bool>(false);
 		m_Settings.SpecularEnvironment = data["SpecularIBL"].as<bool>(true);
 		m_TAA = data["TAA"].as<bool>(false);
@@ -888,6 +988,7 @@ namespace Redflag
 		data["ToneMapping"] = m_Filmic ? "ACES" : "Reinhard";
 		data["ExposureEV"] = m_ExposureEV;
 		data["Samples"] = m_Samples;
+		data["AnimatedShadowSize"] = m_ShadowSize;
 		data["DDGIProbeFeedback"] = m_ProbeFeedback;
 		data["FastNavigation"] = FastNavigation;
 		data["AORadius"] = m_Settings.AORadius;
@@ -900,6 +1001,7 @@ namespace Redflag
 		data["GTAO"] = m_AO;
 		data["SSR"] = m_Reflections;
 		data["SceneReflections"] = m_Settings.TraceScene;
+		data["ReflectionBounces"] = m_Settings.ReflectionBounces;
 		data["DenoiseReflections"] = m_Settings.DenoiseReflections;
 		data["SpecularIBL"] = m_Settings.SpecularEnvironment;
 		data["TAA"] = m_TAA;

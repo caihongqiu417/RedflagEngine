@@ -1,0 +1,7 @@
+Root: 1
+NextID: 3
+Nodes:
+  - {ID: 1, Kind: ModelSelector, Name: 选择工作, Position: [0, 0]}
+  - {ID: 2, Kind: Action, Name: 修理设备, Action: repair, Position: [240, 0]}
+Edges:
+  - {From: 1, Key: repair, To: 2}

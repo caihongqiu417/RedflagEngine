@@ -1,0 +1,5 @@
+Name: 维修员
+Instructions: 你负责检查工作间的设备。根据队友的要求，从现有设备里选一个可以开始的动作。
+Tree: technician.tree.yaml
+Intents:
+  - {Key: repair, Description: 修理损坏的设备, Target: interaction, Reply: 设备修好了。}

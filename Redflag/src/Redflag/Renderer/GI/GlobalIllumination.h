@@ -64,6 +64,7 @@ namespace Redflag
         }
     };
 
+    struct TerrainChunk;
     struct GIModel
     {
         std::filesystem::path Path; // 空路径表示引擎的单位立方体。
@@ -78,6 +79,7 @@ namespace Redflag
         std::map<size_t, GIEmissionOverride> EmissionOverrides;
         std::map<size_t, GIMaterialMaps> MaterialMaps;
         std::map<size_t, GIMaskSettings> MaterialMasks;
+        std::shared_ptr<const std::vector<TerrainChunk>> TerrainChunks;
     };
 
     enum class GIMethod
@@ -132,6 +134,8 @@ namespace Redflag
         bool HasBakedProbes() const;
         // useReSTIR 为 true 时为每个像素选一盏灯，否则逐盏计算。直接光单独保存，编辑器稍后把它与间接光相加。
         void RenderDirect(bool useReSTIR);
+        void SetAnimatedVisibility(const Ref<ComputeResource>& visibility);
+        const Ref<ComputeResource>& GetAnimatedVisibility() const;
         /// <summary>沿视线逐段计算雾散射进镜头的光，再加上穿过雾的场景颜色。遇到物体或达到设定的距离就停止。</summary>
         /// <param name="color">色调映射前的场景颜色。每个像素占四个 float，前三个是线性 RGB。</param>
         Ref<ComputeResource> RenderFog(const Ref<ComputeResource>& color, const FogSettings& fog);

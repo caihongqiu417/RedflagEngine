@@ -11,6 +11,7 @@
 #include <sstream>
 #include "Scene/Components.h"
 #include "Redflag/Assets/AssetManager.h"
+#include "Redflag/AI/EnvironmentSense.h"
 #include "Redflag/Renderer/Model.h"
 #include "Redflag/Renderer/RendererAPI.h"
 #include "Redflag/Utils/PlatformUtils.h"
@@ -833,7 +834,7 @@ namespace Redflag {
 
     // 编辑器模式下的字段控件：直接读写 ScriptEngine 维护的字节缓存
     // 与 DrawRuntimeScriptFieldControl 不同，这里不存在 ScriptInstance，值进入 Play 时才生效
-    static void DrawEditorScriptFieldControl(const ScriptField& field, ScriptEngine::EntityScriptFieldMap& fieldCache, Scene* scene)
+    static void DrawEditorScriptFieldControl(const ScriptField& field, ScriptComponent::FieldMap& fieldCache, Scene* scene)
     {
         const size_t typeSize = ScriptFieldTypeSize(field.Type);
         if (typeSize == 0)
@@ -1069,6 +1070,17 @@ namespace Redflag {
         }
     }
 
+    static void EditText(const char* label, std::string& text)
+    {
+        ImGui::InputText(label, text.data(), text.capacity() + 1, ImGuiInputTextFlags_CallbackResize,
+            [](ImGuiInputTextCallbackData* change) {
+                auto& value = *static_cast<std::string*>(change->UserData);
+                value.resize(change->BufTextLen);
+                change->Buf = value.data();
+                return 0;
+            }, &text);
+    }
+
     void SceneHierachyPanel::DrawComponents(Entity entity)
     {
         if (!entity) return;
@@ -1103,6 +1115,8 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
+            AddComponentItem<TerrainComponent>(entity, "地形");
+            AddComponentItem<EnvironmentZoneComponent>(entity, "环境区域");
             AddComponentItem<ModelAnimationComponent>(entity, "模型动画");
             AddComponentItem<SkeletonAnimationComponent>(entity, "骨骼动画");
             if (!entity.HasComponent<RigidBody2DComponent>() && !entity.HasComponent<RigidBody3DComponent>())
@@ -1114,6 +1128,11 @@ namespace Redflag {
             }
             AddComponentItem<BoxCollider3DComponent>(entity, "3D 盒形碰撞体");
             AddComponentItem<PickupComponent>(entity, "可拿取");
+            AddComponentItem<HealthComponent>(entity, "生命与耐久");
+            AddComponentItem<NpcComponent>(entity, "AI 角色");
+            AddComponentItem<InventoryComponent>(entity, "库存");
+            AddComponentItem<HudComponent>(entity, "游戏界面");
+            AddComponentItem<InteractionComponent>(entity, "持续交互");
 
             const char* extra = RendererAPI::GetAPI() == RendererAPI::API::Vulkan ? "其他组件（OpenGL 预览）" : "更多组件";
             if (ImGui::BeginMenu(extra))
@@ -1277,7 +1296,7 @@ namespace Redflag {
                 else if (!scriptInstance)
 				{
 					// 编辑器模式：通过字段缓存编辑，进入 Play 时这些值会被写入 ScriptInstance
-					auto& fieldCache = ScriptEngine::GetScriptFieldCache(entity.GetUUID());
+					auto& fieldCache = component.Fields;
 					for (const ScriptField& field : fields)
 						DrawEditorScriptFieldControl(field, fieldCache, m_Context.get());
 				}
@@ -1482,9 +1501,101 @@ namespace Redflag {
                 }
             });
 
-        DrawComponent<PickupComponent>("可拿取", entity, []()
+        DrawComponent<PickupComponent>("可拿取", entity, [](PickupComponent& pickup)
             {
-                ImGui::TextUnformatted("允许角色在接近这个物体后拿起它。");
+                EditText("物品编号", pickup.Item);
+                ImGui::InputInt("数量", &pickup.Count);
+            });
+
+        DrawComponent<NpcComponent>("AI 角色", entity, [this, entity](NpcComponent& npc)
+            {
+                EditText("角色定义", npc.Definition);
+                ImGui::InputScalar("队友实体编号", ImGuiDataType_U64, &npc.Leader);
+                EditText("覆盖音色", npc.VoiceOverride);
+                if (npc.VoiceOverride.empty()) ImGui::TextDisabled("使用角色定义中的音色");
+                if (ImGui::TreeNode("当前位置的环境"))
+                {
+                    const std::vector<DecisionFact> facts = SenseEnvironment(*m_Context, entity.GetUUID());
+                    if (facts.empty()) ImGui::TextDisabled("角色在所有环境区域之外");
+                    for (const DecisionFact& fact : facts) ImGui::TextWrapped("%s", fact.Description.c_str());
+                    ImGui::TreePop();
+                }
+            });
+
+        DrawComponent<EnvironmentZoneComponent>("环境区域", entity, [this](EnvironmentZoneComponent& zone)
+        {
+            ImGui::DragFloat3("区域半长（米）", &zone.HalfSize.x, .1f, .01f, 100000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("分别是从中心到 X、Y、Z 三个面的距离。实体的变换决定区域的位置和朝向。");
+            EditText("地貌", zone.Landform);
+            EditText("植被", zone.Vegetation);
+            EditText("地标", zone.Landmark);
+            if (ImGui::BeginCombo("关联灯具", "选择场景里的灯"))
+            {
+                for (entt::entity handle : m_Context->GetRegistry().view<TagComponent>())
+                {
+                    Entity lamp(handle, m_Context.get());
+                    if (!lamp.HasComponent<PointLightComponent>() && !lamp.HasComponent<DirectionalLightComponent>()) continue;
+                    const uint64_t id = lamp.GetUUID();
+                    const bool linked = zone.Lights.count(id) != 0;
+                    ImGui::PushID(static_cast<int>(handle));
+                    if (ImGui::Selectable(lamp.GetName().c_str(), linked))
+                    {
+                        if (linked) zone.Lights.erase(id);
+                        else zone.Lights.insert(id);
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::EndCombo();
+            }
+            for (auto it = zone.Lights.begin(); it != zone.Lights.end(); )
+            {
+                Entity lamp = m_Context->GetEntityByUUID(*it);
+                const std::string id = std::to_string(*it);
+                ImGui::PushID(id.c_str());
+                ImGui::TextUnformatted(lamp ? lamp.GetName().c_str() : id.c_str());
+                ImGui::SameLine();
+                if (ImGui::SmallButton("移除")) it = zone.Lights.erase(it);
+                else ++it;
+                ImGui::PopID();
+            }
+        });
+
+        DrawComponent<HealthComponent>("生命与耐久", entity, [](HealthComponent& health)
+            {
+                ImGui::DragFloat("最大值", &health.Maximum);
+                ImGui::DragFloat("当前值", &health.Current);
+                EditText("阵营", health.Team);
+            });
+
+        DrawComponent<InteractionComponent>("持续交互", entity, [](InteractionComponent& use)
+            {
+                EditText("动作", use.Action);
+                ImGui::DragFloat("距离（米）", &use.Range, .1f);
+                ImGui::DragFloat("持续时间（秒）", &use.Seconds, .1f);
+                ImGui::DragFloat("完成时恢复", &use.Restore);
+                ImGui::Checkbox("仅在目标生命为零时可用", &use.OnlyWhenDown);
+            });
+
+        DrawComponent<HudComponent>("游戏界面", entity, [](HudComponent& hud) {
+            EditText("布局文件", hud.Layout);
+        });
+
+        DrawComponent<InventoryComponent>("库存", entity, [this](InventoryComponent& inventory)
+            {
+                for (auto it = inventory.Items.begin(); it != inventory.Items.end(); )
+                {
+                    ImGui::PushID(it->first.c_str());
+                    ImGui::InputInt(it->first.c_str(), &it->second);
+                    if (ImGui::SmallButton("移除")) it = inventory.Items.erase(it);
+                    else ++it;
+                    ImGui::PopID();
+                }
+                EditText("物品编号", m_NewItem);
+                if (ImGui::Button("添加物品") && !m_NewItem.empty())
+                {
+                    inventory.Items.emplace(m_NewItem, 1);
+                    m_NewItem.clear();
+                }
             });
 
         DrawComponent<RagdollComponent>("物理角色（双腿）", entity, [](RagdollComponent& character)
@@ -1517,6 +1628,7 @@ namespace Redflag {
         DrawComponent<BoxCollider3DComponent>("3D 盒形碰撞体", entity, [](BoxCollider3DComponent& box)
             {
                 glm::vec3 size = box.HalfSize * 2.f;
+                ImGui::DragFloat3("中心偏移（米）", glm::value_ptr(box.Center), .02f);
                 if (ImGui::DragFloat3("尺寸 XYZ（米）", glm::value_ptr(size), 0.01f) &&
                     glm::all(glm::greaterThan(size, glm::vec3(0))))
                     box.HalfSize = size * .5f;
@@ -1671,6 +1783,55 @@ namespace Redflag {
             for (const auto& clip : clips)
                 if (clip.Name == player.Clip && ImGui::SliderFloat("时间（秒）", &player.Time, 0.f, clip.Duration, "%.3f"))
                     player.Playing = false;
+        });
+
+        DrawComponent<TerrainComponent>("地形", entity, [](TerrainComponent& ground)
+        {
+            auto choose = [](const char* label, std::string& path, const char* filter)
+            {
+                ImGui::PushID(label);
+                bool changed = false;
+                if (ImGui::Button(label))
+                {
+                    const std::string file = FileDialogs::OpenFile(filter);
+                    if (!file.empty())
+                    {
+                        path = std::filesystem::relative(std::filesystem::u8path(file)).generic_u8string();
+                        changed = true;
+                    }
+                }
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* drop = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                    {
+                        path = static_cast<const char*>(drop->Data);
+                        changed = true;
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+                ImGui::SameLine();
+                ImGui::TextUnformatted(path.empty() ? "未选择" : std::filesystem::u8path(path).filename().u8string().c_str());
+                ImGui::PopID();
+                return changed;
+            };
+
+            if (choose("选择高度图", ground.Heightmap, "Grayscale PNG\0*.png\0")) ground.Reload();
+            choose("选择地表贴图", ground.BaseColorTexture, "Surface image\0*.jpg;*.jpeg;*.png;*.tga\0");
+            if (!ground.Heightmap.empty() && ImGui::Button("重新读取高度图")) ground.Reload();
+            const Ref<Terrain> data = ground.GetTerrain();
+            if (data)
+                ImGui::Text("采样点 %u × %u，地面 %.1f × %.1f 米", data->GetWidth(), data->GetDepth(),
+                    (data->GetWidth() - 1) * ground.CellSize, (data->GetDepth() - 1) * ground.CellSize);
+            else if (!ground.Heightmap.empty()) ImGui::TextUnformatted("无法读取高度图，请选择 8 位或 16 位单通道 PNG。");
+
+            ImGui::DragFloat("相邻采样点间距（米）", &ground.CellSize, .1f, .01f, 10000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::DragFloat("地形高差（米）", &ground.HeightScale, .1f, 0.f, 10000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::DragFloat("贴图宽度（米）", &ground.UVScaleMeters, .1f, .01f, 10000.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            int cells = int(ground.ChunkCells);
+            if (ImGui::DragInt("每块一边的格数", &cells, 1.f, 1, 256, "%d", ImGuiSliderFlags_AlwaysClamp))
+                ground.ChunkCells = uint32_t(cells);
+            ImGui::ColorEdit3("地表颜色", &ground.Tint.x);
+            ImGui::Checkbox("地形碰撞", &ground.Collision);
         });
 
         DrawComponent<ModelRendererComponent>("模型绘制", entity, [](auto& component)

@@ -16,6 +16,7 @@ namespace Redflag
 		void Seek(float seconds);
 		void SetIdleMotion(const std::filesystem::path& path);
 		void RestartControl();
+		std::optional<glm::vec2> Movement; // 脚本给本角色的世界 X、Z 方向；零让角色停步。
 		/// <summary>为已配好待机与行走动作的角色计算本帧姿势。速度沿角色自己的 X、Z 轴，单位为米/秒。</summary>
 		void Move(float seconds, glm::vec2 velocity);
 

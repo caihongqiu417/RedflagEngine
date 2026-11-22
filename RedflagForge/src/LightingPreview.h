@@ -36,6 +36,7 @@ namespace Redflag
 		bool FastNavigation = false;
 		bool CompareDirect = false;
 		bool NeedsModelOverlay() const { return m_OverlayModels; }
+		std::vector<glm::u8vec4> ReadDisplayPixels();
 		static const char* ModeName(Shading mode);
 
 	private:
@@ -50,6 +51,7 @@ namespace Redflag
 			const std::vector<GILight>& lights, glm::uvec2 size = { 1, 1 });
 		Ref<ComputeResource> RenderLit(const glm::mat4& projection, const glm::mat4& view, bool directOnly);
 		void DrawSky(const Ref<ComputeResource>& color, const glm::mat4& projection, const glm::mat4& view);
+		void DrawAnimatedShadows(Scene& scene, const std::vector<GILight>& lights);
 		VkDescriptorSet Display(const Ref<ComputeResource>& color);
 
 		VulkanContext& m_Context;
@@ -59,6 +61,11 @@ namespace Redflag
 		Ref<ComputeResource> AddEmission(const Ref<ComputeResource>& reflected);
 		Scope<VulkanDraw> m_SurfaceDraw, m_TransparentDraw;
 		Scope<VulkanDraw> m_EmissionDraw;
+		Scope<VulkanDraw> m_ShadowDraw;
+		Ref<ComputePipeline> m_StoreShadow;
+		Ref<ComputeResource> m_ShadowMaps;
+		size_t m_ShadowWords = 0, m_MaxShadowWords = 0;
+		int m_ShadowSize = 512;
 		Ref<ComputePipeline> m_AddEmission;
 		Ref<ComputeResource> m_EmittedColor;
 		Ref<ComputePipeline> m_CompositeTransparency;

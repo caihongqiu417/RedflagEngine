@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "GIScene.h"
+#include "Redflag/Terrain/Terrain.h"
 #include "GITexture.h"
 #include "Redflag/Renderer/ModelNodes.h"
 #include "Redflag/Renderer/ModelEmission.h"
@@ -274,6 +275,26 @@ namespace Redflag
             scene.Triangles.push_back({{a, opaque ? surfaceType : 0.f}, {b, factors.x}, {c, factors.y},
                                        {color * input.Tint, maskIndex >= 0 ? -float(face) : float(face)}});
         };
+        if (input.TerrainChunks)
+        {
+            glm::uvec4 albedo{}, roughness{};
+            materialMaps(0, albedo, roughness);
+            for (const TerrainChunk& chunk : *input.TerrainChunks)
+                for (size_t index = 0; index < chunk.Indices.size(); index += 3)
+                {
+                    const MeshVertex& a = chunk.Vertices[chunk.Indices[index]];
+                    const MeshVertex& b = chunk.Vertices[chunk.Indices[index + 1]];
+                    const MeshVertex& c = chunk.Vertices[chunk.Indices[index + 2]];
+                    uint32_t face = 0;
+                    if (albedo.y)
+                    {
+                        scene.TextureFaces.push_back({{a.TexCoord, b.TexCoord}, {c.TexCoord, 0, 0}, albedo, roughness});
+                        face = uint32_t(scene.TextureFaces.size());
+                    }
+                    addTriangle(a.Position, b.Position, c.Position, glm::vec3(1.f), face);
+                }
+            return;
+        }
         if (input.Path.empty())
         {
             glm::uvec4 baseColor{}, metallicRoughness{};
@@ -488,6 +509,11 @@ namespace Redflag
     GIScene LoadGIScene(const std::vector<GIModel> &models, bool normalize)
     {
         GIScene scene;
+        // 场景只有动画角色时，直接光仍可照亮角色，静态光线则找不到三角形。
+        if (models.empty() && !normalize) {
+            scene.Min = scene.Max = glm::vec3(0);
+            return scene;
+        }
         scene.Min = glm::vec3(std::numeric_limits<float>::max());
         scene.Max = -scene.Min;
         // 先看哪些材质把同一张图用作底色或透明图，解码一次即可取出需要的通道。

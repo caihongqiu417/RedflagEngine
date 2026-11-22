@@ -56,8 +56,15 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Dist|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Source\ArcFloor.cs" />
     <Compile Include="Source\Chaser.cs" />
     <Compile Include="Source\Player.cs" />
+    <Compile Include="Source\StationEquipment.cs" />
+    <Compile Include="Source\StationGuard.cs" />
+    <Compile Include="Source\StationMotion.cs" />
+    <Compile Include="Source\StationPlayer.cs" />
+    <Compile Include="Source\ThirdPersonCamera.cs" />
+    <Compile Include="Source\UI\StationHud.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Redflag-ScriptCore\Redflag-ScriptCore.csproj">
