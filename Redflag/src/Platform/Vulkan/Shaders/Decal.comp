@@ -1,0 +1,49 @@
+#version 450
+layout(local_size_x=8, local_size_y=8) in;
+
+struct Surface { vec4 position, normal, albedo; };
+layout(std430,binding=0) buffer Surfaces { Surface pixels[]; };
+layout(std430,binding=1) readonly buffer Image { uint rgba[]; };
+layout(push_constant) uniform Projector {
+    mat4 worldToBox;
+    vec4 tint;
+    vec4 axis;       // xyz 朝向接收贴花的表面，w 是最大倾角的余弦。
+    vec4 material;   // 粗糙度、金属度、图片宽高。
+    uvec4 screen;    // 输出宽高、从屏幕左上角量的绘制起点。
+} decal;
+
+vec4 texel(ivec2 xy, ivec2 size)
+{
+    xy=clamp(xy,ivec2(0),size-1);
+    vec4 c=unpackUnorm4x8(rgba[xy.y*size.x+xy.x]);
+    vec3 rgb=mix(c.rgb / 12.92, pow((c.rgb+.055)/1.055,vec3(2.4)), greaterThan(c.rgb,vec3(.04045)));
+    // 先乘透明度再过滤，透明像素里的 RGB 就不会在污渍边缘留下黑边。
+    return vec4(rgb*c.a,c.a);
+}
+
+void main()
+{
+    uvec2 p=gl_GlobalInvocationID.xy+decal.screen.zw;
+    if(any(greaterThanEqual(p,decal.screen.xy))) return;
+    uint i=p.y*decal.screen.x+p.x;
+    Surface s=pixels[i];
+    if(s.position.w==0.) return;
+
+    vec3 local=(decal.worldToBox*vec4(s.position.xyz,1.)).xyz;
+    if(any(greaterThan(abs(local),vec3(.5)))) return;
+    float facing=dot(s.normal.xyz,decal.axis.xyz);
+    if(facing<=decal.axis.w) return;
+    float opacity=smoothstep(decal.axis.w,1.,facing)*decal.tint.a;
+    ivec2 size=ivec2(decal.material.zw);
+    vec2 uv=(local.xz+.5)*size-.5;
+    ivec2 corner=ivec2(floor(uv));
+    vec2 t=fract(uv);
+    vec4 color=mix(mix(texel(corner,size),texel(corner+ivec2(1,0),size),t.x),
+                   mix(texel(corner+ivec2(0,1),size),texel(corner+ivec2(1),size),t.x),t.y);
+    float alpha=color.a*opacity;
+    if(alpha<=0.) return;
+
+    pixels[i].albedo.rgb=s.albedo.rgb*(1.-alpha)+color.rgb*decal.tint.rgb*opacity;
+    pixels[i].albedo.w=mix(s.albedo.w,decal.material.y,alpha);
+    pixels[i].normal.w=mix(s.normal.w,decal.material.x,alpha);
+}

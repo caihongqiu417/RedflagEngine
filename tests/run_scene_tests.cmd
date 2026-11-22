@@ -15,6 +15,16 @@ if "%~1"=="--review-panel" (
     set "RF_TEST_EXTRA=bin-int\Debug-windows-x86_64\RedflagForge\PlaytestReview.obj bin-int\Debug-windows-x86_64\RedflagForge\AssetChangeReview.obj bin-int\Debug-windows-x86_64\RedflagForge\ReviewImage.obj bin-int\Debug-windows-x86_64\RedflagForge\NpcAuthoringFiles.obj"
     if not defined VULKAN_SDK for /f "delims=" %%i in ('dir /b /ad /o-n C:\VulkanSDK 2^>nul') do if not defined VULKAN_SDK set "VULKAN_SDK=C:\VulkanSDK\%%i"
 )
+if "%~1"=="--decal" (
+    set "RF_TEST_SOURCE=tests\DecalTests.cpp"
+    set "RF_TEST_NAME=DecalTests"
+    if not "%~3"=="" (
+        for %%d in ("%~3") do set "VK_ADD_LAYER_PATH=%%~dpd"
+        set "VK_INSTANCE_LAYERS=VK_LAYER_RENDERDOC_Capture"
+    )
+    set "RF_TEST_EXTRA=bin-int\Debug-windows-x86_64\RedflagForge\LightingPreview.obj"
+    if not defined VULKAN_SDK for /f "delims=" %%i in ('dir /b /ad /o-n C:\VulkanSDK 2^>nul') do if not defined VULKAN_SDK set "VULKAN_SDK=C:\VulkanSDK\%%i"
+)
 if "%~1"=="--npc-photo" (
     set "RF_TEST_SOURCE=tests\NpcCameraTests.cpp"
     set "RF_TEST_NAME=NpcCameraTests"
@@ -37,12 +47,12 @@ if "%~1"=="--npc-environment" (
     set "RF_TEST_SOURCE=tests\EnvironmentZoneTests.cpp"
     set "RF_TEST_NAME=EnvironmentZoneTests"
 )
-cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE /DYAML_CPP_STATIC_DEFINE ^
- /I Redflag\vendor\entt\include /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
 if "%~1"=="--playtest-audio" (
     set "RF_TEST_SOURCE=tests\PlaytestAudioTests.cpp"
     set "RF_TEST_NAME=PlaytestAudioTests"
 )
+cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE /DYAML_CPP_STATIC_DEFINE ^
+ /I Redflag\vendor\entt\include /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
  /I Redflag\vendor\fmt\include /I Redflag\vendor\glm /I Redflag\vendor\Glad\include /I Redflag\vendor\GLFW\include /I Redflag\vendor\yaml-cpp\include ^
  /I Redflag\vendor\imgui /I "%VULKAN_SDK%\Include" "%RF_TEST_SOURCE%" %RF_TEST_EXTRA% /Fe:bin-int\Tests\%RF_TEST_NAME%.exe /Fo:bin-int\Tests\%RF_TEST_NAME%.obj ^
  /link bin\Debug-windows-x86_64\Redflag\Redflag.lib bin\Debug-windows-x86_64\GLFW\GLFW.lib ^

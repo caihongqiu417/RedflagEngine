@@ -457,6 +457,8 @@ RedflagForge/assets/textures/*
 !RedflagForge/assets/textures/sky/
 RedflagForge/assets/textures/sky/*
 !RedflagForge/assets/textures/sky/daylight.hdr
+!RedflagForge/assets/textures/decals/
+!RedflagForge/assets/textures/decals/paint.png
 
 # Mono vendor - only keep .lib, .dll, and headers
 Redflag/vendor/mono/lib/**/*.exe

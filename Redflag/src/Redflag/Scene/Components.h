@@ -4,6 +4,7 @@
 #include "Redflag/Gameplay/GameplayComponents.h"
 #include "Redflag/AI/NpcComponent.h"
 #include "Redflag/Scene/EnvironmentZoneComponent.h"
+#include "Redflag/Scene/DecalComponent.h"
 #include "Redflag/Terrain/TerrainComponent.h"
 #include "Redflag/Animation/ModelAnimationPlayer.h"
 #include "Redflag/Animation/SkeletonAnimation.h"

@@ -2,6 +2,7 @@
 
 #include "Platform/Vulkan/VulkanComputeDevice.h"
 #include "Redflag/Renderer/EnvironmentLighting.h"
+#include "Redflag/Renderer/DecalRenderer.h"
 #include "Redflag/Renderer/GI/GlobalIllumination.h"
 #include "Redflag/Renderer/ScreenSpace/ScreenEffects.h"
 #include <vulkan/vulkan.h>
@@ -56,6 +57,7 @@ namespace Redflag
 
 		VulkanContext& m_Context;
 		VulkanComputeDevice m_Device;
+		DecalRenderer m_Decals{m_Device};
 		VkSampler m_Sampler;
 		Ref<ComputeResource> CompositeTransparency(const Ref<ComputeResource>& background, const glm::mat4& vp);
 		Ref<ComputeResource> AddEmission(const Ref<ComputeResource>& reflected);

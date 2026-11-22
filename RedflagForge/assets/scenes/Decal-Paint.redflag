@@ -1,0 +1,86 @@
+Scene: 泥渍与油漆
+Entities:
+- Entity: 101
+  TagComponent:
+    Tag: 主相机
+  TransformComponent:
+    Translation: [2.8, 2.4, 3.1]
+    Rotation: [-0.44391, 0.694738, 0]
+    Scale: [1, 1, 1]
+  CameraComponent:
+    Camera:
+      ProjectionType: 0
+      PerspectiveFov: 0.7330383
+      PerspectiveNear: 0.04
+      PerspectiveFar: 30
+      OrthographicSize: 4
+      OrthographicNear: -1
+      OrthographicFar: 25
+    Primary: true
+    FixedAspectRatio: false
+- Entity: 102
+  TagComponent:
+    Tag: 墙面
+  TransformComponent:
+    Translation: [0, 0.6, -1.3]
+    Rotation: [0, 0, 0]
+    Scale: [3.8, 1.2, 0.15]
+  MeshRendererComponent:
+    Color: [1, 1, 1, 1]
+    BaseColor: [0.21, 0.24, 0.26, 1]
+    Metallic: 0
+    Roughness: 0.76
+- Entity: 103
+  TagComponent:
+    Tag: 地面
+  TransformComponent:
+    Translation: [0, -0.1, 0]
+    Rotation: [0, 0, 0]
+    Scale: [4, 0.2, 3.3]
+  MeshRendererComponent:
+    Color: [1, 1, 1, 1]
+    BaseColor: [0.36, 0.39, 0.4, 1]
+    Metallic: 0
+    Roughness: 0.76
+- Entity: 104
+  TagComponent:
+    Tag: 主灯
+  TransformComponent:
+    Translation: [1.6, 3.2, 2.25]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  PointLightComponent:
+    Color: [1, 0.96, 0.91]
+    Intensity: 36
+    Radius: 12
+    CastShadow: false
+- Entity: 105
+  TagComponent:
+    Tag: 地面泥渍
+  TransformComponent:
+    Translation: [-0.5, 0, 0.18]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1]
+  DecalComponent:
+    Texture: assets/textures/decals/paint.png
+    Size: [1.85, 0.16, 1.5]
+    Tint: [0.14, 0.067, 0.028, 0.95]
+    Roughness: 0.16
+    Metallic: 0
+    MaxAngle: 75
+    Order: 0
+- Entity: 106
+  TagComponent:
+    Tag: 墙面油漆
+  TransformComponent:
+    Translation: [0.5, 0.63, -1.225]
+    Rotation: [1.5707963, 0, 0]
+    Scale: [1, 1, 1]
+  DecalComponent:
+    Texture: assets/textures/decals/paint.png
+    Size: [1.15, 0.2, 0.92]
+    Tint: [0.82, 0.45, 0.12, 1]
+    Roughness: 0.62
+    Metallic: 0
+    MaxAngle: 75
+    Order: 0

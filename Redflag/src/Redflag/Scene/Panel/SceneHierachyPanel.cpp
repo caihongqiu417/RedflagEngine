@@ -1115,6 +1115,7 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
+            AddComponentItem<DecalComponent>(entity, "贴花");
             AddComponentItem<TerrainComponent>(entity, "地形");
             AddComponentItem<EnvironmentZoneComponent>(entity, "环境区域");
             AddComponentItem<ModelAnimationComponent>(entity, "模型动画");
@@ -1785,6 +1786,29 @@ namespace Redflag {
                     player.Playing = false;
         });
 
+        DrawComponent<DecalComponent>("贴花", entity, [](DecalComponent& decal)
+        {
+            if (ImGui::Button("选择贴花图片"))
+            {
+                const std::string file = FileDialogs::OpenFile("Decal image\0*.png;*.jpg;*.jpeg;*.tga;*.bmp\0");
+                if (!file.empty()) decal.Texture = std::filesystem::proximate(std::filesystem::path(file)).generic_u8string();
+            }
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* image = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE"))
+                    decal.Texture = std::filesystem::path(static_cast<const char*>(image->Data)).generic_u8string();
+                ImGui::EndDragDropTarget();
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(decal.Texture.empty() ? "未选择图片" : std::filesystem::u8path(decal.Texture).filename().u8string().c_str());
+            ImGui::DragFloat3("宽、厚、高（米）", glm::value_ptr(decal.Size), .01f, .001f, 10000.f);
+            ImGui::ColorEdit4("着色与透明度", glm::value_ptr(decal.Tint));
+            ImGui::SliderFloat("粗糙度", &decal.Roughness, 0.f, 1.f);
+            ImGui::SliderFloat("金属度", &decal.Metallic, 0.f, 1.f);
+            ImGui::SliderFloat("最大倾角", &decal.MaxAngle, 1.f, 90.f, "%.0f°");
+            ImGui::InputInt("叠放顺序", &decal.Order);
+            ImGui::TextDisabled("默认向下投影。在变换组件中旋转，可将图案投到墙上。");
+        });
         DrawComponent<TerrainComponent>("地形", entity, [](TerrainComponent& ground)
         {
             auto choose = [](const char* label, std::string& path, const char* filter)

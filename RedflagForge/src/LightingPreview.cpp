@@ -310,6 +310,7 @@ namespace Redflag
 		glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating, bool scenePreview)
 	{
 		SceneGeometry geometry = CollectModels(scene);
+		if (m_Decals.Update(scene)) ResetHistory();
 		// 角色的骨段会改变相机看到的表面。房间的静态三角形和已烘焙的探针继续使用。
 		std::vector<glm::mat4> bones;
 		scene.GetRegistry().view<TransformComponent, SkeletonAnimationComponent>().each(
@@ -506,6 +507,7 @@ namespace Redflag
 			const glm::mat4 inverseVP = glm::inverse(sampleVP);
 			m_Device.Dispatch(m_PackSurfaces, {m_SurfaceDraw->GetAlbedo(), m_SurfaceDraw->GetNormalDepth(),
 				m_GI->GetSurfaces()}, &inverseVP, (width + 7) / 8, (height + 7) / 8);
+			m_Decals.Draw(m_GI->GetSurfaces(), sampleVP, {width, height});
 			// 相机移动或 TAA 更换像素采样位置，灯看到的角色并没有变。姿势、灯和场景设置改变时会重置 m_Frame。
 			if (m_Frame == 0) DrawAnimatedShadows(scene, lights);
 		}

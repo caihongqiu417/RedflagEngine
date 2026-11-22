@@ -491,6 +491,16 @@ namespace Redflag {
             for (uint64_t id : zone.Lights) out << id;
             out << YAML::EndSeq << YAML::EndMap;
         }
+        if (entity.HasComponent<DecalComponent>())
+        {
+            const DecalComponent& decal=entity.GetComponent<DecalComponent>();
+            out << YAML::Key << "DecalComponent" << YAML::Value << YAML::BeginMap
+                << YAML::Key << "Texture" << YAML::Value << decal.Texture
+                << YAML::Key << "Size" << YAML::Value << decal.Size << YAML::Key << "Tint" << YAML::Value << decal.Tint
+                << YAML::Key << "Roughness" << YAML::Value << decal.Roughness << YAML::Key << "Metallic" << YAML::Value << decal.Metallic
+                << YAML::Key << "MaxAngle" << YAML::Value << decal.MaxAngle << YAML::Key << "Order" << YAML::Value << decal.Order
+                << YAML::EndMap;
+        }
         if (entity.HasComponent<TerrainComponent>())
         {
             const TerrainComponent& ground = entity.GetComponent<TerrainComponent>();
@@ -1053,6 +1063,17 @@ namespace Redflag {
                     zone.Vegetation = data["Vegetation"].as<std::string>("");
                     zone.Landmark = data["Landmark"].as<std::string>("");
                     for (const YAML::Node& light : data["Lights"]) zone.Lights.insert(light.as<uint64_t>());
+                }
+                if (const YAML::Node data = entity["DecalComponent"])
+                {
+                    DecalComponent& decal=deserializedEntity.AddComponent<DecalComponent>();
+                    decal.Texture=data["Texture"].as<std::string>("");
+                    decal.Size=data["Size"].as<glm::vec3>(decal.Size);
+                    decal.Tint=data["Tint"].as<glm::vec4>(decal.Tint);
+                    decal.Roughness=data["Roughness"].as<float>(decal.Roughness);
+                    decal.Metallic=data["Metallic"].as<float>(decal.Metallic);
+                    decal.MaxAngle=data["MaxAngle"].as<float>(decal.MaxAngle);
+                    decal.Order=data["Order"].as<int>(decal.Order);
                 }
                 if (const YAML::Node data = entity["TerrainComponent"])
                 {

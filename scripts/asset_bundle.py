@@ -108,6 +108,8 @@ class AssetBundle:
                 for part in (value, *value.get("LODs", [])):
                     if part.get("ModelID"): self.add(models[part["ModelID"]], name)
                     elif part.get("FilePath"): self.add(self.root / part["FilePath"], name)
+            elif field == "DecalComponent" and value.get("Texture"):
+                self.add(self.root / value["Texture"], name)
             elif field == "TerrainComponent":
                 for image in ("Heightmap", "BaseColorTexture"):
                     if value.get(image): self.add(self.root / value[image], name)

@@ -1,0 +1,9 @@
+Shading: Lit
+ToneMapping: ACES
+Samples: 1
+Direct: All point lights
+Indirect: Off
+TAA: false
+GTAO: false
+SSR: false
+SpecularIBL: false

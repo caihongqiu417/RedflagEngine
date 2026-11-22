@@ -262,6 +262,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Redflag\Renderer\Buffer.h" />
     <ClInclude Include="src\Redflag\Renderer\Camera.h" />
+    <ClInclude Include="src\Redflag\Renderer\DecalRenderer.h" />
     <ClInclude Include="src\Redflag\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Redflag\Renderer\EnvironmentLighting.h" />
     <ClInclude Include="src\Redflag\Renderer\Framebuffer.h" />
@@ -301,6 +302,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Renderer\VertexArray.h" />
     <ClInclude Include="src\Redflag\Scene\CameraControllerScript.h" />
     <ClInclude Include="src\Redflag\Scene\Components.h" />
+    <ClInclude Include="src\Redflag\Scene\DecalComponent.h" />
     <ClInclude Include="src\Redflag\Scene\Entity.h" />
     <ClInclude Include="src\Redflag\Scene\EnvironmentZoneComponent.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h" />
@@ -819,6 +821,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\Redflag\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Redflag\Renderer\DecalRenderer.cpp" />
     <ClCompile Include="src\Redflag\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Redflag\Renderer\EnvironmentLighting.cpp" />
     <ClCompile Include="src\Redflag\Renderer\Framebuffer.cpp" />

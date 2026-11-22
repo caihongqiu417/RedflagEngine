@@ -147,6 +147,7 @@ namespace Redflag {
         CopyComponent<HudComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<InteractionComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<NpcComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<DecalComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<TerrainComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<EnvironmentZoneComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RagdollComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -518,6 +519,7 @@ namespace Redflag {
         CopyComponentIfExist<HudComponent>(newEntity, entity);
         CopyComponentIfExist<InteractionComponent>(newEntity, entity);
         CopyComponentIfExist<NpcComponent>(newEntity, entity);
+        CopyComponentIfExist<DecalComponent>(newEntity, entity);
         CopyComponentIfExist<TerrainComponent>(newEntity, entity);
         CopyComponentIfExist<EnvironmentZoneComponent>(newEntity, entity);
         CopyComponentIfExist<RagdollComponent>(newEntity, entity);
