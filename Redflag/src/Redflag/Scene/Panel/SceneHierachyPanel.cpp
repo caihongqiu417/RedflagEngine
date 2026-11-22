@@ -1104,7 +1104,9 @@ namespace Redflag {
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
             AddComponentItem<SkeletonAnimationComponent>(entity, "骨骼动画");
-            if (!entity.HasComponent<RigidBody2DComponent>() && AddComponentItem<RigidBody3DComponent>(entity, "3D 刚体"))
+            if (!entity.HasComponent<RigidBody2DComponent>() && !entity.HasComponent<RigidBody3DComponent>())
+                AddComponentItem<RagdollComponent>(entity, "物理角色（双腿）");
+            if (!entity.HasComponent<RigidBody2DComponent>() && !entity.HasComponent<RagdollComponent>() && AddComponentItem<RigidBody3DComponent>(entity, "3D 刚体"))
             {
                 if (!entity.HasComponent<BoxCollider3DComponent>())
                     entity.AddComponent<BoxCollider3DComponent>();
@@ -1119,7 +1121,7 @@ namespace Redflag {
                 AddComponentItem<ScriptComponent>(entity, "脚本");
                 AddComponentItem<SpriteRendererComponent>(entity, "2D 精灵");
                 AddComponentItem<CircleRendererComponent>(entity, "2D 圆形");
-                if (!entity.HasComponent<RigidBody3DComponent>())
+                if (!entity.HasComponent<RigidBody3DComponent>() && !entity.HasComponent<RagdollComponent>())
                     AddComponentItem<RigidBody2DComponent>(entity, "2D 刚体");
                 AddComponentItem<BoxCollider2DComponent>(entity, "2D 方形碰撞体");
                 AddComponentItem<CircleCollider2DComponent>(entity, "2D 圆形碰撞体");
@@ -1482,6 +1484,17 @@ namespace Redflag {
         DrawComponent<PickupComponent>("可拿取", entity, []()
             {
                 ImGui::TextUnformatted("允许角色在接近这个物体后拿起它。");
+            });
+
+        DrawComponent<RagdollComponent>("物理角色（双腿）", entity, [](RagdollComponent& character)
+            {
+                ImGui::Checkbox("行走驱动", &character.Walking);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("关闭后放松关节，两腿和骨盆由重力带动。");
+                ImGui::DragFloat("速度（米/秒）", &character.Speed, .05f);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("沿开始时的朝向前进，零站住，负值后退。");
+                ImGui::TextWrapped("变换位置在骨盆中心。平地站立时，骨盆离地约 0.91 米。七个碰撞盒使用固定尺寸。");
             });
 
         DrawComponent<RigidBody3DComponent>("3D 刚体", entity, [](RigidBody3DComponent& body)

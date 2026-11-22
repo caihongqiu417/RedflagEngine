@@ -93,7 +93,7 @@ namespace Redflag
 		return body == m_World->Bodies.end() ? nullptr : body->second.Actor.get();
 	}
 
-	void PhysicsWorld::AddBox(const BoxBody3D& box)
+	void PhysicsWorld::AddBox(const BoxBody3D& box, std::optional<uint64_t> owner)
 	{
 		PxPhysics& physics = *m_World->Sdk->Physics;
 		PxTransform pose = Pose(box.Position, box.Rotation);
@@ -109,7 +109,7 @@ namespace Redflag
 			actor = std::move(dynamic);
 		}
 
-		Body& body = m_World->Bodies.insert_or_assign(box.Entity, Body{ box.Entity, std::move(actor) }).first->second;
+		Body& body = m_World->Bodies.insert_or_assign(box.Entity, Body{ owner.value_or(box.Entity), std::move(actor) }).first->second;
 		body.Actor->userData = &body;
 		m_World->Scene->addActor(*body.Actor);
 	}
@@ -119,13 +119,15 @@ namespace Redflag
 		m_World->Bodies.erase(entity);
 	}
 
-	void PhysicsWorld::Step(float seconds)
+	void PhysicsWorld::Step(float seconds, const std::function<void(float)>& beforeStep)
 	{
 		// 每次模拟 1/60 秒。高帧率时，把这帧不足一步的时间留给下一帧。
 		constexpr double step = 1.0 / 60.0;
 		m_World->Remainder += seconds;
 		while (m_World->Remainder >= step)
 		{
+			if (beforeStep)
+				beforeStep(static_cast<float>(step));
 			m_World->Scene->simulate(static_cast<float>(step));
 			m_World->Scene->fetchResults(true);
 			m_World->Remainder -= step;
@@ -176,6 +178,8 @@ namespace Redflag
 		m_World->Scene->overlap(PxSphereGeometry(radius), PxTransform(ToPx(center)), result);
 		for (PxU32 i = 0; i < result.nbTouches; ++i)
 			entities.push_back(static_cast<const Body*>(hits[i].actor->userData)->Entity);
+		std::sort(entities.begin(), entities.end());
+		entities.erase(std::unique(entities.begin(), entities.end()), entities.end());
 		return entities;
 	}
 }

@@ -1,0 +1,2 @@
+scene,seconds,speed_m_s,forward_m,sideways_m,pelvis_m,zero_speed_drift_m,relaxed_pelvis_m,dropped_pelvis_m,max_position_difference_at_30_60_120_hz_m,viewport_changed_pixels,save_open,copy,remove,game_start_stop
+Character-Physics,3,0.8,1.42634,0.0119858,0.86888,0.34389,0.210782,0.504525,0,109,pass,pass,pass,pass

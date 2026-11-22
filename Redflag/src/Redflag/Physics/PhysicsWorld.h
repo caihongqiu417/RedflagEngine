@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -37,9 +38,11 @@ namespace Redflag
 		PhysicsWorld();
 		~PhysicsWorld();
 
-		void AddBox(const BoxBody3D& box);
+		/// <param name="owner">几个碰撞盒属于同一角色时，射线和范围查询都返回角色的实体编号。</param>
+		void AddBox(const BoxBody3D& box, std::optional<uint64_t> owner = {});
 		void Remove(uint64_t entity);
-		void Step(float seconds);
+		/// <param name="beforeStep">每次推进物理前调用，传入这一小步的秒数，供角色按当前姿势施力。</param>
+		void Step(float seconds, const std::function<void(float)>& beforeStep = {});
 
 		bool GetPose(uint64_t entity, glm::vec3& position, glm::quat& rotation) const;
 		void SetKinematicTarget(uint64_t entity, const glm::vec3& position, const glm::quat& rotation);

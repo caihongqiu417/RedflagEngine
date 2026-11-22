@@ -542,6 +542,15 @@ namespace Redflag {
             out << YAML::EndMap;
         }
 
+        if (entity.HasComponent<RagdollComponent>())
+        {
+            const RagdollComponent& character = entity.GetComponent<RagdollComponent>();
+            out << YAML::Key << "RagdollComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Walking" << YAML::Value << character.Walking;
+            out << YAML::Key << "Speed" << YAML::Value << character.Speed;
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<RigidBody3DComponent>())
         {
             const RigidBody3DComponent& body = entity.GetComponent<RigidBody3DComponent>();
@@ -851,6 +860,16 @@ namespace Redflag {
                     body.Density = bodyNode["Density"].as<float>();
                     if (!(body.Density > 0.f))
                         throw std::runtime_error("3D rigid body density must be positive");
+                }
+
+                if (const YAML::Node ragdoll = entity["RagdollComponent"])
+                {
+                    if (deserializedEntity.HasComponent<RigidBody2DComponent>() || deserializedEntity.HasComponent<RigidBody3DComponent>())
+                        throw std::runtime_error("A ragdoll already has its own rigid bodies");
+                    RagdollComponent& character = deserializedEntity.AddComponent<RagdollComponent>();
+                    character.Walking = ragdoll["Walking"].as<bool>(character.Walking);
+                    character.Speed = ragdoll["Speed"].as<float>(character.Speed);
+                    if (!std::isfinite(character.Speed)) throw std::runtime_error("Walking speed must be finite");
                 }
 
                 if (const YAML::Node boxNode = entity["BoxCollider3DComponent"])

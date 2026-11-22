@@ -877,6 +877,16 @@ namespace Redflag {
 				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), 1.f);
 		});
 
+		registry.view<RagdollComponent>().each([&](entt::entity entity, RagdollComponent& character) {
+			if (!character.LimbMesh)
+			{
+				character.LimbMesh = Mesh::CreateCube();
+				character.LimbMaterial = Material::Create(glm::vec4(.84f, .52f, .22f, 1.f));
+			}
+			for (const glm::mat4& limb : scene.GetRagdollMeshes(entity))
+				draw(character.LimbMesh, limb, character.LimbMaterial, static_cast<int>(entity), 1.f);
+		});
+
 		// 文件导入的模型可能含多个部件，实体的变换对它们全部生效。
 		registry.view<TransformComponent, ModelRendererComponent>().each(
 			[&](auto entity, TransformComponent& transform, ModelRendererComponent& component)

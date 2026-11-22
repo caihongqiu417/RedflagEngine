@@ -20,11 +20,22 @@ namespace Redflag
 		PxVec3 ToPx(glm::vec3 v) { return {v.x,v.y,v.z}; }
 	}
 
+	glm::vec3 Ragdoll::Center(Limb limb) { return Centers[limb]; }
+
 	glm::vec3 Ragdoll::HalfSize(Limb limb) { return Sizes[limb]; }
 
-	Ragdoll::Ragdoll(PhysicsWorld& world, const Entities& entities, glm::vec3 origin)
+	void Ragdoll::GetPose(Limb limb, glm::vec3& position, glm::quat& rotation) const
+	{
+		m_World.GetPose(m_Entities[limb], position, rotation);
+	}
+
+	Ragdoll::Ragdoll(PhysicsWorld& world, const Entities& entities, glm::vec3 origin,
+		glm::quat rotation, std::optional<uint64_t> owner)
 		: m_World(world), m_Entities(entities)
 	{
+		glm::vec3 localForward = rotation * glm::vec3(0,0,1);
+		float heading = std::atan2(localForward.x, localForward.z);
+		m_Forward = { std::sin(heading), 0, std::cos(heading) };
 		for (size_t i = 0; i < Count; ++i)
 			if (world.GetActor(entities[i]) || std::find(entities.begin(), entities.begin() + i, entities[i]) != entities.begin() + i)
 				throw std::invalid_argument("Each limb needs a separate unused entity ID");
@@ -35,7 +46,7 @@ namespace Redflag
 			for (int i = 0; i < Count; ++i)
 			{
 				constexpr float density = 950.0f; // kg/m³，用接近水的密度给简化肢体分配质量。
-				world.AddBox({entities[i], BodyType3D::Dynamic, origin + Centers[i], {1,0,0,0}, Sizes[i], density});
+				world.AddBox({entities[i], BodyType3D::Dynamic, origin + rotation * Centers[i], rotation, Sizes[i], density}, owner);
 				++created;
 				PxRigidDynamic* body = world.GetActor(entities[i])->is<PxRigidDynamic>();
 				m_Mass += body->getMass();
@@ -55,7 +66,7 @@ namespace Redflag
 				joint->setTwistLimit(PxJointAngularLimitPair(knee ? -0.08f : -1.15f, knee ? 1.9f : 1.15f));
 			}
 			// 骨盆在三个方向都可以移动。行走时由角度弹簧辅助维持站姿，放松后弹簧也随之关闭。
-			m_Balance = PxD6JointCreate(world.GetScene().getPhysics(), nullptr, PxTransform(PxIdentity),
+			m_Balance = PxD6JointCreate(world.GetScene().getPhysics(), nullptr, PxTransform(PxQuat(heading, PxVec3(0,1,0))),
 				world.GetActor(entities[Pelvis]), PxTransform(PxIdentity));
 			if (!m_Balance)
 				throw std::runtime_error("Could not create pelvis balance joint");
@@ -83,6 +94,8 @@ namespace Redflag
 
 	void Ragdoll::Relax()
 	{
+		if (!m_Driven) return;
+		m_Driven = false;
 		m_Balance->setDrive(PxD6Drive::eSLERP, PxD6JointDrive());
 		for (PxD6Joint* joint : m_Joints)
 			joint->setDrive(PxD6Drive::eTWIST, PxD6JointDrive());
@@ -90,6 +103,7 @@ namespace Redflag
 
 	void Ragdoll::DriveWalk(float seconds, float speed)
 	{
+		m_Driven = true;
 		// 1.1 米/秒时每秒走完一次左右脚周期。慢走时缩短步幅。
 		constexpr float strideSpeed = 1.1f;
 		float stride = glm::clamp(speed / strideSpeed, -1.0f, 1.0f);
@@ -134,6 +148,7 @@ namespace Redflag
 		// 脚还靠近地面时，骨盆低于站立高度就给向上的辅助力。课程里的根部受力控制也允许直接推骨盆。
 		float standingHeight = ground.block.position.y + Centers[Pelvis].y;
 		float lift = 110.0f * (standingHeight - pelvis.getGlobalPose().p.y) - 18.0f * velocity.y;
-		pelvis.addForce(m_Mass * PxVec3(-5.0f * velocity.x, std::max(lift,0.0f), 5.0f * (speed - velocity.z)));
+		pelvis.addForce(m_Mass * PxVec3(5.0f * (speed * m_Forward.x - velocity.x), std::max(lift,0.0f),
+			5.0f * (speed * m_Forward.z - velocity.z)));
 	}
 }

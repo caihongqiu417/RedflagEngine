@@ -20,6 +20,8 @@ set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 set RF_VULKAN_VALIDATION=1
 if /i "%~1"=="--skeleton" (
     bin-int\Tests\LightingPreviewEdits.exe tmp\skeleton-scene output\validation\character-animation\scene.csv --skeleton
+) else if /i "%~1"=="--ragdoll" (
+    bin-int\Tests\LightingPreviewEdits.exe tmp\ragdoll-scene output\validation\character-animation\physics-scene.csv --ragdoll
 ) else (
     bin-int\Tests\LightingPreviewEdits.exe tmp\lighting-preview-edits output\profiling\probe-materials\editor-edits.tsv
 )

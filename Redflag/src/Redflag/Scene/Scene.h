@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
+#include "Redflag/Animation/Ragdoll.h"
 #include <filesystem>
 #include"Redflag/Core/UUID.h"
 #include"Components.h"
@@ -44,6 +45,10 @@ namespace Redflag {
 		// 查询最近一次物理步中的碰撞体；距离和半径均以米为单位。
 		std::optional<RayHit3D> Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const;
 		std::vector<uint64_t> OverlapSphere(glm::vec3 center, float radius) const;
+		/// <returns>开始模拟后可读取各肢体的位置。移除组件或停止模拟后，指针失效。</returns>
+		const Ragdoll* GetRagdoll(entt::entity handle) const;
+		/// <returns>按 Ragdoll::Limb 排列的七个矩阵，把单位立方体放到各肢体的位置并缩放到碰撞盒的大小。</returns>
+		std::array<glm::mat4, Ragdoll::Count> GetRagdollMeshes(entt::entity handle) const;
 
 		// 编辑、运行和物理模拟分别更新。
 		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
@@ -74,6 +79,7 @@ namespace Redflag {
 
 		void SyncPhysics3D();
 		void RemovePhysicsBody(entt::entity handle);
+		void RemoveRagdoll(entt::entity handle);
 		void StopPhysics3D();
 	private:
 		entt::registry m_Registry;
@@ -93,6 +99,7 @@ namespace Redflag {
 		Scope<PhysicsWorld> m_Physics3D;
 		// 留下创建碰撞盒时的尺寸和类型，只重建被修改的刚体。
 		std::unordered_map<entt::entity, BoxBody3D> m_Boxes3D;
+		std::unordered_map<entt::entity, Scope<Ragdoll>> m_Ragdolls;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 

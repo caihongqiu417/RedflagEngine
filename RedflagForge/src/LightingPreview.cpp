@@ -240,6 +240,8 @@ namespace Redflag
 				const glm::mat4 world = transform.GetTransform();
 				for (const glm::mat4& bone : player.Bones) bones.push_back(world * bone);
 			});
+		for (entt::entity entity : scene.GetRegistry().view<RagdollComponent>())
+			for (const glm::mat4& limb : scene.GetRagdollMeshes(entity)) bones.push_back(limb);
 		if (bones != m_Bones) { m_Bones = std::move(bones); ResetHistory(); }
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }

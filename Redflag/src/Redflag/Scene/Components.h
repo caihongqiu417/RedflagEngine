@@ -188,6 +188,15 @@ namespace Redflag {
 	/* 带此标记的实体允许被拿起。碰撞范围由它的碰撞体决定。 */
 	struct PickupComponent {};
 
+	/* 变换的位置是骨盆中心。运行时的七个碰撞盒和关节由场景持有。 */
+	struct RagdollComponent
+	{
+		bool Walking = true;
+		float Speed = .8f; // 米/秒。负值后退，零让角色站住。
+		Ref<Mesh> LimbMesh;
+		Ref<Material> LimbMaterial;
+	};
+
 	// 3D 网格渲染组件
 	struct MeshRendererComponent
 	{

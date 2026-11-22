@@ -39,6 +39,7 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
         m_Registry.on_destroy<RigidBody3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
         m_Registry.on_destroy<BoxCollider3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
+        m_Registry.on_destroy<RagdollComponent>().connect<&Scene::RemoveRagdoll>(*this);
 	}
 
 	Scene::~Scene()
@@ -50,6 +51,7 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().disconnect(this);
         m_Registry.on_destroy<RigidBody3DComponent>().disconnect(this);
         m_Registry.on_destroy<BoxCollider3DComponent>().disconnect(this);
+        m_Registry.on_destroy<RagdollComponent>().disconnect(this);
 	}
 
     template<typename Component>
@@ -117,6 +119,7 @@ namespace Redflag {
         CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<RagdollComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<SkeletonAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -415,6 +418,7 @@ namespace Redflag {
         CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
         CopyComponentIfExist<PickupComponent>(newEntity, entity);
+        CopyComponentIfExist<RagdollComponent>(newEntity, entity);
         CopyComponentIfExist<SkeletonAnimationComponent>(newEntity, entity);
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
@@ -480,10 +484,20 @@ namespace Redflag {
         }
 
         SyncPhysics3D();
-        if (m_Boxes3D.empty())
+        if (!m_Physics3D)
             return;
 
-        m_Physics3D->Step(ts.GetSeconds());
+        // 一帧可能跨过两个物理步。每步都要按当时的脚底位置决定关节用力。
+        m_Physics3D->Step(ts.GetSeconds(), [&](float step) {
+            for (const auto& [handle, ragdoll] : m_Ragdolls)
+            {
+                const RagdollComponent& settings = m_Registry.get<RagdollComponent>(handle);
+                if (settings.Walking)
+                    ragdoll->DriveWalk(step, settings.Speed);
+                else
+                    ragdoll->Relax();
+            }
+        });
         for (const auto& [handle, box] : m_Boxes3D)
         {
             if (box.Type != BodyType3D::Dynamic)
@@ -492,6 +506,13 @@ namespace Redflag {
             glm::quat rotation;
             if (m_Physics3D->GetPose(box.Entity, transform.Translation, rotation))
                 transform.Rotation = glm::eulerAngles(rotation);
+        }
+        for (const auto& [handle, ragdoll] : m_Ragdolls)
+        {
+            TransformComponent& transform = m_Registry.get<TransformComponent>(handle);
+            glm::quat rotation;
+            ragdoll->GetPose(Ragdoll::Pelvis, transform.Translation, rotation);
+            transform.Rotation = glm::eulerAngles(rotation);
         }
     }
 
@@ -538,6 +559,26 @@ namespace Redflag {
             m_Physics3D->AddBox(box);
             m_Boxes3D.emplace(handle, box);
         }
+
+        auto characters = m_Registry.view<IDComponent, TransformComponent, RagdollComponent>();
+        for (entt::entity handle : characters)
+        {
+            if (m_Registry.any_of<RigidBody2DComponent, RigidBody3DComponent>(handle))
+            {
+                RemoveRagdoll(handle);
+                continue;
+            }
+            if (m_Ragdolls.count(handle)) continue;
+            if (!m_Physics3D) m_Physics3D = CreateScope<PhysicsWorld>();
+
+            const TransformComponent& transform = characters.get<TransformComponent>(handle);
+            glm::quat rotation(transform.Rotation);
+            glm::vec3 feet = transform.Translation - rotation * Ragdoll::Center(Ragdoll::Pelvis);
+            Ragdoll::Entities limbs;
+            for (uint64_t& id : limbs) id = UUID();
+            uint64_t owner = characters.get<IDComponent>(handle).ID;
+            m_Ragdolls.emplace(handle, CreateScope<Ragdoll>(*m_Physics3D, limbs, feet, rotation, owner));
+        }
     }
 
     void Scene::RemovePhysicsBody(entt::entity handle)
@@ -552,8 +593,37 @@ namespace Redflag {
 
     void Scene::StopPhysics3D()
     {
+        m_Ragdolls.clear();
         m_Boxes3D.clear();
         m_Physics3D.reset();
+    }
+
+    const Ragdoll* Scene::GetRagdoll(entt::entity handle) const
+    {
+        auto found = m_Ragdolls.find(handle);
+        return found == m_Ragdolls.end() ? nullptr : found->second.get();
+    }
+
+    void Scene::RemoveRagdoll(entt::entity handle)
+    {
+        m_Ragdolls.erase(handle);
+    }
+
+    std::array<glm::mat4, Ragdoll::Count> Scene::GetRagdollMeshes(entt::entity handle) const
+    {
+        const TransformComponent& root = m_Registry.get<TransformComponent>(handle);
+        const Ragdoll* body = GetRagdoll(handle);
+        std::array<glm::mat4, Ragdoll::Count> meshes;
+        for (int index = 0; index < Ragdoll::Count; ++index)
+        {
+            Ragdoll::Limb limb = static_cast<Ragdoll::Limb>(index);
+            glm::quat rotation(root.Rotation);
+            glm::vec3 position = root.Translation + rotation * (Ragdoll::Center(limb) - Ragdoll::Center(Ragdoll::Pelvis));
+            if (body) body->GetPose(limb, position, rotation);
+            meshes[index] = glm::translate(glm::mat4(1), position) * glm::mat4_cast(rotation) *
+                glm::scale(glm::mat4(1), 2.f * Ragdoll::HalfSize(limb));
+        }
+        return meshes;
     }
 
     std::optional<RayHit3D> Scene::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const

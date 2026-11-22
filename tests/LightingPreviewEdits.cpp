@@ -162,11 +162,13 @@ static void CheckScene(VulkanContext& context, VulkanDraw& draw, const fs::path&
 }
 
 #include "SkeletonSceneCheck.h"
+#include "RagdollSceneCheck.h"
 
 int main(int argc, char** argv)
 {
     const bool skeleton = argc == 4 && std::string_view(argv[3]) == "--skeleton";
-    if (argc != 3 && !skeleton) return 1;
+    const bool ragdoll = argc == 4 && std::string_view(argv[3]) == "--ragdoll";
+    if (argc != 3 && !skeleton && !ragdoll) return 1;
     const fs::path work = fs::absolute(argv[1]), evidence = fs::absolute(argv[2]);
     fs::create_directories(work);
     fs::create_directories(evidence.parent_path());
@@ -188,6 +190,7 @@ int main(int argc, char** argv)
         RenderDevice::SetCurrent(&draw);
         std::ostringstream report;
         if (skeleton) CheckSkeletonScene(context, draw, work, report);
+        else if (ragdoll) CheckRagdollScene(context, draw, work, report);
         else CheckScene(context, draw, work, report);
         RenderDevice::SetCurrent(nullptr);
         std::ofstream file(evidence);
