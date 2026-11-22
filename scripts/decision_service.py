@@ -27,6 +27,12 @@ def validate(request, choices=True):
         raise ValueError("prompt_required")
     if not isinstance(request.get("instructions", ""), str):
         raise ValueError("invalid_instructions")
+    fields = request.get("reply_fields")
+    if fields is not None:
+        kinds = ("boolean","integer","number","string")
+        if choices or not isinstance(fields,dict) or not fields or any(
+                not isinstance(name,str) or not name or kind not in kinds for name,kind in fields.items()):
+            raise ValueError("invalid_reply_fields")
     for field in ("candidates", "observations"):
         entries = request.get(field, [])
         if not isinstance(entries, list):
@@ -146,7 +152,14 @@ class ChatModel:
         return json.loads(self.complete(messages(request), cancel, 128, format))["choice"]
 
     def reply(self, request, cancel):
-        return self.complete(messages(request, choices=False), cancel, 512)
+        fields = request.get("reply_fields")
+        output = None
+        if fields:
+            # 创作工具提供实际允许编辑的字段。没有这个参数的普通对话仍然可以自由回答。
+            schema = {"type":"object", "properties":{key:{"type":kind} for key,kind in fields.items()},
+                      "additionalProperties":False}
+            output = {"type":"json_schema","json_schema":{"name":"asset_fields","schema":schema}}
+        return self.complete(messages(request, choices=False), cancel, 512, output)
 
     def complete(self, conversation, cancel, limit, output_format=None):
         body = {"model":self.name, "messages":conversation, "temperature":0, "max_tokens":limit, "stream":True}

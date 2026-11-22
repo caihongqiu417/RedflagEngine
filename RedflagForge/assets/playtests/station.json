@@ -1,0 +1,12 @@
+{
+  "actor": "1101",
+  "actions": {
+    "forward": {"key":"W","seconds":0.6,"description":"沿镜头前方走，靠近前面的设施"},
+    "back": {"key":"S","seconds":0.6,"description":"向后退，拉开与前方物体的距离"},
+    "left": {"key":"A","seconds":0.45,"description":"向左侧移动，可以绕开障碍"},
+    "right": {"key":"D","seconds":0.45,"description":"向右侧移动，可以绕开障碍"},
+    "jump": {"key":"Space","seconds":0.15,"description":"跳跃一次，观察落地和动作是否连续"},
+    "interact": {"key":"E","seconds":1.5,"description":"靠近设备或补给时，持续交互"},
+    "help": {"key":"F1","seconds":0.5,"description":"按住查看游戏操作，再松开"}
+  }
+}

@@ -1,0 +1,32 @@
+Scene: 维修间
+Entities:
+  - Entity: 101
+    TagComponent: {Tag: 观察相机}
+    TransformComponent: {Translation: [1, 1.8, 3.5], Rotation: [-0.35, 0, 0], Scale: [1, 1, 1]}
+    CameraComponent:
+      Camera: {ProjectionType: 0, PerspectiveFov: 0.85, PerspectiveNear: 0.05, PerspectiveFar: 30, OrthographicSize: 5, OrthographicNear: -1, OrthographicFar: 30}
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 102
+    TagComponent: {Tag: 操作员}
+    TransformComponent: {Translation: [0, 0.45, 0], Rotation: [0, 0, 0], Scale: [0.35, 0.9, 0.35]}
+    MeshRendererComponent: {Color: [1, 1, 1, 1], BaseColor: [0.14, 0.59, 0.62, 1], Roughness: 0.65}
+    HudComponent: {Layout: assets/ui/panel.yaml}
+    ScriptComponent:
+      Class: Workshop.Operator
+      ScriptFields:
+        - {Name: WalkSpeed, Type: Float, Value: 2.0}
+        - {Name: Console, Type: Entity, Value: 103}
+  - Entity: 103
+    TagComponent: {Tag: 阀门}
+    TransformComponent: {Translation: [1.25, 0.35, 0], Rotation: [0, 0, 0], Scale: [0.4, 0.7, 0.4]}
+    MeshRendererComponent: {Color: [1, 1, 1, 1], BaseColor: [0.79, 0.29, 0.09, 1], Roughness: 0.5}
+    InteractionComponent: {Action: open, Range: 0.5}
+  - Entity: 104
+    TagComponent: {Tag: 地面}
+    TransformComponent: {Translation: [0, -0.1, 0], Rotation: [0, 0, 0], Scale: [8, 0.2, 4]}
+    MeshRendererComponent: {Color: [1, 1, 1, 1], BaseColor: [0.23, 0.25, 0.26, 1], Roughness: 0.9}
+  - Entity: 105
+    TagComponent: {Tag: 工作灯}
+    TransformComponent: {Translation: [1, 2.5, 1.4], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    PointLightComponent: {Color: [1, 0.94, 0.85], Intensity: 35, Radius: 8, CastShadow: true}

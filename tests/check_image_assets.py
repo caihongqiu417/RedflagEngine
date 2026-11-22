@@ -64,6 +64,16 @@ async def check_mcp(project, original, env):
         args = dict(collection="menus",name="Token.png")
         generated = await call("generate_ui_image",**args,prompt="blue")
         assert generated["id"] == imported["id"]
+        layout = "assets/ui/menus/hud.yaml"
+        (project/layout).write_text("# 保留设计者的字号\nSprites: {badge: Old.png}\nElements: [{Text: mode, Font: 21}]\n",encoding="utf8")
+        assert layout in (await call("list_ui_layouts"))["layouts"]
+        saved = await call("inspect_ui_layout",layout=layout)
+        assert saved["Sprites"]["badge"] == "Old.png"
+        await call("set_ui_sprite",layout=layout,key="badge",previous="Old.png",image=imported["asset"])
+        assert (await call("inspect_ui_layout",layout=layout))["Elements"] == saved["Elements"]
+        assert "# 保留设计者的字号" in (project/layout).read_text(encoding="utf8")
+        stale = await client.call_tool("set_ui_sprite",dict(layout=layout,key="badge",previous="Old.png",image=imported["asset"]))
+        assert stale.is_error and (await call("inspect_ui_layout",layout=layout))["Sprites"]["badge"] == "Token.png"
         files = [project/generated[key] for key in ("asset","source")] + [Path(str(project/generated["asset"])+".rfmeta")]
         previous = [file.read_bytes() for file in files]
         assert previous[0] == png("blue")

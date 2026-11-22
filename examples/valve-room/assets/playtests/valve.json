@@ -1,0 +1,18 @@
+{
+  "actor": "102",
+  "actions": {
+    "walk": {"key":"W", "seconds":1.0, "description":"向阀门走。操作员的 X 小于 0.75 时需要先走过去。"},
+    "open": {"key":"E", "seconds":0.18, "description":"打开阀门。操作员 X 达到 0.75 米时能够到阀门。"},
+    "retreat": {"key":"S", "seconds":0.5, "description":"离开阀门，向入口退回。"}
+  },
+  "finish_events": ["valve_open"],
+  "checks": {
+    "movement": {"walk":{"min_m":0.15,"until_event":"at_panel"}},
+    "transitions":[{"from":"at_panel", "to":"valve_open", "entity":"102", "within_s":30}],
+    "required_channels":["state", "image", "input", "performance"]
+  },
+  "editable": {
+    "walk_speed": {"asset":"assets/scenes/Valve.redflag", "field":["Entities", {"Entity":"102"}, "ScriptComponent", "ScriptFields", {"Name":"WalkSpeed"}, "Value"], "unit":"m/s", "range":[0, 4]},
+    "prompt_font": {"asset":"assets/ui/panel.yaml", "field":["Elements", {"Text":"prompt"}, "Font"], "unit":"px", "range":[10, 48]}
+  }
+}

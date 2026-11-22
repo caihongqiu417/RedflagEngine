@@ -1,0 +1,4 @@
+{"choice": "walk", "from": 210, "to": 471, "image_seq": 34, "actor": "102", "before": [0, 0.449999988, 0], "after": [1.25, 0.449999988, 0], "distance_m": 1.25, "input": 1}
+{"choice": "walk", "from": 941, "to": 1208, "image_seq": 791, "actor": "102", "before": [1.25, 0.449999988, 0], "after": [1.25, 0.449999988, 0], "distance_m": 0.0, "input": 3}
+{"choice": "walk", "from": 1628, "to": 1884, "image_seq": 1495, "actor": "102", "before": [1.25, 0.449999988, 0], "after": [1.25, 0.449999988, 0], "distance_m": 0.0, "input": 5}
+{"choice": "open", "from": 2329, "to": 2392, "image_seq": 2192, "actor": "102", "before": [1.25, 0.449999988, 0], "after": [1.25, 0.449999988, 0], "distance_m": 0.0, "input": 7}

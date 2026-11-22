@@ -49,5 +49,10 @@ $python = ".\bin-int\redflag-mcp\Scripts\python.exe"
 Forge 的「角色创作 → 表格」也可以导出和导入这三种表。除了角色属性和行为树连线，`intents` 用来改候选说明、目标来源和物品。以 `.csv` 结尾使用逗号，以 `.tsv` 结尾使用制表符。两种格式均使用 UTF-8。
 
 在「动画」页找到 `pickup`，可以从当前模型的剪辑里挑选拾取动作。手碰到医疗包的时刻用动作长度的比例表示。如果一段动作指定为 0.9 秒、接触比例是 0.58，游戏在约 0.52 秒时完成交互。MCP 的 `inspect_npc` 会列出同一份动作表。`set_npc_animation(npc="medic.npc.yaml", state="pickup", contact=0.58)` 只修改这一项。输入 1.2 时引擎会拒绝保存，原来的时间仍可使用。[动画状态的读取与校验](../../Redflag/src/Redflag/Animation/AnimationController.cpp)
+## 项目的界面图片
+
+先用 `list_ui_layouts` 找到当前游戏的布局，用 `inspect_ui_layout` 看哪些文字和图片正在使用。假设维修站的工单图叫 `ticket`，想换成另一张 PNG，就把布局路径、`ticket`、刚读到的原文件名和新图在项目里的路径交给 `set_ui_sprite`。已有布局中的字号、文字间距和其他图片都能保留。重新打开游戏就可以在真实画面上检查。换一个游戏时，用 `REDFLAG_PROJECT` 指向那个项目的根目录，仍用这一组工具。[图片导入与生成](../../docs/Creator-Images.md)
 
 在 Forge 中审查工具产生的改动、比较两局试玩、从帧号回到原始截图，见[创作审查使用说明](../../docs/Creation-Review.md)。
+
+用自己的游戏接入自动试玩，或复现操作员走不动、模型修订并重新开局的整段过程，见[游戏试玩与修订](../../docs/Playtest-Harness.md)。

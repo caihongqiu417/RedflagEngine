@@ -9,6 +9,7 @@ import re
 import shutil
 from statistics import median, quantiles
 import subprocess
+import sys
 import time
 
 import win32api
@@ -18,6 +19,7 @@ import win32process
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts/redflag_mcp"))
 WORK = ROOT / "tmp/rhi-vulkan/navigation-light"
 OUT = ROOT / "output/profiling/navigation-light"
 SIZE = (948, 613)
@@ -93,25 +95,8 @@ def set_exact_view(process, hwnd, log):
 
 
 def save_view(hwnd, path):
-    import win32ui
-    from PIL import Image
-
-    _, _, width, height = win32gui.GetClientRect(hwnd)
-    handle = win32gui.GetDC(hwnd)
-    source = win32ui.CreateDCFromHandle(handle)
-    dest = source.CreateCompatibleDC()
-    bitmap = win32ui.CreateBitmap()
-    bitmap.CreateCompatibleBitmap(source, width, height)
-    dest.SelectObject(bitmap)
-    try:
-        if not ctypes.windll.user32.PrintWindow(hwnd, dest.GetSafeHdc(), 3):
-            raise RuntimeError("Cannot capture the Forge client")
-        pixels = bitmap.GetBitmapBits(True)
-        Image.frombytes("RGB", (width,height), pixels, "raw", "BGRX", 0, 1).save(path)
-    finally:
-        dest.DeleteDC()
-        win32gui.DeleteObject(bitmap.GetHandle())
-        win32gui.ReleaseDC(hwnd, handle)
+    from playtest_capture import client_image
+    client_image(hwnd).save(path)
 
 
 def measure(exe, fast, env):

@@ -515,3 +515,6 @@ thesis/
 *答辩*.pptx
 /output/captures/local/
 /output/packages/
+**/captures/playtests/
+**/captures/changes/
+!RedflagForge/assets/playtests/*.json

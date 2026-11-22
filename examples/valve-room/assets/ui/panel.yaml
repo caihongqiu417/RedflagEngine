@@ -1,0 +1,4 @@
+# 维修间场景只显示当前操作和开阀结果。
+TextShadow: {Offset: [1, 1], Color: [26, 36, 42, 245]}
+Elements:
+  - {Text: prompt, Anchor: [0, 0], Position: [52, 54], Font: 26}
