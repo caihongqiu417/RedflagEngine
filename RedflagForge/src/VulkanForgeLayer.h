@@ -9,6 +9,7 @@
 #include "Redflag/Debug/PlaytestSession.h"
 #include "UI/GameHudView.h"
 #include "UI/CreationReviewPanel.h"
+#include "UI/DevContextPanel.h"
 #include "ProjectPanel.h"
 #include "DecisionPanel.h"
 #include "CompanionPanel.h"
@@ -64,6 +65,7 @@ namespace Redflag
 		Scope<PlaytestSession> m_Playtest;
 		GameHudView m_Hud;
 		CreationReviewPanel m_Reviews;
+		DevContextPanel m_DevContext;
 		bool m_SelectSceneTab = false;
 		bool m_SelectGameTab = false;
 		bool m_Playing = false;

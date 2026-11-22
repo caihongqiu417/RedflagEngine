@@ -9,6 +9,11 @@ if errorlevel 1 exit /b 1
 if not exist "bin-int\Tests" mkdir "bin-int\Tests"
 set "RF_TEST_SOURCE=tests\SceneRenderTests.cpp"
 set "RF_TEST_NAME=SceneRenderTests"
+if "%~1"=="--dev-context-panel" (
+    set "RF_TEST_SOURCE=tests\DevContextPanelTests.cpp"
+    set "RF_TEST_NAME=DevContextPanelTests"
+    set "RF_TEST_EXTRA=bin-int\Debug-windows-x86_64\RedflagForge\DevContextPanel.obj bin-int\Debug-windows-x86_64\RedflagForge\NpcAuthoringFiles.obj"
+)
 if "%~1"=="--review-panel" (
     set "RF_TEST_SOURCE=tests\CreationReviewTests.cpp"
     set "RF_TEST_NAME=CreationReviewTests"

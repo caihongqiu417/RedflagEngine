@@ -27,6 +27,9 @@
     <ClInclude Include="src\UI\CreationReviewPanel.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="src\UI\DevContextPanel.h">
+      <Filter>UI</Filter>
+    </ClInclude>
     <ClInclude Include="src\UI\GameHudView.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -59,6 +62,9 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\CreationReviewPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\DevContextPanel.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\GameHudView.cpp">

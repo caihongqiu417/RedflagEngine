@@ -1,0 +1,58 @@
+{
+  "checks": [
+    "text box receives keyboard input",
+    "note persisted in the shared task",
+    "switch to the code page after the task is reread",
+    "text box receives keyboard input",
+    "find used the shared CLI and appended its references",
+    "selecting a match requested that source line"
+  ],
+  "notes": [
+    "这次只核对 CreateMesh 的调用和测试，尚未测量 GPU 耗时。"
+  ],
+  "references": [
+    {
+      "operation": "find",
+      "query": "CreateMesh",
+      "sources": [
+        "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.h:10",
+        "Redflag/src/Platform/Vulkan/VulkanDraw.h:23",
+        "Redflag/src/Redflag/Renderer/RHI/RenderDevice.h:25",
+        "Redflag/src/Redflag/Animation/SkinnedMesh.h:25"
+      ]
+    },
+    {
+      "operation": "show",
+      "query": "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.h:10",
+      "sources": [
+        "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.h:10"
+      ]
+    }
+  ],
+  "implementation": [
+    {
+      "source": "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.cpp:9",
+      "text": "Ref<MeshGeometry> OpenGLRenderDevice::CreateMesh(const std::vector<MeshVertex>& vertices,"
+    }
+  ],
+  "tests": [
+    {
+      "source": "tests/CascadeShadowTests.cpp:57",
+      "text": "auto quad=meshDevice.CreateMesh({"
+    },
+    {
+      "source": "tests/CharacterAnimationTests.cpp:87",
+      "text": "Ref<MeshGeometry> geometry = renderer.CreateMesh(f ? active : mesh.Deform(rest), mesh.GetIndices());"
+    },
+    {
+      "source": "tests/EnvironmentLightingTests.cpp:254",
+      "text": "auto quad = sign.CreateMesh(corners, {0,1,2,2,3,0});"
+    },
+    {
+      "source": "tests/RHITests.cpp:46",
+      "text": "scene.Near = device.CreateMesh(vertices, indices);"
+    }
+  ],
+  "check_exit_code": 0,
+  "exe_sha256": "0aba2053a5bff94b1124c1040338e672b6dab4a21b6b385807b2c0388e71a771"
+}

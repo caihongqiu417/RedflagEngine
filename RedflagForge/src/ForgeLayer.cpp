@@ -495,6 +495,7 @@ namespace Redflag {
             }
             if (ImGui::BeginMenu("View"))
             {
+                m_DevContext.DrawMenu();
                 ImGui::MenuItem("Physics Colliders", nullptr, &m_ShowPhysicsColliders);
                 ImGui::MenuItem("Show Culling AABBs",nullptr, &Renderer3D::GetDebugCullingVizEnabled());
                 ImGui::EndMenu();
@@ -1032,6 +1033,7 @@ namespace Redflag {
         // 左侧面板
         m_SceneHierachyPanel.OnImguiRender();
         m_ContentBrowserPanel.OnImGuiRender();
+        m_DevContext.Draw();
 
         // Viewport 面板
         const bool visible = ImGui::Begin("Viewport");

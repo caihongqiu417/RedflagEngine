@@ -352,6 +352,7 @@ namespace Redflag
 		if (ImGui::BeginMenu("窗口"))
 		{
 			m_Reviews.DrawMenu();
+			m_DevContext.DrawMenu();
 			if (ImGui::MenuItem("恢复默认布局")) m_ResetLayout = true;
 			ImGui::EndMenu();
 		}
@@ -459,6 +460,7 @@ namespace Redflag
 		DrawViewport();
 		m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
 		m_Reviews.Draw(GetWindowContext(), *m_Draw);
+		m_DevContext.Draw();
 	}
 
 	void VulkanForgeLayer::DrawTransformTools()

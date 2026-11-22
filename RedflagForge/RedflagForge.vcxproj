@@ -158,6 +158,7 @@
     <ClInclude Include="src\ProjectPanel.h" />
     <ClInclude Include="src\UI\AssetChangeReview.h" />
     <ClInclude Include="src\UI\CreationReviewPanel.h" />
+    <ClInclude Include="src\UI\DevContextPanel.h" />
     <ClInclude Include="src\UI\GameHudView.h" />
     <ClInclude Include="src\UI\JobTimeline.h" />
     <ClInclude Include="src\UI\PlaytestReview.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="src\RedflagForgeApp.cpp" />
     <ClCompile Include="src\UI\AssetChangeReview.cpp" />
     <ClCompile Include="src\UI\CreationReviewPanel.cpp" />
+    <ClCompile Include="src\UI\DevContextPanel.cpp" />
     <ClCompile Include="src\UI\GameHudView.cpp" />
     <ClCompile Include="src\UI\JobTimeline.cpp" />
     <ClCompile Include="src\UI\PlaytestReview.cpp" />

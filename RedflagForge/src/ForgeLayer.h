@@ -1,5 +1,6 @@
 #pragma once
 #include "GameViewport.h"
+#include "UI/DevContextPanel.h"
 
 #include"Redflag.h"
 #include"Scene/Panel/SceneHierachyPanel.h"
@@ -52,6 +53,7 @@ namespace Redflag {
 
 		Ref<Redflag::Framebuffer> m_Framebuffer;
 		GameViewport m_GameViewport;
+		DevContextPanel m_DevContext;
 		glm::uvec2 m_ViewportSize{1920,1080};
 		glm::vec2 m_ViewportBounds[2]{};
 		

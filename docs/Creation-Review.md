@@ -72,3 +72,13 @@ python scripts/redflag_mcp/creation_reviews.py open door --page images
 ```powershell
 python scripts/redflag_mcp/creation_reviews.py --project D:/Games/MyGame open CURRENT --page playtest --frame 85 --baseline BEFORE --base-frame 79
 ```
+
+## 源码、测试与开发记录
+
+在 Vulkan 版 Forge 里打开「窗口 → 开发资料」，在 OpenGL 版里打开「View → 开发资料」。想查一个接口时，先在「源码与测试」输入名称，例如 `CreateMesh`。同名接口可能在设备接口、OpenGL 后端、Vulkan 后端各有一处。看清类名和文件后点一项，窗口会列出签名、可能的调用位置、测试及其运行入口。点具体的源码位置，可以读到那几行原文。如果声明在生成 API 手册之后又改过，窗口会告诉你索引需要更新。[源码窗口](../RedflagForge/src/UI/DevContextPanel.cpp) · [查询实现](../scripts/context_index.py)
+
+![在 Forge 查看创建网格的定义、实现和测试](../output/validation/forge-context/source.png)
+
+复核一项开发任务时，从上方下拉框选择它。勾选「把这次查询记入选中的任务」后，接下来的搜索和点开的源码都会留下记录。切到「任务记录」，可以检查开始时提到的文件、实际运行的测试、已有意见和证据目录。比如同事写下“网格创建更快了”，但记录里仅有功能测试，你可以在输入框补充“这次只核对调用和测试，尚未测量 GPU 耗时”，再点「记下更正」。原来的测试仍可查到，下一位使用命令行或 MCP 的开发者也会读到这条意见。[共用的任务记录](../scripts/context_review.py) · [窗口输入与 CLI 回读验证](../tests/check_forge_context.py)
+
+![任务记录中的人工更正和引用的源码](../output/validation/forge-context/record.png)
