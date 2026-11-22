@@ -32,6 +32,7 @@ namespace Redflag {
 		mat->HeightMap             = HeightMap;
 		mat->HeightMode            = HeightMode;
 		mat->HeightScale           = HeightScale;
+		mat->HeightReference       = HeightReference;
 		mat->MetallicRoughnessMap  = MetallicRoughnessMap;
 		mat->AOMap                 = AOMap;
 		mat->AlphaMap              = AlphaMap;

@@ -24,5 +24,6 @@ namespace Redflag {
         Ref<SampledTexture> Height;
         HeightMapping HeightMode = HeightMapping::Off;
         float HeightScale = 0.f;
+        float HeightReference = 1.f;
     };
 }

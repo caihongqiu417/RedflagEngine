@@ -132,6 +132,20 @@ int main(int argc, char** argv) try
         mat->HeightMode=HeightMapping::Off;
         Check(!Compare(front,frame()).Color,"No UV offset looking straight down with orthographic projection");
 
+        // 置换参考面设为黑时，一张全黑高度图应使所有顶点停在原位。
+        vp=projection*view;
+        Ref<Texture2D> gravel=mat->HeightMap;
+        mat->HeightMap=Texture2D::Create(1,1);
+        uint8_t black[]={0,0,0,255};
+        mat->HeightMap->SetData(black,sizeof(black));
+        mat->HeightMode=HeightMapping::Displacement;
+        mat->HeightReference=0.f;
+        Difference neutral=Compare(reference,frame());
+        Check(!neutral.Depth && !neutral.IDs,"The selected reference value keeps the original geometry");
+        mat->HeightReference=1.f;
+        Check(Compare(reference,frame()).Depth>500,"Changing the reference moves the vertices");
+        mat->HeightMap=gravel;
+
         // 计时范围到场景命令写完为止。DrawSurfaces 在回调外提交队列，等待时间不计入 CPU 录制。
         vp=projection*view;
         std::ofstream timing(Output/"record-cpu-us.csv");
@@ -173,12 +187,14 @@ int main(int argc, char** argv) try
         const auto clone=mat->Clone();
         Check(clone->HeightMap==mat->HeightMap && clone->HeightScale==mat->HeightScale,"Cloning retains the height map and scale");
         mat->HeightMode=HeightMapping::Displacement;
+        mat->HeightReference=.522f;
         SceneSerializer(scene).Serialize("../tmp/height-saved.redflag");
         auto opened=CreateRef<Scene>(); opened->OnViewportResize(Width,Height);
         Check(SceneSerializer(opened).Deserialize("../tmp/height-saved.redflag"),"Read saved material");
         const auto saved=opened->GetEntityByUUID(102).GetComponent<ModelRendererComponent>().OverrideMaterials.at(0);
         Check(saved->HeightMap && saved->HeightMap->IsLoaded() && saved->HeightMode==HeightMapping::Displacement &&
-              saved->HeightScale==mat->HeightScale,"Saved height, mode and scale");
+              saved->HeightScale==mat->HeightScale && saved->HeightReference==mat->HeightReference,
+              "Saved height, mode, scale and neutral surface");
     }
     context.WaitIdle();
     scene.reset();

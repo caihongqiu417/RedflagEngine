@@ -1,0 +1,133 @@
+[
+  {
+    "view": "spawn-original-normal",
+    "old_surface": 861962,
+    "new_surface": 861958,
+    "common_pixels": 861942,
+    "changed_visible_pixels": 36,
+    "final_rgb_mae": 2.5007808208465576,
+    "normal_angle_degrees_median": 5.210376739501953,
+    "normal_angle_degrees_p95": 16.409860610961914,
+    "changed_albedo_pixels": 0,
+    "clip_matrix_max_difference": 0.0,
+    "crop": [
+      990,
+      900,
+      1410,
+      1070
+    ],
+    "bounds": [
+      0,
+      429,
+      1920,
+      1080
+    ]
+  },
+  {
+    "view": "spawn-normal-current",
+    "old_surface": 861958,
+    "new_surface": 861414,
+    "common_pixels": 860200,
+    "changed_visible_pixels": 2972,
+    "final_rgb_mae": 4.103428840637207,
+    "normal_angle_degrees_median": 7.632793426513672,
+    "normal_angle_degrees_p95": 22.512548446655273,
+    "changed_albedo_pixels": 755547,
+    "clip_matrix_max_difference": 0.0,
+    "crop": [
+      990,
+      900,
+      1410,
+      1070
+    ],
+    "bounds": [
+      0,
+      429,
+      1920,
+      1080
+    ]
+  },
+  {
+    "view": "gravel-normal-current",
+    "old_surface": 1273787,
+    "new_surface": 1272803,
+    "common_pixels": 1270400,
+    "changed_visible_pixels": 5790,
+    "final_rgb_mae": 5.880404949188232,
+    "normal_angle_degrees_median": 8.950485229492188,
+    "normal_angle_degrees_p95": 23.728168487548828,
+    "changed_albedo_pixels": 1218582,
+    "clip_matrix_max_difference": 0.0,
+    "crop": [
+      910,
+      810,
+      1450,
+      1050
+    ],
+    "bounds": [
+      0,
+      0,
+      1920,
+      1080
+    ]
+  },
+  {
+    "view": "rack-original-current",
+    "old_surface": 244246,
+    "new_surface": 243739,
+    "common_pixels": 243739,
+    "changed_visible_pixels": 507,
+    "final_rgb_mae": 5.471502780914307,
+    "normal_angle_degrees_median": 0.33043068647384644,
+    "normal_angle_degrees_p95": 2.624504327774048,
+    "changed_albedo_pixels": 158396,
+    "clip_matrix_max_difference": 0.0,
+    "crop": [
+      607,
+      180,
+      1209,
+      1080
+    ],
+    "bounds": [
+      607,
+      180,
+      1209,
+      1080
+    ]
+  },
+  {
+    "view": "rim-original-current",
+    "old_surface": 50724,
+    "new_surface": 50853,
+    "common_pixels": 50722,
+    "changed_visible_pixels": 133,
+    "final_rgb_mae": 0.8762667179107666,
+    "normal_angle_degrees_median": 0.11364090442657471,
+    "normal_angle_degrees_p95": 1.6381422281265259,
+    "changed_albedo_pixels": 1712,
+    "clip_matrix_max_difference": 0.0,
+    "crop": [
+      798,
+      527,
+      1124,
+      857
+    ],
+    "bounds": [
+      798,
+      527,
+      1124,
+      857
+    ],
+    "indexed_vertices": 49320,
+    "pixel_shift_p50_p95_max": [
+      0.03516676657934569,
+      0.19487917640615396,
+      0.5108557981039998
+    ],
+    "displacement_mm_p50_p95_max": [
+      0.05164413593982588,
+      0.3452956799251284,
+      0.8212183307082311
+    ]
+  }
+]

@@ -61,7 +61,7 @@ namespace Redflag
 	{
 		std::vector<GIModel> Models;
 		std::vector<glm::vec4> Glass;
-		std::vector<std::tuple<Ref<SampledTexture>, bool, Ref<SampledTexture>, int, float>> Surfaces;
+		std::vector<std::tuple<Ref<SampledTexture>, bool, Ref<SampledTexture>, int, glm::vec2>> Surfaces;
 		std::vector<std::pair<uint64_t, float>> LODs;
 		std::vector<FoliageState> Plants;
 		bool WindMoving = false;
@@ -87,7 +87,8 @@ namespace Redflag
 			geometry.Surfaces.emplace_back(material && material->NormalMap ? material->NormalMap->GetSampledTexture() : nullptr,
 			                               material && material->DoubleSided,
 			                               material && material->HeightMap ? material->HeightMap->GetSampledTexture() : nullptr,
-			                               material ? int(material->HeightMode) : 0, material ? material->HeightScale : 0.f);
+			                               material ? int(material->HeightMode) : 0,
+			                               material ? glm::vec2(material->HeightScale, material->HeightReference) : glm::vec2(0.f));
 			input.MaterialFactors.emplace_back(material ? glm::vec2(material->Roughness, material->Metallic) : glm::vec2(.5f, 0.f));
 			if (material && material->Alpha == AlphaMode::Mask)
 			{

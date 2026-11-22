@@ -23,4 +23,5 @@ layout(push_constant) uniform ObjectData {
 
 // 高度图用两个比特选择算法，高 16 位是模型局部坐标中的高度差。
 uint heightMode() { return (u_Object.MaterialFlags >> 7u) & 3u; }
+float heightReference() { return float((u_Object.MaterialFlags >> 9u) & 127u) / 127.; }
 float heightRange() { return unpackHalf2x16(u_Object.MaterialFlags).y; }

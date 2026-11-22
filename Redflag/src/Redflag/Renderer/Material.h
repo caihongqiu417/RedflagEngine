@@ -43,6 +43,7 @@ namespace Redflag {
 		Ref<Texture2D> HeightMap;
 		HeightMapping HeightMode = HeightMapping::Off;
 		float HeightScale = .02f; // 白处与黑处的高度差，单位为模型局部坐标中的米。
+		float HeightReference = 1.f; // 顶点置换时，取到这个灰度的顶点留在原位。
 		Ref<Texture2D> NormalMap;              // 切线空间法线贴图
 		Ref<Texture2D> MetallicRoughnessMap;   // G=粗糙度, B=金属度
 		Ref<Texture2D> AOMap;                  // 环境遮蔽

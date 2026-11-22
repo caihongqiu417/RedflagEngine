@@ -1011,6 +1011,13 @@ namespace Redflag {
 		{
 			const auto texture = material->BaseColorMap ? material->BaseColorMap->GetSampledTexture() : nullptr;
 			SurfaceMaterial surface;
+			if (material->Alpha == AlphaMode::Opaque && material->HeightMap && material->HeightMode != HeightMapping::Off)
+			{
+				surface.Height = material->HeightMap->GetSampledTexture();
+				surface.HeightMode = material->HeightMode;
+				surface.HeightScale = material->HeightScale;
+				surface.HeightReference = material->HeightReference;
+			}
 			surface.Normal = material->NormalMap ? material->NormalMap->GetSampledTexture() : nullptr;
 			surface.Opacity = material->AlphaMap ? material->AlphaMap->GetSampledTexture() : nullptr;
 			surface.MetallicRoughnessMap = material->MetallicRoughnessMap ? material->MetallicRoughnessMap->GetSampledTexture() : nullptr;
@@ -1019,12 +1026,6 @@ namespace Redflag {
 			surface.Blend = material->Alpha == AlphaMode::Blend;
 			surface.DoubleSided = material->DoubleSided;
 			surface.Emission = material->Emission;
-			if (material->Alpha == AlphaMode::Opaque && material->HeightMap && material->HeightMode != HeightMapping::Off)
-			{
-				surface.Height = material->HeightMap->GetSampledTexture();
-				surface.HeightMode = material->HeightMode;
-				surface.HeightScale = material->HeightScale;
-			}
 			surface.EmissiveMap = material->EmissiveMap ? material->EmissiveMap->GetSampledTexture() : nullptr;
 			surface.RefractionIndex = material->RefractionIndex;
 			surface.Thickness = material->Thickness;

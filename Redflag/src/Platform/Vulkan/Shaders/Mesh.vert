@@ -22,8 +22,8 @@ void main()
     vec4 position = vec4(a_Position, 1.0);
     if (heightMode() == 3u)
     {
-        // 白色零深度在原表面，黑色谷底向模型内部移动 HeightScale 米。
-        float depth = 1.0 - textureLod(heightMap, a_TexCoord, 0.0).r;
+        // 原面灰度对应零位移。扫描件常把未磨损处保存在中灰，顶点可向两侧移动。
+        float depth = heightReference() - textureLod(heightMap, a_TexCoord, 0.0).r;
         position.xyz -= a_Normal * (heightRange() * depth);
     }
     if (instanced) position = a_Instance * position;

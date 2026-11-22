@@ -44,9 +44,10 @@ vec3 worldNormal(vec2 uv)
         vec3 sampled = texture(u_NormalMap, uv).xyz * 2. - 1.;
         n = mat3(t, b, n) * sampled;
     }
-    // 置换用原始高度场的坡度补回三角形之间的明暗细节；有作者法线图时沿用作者的法线。
-    if (heightMode() == 1u || heightMode() == 2u || (heightMode() == 3u && (u_Object.MaterialFlags & 1u) == 0u))
-        n = bumpNormal(u_OpacityMap, uv, textureFrame(v_LocalPosition, v_LocalNormal, v_TexCoord), n, dFdx(v_TexCoord), dFdy(v_TexCoord));
+    // 同一扫描的法线图和高度图常含有相同的坡度。视差和置换优先用作者法线，避免加深两次。
+    if (heightMode() == 1u || (heightMode() >= 2u && (u_Object.MaterialFlags & 1u) == 0u))
+        n = bumpNormal(u_OpacityMap, uv, textureFrame(v_LocalPosition, v_LocalNormal, v_TexCoord),
+                       normalize(v_LocalNormal), dFdx(v_TexCoord), dFdy(v_TexCoord));
     mat3 normal = mat3(u_Object.NormalMatrix[0], u_Object.NormalMatrix[1], u_Object.NormalMatrix[2],
                        u_Object.NormalMatrix[3], u_Object.NormalMatrix[4], u_Object.NormalMatrix[5],
                        u_Object.NormalMatrix[6], u_Object.NormalMatrix[7], u_Object.NormalMatrix[8]);

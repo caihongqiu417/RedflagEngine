@@ -242,7 +242,10 @@ namespace Redflag {
         object.MaterialFlags = (surface.Normal ? 1u : 0u) | ((surface.Blend || emission) && !surface.DoubleSided ? 2u : 0u);
         if (instances) object.MaterialFlags |= 64u;
         if (heightMapped)
-            object.MaterialFlags |= (uint32_t(surface.HeightMode) << 7u) | glm::packHalf2x16({0.f, surface.HeightScale});
+        {
+            const uint32_t reference = uint32_t(std::round(glm::clamp(surface.HeightReference, 0.f, 1.f) * 127.f));
+            object.MaterialFlags |= (uint32_t(surface.HeightMode) << 7u) | (reference << 9u) | glm::packHalf2x16({0.f, surface.HeightScale});
+        }
         if (m_Data->SubpixelMask && (lighting || emission) && color.a > 0.f && surface.AlphaCutoff == .5f * color.a)
         {
             using Channel = Vulkan::Texture::Channel;

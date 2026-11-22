@@ -33,6 +33,9 @@ def main():
     packed_image.update(uri="gravel_road_orm_2k.png", mimeType="image/png")
     corrected.save(folder / packed_image["uri"])
 
+    height = files["Displacement"]["1k"]["png"]
+    (folder / Path(height["url"]).name).write_bytes(verified(height))
+
     # 源材质预览用的是球。场景用项目已有的平面，并保留作者的颜色、法线和粗糙度通道。
     plane = ROOT / "RedflagForge/assets/models/Primitives/Plane.obj"
     rows = [line.split() for line in plane.read_text().splitlines() if line and not line.startswith("#")]
@@ -58,7 +61,8 @@ def main():
     (folder/"Gravel.gltf").write_text(json.dumps(material,indent=2),encoding="utf8")
     source_info = dict(asset=asset,author="Amal Kumar",license="CC0-1.0",source="https://polyhaven.com/a/gravel_road",
                        material_md5=source["md5"],roughness_md5=roughness["md5"],
-                       geometry=plane.relative_to(ROOT).as_posix(),width_m=metres,scan_m=2)
+                       geometry=plane.relative_to(ROOT).as_posix(),width_m=metres,scan_m=2,
+                       height=dict(url=height["url"],md5=height["md5"],role="Poly Haven Displacement 1k (white highest)"))
     (folder/"sources.json").write_text(json.dumps(source_info,indent=2),encoding="utf8")
 
 

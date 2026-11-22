@@ -263,6 +263,8 @@ namespace Redflag {
         {
             out << YAML::Key << "HeightMode" << YAML::Value << HeightModes[int(material.HeightMode)];
             out << YAML::Key << "HeightScale" << YAML::Value << material.HeightScale;
+            if (material.HeightMode == HeightMapping::Displacement || material.HeightReference != 1.f)
+                out << YAML::Key << "HeightReference" << YAML::Value << material.HeightReference;
         }
         out << YAML::Key << "Metallic" << YAML::Value << material.Metallic;
         out << YAML::Key << "Roughness" << YAML::Value << material.Roughness;
@@ -307,6 +309,7 @@ namespace Redflag {
                 if (mode == HeightModes[i]) material.HeightMode = HeightMapping(i);
         }
         material.HeightScale = node["HeightScale"].as<float>(material.HeightScale);
+        material.HeightReference = node["HeightReference"].as<float>(material.HeightReference);
         if (node["Emission"]) material.Emission = node["Emission"].as<glm::vec3>();
         for (const MaterialMap& map : s_MaterialMaps)
         {

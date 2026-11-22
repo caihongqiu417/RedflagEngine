@@ -179,8 +179,19 @@ Entities:
     ModelRendererComponent: {FilePath: assets/game/station/salvage/barrel_03.glb, Color: [1, 1, 1, 1]}
   - Entity: 1215
     TagComponent: {Tag: 备用轮毂}
-    TransformComponent: {Translation: [-5.83, 0, 4.0], Rotation: [0, -0.4, 0], Scale: [1, 1, 1]}
-    ModelRendererComponent: {FilePath: assets/game/station/salvage/rusted_wheel_rim_01.glb, Color: [1, 1, 1, 1]}
+    TransformComponent: {Translation: [-5.83, 0.178, 4.0], Rotation: [0, -0.4, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent:
+      FilePath: assets/game/station/salvage/rusted_wheel_rim_01.glb
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - ModelMaps: [BaseColorMap, NormalMap, MetallicRoughnessMap]
+          Metallic: 0
+          Roughness: 1
+          DoubleSided: true
+          HeightMap: assets/game/station/salvage/rim-detail/Height.png
+          HeightMode: Displacement
+          HeightReference: 0.522 # 扫描图中位灰度 133/255。
+          HeightScale: 0.025 # 实际灰阶 125 至 145，轮毂最大高差约 2 毫米。
   - Entity: 1216
     TagComponent: {Tag: 汽油桶}
     TransformComponent: {Translation: [-6.66, 0, 4.46], Rotation: [0, 0.26, 0], Scale: [1, 1, 1]}
@@ -196,11 +207,30 @@ Entities:
   - Entity: 1221
     TagComponent: {Tag: 工具台}
     TransformComponent: {Translation: [6.6, 0, 3.3], Rotation: [0, 1.45, 0], Scale: [1, 1, 1]}
-    ModelRendererComponent: {FilePath: assets/game/station/salvage/worn_metal_rack.glb, Color: [1, 1, 1, 1]}
+    ModelRendererComponent:
+      FilePath: assets/game/station/salvage/worn_metal_rack.glb
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - BaseColorMap: assets/game/station/salvage/rack-detail/BaseColor.jpg
+          NormalMap: assets/game/station/salvage/rack-detail/Normal.png
+          ModelMaps: [MetallicRoughnessMap]
+          Metallic: 1
+          Roughness: 1
+          DoubleSided: true
   - Entity: 1222
     TagComponent: {Tag: 砂石地面}
-    TransformComponent: {Translation: [9, -0.025, 0], Rotation: [-1.5707963, 0, 0], Scale: [100, 100, 1]}
-    ModelRendererComponent: {FilePath: assets/game/station/salvage/ground/Gravel.gltf, Color: [1, 1, 1, 1]}
+    TransformComponent: {Translation: [9, -0.025, 0], Rotation: [-1.5707963, 0, 0], Scale: [100, 100, 100]}
+    ModelRendererComponent:
+      FilePath: assets/game/station/salvage/ground/Gravel.gltf
+      Color: [1, 1, 1, 1]
+      OverrideMaterials:
+        - ModelMaps: [BaseColorMap, NormalMap, MetallicRoughnessMap]
+          Metallic: 0
+          Roughness: 1
+          DoubleSided: true
+          HeightMap: assets/game/station/salvage/ground/gravel_road_disp_1k.png
+          HeightMode: Parallax
+          HeightScale: 0.00025 # 模型放大 100 倍后，砂石最高到最低相差 2.5 厘米。
   - Entity: 1229
     TagComponent: {Tag: 场外砂石路基}
     TransformComponent: {Translation: [9, -0.525, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}

@@ -26,8 +26,9 @@
 
 \noindent\path{Redflag/src/Platform/Vulkan/Shaders/Mesh.vert}，顶点阶段的 \code{main}，下列变量名与源码相同。
 \begin{lstlisting}
-// 白色的顶点留在原地，黑色的顶点向内移动整个高度差。
-float depth = 1.0 - textureLod(heightMap, a_TexCoord, 0.0).r;
+// 示例将原表面设为白色。轮毂扫描可另外选未磨损处的灰度。
+float depth = heightReference()
+            - textureLod(heightMap, a_TexCoord, 0.0).r;
 position.xyz -= a_Normal * (heightRange() * depth);
 \end{lstlisting}
 片元阶段在 \path{Shaders/HeightSurface.glsl} 的 \code{bumpNormal} 求坡度，在 \code{reliefUV} 找视线与石面的交点。项目为正对镜头的表面选 8 层，斜看时最多 24 层。加密分层能分辨更窄的沟槽，也会增加读贴图的次数。高度为零时，绘制恢复到原材质。

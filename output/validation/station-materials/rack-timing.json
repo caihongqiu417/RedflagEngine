@@ -1,0 +1,991 @@
+{
+  "order": [
+    "rack-original",
+    "rack-current",
+    "rack-current",
+    "rack-original"
+  ],
+  "units": "microseconds",
+  "cases": {
+    "rack-original": {
+      "material": [
+        49.344,
+        620.6080000000001,
+        55.519999999999996,
+        51.232,
+        49.12,
+        43.903999999999996,
+        45.088,
+        51.968,
+        45.184,
+        46.816
+      ],
+      "sum": [
+        116112.25600000011,
+        141862.4640000002,
+        163219.45600000018,
+        138607.1680000001,
+        119310.49600000007,
+        124671.80800000014,
+        143910.11200000005,
+        175030.24000000014,
+        129653.92000000016,
+        121608.51200000016
+      ],
+      "slowest": [
+        [
+          {
+            "event": 1436,
+            "us": 61298.848000000005,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 41510.944,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3899.04,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3540.192,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 70692.38399999999,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 57878.496,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3666.7200000000003,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3467.712,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 95740.544,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 52890.528,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 4632.032,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3687.1040000000003,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 74550.08,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 51041.248,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3955.8400000000006,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3603.6800000000003,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 61128.896,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 45943.392,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3630.5280000000002,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3546.88,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 70453.12,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 42854.144,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3387.52,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3378.944,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 73863.10399999999,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 58538.72,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3450.08,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3375.3920000000003,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 110272.416,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 51914.112,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 4301.376,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3438.9440000000004,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 72628.416,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 45133.408,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3576.704,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3387.968,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1436,
+            "us": 68792.992,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1472,
+            "us": 40974.688,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1353,
+            "us": 3730.784,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1389,
+            "us": 3368.128,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ]
+      ],
+      "median_material_us": 49.232,
+      "median_sum_us": 134130.5440000001
+    },
+    "rack-current": {
+      "material": [
+        45.728,
+        45.344,
+        55.519999999999996,
+        46.72,
+        50.751999999999995,
+        46.432,
+        47.296,
+        56.480000000000004,
+        54.784000000000006,
+        58.304
+      ],
+      "sum": [
+        126843.80800000012,
+        140524.2240000001,
+        166448.47999999998,
+        125452.48000000017,
+        122702.08000000009,
+        122915.04000000026,
+        126573.21600000009,
+        168125.98400000023,
+        143880.38400000005,
+        131105.88800000015
+      ],
+      "slowest": [
+        [
+          {
+            "event": 1434,
+            "us": 68388.67199999999,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 46749.76,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3706.7200000000003,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 3428.352,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 68354.048,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 59726.432,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3652.9599999999996,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 3553.344,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 103689.12,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 45967.264,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 8304.256,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3419.168,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 64903.935999999994,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 48816.352,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 3568.352,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3381.92,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 67756.864,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 42825.28,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 3549.7599999999998,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3404.256,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 72222.84800000001,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 39312.832,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 3437.5679999999998,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3357.824,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 68252.44799999999,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 44656.768,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 4992.96,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3829.8559999999998,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 100749.088,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 54637.664000000004,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 4262.208,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3429.4719999999998,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 83272.896,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 47162.24,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 4670.624,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3442.6240000000003,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ],
+        [
+          {
+            "event": 1434,
+            "us": 76474.432,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1470,
+            "us": 41182.08,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1351,
+            "us": 4922.0160000000005,
+            "kind": "dispatch",
+            "groups": [
+              32400,
+              1,
+              1
+            ],
+            "indices": 0
+          },
+          {
+            "event": 1387,
+            "us": 3460.864,
+            "kind": "dispatch",
+            "groups": [
+              240,
+              135,
+              1
+            ],
+            "indices": 0
+          }
+        ]
+      ],
+      "median_material_us": 49.024,
+      "median_sum_us": 128974.84800000014
+    }
+  }
+}
