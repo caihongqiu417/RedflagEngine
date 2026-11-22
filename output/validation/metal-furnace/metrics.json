@@ -1,0 +1,17 @@
+{
+  "opengl": {
+    "rough_white_center_before": 0.3081399202346802,
+    "rough_white_center_after": 1.0,
+    "max_white_abs_error": 1.1920928955078125e-07,
+    "max_dielectric_change": 0.0,
+    "max_black_environment_output": 0.0
+  },
+  "vulkan": {
+    "rough_white_center_before": 0.3081399202346802,
+    "rough_white_center_after": 1.0,
+    "max_white_abs_error": 1.1920928955078125e-07,
+    "max_dielectric_change": 0.0,
+    "max_black_environment_output": 0.0
+  },
+  "backend_max_abs_error": 0.0001621246337890625
+}

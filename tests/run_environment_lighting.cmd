@@ -12,10 +12,12 @@ if not defined RF_VS exit /b 1
 call "%RF_VS%\VC\Auxiliary\Build\vcvars64.bat" >nul
 if errorlevel 1 exit /b 1
 if not exist "bin-int\Tests" mkdir "bin-int\Tests"
+set "testName=EnvironmentLightingTests"
+if defined RF_METAL_FURNACE set "testName=MetalFurnaceTests"
 cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE ^
  /I Redflag\vendor\stb_image /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
  /I "%VULKAN_SDK%\Include" /I Redflag\vendor\fmt\include /I Redflag\vendor\glm /I Redflag\vendor\Glad\include /I Redflag\vendor\GLFW\include ^
- tests\EnvironmentLightingTests.cpp /Fe:bin-int\Tests\EnvironmentLightingTests.exe /Fo:bin-int\Tests\EnvironmentLightingTests.obj ^
+ tests\%testName%.cpp /Fe:bin-int\Tests\%testName%.exe /Fo:bin-int\Tests\%testName%.obj ^
  /link bin\Debug-windows-x86_64\Redflag\Redflag.lib bin\Debug-windows-x86_64\GLFW\GLFW.lib ^
  bin\Debug-windows-x86_64\Glad\Glad.lib /LIBPATH:"%VULKAN_SDK%\Lib" Redflag\vendor\assimp\bin\Debug-windows-x86_64\assimp\assimp.lib advapi32.lib vulkan-1.lib opengl32.lib user32.lib gdi32.lib shell32.lib ^
  /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCPMTD
@@ -28,5 +30,5 @@ if exist "%~2" (
     set "VK_ADD_LAYER_PATH=%~dp2"
     set "VK_INSTANCE_LAYERS=VK_LAYER_RENDERDOC_Capture"
 )
-bin-int\Tests\EnvironmentLightingTests.exe %*
+bin-int\Tests\%testName%.exe %*
 exit /b %errorlevel%

@@ -117,10 +117,37 @@ Redflag 的 \code{IntegrateBRDF} 将 $a,b$ 写入红、绿通道。着色时项�
 vec3 R = reflect(-V, N);
 vec3 prefilteredColor = textureLod(u_PrefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
 vec2 brdf = texture(u_BRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-vec3 specularIBL = prefilteredColor * (kS * brdf.x + brdf.y);
+vec3 reflection = kS * brdf.x + brdf.y;
 \end{lstlisting}
 \loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（节选）}
 系数 4 来自五层反射图，层号从 0 到 4。粗糙度为 0.5 时取第 2 层。最后按 \code{ambient = (kD * diffuseIBL + specularIBL) * ao} 合成；这里把遮蔽同时乘到漫反射和镜面项，是项目采用的近似。\source{https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf}{Brian Karis，SIGGRAPH 2013 课程笔记，第 5--7 页}
+
+
+\clearpage
+\subsection{粗糙金属的环境反射}
+把金属球放进四周同样明亮的房间。假设光源的线性亮度是 1，球面也不吸收任何光，那么无论球面如何打磨，最终看到的亮度都应是 1。这种测试环境叫白炉（white furnace）。在下图左半，第一排最右端的球却明显变暗。前面的计算只追踪光在一块微小表面上反射之后直接离开。表面越粗糙，反射光越容易先撞上旁边的表面。这部分光有机会经过几次反射后离开。
+
+\begin{figure}[H]\centering
+{\small\makebox[.43\linewidth]{只计算一次反射}\makebox[.43\linewidth]{补回粗糙金属的反射}}\\[3pt]
+\includegraphics[width=.86\linewidth]{../../../output/validation/metal-furnace/vulkan.png}
+\caption{Redflag Vulkan 计算着色器输出。左侧四列为旧版，右侧四列为修正后。每组从左至右的粗糙度为 0.1、0.4、0.7、1。上排是理想白金属，中排是有色金属，下排是底色为黑的塑料。上排修正后融入白色背景，表示它把收到的光都反射了回来。}
+\end{figure}
+
+仍用上一页的查询表。对白金属，$F_0=1$，查表返回的 $E=a+b$ 就是经过一次反射后已经离开的比例。在粗糙度为 1 的球面中央，我们读到了 $E=0.30814$。白金属应该完整反射，所以还要补回 $1-E$。有色金属每次反射都会吸收一部分光，并且三个颜色通道的吸收不同。Turquin 的近似让每个通道按自身的 $F_0$ 补偿。写 $m$ 为材质的金属度，$S=k_Sa+b$ 为原反射颜色，Redflag 作用于环境倒影的计算为
+\[
+  S' = S + mF_0\bigl(S/E-S\bigr).
+\]
+取 $m=F_0=1$ 得 $S'=1$；取 $m=0$ 得 $S'=S$。有色金属这一排取 $F_0=(0.95,0.55,0.20)$，最粗糙球的中心由 $(0.293,0.169,0.062)$ 变为 $(0.917,0.379,0.089)$，看起来仍保留金属自身的颜色。这个近似沿用原反射图层，因此不会产生环境图本身没有的倒影。
+
+\begin{lstlisting}
+// 两个通道相加，得到同样粗糙的白金属经过一次反射后返回的比例。
+float singleBounce = brdf.x + brdf.y;
+if (singleBounce > 0.0)
+    reflection += metallic * F0 * (reflection / singleBounce - reflection);
+vec3 specularIBL = prefilteredColor * reflection;
+\end{lstlisting}
+\loc{RedflagForge/assets/shaders/Renderer3D_Mesh.glsl}{main（片元阶段节选）}
+Vulkan 的 \code{specularEnvironment} 使用相同的两个通道。两条路径都对准同一张表和同一片球面，白金属最大误差为 $1.2\times 10^{-7}$。将环境光调为黑色，球面上所有材质也都返回 0。\source{https://google.github.io/filament/main/filament.html}{Filament，Energy compensation 与 Pre-integration for multiscattering}
 
 \clearpage
 \subsection{全景图的接缝}

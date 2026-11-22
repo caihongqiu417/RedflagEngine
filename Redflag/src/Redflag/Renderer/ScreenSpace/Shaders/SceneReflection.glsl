@@ -67,7 +67,7 @@ bool sceneReflection(vec3 origin, vec3 direction, float distance, out vec3 incom
         vec3 ks = environmentFresnel(f0, nv, hit.n.w);
         if (useDiffuseSky != 0) incoming += (1. - ks) * diffuse * cubeLight(n, 0, diffuseSize);
 #ifndef RF_MULTI_REFLECTION
-        if (useEnvironment != 0) incoming += specularEnvironment(reflect(-v, n), nv, hit.n.w, ks);
+        if (useEnvironment != 0) incoming += specularEnvironment(reflect(-v, n), nv, hit.n.w, f0, hit.rho.w);
 #endif
     }
 #ifdef RF_MULTI_REFLECTION

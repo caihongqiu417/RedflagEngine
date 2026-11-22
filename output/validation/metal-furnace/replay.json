@@ -1,0 +1,23 @@
+{
+  "renderdoc": "1.47",
+  "api": "GraphicsAPI.Vulkan",
+  "event": 8,
+  "groups": [
+    33,
+    25,
+    1
+  ],
+  "extent": [
+    260,
+    195
+  ],
+  "color_buffer_sha256": "84c782b78c7ab8dc53a98cb47c0b403e5df7c45ff5291e2f18e8790ba40ce218",
+  "capture_sha256": "5c7173b4e2b7d0d6d7494bfd5e0afb5cae16788c05f5975505f59d73df7e614d",
+  "rough_white_center": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "matches_live_buffer": true,
+  "validation_messages": []
+}

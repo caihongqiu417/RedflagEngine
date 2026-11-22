@@ -519,7 +519,12 @@ void main()
 
         // 查表得到两个系数，决定这个观察角度下要保留多少环境反射。
         vec2 brdf = texture(u_BRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-        vec3 specularIBL = prefilteredColor * (kS * brdf.x + brdf.y);
+        vec3 reflection = kS * brdf.x + brdf.y;
+        // A+B 是理想白金属经过一次反射后返回的光量。用材质的反射率估算后续几次反射能补回多少。
+        float singleBounce = brdf.x + brdf.y;
+        if (singleBounce > 0.0)
+            reflection += metallic * F0 * (reflection / singleBounce - reflection);
+        vec3 specularIBL = prefilteredColor * reflection;
 
         ambient = (kD * diffuseIBL + specularIBL) * ao;
     }
