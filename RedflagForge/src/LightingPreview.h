@@ -8,6 +8,7 @@
 namespace Redflag
 {
 	class Scene;
+	class Mesh;
 	class VulkanContext;
 	class VulkanDraw;
 	struct SampledTexture;
@@ -63,6 +64,7 @@ namespace Redflag
 		std::vector<std::pair<Ref<SampledTexture>, bool>> m_SurfaceSettings;
 		std::vector<std::pair<uint64_t, float>> m_LODSettings;
 		std::vector<glm::mat4> m_Bones;
+		std::vector<Ref<Mesh>> m_AnimatedMeshes;
 		Ref<ComputePipeline> m_PackSurfaces;
 		Ref<ComputePipeline> m_Display;
 		Ref<ComputePipeline> m_Combine;

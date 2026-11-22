@@ -162,13 +162,15 @@ static void CheckScene(VulkanContext& context, VulkanDraw& draw, const fs::path&
 }
 
 #include "SkeletonSceneCheck.h"
+#include "ModelAnimationSceneCheck.h"
 #include "RagdollSceneCheck.h"
 
 int main(int argc, char** argv)
 {
     const bool skeleton = argc == 4 && std::string_view(argv[3]) == "--skeleton";
     const bool ragdoll = argc == 4 && std::string_view(argv[3]) == "--ragdoll";
-    if (argc != 3 && !skeleton && !ragdoll) return 1;
+    const bool modelAnimation = argc == 4 && std::string_view(argv[3]) == "--model-animation";
+    if (argc != 3 && !skeleton && !ragdoll && !modelAnimation) return 1;
     const fs::path work = fs::absolute(argv[1]), evidence = fs::absolute(argv[2]);
     fs::create_directories(work);
     fs::create_directories(evidence.parent_path());
@@ -189,7 +191,8 @@ int main(int argc, char** argv)
         RendererAPI::SetAPI(RendererAPI::API::Vulkan);
         RenderDevice::SetCurrent(&draw);
         std::ostringstream report;
-        if (skeleton) CheckSkeletonScene(context, draw, work, report);
+        if (modelAnimation) CheckModelAnimationScene(context, draw, work, report);
+        else if (skeleton) CheckSkeletonScene(context, draw, work, report);
         else if (ragdoll) CheckRagdollScene(context, draw, work, report);
         else CheckScene(context, draw, work, report);
         RenderDevice::SetCurrent(nullptr);

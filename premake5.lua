@@ -48,6 +48,7 @@ IncludeDir["Box2D"]= "Redflag/vendor/Box2D/include"
 IncludeDir["Glad"] = "Redflag/vendor/Glad/include"
 IncludeDir["Imgui"] = "Redflag/vendor/imgui"
 IncludeDir["glm"]    = "Redflag/vendor/glm" 
+IncludeDir["cgltf"] = "Redflag/vendor/cgltf"
 IncludeDir["stb_image"]    = "Redflag/vendor/stb_image"
 IncludeDir["spdlog"] = "Redflag/vendor/spdlog/include"  
 IncludeDir["entt"]="Redflag/vendor/entt/include"
@@ -158,6 +159,7 @@ project "Redflag"
         "%{IncludeDir.Imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
+        "%{IncludeDir.cgltf}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.yaml_cpp}", 
         "%{IncludeDir.ImGuizmo}",

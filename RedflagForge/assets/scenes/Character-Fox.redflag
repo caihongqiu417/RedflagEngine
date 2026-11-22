@@ -1,0 +1,83 @@
+Scene: 狐狸
+Entities:
+  - Entity: 101
+    TagComponent:
+      Tag: 主相机
+    TransformComponent:
+      Translation: [4.2, 2.15, 2.0]
+      Rotation: [-0.28, 1.126, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFov: 0.64
+        PerspectiveNear: 0.05
+        PerspectiveFar: 25
+        OrthographicSize: 4
+        OrthographicNear: -1
+        OrthographicFar: 25
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 102
+    TagComponent:
+      Tag: 狐狸
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.021, 0.021, 0.021]
+    ModelRendererComponent:
+      ModelID: 16867848280343966198
+      FilePath: assets/models/reference/Fox/Fox.glb
+      Color: [1, 1, 1, 1]
+    ModelAnimationComponent:
+      Clip: Walk
+      Time: 0
+      Playing: true
+  - Entity: 103
+    TagComponent:
+      Tag: 地面
+    TransformComponent:
+      Translation: [0, -0.06, 0]
+      Rotation: [0, 0, 0]
+      Scale: [5, 0.12, 5]
+    MeshRendererComponent:
+      Color: [1, 1, 1, 1]
+      BaseColor: [0.19, 0.24, 0.28, 1]
+      Metallic: 0
+      Roughness: 0.9
+  - Entity: 104
+    TagComponent:
+      Tag: 主灯
+    TransformComponent:
+      Translation: [2.5, 3.6, 2.5]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.94, 0.85]
+      Intensity: 35
+      Radius: 8
+      CastShadow: false
+  - Entity: 105
+    TagComponent:
+      Tag: 补光灯
+    TransformComponent:
+      Translation: [2.5, 2.0, -3]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0.79, 0.88, 1]
+      Intensity: 20
+      Radius: 8
+      CastShadow: false
+  - Entity: 106
+    TagComponent:
+      Tag: 轮廓灯
+    TransformComponent:
+      Translation: [-2, 3, -1]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0.86, 0.7]
+      Intensity: 12
+      Radius: 8
+      CastShadow: false

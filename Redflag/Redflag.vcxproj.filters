@@ -174,19 +174,25 @@
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Redflag\Animation\SkeletonAnimation.h">
-      <Filter>src\Redflag\Animation</Filter>
-    </ClInclude>
     <ClInclude Include="src\Redflag\Animation\AnimationClip.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Animation\CharacterController.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\ModelAnimation.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\ModelAnimationPlayer.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Animation\Ragdoll.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Animation\Skeleton.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\SkeletonAnimation.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Animation\SkinnedMesh.h">
@@ -1772,19 +1778,25 @@
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="src\Redflag\Animation\SkeletonAnimation.cpp">
-      <Filter>src\Redflag\Animation</Filter>
-    </ClCompile>
     <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\CharacterController.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\ModelAnimation.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\ModelAnimationPlayer.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Animation\Ragdoll.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\Skeleton.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\SkeletonAnimation.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\SkinnedMesh.cpp">

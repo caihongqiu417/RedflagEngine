@@ -1,5 +1,6 @@
 #include"rfpch.h"
 #include"Scene.h"
+#include "Redflag/Assets/AssetManager.h"
 
 #include"Redflag/Renderer/SceneRenderer.h"
 
@@ -124,6 +125,7 @@ namespace Redflag {
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<ModelAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<DirectionalLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PointLightComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ParticleEmitterComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -265,6 +267,11 @@ namespace Redflag {
             }
             else if (player.Playing && player.Clip)
                 player.Seek(player.Time + ts.GetSeconds());
+        });
+
+        m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](ModelRendererComponent& renderer, ModelAnimationComponent& player) {
+            if (!renderer.ModelAsset && renderer.ModelID) renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
+            player.Update(renderer.ModelAsset, ts.GetSeconds());
         });
     }
 
@@ -434,6 +441,7 @@ namespace Redflag {
         }
 
         CopyComponentIfExist<ModelRendererComponent>(newEntity, entity);
+        CopyComponentIfExist<ModelAnimationComponent>(newEntity, entity);
         if (newEntity.HasComponent<ModelRendererComponent>())
         {
             auto& mrc = newEntity.GetComponent<ModelRendererComponent>();

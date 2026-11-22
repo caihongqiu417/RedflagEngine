@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;PX_DEBUG=1;PX_CHECKED=1;RF_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\cgltf;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -110,7 +110,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\De
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\cgltf;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -147,7 +147,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Re
       <PrecompiledHeaderFile>rfpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RF_PLATFORM_WINDOWS;RF_BUILD_DLL;GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;YAML_CPP_STATIC_DEFINE;RF_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\bin-int\dependencies\PhysX\include;src\Redflag;vendor\Box2D\include;vendor\spdlog\include;vendor\GLFW\include;vendor\fmt\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\cgltf;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\assimp\include;vendor\mono\include;vendor\tinyexr;vendor\tinyexr\deps\miniz;C:\VulkanSDK\1.3.275.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -202,6 +202,8 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag.h" />
     <ClInclude Include="src\Redflag\Animation\AnimationClip.h" />
     <ClInclude Include="src\Redflag\Animation\CharacterController.h" />
+    <ClInclude Include="src\Redflag\Animation\ModelAnimation.h" />
+    <ClInclude Include="src\Redflag\Animation\ModelAnimationPlayer.h" />
     <ClInclude Include="src\Redflag\Animation\Ragdoll.h" />
     <ClInclude Include="src\Redflag\Animation\Skeleton.h" />
     <ClInclude Include="src\Redflag\Animation\SkeletonAnimation.h" />
@@ -736,6 +738,8 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp" />
     <ClCompile Include="src\Redflag\Animation\CharacterController.cpp" />
+    <ClCompile Include="src\Redflag\Animation\ModelAnimation.cpp" />
+    <ClCompile Include="src\Redflag\Animation\ModelAnimationPlayer.cpp" />
     <ClCompile Include="src\Redflag\Animation\Ragdoll.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

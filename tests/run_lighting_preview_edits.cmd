@@ -18,7 +18,9 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
 if errorlevel 1 exit /b 1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 set RF_VULKAN_VALIDATION=1
-if /i "%~1"=="--skeleton" (
+if /i "%~1"=="--model-animation" (
+    bin-int\Tests\LightingPreviewEdits.exe tmp\model-animation output\validation\character-animation\fox.csv --model-animation
+) else if /i "%~1"=="--skeleton" (
     bin-int\Tests\LightingPreviewEdits.exe tmp\skeleton-scene output\validation\character-animation\scene.csv --skeleton
 ) else if /i "%~1"=="--ragdoll" (
     bin-int\Tests\LightingPreviewEdits.exe tmp\ragdoll-scene output\validation\character-animation\physics-scene.csv --ragdoll

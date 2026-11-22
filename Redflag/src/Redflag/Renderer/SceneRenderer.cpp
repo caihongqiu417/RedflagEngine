@@ -897,7 +897,10 @@ namespace Redflag {
 				return;
 
 			const glm::mat4 world = transform.GetTransform();
-			const auto& model = *SelectModel(component, lodViewProjection * world);
+			auto* player = registry.try_get<ModelAnimationComponent>(entity);
+			if (player) player->Update(component.ModelAsset, 0.f);
+			const bool posed = player && !player->GetMeshes().empty();
+			const auto& model = posed ? *component.ModelAsset : *SelectModel(component, lodViewProjection * world);
 			const auto& parts = model.GetSubMeshes();
 			Ref<Material> fallback;
 
@@ -912,7 +915,9 @@ namespace Redflag {
 					fallback = Material::Create(component.Color);
 
 				const float instanceAlpha = material && material->Alpha == AlphaMode::Mask ? component.Color.a : 1.0f;
-				draw(part.MeshData, world * part.LocalTransform, material ? material : fallback,
+				const Ref<Mesh>& mesh = posed ? player->GetMeshes()[i] : part.MeshData;
+				const glm::mat4& local = posed ? player->GetTransform(i) : part.LocalTransform;
+				draw(mesh, world * local, material ? material : fallback,
 					static_cast<int>(entity), instanceAlpha);
 			}
 		});

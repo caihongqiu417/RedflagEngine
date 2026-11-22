@@ -26,6 +26,52 @@ static void Check(bool condition, const char* name)
     s_Failures += !condition;
 }
 
+static void CheckFoxScene()
+{
+    Ref<Scene> scene = CreateRef<Scene>();
+    scene->OnViewportResize(48,48);
+    if (!SceneSerializer(scene).Deserialize("assets/scenes/Character-Fox.redflag")) {
+        Check(false, "Open the glTF animation scene in OpenGL");
+        return;
+    }
+    Entity fox = scene->GetEntityByUUID(102);
+    ModelAnimationComponent& player = fox.GetComponent<ModelAnimationComponent>();
+    player.Playing = false;
+    const glm::mat4 view = glm::lookAt(glm::vec3(3.3f,1.6f,1.2f), glm::vec3(0,.8f,0), glm::vec3(0,1,0));
+    FramebufferSpecification spec;
+    spec.Width = 48; spec.Height = 48;
+    spec.Attachments = {FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RED_INTEGER,
+                        FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::DEPTH32F};
+    Ref<Framebuffer> target = Framebuffer::Create(spec);
+    SceneRenderer::SetMainSceneColorTarget(target->GetColorAttachmentRendererID(),48,48);
+    auto draw = [&](float seconds) {
+        player.Time = seconds;
+        scene->OnUpdateAnimations(0.f);
+        target->Bind();
+        glDepthMask(GL_TRUE);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        target->ClearAttachment(1,-1);
+        SceneRenderer::RenderRuntime(*scene, glm::perspective(.65f,1.f,.05f,25.f), glm::inverse(view));
+        std::array<int,48*48> ids;
+        glGetTextureImage(target->GetColorAttachmentRendererID(1),0,GL_RED_INTEGER,GL_INT,sizeof(ids),ids.data());
+        return ids;
+    };
+    const auto first = draw(0.f), next = draw(.2f), paused = draw(.2f);
+    int visible = 0, changed = 0;
+    const int foxID = int(static_cast<entt::entity>(fox));
+    for (size_t i = 0; i < first.size(); ++i) {
+        visible += next[i] == foxID;
+        changed += (next[i] == foxID) != (first[i] == foxID);
+    }
+    Check(visible > 0 && changed > 0 && next == paused && glGetError() == GL_NO_ERROR,
+          "OpenGL Fox skin changes the rendered silhouette and holds its paused pose");
+    std::cout << "OpenGL Fox Walk at 0.2 s: " << visible << " actor pixels; " << changed << " changed pixels\n";
+    std::ofstream("../output/validation/character-animation/fox-opengl.csv")
+        << "scene,seconds,actor_pixels,changed_pixels,paused_identical\nCharacter-Fox,0.2,"
+        << visible << ',' << changed << ',' << (paused == next) << '\n';
+    AssetManager::Unload<Model>(fox.GetComponent<ModelRendererComponent>().ModelID);
+}
+
 static void CheckGlassScene()
 {
     const char* path = "../bin-int/Tests/glass-materials.redflag";
@@ -321,6 +367,7 @@ int main(int argc, char** argv)
     SceneRenderer::GetShadowEnabled() = false;
     SceneRenderer::GetRSMSettings().Enabled = false;
     SceneRenderer::GetBloomSettings().Enabled = false;
+    CheckFoxScene();
     CheckEmission();
     {
         FramebufferSpecification spec;

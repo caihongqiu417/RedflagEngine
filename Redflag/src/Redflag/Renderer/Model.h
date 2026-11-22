@@ -20,6 +20,8 @@ struct aiTexture;
 
 namespace Redflag {
 
+	class ModelAnimation;
+
 	// 模型的每个部件保存自己的网格和材质。LocalTransform 把部件顶点从自身坐标变换到模型坐标。
 	struct SubMesh
 	{
@@ -48,6 +50,7 @@ namespace Redflag {
 		}
 
 		const std::string& GetFilePath() const { return m_FilePath; }
+		const Ref<ModelAnimation>& GetAnimation();
 
 		// ---- 模型导入 ----
 		// 导入失败返回空引用，返回对象不保留 Assimp 场景指针。
@@ -74,6 +77,8 @@ namespace Redflag {
 	private:
 		// ---- 模型数据 ----
 		std::vector<SubMesh> m_SubMeshes;
+		Ref<ModelAnimation> m_Animation;
+		bool m_ReadAnimation = false;
 		glm::vec3 m_BoundsMin{ std::numeric_limits<float>::max() };
 		glm::vec3 m_BoundsMax{ std::numeric_limits<float>::lowest() };
 		std::string          m_FilePath;

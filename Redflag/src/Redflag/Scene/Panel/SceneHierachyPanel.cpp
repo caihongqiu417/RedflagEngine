@@ -1103,6 +1103,7 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
+            AddComponentItem<ModelAnimationComponent>(entity, "模型动画");
             AddComponentItem<SkeletonAnimationComponent>(entity, "骨骼动画");
             if (!entity.HasComponent<RigidBody2DComponent>() && !entity.HasComponent<RigidBody3DComponent>())
                 AddComponentItem<RagdollComponent>(entity, "物理角色（双腿）");
@@ -1645,6 +1646,33 @@ namespace Redflag {
             });
 
         // Model Renderer
+        DrawComponent<ModelAnimationComponent>("模型动画", entity, [entity](ModelAnimationComponent& player) mutable
+        {
+            if (!entity.HasComponent<ModelRendererComponent>()) {
+                ImGui::TextWrapped("请先添加“模型绘制”，并选择带动作的 glTF 模型。");
+                return;
+            }
+            ModelRendererComponent& renderer = entity.GetComponent<ModelRendererComponent>();
+            player.Update(renderer.ModelAsset, 0.f);
+            if (!player.GetAnimation()) {
+                ImGui::TextWrapped("此模型没有可用的 glTF 节点或骨骼动作。");
+                return;
+            }
+            const auto& clips = player.GetAnimation()->GetClips();
+            if (ImGui::BeginCombo("动作", player.Clip.c_str())) {
+                for (const auto& clip : clips)
+                    if (ImGui::Selectable(clip.Name.c_str(), player.Clip == clip.Name)) {
+                        player.Clip = clip.Name;
+                        player.Time = 0.f;
+                    }
+                ImGui::EndCombo();
+            }
+            ImGui::Checkbox("播放", &player.Playing);
+            for (const auto& clip : clips)
+                if (clip.Name == player.Clip && ImGui::SliderFloat("时间（秒）", &player.Time, 0.f, clip.Duration, "%.3f"))
+                    player.Playing = false;
+        });
+
         DrawComponent<ModelRendererComponent>("模型绘制", entity, [](auto& component)
             {
                 // 文件路径（只读显示）

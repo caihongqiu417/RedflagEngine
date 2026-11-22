@@ -124,6 +124,8 @@ namespace Redflag
 		registry.view<TransformComponent, ModelRendererComponent>().each([&](auto entity, auto& transform, auto& model) {
 			if (!model.ModelAsset && model.ModelID) model.ModelAsset = AssetManager::Load<Model>(model.ModelID);
 			if (!model.ModelAsset) return;
+			// 烘焙静态房间时跳过会动的模型。误加播放组件的静态模型仍然参与遮挡。
+			if (registry.all_of<ModelAnimationComponent>(entity) && model.ModelAsset->GetAnimation()) return;
 			if (!model.LODs.empty()) geometry.LODs.emplace_back(static_cast<uint64_t>(entity), 0.f);
 			for (const auto& lod : model.LODs) geometry.LODs.emplace_back(lod.ModelID, lod.ScreenHeight);
 			GIModel input{ model.ModelAsset->GetFilePath(), transform.GetTransform(), glm::vec3(model.Color) };
@@ -242,7 +244,20 @@ namespace Redflag
 			});
 		for (entt::entity entity : scene.GetRegistry().view<RagdollComponent>())
 			for (const glm::mat4& limb : scene.GetRagdollMeshes(entity)) bones.push_back(limb);
-		if (bones != m_Bones) { m_Bones = std::move(bones); ResetHistory(); }
+		std::vector<Ref<Mesh>> meshes;
+		scene.GetRegistry().view<TransformComponent, ModelAnimationComponent>().each(
+			[&](const TransformComponent& transform, const ModelAnimationComponent& player) {
+				const auto& posed = player.GetMeshes();
+				for (size_t i = 0; i < posed.size(); ++i) {
+					meshes.push_back(posed[i]);
+					bones.push_back(transform.GetTransform() * player.GetTransform(i));
+				}
+			});
+		if (meshes != m_AnimatedMeshes || bones != m_Bones) {
+			m_AnimatedMeshes = std::move(meshes);
+			m_Bones = std::move(bones);
+			ResetHistory();
+		}
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
 		if (geometry.Glass != m_GlassSettings) { m_GlassSettings = std::move(geometry.Glass); ResetHistory(); }

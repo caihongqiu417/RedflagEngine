@@ -469,6 +469,14 @@ namespace Redflag {
             out << YAML::EndMap;
         }
 
+        if (entity.HasComponent<ModelAnimationComponent>())
+        {
+            const ModelAnimationComponent& player = entity.GetComponent<ModelAnimationComponent>();
+            out << YAML::Key << "ModelAnimationComponent" << YAML::Value << YAML::BeginMap
+                << YAML::Key << "Clip" << YAML::Value << player.Clip << YAML::Key << "Time" << YAML::Value << player.Time
+                << YAML::Key << "Playing" << YAML::Value << player.Playing << YAML::EndMap;
+        }
+
         if (entity.HasComponent<ModelRendererComponent>())
         {
             out << YAML::Key << "ModelRendererComponent";
@@ -920,6 +928,14 @@ namespace Redflag {
                     // 旧场景只保存网格颜色。先用它创建材质，文件里另有 BaseColor 时再读入材质自己的颜色。
                     mr.Mat = Material::Create(mr.Color);
                     ReadMaterial(mrNode, *mr.Mat);
+                }
+
+                if (const YAML::Node animation = entity["ModelAnimationComponent"])
+                {
+                    ModelAnimationComponent& player = deserializedEntity.AddComponent<ModelAnimationComponent>();
+                    player.Clip = animation["Clip"].as<std::string>("");
+                    player.Time = animation["Time"].as<float>(0.f);
+                    player.Playing = animation["Playing"].as<bool>(true);
                 }
 
                 // ModelRendererComponent

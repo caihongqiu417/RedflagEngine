@@ -1,0 +1,5 @@
+Shading: Lit
+Direct: All point lights
+Indirect: Off
+GTAO: false
+TAA: false

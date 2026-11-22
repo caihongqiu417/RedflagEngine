@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "Model.h"
+#include "Redflag/Animation/ModelAnimation.h"
 #include "ModelNodes.h"
 #include "ModelImages.h"
 #include "ModelEmission.h"
@@ -57,6 +58,15 @@ namespace Redflag {
 			}
 		});
 		return model;
+	}
+
+	const Ref<ModelAnimation>& Model::GetAnimation()
+	{
+		if (!m_ReadAnimation) {
+			m_Animation = ModelAnimation::Load(std::filesystem::u8path(m_FilePath));
+			m_ReadAnimation = true;
+		}
+		return m_Animation;
 	}
 
 	// ---- 节点与几何 ----
