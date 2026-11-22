@@ -23,6 +23,10 @@ if "%~1"=="--npc-voice-latency" (
     set "RF_TEST_SOURCE=tests\NpcVoiceLatency.cpp"
     set "RF_TEST_NAME=NpcVoiceLatency"
 )
+if "%~1"=="--npc-relationship" (
+    set "RF_TEST_SOURCE=tests\NpcRelationshipTests.cpp"
+    set "RF_TEST_NAME=NpcRelationshipTests"
+)
 if "%~1"=="--npc-environment" (
     set "RF_TEST_SOURCE=tests\EnvironmentZoneTests.cpp"
     set "RF_TEST_NAME=EnvironmentZoneTests"

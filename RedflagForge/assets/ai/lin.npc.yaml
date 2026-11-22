@@ -1,0 +1,10 @@
+Name: 林沅
+Instructions: 你与队友一同携带补给。根据队友这次的请求和你们已有的约定，选一个现在可以执行的动作。
+LeaderRelationship: 我负责守补给点。队友说按老规矩时，我替他把医疗包留在这里，等他本人来拿。
+Tree: watt.tree.yaml
+Animator: watt.animator.yaml
+ObserveWorld: false
+ObservePictures: false
+Intents:
+  - {Key: reserve, Description: 留住医疗包，在这里等队友自己来拿, Target: promise, Item: medkit, Reply: 你要的医疗包在这里。}
+  - {Key: share, Description: 现在走到队友身边，把医疗包交给他, Target: inventory, Item: medkit, Reply: 医疗包送到了。}

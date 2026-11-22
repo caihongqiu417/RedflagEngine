@@ -1,0 +1,73 @@
+{
+  "prompt": "按我们的老规矩处理这份医疗包。",
+  "baseline": [
+    {
+      "file": "lin.npc.yaml",
+      "submitted": true,
+      "choice": "reserve",
+      "first_action": "wait",
+      "completed": "reserve",
+      "npc_z_after_choice_m": 0.0,
+      "npc_z_at_transfer_m": 0.0,
+      "teammate_medkits": 1
+    },
+    {
+      "file": "shen.npc.yaml",
+      "submitted": true,
+      "choice": "share",
+      "first_action": "walk",
+      "completed": "share",
+      "npc_z_after_choice_m": 0.0333333,
+      "npc_z_at_transfer_m": 2.0,
+      "teammate_medkits": 1
+    },
+    {
+      "file": "shen.npc.yaml",
+      "submitted": false,
+      "choice": "",
+      "first_action": "",
+      "completed": "",
+      "npc_z_after_choice_m": 0.0,
+      "npc_z_at_transfer_m": 0.0,
+      "teammate_medkits": 0
+    }
+  ],
+  "swapped": [
+    {
+      "file": "lin.npc.yaml",
+      "submitted": true,
+      "choice": "share",
+      "first_action": "walk",
+      "completed": "share",
+      "npc_z_after_choice_m": 0.0333333,
+      "npc_z_at_transfer_m": 2.0,
+      "teammate_medkits": 1
+    },
+    {
+      "file": "shen.npc.yaml",
+      "submitted": true,
+      "choice": "reserve",
+      "first_action": "wait",
+      "completed": "reserve",
+      "npc_z_after_choice_m": 0.0,
+      "npc_z_at_transfer_m": 0.0,
+      "teammate_medkits": 1
+    },
+    {
+      "file": "shen.npc.yaml",
+      "submitted": false,
+      "choice": "",
+      "first_action": "",
+      "completed": "",
+      "npc_z_after_choice_m": 0.0,
+      "npc_z_at_transfer_m": 0.0,
+      "teammate_medkits": 0
+    }
+  ],
+  "agreements": {
+    "lin.npc.yaml": "我负责守补给点。队友说按老规矩时，我替他把医疗包留在这里，等他本人来拿。",
+    "shen.npc.yaml": "我负责跑腿送补给。队友说按老规矩时，我立刻带着医疗包走到他身边，亲手交给他。"
+  },
+  "model": "Qwen3-VL-2B-Instruct",
+  "host_sha256": "e96a84ba848ae469b2134dbd6fc8694165311158ac944f66f653b5b3500e01a5"
+}

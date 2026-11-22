@@ -18,6 +18,7 @@ namespace Redflag
 			NpcDefinition data;
 			data.Name = file["Name"].as<std::string>();
 			data.Instructions = file["Instructions"].as<std::string>();
+			data.LeaderRelationship = file["LeaderRelationship"].as<std::string>("");
 			data.Model = file["Model"].as<std::string>("");
 			data.Voice = file["Voice"].as<std::string>("");
 			data.IdleClip = file["IdleClip"].as<std::string>("");

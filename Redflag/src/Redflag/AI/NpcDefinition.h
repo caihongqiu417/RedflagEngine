@@ -14,6 +14,7 @@ namespace Redflag
 	struct NpcDefinition
 	{
 		std::string Name, Instructions, Model, Voice, IdleClip, WalkClip;
+		std::string LeaderRelationship; // 与场景里指定队友的约定，例如物资是留在原地还是送到对方手里。
 		float Sight = 18.0f, Speed = 2.0f, Reach = 2.0f;
 		float EyeHeight = 1.55f, EyeForward = .28f, VerticalFov = 65.f; // 眼睛相对角色原点的高度和前移量（米），以及垂直视角（度）。
 		float TurnSpeed = 270.0f; // 每秒最多转过多少度，适用于接近目标和面对队友。

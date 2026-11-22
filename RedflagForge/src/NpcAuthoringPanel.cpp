@@ -32,6 +32,7 @@ namespace Redflag
         YAML::Node data;
         data["Name"] = npc.Name;
         data["Instructions"] = npc.Instructions;
+        data["LeaderRelationship"] = npc.LeaderRelationship;
         data["Voice"] = npc.Voice;
         data["Model"] = npc.Model;
         data["IdleClip"] = npc.IdleClip;
@@ -286,6 +287,8 @@ namespace Redflag
         if (m_Draft.Model.empty())
             ImGui::TextDisabled("留空使用决策服务的默认模型。");
         Edit("音色", m_Draft.Voice);
+        ImGui::TextUnformatted("与指定队友的约定");
+        Edit("##LeaderRelationship", m_Draft.LeaderRelationship, true);
         if (m_Draft.Voice.empty())
         {
             if (m_DefaultVoice.empty())
@@ -597,6 +600,8 @@ namespace Redflag
             m_Request = m_Client.Start(std::move(request));
             m_RequestOwner = m_Path;
             m_Message = "正在等待模型选择…";
+            if (!m_Draft.LeaderRelationship.empty())
+                request.Observations.push_back({"与指定队友的约定", m_Draft.LeaderRelationship});
         }
         if (m_Request && ImGui::Button("停止试答"))
             m_Client.Cancel(m_Request);

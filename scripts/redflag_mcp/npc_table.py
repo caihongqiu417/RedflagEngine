@@ -7,6 +7,7 @@ import npc_assets
 
 
 PROFILE = {"名称": ("Name", "name"), "角色说明": ("Instructions", "instructions"), "音色": ("Voice", "voice"),
+           "与指定队友的约定": ("LeaderRelationship", "leader_relationship"),
            "决策模型": ("Model", "model"), "待机动画": ("IdleClip", "idle"), "行走动画": ("WalkClip", "walk"),
            "使用角色记忆": ("Remember", "remember"), "观察场景物体": ("ObserveWorld", "observe_world"),
            "观察距离（米）": ("Sight", "sight")}

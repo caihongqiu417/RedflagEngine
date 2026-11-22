@@ -139,6 +139,12 @@ namespace Redflag
 		if (!event.empty()) request.Observations.push_back({"event", event});
 		Entity owner = m_Scene.GetEntityByUUID(actor);
 		if (owner.HasComponent<InventoryComponent>())
+		if (!definition->LeaderRelationship.empty())
+		{
+			Entity leader = m_Scene.GetEntityByUUID(owner.GetComponent<NpcComponent>().Leader);
+			if (leader)
+				request.Observations.push_back({"与队友" + leader.GetName() + "的约定", definition->LeaderRelationship});
+		}
 		{
 			std::string stock;
 			for (const auto& item : owner.GetComponent<InventoryComponent>().Items)

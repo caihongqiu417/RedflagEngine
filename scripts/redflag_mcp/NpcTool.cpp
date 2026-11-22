@@ -10,6 +10,7 @@ static YAML::Node Inspect(const NpcDefinition& npc)
 {
     YAML::Node result;
     result["name"] = npc.Name;
+    result["leader_relationship"] = npc.LeaderRelationship;
     result["voice"] = npc.Voice;
     result["model"] = npc.Model;
     result["remember"] = npc.Remember;

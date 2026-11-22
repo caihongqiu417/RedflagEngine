@@ -125,9 +125,11 @@ def copy_npc(npc: str, new_file: str, display_name: str) -> dict[str, object]:
 
 
 @app.tool()
-def update_npc_role(npc: str, name: str | None = None, instructions: str | None = None) -> dict[str, object]:
-    """修改角色名称或角色描述，只写入这次指定的字段。"""
-    return npc_assets.update(npc, {k: v for k, v in (("Name", name), ("Instructions", instructions)) if v is not None})
+def update_npc_role(npc: str, name: str | None = None, instructions: str | None = None,
+                    leader_relationship: str | None = None) -> dict[str, object]:
+    """修改角色名称、描述或与场景指定队友的约定，只写入此次提供的字段。传空字符串可以清除旧约定。"""
+    return npc_assets.update(npc, {k: v for k, v in (("Name", name), ("Instructions", instructions),
+                            ("LeaderRelationship", leader_relationship)) if v is not None})
 
 
 @app.tool()
