@@ -4,6 +4,8 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 ## 打开编辑器
 
+第一次编译请看[Windows 构建说明](docs/Build-Windows.md)，里面列出了 Visual Studio 组件、Vulkan SDK、Mono 和生成工程的命令。
+
 在 Visual Studio 中生成 Debug / x64 的 RedflagForge，然后双击 [Open-Vulkan-Editor.cmd](Open-Vulkan-Editor.cmd)。场景视口上方有“实时效果”，可以在同一机位切换 DDGI、ReSTIR、GTAO、SSR 和 TAA。直接运行编辑器时默认使用 OpenGL。[编辑器图解手册](output/pdf/Redflag-Editor-Guide.pdf) · [常用接口源码读本](output/pdf/Redflag-Source-Guide.pdf)
 
 第一次打开 [中庭雕塑展](RedflagForge/assets/scenes/Sponza-Sculpture-Gallery.redflag)，先在仓库根目录分别运行 `python tests/fetch_sponza.py` 和 `python tests/fetch_stanford.py`。前者取得建筑和贴图，后者取得展台上的龙、兔子与佛像。回到编辑器的“项目”面板，双击场景文件就能打开布置好的展厅。[Stanford 模型与来源](output/scenes/Stanford-Scans.md) · [RHI 与 Vulkan](output/pdf/Redflag-RHI-Vulkan-Plan.pdf) · [引擎架构](output/pdf/Redflag-Architecture-LaTeX.pdf)

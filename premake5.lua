@@ -207,6 +207,8 @@ project "Redflag"
         -- 基础 Post-build (所有配置共用)
         postbuildcommands
         {
+            "{MKDIR} ../bin/" .. outputdir .. "/RedflagForge",
+            "{MKDIR} ../bin/" .. outputdir .. "/Sandbox",
             "{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/RedflagForge",
         }
     
