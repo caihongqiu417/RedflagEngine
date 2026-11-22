@@ -50,6 +50,9 @@ namespace Redflag
         internal static extern bool Input_IsMouseButtonDown(int button);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Playtest_Record(ulong entity, string kind, string text);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Input_MousePosition(out float x, out float y);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

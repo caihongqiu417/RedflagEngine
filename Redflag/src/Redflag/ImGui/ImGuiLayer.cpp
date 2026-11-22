@@ -2,10 +2,12 @@
 #include"ImGuiLayer.h"
 
 #include"imgui.h"
+#include "Redflag/Debug/PlaytestSession.h"
 #include"backends/imgui_impl_glfw.h"
 #include"backends/imgui_impl_opengl3.h"
 
 #include"Redflag/Core/Application.h"
+#include "Redflag/Core/Input.h"
 #include "Redflag/Renderer/RendererAPI.h"
 #include "VulkanImGui.h"
 
@@ -133,10 +135,11 @@ namespace Redflag {
        
     }
 
+    // ---- 游戏画面与工具窗口的输入 ----
     void ImGuiLayer::OnEvent(Event& e)
     {
        
-        if (m_BlockEvents) // 当鼠标在其他面板上时，m_BlockEvents = true
+        if (m_BlockEvents)
         {
             ImGuiIO& io = ImGui::GetIO();
             if ((e.IsInCategory(EventCategoryMouse) && io.WantCaptureMouse) ||
@@ -145,6 +148,30 @@ namespace Redflag {
                 e.SetHandled(true);
             }
         }
+    }
+
+    void ImGuiLayer::BlockEvents(bool block)
+    {
+        m_BlockEvents = block;
+        if (!m_GameMouseButtons) m_GameMouseButtons.emplace();
+
+        // 在游戏图内按下，移出后仍按住。从工具窗口开始的拖动留给该窗口。
+        for (int button = 0; button < int(m_GameMouseButtons->size()); ++button)
+        {
+            if (ImGui::IsMouseClicked(button)) (*m_GameMouseButtons)[button] = !block;
+            if (!ImGui::IsMouseDown(button)) (*m_GameMouseButtons)[button] = false;
+        }
+    }
+
+    void ImGuiLayer::ReleaseGameMouse()
+    {
+        if (m_GameMouseButtons) m_GameMouseButtons->fill(false);
+    }
+
+    bool ImGuiLayer::IsGameMouseDown(int button) const
+    {
+        if (!m_GameMouseButtons) return Input::IsMouseButtonPressed(button);
+        return button >= 0 && button < int(m_GameMouseButtons->size()) && (*m_GameMouseButtons)[button];
     }
 
     void ImGuiLayer::Begin() {
@@ -156,6 +183,8 @@ namespace Redflag {
         else
             ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();     // GLFW新帧
+        // GLFW 先提供真实设备输入。试玩工具的输入随后交给相同的按钮和窗口。
+        if (PlaytestSession* session = PlaytestSession::Active()) session->SendToGui();
         ImGui::NewFrame();             // ImGui新帧
 
         //ImGuizmo

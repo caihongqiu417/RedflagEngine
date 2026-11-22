@@ -8,6 +8,8 @@
 #include"Scene/Scene.h"
 #include "Scene/Entity.h"
 #include"Redflag/Core/Input.h"
+#include "Redflag/Core/Application.h"
+#include "Redflag/Debug/PlaytestSession.h"
 #include <imgui.h>
 
 #define RF_ADD_INTERNAL_CALL(Name) mono_add_internal_call("Redflag.InternalCalls::" #Name, reinterpret_cast<const void*>(Name))
@@ -143,23 +145,53 @@ namespace Redflag {
     {
         // 给队友打字时，W、E 等字母只进入输入框。
         if (ImGui::GetCurrentContext() && ImGui::GetIO().WantTextInput) return false;
+        PlaytestSession* session = PlaytestSession::Active();
+        if (session && session->Info().Owner=="agent") return session->Input().Held(keycode);
         return Input::IsKeyPressed(keycode);
     }
 
-    static bool Input_IsMouseButtonDown(int button) { return Input::IsMouseButtonPressed(button); }
+    static bool Input_IsMouseButtonDown(int button)
+    {
+        PlaytestSession* session = PlaytestSession::Active();
+        if (session && session->Info().Owner=="agent" && !session->Input().SentMouse(button)) return false;
+        if (!ImGui::GetCurrentContext()) return Input::IsMouseButtonPressed(button);
+        return Application::Get().GetImGuiLayer()->IsGameMouseDown(button);
+    }
 
-    static void Input_CaptureCursor(bool capture) { Input::CaptureCursor(capture); }
+    static void Input_CaptureCursor(bool capture)
+    {
+        PlaytestSession* session = PlaytestSession::Active();
+        if (!capture || !session || session->Info().Owner!="agent") Input::CaptureCursor(capture);
+    }
 
     static void Input_MousePosition(float* x, float* y)
     {
+        PlaytestSession* session = PlaytestSession::Active();
+        if (session && session->Info().Owner=="agent" && session->Input().Position()) {
+            const auto& point = *session->Input().Position();
+            *x=point.first; *y=point.second;
+            return;
+        }
         const auto [mouseX, mouseY] = Input::GetMousePosition();
         *x = mouseX;
         *y = mouseY;
     }
 
+    static void Playtest_Record(uint64_t entity, MonoString* kind, MonoString* text)
+    {
+        PlaytestSession* session = PlaytestSession::Active();
+        if (!session) return;
+        char* label=mono_string_to_utf8(kind);
+        char* message=mono_string_to_utf8(text);
+        session->Event(entity,label,message);
+        mono_free(label);
+        mono_free(message);
+    }
+
     void ScriptGlue::RegisterFunctions()
     {
         RegisterGameplayCalls();
+        RF_ADD_INTERNAL_CALL(Playtest_Record);
         RegisterNpcCalls();
         RF_ADD_INTERNAL_CALL(TerrainComponent_GetSurface);
         RF_ADD_INTERNAL_CALL(PointLightComponent_GetIntensity);

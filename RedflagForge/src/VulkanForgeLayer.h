@@ -6,6 +6,7 @@
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "LightingPreview.h"
 #include "GameViewport.h"
+#include "Redflag/Debug/PlaytestSession.h"
 #include "UI/GameHudView.h"
 #include "ProjectPanel.h"
 #include "DecisionPanel.h"
@@ -59,6 +60,7 @@ namespace Redflag
 		std::deque<std::string> m_Messages;
 		bool m_GameView = false;
 		GameViewport m_GameViewport;
+		Scope<PlaytestSession> m_Playtest;
 		GameHudView m_Hud;
 		bool m_SelectSceneTab = false;
 		bool m_SelectGameTab = false;

@@ -220,6 +220,7 @@ namespace Redflag
 		m_Scene = Scene::Copy(m_EditScene);
 		m_Playing = play;
 		if (play) {
+			m_Playtest = PlaytestSession::Open(m_ScenePath);
 			m_Scene->OnRuntimeStart();
 			m_SelectGameTab = true;
 		} else {
@@ -238,6 +239,7 @@ namespace Redflag
 		m_Companions.Stop();
 		if (m_Playing) m_Scene->OnRuntimeStop();
 		else m_Scene->OnSimulationStop();
+		m_Playtest.reset();
 		m_Playing = false;
 		m_Scene = std::move(m_EditScene);
 		m_Hierarchy.SetContext(m_Scene);
@@ -251,8 +253,10 @@ namespace Redflag
 	void VulkanForgeLayer::OnUpdate(Timestep ts)
 	{
 		if (m_Playing) {
+			if (m_Playtest) m_Playtest->BeginFrame(ts.GetSeconds());
 			auto hud = m_Scene->GetRegistry().view<GameHud>();
 			if (hud.empty() || !hud.get<GameHud>(hud.front()).Finished) m_Scene->UpdateGame(ts);
+			if (m_Playtest) m_Playtest->RecordScene(*m_Scene);
 		}
 		else if (m_EditScene)
 		{
@@ -518,7 +522,9 @@ namespace Redflag
 		ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 		if (m_Standalone)
 		{
-			flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings;
+			// 游戏画面始终在工具窗口下面。点回游戏后，队友通讯仍能接收下一次点击。
+			flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking |
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
 			const ImVec2 window = ImGui::GetMainViewport()->WorkSize;
 			const ImVec2 margin = m_GameViewport.Fit(window, ImGui::GetIO().DisplayFramebufferScale, true).Offset;
 			// 场景铺满窗口时省去被它盖住的底色。留有黑边的窗口继续按主题绘制。

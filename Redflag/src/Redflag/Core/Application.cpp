@@ -1,4 +1,5 @@
 #include "rfpch.h"
+#include "Redflag/Debug/PlaytestSession.h"
 #include "Application.h"
 #include "Redflag/Core/Log.h"
 
@@ -90,6 +91,7 @@ namespace Redflag
 
 	void Application::OnEvent(Event& e)
 	{
+		if (PlaytestSession* session=PlaytestSession::Active()) session->HumanInput(e);
 		RF_PROFILE_FUNCTION();
 
 		EventDispatcher dispatcher(e);

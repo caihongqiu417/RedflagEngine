@@ -38,7 +38,9 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--exe", type=Path,default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
-    exe = parser.parse_args().exe.resolve(strict=True)
+    parser.add_argument("--playtest", action="store_true",help="两轮 F6 写入同一份试玩记录，核对帧号和接管代数")
+    options=parser.parse_args()
+    exe = options.exe.resolve(strict=True)
     ctypes.windll.user32.SetProcessDPIAware()
     work = Path(tempfile.mkdtemp(prefix="game-play-",dir=ROOT/"tmp"))
     scripts = work/"Resources/Scripts"
@@ -71,6 +73,11 @@ def main():
     info = win32process.STARTUPINFO()
     info.lpDesktop = "WinSta0\\"+name
     env = dict(os.environ,RF_VULKAN_VALIDATION="1")
+    session=work/"captures/playtests/f6"
+    if options.playtest:
+        session.mkdir(parents=True)
+        (session/"session.json").write_text(json.dumps({"scene":str(sample),"intent":"双轮 F6 播放"}),encoding="utf8")
+        env["REDFLAG_PLAYTEST"]=str(session)
     args = subprocess.list2cmdline([str(exe),"--vulkan","--scene",str(sample)])
     process,thread,pid,_ = win32process.CreateProcess(None,args,None,None,False,win32con.CREATE_NO_WINDOW,env,str(work),info)
     thread.Close()
@@ -125,6 +132,14 @@ def main():
     shutil.copy2(saved,out/"lifecycle.csv")
     report = dict(exe_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),scene_saved_unchanged=True,
                   play_cycles=2,stop_via=["F6","window close"],independent_movement=True,physics_simulation_ran_scripts=False)
+    if options.playtest:
+        trace=[json.loads(line) for line in (session/"frames.jsonl").read_bytes().splitlines()]
+        starts=[row for row in trace if any(e["kind"]=="play" and e["text"]=="start" for e in row["events"])]
+        assert [row["seq"] for row in trace]==list(range(1,len(trace)+1))
+        assert [row["generation"] for row in starts]==[1,2]
+        stopped=json.loads((session/"status.json").read_text("utf8"))
+        assert stopped["state"]=="stopped" and stopped["seq"]==len(trace)
+        report["playtest"]=dict(frames=len(trace),starts=[row["seq"] for row in starts],status=stopped)
     (out/"report.json").write_text(json.dumps(report,indent=2)+"\n",encoding="utf8")
     print(json.dumps(report))
 

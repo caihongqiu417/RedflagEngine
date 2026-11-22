@@ -306,6 +306,12 @@
     <ClInclude Include="src\Redflag\Debug\Instrumentor.h">
       <Filter>src\Redflag\Debug</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Debug\PlaytestInput.h">
+      <Filter>src\Redflag\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Debug\PlaytestSession.h">
+      <Filter>src\Redflag\Debug</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Events\ApplicationEvent.h">
       <Filter>src\Redflag\Events</Filter>
     </ClInclude>
@@ -1960,6 +1966,12 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Core\UUID.cpp">
       <Filter>src\Redflag\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Debug\PlaytestInput.cpp">
+      <Filter>src\Redflag\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Debug\PlaytestSession.cpp">
+      <Filter>src\Redflag\Debug</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Gameplay\TerrainTraversal.cpp">
       <Filter>src\Redflag\Gameplay</Filter>

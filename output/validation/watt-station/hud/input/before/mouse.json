@@ -1,0 +1,52 @@
+{
+  "exe_sha256": "8e90fe4adf061017a2102f9e05682f554916cfcf002533f485a67c86bcefd1b8",
+  "game_script": {
+    "click_game": [
+      "down",
+      "up"
+    ],
+    "close_communications": [
+      "down",
+      "up",
+      "down",
+      "up"
+    ],
+    "drag_from_game": [
+      "down",
+      "up",
+      "down",
+      "up",
+      "down"
+    ],
+    "release_on_panel": [
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up"
+    ],
+    "drag_from_panel": [
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up",
+      "down"
+    ],
+    "click_game_again": [
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up"
+    ]
+  },
+  "communication_opened_and_closed": true
+}

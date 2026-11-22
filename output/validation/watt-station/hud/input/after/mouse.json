@@ -1,0 +1,291 @@
+{
+  "exe_sha256": "d8e7e7465a287c1d9075ebe6678c1ee3d4738aa3e3d6b818c70d27cf937858dc",
+  "game_script": {
+    "click_game": [
+      "down",
+      "up"
+    ],
+    "close_communications": [
+      "down",
+      "up"
+    ],
+    "drag_from_game": [
+      "down",
+      "up",
+      "down"
+    ],
+    "release_on_panel": [
+      "down",
+      "up",
+      "down",
+      "up"
+    ],
+    "drag_from_panel": [
+      "down",
+      "up",
+      "down",
+      "up"
+    ],
+    "click_game_again": [
+      "down",
+      "up",
+      "down",
+      "up",
+      "down",
+      "up"
+    ]
+  },
+  "communication_opened_and_closed": true,
+  "receipts": [
+    {
+      "id": 1,
+      "generation": 1,
+      "seq": 82,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 2,
+      "generation": 1,
+      "seq": 140,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 3,
+      "generation": 1,
+      "seq": 196,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 4,
+      "generation": 1,
+      "seq": 253,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 5,
+      "generation": 1,
+      "seq": 352,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 6,
+      "generation": 1,
+      "seq": 404,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 7,
+      "generation": 1,
+      "seq": 458,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 8,
+      "generation": 1,
+      "seq": 531,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 9,
+      "generation": 1,
+      "seq": 609,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 10,
+      "generation": 1,
+      "seq": 659,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 11,
+      "generation": 1,
+      "seq": 718,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 12,
+      "generation": 1,
+      "seq": 777,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 13,
+      "generation": 1,
+      "seq": 854,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 14,
+      "generation": 1,
+      "seq": 861,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 15,
+      "generation": 1,
+      "seq": 921,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 16,
+      "generation": 1,
+      "seq": 981,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 17,
+      "generation": 1,
+      "seq": 1041,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 18,
+      "generation": 1,
+      "seq": 1133,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 19,
+      "generation": 1,
+      "seq": 1190,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 20,
+      "generation": 1,
+      "seq": 1246,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 21,
+      "generation": 1,
+      "seq": 1314,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 22,
+      "generation": 1,
+      "seq": 1433,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 23,
+      "generation": 2,
+      "seq": 1470,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 24,
+      "generation": 2,
+      "seq": 1477,
+      "ok": false,
+      "reason": "stale_generation"
+    },
+    {
+      "id": 25,
+      "generation": 2,
+      "seq": 1485,
+      "ok": false,
+      "reason": "human_controls_game"
+    },
+    {
+      "id": 26,
+      "generation": 2,
+      "seq": 1576,
+      "ok": false,
+      "reason": "human_controls_game"
+    },
+    {
+      "id": 27,
+      "generation": 3,
+      "seq": 1583,
+      "ok": true,
+      "reason": ""
+    },
+    {
+      "id": 28,
+      "generation": 3,
+      "seq": 1595,
+      "ok": true,
+      "reason": ""
+    }
+  ],
+  "walking": [
+    [
+      1314,
+      "begin"
+    ],
+    [
+      1362,
+      "end"
+    ],
+    [
+      1433,
+      "begin"
+    ],
+    [
+      1470,
+      "end"
+    ],
+    [
+      1492,
+      "begin"
+    ],
+    [
+      1551,
+      "end"
+    ]
+  ],
+  "actor_first": {
+    "id": "101",
+    "name": "\u4e3b\u76f8\u673a",
+    "position": [
+      2.20000005,
+      1.14999998,
+      2.29999995
+    ]
+  },
+  "actor_last": {
+    "id": "101",
+    "name": "\u4e3b\u76f8\u673a",
+    "position": [
+      2.80769515,
+      1.14999998,
+      2.29999995
+    ]
+  },
+  "timed_release": true,
+  "stale_rejected": true,
+  "human_input": true,
+  "status": {
+    "state": "stopped",
+    "seq": 1595,
+    "seconds": 8.428548812866211,
+    "scene": "D:/Cdev/Redflag/tmp/hud-input-i_757aj6/assets/scenes/Mouse.redflag",
+    "pid": 49864
+  }
+}

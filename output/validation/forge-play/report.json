@@ -1,0 +1,25 @@
+{
+  "exe_sha256": "d8e7e7465a287c1d9075ebe6678c1ee3d4738aa3e3d6b818c70d27cf937858dc",
+  "scene_saved_unchanged": true,
+  "play_cycles": 2,
+  "stop_via": [
+    "F6",
+    "window close"
+  ],
+  "independent_movement": true,
+  "physics_simulation_ran_scripts": false,
+  "playtest": {
+    "frames": 148,
+    "starts": [
+      1,
+      93
+    ],
+    "status": {
+      "state": "stopped",
+      "seq": 148,
+      "seconds": 1.0675253868103027,
+      "scene": "D:/Cdev/Redflag/tmp/game-play-nbmf9_yt/assets/scenes/Play.redflag",
+      "pid": 47320
+    }
+  }
+}
