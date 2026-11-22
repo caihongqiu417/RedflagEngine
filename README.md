@@ -2,6 +2,8 @@
 
 Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可以打开场景、摆放模型与灯光，再用 OpenGL 或 Vulkan 查看结果。
 
+想先玩一局，可以从《潮汐维修站》开始。你操控蓝灰色机器人，瓦特是身边的赭色队友。按 T 交代一件事，观察它能否把药送到你手上，或在你留守闸口期间独自修好发电机。[单人版启动与实测](docs/Watt-Station.md)
+
 ## 打开编辑器
 
 第一次编译请看[Windows 构建说明](docs/Build-Windows.md)，里面列出了 Visual Studio 组件、Vulkan SDK、Mono 和生成工程的命令。

@@ -56,6 +56,7 @@ def main():
     parser.add_argument("--input-at", type=int, nargs=2, metavar=("X", "Y"))
     parser.add_argument("--mission", action="store_true", help="通过通讯让瓦特修理发电机，两人撤离后按 R 开新局")
     parser.add_argument("--defeat", action="store_true", help="撤离后的第二局体验倒地、任务失败和重新开局")
+    parser.add_argument("--use-720p", action="store_true", help="从玩家能双击的 Play-720p.cmd 启动")
     args = parser.parse_args()
     if args.mission and not args.input_at:
         parser.error("--mission 需要 --input-at 指定通讯窗口输入框的位置")
@@ -105,8 +106,9 @@ def main():
         command("tap", "Enter")
 
     env = dict(os.environ, REDFLAG_PLAYTEST=str(folder))
+    launcher = "Play-720p.cmd" if args.use_720p else "Play-With-Companion.cmd"
     with (project / "launcher.log").open("wb") as log:
-        launch = subprocess.Popen(["cmd", "/d", "/c", "Play-With-Companion.cmd"], cwd=project, env=env,
+        launch = subprocess.Popen(["cmd", "/d", "/c", launcher], cwd=project, env=env,
                                   stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
                                   creationflags=subprocess.CREATE_NO_WINDOW)
     hwnd = None
@@ -135,7 +137,7 @@ def main():
             screenshot("delivery")
         with args.archive.open("rb") as archive:
             archive_sha = hashlib.file_digest(archive, "sha256").hexdigest()
-        record = dict(scene=manifest["scene"], verified_files=len(manifest["files"]), client=[1920, 1080],
+        record = dict(scene=manifest["scene"], verified_files=len(manifest["files"]), client=[1920, 1080], launcher=launcher,
                       archive_sha256=archive_sha, exe_sha256=hashlib.sha256((project/"RedflagForge.exe").read_bytes()).hexdigest(),
                       before=before, after=team(), delivered=bool(args.input_at and not args.mission))
         if args.mission:

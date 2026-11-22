@@ -36,6 +36,8 @@
 
 在 Windows 10 或 11 的 64 位电脑上，把游戏包和队友离线包解压到同一个目录。打开目录，应当能同时看见 \path{Play-With-Companion.cmd} 和 \path{CompanionRuntime} 文件夹。双击启动脚本，第一次要等模型读进内存，然后会打开游戏窗口。发布版附有运行库，显卡驱动需要支持 Vulkan 1.3。中文朗读使用 Windows 已安装的中文音色。
 
+游戏默认以 1920 × 1080 绘制。如果转动镜头时画面跟不上，退出后双击 \path{Play-720p.cmd}。场景改以 1280 × 720 绘制，窗口和界面文字仍保持原来的大小，队友通讯照常使用。
+
 队友离线包里有 Qwen3-VL-2B、中文语音识别模型和配套的 Python。想用自己的模型服务时，把 \path{REDFLAG_MODEL_ENDPOINT} 设为聊天请求地址，\path{REDFLAG_MODEL_NAME} 设为模型名称。支持图片的服务可以从 \path{scripts/Start-NpcServices.ps1} 传入 \texttt{-Vision}。
 
 游戏通过本机端口 8716 与模型通讯，通过 8717 识别和播放语音。服务已经就绪时，再次开局会直接复用。如果窗口报错，\path{tmp/npc-services} 保存了具体原因。要先看看画面、试试键鼠操作，可双击 \path{Play.cmd} 进入关卡。源码工作区的入口是 \path{Open-Watt-Station.cmd}。
