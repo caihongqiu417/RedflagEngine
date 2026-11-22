@@ -8,7 +8,7 @@
 
 维修棚里的应急发电机还没通电。你可以过去按住 **E** 维修，也可以告诉瓦特「去东面的应急发电机，把它修好」，自己先去西侧闸口。要等机器供电、两人都到闸口，任务才会结算。按住 **F1** 查看键位，结束后按 **R** 重新开局。一次发布包验收记录了两人撤离，另一次交战记录了瓦特两次扶起玩家、最终任务失败和重新开局。[任务经过](../output/validation/packaged-watt/release-mission/mission.json) · [逐帧动作与输入](../output/validation/packaged-watt/release-mission/frames.jsonl)
 
-游戏默认 1920 × 1080。如果转动镜头时有明显迟滞，退出后双击 `Play-720p.cmd`，它会用 1280 × 720 绘制场景，保留原来的窗口、界面字号和队友通讯。
+游戏默认 1920 × 1080。如果转动镜头时有明显迟滞，退出后双击 `Play-720p.cmd`，它会用 1280 × 720 绘制场景，保留原来的窗口、界面字号和队友通讯。在 RTX 5070 Ti Laptop 上固定出生机位，两种模式的帧时间中位数分别为 87.77 和 58.12 毫秒。720p 转动起来更快，目前两档都达不到稳定的 30 帧。[帧时间实测](../output/validation/packaged-watt/resolution.json)
 
 ## 修改队友
 
@@ -20,7 +20,7 @@
 
 完整试玩在开发机上从新目录解包，逐项校验清单，通过游戏窗口输入中文、移动和重新开局。离线服务另用三个空闲端口启动，确认使用的是包内的模型、解释器和语音识别程序。SDK 的独立测试也做了真实的文字、图像和语音调用。第二台 Windows 电脑的安装及实际操作手感仍待试玩。[游戏运行文件](../output/validation/packaged-watt/release-runtime.json) · [独立 SDK 测试](../output/validation/runtime-ai/portable-sdk.json)
 
-对照 UE 样例时，同一条玩家指令能触发的游戏动作不同，UE 的有效样本也不足以计算完整任务的 P95。两边各自测到的时间、模型返回和失败原因保存在延迟报告里。[队友延迟与 UE 对照](../output/validation/runtime-ai/latency.md)
+输入同一句中文后，从游戏登记文字到开始派发模型请求，Redflag 的 20 次中位数为 0.128 毫秒，UE 样例的 5 次中位数为 9 毫秒。此时模型还没有作出决定。两个样例能执行的游戏动作不同，完整任务的用时仍缺少可直接比较的样本。[队友延迟与 UE 对照](../output/validation/runtime-ai/latency.md)
 
 ## 从源码重新打包
 
