@@ -58,7 +58,11 @@ namespace Redflag
             h = embedded->mHeight;
         }
         if (!bytes && !(embedded && embedded->mHeight))
+        {
+            // 编辑器仍可显示材质颜色；烘焙时用这个文件名提示用户补回贴图。
+            if (scene.UnreadableTexture.empty()) scene.UnreadableTexture = source.Path;
             return {};
+        }
 
         auto rgba = [&](uint32_t x, uint32_t y) {
             if (bytes)

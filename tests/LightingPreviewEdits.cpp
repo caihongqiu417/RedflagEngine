@@ -115,6 +115,20 @@ static void CheckScene(VulkanContext& context, VulkanDraw& draw, const fs::path&
     glm::u8vec3 original = measure("original", "已烘焙", panelID, true);
     measure("unchanged", "已烘焙", panelID, false);
 
+    // 法线贴图只改变表面接收光照的方向，即使镜头不动也要重画。再给同一张贴图换像素，重复检查。
+    Ref<Material> relief = model.ModelAsset->GetSubMeshes()[0].Mat->Clone();
+    relief->NormalMap = Texture2D::Create(1, 1);
+    glm::u8vec4 normal{255, 128, 128, 255};
+    relief->NormalMap->SetData(&normal, sizeof(normal));
+    model.OverrideMaterials = {relief};
+    measure("add_normal_map", "已烘焙", panelID, true);
+    measure("same_normal_map", "已烘焙", panelID, false);
+    normal = {128, 128, 255, 255};
+    relief->NormalMap->SetData(&normal, sizeof(normal));
+    measure("replace_normal_pixels", "已烘焙", panelID, true);
+    model.OverrideMaterials.clear();
+    measure("remove_normal_map", "已烘焙", panelID, true);
+
     // 只给当前实体换一张纯蓝底图。取消覆盖后，模型会重新使用 glTF 内的四色贴图。
     const fs::path blue = work / "blue.ppm";
     const char bluePixel[] = "P6\n1 1\n255\n\0\0\xff";

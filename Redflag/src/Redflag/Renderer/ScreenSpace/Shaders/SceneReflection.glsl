@@ -40,17 +40,17 @@ bool sceneReflection(vec3 origin, vec3 direction, float distance, out vec3 incom
     incoming = emittedAtHit;
     for (uint lamp = 0; lamp < extent.w; ++lamp)
     {
-        vec3 delta = lights[lamp].p.xyz - hit.p.xyz;
-        float r = length(delta);
-        if (r < EPS) continue;
-        vec3 l = delta / r;
+        Light light = lights[lamp];
+        vec3 l;
+        float r;
+        float radius = depthRange.z != 0. ? temporal.z : light.intensity.w;
+        float fade = sampleLight(light.p, radius, hit.p.xyz, l, r);
         float nl = dot(n, l);
-        float fade = pointAttenuation(r, depthRange.z != 0. ? temporal.z : lights[lamp].intensity.w);
         if (nl <= 0. || fade == 0.) continue;
-        if (pointInShadow(hit.p.xyz, n, l, r)) continue;
+        if (lightCastsShadow(light.p) && surfaceInShadow(hit.p.xyz, n, l, r)) continue;
         vec3 response = depthRange.z != 0. ? hit.rho.rgb * (nl / PI)
-            : reflectedPointLight(hit.rho.rgb, hit.n.w, hit.rho.w, n, v, l);
-        incoming += response * lights[lamp].intensity.rgb * fade;
+            : reflectedLight(hit.rho.rgb, hit.n.w, hit.rho.w, n, v, l);
+        incoming += response * light.intensity.rgb * fade;
     }
 
     vec3 diffuse = diffuseReflectance(hit.rho.rgb, hit.rho.w);

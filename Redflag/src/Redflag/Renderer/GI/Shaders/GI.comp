@@ -99,23 +99,21 @@ vec3 hemisphere(vec3 n)
 #include "RaySurface.glsl"
 vec3 direct(Surface s, uint id, bool diffuseOnly)
 {
-    vec3 delta = lights[id].p.xyz - s.p.xyz;
-    float r = length(delta);
-    if (r < EPS)
-        return vec3(0);
-    vec3 wi = delta / r;
+    Light light = lights[id];
+    vec3 wi;
+    float r;
+    float attenuation = sampleLight(light.p, light.intensity.w, s.p.xyz, wi, r);
     float cosine = dot(s.n.xyz, wi);
-    float attenuation = pointAttenuation(r, lights[id].intensity.w);
     if (cosine <= 0. || attenuation == 0.)
         return vec3(0);
-    if (pointInShadow(s.p.xyz, s.n.xyz, wi, r))
+    if (lightCastsShadow(light.p) && surfaceInShadow(s.p.xyz, s.n.xyz, wi, r))
         return vec3(0);
     vec3 response = diffuseReflectance(s.rho.rgb, s.rho.w) * (cosine / PI);
     if (!diffuseOnly && gridOrigin.w == 0.) {
         vec3 V = inverseVP[2].w == 0. ? normalize(-inverseVP[2].xyz) : normalize(eye.xyz - s.p.xyz);
-        response = reflectedPointLight(s.rho.rgb, s.n.w, s.rho.w, s.n.xyz, V, wi);
+        response = reflectedLight(s.rho.rgb, s.n.w, s.rho.w, s.n.xyz, V, wi);
     }
-    return response * lights[id].intensity.rgb * attenuation;
+    return response * light.intensity.rgb * attenuation;
 }
 uint lightID()
 {

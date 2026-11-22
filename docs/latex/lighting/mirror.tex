@@ -64,9 +64,9 @@ else:
 return base + incoming * weight        (*@{\footnotesize\color{quiet}镜面把入射光中的这一份反射到相机。}@*)
 \end{lstlisting}
 
-镜子照到灯牌时，交点给出灯牌上的纹理坐标。顺着坐标找到发光贴图上的条纹，把纹素从 sRGB 转为线性颜色，再乘材质的发光颜色和强度，就能分清亮条、暗条和黑边。若照到一面普通墙，还要看哪几盏点光源能照到它。此时视线从墙指向镜子，高光的方向也按这条视线计算。启用 DDGI 后，墙面还能从附近的探针取到反射来的光。编辑器在探针算完第一轮或读入烘焙文件后才使用这份数据。镜子前什么都没碰到时，已启用的镜面环境光可以提供远景。环境图按方向取色，花纹随位置改变的近处灯牌需要前面的交点才能画准。
+镜子照到灯牌时，交点给出灯牌上的纹理坐标。顺着坐标找到发光贴图上的条纹，把纹素从 sRGB 转为线性颜色，再乘材质的发光颜色和强度，就能分清亮条、暗条和黑边。若照到一面普通墙，还要看哪些点光源或方向光能照到它。此时视线从墙指向镜子，高光的方向也按这条视线计算。启用 DDGI 后，墙面还能从附近的探针取到反射来的光。编辑器在探针算完第一轮或读入烘焙文件后才使用这份数据。镜子前什么都没碰到时，已启用的镜面环境光可以提供远景。环境图按方向取色，花纹随位置改变的近处灯牌需要前面的交点才能画准。
 
-这些计算可在 \href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/SceneReflection.glsl}{\texttt{SceneReflection.glsl} 的 \texttt{sceneReflection}} 中找到。交点取三角形本身的法线，法线贴图刻出的细纹可能在倒影里变平。计算会略过整片标成透明的玻璃，也不会逐个检查叶片贴图里剪出的空隙。镜子里出现第二面镜子时，只计算第二面镜子自身的材质和照明。
+这些计算可在 \href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/SceneReflection.glsl}{\texttt{SceneReflection.glsl} 的 \texttt{sceneReflection}} 中找到。交点取三角形本身的法线，法线贴图刻出的细纹可能在倒影里变平。计算会略过标成半透明的玻璃。若叶片使用透明度裁剪，射线会在交点读取贴图的透明度，遇到孔隙便继续查找后面的物体。镜子里出现第二面镜子时，只计算第二面镜子自身的材质和照明。
 
 在 GPU 上读一次屏幕颜色很直接，沿场景查找还需读包围盒、三角形和材质。AMD 的 FidelityFX 示例也利用两种查询各自能看到的物体，并用屏幕分块和降噪控制工作量。本项目由 Vulkan 计算着色器沿包围盒查找，同一条反射光线找到屏幕颜色就结束查找。屏幕颜色来自主相机的视角，因此把带窄高光的物体转过屏幕边缘时，两种方法算出的高光仍可能不同。\href{https://gpuopen.com/manuals/fidelityfx_sdk/samples/hybrid-reflections/}{AMD 示例说明}\quad\href{https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/v1.1.4/samples/hybridreflections/shaders/Intersect.hlsl}{SDK 1.1.4 源码}\quad
 \href{https://gpuopen.com/download/GDC_Performant_Reflective_Beauty_Hybrid_Ray_Traced_Reflections_In_Far_Cry_6.pdf}{GDC 2022 讲义，第 74--77 页}

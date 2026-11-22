@@ -1,0 +1,4 @@
+scene,float_count,different_floats,max_abs_error,new_payload_sha256,ddgi_editor_draws_after_resize,ddgi_editor_cached_frames
+Light-Studio,24192,0,0.0,c4839fba798b16fa7fa37862bdc33588cc3123812ea3395c4c29cf5a88a4e991,1,10
+Mirror-Studio,24192,0,0.0,fc277fde8eca26f539a65fa24fb0491e44014f047e7a63a7ad601c198977eb5b,1,10
+RTXGI-Bathroom,24192,778,1.1920928955078125e-07,3b40102ecb660c7f2df8f7a287e8a7b1bc4d1ecccf3cb8fa33d8e4a4f408668c,1,10

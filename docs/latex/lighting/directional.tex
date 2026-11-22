@@ -1,0 +1,23 @@
+\clearpage
+\section{方向光与投影}
+
+两张图里的兔子、地面和相机都在原处。场景只留一盏方向光，阳光从兔子的左上方照来。看右图，耳朵上沿受光，腹部下面的地面落在阴影里。旧版里连耳朵也看不见。用 RenderDoc 查看时，底色和深度中都有模型，最后送给面板的光照却全是零。顺着这条线索回到编辑器，才发现它交给 Vulkan 的灯光列表只收集了点光源。
+
+\pair{validation/directional-light/bunny-before.png}{旧版，光照图全黑}{validation/directional-light/bunny-after.png}{修复后，太阳照亮兔子与地面}
+{\small\color{quiet}Redflag 正式 Vulkan 编辑器的场景面板。Stanford Bunny，$384\times246$，RenderDoc 第 24 帧。两次均关闭间接光和环境光，保留相同的 TAA 和曝光。}
+
+把台灯从一米外挪到两米外，原来落在一小块墙上的光就分散到更大的面积上。太阳离这间屋子足够远，从地面走到兔子身边，收到的阳光可以看成来自同一方向，强度也相同。描述这盏灯只需它的方向、颜色和强度。移动灯的实体不会移动阴影，转动灯才会改变阴影的朝向。\href{https://pbr-book.org/4ed/Light_Sources/Distant_Lights}{PBRT 第四版 §12.3}
+
+设地板的粗糙表面向各个方向均匀反光，能反射的比例是 $\rho$。用单位向量 $\mathbf n$ 表示地板的朝向，$\mathbf l$ 从地板指向光源。太阳正对地板时，这块面积能接住整束光；转过 $60^\circ$，它从太阳方向看去只剩一半宽，收到的光也减半。这个比例就是 $\mathbf n\cdot\mathbf l=\cos\theta$。再从地面向太阳检查一次遮挡，有模型挡住时取 $V=0$，一路通畅时取 $V=1$。若 $E$ 表示正对太阳时收到的光，漫反射送向相机的亮度为
+\[
+ L_o=\frac{\rho}{\pi}\,E\,\max(0,\mathbf n\cdot\mathbf l)\,V .
+\]
+这里除以 $\pi$，使表面向上方所有方向反射的光加起来等于它收到的光乘 $\rho$。Redflag 的直接光还会计算材质高光。算探针时，光线先找到墙面，再用上式估计墙向房间反射的光。
+
+{\small GLSL，摘自 \path{Renderer/GI/Shaders/LightSource.glsl} 的 \texttt{sampleLight}（方向光分支）。}
+\begin{lstlisting}
+toLight = source.xyz;             // CPU 已把方向换成从表面指向太阳
+distanceToLight = 3.402823466e38; // 查遍场景中沿这条射线的遮挡物
+return 1.;                       // 光照强度在场景各处相同
+\end{lstlisting}
+场景组件保存的是光线传播的方向，从表面往回找太阳时要反向。上面的距离取浮点数能表示的最大有限值，只供查找遮挡物使用。画雾时，视点到墙面之间实际有多长一段雾，就对那段距离计算透射。近墙和远墙可以受到一样强的日照，远墙前的空气却能把更多光散射进镜头。\href{run:../validation/directional/DirectionalLight_capture.rdc}{两面墙的 RenderDoc 实测帧}

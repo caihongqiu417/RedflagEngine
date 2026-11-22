@@ -1,6 +1,10 @@
 stage	DDGI_panel	rasterized_lighting_surfaces	has_lighting_image	picked_id	base_rgb8	original_bake_unchanged
 original	已烘焙	1	1	0	19,19,19	1
 unchanged	已烘焙	0	1	0	19,19,19	1
+add_normal_map	已烘焙	1	1	0	19,19,19	1
+same_normal_map	已烘焙	0	1	0	19,19,19	1
+replace_normal_pixels	已烘焙	1	1	0	19,19,19	1
+remove_normal_map	已烘焙	1	1	0	19,19,19	1
 override_blue	实时更新	1	1	0	0,0,25	1
 restore_original	已烘焙	1	1	0	19,19,19	1
 remove_last_light	实时更新	1	1	0	19,19,19	1

@@ -10,6 +10,7 @@ namespace Redflag
 	class Scene;
 	class VulkanContext;
 	class VulkanDraw;
+	struct SampledTexture;
 
 	enum class Shading { BaseColor, Direct, DDGI, ReSTIRDI, ReSTIRGI, GTAO, Clustered, Reflections, TAA, Lit };
 
@@ -36,7 +37,7 @@ namespace Redflag
 
 	private:
 		// 菜单按这个顺序列出选项，场景文件按名称保存。
-		enum DirectLight { AllPointLights, ReSTIRDirect, ClusteredLights };
+		enum DirectLight { AllLights, ReSTIRDirect, ClusteredLights };
 		enum IndirectLight { NoIndirectLight, ProbeLighting, ReSTIRIndirect, EnvironmentDiffuse };
 
 		bool UsesFrameHistory(bool directOnly) const;
@@ -56,6 +57,7 @@ namespace Redflag
 		Ref<ComputePipeline> m_CompositeTransparency;
 		Ref<ComputeResource> m_TransparentColor;
 		std::vector<glm::vec4> m_GlassSettings;
+		std::vector<std::pair<Ref<SampledTexture>, bool>> m_SurfaceSettings;
 		std::vector<std::pair<uint64_t, float>> m_LODSettings;
 		Ref<ComputePipeline> m_PackSurfaces;
 		Ref<ComputePipeline> m_Display;
@@ -79,7 +81,7 @@ namespace Redflag
 		uint32_t m_StillFrames = 0;
 		int m_Samples = 1;
 		int m_PreviewWidth = 0; // 0 表示按面板的实际像素绘制。
-		int m_DirectLight = AllPointLights;
+		int m_DirectLight = AllLights;
 		int m_IndirectLight = ProbeLighting;
 		bool m_AO = true, m_Reflections = false, m_TAA = false;
 		bool m_FogEnabled = false;

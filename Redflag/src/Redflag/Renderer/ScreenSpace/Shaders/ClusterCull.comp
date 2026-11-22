@@ -1,6 +1,7 @@
 #version 450
 #include "Screen.glsl"
 #include "Cluster.glsl"
+#include "../../GI/Shaders/LightSource.glsl"
 layout(local_size_x = 64) in;
 layout(std430, binding = 2) readonly buffer Lamps
 {
@@ -41,9 +42,14 @@ void main()
     uint bits = 0u, first = (entry % words()) * 32u;
     for (uint j = 0; j < 32u && first + j < extent.w; ++j)
     {
-        vec3 center = (view * vec4(lights[first + j].position.xyz, 1)).xyz;
+        ScreenLight light = lights[first + j];
+        if (isDirectionalLight(light.position)) {
+            bits |= 1u << j; // 方向光照向整个场景，每个灯簇都保留它。
+            continue;
+        }
+        vec3 center = (view * vec4(light.position.xyz, 1)).xyz;
         vec3 delta = center - clamp(center, lo, hi);
-        float radius = depthRange.z > 0. ? temporal.z : lights[first + j].intensity.w;
+        float radius = depthRange.z > 0. ? temporal.z : light.intensity.w;
         if (radius <= 0. || dot(delta, delta) <= radius * radius)
             bits |= 1u << j;
     }

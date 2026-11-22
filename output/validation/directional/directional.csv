@@ -1,0 +1,17 @@
+case,method,left_near_red,right_near_red,left_far_red,right_far_red,max_abs_rgb_error
+sun_shadow_off,all,0.49529,0.49529,0.49529,0.49529,3.72529e-09
+sun_shadow_off,clustered,0.49529,0.49529,0.49529,0.49529,3.72529e-09
+sun_shadow_off,restir_di,0.49529,0.49529,0.49529,0.49529,2.98023e-08
+sun_shadow_off,fog,0.0137484,0.0137484,0.0313781,0.0313781,1.67638e-08
+sun_shadow_on,all,0,0.49529,0,0.49529,3.72529e-09
+sun_shadow_on,clustered,0,0.49529,0,0.49529,3.72529e-09
+sun_shadow_on,restir_di,0,0.49529,0,0.49529,2.98023e-08
+sun_shadow_on,fog,0,0.0137484,0,0.0313781,1.67638e-08
+sun_reversed,all,0,0,0,0,0
+sun_reversed,clustered,0,0,0,0,0
+sun_reversed,restir_di,0,0,0,0,0
+sun_reversed,fog,0.174656,0.174656,0.398618,0.398618,2.23517e-07
+sun_and_point,all,0.502173,0.500398,0.49529,0.49529,5.96046e-08
+sun_and_point,clustered,0.502173,0.500398,0.49529,0.49529,5.96046e-08
+mirror_backlit,scene_reflection,0,0,0,0,0
+mirror_frontlit,scene_reflection,0.49529,0,0.49529,0,2.98023e-08

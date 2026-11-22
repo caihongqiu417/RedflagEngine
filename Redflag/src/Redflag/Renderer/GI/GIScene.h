@@ -48,6 +48,7 @@ namespace Redflag
         std::vector<GIEmission> Emissions;
         glm::vec3 Min, Max;
         std::vector<GIMask> Masks;
+        std::filesystem::path UnreadableTexture;
     };
 
     GIScene LoadGIScene(const std::vector<GIModel> &models, bool normalize);

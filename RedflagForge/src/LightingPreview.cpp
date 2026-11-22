@@ -17,8 +17,9 @@ namespace Redflag
 		"GTAO", "Clustered lights", "Stochastic reflections", "TAA", "Lit" };
 	static const char* s_Labels[] = { "材质底色", "直接光采样", "DDGI", "ReSTIR DI", "ReSTIR GI",
 		"GTAO", "分簇光照", "SSR", "TAA", "组合光照 Lit" };
-	static const char* s_DirectLabels[] = { "全部点光源", "ReSTIR DI", "分簇光照" };
+	static const char* s_DirectLabels[] = { "全部光源", "ReSTIR DI", "分簇光照" };
 	static const char* s_IndirectLabels[] = { "关闭", "DDGI", "ReSTIR GI", "环境漫反射 IBL" };
+	// 场景文件沿用旧名称，面板中的「全部光源」也包括方向光。
 	static const char* s_Direct[] = { "All point lights", "ReSTIR DI", "Clustered lights" };
 	static const char* s_Indirect[] = { "Off", "DDGI", "ReSTIR GI", "Diffuse IBL" };
 
@@ -57,6 +58,7 @@ namespace Redflag
 	{
 		std::vector<GIModel> Models;
 		std::vector<glm::vec4> Glass;
+		std::vector<std::pair<Ref<SampledTexture>, bool>> Surfaces;
 		std::vector<std::pair<uint64_t, float>> LODs;
 	};
 
@@ -76,6 +78,8 @@ namespace Redflag
 	{
 		SceneGeometry geometry;
 		auto inspect = [&](GIModel& input, size_t part, const Ref<Material>& material, const Material* original, float tintAlpha) {
+			geometry.Surfaces.emplace_back(material && material->NormalMap ? material->NormalMap->GetSampledTexture() : nullptr,
+			                               material && material->DoubleSided);
 			input.MaterialFactors.emplace_back(material ? glm::vec2(material->Roughness, material->Metallic) : glm::vec2(.5f, 0.f));
 			if (material && material->Alpha == AlphaMode::Mask)
 			{
@@ -158,6 +162,11 @@ namespace Redflag
 		scene.GetRegistry().view<TransformComponent, PointLightComponent>().each([&](auto& transform, auto& light) {
 			lights.push_back({ glm::vec4(transform.Translation, 1), glm::vec4(light.Color * light.Intensity, light.Radius) });
 		});
+		scene.GetRegistry().view<TransformComponent, DirectionalLightComponent>().each([&](auto& transform, auto& light) {
+			const glm::vec3 direction = light.WorldDirection(transform);
+			if (glm::dot(direction, direction) >= 1e-6f)
+				lights.push_back(GILight::Directional(direction, light.Color * light.Intensity, light.CastShadow));
+		});
 		return lights;
 	}
 
@@ -179,12 +188,12 @@ namespace Redflag
 			throw std::runtime_error("Cannot bake lighting without model: " + missing->FilePath);
 	}
 
-	static Scope<GlobalIllumination> CreateProbeLighting(ComputeDevice& device, const SceneGeometry& geometry,
-		Scene& scene, bool feedback)
+	static Scope<GlobalIllumination> CreateProbeLighting(ComputeDevice& device, const std::vector<GIModel>& models,
+		const std::vector<GILight>& lights, bool feedback, glm::uvec2 size = { 1, 1 })
 	{
-		// 烘焙的是房间里的光。这里用 1 × 1 的视口，避免为场景面板分配图像。
-		Scope<GlobalIllumination> lighting = CreateScope<GlobalIllumination>(device, geometry.Models, 1, 1);
-		lighting->SetLights(CollectLights(scene));
+		// 只读写烘焙文件时用 1 × 1 的视口。编辑器还要用这份光照绘制场景，传入实际画幅。
+		Scope<GlobalIllumination> lighting = CreateScope<GlobalIllumination>(device, models, size.x, size.y);
+		lighting->SetLights(lights);
 		lighting->SetProbeFeedback(feedback);
 		return lighting;
 	}
@@ -193,7 +202,7 @@ namespace Redflag
 	{
 		const SceneGeometry geometry = CollectModels(scene);
 		CheckModelsForBake(scene);
-		CreateProbeLighting(m_Device, geometry, scene, m_ProbeFeedback)->BakeProbes(m_ProbeFile);
+		CreateProbeLighting(m_Device, geometry.Models, CollectLights(scene), m_ProbeFeedback)->BakeProbes(m_ProbeFile);
 	}
 
 	VkDescriptorSet LightingPreview::Render(Scene& scene, const glm::mat4& projection, const glm::mat4& view,
@@ -203,6 +212,8 @@ namespace Redflag
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
 		if (geometry.Glass != m_GlassSettings) { m_GlassSettings = std::move(geometry.Glass); ResetHistory(); }
+		// 换了法线贴图，墙面的明暗就要重画。探针使用三角形的法线，原来的烘焙仍可用。
+		if (geometry.Surfaces != m_SurfaceSettings) { m_SurfaceSettings = std::move(geometry.Surfaces); ResetHistory(); }
 		if (geometry.Models.empty())
 		{
 			// 场景里已经没有可绘制的模型。清掉场景的光照探针，取消尚未开始的烘焙。
@@ -295,11 +306,18 @@ namespace Redflag
 			try
 			{
 				CheckModelsForBake(scene);
-				m_GI->BakeProbes(m_ProbeFile);
+				// 按下按钮后重新读磁盘上的模型和贴图。文件写好后，场景面板才换用新的光照。
+				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Device, m_Models, lights, m_ProbeFeedback, { width, height });
+				lighting->BakeProbes(m_ProbeFile);
+				m_GI = std::move(lighting);
 				m_ProbeMessage.clear();
 				ResetHistory();
 			}
-			catch (const std::exception& e) { m_ProbeMessage = e.what(); }
+			catch (const std::exception& e)
+			{
+				m_ProbeMessage = e.what();
+				RF_CORE_ERROR("Probe bake failed: {0}", m_ProbeMessage);
+			}
 		}
 		const bool cameraMoved = projection * view != m_LastViewProjection;
 		if (cameraMoved) m_StillFrames = 0;
@@ -511,10 +529,10 @@ namespace Redflag
 	{
 		bool changed = false;
 		ImGui::TextUnformatted("直接光");
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("点光源直接照到物体表面的光。");
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("光从点光源或方向光直接照到物体表面。");
 		ImGui::SetNextItemWidth(-1);
 		changed |= ImGui::Combo("##Direct", &m_DirectLight, s_DirectLabels, IM_ARRAYSIZE(s_DirectLabels));
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("选择怎样计算直接照明。全部点光源会逐盏计算。");
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("“全部光源”逐盏计算场景中的点光源和方向光。");
 		ImGui::TextUnformatted("间接光");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("光先照到其他表面，再反射到这里。");
 		ImGui::SetNextItemWidth(-1);
@@ -697,7 +715,7 @@ namespace Redflag
 		m_PreviewWidth = 0;
 		m_Supersampling = false;
 		FastNavigation = false;
-		m_DirectLight = AllPointLights;
+		m_DirectLight = AllLights;
 		m_IndirectLight = ProbeLighting;
 		m_AO = true;
 		m_Reflections = m_TAA = false;
@@ -771,7 +789,7 @@ namespace Redflag
 			const SceneGeometry geometry = CollectModels(scene);
 			if (!geometry.Models.empty() && !MissingBakeModel(scene))
 			{
-				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Device, geometry, scene, m_ProbeFeedback);
+				Scope<GlobalIllumination> lighting = CreateProbeLighting(m_Device, geometry.Models, CollectLights(scene), m_ProbeFeedback);
 				if (lighting->LoadProbes(m_ProbeFile))
 					lighting->SaveProbes(probeFile);
 			}

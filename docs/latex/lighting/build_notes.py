@@ -67,7 +67,9 @@ def generate():
             index += ["[屏幕外的倒影与遮挡](mirror.tex) · [PBRT 镜面反射](https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission) · [AMD 混合反射](https://gpuopen.com/manuals/fidelityfx_sdk/samples/hybrid-reflections/)", ""]
             index += ["[粗糙倒影的降噪](rough-reflections.tex) · [反射滤波着色器](../../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/ReflectionFilter.comp) · [HPG 2010 作者论文](https://jo.dreggn.org/home/2010_atrous.pdf) · [AMD 反射降噪说明](https://gpuopen.com/manuals/fidelityfx_sdk/techniques/denoiser/)", ""]
         sections.extend(parts)
-    index += ["## 光谱、色散、球谐函数与体素", "",
+    index += ["## 方向光与投影", "",
+              "[Stanford Bunny 的同机位截帧](directional.tex) · [PBRT 第四版 §12.3](https://pbr-book.org/4ed/Light_Sources/Distant_Lights)", "",
+              "## 光谱、色散、球谐函数与体素", "",
               "[专题与配图](light-representations.tex) · [棱镜插图的原件和许可](figures/README.md)", "",
               "[PBRT 第四版，光谱分布](https://pbr-book.org/4ed/Radiometry,_Spectra,_and_Color/Representing_Spectral_Distributions) · "
               "[PBRT 第四版，玻璃色散](https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission) · "

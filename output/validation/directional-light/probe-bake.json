@@ -1,0 +1,198 @@
+{
+  "scene": "RedflagForge/assets/scenes/Reference-StanfordBunny.redflag",
+  "directional_light": {
+    "Direction": [
+      0.449999988,
+      -0.850000024,
+      -0.550000012
+    ],
+    "Color": [
+      1,
+      1,
+      1
+    ],
+    "Intensity": 3.29999995,
+    "CastShadow": true
+  },
+  "feedback": false,
+  "executable_sha256": "9777215e2417bdd1c3ef771b53884aea4c1d9e9a17f248e295163a153208de1a",
+  "cases": {
+    "off": {
+      "scene_key": "8b033b7eedb8407d",
+      "sha256": "5644ea86869d136cce966477215c5ca099ddc908eb4554180d6cf18bb8138ca4",
+      "probe_faces": 3024,
+      "lit_faces": 0,
+      "mean_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "white": {
+      "scene_key": "d6955cf6bf5cbad8",
+      "sha256": "a9734f68a89df5bf43116e98e8fe423360241a1cf4512e0d6a9089072d6631f1",
+      "probe_faces": 3024,
+      "lit_faces": 2514,
+      "mean_rgb": [
+        0.08754704658374773,
+        0.09234115398524116,
+        0.10188113938349931
+      ],
+      "max_rgb": [
+        0.4210284650325775,
+        0.35045504570007324,
+        0.3868238031864166
+      ]
+    },
+    "double": {
+      "scene_key": "53e2898ae451c52d",
+      "sha256": "8d6332e08d6ef57645808c5530efbd958df84f77014933f360e19f59dc11fcdc",
+      "probe_faces": 3024,
+      "lit_faces": 2514,
+      "mean_rgb": [
+        0.17509409316749547,
+        0.18468230797048232,
+        0.20376227876699862
+      ],
+      "max_rgb": [
+        0.842056930065155,
+        0.7009100914001465,
+        0.7736476063728333
+      ]
+    },
+    "red": {
+      "scene_key": "0c41a81789cc67c9",
+      "sha256": "2be877a5f6a7c4d9399e18d8d6c25c41cc2df904236431ed1a437c6d97bc6d23",
+      "probe_faces": 3024,
+      "lit_faces": 2514,
+      "mean_rgb": [
+        0.08754704658374773,
+        0.0,
+        0.0
+      ],
+      "max_rgb": [
+        0.4210284650325775,
+        0.0,
+        0.0
+      ]
+    },
+    "side": {
+      "scene_key": "f707f8f391fa8951",
+      "sha256": "d906e0d03ec67b8cf2508b1b68d3ccebf64a8f12322df00c41da2378edf2a85d",
+      "probe_faces": 3024,
+      "lit_faces": 2498,
+      "mean_rgb": [
+        0.026940066412073315,
+        0.025589494205089172,
+        0.02578764464680149
+      ],
+      "max_rgb": [
+        0.44822055101394653,
+        0.3113292455673218,
+        0.20378097891807556
+      ]
+    },
+    "no_shadows": {
+      "scene_key": "f63d1a48df72231f",
+      "sha256": "1123c119b24d4b9aa38499885323decef90822e09cc44281418207f7ab93b4a1",
+      "probe_faces": 3024,
+      "lit_faces": 2626,
+      "mean_rgb": [
+        0.09967269850836534,
+        0.10281492508742786,
+        0.1114327249064753
+      ],
+      "max_rgb": [
+        0.5254262685775757,
+        0.3655463457107544,
+        0.3868238031864166
+      ]
+    }
+  },
+  "vulkan_device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "faces_dimmed_by_shadows": 1093,
+  "side_direction": [
+    1,
+    -0.18,
+    0
+  ],
+  "changed_faces_after_turn": 2570,
+  "max_rgb_error_at_double_intensity": 0.0,
+  "before_executable_sha256": "bca1c0b21c519aafaddbe473ad775a279bc7bdc9ff5832b96fba977357f5206a",
+  "before": {
+    "off": {
+      "scene_key": "facaa7d89f91711e",
+      "sha256": "5732f1e220681ee0d1b3852361e40249667250c6167b4dcf641c4a2102288307",
+      "probe_faces": 3024,
+      "lit_faces": 0,
+      "mean_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "white": {
+      "scene_key": "facaa7d89f91711e",
+      "sha256": "5732f1e220681ee0d1b3852361e40249667250c6167b4dcf641c4a2102288307",
+      "probe_faces": 3024,
+      "lit_faces": 0,
+      "mean_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "editor_copied_bake": {
+    "same": true,
+    "turned": false,
+    "before-fix": false
+  },
+  "shipped_scenes": {
+    "Light-Studio": {
+      "scene_key": "7ceb511c0184a6f7",
+      "shipped_sha256": "d3ab0ee32b27a57f4cf135dafc0bef7cdcddd2972b890b5991d34c4e576ec7f0",
+      "generated_sha256": "d3ab0ee32b27a57f4cf135dafc0bef7cdcddd2972b890b5991d34c4e576ec7f0",
+      "identical": true,
+      "before_scene_key": "6a554d0beeba43c7",
+      "before_sha256": "bafb16b5a5fc91705500fe8e202929228aa01b0108caec771567e4c582bfd8e3",
+      "before_payload_identical": true,
+      "max_rgb_difference": 0.0
+    },
+    "Mirror-Studio": {
+      "scene_key": "d1ca17501b7d805c",
+      "shipped_sha256": "ebf4506758ba1cadb515b9791f1658bedf8ead65ad52afe69dec678e6c2b2bed",
+      "generated_sha256": "ebf4506758ba1cadb515b9791f1658bedf8ead65ad52afe69dec678e6c2b2bed",
+      "identical": true,
+      "before_scene_key": "054798d4f9a75da2",
+      "before_sha256": "9071040d10e2766fa355de530c6d1570012d91dfe5d3dd5c610d542323432c66",
+      "before_payload_identical": true,
+      "max_rgb_difference": 0.0
+    },
+    "RTXGI-Bathroom": {
+      "scene_key": "779dd4eca10039fa",
+      "shipped_sha256": "bb0a93218781f3d4c0b83bc5245a40bb98321f055781ce7ac769ad3fed20b64e",
+      "generated_sha256": "bb0a93218781f3d4c0b83bc5245a40bb98321f055781ce7ac769ad3fed20b64e",
+      "identical": true,
+      "before_scene_key": "bb87a2666c3e830c",
+      "before_sha256": "26f8f8991aa105df05cf1436bacee50810122d9113206d0e4ba3b0f31b22890e",
+      "before_payload_identical": false,
+      "max_rgb_difference": 1.1920928955078125e-07
+    }
+  }
+}

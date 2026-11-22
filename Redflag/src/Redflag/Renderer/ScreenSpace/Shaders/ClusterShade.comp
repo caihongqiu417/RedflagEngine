@@ -47,21 +47,21 @@ void main()
         {
             uint lamp = j * 32u + uint(findLSB(bits));
             bits &= bits - 1u;
-            vec3 delta = lights[lamp].position.xyz - s.position.xyz;
-            float r = length(delta);
-            if (r < EPS) continue;
-            vec3 L = delta / r;
+            ScreenLight light = lights[lamp];
             bool diffuseReference = depthRange.z > 0.;
-            float attenuation = pointAttenuation(r, diffuseReference ? temporal.z : lights[lamp].intensity.w);
+            float radius = diffuseReference ? temporal.z : light.intensity.w;
+            vec3 L;
+            float r;
+            float attenuation = sampleLight(light.position, radius, s.position.xyz, L, r);
             if (dot(s.normal.xyz, L) <= 0. || attenuation == 0.) continue;
-            vec3 response;
-            if (diffuseReference)
-                response = s.albedo.rgb * max(dot(s.normal.xyz, L), 0.) / PI;
-            else {
-                if (pointInShadow(s.position.xyz, s.normal.xyz, L, r)) continue;
-                response = reflectedPointLight(s.albedo.rgb, s.normal.w, s.albedo.w, s.normal.xyz, V, L);
-            }
-            sum += response * lights[lamp].intensity.rgb * attenuation;
+
+            // 漫反射对照里的点光源只检查分簇。方向光仍按场景设置投下阴影。
+            bool checkShadow = !diffuseReference || isDirectionalLight(light.position);
+            if (checkShadow && lightCastsShadow(light.position) && surfaceInShadow(s.position.xyz, s.normal.xyz, L, r)) continue;
+
+            vec3 response = diffuseReference ? s.albedo.rgb * max(dot(s.normal.xyz, L), 0.) / PI
+                : reflectedLight(s.albedo.rgb, s.normal.w, s.albedo.w, s.normal.xyz, V, L);
+            sum += response * light.intensity.rgb * attenuation;
         }
     }
     result[i] = vec4(sum, float(candidates));

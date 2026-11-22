@@ -3,6 +3,7 @@
 #include "GIScene.h"
 #include "ProbeBake.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <array>
 #include <cstring>
 
 namespace Redflag
@@ -41,6 +42,7 @@ namespace Redflag
         static constexpr uint32_t BakeRays = 64, BakeRounds = 4;
         uint64_t GeometryKey = ProbeBake::HashStart;
         std::vector<glm::vec4> BakedProbes;
+        std::filesystem::path UnreadableTexture;
 
         Data(ComputeDevice &device, const std::vector<GIModel> &models, uint32_t width, uint32_t height, bool normalize)
             : Device(device), Bindings(14)
@@ -50,6 +52,7 @@ namespace Redflag
                 return a.EntityID < b.EntityID;
             });
             auto scene = LoadGIScene(ordered, normalize);
+            UnreadableTexture = std::move(scene.UnreadableTexture);
             const glm::uvec3 grid{12, 6, 7};
             const glm::vec3 step = glm::max(scene.Max - scene.Min, glm::vec3(.01f)) / glm::vec3(grid);
             Info.ImageSize = {width, height, 0, scene.Nodes.size()};
@@ -162,17 +165,34 @@ namespace Redflag
             std::swap(buffers[4], buffers[13]);
         }
 
-        uint64_t ProbeKey() const
+        std::vector<GILight> BakeLights() const
+        {
+            // 固定种子选中第 i 盏灯时，两次烘焙应读到同一盏灯。先按 RGB 强度排列，再用半径、位置或方向区分同色的灯。
+            auto fields = [](const GILight& light) {
+                const glm::uvec4 color = glm::floatBitsToUint(light.Intensity);
+                const glm::uvec4 position = glm::floatBitsToUint(light.Position);
+                return std::array<uint32_t, 8>{color.r, color.g, color.b, color.w, position.x, position.y, position.z, position.w};
+            };
+            std::vector<GILight> lights = Lights;
+            std::sort(lights.begin(), lights.end(), [&](const GILight& a, const GILight& b) { return fields(a) < fields(b); });
+            return lights;
+        }
+
+        uint64_t ProbeKey(const std::vector<GILight>& bakeLights) const
         {
             auto key = ProbeBake::Hash(GeometryKey, &Seed, sizeof(Seed));
             const uint32_t bake[] = { BakeRays, ProbeFeedback ? BakeRounds : 1u };
             key = ProbeBake::Hash(key, bake, sizeof(bake));
-            // 先为每盏灯的位置、颜色、强度和半径算一个校验值，再排序。单纯改变场景文件里的灯光顺序，仍能读回原来的烘焙。
-            std::vector<uint64_t> lightKeys;
-            for (const auto& light : Lights)
-                lightKeys.push_back(ProbeBake::Hash(ProbeBake::HashStart, &light, sizeof(light)));
-            std::sort(lightKeys.begin(), lightKeys.end());
-            return ProbeBake::Hash(key, lightKeys.data(), lightKeys.size() * sizeof(uint64_t));
+            if (bakeLights.size() > 1) {
+                // 旧版本按实体出现的顺序抽灯。两盏以上要重烘，只有一盏灯的场景可继续读原文件。
+                constexpr uint32_t lightOrderVersion = 2;
+                key = ProbeBake::Hash(key, &lightOrderVersion, sizeof(lightOrderVersion));
+            }
+            for (const GILight& light : bakeLights) {
+                const uint64_t lightKey = ProbeBake::Hash(ProbeBake::HashStart, &light, sizeof(light));
+                key = ProbeBake::Hash(key, &lightKey, sizeof(lightKey));
+            }
+            return key;
         }
     };
 
@@ -368,18 +388,24 @@ namespace Redflag
     void GlobalIllumination::BakeProbes(const std::filesystem::path& file)
     {
         auto& d = *m_Data;
+        if (!d.UnreadableTexture.empty())
+            throw std::runtime_error("烘焙需要的贴图无法读取：" + d.UnreadableTexture.u8string());
+
         // 烘焙时继续用旧探针照亮场景。新算出的光先单独存放，等文件写好再换上去。
         std::vector<glm::vec4> values(d.ProbeFaces() * 2);
         const size_t bytes = values.size() * sizeof(values[0]);
         std::vector<Ref<ComputeResource>> buffers = d.Bindings;
         buffers[4] = d.Device.CreateBuffer(bytes);
+        const std::vector<GILight> lights = d.BakeLights();
+        if (lights.size() > 1)
+            buffers[3] = d.Device.CreateBuffer(lights.size() * sizeof(GILight), lights.data());
 
         // 第一轮记录墙面反射的直接光和材质自身发出的光。开启多次反射后，每一轮还会算入墙面从上轮探针收到的光。
         const uint32_t rounds = d.ProbeFeedback ? Data::BakeRounds : 1u;
         for (uint32_t round = 0; round < rounds; ++round)
             d.UpdateProbes(buffers, round, Data::BakeRays, false);
         d.Device.Readback(buffers[4], values.data(), bytes);
-        ProbeBake::Save(file, d.ProbeKey(), values);
+        ProbeBake::Save(file, d.ProbeKey(lights), values);
 
         d.Bindings[4] = std::move(buffers[4]);
         d.Bindings[13] = std::move(buffers[13]);
@@ -391,7 +417,7 @@ namespace Redflag
     {
         auto& d = *m_Data;
         std::vector<glm::vec4> values(d.ProbeFaces() * 2);
-        if (!ProbeBake::Load(file, d.ProbeKey(), values))
+        if (!d.UnreadableTexture.empty() || !ProbeBake::Load(file, d.ProbeKey(d.BakeLights()), values))
             return false;
         d.Device.Upload(d.Bindings[4], values.data(), values.size() * sizeof(values[0]));
         d.BakedProbes = std::move(values);
@@ -404,7 +430,7 @@ namespace Redflag
         const auto& d = *m_Data;
         if (!HasBakedProbes())
             throw std::logic_error("Bake probes before saving them");
-        ProbeBake::Save(file, d.ProbeKey(), d.BakedProbes);
+        ProbeBake::Save(file, d.ProbeKey(d.BakeLights()), d.BakedProbes);
     }
 
     bool GlobalIllumination::HasBakedProbes() const { return !m_Data->BakedProbes.empty(); }

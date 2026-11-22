@@ -19,7 +19,7 @@ layout(push_constant) uniform Medium {
 };
 const float PI = 3.14159265359, EPS = .001;
 #include "Trace.glsl"
-#include "PointLighting.glsl"
+#include "LightSource.glsl"
 
 // 从灯到采样点的线段遇到墙，光就到不了这团雾。
 vec3 incidentLight(vec3 point, vec3 viewRay)
@@ -27,21 +27,25 @@ vec3 incidentLight(vec3 point, vec3 viewRay)
     vec3 sum = vec3(0);
     for (uint i = 0; i < imageSize.z; ++i)
     {
-        vec3 delta = lights[i].p.xyz - point;
-        float r = length(delta);
-        if (r < EPS) continue;
-        // 雾离点光源不到 0.2 个场景单位时，按 0.2 计算距离衰减中的 1/r²，避免灯旁的雾亮成白斑。
-        float attenuation = pointAttenuation(r, lights[i].intensity.w) * min(1., r*r/.04);
+        Light light = lights[i];
+        vec3 toLight;
+        float r;
+        float attenuation = sampleLight(light.p, light.intensity.w, point, toLight, r);
         if (attenuation == 0.) continue;
-        vec3 toLight = delta / r;
+
+        // 点光源到这团雾之间也会消光。方向光的强度取进入场景时的值，没有可用的灯到雾的距离。
+        if (!isDirectionalLight(light.p)) {
+            const float minDistance = .2; // 场景单位。加大后，灯心周围的雾会变暗。
+            attenuation *= min(1., r*r/(minDistance*minDistance)) * exp(-density*r);
+        }
         vec2 barycentric;
         float limit = r;
-        if (trace(point, toLight, limit, true, barycentric) >= 0) continue;
+        if (lightCastsShadow(light.p) && trace(point, toLight, limit, true, barycentric) >= 0) continue;
 
         // 光沿 -toLight 入射，沿 -viewRay 飞向镜头，正向散射时夹角接近零。
         float g = anisotropy;
         float p = (1. - g*g) / (4.*PI * pow(1. + g*g - 2.*g*dot(toLight, viewRay), 1.5));
-        sum += lights[i].intensity.rgb * exp(-density*r) * p * attenuation;
+        sum += light.intensity.rgb * p * attenuation;
     }
     return sum;
 }

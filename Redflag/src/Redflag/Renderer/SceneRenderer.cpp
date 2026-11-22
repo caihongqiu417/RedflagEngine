@@ -436,7 +436,7 @@ namespace Redflag {
 		{
 			auto& tc = view.get<TransformComponent>(e);
 			auto& dl = view.get<DirectionalLightComponent>(e);
-			dir = glm::mat3(tc.GetTransform()) * dl.Direction;
+			dir = dl.WorldDirection(tc);
 			if (glm::dot(dir, dir) < 1e-6f) continue;
 			if (!dl.CastShadow) return false;
 			dir = glm::normalize(dir);
@@ -1324,7 +1324,7 @@ namespace Redflag {
 			{
 				if (header.NumDirectionalLights >= (int)MAX_DIRECTIONAL_LIGHTS) return;
 				auto& light = dirLights[header.NumDirectionalLights];
-				glm::vec3 dir = glm::mat3(tc.GetTransform()) * dl.Direction;
+				glm::vec3 dir = dl.WorldDirection(tc);
 				if (glm::dot(dir, dir) < 1e-6f) return;
 				dir = glm::normalize(dir);
 				light.Direction = glm::vec4(dir, 0.0f);

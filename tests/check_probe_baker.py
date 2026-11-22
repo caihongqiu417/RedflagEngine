@@ -47,7 +47,7 @@ def probe_colors(data):
     return colors
 
 
-def gui_bake(exe, work, env, target):
+def gui_bake(exe, work, env, target, before_shortcut=None, error_message=None):
     """在独立 Windows 桌面向自己的窗口发送 Ctrl+Shift+B，避免影响正在使用的编辑器。"""
     name = f"RedflagProbeCheck{os.getpid()}"
     desktop = win32service.CreateDesktop(name, 0, wc.GENERIC_ALL, None)
@@ -86,6 +86,8 @@ def gui_bake(exe, work, env, target):
                 hwnd = wait_for(editor_window)
                 # 等待首次布局完成，再在“质量与参数”面板触发正常烘焙操作。
                 time.sleep(1)
+                if before_shortcut:
+                    before_shortcut()
                 keys = [(wc.VK_CONTROL, 0x1d), (wc.VK_SHIFT, 0x2a), (ord("B"), 0x30)]
                 win32gui.PostMessage(hwnd, wc.WM_SETFOCUS, 0, 0)
                 for key, scan in keys:
@@ -93,7 +95,10 @@ def gui_bake(exe, work, env, target):
                 time.sleep(.4)
                 for key, scan in reversed(keys):
                     win32gui.PostMessage(hwnd, wc.WM_KEYUP, key, 1 | (scan << 16) | (3 << 30))
-                wait_for(target.is_file)
+                if error_message:
+                    wait_for(lambda: error_message in log.read_bytes())
+                else:
+                    wait_for(target.is_file)
                 win32gui.PostMessage(hwnd, wc.WM_CLOSE, 0, 0)
                 if win32event.WaitForSingleObject(proc, 15000) != wc.WAIT_OBJECT_0:
                     raise TimeoutError("编辑器退出超时")
@@ -160,6 +165,22 @@ def run(exe, work):
     probes.unlink()  # 强制从头生成文件，不能靠原来的文件通过比较。
     if bake("new-process", baseline, defaults) != reference:
         raise AssertionError("第二个进程生成的文件与首次烘焙不一致")
+
+    # 两个进程分别读“红灯、蓝灯”和“蓝灯、红灯”。两盏灯本身没动，固定采样种子后每个探针都应得到相同的 RGB。
+    pair = deepcopy(scene)
+    red = pair["Entities"][-1]
+    red["PointLightComponent"]["Color"] = [1, 0, 0]
+    blue = deepcopy(red)
+    blue.update(Entity=54, TagComponent={"Tag": "蓝灯"})
+    blue["PointLightComponent"]["Color"] = [0, 0, 1]
+    pair["Entities"].append(blue)
+    first = bake("red-blue", dump_yaml(pair), defaults)
+    pair["Entities"][-2:] = [blue, red]
+    second = bake("blue-red", dump_yaml(pair), defaults)
+    if first != second:
+        (work / "red-blue.rfprobes").write_bytes(first)
+        (work / "blue-red.rfprobes").write_bytes(second)
+        raise AssertionError("只交换两盏灯的保存顺序，重新烘焙的文件却变了")
 
     dark_wall = deepcopy(scene)
     wall = next(entity for entity in dark_wall["Entities"] if entity["TagComponent"]["Tag"] == "白墙")

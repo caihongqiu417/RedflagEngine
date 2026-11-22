@@ -23,10 +23,13 @@ if errorlevel 1 exit /b 1
 set RF_VULKAN_VALIDATION=1
 set "PATH=%CD%\bin\Debug-windows-x86_64\RedflagForge;%PATH%"
 rem Run from project root
-bin-int\Tests\ScreenEffectsTests.exe "RedflagForge\assets\models\reference\Sponza\Sponza.gltf" "tmp\screen-effects" %*
+set "RF_SCREEN_OUTPUT=tmp\screen-effects"
+if /i "%~1"=="--directional" set "RF_SCREEN_OUTPUT=output\validation\directional"
+bin-int\Tests\ScreenEffectsTests.exe "RedflagForge\assets\models\reference\Sponza\Sponza.gltf" "%RF_SCREEN_OUTPUT%" %*
 if errorlevel 1 exit /b 1
 if /i "%~1"=="--capture" exit /b 0
 if /i "%~1"=="--point-materials" exit /b 0
+if /i "%~1"=="--directional" exit /b 0
 python tests\screen_effects_report.py
 if errorlevel 1 exit /b 1
 python tests\temporal_quality.py

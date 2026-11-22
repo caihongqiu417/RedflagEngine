@@ -1,0 +1,2 @@
+case,method,left_near_red,right_near_red,left_far_red,right_far_red,max_abs_rgb_error
+sun_shadow_off,all,0.0254057,0.0246442,0.00335605,0.00334322,0.492165

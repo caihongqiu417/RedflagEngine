@@ -19,6 +19,14 @@ namespace Redflag
     struct GILight
     {
         glm::vec4 Position, Intensity; // Intensity.rgb 是各色光的强度，w 是场景中的照明半径。w 为零时只随距离减弱。
+
+        /// <param name="directionOfTravel">光线在世界中传播的非零方向。例如正午向下照时填 (0,-1,0)。</param>
+        static GILight Directional(glm::vec3 directionOfTravel, glm::vec3 intensity, bool castShadow)
+        {
+            // 着色时用从表面指向灯的方向。第四个数区分开启和关闭阴影的方向光。
+            return { glm::vec4(-glm::normalize(directionOfTravel), castShadow ? -1.f : -2.f),
+                     glm::vec4(intensity, 0.f) };
+        }
     };
 
     struct GIEmissionOverride
@@ -90,14 +98,14 @@ namespace Redflag
         Ref<ComputeResource> Masks;
     };
 
-    /* 计算点光源直接照到物体的光，以及场景反射到表面的光。DDGI 探针和 ReSTIR GI 也能收到发光材质的光。 */
+    /* 计算点光源和方向光直接照到物体的光，以及场景反射到表面的光。DDGI 探针和 ReSTIR GI 也能收到发光材质的光。 */
     class GlobalIllumination
     {
       public:
         // 对照测试把模型最长的一边缩放到 20 个场景单位，固定点光源的位置，按漫反射计算直接光。
         GlobalIllumination(ComputeDevice &device, const std::filesystem::path &modelPath, uint32_t width,
                            uint32_t height);
-        // 编辑器和游戏传入场景原有的变换与材质，再用 SetLights 指定点光源。
+        // 编辑器和游戏传入场景原有的变换与材质，再用 SetLights 指定照亮场景的灯。
         GlobalIllumination(ComputeDevice &device, const std::vector<GIModel> &models, uint32_t width, uint32_t height);
         ~GlobalIllumination();
 

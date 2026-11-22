@@ -11,6 +11,7 @@ using namespace Redflag;
 namespace fs=std::filesystem;
 #include "PointMaterialCheck.h"
 #include "CubeMaterialCheck.h"
+#include "DirectionalLightCheck.h"
 
 static std::vector<GILight> ClusterLights()
 {
@@ -211,10 +212,22 @@ static void CheckSurfaceTexture(ComputeDevice& device)
 int main(int argc,char** argv)
 {
     const bool materials = (argc==4 || argc==5) && std::string(argv[3])=="--point-materials";
-    if (argc!=3 && !materials && !(argc==5 && std::string(argv[3])=="--capture")) return 2;
-    RenderDocCapture capture(argc==5?argv[4]:nullptr,materials?"output/captures/local/PointMaterials":"output/profiling/screen-effects/SponzaScreen",
-        materials?"GGX point lights":"Sponza / screen effects",materials?"33x33 orthographic, smooth metal, three point lights. Exhaustive and clustered shading.":
-        "161x91. GTAO, stochastic SSR, TAA and 49-light clustered culling/shading.");
+    const bool directional = (argc==4 || argc==5) && std::string(argv[3])=="--directional";
+    if (argc!=3 && !materials && !directional && !(argc==5 && std::string(argv[3])=="--capture")) return 2;
+    const char* path = "output/profiling/screen-effects/SponzaScreen";
+    const char* title = "Sponza / screen effects";
+    const char* description = "161x91. GTAO, stochastic SSR, TAA and 49-light clustered culling/shading.";
+    if (materials) {
+        path = "output/captures/local/PointMaterials";
+        title = "GGX point lights";
+        description = "33x33 orthographic, smooth metal, three point lights. Exhaustive and clustered shading.";
+    }
+    if (directional) {
+        path = "output/validation/directional/DirectionalLight";
+        title = "Directional light and shadows";
+        description = "48x16 orthographic. Two receiving depths and one blocker above the left half. Direct, clustered, ReSTIR DI and fog.";
+    }
+    RenderDocCapture capture(argc==5?argv[4]:nullptr,path,title,description);
     Log::Init();
     if (!glfwInit()) return 1;
     int result=0;
@@ -232,7 +245,8 @@ int main(int argc,char** argv)
             context.EndWindowPass();
             context.SwapBuffers();
         }
-        if (!materials) Run(device,argv[1],argv[2],argc==5?&capture:nullptr);
+        if (!materials && !directional) Run(device,argv[1],argv[2],argc==5?&capture:nullptr);
+        if (argc==3 || directional) CheckDirectionalLight(device,argv[2],capture);
         if (argc == 3 || materials)
         {
             CheckPointMaterials(device,argv[2],capture);

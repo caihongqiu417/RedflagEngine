@@ -1,0 +1,93 @@
+{
+  "api": "GraphicsAPI.Vulkan",
+  "tool": "1.47",
+  "capture": "DirectionalLight_capture.rdc",
+  "sha256": "63d51cb8e981831d3112d0bffb0037677cc4432bfa48fa30517075a5134a6b28",
+  "width": 48,
+  "height": 16,
+  "events": [
+    {
+      "stage": "all",
+      "event": 8,
+      "groups": [
+        12,
+        1,
+        1
+      ],
+      "max_abs_rgb_error": 2.2722840109512532e-08,
+      "four_red_samples": [
+        0.0,
+        0.4952901601791382,
+        0.0,
+        0.4952901601791382
+      ]
+    },
+    {
+      "stage": "cluster_cull",
+      "event": 22,
+      "groups": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "stage": "clustered",
+      "event": 33,
+      "groups": [
+        6,
+        2,
+        1
+      ],
+      "max_abs_rgb_error": 2.2722840109512532e-08,
+      "four_red_samples": [
+        0.0,
+        0.4952901601791382,
+        0.0,
+        0.4952901601791382
+      ]
+    },
+    {
+      "stage": "restir_candidates",
+      "event": 46,
+      "groups": [
+        12,
+        1,
+        1
+      ]
+    },
+    {
+      "stage": "restir_di",
+      "event": 58,
+      "groups": [
+        12,
+        1,
+        1
+      ],
+      "max_abs_rgb_error": 5.2525162497207845e-08,
+      "four_red_samples": [
+        0.0,
+        0.4952901601791382,
+        0.0,
+        0.4952901601791382
+      ]
+    },
+    {
+      "stage": "fog",
+      "event": 71,
+      "groups": [
+        12,
+        1,
+        1
+      ],
+      "max_abs_rgb_error": 1.7299089561870207e-08,
+      "four_red_samples": [
+        0.0,
+        0.01374844927340746,
+        0.0,
+        0.031378112733364105
+      ]
+    }
+  ],
+  "debug_messages": []
+}

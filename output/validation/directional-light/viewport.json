@@ -1,0 +1,133 @@
+{
+  "scene": "Reference-StanfordBunny.redflag",
+  "settings": {
+    "Shading": "Lit",
+    "Direct": "All point lights",
+    "Indirect": "Off",
+    "TAA": true,
+    "GTAO": false,
+    "SSR": false,
+    "SpecularIBL": false,
+    "FastNavigation": false,
+    "PreviewWidth": 384
+  },
+  "threshold_linear_rgb": 0.01,
+  "before": {
+    "executable_sha256": "bca1c0b21c519aafaddbe473ad775a279bc7bdc9ff5832b96fba977357f5206a",
+    "renderdoc": {
+      "frame": 24,
+      "size": [
+        384,
+        246
+      ],
+      "shading_size": [
+        384,
+        246
+      ],
+      "samples_per_pixel": 1,
+      "dispatches": [
+        11,
+        44,
+        56,
+        68,
+        80,
+        92
+      ],
+      "draws": [
+        27,
+        32,
+        112,
+        117,
+        128,
+        131,
+        134,
+        137,
+        140,
+        143,
+        146,
+        149,
+        152,
+        155,
+        158,
+        161,
+        164,
+        167,
+        170,
+        173,
+        176,
+        179,
+        182,
+        185,
+        188
+      ],
+      "pack_event": 44,
+      "display_event": 92,
+      "messages": [],
+      "file": "studio_frame24.rdc",
+      "tool": "1.47"
+    },
+    "scene_sha256": "49d9b6ac3ef4c1ec399ccf444698d01959bb8f09c2414bf69b485f774831d02e",
+    "capture": "studio_frame24.rdc",
+    "max_linear_rgb": 0.0,
+    "lit_pixels": 0
+  },
+  "after": {
+    "executable_sha256": "c08805759f04dcb486e0404bd9fe3a202cb865bc2bcaad7b6aacce7e1e54ebbb",
+    "renderdoc": {
+      "frame": 24,
+      "size": [
+        384,
+        246
+      ],
+      "shading_size": [
+        384,
+        246
+      ],
+      "samples_per_pixel": 1,
+      "dispatches": [
+        11,
+        44,
+        56,
+        68,
+        80,
+        92
+      ],
+      "draws": [
+        27,
+        32,
+        112,
+        117,
+        128,
+        131,
+        134,
+        137,
+        140,
+        143,
+        146,
+        149,
+        152,
+        155,
+        158,
+        161,
+        164,
+        167,
+        170,
+        173,
+        176,
+        179,
+        182,
+        185,
+        188
+      ],
+      "pack_event": 44,
+      "display_event": 92,
+      "messages": [],
+      "file": "studio_frame24.rdc",
+      "tool": "1.47"
+    },
+    "scene_sha256": "49d9b6ac3ef4c1ec399ccf444698d01959bb8f09c2414bf69b485f774831d02e",
+    "capture": "studio_frame24.rdc",
+    "max_linear_rgb": 0.797203004360199,
+    "lit_pixels": 42964
+  }
+}

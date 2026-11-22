@@ -31,7 +31,7 @@ float edgeArea(vec2 a, vec2 b)
     return area;
 }
 
-// 找光线最先碰到的表面，要比较各次命中的距离。查点光源是否被挡住，只要在灯前遇到一个不透明三角形就能返回。
+// 找光线最先碰到的表面，要比较各次命中的距离。查阴影时，只要在射线范围内遇到一个不透明三角形就能返回。
 int trace(vec3 o, vec3 d, inout float far, bool shadow, out vec2 barycentric)
 {
     barycentric = vec2(0);
@@ -86,7 +86,7 @@ int trace(vec3 o, vec3 d, inout float far, bool shadow, out vec2 barycentric)
     return hit;
 }
 
-bool pointInShadow(vec3 position, vec3 normal, vec3 toLight, float distanceToLight)
+bool surfaceInShadow(vec3 position, vec3 normal, vec3 toLight, float distanceToLight)
 {
     float far = distanceToLight - 2. * EPS;
     vec2 weights;

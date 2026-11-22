@@ -235,6 +235,12 @@ namespace Redflag {
 
 		DirectionalLightComponent() = default;
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+
+		glm::vec3 WorldDirection(const TransformComponent& transform) const
+		{
+			// 旋转灯会改变光照方向。移动或缩放灯的图标不会改变太阳光。
+			return glm::quat(transform.Rotation) * Direction;
+		}
 	};
 
 	// ----------

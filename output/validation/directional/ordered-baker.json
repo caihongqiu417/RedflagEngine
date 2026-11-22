@@ -1,0 +1,74 @@
+{
+  "scene": "Light-Studio.redflag",
+  "extra_point_light_intensity": 4,
+  "exe_sha256": "9777215e2417bdd1c3ef771b53884aea4c1d9e9a17f248e295163a153208de1a",
+  "probe_file_bytes": 96792,
+  "probe_rgb_channels": 9072,
+  "results": {
+    "baseline": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "0e613087da5ac947aa9354f768ee19f148b0ca99092e982a7d89797a89b30958",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    },
+    "new-process": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "0e613087da5ac947aa9354f768ee19f148b0ca99092e982a7d89797a89b30958",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    },
+    "red-blue": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "1a3d9ab71371f9957cd4322d8c5bced629b0a26c061c89f9dfb78a183f6d614c",
+      "payload_sha256": "88c5c6a74740a4473ebd2c2bda929da00f5c470b09c4545926e23ccaf9fbd076"
+    },
+    "blue-red": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "1a3d9ab71371f9957cd4322d8c5bced629b0a26c061c89f9dfb78a183f6d614c",
+      "payload_sha256": "88c5c6a74740a4473ebd2c2bda929da00f5c470b09c4545926e23ccaf9fbd076"
+    },
+    "single-bounce": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "4b196cd61b030fd9e97e9f9363b38c60612001b14a66e0c975c44b55ce33ce91",
+      "payload_sha256": "6338c7ab6b3b43f634257b6b2bc07398039c87638ff3afac16ebdbdfc36eb8b4",
+      "changed_rgb_channels_vs_baseline": 8784
+    },
+    "dark-wall": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "799b9ed592250c9eeafdd0b3e747a151d7f0d8778112ec2aeda6cdd9f5e1aa1e",
+      "payload_sha256": "f876a46c914d1d654b49f4ead12c30c28a1f4e8989d9c9ea84d5641f6dc3f692",
+      "changed_rgb_channels_vs_baseline": 8631
+    },
+    "bright-point-light": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "54145d61f62b6a13e4ad241a5ef1496866b3e1c504b5ef6195db1f9292862b62",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "changed_rgb_channels_vs_baseline": 8631
+    },
+    "missing-model": {
+      "exit_code": 1,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "54145d61f62b6a13e4ad241a5ef1496866b3e1c504b5ef6195db1f9292862b62",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "previous_bake_preserved": true
+    },
+    "damaged-scene": {
+      "exit_code": 1,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "54145d61f62b6a13e4ad241a5ef1496866b3e1c504b5ef6195db1f9292862b62",
+      "payload_sha256": "c76ecc7623a22f049240d9ae8584e858b1d590a8a91675fb07ea467d85c422b1",
+      "previous_bake_preserved": true
+    },
+    "editor-hotkey": {
+      "exit_code": 0,
+      "scene_and_settings_unchanged": true,
+      "probe_sha256": "0e613087da5ac947aa9354f768ee19f148b0ca99092e982a7d89797a89b30958",
+      "payload_sha256": "9aec73b2764def1ea65189646433037eebb0670c1d3f5f37b9ab936251ac2455"
+    }
+  }
+}
