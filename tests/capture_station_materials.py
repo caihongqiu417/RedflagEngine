@@ -13,7 +13,7 @@ from profile_native_navigation import ROOT, prepare
 
 def main():
     cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument("view", choices=("spawn", "gravel", "rack", "rim"))
+    cli.add_argument("view", choices=("spawn", "gravel", "rack", "rim", "tracks"))
     cli.add_argument("variant", choices=("original", "normal", "current"))
     cli.add_argument("--exe", type=Path, default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
     cli.add_argument("--renderdoc", type=Path, default=ROOT/"tmp/tools/renderdoc/RenderDoc_1.47_64")
@@ -23,11 +23,12 @@ def main():
     exe, rd = args.exe.resolve(strict=True), args.renderdoc.resolve(strict=True)
     label = args.view + "-" + args.variant
     version = hashlib.sha256(exe.read_bytes()).hexdigest()
-    work = ROOT/"tmp/station-materials"/version[:12]/label
-    out = ROOT/"output/validation/station-materials"
+    collection = "station-tracks" if args.view == "tracks" else "station-materials"
+    work = ROOT/"tmp"/collection/version[:12]/label
+    out = ROOT/"output/validation"/collection
     out.mkdir(parents=True, exist_ok=True)
     source = ROOT/"RedflagForge/assets/scenes/Watt-Station.redflag"
-    rdc = ROOT/"output/captures/local/station-materials"/version[:12]/label/"game.rdc"
+    rdc = ROOT/"output/captures/local"/collection/version[:12]/label/"game.rdc"
     rdc.parent.mkdir(parents=True, exist_ok=True)
     if not args.replay:
         prepare(work)
@@ -35,7 +36,9 @@ def main():
         entities = {e["Entity"]:e for e in scene["Entities"]}
         ground = entities[1222]
         camera = entities[1100]
-        if args.view in ("rack", "rim"):
+        if args.view == "tracks":
+            if args.variant == "original": scene["Entities"].remove(entities[1280])
+        elif args.view in ("rack", "rim"):
             target = entities[1221 if args.view == "rack" else 1215]
             if args.variant == "original": del target["ModelRendererComponent"]["OverrideMaterials"]
         elif args.variant == "original":
@@ -43,7 +46,7 @@ def main():
             ground["TransformComponent"]["Scale"] = [100,100,1]
         elif args.variant == "normal":
             ground["ModelRendererComponent"]["OverrideMaterials"][0]["HeightMode"] = "Off"
-        if args.view != "spawn":
+        if args.view not in ("spawn", "tracks"):
             yaw = -1.5707963
             if args.view == "rack":
                 position, pitch, height, distance = [5.65,.08,2.74], -.18, 1.4, .95

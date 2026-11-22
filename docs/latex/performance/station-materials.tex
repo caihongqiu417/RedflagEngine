@@ -36,3 +36,19 @@
 
 \readings{\refitem{https://polyhaven.com/a/worn_metal_rack}{Poly Haven，Worn Metal Rack}；
 \refitem{https://polyhaven.com/a/rusted_wheel_rim_01}{Poly Haven，Rusted Wheel Rim 01}。实机图、四种机位、回放原始样本见 \path{output/validation/station-materials/}。}
+
+\clearpage
+\subsection{碎石上的车辙}
+角色脚下的石块已有法线和视差遮蔽。从游戏的跟随相机看过去，缝隙只能说明单颗石头的起伏；同一片碎石一直铺到维修棚，路上看不出车辆经过的方向。我们沿弯道各铺一条宽约 34 厘米的胎印，轮心间距 1.54 米。泥土的颜色、法线与粗糙度取自同一块两米多宽的实物扫描。槽边露出的石头继续显示原砂石的材质，行走高度沿用原来的碰撞面。
+
+\begin{center}
+\panelimage{.48\linewidth}{\includegraphics[width=\linewidth]{../../../output/validation/station-tracks/tracks-original.png}}{原来的视差碎石。两张都是游戏默认出生点。}
+\hfill
+\panelimage{.48\linewidth}{\includegraphics[width=\linewidth]{../../../output/validation/station-tracks/tracks-current.png}}{两道胎印之间仍可看到碎石，向前延伸到维修棚。}
+\end{center}
+
+同机位旧碎石覆盖 860,798 个像素，其中 86,064 个在新图中显示胎印，约占十分之一。只取这块共同可见区域，显示颜色的平均绝对差为 21.51 个 8-bit 色阶。两个模型的区分来自各次绘制前后的实际深度，可以排除角色动作对统计的影响。
+
+地表带由九个路径点确定。正式路线分成 16 段，两道胎印合计 64 个三角形。开启后 draw 从 413 增至 415，dispatch 仍为 16 次。使用 RTX 5070 Ti Laptop GPU，在 1080p 游戏第 12 帧交替回放有无车辙的两个版本，每次预热后读五次时间，每种配置共十次。写入车辙底色和法线的那次绘制中位数为 14.58 微秒。帧内全部绘制与计算命令的时间之和，中位数从 47.17 到 44.81 毫秒，但两组 P10 到 P90 区间分别为 43.42--50.37 和 44.03--50.61 毫秒，本次没有测出整帧速度的稳定变化。CPU 提交时间未单独测量。
+
+其他场景可用同一份地表带工具，替换路线、带宽、贴图及每次重复的米数。Forge 将它生成普通 glTF，模型和材质继续沿用既有渲染接口。\readings{\refitem{https://polyhaven.com/a/muddy_tracks}{Amal Kumar，Poly Haven Muddy Tracks，CC0}。回放帧路径、完整对照、指标和复测命令见 \path{output/validation/station-tracks/}。}

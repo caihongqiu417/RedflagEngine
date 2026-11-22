@@ -16,7 +16,7 @@ def visit(nodes):
 
 
 def run():
-    order=["rack-original","rack-current","rack-current","rack-original"]
+    order=[view+"-"+variant for variant in ("original","current","current","original")]
     result={"order":order,"units":"microseconds","cases":{}}
     for label in order:
         report=json.loads((out/(label+".json")).read_text(encoding="utf8"))
@@ -47,10 +47,11 @@ def run():
     return result
 
 
-out=Path("output/validation/station-materials")
+view=os.environ.get("RF_COST_VIEW","rack")
+out=Path("output/validation")/("station-tracks" if view=="tracks" else "station-materials")
 try:
     data=run()
 except Exception:
     data={"error":traceback.format_exc()}
-(out/"rack-timing.json").write_text(json.dumps(data,indent=2)+"\n",encoding="utf8")
+(out/(view+"-timing.json")).write_text(json.dumps(data,indent=2)+"\n",encoding="utf8")
 sys.exit(int("error" in data))

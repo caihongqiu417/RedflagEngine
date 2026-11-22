@@ -1,0 +1,26 @@
+{
+  "exe_sha256": "bc21b15c820bd4f420aee19a396c936f7da43fa4abecfad6d3500058029da87d",
+  "camera": [
+    [
+      -11.5540152,
+      2.11585259,
+      2.02000022
+    ],
+    [
+      -11.5540152,
+      2.11585259,
+      2.02000022
+    ]
+  ],
+  "original_floor_pixels": 860798,
+  "new_track_pixels": 86273,
+  "common_pixels": 86064,
+  "fraction_of_original_floor": 0.09998164493876611,
+  "rgb_abs_mean": 21.50505828857422,
+  "mean_display_rgb_change": [
+    -23.59724235534668,
+    -22.566659927368164,
+    -17.66803741455078
+  ],
+  "absolute_rgb_change_at_least_8": 78396
+}

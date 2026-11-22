@@ -1,6 +1,8 @@
 #pragma once
 
 #include <filesystem>
+#include <future>
+#include <string>
 #include <vector>
 
 namespace Redflag
@@ -16,6 +18,8 @@ namespace Redflag
 
 		std::filesystem::path m_Directory;
 		std::vector<std::filesystem::directory_entry> m_Entries;
+		std::future<std::string> m_SurfaceBuild;
+		std::string m_BuildMessage;
 		char m_Filter[128]{};
 	};
 }

@@ -231,6 +231,10 @@ Entities:
           HeightMap: assets/game/station/salvage/ground/gravel_road_disp_1k.png
           HeightMode: Parallax
           HeightScale: 0.00025 # 模型放大 100 倍后，砂石最高到最低相差 2.5 厘米。
+  - Entity: 1280
+    TagComponent: {Tag: 车辙}
+    TransformComponent: {Translation: [0, -0.022, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    ModelRendererComponent: {FilePath: assets/game/station/salvage/tracks/Tracks.gltf, Color: [1, 1, 1, 1]}
   - Entity: 1229
     TagComponent: {Tag: 场外砂石路基}
     TransformComponent: {Translation: [9, -0.525, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}

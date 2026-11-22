@@ -31,9 +31,10 @@ def run(frame):
     selection = []
     seen = []
     view = label.split("-")[0]
+    tracks = label == "tracks-current"
     expected = {"rack":19116, "rim":49320}.get(view,6)
     for a in draws:
-        if a.numIndices != expected: continue
+        if not tracks and a.numIndices != expected: continue
         frame.SetFrameEvent(a.eventId, True)
         state = frame.GetPipelineState()
         targets = state.GetOutputTargets()
@@ -45,11 +46,12 @@ def run(frame):
         normals = struct.unpack_from("<9f",push,84)
         seen.append((a.eventId,len(targets),fmt.Name(),normals))
         if len(targets)<2 or fmt.compType != rd.CompType.Float: continue
+        if tracks and normals != (1,0,0,0,1,0,0,0,1): continue
         if view in ("rack", "rim"):
             matrix = struct.unpack_from("<16f",push)
             yaw = 1.45 if view=="rack" else -.4
             if abs(normals[0]-math.cos(yaw))>.001 or abs(normals[2]+math.sin(yaw))>.001: continue
-        elif any(abs(math.sqrt(sum(v*v for v in normals[i:i+3]))-.01)>1e-4 for i in (0,3)): continue
+        elif not tracks and any(abs(math.sqrt(sum(v*v for v in normals[i:i+3]))-.01)>1e-4 for i in (0,3)): continue
         else:
             matrix = struct.unpack_from("<16f",push)
         shader = state.GetShaderReflection(rd.ShaderStage.Fragment)
@@ -57,6 +59,7 @@ def run(frame):
                  [textures[r.descriptor.resource].width,textures[r.descriptor.resource].height]
                  for r in state.GetReadOnlyResources(rd.ShaderStage.Fragment) if r.descriptor.resource in textures}
         flags = struct.unpack_from("<I",push,124)[0]
+        if tracks and reads.get(0) != [512,4096]: continue
         selection.append(dict(event=a.eventId,mode=(flags>>7)&3,indices=a.numIndices,reads=reads,
                               clip_matrix=list(matrix)))
         normal_image, albedo = targets[1].resource, targets[0].resource

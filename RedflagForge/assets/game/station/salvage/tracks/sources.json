@@ -1,0 +1,28 @@
+{
+  "author": "Amal Kumar",
+  "license": "CC0-1.0",
+  "source": "https://polyhaven.com/a/muddy_tracks",
+  "scan_m": 2.25,
+  "axle_m": 1.54,
+  "tread_width_m": 0.34,
+  "files": {
+    "Diffuse": {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/muddy_tracks/muddy_tracks_diff_2k.jpg",
+      "md5": "f3a4fce7216493f69741ad88f52daab8"
+    },
+    "nor_gl": {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/muddy_tracks/muddy_tracks_nor_gl_2k.jpg",
+      "md5": "f8d5c1f1e90bae67605b5fca77761ee2"
+    },
+    "Rough": {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/muddy_tracks/muddy_tracks_rough_2k.jpg",
+      "md5": "4c6dd34d04b0ba95e024e6c345a352c3"
+    },
+    "Displacement": {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/muddy_tracks/muddy_tracks_disp_2k.png",
+      "md5": "cdaf895bfecfefde4f360e8f521dbd7f"
+    }
+  },
+  "adjacent_gravel": "../ground/sources.json",
+  "importer": "scripts/import_station_tracks.py"
+}

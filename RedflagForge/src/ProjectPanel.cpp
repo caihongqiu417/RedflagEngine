@@ -1,10 +1,11 @@
 #include "rfpch.h"
 #include "ProjectPanel.h"
+#include "ForgeTool.h"
 #include <imgui.h>
 
 namespace Redflag
 {
-	enum class AssetKind { Folder, Scene, Model, Other };
+	enum class AssetKind { Folder, Scene, Model, SurfaceStrip, Other };
 
 	static AssetKind GetAssetKind(const std::filesystem::directory_entry& entry)
 	{
@@ -12,6 +13,7 @@ namespace Redflag
 		std::string ext = entry.path().extension().string();
 		std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 		if (ext == ".redflag") return AssetKind::Scene;
+		if (ext == ".rfstrip") return AssetKind::SurfaceStrip;
 		if (ext == ".obj" || ext == ".fbx" || ext == ".gltf" || ext == ".glb" || ext == ".ply") return AssetKind::Model;
 		return AssetKind::Other;
 	}
@@ -49,6 +51,13 @@ namespace Redflag
 			ImGui::SameLine();
 			if (ImGui::SmallButton("刷新")) OpenDirectory(m_Directory);
 
+			if (m_SurfaceBuild.valid() && m_SurfaceBuild.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+			{
+				m_BuildMessage = m_SurfaceBuild.get();
+				OpenDirectory(m_Directory);
+			}
+			if (!m_BuildMessage.empty()) ImGui::TextWrapped("%s", m_BuildMessage.c_str());
+
 			std::filesystem::path next;
 			if (ImGui::BeginTable("Files", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY))
 			{
@@ -72,10 +81,26 @@ namespace Redflag
 					if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
 					{
 						if (entry.is_directory()) next = entry.path();
+						else if (kind == AssetKind::SurfaceStrip)
+						{
+							if (!m_SurfaceBuild.valid())
+							{
+								m_BuildMessage = "正在生成地表带…";
+								m_SurfaceBuild = std::async(std::launch::async, [path = std::filesystem::absolute(entry.path())]()
+								{
+									YAML::Node request;
+									request["profile"] = path.u8string();
+									const YAML::Node reply = RunForgeTool("surface_strip.py", request);
+									if (reply["error"]) return reply["error"].as<std::string>();
+									return std::string("已生成 ") + std::filesystem::u8path(reply["model"].as<std::string>()).filename().u8string();
+								});
+							}
+						}
 						else chosen = entry.path();
 					}
 					ImGui::TableNextColumn();
-					ImGui::TextDisabled("%s", kind == AssetKind::Folder ? "文件夹" : kind == AssetKind::Scene ? "场景" : "模型");
+					ImGui::TextDisabled("%s", kind == AssetKind::Folder ? "文件夹" : kind == AssetKind::Scene ? "场景" :
+						kind == AssetKind::SurfaceStrip ? "地表带" : "模型");
 				}
 				ImGui::EndTable();
 			}
