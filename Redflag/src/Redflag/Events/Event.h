@@ -3,7 +3,9 @@
 
 // Project headers  
 #include "Redflag/Core/Core.h"
-#include"string.h"
+#include <functional>
+#include <ostream>
+#include <string>
 
 namespace Redflag {
 

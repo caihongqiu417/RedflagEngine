@@ -1,5 +1,9 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <utility>
+
 // DLL 宏定义 - 修改为静态库版本
 #ifdef RF_PLATFORM_WINDOWS
     // 如果是静态库，不需要导出/导入声明

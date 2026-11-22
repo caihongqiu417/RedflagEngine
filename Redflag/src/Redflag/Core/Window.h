@@ -1,6 +1,8 @@
 #pragma once
 
-#include"rfpch.h"
+#include <cstdint>
+#include <functional>
+#include <string>
 #include"Redflag/Core/Core.h"
 #include"Redflag/Events/Event.h"
 
