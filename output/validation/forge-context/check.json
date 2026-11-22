@@ -1,11 +1,26 @@
 {
   "checks": [
+    "failed check and stale source displayed separately",
+    "opened captured output in Forge",
+    "read the original failure after line 80",
+    "read the saved patch in Forge",
+    "read complete working changes after the twenty-line preview",
     "text box receives keyboard input",
     "note persisted in the shared task",
     "switch to the code page after the task is reread",
     "text box receives keyboard input",
     "find used the shared CLI and appended its references",
-    "selecting a match requested that source line"
+    "selecting a match requested that source line",
+    "source declaration ready",
+    "browsed the original source file",
+    "opened a test location returning numbered lines",
+    "test excerpt visible",
+    "opened full test source",
+    "text box receives keyboard input",
+    "changed project and discarded old selection",
+    "select task from moved records",
+    "copied task still contains failed check",
+    "copy resolved the full test log under the new project"
   ],
   "notes": [
     "这次只核对 CreateMesh 的调用和测试，尚未测量 GPU 耗时。"
@@ -26,6 +41,13 @@
       "query": "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.h:10",
       "sources": [
         "Redflag/src/Platform/OpenGL/OpenGLRenderDevice.h:10"
+      ]
+    },
+    {
+      "operation": "show",
+      "query": "tests/CascadeShadowTests.cpp:57",
+      "sources": [
+        "tests/CascadeShadowTests.cpp:57"
       ]
     }
   ],
@@ -54,5 +76,35 @@
     }
   ],
   "check_exit_code": 0,
-  "exe_sha256": "0aba2053a5bff94b1124c1040338e672b6dab4a21b6b385807b2c0388e71a771"
+  "task": "ab6910e67cef",
+  "checks_at_review": [
+    {
+      "exit": 0,
+      "same_source": false
+    },
+    {
+      "exit": 1,
+      "same_source": true
+    },
+    {
+      "exit": 0,
+      "same_source": true
+    }
+  ],
+  "snapshots": {
+    "log": {
+      "file": "indices-output.txt",
+      "screenshot": "log.png",
+      "bytes": 3359,
+      "sha256": "8f40bd5518513abd2d3495b2bd2b062ee7e338a76b55bb4e2058e4ab0b2149f2"
+    },
+    "diff": {
+      "file": "indices.diff",
+      "screenshot": "diff.png",
+      "bytes": 319,
+      "sha256": "17e703b281d825c4eb583388a8f949c9d427380ebdabd7a5ff2e460be4643f04"
+    }
+  },
+  "project_copy_read": true,
+  "exe_sha256": "1e6bda497304052f5d26ef06293477270bf1435b3c0cdb81954ede853b511eff"
 }

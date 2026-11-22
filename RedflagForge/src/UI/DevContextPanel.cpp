@@ -14,9 +14,13 @@ namespace Redflag
         m_Error.clear();
         YAML::Node input;
         input["operation"] = operation;
-        const char* project = std::getenv("REDFLAG_PROJECT");
-        input["project"] = project && *project ? std::filesystem::absolute(std::filesystem::u8path(project)).u8string() :
-            std::filesystem::current_path().u8string();
+        if (m_Project.empty())
+        {
+            const char* project = std::getenv("REDFLAG_PROJECT");
+            m_Project = project && *project ? std::filesystem::absolute(std::filesystem::u8path(project)).u8string() :
+                std::filesystem::current_path().u8string();
+        }
+        input["project"] = m_Project;
         if (operation == "find" || operation == "show")
         {
             input["query"] = query;
@@ -24,6 +28,12 @@ namespace Redflag
         }
         else if (operation != "tasks") input["task"] = m_Task;
         if (operation == "note") input["text"] = std::string(m_Correction);
+        if (operation == "read" || operation == "locate")
+        {
+            input["kind"] = m_Kind;
+            input["file"] = m_File;
+            input["first"] = m_First;
+        }
         m_Job = std::async(std::launch::async, RunForgeTool, "forge_context.py", input);
     }
 
@@ -34,6 +44,8 @@ namespace Redflag
         if (reply["error"]) m_Error = reply["error"].as<std::string>();
         else if (m_Operation == "tasks") m_Tasks.reset(reply["tasks"]);
         else if (m_Operation == "review") m_Record.reset(reply);
+        else if (m_Operation == "read") m_Document.reset(reply);
+        else if (m_Operation == "locate") return;
         else if (m_Operation == "note")
         {
             m_Correction[0] = 0;
@@ -43,6 +55,61 @@ namespace Redflag
     }
 
     // ---- 源码、测试与任务证据 ----
+
+    void DevContextPanel::Read(const std::string& kind, const std::string& file)
+    {
+        m_Kind = kind;
+        m_File = file;
+        m_First = 0;
+        Start("read");
+    }
+
+    void DevContextPanel::DrawDocument()
+    {
+        if (ImGui::Button("返回资料"))
+        {
+            m_Document.reset();
+            if (m_RecordPage && !m_Record.IsMap()) Start("review");
+            return;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("在文件夹中定位")) Start("locate");
+        ImGui::SameLine();
+        const std::string path = m_Document["path"].Scalar();
+        if (ImGui::Button("复制完整路径")) ImGui::SetClipboardText(path.c_str());
+        ImGui::TextWrapped("%s", path.c_str());
+        ImGui::Separator();
+        const int first = m_Document["first"].as<int>(), total = m_Document["total"].as<int>();
+        const int page = m_Document["page"].as<int>(), focus = m_Document["focus"].as<int>();
+        if (total == 0) { ImGui::TextDisabled("没有内容。"); return; }
+        ImGui::Text("%s    第 %d–%d 行，共 %d 行", m_Document["title"].Scalar().c_str(),
+                    first, std::min(first + page - 1, total), total);
+        auto turn = [&](const char* label, int line, bool enabled) {
+            ImGui::BeginDisabled(!enabled);
+            if (ImGui::SmallButton(label)) { m_First = line; Start("read"); }
+            ImGui::EndDisabled();
+        };
+        turn("上一页", first - page, first > 1);
+        ImGui::SameLine();
+        turn("下一页", first + page, first + page <= total);
+        ImGui::BeginChild("##文件正文", {0,0}, false, ImGuiWindowFlags_HorizontalScrollbar);
+        int number = first;
+        const bool diff = m_Kind == "changes" || std::filesystem::u8path(m_File).extension() == ".diff";
+        for (const auto& line : m_Document["lines"])
+        {
+            const std::string text = line.Scalar();
+            ImGui::TextDisabled("%4d", number);
+            ImGui::SameLine();
+            ImVec4 color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+            if (diff && text.rfind("+", 0) == 0) color = {.62f,.85f,.64f,1};
+            else if (diff && text.rfind("-", 0) == 0) color = {1,.66f,.62f,1};
+            else if (m_Kind == "source" && number == focus) color = {1,.82f,.46f,1};
+            ImGui::TextColored(color,"%s",text.c_str());
+            if (m_Kind == "source" && number == focus && ImGui::IsWindowAppearing()) ImGui::SetScrollHereY(.35f);
+            ++number;
+        }
+        ImGui::EndChild();
+    }
 
     static void Details(const YAML::Node& entries)
     {
@@ -55,7 +122,14 @@ namespace Redflag
         const bool enter = ImGui::InputTextWithHint("##源码查询", "输入接口名、文件位置或关键词", m_Search, sizeof(m_Search),
                                                      ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
-        if ((ImGui::Button("查找") || enter) && m_Search[0]) Start("find", m_Search);
+        if ((ImGui::Button("查找") || enter) && m_Search[0])
+        {
+            const std::string query = m_Search;
+            const size_t colon = query.rfind(':');
+            const bool line = colon != std::string::npos && colon + 1 < query.size() &&
+                query.find_first_not_of("0123456789", colon + 1) == std::string::npos;
+            Start(line ? "show" : "find", query);
+        }
         if (!m_Task.empty()) ImGui::Checkbox("把这次查询记入选中的任务", &m_Attach);
         if (!m_Code.IsMap()) return;
         if (const auto matches = m_Code["matches"])
@@ -67,7 +141,7 @@ namespace Redflag
                 const std::string source = item["source"].as<std::string>();
                 ImGui::PushID(i++);
                 if (ImGui::Selectable(item["symbol"].as<std::string>().c_str())) Start("show", source);
-                ImGui::TextWrapped("%s", source.c_str());
+                if (ImGui::SmallButton(source.c_str())) Read("source", source);
                 const std::string summary = item["summary"].as<std::string>("");
                 if (!summary.empty()) ImGui::TextWrapped("%s", summary.c_str());
                 ImGui::Separator();
@@ -79,8 +153,9 @@ namespace Redflag
         }
         if (!m_Code["symbol"]) return;
         const std::string source = m_Code["source"].as<std::string>();
+        if (ImGui::SmallButton("打开源码原文")) Read("source", source);
+        ImGui::SameLine();
         ImGui::TextWrapped("%s", source.c_str());
-        if (ImGui::SmallButton("复制源码位置")) ImGui::SetClipboardText(source.c_str());
         if (const auto lines = m_Code["lines"])
         {
             for (const YAML::Node& line : lines) ImGui::TextWrapped("%d   %s", line["line"].as<int>(), line["text"].Scalar().c_str());
@@ -127,26 +202,76 @@ namespace Redflag
         if (ImGui::CollapsingHeader("文件修改", ImGuiTreeNodeFlags_DefaultOpen))
         {
             for (const auto& item : m_Record["files"])
-                ImGui::TextWrapped("%s   %s", item.second["changed"].as<bool>() ? "已修改" : "与开始时相同", item.first.Scalar().c_str());
-            Details(m_Record["diff_preview"]);
-        }
-        if (ImGui::CollapsingHeader("引用", ImGuiTreeNodeFlags_DefaultOpen))
-            for (const YAML::Node& item : m_Record["references"])
             {
-                ImGui::TextWrapped("%s  %s", item["operation"].Scalar().c_str(), item["query"].Scalar().c_str());
-                Details(item["sources"]);
+                ImGui::TextDisabled("%s", item.second["changed"].as<bool>() ? "已修改" : "与开始时相同");
+                ImGui::SameLine();
+                const std::string file = item.first.Scalar();
+                if (ImGui::SmallButton(file.c_str())) Read("source", file);
             }
+            if (m_Record["diff_preview"].size() && ImGui::SmallButton("查看当前完整改动")) Read("changes");
+        }
         if (ImGui::CollapsingHeader("验证", ImGuiTreeNodeFlags_DefaultOpen))
             for (const YAML::Node& item : m_Record["checks"])
             {
+                const std::string log = item["log"].Scalar();
+                ImGui::PushID(log.c_str());
+                const int exit = item["exit_code"].as<int>();
+                ImGui::TextColored(exit ? ImVec4{1,.66f,.62f,1} : ImVec4{.62f,.85f,.64f,1},
+                                   "%s  ·  退出码 %d", exit ? "测试失败" : "测试通过", exit);
+                ImGui::SameLine();
+                ImGui::TextDisabled("%s", item["current"].as<bool>() ? "对应当前源码" : "源码已变化，需复测");
                 std::string command;
                 for (const YAML::Node& arg : item["command"]) command += (command.empty() ? "" : " ") + arg.Scalar();
                 ImGui::TextWrapped("%s", command.c_str());
-                ImGui::Text("退出码 %d   %s", item["exit_code"].as<int>(), item["current"].as<bool>() ? "对应当前源码" : "源码已变化，需复测");
-                ImGui::TextWrapped("%s", item["log"].Scalar().c_str());
+                if (ImGui::SmallButton("原始测试输出")) Read("artifact", log);
+                ImGui::SameLine();
+                if (ImGui::SmallButton("测试时的改动")) Read("artifact", item["diff"].Scalar());
+                ImGui::Separator();
+                ImGui::PopID();
             }
-        if (m_Record["evidence"].IsScalar() && ImGui::SmallButton("复制证据目录"))
-            ImGui::SetClipboardText(m_Record["evidence"].Scalar().c_str());
+        if (m_Record["references"].size() && ImGui::CollapsingHeader("引用", ImGuiTreeNodeFlags_DefaultOpen))
+            for (const YAML::Node& item : m_Record["references"])
+            {
+                ImGui::PushID(item["evidence"].Scalar().c_str());
+                ImGui::TextWrapped("%s  %s", item["operation"].Scalar().c_str(), item["query"].Scalar().c_str());
+                for (const YAML::Node& source : item["sources"])
+                    if (ImGui::SmallButton(source.Scalar().c_str())) Read("source", source.Scalar());
+                if (ImGui::SmallButton("当时的查询记录")) Read("artifact", item["evidence"].Scalar());
+                ImGui::PopID();
+            }
+        if (ImGui::Button("打开证据目录")) { m_Kind = "folder"; m_File.clear(); Start("locate"); }
+    }
+
+    void DevContextPanel::DrawProject()
+    {
+        if (ImGui::SmallButton("切换项目"))
+        {
+            snprintf(m_ProjectInput, sizeof(m_ProjectInput), "%s", m_Project.c_str());
+            ImGui::OpenPopup("选择资料项目");
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("%s", m_Project.c_str());
+        if (!ImGui::BeginPopup("选择资料项目")) return;
+        ImGui::TextUnformatted("项目目录");
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 28);
+        const bool enter = ImGui::InputText("##项目目录", m_ProjectInput, sizeof(m_ProjectInput), ImGuiInputTextFlags_EnterReturnsTrue);
+        if (ImGui::Button("打开项目") || enter)
+        {
+            std::error_code error;
+            const auto path = std::filesystem::u8path(m_ProjectInput);
+            if (std::filesystem::is_directory(path, error))
+            {
+                m_Project = std::filesystem::absolute(path).lexically_normal().u8string();
+                m_Task.clear();
+                m_Attach = false;
+                m_Correction[0] = 0;
+                m_Code.reset(); m_Tasks.reset(); m_Record.reset(); m_Document.reset();
+                ImGui::CloseCurrentPopup();
+                Start("tasks");
+            }
+            else m_Error = "找不到这个项目目录。";
+        }
+        ImGui::EndPopup();
     }
 
     void DevContextPanel::DrawMenu()
@@ -161,6 +286,7 @@ namespace Redflag
             m_Startup = false;
             const char* task = std::getenv("REDFLAG_DEV_TASK");
             const char* symbol = std::getenv("REDFLAG_DEV_SYMBOL");
+            const char* artifact = std::getenv("REDFLAG_DEV_EVIDENCE");
             if (task && *task) m_Task = task;
             if (symbol && *symbol)
             {
@@ -170,7 +296,7 @@ namespace Redflag
             else if (!m_Task.empty())
             {
                 m_Open = m_RecordPage = true;
-                Start("review");
+                if (artifact && *artifact) Read("artifact", artifact); else Start("review");
             }
         }
         Receive();
@@ -178,6 +304,16 @@ namespace Redflag
         ImGui::SetNextWindowSize({740, 570}, ImGuiCond_FirstUseEver);
         if (!ImGui::Begin("开发资料", &m_Open)) { ImGui::End(); return; }
         ImGui::BeginDisabled(m_Job.valid());
+        DrawProject();
+        if (m_Document.IsMap()) DrawDocument(); else DrawBrowse();
+        ImGui::EndDisabled();
+        if (m_Job.valid()) ImGui::TextDisabled("正在读取项目资料…");
+        if (!m_Error.empty()) ImGui::TextWrapped("%s", m_Error.c_str());
+        ImGui::End();
+    }
+
+    void DevContextPanel::DrawBrowse()
+    {
         if (ImGui::BeginCombo("任务", m_Task.empty() ? "选择任务" : m_Task.c_str()))
         {
             for (const YAML::Node& item : m_Tasks)
@@ -199,9 +335,5 @@ namespace Redflag
         ImGui::SameLine();
         if (ImGui::RadioButton("任务记录", m_RecordPage)) m_RecordPage = true;
         if (m_RecordPage) DrawRecord(); else DrawCode();
-        ImGui::EndDisabled();
-        if (m_Job.valid()) ImGui::TextDisabled("正在读取项目资料…");
-        if (!m_Error.empty()) ImGui::TextWrapped("%s", m_Error.c_str());
-        ImGui::End();
     }
 }
