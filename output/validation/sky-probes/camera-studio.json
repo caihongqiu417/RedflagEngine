@@ -1,0 +1,66 @@
+{
+  "executable_sha256": "8ef39d29b012d59934c990c59c49498df9b67219fb87f1f398b0c4a4d78ad679",
+  "renderdoc": {
+    "frame": 24,
+    "size": [
+      640,
+      410
+    ],
+    "shading_size": [
+      640,
+      410
+    ],
+    "samples_per_pixel": 1,
+    "dispatches": [
+      11,
+      54,
+      66,
+      78,
+      90,
+      103,
+      115,
+      127
+    ],
+    "draws": [
+      27,
+      32,
+      37,
+      42,
+      147,
+      152,
+      157,
+      162,
+      173,
+      176,
+      179,
+      182,
+      185,
+      188,
+      191,
+      194,
+      197,
+      200,
+      203,
+      206,
+      209,
+      212,
+      215,
+      218,
+      221,
+      224,
+      227,
+      230,
+      233
+    ],
+    "pack_event": 54,
+    "display_event": 127,
+    "messages": [],
+    "file": "studio_frame24.rdc",
+    "tool": "1.47"
+  },
+  "scene_sha256": "0f6ad70c92d2b7234ce828c523a2017091cba5edb23fa8a1a134250980a5220b",
+  "capture": "studio_frame24.rdc",
+  "max_linear_rgb": 14.70370864868164,
+  "lit_pixels": 260912,
+  "probes_sha256": "150d92851a901e1851e1988877debb5178336a1eedcadda72b96a412125cc665"
+}

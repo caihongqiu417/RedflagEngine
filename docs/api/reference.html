@@ -407,11 +407,41 @@ effects.ResetHistory();  // 切换场景或跳切相机时调用一次。</code>
             <p>从 RedflagForge 目录启动编辑器，在“渲染设置 Lighting”面板顶部选择“组合光照 Lit”。展开“质量与参数”，把“分辨率”设为“原始 Native”，着色计算就会使用场景面板的实际像素。选择“主相机 Game”可以观察场景保存的机位，选择“场景 Scene”可以绕着模型观察。</p>
             <pre><code>cd RedflagForge
 ..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe --vulkan</code></pre>
-            <p>以 Sponza 的砖墙为例，点视口上方的“实时效果”，将“直接光”设为“全部点灯”，“间接光”设为“探针 DDGI”。勾选、取消“对照：只显示直接光”，可以比较墙角增加反弹光后的明暗。GTAO 调节间接光的遮蔽，SSR 使用本帧画面寻找反射，TAA 将多帧采样结合起来。“快速移动相机”开启时，拖动或变焦期间先看模型底色，停下片刻后恢复组合光照。</p>
+            <p>点 Sponza 视口上方的“实时效果”，直接光选“全部光源”，间接光选“DDGI”。勾选“对照：只显示直接光”，再取消勾选，比较两次墙角的亮度。GTAO 对周围几何遮住的部分减弱间接光，SSR 在画面中寻找倒影，TAA 用前几帧的颜色平滑边缘。打开快速导航时，移动镜头会先显示直接光，停下后恢复组合光照。</p>
             <p>在“文件”菜单中选“保存”，同名的 .redflag.render.yaml 会保留模式、分辨率和效果参数。下次打开场景便可继续比较。初次使用 Sponza 需要在仓库根目录运行 python tests/fetch_sponza.py 获取模型。</p>
             <button class="source" data-query="LightingPreview">查看 LightingPreview</button>
             · <button class="source" data-file="RedflagForge/src/LightingPreview.cpp" data-function="LightingPreview::RenderLit(">查看直接光和间接光怎样相加</button>
             · <button class="source" data-file="RedflagForge/src/VulkanForgeLayer.cpp" data-function="VulkanForgeLayer::SaveScene(">查看场景与光照设置怎样保存</button>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>让箱子落地，并同步给另一位玩家</summary>
+          <div>
+            <p>打开 Physics-Workshop 场景，红箱子有动态刚体，地面有静态刚体。游戏层调用一次 <code>OnSimulationStart()</code> 建立碰撞体，随后每帧用 <code>OnUpdatePhysics(dt)</code> 推进物理。此时读箱子的 Transform 就能得到它落下后的姿态。退出模拟时调用 <code>OnSimulationStop()</code> 释放这次模拟用的对象。</p>
+            <p>主机连接 REDFServer 后，先用 <code>CapturePoses(scene, ids)</code> 读取这一刻要发的实体，再用 <code>WorldClient::Publish</code> 提交。上一份还在等待确认时，主机可以继续模拟。观看端每帧调用 <code>Update()</code>，收到新版本后用 <code>NetworkScene::Apply</code> 把位置写入自己的场景。两端按相同的实体编号认出箱子。</p>
+            <button class="source" data-file="Redflag/src/Redflag/Scene/Scene.cpp" data-function="Scene::OnUpdatePhysics(">查看物理步</button>
+            · <button class="source" data-file="tests/WorldSessionTests.cpp" data-function="int main(">查看主机和两个观看端</button>
+            · <a href="../pdf/Redflag-Source-Guide.pdf">实体同步与确认</a>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>播放角色动作与驱动物理双腿</summary>
+          <div>
+            <p>BVH 动作文件保存骨架的父子关系和每一帧的关节姿势。<code>AnimationClip::LoadBVH</code> 读取它们，<code>Skeleton</code> 把关节相对父骨的姿势换成模型中的位置。给皮肤上的顶点指定关节权重后，<code>SkinnedMesh::Deform</code> 就能随骨架弯曲模型。角色演示从待机和走路动作开始，还可切换到双腿的物理模拟。</p>
+            <p>想在 Forge 里查看动作，可以打开 <code>Character-Walk.redflag</code>，在层级里选中角色，到“骨骼动画”暂停播放或拖动进度。场景保存动作文件和播放到的秒数。独立示例中的蒙皮和物理行走另见下方的角色动画手册。</p>
+            <p>模拟行走用 <code>Ragdoll::DriveWalk(seconds, speed)</code>，需在每个固定的物理步前调用。速度以米每秒计，沿模型的 +Z。髋、膝、踝关节的驱动与地面的接触共同决定实际位移。调用 <code>Relax()</code> 放松关节，双腿随重力倒下。</p>
+            <button class="source" data-file="tests/CharacterAnimationTests.cpp" data-function="void CheckPhysics(">查看平地行走测试</button>
+            · <a href="../pdf/Redflag-Character-Animation.pdf">角色动画、蒙皮与行走</a>
+          </div>
+        </details>
+        <details class="guide">
+          <summary>从 NPC 视角找到可拿取的物体</summary>
+          <div>
+            <p>物理实验台的候选图片在游戏开始前生成。<code>AskNpcVision</code> 接收场景名称和问题，在工作线程等待图片服务的回答。游戏继续绘制，等结果准备好后回到场景线程，按候选编号调用 <code>CanPickUp</code>。这个函数用当前的可拿取组件、手到物体的距离以及中间的遮挡决定能否拿取。箱子即使仍出现在旧照片里，游戏删除它以后查询也会失败。</p>
+            <p>如果问题是“地台右侧在哪里”，可以用 <code>AskNpcCandidate</code> 同时查询实体和已标注的图片区域。区域的 <code>Origin</code> 是拍摄位置，<code>Direction</code> 指向图片中选中的地方。从那里看过去可以认出目标所在的大致方向。一张照片只能给出这条射线，目标有多远仍需由场景里的几何来确定。</p>
+            <button class="source" data-file="Redflag/src/Redflag/Scene/NpcVision.cpp" data-function="CanPickUp(">查看拿取查询</button>
+            · <button class="source" data-file="Redflag/src/Redflag/Scene/NpcVision.h" data-function="AskNpcCandidate(">查看区域与实体候选</button>
+            · <a href="../npc-vision/README.md">图片服务与验证场景</a>
           </div>
         </details>
         <details class="guide">

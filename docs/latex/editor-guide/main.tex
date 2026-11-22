@@ -128,13 +128,13 @@ $forge = '..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe'
 在仓库根目录运行 \code{python tests/fetch\_camera\_studio.py}。打开 Vulkan 编辑器，在“文件 → 打开场景”中选 \path{assets/scenes/Camera-Studio.redflag}。切到\ui{主相机 Game}，看镜圈下方的金属托板和机身右边框。
 
 \begin{figure}[H]\centering
-\includegraphics[width=.95\linewidth]{../../../output/profiling/material-studio/after.png}
+\includegraphics[width=.88\linewidth]{../../../output/validation/sky-probes/camera-studio.png}
 \caption{正式 Vulkan 编辑器中的古董相机。机身使用模型自带的底色、法线和材质贴图，棚灯的倒影来自场景选定的 HDR 全景。}
 \end{figure}
 
 点开视口的\ui{实时效果}，关闭\ui{镜面 IBL}，再打开。机身右边框跟着变暗、变亮，两盏场景灯一直开着。要单独调灯，可在层级面板选\ui{主灯}，到\ui{属性 → 点光源}调整强度和半径。半径决定这盏灯最远能照到哪里。
 
-想换一间摄影棚，先用\ui{另存为}留下场景副本，再从菜单栏的\ui{环境贴图}选择另一张 HDR 全景，或打开之前保存的 \path{.rfibl} 文件。\ui{镜面 IBL}控制金属和涂漆表面的环境倒影。把“间接光”选成\ui{环境漫反射 IBL}，全景也会照亮木头和皮革。换回\ui{DDGI}，则用房间里墙面之间传来的光计算漫反射。按 \ui{Ctrl + S} 可以留下这次的环境选择和效果开关。
+摄影棚随场景附有一份烘焙光照。打开时，“质量与参数”中会显示\ui{DDGI 探针：已烘焙}。想换一张全景，可以先\ui{另存为}，再到菜单栏的\ui{环境贴图}选一张 HDR 图片。金属上会映出新环境。把“间接光”设为\ui{环境漫反射 IBL}，木头和皮革会受到整片天空的光照。选\ui{DDGI}时，窗框能挡住天光，被照亮的墙也能把光反射给别处。换好全景后，在“质量与参数”中点\ui{烘焙探针}，再按 \ui{Ctrl + S} 保存。
 \clearpage
 \section{灯牌的颜色与花纹}
 在 Vulkan 编辑器打开 \path{assets/scenes/Light-Studio.redflag}，切到\ui{主相机 Game}。模型和贴图已经随项目附上。房间里只有左边的灯牌发光，白墙和地板靠它照亮。灯牌的三条色带共用一份材质。上、下两条在贴图里是白色，中间一条是灰色，因此中间看起来暗一些。

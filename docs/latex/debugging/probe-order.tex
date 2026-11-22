@@ -26,3 +26,5 @@ return ProbeBake::Hash(key, Lights.data(), Lights.size() * sizeof(GILight));
 修正后用两个独立进程再次打开浴室，面板保持「已烘焙」。RenderDoc 第 12 帧有 8 次计算调度，省去了更新探针的一次。独立回归另外交换两盏灯的顺序，并颠倒两个不同颜色和位置的模型；两次都能读回原文件。改灯强或替换几何时，两次都拒绝使用旧文件。\href{run:../../output/validation/probe-order/reproduction.json}{两次实拍记录}\quad\href{run:../../tests/ProbeBakeCheck.h}{C++ 回归用例}
 
 重新烘焙又暴露出一处差别。把红灯和蓝灯放在同一位置，调换它们在文件中的顺序，两次用相同的随机种子从头烘焙。原先校验值一样，实际却有 5,754 个 RGB 分量不同。探针抽到数组中的第一盏灯时，两次读到的颜色恰好相反。现在烘焙先把灯排成同样的顺序，按这份列表抽样并计算校验值。新测试里两次写出的 96,792 字节完全相同。实时绘制仍可以沿用自己的灯光编号。\href{run:../validation/directional/bake-order.csv}{两次烘焙的逐项比较}
+
+同一份文件还能换一个 Vulkan 驱动读取。在同一台 Windows 电脑上，先用 RTX 5070 Ti Laptop 烘焙灯光工作室，再用 SwiftShader 在 CPU 上打开并另存，文件逐字节相同。交换两者再做一次，同样可以复用。如果让两个驱动各自从头算，9,072 个线性 RGB 分量的平均绝对差为 $6.08\times10^{-6}$，最大为 $0.00110$。这两项读数分别回答文件能否带走，以及换一种实现重新计算时数值相差多少。\href{run:../validation/probe-drivers.json}{两种 Vulkan 实现的往返记录}

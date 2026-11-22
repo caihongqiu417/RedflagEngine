@@ -16,7 +16,7 @@
 
 [RTXGI-DDGI 源码](https://github.com/NVIDIAGameWorks/RTXGI-DDGI) · [NVIDIA 的探针更新与遮挡说明](https://github.com/NVIDIAGameWorks/RTXGI-DDGI/blob/main/docs/Algorithms.md) · [JCGT 2019 原论文（未列 DOI）](https://jcgt.org/published/0008/02/01/) · [GDC 的探针课](https://www.gdcvault.com/play/1026182/Ray-Traced-Irradiance-Fields-%28Presented) · [GAMES202 的 RSM](https://sites.cs.ucsb.edu/~lingqi/teaching/resources/GAMES202_Lecture_07.pdf) · [PBRT 漫反射](https://pbr-book.org/4ed/Reflection_Models/Diffuse_Reflection)
 
-[墙面之间的多次漫反射](probe-feedback.tex) · [保存和载入烘焙探针](probe-baking.tex)
+[墙面之间的多次漫反射](probe-feedback.tex) · [窗外的环境光](sky-probes.tex) · [保存和载入烘焙探针](probe-baking.tex)
 
 ## ReSTIR DI 的选灯与复用
 

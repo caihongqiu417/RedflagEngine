@@ -60,8 +60,8 @@ def generate():
             parts.append(r"\input{point-materials}")
             index += ["[点光源下的金属高光](point-materials.tex)", ""]
         if key == "ddgi":
-            parts.extend([r"\input{probe-feedback}", r"\input{probe-baking}"])
-            index += ["[墙面之间的多次漫反射](probe-feedback.tex) · [保存和载入烘焙探针](probe-baking.tex)", ""]
+            parts.extend([r"\input{probe-feedback}", r"\input{sky-probes}", r"\input{probe-baking}"])
+            index += ["[墙面之间的多次漫反射](probe-feedback.tex) · [窗外的环境光](sky-probes.tex) · [保存和载入烘焙探针](probe-baking.tex)", ""]
         if key == "ssr":
             parts.extend([r"\input{mirror}", r"\input{rough-reflections}"])
             index += ["[屏幕外的倒影与遮挡](mirror.tex) · [PBRT 镜面反射](https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission) · [AMD 混合反射](https://gpuopen.com/manuals/fidelityfx_sdk/samples/hybrid-reflections/)", ""]

@@ -16,19 +16,19 @@ OUT = ROOT / "output/validation/directional-light"
 SCENE = ROOT / "RedflagForge/assets/scenes/Reference-StanfordBunny.redflag"
 
 
-def capture(exe, tools, scene, label):
+def capture(exe, tools, scene, image_file, width=384):
     with exe.open("rb") as binary:
         digest = hashlib.file_digest(binary, "sha256").hexdigest()
     subprocess.run([sys.executable, str(ROOT / "tests/capture_material_studio.py"), "--renderdoc", str(tools),
-                    "--exe", str(exe), "--scene", str(scene), "--width", "384"], cwd=ROOT, check=True)
-    work = ROOT / "tmp/material-reference" / f"{scene.stem}-{digest[:12]}-384"
+                    "--exe", str(exe), "--scene", str(scene), "--width", str(width)], cwd=ROOT, check=True)
+    work = ROOT / "tmp/material-reference" / f"{scene.stem}-{digest[:12]}-{width}"
     replay = json.loads((work / "replay.json").read_text(encoding="utf8"))
     w, h = replay["size"]
     image = np.fromfile(work / "display.f32", "<f4").reshape(h, w, 4)[:, :, :3]
     light = np.fromfile(work / "light.f32", "<f4").reshape(h, w, 4)[:, :, :3]
     assert replay["pack_event"] and replay["frame"] == 24 and not replay["messages"]
     assert np.isfinite(image).all() and np.isfinite(light).all()
-    Image.fromarray(np.uint8(np.clip(image, 0, 1) * 255 + .5)).save(OUT / f"bunny-{label}.png")
+    Image.fromarray(np.uint8(np.clip(image, 0, 1) * 255 + .5)).save(image_file)
     return dict(executable_sha256=digest, renderdoc=replay, scene_sha256=hashlib.sha256(scene.read_bytes()).hexdigest(),
                 capture=Path((work / "frame-path.txt").read_text(encoding="utf8")).name,
                 max_linear_rgb=float(light.max()), lit_pixels=int((light.max(axis=2) > .01).sum()))
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     settings = dict(Shading="Lit", Direct="All point lights", Indirect="Off", TAA=True, GTAO=False,
                     SSR=False, SpecularIBL=False, FastNavigation=False, PreviewWidth=384)
     Path(str(scene) + ".render.yaml").write_text(yaml.safe_dump(settings), encoding="utf8")
-    before = capture(args.before_exe.resolve(), args.renderdoc.resolve(), scene, "before")
-    after = capture(args.exe.resolve(), args.renderdoc.resolve(), scene, "after")
+    before = capture(args.before_exe.resolve(), args.renderdoc.resolve(), scene, OUT / "bunny-before.png")
+    after = capture(args.exe.resolve(), args.renderdoc.resolve(), scene, OUT / "bunny-after.png")
     assert before["max_linear_rgb"] == 0 and after["lit_pixels"] > 0
     report = dict(scene=SCENE.name, settings=settings, threshold_linear_rgb=.01, before=before, after=after)
     (OUT / "viewport.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf8")

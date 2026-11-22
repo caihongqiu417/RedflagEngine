@@ -1,0 +1,49 @@
+\clearpage
+\section{窗外的环境光}
+
+如果房间没有开灯，白墙仍可能被窗外的天空照亮。沿探针的一个采样方向看去，先碰到墙，就取墙面向探针反射的光；穿过窗户直到离开场景，就取窗外那个方向的光。一张 HDR 全景记录了从四周各个方向照过来的亮度。把摄影棚全景放在兔子周围、移掉所有场景灯，可以单独看这部分光。
+
+\pair{validation/sky-probes/bunny-first.png}{每个探针方向只取 64 个样本}{validation/sky-probes/bunny-after.png}{先把每片天空的光加起来}
+{\small\color{quiet}Stanford Bunny，正式 Vulkan 编辑器第 24 帧。两次使用同一张 \href{https://polyhaven.com/a/studio_small_09}{Poly Haven 摄影棚全景}、同一机位与曝光。关闭镜面环境光、SSR 和 GTAO。背景是场景面板的清屏色。}
+
+沿用前面余弦加权的采样方法，设上方的天空处处一样亮，RGB 为 $(1,0.5,0.25)$。每条通向天空的射线都取到这个颜色。若其余射线打在完全吸光的墙上，从某个探针方向射出 $N$ 条，其中 $k$ 条穿过窗户，这次对 $E/\pi$ 的估计就是
+\[
+ \widehat{E/\pi}=\frac{k}{N}\,(1,0.5,0.25).
+\]
+没有遮挡时 $k=N$，关严窗户后 $k=0$。换成真实全景，窗外各处亮度不同，这时要把穿过窗户的每条射线各自取到的 RGB 相加，再除以总采样数。如果墙能反光，撞到墙的射线也会带回颜色；打开多次漫反射，已经被天空照亮的墙会在下一轮把光传给别处。环境光已经进入这些探针，再把不考虑窗框遮挡的整片天空加一次，同一份光就会算两遍。
+
+左图的斑块来自小而亮的摄影灯。对同一片地面，一支探针碰巧有几条射线指向灯箱，旁边的探针却一条也没抽到。增加样本可以减轻波动，但只要灯箱在图上足够小，少取几条就会漏掉主要光源。我们保留天空立方体图中最清晰的一层，把它分块。每块先累加所有像素的光，再选出一个代表方向，在每个探针处沿这个方向检查遮挡。亮灯即使只占几粒像素，它的光也会计入所在的块。代价是窗框若只挡住一块中的半边，一个方向无法完整描述这半边阴影。
+
+这种取舍可以对照 Agarwal 等人用预先积分的光源区域减少采样噪声的工作。论文按照图像内容划分区域，Redflag 使用固定分块。环境光的方向与能量按 \href{https://pbr-book.org/4ed/Light_Sources/Infinite_Area_Lights}{PBRT 第四版 §12.5} 的无限面积光理解。\href{https://graphics.ucsd.edu/~henrik/papers/structured/}{Agarwal 等，SIGGRAPH 2003}
+
+\clearpage
+\subsection{一块天空的亮度}
+把一张白卡水平放好。卡片朝上的单位法线记作 $n$，天空中一个像素的单位方向记作 $\omega_i$。正上方来的光正对卡片，斜着来的光只照到卡片沿该方向投影的面积；这部分比例是 $\max(0,n\cdot\omega_i)$。还要算这个像素占了多大一片天空。设它在单位球面上占的面积为 $\Delta\omega_i$，它在平均值里应当占的权重就是
+\[
+ w_i=\max(0,n\cdot\omega_i)\,\Delta\omega_i,\qquad
+ \frac E\pi \;\simeq\;
+ \frac{\displaystyle\sum_B V_B\sum_{i\in B} L_i w_i}{\displaystyle\sum_i w_i}.
+\]
+这里 $L_i$ 是像素的线性 RGB。每个天空块 $B$ 选出一个方向查遮挡，能看到天空时 $V_B=1$，被屋顶挡住时 $V_B=0$。分母仍加上整个半球的权重。如果只除以窗户露出来的部分，把窗户关到只剩一条缝，房间仍会像开着整扇窗一样亮。
+
+{\small\color{quiet}源码 \path{Renderer/GI/Shaders/SkyVisibility.comp}，摘自 \texttt{integrateCell}。}
+\begin{lstlisting}
+float invLength = inversesqrt(1. + dot(plane, plane));
+vec3 direction = cubeDirection(int(face), uv) * invLength; // 单位方向
+float w = max(dot(normal, direction), 0.) * invLength * invLength * invLength;
+vec3 incoming = environment[index].rgb * w; // 这个像素分到的光
+energy += incoming;
+weight += w;
+\end{lstlisting}
+立方体图的像素均匀排在平面上，从球心看去，面角的同一个像素比面中心的像素覆盖更小的范围。代码里的后三个 \texttt{invLength} 就是这次面积换算。计算余弦时，\texttt{direction} 本身还要归一化。我们曾漏掉这一步，人工灯箱下每个测点都一样亮，整块白卡却偏暗了约 9\%。
+
+\begin{center}\small
+\begin{tabular}{@{}lrrr@{}}\toprule
+白色平面上的照明 & 独立积分（红） & GPU（红） & RGB 均方根误差\\\midrule
+人工方形灯箱 & 0.374260 & 0.374276 & 0.000010\\
+摄影棚全景 & 0.827443 & 0.828013 & 0.000599\\\bottomrule
+\end{tabular}
+\end{center}
+这些读数取自在开阔地朝上的 504 个位置。误差先按 RGB 三个分量分别求差、平方，取所有测点的平均后再开方。换成带天窗的房间，在六处查到的红色最大绝对偏差为 0.02661；一个天空块刚好跨过窗沿时，用一个方向判断遮挡会有偏差。
+
+CPU 上的 \texttt{PrepareSky} 让 GPU 先加总天空像素，再逐个探针查遮挡。墙和天空没变时，多次漫反射可以重用这份结果。烘焙文件保留最后的探针光照，下次打开同一场景就能使用。程序按材质和环境选择已编译的着色器版本，普通不发光材质、镂空材质与带环境光的探针共享一套源文件；只有需要测试透明度的版本才读取遮罩。编译选项见 \path{Renderer/GI/Shaders/Compile.ps1}。

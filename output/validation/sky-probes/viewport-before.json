@@ -1,0 +1,74 @@
+{
+  "executable_sha256": "16386ce2b4b8ad7ae130c04a0b3620dcdbdd8f1b0e4b7bd915c0db7b4964553c",
+  "renderdoc": {
+    "frame": 24,
+    "size": [
+      384,
+      246
+    ],
+    "shading_size": [
+      384,
+      246
+    ],
+    "samples_per_pixel": 1,
+    "dispatches": [
+      11,
+      44,
+      56,
+      68,
+      80,
+      92,
+      104
+    ],
+    "draws": [
+      27,
+      32,
+      124,
+      129,
+      140,
+      143,
+      146,
+      149,
+      152,
+      155,
+      158,
+      161,
+      164,
+      167,
+      170,
+      173,
+      176,
+      179,
+      182,
+      185,
+      188,
+      191,
+      194,
+      197,
+      200
+    ],
+    "pack_event": 44,
+    "display_event": 104,
+    "messages": [],
+    "file": "studio_frame24.rdc",
+    "tool": "1.47"
+  },
+  "scene_sha256": "96ffdadbd5f85f0481c7f5e203eac55d573708b8b1df476ce407887bcde3a671",
+  "capture": "studio_frame24.rdc",
+  "max_linear_rgb": 0.0,
+  "lit_pixels": 0,
+  "probes_sha256": "e0f7a366cd2dc64ad2d4ecc283bdae75e241f26d5d49541d20d05b01b3b56be6",
+  "settings": {
+    "Shading": "Lit",
+    "Direct": "All point lights",
+    "Indirect": "DDGI",
+    "TAA": true,
+    "GTAO": false,
+    "SSR": false,
+    "SpecularIBL": false,
+    "FastNavigation": false,
+    "PreviewWidth": 384
+  },
+  "environment": "../textures/studio_small_09_1k.hdr",
+  "environment_sha256": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
+}
