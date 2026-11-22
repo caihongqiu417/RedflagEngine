@@ -7,7 +7,7 @@ param(
     [string]$ModelFile,
     [string]$VisionProjector,
     [string]$SpeechRuntime = $env:REDFLAG_SPEECH_RUNTIME,
-    [string]$SpeechPython,
+    [string]$SpeechPython = $env:REDFLAG_SPEECH_PYTHON,
     [int]$DecisionPort = 8716,
     [int]$SpeechPort = 8717,
     [int]$LlamaPort = 18157,
@@ -64,12 +64,14 @@ function Start-Decision {
 }
 
 function Start-Speech {
+    $health = "http://127.0.0.1:$SpeechPort/v1/speech/voices"
+    if (Read-Health $health) { Write-Host "speech ready ($health)"; return }
     if (!$SpeechRuntime) {
         $SpeechRuntime = Join-Path ([IO.Path]::GetPathRoot($project)) 'Udev/Delivery/Saved/DeliverySpeech/runtime'
     }
     if (!(Test-Path -LiteralPath $SpeechPython)) { throw 'Set -SpeechPython or install scripts/requirements-speech.txt in tmp/ai-media-venv.' }
     $speechArgs = @((Join-Path $PSScriptRoot 'speech_service.py'),'--runtime',$SpeechRuntime,'--port',"$SpeechPort")
-    Start-LocalProcess 'speech' $SpeechPython $speechArgs "http://127.0.0.1:$SpeechPort/v1/speech/voices"
+    Start-LocalProcess 'speech' $SpeechPython $speechArgs $health
 }
 
 $failed = @()

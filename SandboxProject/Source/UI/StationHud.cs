@@ -59,7 +59,7 @@ namespace Sandbox
                 showingHelp = showKeys;
             }
 
-            string controls = done ? "R   重新开始" : "T   队友通讯     F1   按住查看操作";
+            string controls = done ? "R   重新开始" : "T   呼叫瓦特     F1   操作帮助";
             if (lastTitle == title && lastObjective == objective && lastHint == hint &&
                 lastControls == controls && finished == done) return;
 

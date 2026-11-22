@@ -32,6 +32,8 @@ Entities:
         - {Name: Guard, Type: Entity, Value: 1103}
         - {Name: Relay, Type: Entity, Value: 1110}
         - {Name: Exit, Type: Entity, Value: 1111}
+        - {Name: ExitRadius, Type: Float, Value: 1.6}
+        - {Name: TeamExitRadius, Type: Float, Value: 3.5}
         - {Name: Supply, Type: Entity, Value: 1112}
   - Entity: 1102
     TagComponent: {Tag: 瓦特}

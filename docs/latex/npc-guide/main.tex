@@ -7,23 +7,38 @@
 \fancyhead[R]{\sffamily\small\color{Muted}潮汐维修站}
 \setlength{\parindent}{2\ccwd}
 \setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{3em}
 \ctexset{section={afterindent=true}}
 \newcommand{\button}[1]{{\bfseries\color{Teal}#1}}
 \newcommand{\picturecaption}[1]{\par\noindent{\small\color{Muted}#1}\par}
 \begin{document}
 \bodytype
-\section*{维修站里的第一局}
+\section*{和瓦特组队}
 
-打开项目根目录的 \texttt{Open-Watt-Station.cmd} 进入维修站。左上角显示当前目标，左下角可以查看生命和背包。按 W、A、S、D 移动，按住鼠标右键转动视角。走近维修台后按住 E，恢复供电后前往出口。Shift 加速，Ctrl 蹲下，空格跳跃。数字键 1、2 切换装备，按鼠标左键使用。受伤时按 H 使用背包里的医疗包。
+解压试玩包，双击 \path{Play-With-Companion.cmd}。进入维修站后，你操控蓝灰色机器人，左前方的赭色机器人是你的队友瓦特。按 \button{T} 打开「队友通讯」，输入「给我留一个医疗包」，按回车发送。要用语音，在这个窗口里按住 \button{V} 说话，松开后发送。
 
 \begin{center}
-\includegraphics[width=\linewidth]{../../../output/validation/watt-station/salvage-yard-workshop.png}
+\includegraphics[width=\linewidth]{../../../output/validation/packaged-watt/yard-original.png}
 \end{center}
-\picturecaption{瓦特维修站，Vulkan 游戏画面。任务目标在左上角，角色头顶显示各自的名字。}
+\picturecaption{正式 Vulkan 游戏画面。蓝灰色机器人是玩家，左侧是瓦特。左下角显示生命、装备与医疗包。按住 F1 可以查看奔跑、跳跃、换装和使用医疗包的按键，松开即可收起。}
 
-按 T 打开\button{队友通讯}，选中瓦特，在输入框写下「给我留一个医疗包」。连接决策服务后，瓦特会根据当前可执行的动作作出选择。展开\button{现场候选}可以看这时它看到了哪些对象。下方的\button{对局记录}会陆续写出玩家的指令、模型的选择和游戏执行结果。
+看着瓦特试一次交接。「给我留一个」和「现在送过来」都提到了药，前一句约好了你去取，后一句需要它走过来。走动时看两人间的距离，交接时看左下角的医疗包数量。通讯窗口下方的\button{对局记录}能帮你分清楚它听到了哪句话、选了什么动作、最后有没有把药递到你手上。
 
-瓦特选择「等待队友取药」后会留在原地。走到它能把药递给你的位置，再看两人的背包数量。它手上没有药时，先去收集是另外一个动作。若要改令，直接发送下一句话。想观察瓦特会不会把药送过来，可以另开一局，改说「把药拿到我身边」并比较它的行动。
+维修站提供一个两人可以合作的目标。蓝色棚顶下面是应急发电机，可以请瓦特去修，也可以自己靠近后按住 E。供电恢复后，两人回到西侧闸口才能一起撤离。如果瓦特倒下，靠近它并按住 E 扶起它。
+
+\clearpage
+\section*{在另一台电脑上启动}
+
+\begin{center}
+\includegraphics[width=\linewidth]{../../../output/validation/packaged-watt/radio.png}
+\end{center}
+\picturecaption{从试玩包启动，在游戏中按 T 打开的队友通讯。输入框在语音按钮下面，点击后可以直接打字；按 Enter 发送。}
+
+在源码目录，启动入口是 \path{Open-Watt-Station.cmd}。试玩包包含游戏程序、关卡、瓦特的角色文件和本机服务脚本。自然语言指令需要模型，语音输入还需要识别模型与 Python 运行环境。已经在本机运行的服务可直接复用。决策服务使用端口 8716，语音服务使用端口 8717。如果窗口报告哪项服务没有启动，可以单独运行 \texttt{Play.cmd} 检查游戏画面和操作。
+
+使用自己的模型服务时，把环境变量 \path{REDFLAG_MODEL_ENDPOINT} 设为该服务的聊天请求地址，把 \path{REDFLAG_MODEL_NAME} 设为模型名称。有图片输入时，运行 \path{scripts/Start-NpcServices.ps1} 并传入 \texttt{-Vision}。本地默认配置使用 llama.cpp 加载 Qwen3-VL-2B-Instruct。模型权重需另行准备。
+
+语音服务读取 \path{REDFLAG_SPEECH_RUNTIME} 指向的语音模型目录，\path{REDFLAG_SPEECH_PYTHON} 指向安装了随包 \path{scripts/requirements-speech.txt} 所列依赖的 Python。朗读中文时还需在 Windows 中安装中文语音。当前试玩构建在 Windows 开发机上使用 Vulkan 和调试版运行库；在其他机器上启动时，也需要兼容的显卡驱动和对应的运行库。
 
 \clearpage
 \section*{给瓦特做一个角色副本}

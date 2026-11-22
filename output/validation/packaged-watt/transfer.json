@@ -1,0 +1,68 @@
+{
+  "scene": "assets/scenes/Watt-Station.redflag",
+  "verified_files": 590,
+  "client": [
+    1920,
+    1080
+  ],
+  "exe_sha256": "962800655604c8095d3550ec8f82a0a8937d43a5006098f30af366398725eed8",
+  "before": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.60470343,
+        0.0799999982,
+        -0.12387839
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      },
+      "action": "follow",
+      "stage": "walk"
+    }
+  },
+  "after": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 2
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.60470343,
+        0.0799999982,
+        -0.12387839
+      ],
+      "health": 100,
+      "inventory": {},
+      "action": "follow",
+      "stage": "idle"
+    }
+  },
+  "delivered": true
+}

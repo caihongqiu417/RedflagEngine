@@ -13,7 +13,7 @@ from urllib.parse import unquote, urlsplit
 from ruamel.yaml import YAML
 
 
-MAPS = {"BaseColorMap", "NormalMap", "MetallicRoughnessMap", "AOMap", "AlphaMap", "EmissiveMap", "TexturePath"}
+MAPS = {"BaseColorMap", "NormalMap", "MetallicRoughnessMap", "AOMap", "AlphaMap", "EmissiveMap", "HeightMap", "TexturePath"}
 UI_FILES = {".png", ".jpeg", ".jpg", ".ttf", ".otf", ".svg", ".webp", ".yaml", ".dds", ".ktx2"}
 INDEX = Path(__file__).resolve().parents[1] / "bin-int/Tools/Assets/AssetIndex.exe"
 
@@ -45,6 +45,8 @@ class AssetBundle:
 
     def model_paths(self, scene):
         ids = {value for field, value in values(scene) if field == "ModelID" and value}
+        if not ids:
+            return {}
         if not INDEX.is_file():
             raise ValueError("请先从仓库根目录运行 scripts/build_asset_index.cmd。")
         result = subprocess.run([INDEX, self.root / "assets"], input="".join(f"{i}\n" for i in sorted(ids)),
@@ -110,10 +112,10 @@ class AssetBundle:
                     elif part.get("FilePath"): self.add(self.root / part["FilePath"], name)
             elif field == "DecalComponent" and value.get("Texture"):
                 self.add(self.root / value["Texture"], name)
-            elif field == "TerrainComponent":
-                for image in ("Heightmap", "BaseColorTexture"):
             elif field == "FoliageComponent" and value.get("Profile"):
                 self.add(self.root / value["Profile"], name)
+            elif field == "TerrainComponent":
+                for image in ("Heightmap", "BaseColorTexture"):
                     if value.get(image): self.add(self.root / value[image], name)
             elif field == "HudComponent" and value.get("Layout"):
                 self.add(self.root / value["Layout"], name)
@@ -145,9 +147,17 @@ class AssetBundle:
         self.add(Path(__file__).with_name("Play-Bundle.cmd"), "player", "Play.cmd")
         for file in executable.parent.glob("*.dll"):
             self.add(file, "player", file.name)
-        for folder in ("mono/lib", "Resources/Scripts", "assets/shaders"):
+        for library in (self.root / "Resources/Scripts").glob("*.dll"):
+            self.add(library, "player")
+        for folder in ("mono/lib", "mono/etc", "assets/shaders"):
             for file in (self.root / folder).rglob("*"):
                 if file.is_file(): self.add(file, "player")
+
+    def companion(self):
+        from package_ai_sdk import SCRIPTS
+        for name in SCRIPTS:
+            self.add(Path(__file__).with_name(name), "companion", "scripts/" + name)
+        self.add(Path(__file__).with_name("Play-With-Companion.cmd"), "companion", "Play-With-Companion.cmd")
 
     def write(self, output: Path, entry: str):
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -178,11 +188,15 @@ if __name__ == "__main__":
     parser.add_argument("--ui", type=Path, action="append", default=[], help="另行选用的 UI 布局文件")
     parser.add_argument("--views", type=Path, action="append", default=[], help="3DGS 烘焙的 index.json")
     parser.add_argument("--runtime", type=Path, help="一起打包指定 RedflagForge.exe 及游戏运行库")
+    parser.add_argument("--companion", action="store_true", help="随包提供本机模型和语音服务的启动入口")
+    parser.add_argument("--guide", type=Path, help="随包提供这款游戏的操作手册")
     args = parser.parse_args()
     bundle = AssetBundle(args.project)
     entry = bundle.scene(args.scene)
     for ui in args.ui: bundle.add(ui, entry)
     for index in args.views: bundle.views(index)
     if args.runtime: bundle.runtime(args.runtime)
+    if args.companion: bundle.companion()
+    if args.guide: bundle.add(args.guide, "guide", args.guide.name)
     manifest = bundle.write(args.output, entry)
     print(f"{entry} -> {args.output}: {len(manifest['files'])} files")
