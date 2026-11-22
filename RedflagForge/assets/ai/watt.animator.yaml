@@ -1,0 +1,22 @@
+# ID 是游戏动作，Clip 是导入模型的剪辑名。Contact 表示手接触物品时，动作已播完的比例。
+States:
+  - {ID: idle, Clip: Idle-cycle, Loop: true, Blend: 0.18}
+  - {ID: walk, Clip: walking_nogun-cycle, Loop: true, Blend: 0.18}
+  - {ID: run, Clip: running_nogun-cycle, Loop: true, Blend: 0.15}
+  - {ID: wait, Clip: Idle-cycle, Loop: true, Blend: 0.25}
+  # 拾取时左腕在第 36 帧降到最低；递物时第 22 帧伸到最前。作者的两段动作均为每秒 30 帧。
+  - {ID: pickup, Clip: Station-Pickup, Seconds: 2.5, Contact: 0.48, Loop: false, Blend: 0.14}
+  - {ID: give, Clip: Station-Give, Seconds: 2.0, Contact: 0.366667, Loop: false, Blend: 0.14}
+  - {ID: revive, Clip: Station-Pickup, Loop: false, Blend: 0.2}
+  - {ID: repair, Clip: Cannon_Charge-cycle, Loop: true, Blend: 0.2}
+  - {ID: aim, Clip: AIM-Center, Loop: false, Blend: 0.12}
+  - {ID: fire, Clip: Cannon_Charge, Loop: false, Blend: 0.08}
+  - {ID: equip, Clip: Cannon_activation-noexp, Loop: false, Blend: 0.12}
+  - {ID: jump, Clip: jump_1_up, Loop: false, Blend: 0.1}
+  - {ID: climb, Clip: Station-Pickup, Loop: false, Blend: 0.12}
+  - ID: land
+    Clip: jump_5_hardlanding
+    Loop: false
+    Blend: 0.1
+    # 每秒 24 帧：第 2 帧骨盆最低。第 5 帧结束缓冲是游戏设定，可在 Forge 调整。
+    Events: [{Name: KneeBend, Start: 0.08333333}, {Name: Recovery, Start: 0, End: 0.20833333}]

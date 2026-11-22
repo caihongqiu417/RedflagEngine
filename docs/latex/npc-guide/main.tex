@@ -1,0 +1,42 @@
+% !TeX program = xelatex
+\input{../rhi/preamble}
+\input{../rhi/layout}
+\geometry{paperwidth=196mm,paperheight=264mm,left=19mm,right=19mm,top=21mm,bottom=21mm}
+\hypersetup{pdftitle={潮汐维修站：玩家与角色创作手册},pdfauthor={Redflag}}
+\fancyhead[L]{\sffamily\small\bfseries\color{Teal}RedflagForge}
+\fancyhead[R]{\sffamily\small\color{Muted}潮汐维修站}
+\setlength{\parindent}{2\ccwd}
+\setlength{\parskip}{5pt}
+\ctexset{section={afterindent=true}}
+\newcommand{\button}[1]{{\bfseries\color{Teal}#1}}
+\newcommand{\picturecaption}[1]{\par\noindent{\small\color{Muted}#1}\par}
+\begin{document}
+\bodytype
+\section*{维修站里的第一局}
+
+打开项目根目录的 \texttt{Open-Watt-Station.cmd} 进入维修站。左上角显示当前目标，左下角可以查看生命和背包。按 W、A、S、D 移动，按住鼠标右键转动视角。走近维修台后按住 E，恢复供电后前往出口。Shift 加速，Ctrl 蹲下，空格跳跃。数字键 1、2 切换装备，按鼠标左键使用。受伤时按 H 使用背包里的医疗包。
+
+\begin{center}
+\includegraphics[width=\linewidth]{../../../output/validation/watt-station/salvage-yard-workshop.png}
+\end{center}
+\picturecaption{瓦特维修站，Vulkan 游戏画面。任务目标在左上角，角色头顶显示各自的名字。}
+
+按 T 打开\button{队友通讯}，选中瓦特，在输入框写下「给我留一个医疗包」。连接决策服务后，瓦特会根据当前可执行的动作作出选择。展开\button{现场候选}可以看这时它看到了哪些对象。下方的\button{对局记录}会陆续写出玩家的指令、模型的选择和游戏执行结果。
+
+瓦特选择「等待队友取药」后会留在原地。走到它能把药递给你的位置，再看两人的背包数量。它手上没有药时，先去收集是另外一个动作。若要改令，直接发送下一句话。想观察瓦特会不会把药送过来，可以另开一局，改说「把药拿到我身边」并比较它的行动。
+
+\clearpage
+\section*{给瓦特做一个角色副本}
+
+在队友窗口打开\button{角色创作}，选择 \texttt{watt.npc.yaml}。点\button{复制角色}，给新角色起名，再填一个新文件名，例如 \texttt{medic.npc.yaml}。副本有自己的角色定义、行为树及原角色引用的动作表。继续编辑前先看窗口顶部的资产名。
+
+\begin{center}
+\includegraphics[width=.78\linewidth]{figures/role.png}
+\end{center}
+\picturecaption{角色创作面板。图由同一份 Forge 面板代码在界面测试中渲染，测试使用 Dear ImGui 默认配色。}
+
+在\button{角色}页写性格和行动约定。音色留空会使用系统默认声音。点\button{读取可用音色}，从列表里选一个本机声音，到\button{试答与试听}听一句，再点\button{保存角色}。试答会把填写的台词和候选交给模型。进入游戏后，队友只能从当时场景允许的候选里选择。
+
+\button{候选}页可以改写交给模型的动作说明。要把「留药」改成「立刻分享」，在行为树里将根节点的 \texttt{reserve} 拖到「分享物资」的左侧圆点，保存后试跑该候选。结果会显示从节点 1 到节点 5。\button{动画}页可以换这个游戏阶段播放的剪辑，并设定手在何时接触物品。只换声音时，行为树里的连线和动作表里的时间会保留。
+\input{animation-events}
+\end{document}

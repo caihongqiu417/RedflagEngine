@@ -1,0 +1,21 @@
+{
+  "exe_sha256": "b0a224aedaccebdecf5ce0171551fe796e029b2cf1d0b42cf8f9336779bae5a1",
+  "configured": {
+    "Name": "Recovery",
+    "Start": 0,
+    "End": 0.300000012
+  },
+  "callbacks": [
+    [
+      "22.320730",
+      "Begin",
+      "0.602938"
+    ],
+    [
+      "22.870530",
+      "End",
+      "0.549799"
+    ]
+  ],
+  "observed_seconds": 0.5497999999999976
+}
