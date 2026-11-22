@@ -1129,7 +1129,7 @@ namespace Redflag {
 		}
 
 		// 不透明物体画完后，用天空填上余下的背景。
-		if (s_IBLEnabled)
+		if (scene.IsSkyVisible())
 			IBLPrecompute::RenderSkybox(camera.GetViewMatrix(), camera.GetProjection());
 
 		Renderer3D::DrawTransparency();
@@ -1316,12 +1316,8 @@ namespace Redflag {
 			}
 		}
 
-		// 天空盒
-		if (s_IBLEnabled)
-		{
-			glm::mat4 viewMat3D = glm::inverse(cameraTransform);
-			IBLPrecompute::RenderSkybox(viewMat3D, projection);
-		}
+		if (scene.IsSkyVisible())
+			IBLPrecompute::RenderSkybox(glm::inverse(cameraTransform), projection);
 
 		Renderer3D::DrawTransparency();
 

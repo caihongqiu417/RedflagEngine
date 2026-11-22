@@ -13,7 +13,7 @@ namespace Redflag::EnvironmentLighting
     namespace
     {
         // 每层紧接在上一层后。着色器用同样的顺序在经纬图中查找亮度。
-        std::vector<glm::vec4> Panorama(const std::filesystem::path& path, glm::ivec2& size)
+        std::vector<glm::vec4> ReadPanorama(const std::filesystem::path& path, glm::ivec2& size)
         {
             int width, height, channels;
             std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -28,7 +28,7 @@ namespace Redflag::EnvironmentLighting
                 stbi_image_free);
             if (!source) return {};
 
-            // 镜面最清晰的一面只有 128 像素。先把 4K 以上的天光平均到小图，保留小片高亮的能量。
+            // 视口和光照共用至多 1024 × 512 的全景。缩小时取区域平均，让小片亮云仍能照亮物体。
             int stride = std::max({1, (width + 1023) / 1024, (height + 511) / 512});
             size = {(width + stride - 1) / stride, (height + stride - 1) / stride};
             std::vector<glm::vec4> pixels(size_t(size.x) * size.y, glm::vec4(0));
@@ -63,10 +63,12 @@ namespace Redflag::EnvironmentLighting
     }
 
     Ref<ComputeResource> Load(ComputeDevice& device, const std::filesystem::path& path,
-        uint64_t* contentKey, const Ref<ComputeResource>& cached)
+        uint64_t* contentKey, const Ref<ComputeResource>& cached, Panorama* sky)
     {
         const uint64_t previous = cached && contentKey ? *contentKey : 0;
         if (contentKey) *contentKey = 0;
+        Panorama previousSky;
+        if (sky) std::swap(*sky, previousSky);
         std::string extension = path.extension().u8string();
         std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) { return std::tolower(ch); });
         if (extension == ".rfibl")
@@ -82,7 +84,7 @@ namespace Redflag::EnvironmentLighting
 
         glm::ivec2 size;
         if (extension != ".hdr") return {};
-        auto pixels = Panorama(path, size);
+        auto pixels = ReadPanorama(path, size);
         if (pixels.empty()) return {};
 
         static const uint32_t code[] =
@@ -92,10 +94,20 @@ namespace Redflag::EnvironmentLighting
             uint64_t key = ProbeBake::Hash(ProbeBake::HashStart, code, sizeof(code));
             key = ProbeBake::Hash(key, &size, sizeof(size));
             *contentKey = ProbeBake::Hash(key, pixels.data(), size_t(size.x) * size.y * sizeof(pixels[0]));
-            if (cached && *contentKey == previous) return cached;
+            if (cached && *contentKey == previous)
+            {
+                if (sky)
+                {
+                    if (!previousSky.Pixels)
+                        previousSky = { device.CreateBuffer(pixels.size() * sizeof(glm::vec4), pixels.data()), size };
+                    *sky = std::move(previousSky);
+                }
+                return cached;
+            }
         }
         auto bake = device.CreatePipeline(code, sizeof(code), {ComputeBinding::Buffer, ComputeBinding::Buffer}, sizeof(size));
         auto panorama = device.CreateBuffer(pixels.size() * sizeof(glm::vec4), pixels.data());
+        if (sky) *sky = { panorama, size };
         uint32_t count = 6 * IBLTextures::DiffuseSize * IBLTextures::DiffuseSize + IBLTextures::LutSize * IBLTextures::LutSize;
         for (int level = 0; level < IBLTextures::ReflectionLevels; ++level)
         {

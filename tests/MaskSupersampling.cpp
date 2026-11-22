@@ -58,8 +58,9 @@ static void Measure(VulkanContext& context, const fs::path& folder)
     static const uint32_t displayShader[] =
 #include "Shaders/LightingPreview.comp.inc"
     ;
+    struct DisplaySettings { uint32_t Gray, SampleSide, Filmic; float Exposure; };
     Ref<ComputePipeline> display = device.CreatePipeline(displayShader, sizeof(displayShader),
-        {ComputeBinding::Buffer, ComputeBinding::Image}, 2 * sizeof(uint32_t));
+        {ComputeBinding::Buffer, ComputeBinding::Image}, sizeof(DisplaySettings));
     Ref<ComputeResource> panel = device.CreateImage(Size, Size);
     std::vector<glm::vec4> panelColor(Size * Size);
     surfaces.SetSubpixelMask(true);
@@ -100,8 +101,8 @@ static void Measure(VulkanContext& context, const fs::path& folder)
                 device.Readback(image, output.data(), output.size() * sizeof(glm::vec4));
                 file.write(reinterpret_cast<const char*>(output.data()), output.size() * sizeof(glm::vec4));
 #ifdef RF_TEST_MASK_SSAA
-                const uint32_t settings[] = {0, uint32_t(scale)};
-                device.Dispatch(display, {full, panel}, settings, Size / 8, Size / 8);
+                const DisplaySettings settings{0, uint32_t(scale), 0, 1.f};
+                device.Dispatch(display, {full, panel}, &settings, Size / 8, Size / 8);
                 device.Readback(panel, panelColor.data(), panelColor.size() * sizeof(glm::vec4));
                 displayed.write(reinterpret_cast<const char*>(panelColor.data()), panelColor.size() * sizeof(glm::vec4));
 #endif

@@ -4,7 +4,6 @@
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/SceneRenderer.h"
-#include "Redflag/Renderer/EnvironmentLighting.h"
 #include "Redflag/Scene/Scene.h"
 #include "Redflag/Utils/FileSystem.h"
 #include "backends/imgui_impl_vulkan.h"
@@ -60,6 +59,7 @@ namespace Redflag
 		std::vector<glm::vec4> Glass;
 		std::vector<std::pair<Ref<SampledTexture>, bool>> Surfaces;
 		std::vector<std::pair<uint64_t, float>> LODs;
+		bool HasAnimatedModel = false;
 	};
 
 	static std::optional<std::filesystem::path> ChangedMap(const Ref<Texture2D>& texture, const Ref<Texture2D>& original)
@@ -125,7 +125,11 @@ namespace Redflag
 			if (!model.ModelAsset && model.ModelID) model.ModelAsset = AssetManager::Load<Model>(model.ModelID);
 			if (!model.ModelAsset) return;
 			// 烘焙静态房间时跳过会动的模型。误加播放组件的静态模型仍然参与遮挡。
-			if (registry.all_of<ModelAnimationComponent>(entity) && model.ModelAsset->GetAnimation()) return;
+			if (registry.all_of<ModelAnimationComponent>(entity) && model.ModelAsset->GetAnimation())
+			{
+				geometry.HasAnimatedModel = true;
+				return;
+			}
 			if (!model.LODs.empty()) geometry.LODs.emplace_back(static_cast<uint64_t>(entity), 0.f);
 			for (const auto& lod : model.LODs) geometry.LODs.emplace_back(lod.ModelID, lod.ScreenHeight);
 			GIModel input{ model.ModelAsset->GetFilePath(), transform.GetTransform(), glm::vec3(model.Color) };
@@ -197,7 +201,8 @@ namespace Redflag
 		if (!readAgain && path == m_EnvironmentPath && time == m_EnvironmentTime) return false;
 
 		uint64_t key = path.empty() ? 0 : m_EnvironmentKey;
-		Ref<ComputeResource> lighting = path.empty() ? nullptr : EnvironmentLighting::Load(m_Device, path, &key, m_Environment);
+		if (path.empty()) m_Panorama = {};
+		Ref<ComputeResource> lighting = path.empty() ? nullptr : EnvironmentLighting::Load(m_Device, path, &key, m_Environment, &m_Panorama);
 		const bool changed = path != m_EnvironmentPath || key != m_EnvironmentKey || bool(lighting) != bool(m_Environment);
 		if (!lighting && !path.empty()) RF_CORE_WARN("Cannot load lighting environment: {0}", path.u8string());
 		m_EnvironmentPath = path;
@@ -232,7 +237,7 @@ namespace Redflag
 	}
 
 	VkDescriptorSet LightingPreview::Render(Scene& scene, const glm::mat4& projection, const glm::mat4& view,
-		glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating)
+		glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating, bool scenePreview)
 	{
 		SceneGeometry geometry = CollectModels(scene);
 		// 角色的骨段会改变相机看到的表面。房间的静态三角形和已烘焙的探针继续使用。
@@ -256,14 +261,23 @@ namespace Redflag
 		if (meshes != m_AnimatedMeshes || bones != m_Bones) {
 			m_AnimatedMeshes = std::move(meshes);
 			m_Bones = std::move(bones);
-			ResetHistory();
+			// 只有角色时，姿势由面板里的角色图更新；天空不用重画。
+			if (!geometry.Models.empty()) ResetHistory();
 		}
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
 		if (geometry.Glass != m_GlassSettings) { m_GlassSettings = std::move(geometry.Glass); ResetHistory(); }
 		// 换了法线贴图，墙面的明暗就要重画。探针使用三角形的法线，原来的烘焙仍可用。
 		if (geometry.Surfaces != m_SurfaceSettings) { m_SurfaceSettings = std::move(geometry.Surfaces); ResetHistory(); }
-		if (geometry.Models.empty())
+		const bool environmentChanged = RefreshEnvironment(scene.GetEnvironment(), m_BakeRequested);
+		if (m_SkyVisible != scene.IsSkyVisible())
+		{
+			m_SkyVisible = scene.IsSkyVisible();
+			ResetHistory();
+		}
+		const bool emptyScene = geometry.Models.empty();
+		m_OverlayModels = emptyScene && (geometry.HasAnimatedModel || !m_Bones.empty());
+		if (emptyScene)
 		{
 			// 场景里已经没有可绘制的模型。清掉场景的光照探针，取消尚未开始的烘焙。
 			if (m_GI)
@@ -274,16 +288,41 @@ namespace Redflag
 				m_BakeRequested = false;
 				ResetHistory();
 			}
-			return VK_NULL_HANDLE;
+			// 没有静态模型时只在这里画天空。动画角色由场景面板叠在前面，仍用原来的底色和贴图。
+			if (Mode != Shading::Lit || !m_SkyVisible || !m_Environment)
+				return VK_NULL_HANDLE;
 		}
-		const bool environmentChanged = RefreshEnvironment(scene.GetEnvironment(), m_BakeRequested);
-		const uint32_t panelWidth = m_PreviewWidth == 0 ? viewportWidth : std::min(viewportWidth, uint32_t(m_PreviewWidth));
+		const uint32_t panelWidth = scenePreview && m_PreviewWidth > 0 ? std::min(viewportWidth, uint32_t(m_PreviewWidth)) : viewportWidth;
 		const uint32_t panelHeight = std::max(1u, uint32_t(std::lround(double(viewportHeight) * panelWidth / viewportWidth)));
 		const bool fits = panelWidth <= m_MaxExtent.width / 2 && panelHeight <= m_MaxExtent.height / 2 &&
 		                  uint64_t(panelWidth) * panelHeight <= m_MaxPixels / 4;
-		const uint32_t sampleSide = m_Supersampling && fits ? 2u : 1u;
+		const uint32_t sampleSide = !emptyScene && m_Supersampling && fits ? 2u : 1u;
 		const uint32_t width = panelWidth * sampleSide, height = panelHeight * sampleSide;
 		bool resized = width != m_Width || height != m_Height || sampleSide != m_SampleSide;
+		if (resized)
+		{
+			m_Context.WaitIdle();
+			if (m_Texture) ImGui_ImplVulkan_RemoveTexture(m_Texture);
+			m_EmittedColor.reset();
+			m_Image = m_Device.CreateImage(panelWidth, panelHeight);
+			m_Texture = ImGui_ImplVulkan_AddTexture(m_Sampler, m_Device.GetImageView(m_Image), VK_IMAGE_LAYOUT_GENERAL);
+			m_Effects.reset();
+			m_CombinedLight.reset();
+			m_TransparentColor.reset();
+			m_Width = width;
+			m_Height = height;
+			m_SampleSide = sampleSide;
+			RF_CORE_INFO("Lighting preview {0} x {1}, viewport {2} x {3}", width, height, viewportWidth, viewportHeight);
+		}
+		if (emptyScene)
+		{
+			if (!resized && m_StillFrames && m_LastViewProjection == projection * view) return m_Texture;
+			if (!m_CombinedLight) m_CombinedLight = m_Device.CreateBuffer(size_t(width) * height * sizeof(glm::vec4));
+			DrawSky(m_CombinedLight, projection, view);
+			m_LastViewProjection = projection * view;
+			return Display(m_CombinedLight);
+		}
+
 		auto sameModel = [](const GIModel& a, const GIModel& b) {
 			return a.Path == b.Path && a.Transform == b.Transform && a.Tint == b.Tint && a.MaterialColors == b.MaterialColors &&
 				a.MaterialFactors == b.MaterialFactors && a.MaterialEmissions == b.MaterialEmissions &&
@@ -303,29 +342,11 @@ namespace Redflag
 			m_GI->Resize(width, height);
 			ResetHistory();
 		}
-		if (resized)
+		if (!m_Effects)
 		{
-			m_Context.WaitIdle();
-			if (m_Texture) ImGui_ImplVulkan_RemoveTexture(m_Texture);
 			m_SurfaceDraw->Resize(width, height);
 			m_SurfaceDraw->SetSubpixelMask(sampleSide == 2);
-			m_EmittedColor.reset();
-			m_Image = m_Device.CreateImage(panelWidth, panelHeight);
-			m_Texture = ImGui_ImplVulkan_AddTexture(m_Sampler, m_Device.GetImageView(m_Image), VK_IMAGE_LAYOUT_GENERAL);
 			m_Effects = CreateScope<ScreenEffects>(m_Device, width, height);
-			m_CombinedLight.reset();
-			m_TransparentColor.reset();
-			m_Width = width;
-			m_Height = height;
-			m_SampleSide = sampleSide;
-			RF_CORE_INFO("Lighting preview {0} x {1}, viewport {2} x {3}", width, height, viewportWidth, viewportHeight);
-		}
-		if (!m_Display)
-		{
-			static const uint32_t code[] =
-#include "Shaders/LightingPreview.comp.inc"
-			;
-			m_Display = m_Device.CreatePipeline(code, sizeof(code), { ComputeBinding::Buffer, ComputeBinding::Image }, 2 * sizeof(uint32_t));
 		}
 
 		const std::vector<GILight> lights = CollectLights(scene);
@@ -382,7 +403,8 @@ namespace Redflag
 		m_LastViewProjection = projection * view;
 
 		// TAA 每帧在像素内换个位置取样。上面先检查相机矩阵，否则取样位置一变，也会被当成镜头移动。
-		glm::mat4 sampleProjection = (Mode == Shading::TAA || (Mode == Shading::Lit && m_TAA && !directOnly))
+		const bool useTAA = Mode == Shading::TAA || (Mode == Shading::Lit && m_TAA && !directOnly);
+		glm::mat4 sampleProjection = useTAA
 			? ScreenEffects::JitterProjection(projection, m_Frame, width, height) : projection;
 		const glm::mat4 sampleVP = sampleProjection * view;
 		const bool redraw = geometryChanged || resized || m_Frame == 0 || sampleVP != m_GI->GetViewProjection();
@@ -421,7 +443,14 @@ namespace Redflag
 		m_Effects->SetEnvironment(m_Environment);
 		Ref<ComputeResource> pixels;
 		if (Mode == Shading::Lit)
-			pixels = RenderLit(sampleProjection, view, projection, directOnly);
+		{
+			pixels = RenderLit(sampleProjection, view, directOnly);
+			DrawSky(pixels, sampleProjection, view);
+			if (!directOnly && m_FogEnabled) pixels = m_GI->RenderFog(pixels, m_Fog);
+			pixels = CompositeTransparency(pixels, sampleVP);
+			if (!directOnly && m_TAA)
+				pixels = m_Effects->Render(ScreenEffect::TAA, *m_GI, sampleProjection, view, m_Frame, pixels, &projection);
+		}
 		else
 		{
 			GIMethod method = GIMethod::Direct;
@@ -443,15 +472,33 @@ namespace Redflag
 					view, m_Frame, pixels, &projection);
 			}
 		}
-		const uint32_t display[] = { uint32_t(Mode == Shading::GTAO), sampleSide };
-		m_Device.Dispatch(m_Display, { pixels, m_Image }, display, (panelWidth + 7) / 8, (panelHeight + 7) / 8);
+		VkDescriptorSet texture = Display(pixels);
+		// 运动帧混有重投影的旧颜色。等镜头真正停下，再取完整的 32 个样本。
+		if (useTAA && cameraMoved && m_Frame > 1) m_StillFrames = 0;
+		return texture;
+	}
+
+	VkDescriptorSet LightingPreview::Display(const Ref<ComputeResource>& color)
+	{
+		struct DisplaySettings { uint32_t Gray, SampleSide, Filmic; float Exposure; };
+		if (!m_Display)
+		{
+			static const uint32_t code[] =
+#include "Shaders/LightingPreview.comp.inc"
+			;
+			m_Display = m_Device.CreatePipeline(code, sizeof(code), { ComputeBinding::Buffer, ComputeBinding::Image }, sizeof(DisplaySettings));
+		}
+		const bool lit = Mode == Shading::Lit;
+		const DisplaySettings display{ uint32_t(Mode == Shading::GTAO), m_SampleSide,
+			uint32_t(lit && m_Filmic), lit ? std::exp2(m_ExposureEV) : 1.f };
+		m_Device.Dispatch(m_Display, { color, m_Image }, &display, (m_Width / m_SampleSide + 7) / 8, (m_Height / m_SampleSide + 7) / 8);
 		++m_Frame;
 		++m_StillFrames;
 		return m_Texture;
 	}
 
 	Ref<ComputeResource> LightingPreview::RenderLit(const glm::mat4& projection, const glm::mat4& view,
-		const glm::mat4& stableProjection, bool directOnly)
+		bool directOnly)
 	{
 		Ref<ComputeResource> direct;
 		if (m_DirectLight == ClusteredLights)
@@ -461,7 +508,7 @@ namespace Redflag
 			m_GI->RenderDirect(m_DirectLight == ReSTIRDirect);
 			direct = m_GI->GetDirectOutput();
 		}
-		if (directOnly) return CompositeTransparency(AddEmission(direct), projection * view);
+		if (directOnly) return AddEmission(direct);
 
 		if (!m_Combine)
 		{
@@ -495,10 +542,26 @@ namespace Redflag
 			m_Effects->GetSettings().TraceReflections = m_Reflections;
 			sceneColor = m_Effects->Render(ScreenEffect::MaterialReflections, *m_GI, projection, view, m_Frame, sceneColor);
 		}
-		if (m_FogEnabled) sceneColor = m_GI->RenderFog(sceneColor, m_Fog);
-		sceneColor = CompositeTransparency(sceneColor, projection * view);
-		if (m_TAA) sceneColor = m_Effects->Render(ScreenEffect::TAA, *m_GI, projection, view, m_Frame, sceneColor, &stableProjection);
 		return sceneColor;
+	}
+
+	void LightingPreview::DrawSky(const Ref<ComputeResource>& color, const glm::mat4& projection, const glm::mat4& view)
+	{
+		if (!m_SkyVisible || !m_Environment) return;
+		struct SkyView { glm::mat4 InverseSkyVP; glm::ivec2 PanoramaSize; uint32_t HasSurfaces; };
+		if (!m_Sky)
+		{
+			static const uint32_t code[] =
+#include "Redflag/Renderer/ScreenSpace/Shaders/SkyBackground.comp.inc"
+			;
+			m_Sky = m_Device.CreatePipeline(code, sizeof(code),
+				{ComputeBinding::Buffer, ComputeBinding::Image, ComputeBinding::Buffer}, sizeof(SkyView));
+		}
+		// 天空只随镜头转动。没有物体时整张图都画天空，此时着色器只用面板图的宽高。
+		SkyView camera{ glm::inverse(projection * glm::mat4(glm::mat3(view))), m_Panorama.Size, uint32_t(bool(m_GI)) };
+		const Ref<ComputeResource>& surfaces = m_GI ? m_SurfaceDraw->GetAlbedo() : m_Image;
+		const Ref<ComputeResource>& sky = m_Panorama.Pixels ? m_Panorama.Pixels : m_Environment;
+		m_Device.Dispatch(m_Sky, {sky, surfaces, color}, &camera, (m_Width + 7) / 8, (m_Height + 7) / 8);
 	}
 
 	Ref<ComputeResource> LightingPreview::AddEmission(const Ref<ComputeResource>& reflected)
@@ -633,7 +696,7 @@ namespace Redflag
 		ImGui::EndPopup();
 	}
 
-	void LightingPreview::DrawSettings(bool allowBake)
+	void LightingPreview::DrawSettings(bool allowBake, bool scenePreview)
 	{
 		int mode = int(Mode);
 		ImGui::TextUnformatted("显示模式");
@@ -659,7 +722,7 @@ namespace Redflag
 		{
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * .50f);
 			const int widths[] = { 0, 320, 480, 720, 960 };
-			if (ImGui::BeginCombo("分辨率", m_PreviewWidth ? std::to_string(m_PreviewWidth).c_str() : "原始 Native"))
+			if (scenePreview && ImGui::BeginCombo("分辨率", m_PreviewWidth ? std::to_string(m_PreviewWidth).c_str() : "原始 Native"))
 			{
 				for (int w : widths)
 					if (ImGui::Selectable(w ? std::to_string(w).c_str() : "原始 Native", w == m_PreviewWidth)) m_PreviewWidth = w;
@@ -668,9 +731,18 @@ namespace Redflag
 			changed |= ImGui::Checkbox("SSAA 2×2", &m_Supersampling);
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip("每个像素取四个位置，分别算光照再平均。细线更平滑，但需要更多显存和绘制时间。");
 			if (m_Supersampling && m_SampleSide == 1 && m_Width > 0)
-				ImGui::TextWrapped("要使用四个样点，请降低上面的分辨率。");
+				ImGui::TextWrapped(scenePreview ? "要使用四个样点，请降低上面的分辨率。" : "要使用四个样点，请降低主相机 Game 的游戏分辨率。");
 			if (Mode == Shading::Lit)
 			{
+				int curve = m_Filmic ? 1 : 0;
+				if (ImGui::Combo("色调映射", &curve, "Reinhard\0ACES 拟合\0"))
+				{
+					m_Filmic = curve == 1;
+					m_StillFrames = 0;
+				}
+				if (ImGui::SliderFloat("曝光补偿 (EV)", &m_ExposureEV, -4.f, 4.f, "%.2f", ImGuiSliderFlags_AlwaysClamp))
+					m_StillFrames = 0;
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("增加 1 EV，显示前的亮度加倍。灯和材质的数值保持原样。");
 				ImGui::Checkbox("移动时仅算直接光", &FastNavigation);
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("拖动时保留点光源照明，停手后恢复间接光和其他已选效果。");
 				if (m_FogEnabled)
@@ -726,7 +798,10 @@ namespace Redflag
 				changed |= ImGui::SliderFloat("反射距离", &m_Settings.ReflectionDistance, .1f, 30.f);
 			}
 			if (Mode == Shading::TAA || (Mode == Shading::Lit && m_TAA))
+			{
 				changed |= ImGui::SliderFloat("历史权重", &m_Settings.HistoryWeight, 0.f, .98f);
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("设为 0 只显示当前帧。开启后，镜头停住时按细线和背景各被采到的次数混色。\n其他像素保留的旧颜色最多占这个比例。");
+			}
 			ImGui::PopItemWidth();
 			if (Mode == Shading::DDGI || Mode == Shading::ReSTIRDI || Mode == Shading::ReSTIRGI || Mode == Shading::TAA || Mode == Shading::Lit)
 			{
@@ -746,6 +821,7 @@ namespace Redflag
 		m_GI.reset();
 		m_EnvironmentPath.clear();
 		m_Environment.reset();
+		m_Panorama = {};
 		m_EnvironmentKey = 0;
 		m_EnvironmentTime = {};
 		m_ProbeFile = scene.empty() ? scene : std::filesystem::path(scene).concat(".rfprobes");
@@ -753,7 +829,7 @@ namespace Redflag
 		m_BakeRequested = false;
 		ResetHistory();
 		m_ProbeFeedback = true;
-		Mode = Shading::BaseColor;
+		Mode = scene.empty() ? Shading::Lit : Shading::BaseColor;
 		CompareDirect = false;
 		m_Settings = {};
 		m_FogEnabled = false;
@@ -761,9 +837,11 @@ namespace Redflag
 		m_Samples = 1;
 		m_PreviewWidth = 0;
 		m_Supersampling = false;
+		m_Filmic = scene.empty();
+		m_ExposureEV = 0.f;
 		FastNavigation = false;
 		m_DirectLight = AllLights;
-		m_IndirectLight = ProbeLighting;
+		m_IndirectLight = scene.empty() ? EnvironmentDiffuse : ProbeLighting;
 		m_AO = true;
 		m_Reflections = m_TAA = false;
 		if (scene.empty() || !std::filesystem::exists(SettingsPath(scene))) return;
@@ -773,6 +851,8 @@ namespace Redflag
 			if (name == s_Modes[i]) Mode = Shading(i);
 		m_PreviewWidth = std::clamp(data["PreviewWidth"].as<int>(0), 0, 4096);
 		m_Supersampling = data["Supersampling"].as<bool>(false);
+		m_Filmic = data["ToneMapping"].as<std::string>("Reinhard") == "ACES";
+		m_ExposureEV = std::clamp(data["ExposureEV"].as<float>(0.f), -4.f, 4.f);
 		m_Samples = std::clamp(data["Samples"].as<int>(1), 1, 8);
 		m_ProbeFeedback = data["DDGIProbeFeedback"].as<bool>(true);
 		FastNavigation = data["FastNavigation"].as<bool>(FastNavigation);
@@ -805,6 +885,8 @@ namespace Redflag
 		data["Shading"] = s_Modes[int(Mode)];
 		data["PreviewWidth"] = m_PreviewWidth;
 		data["Supersampling"] = m_Supersampling;
+		data["ToneMapping"] = m_Filmic ? "ACES" : "Reinhard";
+		data["ExposureEV"] = m_ExposureEV;
 		data["Samples"] = m_Samples;
 		data["DDGIProbeFeedback"] = m_ProbeFeedback;
 		data["FastNavigation"] = FastNavigation;

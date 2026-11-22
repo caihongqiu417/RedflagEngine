@@ -1,0 +1,358 @@
+{
+  "frames": {
+    "baseline": {
+      "frame": 24,
+      "size": [
+        600,
+        385
+      ],
+      "shading_size": [
+        600,
+        385
+      ],
+      "samples_per_pixel": 1,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 600,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": false,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Baseline-fb0d6b17e588-600/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Baseline-fb0d6b17e588-600",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "spatial": {
+      "frame": 24,
+      "size": [
+        600,
+        385
+      ],
+      "shading_size": [
+        1200,
+        770
+      ],
+      "samples_per_pixel": 4,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 600,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": true,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Spatial-fb0d6b17e588-600/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Spatial-fb0d6b17e588-600",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "reference": {
+      "frame": 24,
+      "size": [
+        1200,
+        770
+      ],
+      "shading_size": [
+        2400,
+        1540
+      ],
+      "samples_per_pixel": 4,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 1200,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": true,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Spatial-fb0d6b17e588-1200/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Spatial-fb0d6b17e588-1200",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "candidate": {
+      "frame": 24,
+      "size": [
+        600,
+        385
+      ],
+      "shading_size": [
+        600,
+        385
+      ],
+      "samples_per_pixel": 1,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 600,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": false,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Baseline-f7a4c52c734f-600/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Baseline-f7a4c52c734f-600",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "native_baseline": {
+      "frame": 24,
+      "size": [
+        1391,
+        892
+      ],
+      "shading_size": [
+        1391,
+        892
+      ],
+      "samples_per_pixel": 1,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 0,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": false,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Baseline-fb0d6b17e588-0/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Baseline-fb0d6b17e588-0",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "native_spatial": {
+      "frame": 24,
+      "size": [
+        1391,
+        892
+      ],
+      "shading_size": [
+        2782,
+        1784
+      ],
+      "samples_per_pixel": 4,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 0,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": true,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Spatial-fb0d6b17e588-0/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Spatial-fb0d6b17e588-0",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    },
+    "native_candidate": {
+      "frame": 24,
+      "size": [
+        1391,
+        892
+      ],
+      "shading_size": [
+        1391,
+        892
+      ],
+      "samples_per_pixel": 1,
+      "display_event": 658,
+      "pack_event": 549,
+      "messages": [],
+      "tool": "1.47",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "settings": {
+        "Direct": "All point lights",
+        "ExposureEV": 0,
+        "GTAO": true,
+        "HistoryWeight": 0.85,
+        "Indirect": "DDGI",
+        "PreviewWidth": 0,
+        "SSR": false,
+        "Samples": 2,
+        "Shading": "Lit",
+        "Supersampling": false,
+        "TAA": true,
+        "ToneMapping": "ACES"
+      },
+      "capture": "output/captures/local/Wire-Baseline-f7a4c52c734f-0/studio_frame24.rdc",
+      "work": "tmp/material-reference/Wire-Baseline-f7a4c52c734f-0",
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+    }
+  },
+  "scores": {
+    "baseline": {
+      "near": {
+        "columns": 64,
+        "band_pixels": 257,
+        "mean_abs_luma": 0.03841269758397619,
+        "mean_signed_luma": -0.008219093748758968,
+        "mean_abs_contrast": 0.0824350106383441,
+        "high_contrast_columns": 61,
+        "weak_columns": 0
+      },
+      "far": {
+        "columns": 69,
+        "band_pixels": 280,
+        "mean_abs_luma": 0.03839572372610548,
+        "mean_signed_luma": 0.0027413712128411443,
+        "mean_abs_contrast": 0.04277286006184159,
+        "high_contrast_columns": 34,
+        "weak_columns": 3
+      },
+      "whole_frame_mae": 0.018577793566730314,
+      "near_red_curtain_mae": 0.036267040470748434
+    },
+    "spatial": {
+      "near": {
+        "columns": 64,
+        "band_pixels": 257,
+        "mean_abs_luma": 0.018363544962192786,
+        "mean_signed_luma": -0.0010561912255180514,
+        "mean_abs_contrast": 0.04026464672014117,
+        "high_contrast_columns": 61,
+        "weak_columns": 1
+      },
+      "far": {
+        "columns": 69,
+        "band_pixels": 280,
+        "mean_abs_luma": 0.018869108432978385,
+        "mean_signed_luma": 0.002197992867316514,
+        "mean_abs_contrast": 0.022295953536465563,
+        "high_contrast_columns": 34,
+        "weak_columns": 1
+      },
+      "whole_frame_mae": 0.009911915342464418,
+      "near_red_curtain_mae": 0.023752304937322548
+    },
+    "candidate": {
+      "near": {
+        "columns": 64,
+        "band_pixels": 257,
+        "mean_abs_luma": 0.07187622856657211,
+        "mean_signed_luma": -0.05570057388079653,
+        "mean_abs_contrast": 0.10053799187436233,
+        "high_contrast_columns": 61,
+        "weak_columns": 0
+      },
+      "far": {
+        "columns": 69,
+        "band_pixels": 280,
+        "mean_abs_luma": 0.03586758972281856,
+        "mean_signed_luma": 0.002103888807243533,
+        "mean_abs_contrast": 0.04202679718542791,
+        "high_contrast_columns": 34,
+        "weak_columns": 4
+      },
+      "whole_frame_mae": 0.018414091647191173,
+      "near_red_curtain_mae": 0.03626660391507861
+    },
+    "native_baseline_vs_native_spatial": {
+      "near": {
+        "columns": 146,
+        "band_pixels": 584,
+        "mean_abs_luma": 0.03737100903880017,
+        "mean_signed_luma": -0.003907284451889077,
+        "mean_abs_contrast": 0.02527709195834826,
+        "high_contrast_columns": 143,
+        "weak_columns": 0
+      },
+      "far": {
+        "columns": 158,
+        "band_pixels": 633,
+        "mean_abs_luma": 0.04186337095738799,
+        "mean_signed_luma": -0.0036002056068024277,
+        "mean_abs_contrast": 0.0342281709719638,
+        "high_contrast_columns": 136,
+        "weak_columns": 2
+      }
+    },
+    "native_candidate_vs_native_spatial": {
+      "near": {
+        "columns": 146,
+        "band_pixels": 584,
+        "mean_abs_luma": 0.05748220425071386,
+        "mean_signed_luma": -0.03110829437117424,
+        "mean_abs_contrast": 0.028361475181492825,
+        "high_contrast_columns": 143,
+        "weak_columns": 0
+      },
+      "far": {
+        "columns": 158,
+        "band_pixels": 633,
+        "mean_abs_luma": 0.038441229517290613,
+        "mean_signed_luma": 0.000781168156611551,
+        "mean_abs_contrast": 0.03232738887042845,
+        "high_contrast_columns": 136,
+        "weak_columns": 1
+      }
+    }
+  },
+  "curtain_xyxy": [
+    30,
+    202,
+    103,
+    290
+  ],
+  "reference_samples_per_output_pixel": 16,
+  "reference_uses_taa": true
+}

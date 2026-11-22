@@ -30,6 +30,7 @@ namespace Redflag
 	{
 	public:
 		Application(const std::string& name="Redflag App", bool visible = true);
+		explicit Application(const WindowProps& props);
 		virtual ~Application();
 
 		void Run(unsigned frameLimit = 0);

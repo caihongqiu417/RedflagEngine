@@ -1,0 +1,2966 @@
+{
+  "600": {
+    "size": [
+      600,
+      385
+    ],
+    "reference": {
+      "near": {
+        "touched_pixels": 165,
+        "coverage_MAE": 0.0,
+        "area_px": 84.8193359375
+      },
+      "far": {
+        "touched_pixels": 157,
+        "coverage_MAE": 0.0,
+        "area_px": 70.2509765625
+      }
+    },
+    "no_jitter": {
+      "near": {
+        "touched_pixels": 165,
+        "coverage_MAE": 0.19733072817325592,
+        "area_px": 86.0
+      },
+      "far": {
+        "touched_pixels": 157,
+        "coverage_MAE": 0.21998780965805054,
+        "area_px": 70.0
+      }
+    },
+    "halton_frames": [
+      {
+        "count": 1,
+        "jitter_px": [
+          0.0,
+          -0.16666666666666669
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21854284405708313,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2396310269832611,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21854284405708313,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2396310269832611,
+            "area_px": 70.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21854284405708313,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2396310269832611,
+            "area_px": 70.0
+          }
+        }
+      },
+      {
+        "count": 2,
+        "jitter_px": [
+          -0.25,
+          0.16666666666666663
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21892163157463074,
+            "area_px": 81.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.24272865056991577,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.11892163753509521,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.14135275781154633,
+            "area_px": 71.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.11892163753509521,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.14135275781154633,
+            "area_px": 71.0
+          }
+        }
+      },
+      {
+        "count": 3,
+        "jitter_px": [
+          0.25,
+          -0.3888888888888889
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.31883877515792847,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.3507849872112274,
+            "area_px": 68.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.1187874898314476,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.13699451088905334,
+            "area_px": 70.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.1187874898314476,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.13699451088905334,
+            "area_px": 70.0
+          }
+        }
+      },
+      {
+        "count": 4,
+        "jitter_px": [
+          -0.375,
+          -0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2127545028924942,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.23413240909576416,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.11479048430919647,
+            "area_px": 84.75
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.12730766832828522,
+            "area_px": 70.5
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.11479048430919647,
+            "area_px": 84.75
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.12730766832828522,
+            "area_px": 70.5
+          }
+        }
+      },
+      {
+        "count": 5,
+        "jitter_px": [
+          0.125,
+          0.2777777777777777
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.26004379987716675,
+            "area_px": 82.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.29153189063072205,
+            "area_px": 67.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.07436435669660568,
+            "area_px": 84.20000457763672
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.08505549281835556,
+            "area_px": 69.80000305175781
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.07436435669660568,
+            "area_px": 84.20000457763672
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.08505549281835556,
+            "area_px": 69.80000305175781
+          }
+        }
+      },
+      {
+        "count": 6,
+        "jitter_px": [
+          -0.125,
+          -0.2777777777777778
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.26793915033340454,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.28690409660339355,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.08139006793498993,
+            "area_px": 84.33333587646484
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.09561396390199661,
+            "area_px": 70.16667175292969
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.08139007538557053,
+            "area_px": 84.33334350585938
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.09561397135257721,
+            "area_px": 70.16667175292969
+          }
+        }
+      },
+      {
+        "count": 7,
+        "jitter_px": [
+          0.375,
+          0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2105291187763214,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.25280529260635376,
+            "area_px": 71.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.0698990449309349,
+            "area_px": 84.42857360839844
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07919754087924957,
+            "area_px": 70.28571319580078
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06966816633939743,
+            "area_px": 84.43333435058594
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07895808666944504,
+            "area_px": 70.29167175292969
+          }
+        }
+      },
+      {
+        "count": 8,
+        "jitter_px": [
+          -0.4375,
+          0.38888888888888884
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.32096946239471436,
+            "area_px": 83.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.37918615341186523,
+            "area_px": 67.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.045448627322912216,
+            "area_px": 84.25
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.051670730113983154,
+            "area_px": 69.875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04476948827505112,
+            "area_px": 84.21833801269531
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05199600011110306,
+            "area_px": 69.79792022705078
+          }
+        }
+      },
+      {
+        "count": 9,
+        "jitter_px": [
+          0.0625,
+          -0.46296296296296297
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.34160155057907104,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.38840439915657043,
+            "area_px": 71.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.0553523488342762,
+            "area_px": 84.33333587646484
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06065953150391579,
+            "area_px": 70.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05998552590608597,
+            "area_px": 84.33558654785156
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06577015668153763,
+            "area_px": 69.97823333740234
+          }
+        }
+      },
+      {
+        "count": 10,
+        "jitter_px": [
+          -0.1875,
+          -0.12962962962962965
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21552439033985138,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.23375920951366425,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06198745593428612,
+            "area_px": 84.5999984741211
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06640002876520157,
+            "area_px": 70.20000457763672
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06869733333587646,
+            "area_px": 84.73526000976562
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07295046746730804,
+            "area_px": 70.28150177001953
+          }
+        }
+      },
+      {
+        "count": 11,
+        "jitter_px": [
+          0.3125,
+          0.20370370370370372
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.24912996590137482,
+            "area_px": 81.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2736552059650421,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04636654257774353,
+            "area_px": 84.2727279663086
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05024462193250656,
+            "area_px": 70.18182373046875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.045518726110458374,
+            "area_px": 84.17496490478516
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05026764050126076,
+            "area_px": 70.23927307128906
+          }
+        }
+      },
+      {
+        "count": 12,
+        "jitter_px": [
+          -0.3125,
+          -0.35185185185185186
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2935901880264282,
+            "area_px": 86.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.31811678409576416,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05633088946342468,
+            "area_px": 84.41666412353516
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06315726041793823,
+            "area_px": 70.41667175292969
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06660524755716324,
+            "area_px": 84.44871520996094
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07473892718553543,
+            "area_px": 70.65338897705078
+          }
+        }
+      },
+      {
+        "count": 13,
+        "jitter_px": [
+          0.1875,
+          -0.018518518518518545
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.19969815015792847,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.22760125994682312,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.055014848709106445,
+            "area_px": 84.61538696289062
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.0625779926776886,
+            "area_px": 70.53846740722656
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06212836876511574,
+            "area_px": 84.83141326904297
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07263091951608658,
+            "area_px": 70.85537719726562
+          }
+        }
+      },
+      {
+        "count": 14,
+        "jitter_px": [
+          -0.0625,
+          0.31481481481481466
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2772786319255829,
+            "area_px": 83.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.3203933537006378,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.039242591708898544,
+            "area_px": 84.50000762939453
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04401640221476555,
+            "area_px": 70.5
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.03877123445272446,
+            "area_px": 84.55670928955078
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04281092435121536,
+            "area_px": 70.7270736694336
+          }
+        }
+      },
+      {
+        "count": 15,
+        "jitter_px": [
+          0.4375,
+          -0.24074074074074076
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2507043182849884,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.29174336791038513,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04382220655679703,
+            "area_px": 84.53334045410156
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.048363275825977325,
+            "area_px": 70.66667175292969
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.044983331114053726,
+            "area_px": 84.62319946289062
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05110926553606987,
+            "area_px": 71.0680160522461
+          }
+        }
+      },
+      {
+        "count": 16,
+        "jitter_px": [
+          -0.46875,
+          0.09259259259259256
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21586766839027405,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.25452205538749695,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.039328835904598236,
+            "area_px": 84.5625
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.044530004262924194,
+            "area_px": 70.8125
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.038926735520362854,
+            "area_px": 84.67971801757812
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04813578724861145,
+            "area_px": 71.35781860351562
+          }
+        }
+      },
+      {
+        "count": 17,
+        "jitter_px": [
+          0.0,
+          -0.16666666666666669
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21854284405708313,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2396310269832611,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04701948165893555,
+            "area_px": 84.70588684082031
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05217127129435539,
+            "area_px": 70.76470947265625
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05735538527369499,
+            "area_px": 85.02775573730469
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06570643186569214,
+            "area_px": 71.15414428710938
+          }
+        }
+      },
+      {
+        "count": 18,
+        "jitter_px": [
+          -0.25,
+          0.16666666666666663
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21892163157463074,
+            "area_px": 81.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.24272865056991577,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04288654774427414,
+            "area_px": 84.5
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.048823289573192596,
+            "area_px": 70.83332824707031
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05444854497909546,
+            "area_px": 84.42359924316406
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06447448581457138,
+            "area_px": 71.28102111816406
+          }
+        }
+      },
+      {
+        "count": 19,
+        "jitter_px": [
+          0.25,
+          -0.3888888888888889
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.31883877515792847,
+            "area_px": 84.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.3507849872112274,
+            "area_px": 68.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05025200545787811,
+            "area_px": 84.47367858886719
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05636334419250488,
+            "area_px": 70.6842041015625
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06654410064220428,
+            "area_px": 84.36006927490234
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07565154880285263,
+            "area_px": 70.78887176513672
+          }
+        }
+      },
+      {
+        "count": 20,
+        "jitter_px": [
+          -0.375,
+          -0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2127545028924942,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.23413240909576416,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.052749767899513245,
+            "area_px": 84.60000610351562
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.058276522904634476,
+            "area_px": 70.75
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.07114112377166748,
+            "area_px": 84.75605773925781
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07870522141456604,
+            "area_px": 70.97055053710938
+          }
+        }
+      },
+      {
+        "count": 21,
+        "jitter_px": [
+          0.125,
+          0.2777777777777777
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.26004379987716675,
+            "area_px": 82.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.29153189063072205,
+            "area_px": 67.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04422376677393913,
+            "area_px": 84.4761962890625
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.049057092517614365,
+            "area_px": 70.57142639160156
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.051625579595565796,
+            "area_px": 84.3426513671875
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05924740061163902,
+            "area_px": 70.37496185302734
+          }
+        }
+      },
+      {
+        "count": 22,
+        "jitter_px": [
+          -0.125,
+          -0.2777777777777778
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.26793915033340454,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.28690409660339355,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04925587400794029,
+            "area_px": 84.5
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05528520420193672,
+            "area_px": 70.63636016845703
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06156080961227417,
+            "area_px": 84.44125366210938
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.07075200229883194,
+            "area_px": 70.61872100830078
+          }
+        }
+      },
+      {
+        "count": 23,
+        "jitter_px": [
+          0.375,
+          0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2105291187763214,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.25280529260635376,
+            "area_px": 71.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04700392112135887,
+            "area_px": 84.52174377441406
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05275898799300194,
+            "area_px": 70.65217590332031
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05285074561834335,
+            "area_px": 84.52507019042969
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06078663095831871,
+            "area_px": 70.67591094970703
+          }
+        }
+      },
+      {
+        "count": 24,
+        "jitter_px": [
+          -0.4375,
+          0.38888888888888884
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.32096946239471436,
+            "area_px": 83.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.37918615341186523,
+            "area_px": 67.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.03786103054881096,
+            "area_px": 84.45833587646484
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.042498089373111725,
+            "area_px": 70.5
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.040166113525629044,
+            "area_px": 84.29631042480469
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04912543296813965,
+            "area_px": 70.1245346069336
+          }
+        }
+      },
+      {
+        "count": 25,
+        "jitter_px": [
+          0.0625,
+          -0.46296296296296297
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.34160155057907104,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.38840439915657043,
+            "area_px": 71.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.043795689940452576,
+            "area_px": 84.47999572753906
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04823920503258705,
+            "area_px": 70.5199966430664
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.050729166716337204,
+            "area_px": 84.40186309814453
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.057161495089530945,
+            "area_px": 70.25585174560547
+          }
+        }
+      },
+      {
+        "count": 26,
+        "jitter_px": [
+          -0.1875,
+          -0.12962962962962965
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21552439033985138,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.23375920951366425,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04736168682575226,
+            "area_px": 84.57691955566406
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.0520314984023571,
+            "area_px": 70.57691955566406
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05988505855202675,
+            "area_px": 84.79158020019531
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06385086476802826,
+            "area_px": 70.51747131347656
+          }
+        }
+      },
+      {
+        "count": 27,
+        "jitter_px": [
+          0.3125,
+          0.20370370370370372
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.24912996590137482,
+            "area_px": 81.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.2736552059650421,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.0410364493727684,
+            "area_px": 84.44444274902344
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.045376408845186234,
+            "area_px": 70.55554962158203
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04126344993710518,
+            "area_px": 84.22285461425781
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04637264460325241,
+            "area_px": 70.43985748291016
+          }
+        }
+      },
+      {
+        "count": 28,
+        "jitter_px": [
+          -0.3125,
+          -0.35185185185185186
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2935901880264282,
+            "area_px": 86.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.31811678409576416,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.045504432171583176,
+            "area_px": 84.5
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.050743043422698975,
+            "area_px": 70.64285278320312
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.06146899610757828,
+            "area_px": 84.48942565917969
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06816843152046204,
+            "area_px": 70.82388305664062
+          }
+        }
+      },
+      {
+        "count": 29,
+        "jitter_px": [
+          0.1875,
+          -0.018518518518518545
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.19969815015792847,
+            "area_px": 87.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.22760125994682312,
+            "area_px": 72.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04560495913028717,
+            "area_px": 84.58621215820312
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05151372775435448,
+            "area_px": 70.68965911865234
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.05750575289130211,
+            "area_px": 84.86601257324219
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.06805175542831421,
+            "area_px": 71.00030517578125
+          }
+        }
+      },
+      {
+        "count": 30,
+        "jitter_px": [
+          -0.0625,
+          0.31481481481481466
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2772786319255829,
+            "area_px": 83.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.3203933537006378,
+            "area_px": 70.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.03818615525960922,
+            "area_px": 84.53333282470703
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04311181232333183,
+            "area_px": 70.66667175292969
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.039316825568675995,
+            "area_px": 84.58611297607422
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04393459111452103,
+            "area_px": 70.85025787353516
+          }
+        }
+      },
+      {
+        "count": 31,
+        "jitter_px": [
+          0.4375,
+          -0.24074074074074076
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.2507043182849884,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.29174336791038513,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.04096350073814392,
+            "area_px": 84.54838562011719
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04590044170618057,
+            "area_px": 70.74193572998047
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.043372586369514465,
+            "area_px": 84.648193359375
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.05019484460353851,
+            "area_px": 71.17272186279297
+          }
+        }
+      },
+      {
+        "count": 32,
+        "jitter_px": [
+          -0.46875,
+          0.09259259259259256
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.21586766839027405,
+            "area_px": 85.0
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.25452205538749695,
+            "area_px": 73.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.039328835904598236,
+            "area_px": 84.5625
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.044530004262924194,
+            "area_px": 70.8125
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 165,
+            "coverage_MAE": 0.03855620697140694,
+            "area_px": 84.70097351074219
+          },
+          "far": {
+            "touched_pixels": 157,
+            "coverage_MAE": 0.04785390570759773,
+            "area_px": 71.44682312011719
+          }
+        }
+      }
+    ],
+    "variants": {
+      "orig_16_halton": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.039328835904598236,
+          "area_px": 84.5625
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.044530004262924194,
+          "area_px": 70.8125
+        }
+      },
+      "rook_5": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.02887665666639805,
+          "area_px": 84.6875
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.03408016636967659,
+          "area_px": 70.375
+        }
+      },
+      "rook_7": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.022697679698467255,
+          "area_px": 84.4375
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.025670532137155533,
+          "area_px": 70.625
+        }
+      },
+      "rook_9": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.026438210159540176,
+          "area_px": 84.75
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.029041849076747894,
+          "area_px": 70.75
+        }
+      },
+      "rook_11": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.031019175425171852,
+          "area_px": 85.125
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.03373183682560921,
+          "area_px": 70.25
+        }
+      },
+      "rook_13": {
+        "near": {
+          "touched_pixels": 165,
+          "coverage_MAE": 0.03245146945118904,
+          "area_px": 84.625
+        },
+        "far": {
+          "touched_pixels": 157,
+          "coverage_MAE": 0.038807474076747894,
+          "area_px": 70.1875
+        }
+      }
+    }
+  },
+  "1391": {
+    "size": [
+      1391,
+      892
+    ],
+    "reference": {
+      "near": {
+        "touched_pixels": 636,
+        "coverage_MAE": 0.0,
+        "area_px": 456.2529296875
+      },
+      "far": {
+        "touched_pixels": 583,
+        "coverage_MAE": 0.0,
+        "area_px": 379.1259765625
+      }
+    },
+    "no_jitter": {
+      "near": {
+        "touched_pixels": 636,
+        "coverage_MAE": 0.1147599145770073,
+        "area_px": 454.0
+      },
+      "far": {
+        "touched_pixels": 583,
+        "coverage_MAE": 0.14147426187992096,
+        "area_px": 383.0
+      }
+    },
+    "halton_frames": [
+      {
+        "count": 1,
+        "jitter_px": [
+          0.0,
+          -0.16666666666666669
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12905211746692657,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15566875040531158,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12905211746692657,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15566875040531158,
+            "area_px": 379.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12905211746692657,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15566875040531158,
+            "area_px": 379.0
+          }
+        }
+      },
+      {
+        "count": 2,
+        "jitter_px": [
+          -0.25,
+          0.16666666666666663
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12876345217227936,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1613304764032364,
+            "area_px": 381.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.06837012618780136,
+            "area_px": 455.5
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.0835471823811531,
+            "area_px": 380.0
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.06837012618780136,
+            "area_px": 455.5
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.0835471823811531,
+            "area_px": 380.0
+          }
+        }
+      },
+      {
+        "count": 3,
+        "jitter_px": [
+          0.25,
+          -0.3888888888888889
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1875813752412796,
+            "area_px": 460.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.22709684073925018,
+            "area_px": 376.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.07270937412977219,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.08620160818099976,
+            "area_px": 378.66668701171875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.07270937412977219,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.08620160818099976,
+            "area_px": 378.66668701171875
+          }
+        }
+      },
+      {
+        "count": 4,
+        "jitter_px": [
+          -0.375,
+          -0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12260926514863968,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1536017209291458,
+            "area_px": 382.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.06621431559324265,
+            "area_px": 456.25
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.07780171185731888,
+            "area_px": 379.5
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.06621431559324265,
+            "area_px": 456.25
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.07780171185731888,
+            "area_px": 379.5
+          }
+        }
+      },
+      {
+        "count": 5,
+        "jitter_px": [
+          0.125,
+          0.2777777777777777
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1464306265115738,
+            "area_px": 458.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.18463397026062012,
+            "area_px": 378.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.04411022365093231,
+            "area_px": 456.6000061035156
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.05151057243347168,
+            "area_px": 379.20001220703125
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.04411022365093231,
+            "area_px": 456.6000061035156
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.05151057243347168,
+            "area_px": 379.20001220703125
+          }
+        }
+      },
+      {
+        "count": 6,
+        "jitter_px": [
+          -0.125,
+          -0.2777777777777778
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1478678435087204,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.18300914764404297,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.050088752061128616,
+            "area_px": 456.6666564941406
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.05742734298110008,
+            "area_px": 379.1666564941406
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.050088752061128616,
+            "area_px": 456.6666564941406
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.05742735043168068,
+            "area_px": 379.1666564941406
+          }
+        }
+      },
+      {
+        "count": 7,
+        "jitter_px": [
+          0.375,
+          0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12145765870809555,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15150119364261627,
+            "area_px": 380.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.04207005724310875,
+            "area_px": 456.28570556640625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04818370193243027,
+            "area_px": 379.28570556640625
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.041857168078422546,
+            "area_px": 456.26666259765625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04797082766890526,
+            "area_px": 379.2916564941406
+          }
+        }
+      },
+      {
+        "count": 8,
+        "jitter_px": [
+          -0.4375,
+          0.38888888888888884
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.19056327641010284,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.2322426438331604,
+            "area_px": 383.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.029697634279727936,
+            "area_px": 456.375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03465205430984497,
+            "area_px": 379.75
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.029832717031240463,
+            "area_px": 456.3766784667969
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03552938997745514,
+            "area_px": 379.8479309082031
+          }
+        }
+      },
+      {
+        "count": 9,
+        "jitter_px": [
+          0.0625,
+          -0.46296296296296297
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.22040370106697083,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.25598835945129395,
+            "area_px": 376.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03380861133337021,
+            "area_px": 456.22222900390625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03981981426477432,
+            "area_px": 379.3333435058594
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03723832964897156,
+            "area_px": 456.1701965332031
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04399512708187103,
+            "area_px": 379.270751953125
+          }
+        }
+      },
+      {
+        "count": 10,
+        "jitter_px": [
+          -0.1875,
+          -0.12962962962962965
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12385914474725723,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15132027864456177,
+            "area_px": 380.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03592921048402786,
+            "area_px": 456.0999755859375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.042778126895427704,
+            "area_px": 379.3999938964844
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.040026675909757614,
+            "area_px": 455.9946594238281
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04749583452939987,
+            "area_px": 379.3800964355469
+          }
+        }
+      },
+      {
+        "count": 11,
+        "jitter_px": [
+          0.3125,
+          0.20370370370370372
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.13789032399654388,
+            "area_px": 458.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.170737624168396,
+            "area_px": 377.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.027864554896950722,
+            "area_px": 456.2727355957031
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03297790512442589,
+            "area_px": 379.18182373046875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.028541678562760353,
+            "area_px": 456.2954406738281
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.033999670296907425,
+            "area_px": 379.02313232421875
+          }
+        }
+      },
+      {
+        "count": 12,
+        "jitter_px": [
+          -0.3125,
+          -0.35185185185185186
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.17558623850345612,
+            "area_px": 459.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.21450036764144897,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.034848641604185104,
+            "area_px": 456.5
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04086542874574661,
+            "area_px": 379.16668701171875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.042196836322546005,
+            "area_px": 456.7011413574219
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04976847022771835,
+            "area_px": 379.0196533203125
+          }
+        }
+      },
+      {
+        "count": 13,
+        "jitter_px": [
+          0.1875,
+          -0.018518518518518545
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.11651957035064697,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.14352118968963623,
+            "area_px": 382.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.0334952175617218,
+            "area_px": 456.3077087402344
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03964194282889366,
+            "area_px": 379.3846435546875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.038365043699741364,
+            "area_px": 456.29595947265625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.045970045030117035,
+            "area_px": 379.46673583984375
+          }
+        }
+      },
+      {
+        "count": 14,
+        "jitter_px": [
+          -0.0625,
+          0.31481481481481466
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.15918122231960297,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1959909051656723,
+            "area_px": 375.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02411596104502678,
+            "area_px": 456.28570556640625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.02834615856409073,
+            "area_px": 379.0714416503906
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.023077817633748055,
+            "area_px": 456.2515869140625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.028190478682518005,
+            "area_px": 378.79669189453125
+          }
+        }
+      },
+      {
+        "count": 15,
+        "jitter_px": [
+          0.4375,
+          -0.24074074074074076
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.14559225738048553,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.17870089411735535,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02716696634888649,
+            "area_px": 456.26666259765625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03139505907893181,
+            "area_px": 379.0666809082031
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.028710179030895233,
+            "area_px": 456.2138671875
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03356041759252548,
+            "area_px": 378.8271789550781
+          }
+        }
+      },
+      {
+        "count": 16,
+        "jitter_px": [
+          -0.46875,
+          0.09259259259259256
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12862218916416168,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.16622835397720337,
+            "area_px": 384.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.024311184883117676,
+            "area_px": 456.25
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.029134394600987434,
+            "area_px": 379.375
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02562810480594635,
+            "area_px": 456.1817626953125
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03264610096812248,
+            "area_px": 379.6031494140625
+          }
+        }
+      },
+      {
+        "count": 17,
+        "jitter_px": [
+          0.0,
+          -0.16666666666666669
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12905211746692657,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15566875040531158,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02803354151546955,
+            "area_px": 456.1764831542969
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03376249969005585,
+            "area_px": 379.3529357910156
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03511984273791313,
+            "area_px": 456.0044860839844
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.043157633394002914,
+            "area_px": 379.5126647949219
+          }
+        }
+      },
+      {
+        "count": 18,
+        "jitter_px": [
+          -0.25,
+          0.16666666666666663
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12876345217227936,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1613304764032364,
+            "area_px": 381.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.025640906766057014,
+            "area_px": 456.1666259765625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.030758460983633995,
+            "area_px": 379.4444580078125
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03211576119065285,
+            "area_px": 456.00384521484375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03997723013162613,
+            "area_px": 379.73577880859375
+          }
+        }
+      },
+      {
+        "count": 19,
+        "jitter_px": [
+          0.25,
+          -0.3888888888888889
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1875813752412796,
+            "area_px": 460.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.22709684073925018,
+            "area_px": 376.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03004901483654976,
+            "area_px": 456.3684387207031
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.035942208021879196,
+            "area_px": 379.26318359375
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.04062614217400551,
+            "area_px": 456.603271484375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04851599410176277,
+            "area_px": 379.1754150390625
+          }
+        }
+      },
+      {
+        "count": 20,
+        "jitter_px": [
+          -0.375,
+          -0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12260926514863968,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1536017209291458,
+            "area_px": 382.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.030432820320129395,
+            "area_px": 456.25
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.0369904451072216,
+            "area_px": 379.3999938964844
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.04113323241472244,
+            "area_px": 456.2127685546875
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.05002983659505844,
+            "area_px": 379.5990905761719
+          }
+        }
+      },
+      {
+        "count": 21,
+        "jitter_px": [
+          0.125,
+          0.2777777777777777
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1464306265115738,
+            "area_px": 458.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.18463397026062012,
+            "area_px": 378.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.025621900334954262,
+            "area_px": 456.3333435058594
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03097313642501831,
+            "area_px": 379.3333435058594
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.031359776854515076,
+            "area_px": 456.4808349609375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03789345920085907,
+            "area_px": 379.3592224121094
+          }
+        }
+      },
+      {
+        "count": 22,
+        "jitter_px": [
+          -0.125,
+          -0.2777777777777778
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.1478678435087204,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.18300914764404297,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.028956416994333267,
+            "area_px": 456.3636474609375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03456129878759384,
+            "area_px": 379.3181457519531
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03748222440481186,
+            "area_px": 456.5587463378906
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.043422017246484756,
+            "area_px": 379.30535888671875
+          }
+        }
+      },
+      {
+        "count": 23,
+        "jitter_px": [
+          0.375,
+          0.05555555555555558
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12145765870809555,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15150119364261627,
+            "area_px": 380.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02765638753771782,
+            "area_px": 456.2608337402344
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03293431177735329,
+            "area_px": 379.3478088378906
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03238685056567192,
+            "area_px": 456.1749267578125
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03716001659631729,
+            "area_px": 379.4095458984375
+          }
+        }
+      },
+      {
+        "count": 24,
+        "jitter_px": [
+          -0.4375,
+          0.38888888888888884
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.19056327641010284,
+            "area_px": 457.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.2322426438331604,
+            "area_px": 383.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.023245565593242645,
+            "area_px": 456.29168701171875
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.027717288583517075,
+            "area_px": 379.5
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.028028877452015877,
+            "area_px": 456.2986755371094
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03296016901731491,
+            "area_px": 379.9481201171875
+          }
+        }
+      },
+      {
+        "count": 25,
+        "jitter_px": [
+          0.0625,
+          -0.46296296296296297
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.22040370106697083,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.25598835945129395,
+            "area_px": 376.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.026499051600694656,
+            "area_px": 456.239990234375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03148310258984566,
+            "area_px": 379.3599853515625
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03292565792798996,
+            "area_px": 456.1039123535156
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03883330896496773,
+            "area_px": 379.3559265136719
+          }
+        }
+      },
+      {
+        "count": 26,
+        "jitter_px": [
+          -0.1875,
+          -0.12962962962962965
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12385914474725723,
+            "area_px": 455.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.15132027864456177,
+            "area_px": 380.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.0280570387840271,
+            "area_px": 456.1923522949219
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03346636891365051,
+            "area_px": 379.3846130371094
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.035613786429166794,
+            "area_px": 455.9383239746094
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.0428275540471077,
+            "area_px": 379.4525146484375
+          }
+        }
+      },
+      {
+        "count": 27,
+        "jitter_px": [
+          0.3125,
+          0.20370370370370372
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.13789032399654388,
+            "area_px": 458.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.170737624168396,
+            "area_px": 377.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.0249482374638319,
+            "area_px": 456.2592468261719
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.029606886208057404,
+            "area_px": 379.2962951660156
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02698630839586258,
+            "area_px": 456.24755859375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.032636627554893494,
+            "area_px": 379.08465576171875
+          }
+        }
+      },
+      {
+        "count": 28,
+        "jitter_px": [
+          -0.3125,
+          -0.35185185185185186
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.17558623850345612,
+            "area_px": 459.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.21450036764144897,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.027726083993911743,
+            "area_px": 456.35711669921875
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03286213055253029,
+            "area_px": 379.28570556640625
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03957067057490349,
+            "area_px": 456.6604309082031
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04696991294622421,
+            "area_px": 379.07196044921875
+          }
+        }
+      },
+      {
+        "count": 29,
+        "jitter_px": [
+          0.1875,
+          -0.018518518518518545
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.11651957035064697,
+            "area_px": 454.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.14352118968963623,
+            "area_px": 382.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.027636917307972908,
+            "area_px": 456.27587890625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03288526460528374,
+            "area_px": 379.3793029785156
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.03649348020553589,
+            "area_px": 456.2613525390625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.04379153624176979,
+            "area_px": 379.51116943359375
+          }
+        }
+      },
+      {
+        "count": 30,
+        "jitter_px": [
+          -0.0625,
+          0.31481481481481466
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.15918122231960297,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.1959909051656723,
+            "area_px": 375.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.023713985458016396,
+            "area_px": 456.26666259765625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.027893953025341034,
+            "area_px": 379.2333679199219
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.023950818926095963,
+            "area_px": 456.22216796875
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.02921130321919918,
+            "area_px": 378.8345031738281
+          }
+        }
+      },
+      {
+        "count": 31,
+        "jitter_px": [
+          0.4375,
+          -0.24074074074074076
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.14559225738048553,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.17870089411735535,
+            "area_px": 379.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.02543782815337181,
+            "area_px": 456.258056640625
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.029821602627635002,
+            "area_px": 379.22576904296875
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.028075121343135834,
+            "area_px": 456.1888732910156
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03310779109597206,
+            "area_px": 378.85931396484375
+          }
+        }
+      },
+      {
+        "count": 32,
+        "jitter_px": [
+          -0.46875,
+          0.09259259259259256
+        ],
+        "single": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.12862218916416168,
+            "area_px": 456.0
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.16622835397720337,
+            "area_px": 384.0
+          }
+        },
+        "uniform": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.024311184883117676,
+            "area_px": 456.25
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.029134394600987434,
+            "area_px": 379.375
+          }
+        },
+        "ema_85": {
+          "near": {
+            "touched_pixels": 636,
+            "coverage_MAE": 0.025784973055124283,
+            "area_px": 456.1605224609375
+          },
+          "far": {
+            "touched_pixels": 583,
+            "coverage_MAE": 0.03299626708030701,
+            "area_px": 379.63043212890625
+          }
+        }
+      }
+    ],
+    "variants": {
+      "orig_16_halton": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.024311184883117676,
+          "area_px": 456.25
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.029134394600987434,
+          "area_px": 379.375
+        }
+      },
+      "rook_5": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.01755509339272976,
+          "area_px": 455.8125
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.021522901952266693,
+          "area_px": 379.4375
+        }
+      },
+      "rook_7": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.013132923282682896,
+          "area_px": 456.625
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.0162330474704504,
+          "area_px": 379.1875
+        }
+      },
+      "rook_9": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.014177046716213226,
+          "area_px": 455.75
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.01837713085114956,
+          "area_px": 378.6875
+        }
+      },
+      "rook_11": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.018006522208452225,
+          "area_px": 455.6875
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.02195841819047928,
+          "area_px": 379.25
+        }
+      },
+      "rook_13": {
+        "near": {
+          "touched_pixels": 636,
+          "coverage_MAE": 0.021055977791547775,
+          "area_px": 455.375
+        },
+        "far": {
+          "touched_pixels": 583,
+          "coverage_MAE": 0.025174541398882866,
+          "area_px": 379.375
+        }
+      }
+    }
+  }
+}

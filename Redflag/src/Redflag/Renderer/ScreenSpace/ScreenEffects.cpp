@@ -53,17 +53,6 @@ namespace Redflag
                                          std::vector<ComputeBinding>(buffers, ComputeBinding::Buffer));
         }
 
-        float Halton(uint32_t index, uint32_t base)
-        {
-            float sum = 0.0f, place = 1.0f;
-            while (index)
-            {
-                place /= base;
-                sum += place * (index % base);
-                index /= base;
-            }
-            return sum;
-        }
     }
 
     struct ScreenEffects::Data
@@ -77,7 +66,7 @@ namespace Redflag
         Ref<ComputeResource> Environment, DiffuseLight, RawReflections;
         Ref<ComputeResource> Frame, Output, Intermediate, Lights, Masks, History[2], Positions[2];
         uint32_t LightCapacity = 0, WordsPerCluster = 0, Previous = 0;
-        uint32_t HistoryFrames = 0, LastFrame = 0;
+        uint32_t HistoryFrames = 0, StillSamples = 0, LastFrame = 0;
         glm::mat4 PreviousVP{1.0f};
 
         Data(ComputeDevice& device, uint32_t width, uint32_t height) : Device(device), Width(width), Height(height)
@@ -155,9 +144,16 @@ namespace Redflag
     glm::mat4 ScreenEffects::JitterProjection(const glm::mat4& projection, uint32_t frame, uint32_t width,
                                               uint32_t height)
     {
-        // 采样点按 16 帧循环，每帧在一个像素内取不同的位置，用来平滑物体边缘。
-        uint32_t index = frame % 16 + 1;
-        glm::vec2 shift(2.0f * (Halton(index, 2) - .5f) / width, -2.0f * (Halton(index, 3) - .5f) / height);
+        // 位置取自 Vulkan 的 16 样点表。重排后，前 4 次取样已经分布在像素的不同区域。
+        static const glm::ivec2 samples[] = {
+            {9,9}, {4,2}, {6,14}, {11,3}, {0,8}, {13,11}, {7,5}, {15,4},
+            {2,12}, {10,13}, {1,0}, {12,7}, {5,10}, {8,1}, {14,15}, {3,6}
+        };
+        // 每个坐标落在小格中心，16 个位置的平均值恰好是像素中心。
+        glm::vec2 sample = (glm::vec2(samples[frame % 16]) + .5f) / 16.f - .5f;
+        // 后 16 帧把这些点绕像素中心转 90°。镜头停下画满 32 帧时，细线的两侧共采过 32 个不同位置。
+        if ((frame / 16) % 2) sample = {-sample.y, sample.x};
+        glm::vec2 shift(2.f * sample.x / width, -2.f * sample.y / height);
         glm::mat4 result = projection;
         for (int col = 0; col < 4; ++col)
         {
@@ -180,8 +176,22 @@ namespace Redflag
 
         const glm::mat4 stableVP = (stableProjection ? *stableProjection : projection) * view;
         const bool historyValid = d.HistoryFrames > 0 && frame == d.LastFrame + 1;
-        // 默认设置下，第二帧混入一半上一帧的颜色，第三帧混入三分之二。HistoryWeight 限制这个比例，防止新画面的颜色越占越少。
+        const bool sameView = stableVP == d.PreviousVP;
+        // 第二帧最多用一半旧颜色，第三帧最多用三分之二。普通表面的混合比例逐步增加到用户设定的上限。
         float weight = historyValid ? std::min(settings.HistoryWeight, d.HistoryFrames / (d.HistoryFrames + 1.f)) : 0.f;
+        float edgeWeight = 0.f;
+        if (effect == ScreenEffect::TAA)
+        {
+            const bool jittered = stableProjection && projection != *stableProjection && settings.HistoryWeight > 0.f;
+            const uint32_t samples = historyValid && sameView ? d.StillSamples : 0u;
+            if (jittered)
+            {
+                // 镜头停下后重新数这个像素采了几次。细线若在 16 次里遮住 3 次，它的颜色应占 3/16。
+                edgeWeight = samples / (samples + 1.f);
+                if (sameView && !samples) weight = 0.f;
+            }
+            d.StillSamples = jittered && (!historyValid || sameView) ? std::min(samples + 1u, 1024u) : 0u;
+        }
         ScreenFrame input{
             projection,
             view,
@@ -191,8 +201,8 @@ namespace Redflag
             glm::vec4(lighting.GetEye(), 1),
             {d.Width, d.Height, frame, static_cast<uint32_t>(lights.size())},
             {settings.AORadius, settings.AOIntensity, settings.Roughness, settings.ReflectionDistance},
-            {weight, historyValid ? 1.0f : 0.0f, settings.LightRange, stableVP == d.PreviousVP ? 1.f : 0.f},
-            {.05f, 250.f, lighting.UsesDiffuseReference() ? 1.f : 0.f, 0}};
+            {weight, historyValid ? 1.0f : 0.0f, settings.LightRange, sameView ? 1.f : 0.f},
+            {.05f, 250.f, lighting.UsesDiffuseReference() ? 1.f : 0.f, edgeWeight}};
         d.Device.Upload(d.Frame, &input, sizeof(input));
 
         uint32_t gx = (d.Width + 7) / 8, gy = (d.Height + 7) / 8;

@@ -36,8 +36,8 @@ namespace Redflag {
 		// 模型画完后补天空背景，让前景物体保留自己的颜色。
 		static void RenderSkybox(const glm::mat4& view, const glm::mat4& projection);
 
-		// 在编辑器换环境图时丢弃旧结果，按新图重新计算。
-		static void Reload(const std::string& hdrPath);
+		// 读到新图后才替换天空。文件打不开时保留原图，返回 false。
+		static bool Reload(const std::string& hdrPath);
 
 		static bool SaveBaked(const std::filesystem::path& path);
 

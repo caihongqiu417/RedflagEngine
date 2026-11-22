@@ -451,6 +451,13 @@ Sandbox/assets/textures/
 **/assets/**/*.exr
 **/assets/**/*.mtl
 
+# Both editors ship with the same daylight sky.
+!RedflagForge/assets/textures/
+RedflagForge/assets/textures/*
+!RedflagForge/assets/textures/sky/
+RedflagForge/assets/textures/sky/*
+!RedflagForge/assets/textures/sky/daylight.hdr
+
 # Mono vendor - only keep .lib, .dll, and headers
 Redflag/vendor/mono/lib/**/*.exe
 Redflag/vendor/mono/lib/**/*.pdb

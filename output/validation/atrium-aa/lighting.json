@@ -1,0 +1,2514 @@
+{
+  "cases": {
+    "live": {
+      "reference": {
+        "frame": 32,
+        "size": [
+          1200,
+          770
+        ],
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "samples_per_pixel": 4,
+        "display_event": 658,
+        "pack_event": 549,
+        "messages": [],
+        "tool": "1.47",
+        "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+        "settings": {
+          "Direct": "All point lights",
+          "ExposureEV": 0,
+          "GTAO": true,
+          "HistoryWeight": 1.0,
+          "Indirect": "DDGI",
+          "PreviewWidth": 1200,
+          "SSR": false,
+          "Samples": 2,
+          "Shading": "Lit",
+          "Supersampling": true,
+          "TAA": true,
+          "ToneMapping": "ACES"
+        },
+        "capture": "output/captures/local/Wire-Uniform-Reference-fb0d6b17e588-1200-f32/studio_frame32.rdc",
+        "work": "tmp/material-reference/Wire-Uniform-Reference-fb0d6b17e588-1200-f32",
+        "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+      },
+      "camera_reference": {
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09258895275706891
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.96875,
+        "edge_blend": 0.0
+      },
+      "versions": {
+        "fb0d6b17e588": {
+          "label": "\u539f\u6709 TAA",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-fb0d6b17e588-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-fb0d6b17e588-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.4687500069849193,
+              0.09259168116841465
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.07211113147057216,
+              "mean_signed_luma": 0.04974722794695587,
+              "mean_abs_contrast": 0.08180203832704572,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.0388132258869069,
+              "mean_signed_luma": 0.003561634279617238,
+              "mean_abs_contrast": 0.039387632976709934,
+              "high_contrast_columns": 31,
+              "weak_columns": 0
+            }
+          }
+        },
+        "f7a4c52c734f": {
+          "label": "\u4ec5\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-f7a4c52c734f-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-f7a4c52c734f-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.4687500069849193,
+              0.09259168116841465
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.05776430754990892,
+              "mean_signed_luma": 0.02369165287160456,
+              "mean_abs_contrast": 0.10210502284280953,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03498236662945577,
+              "mean_signed_luma": 0.003960045748651024,
+              "mean_abs_contrast": 0.04169803153993426,
+              "high_contrast_columns": 31,
+              "weak_columns": 1
+            }
+          }
+        },
+        "db6af2c86fbf": {
+          "label": "\u5c45\u4e2d\u659c\u6392\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-db6af2c86fbf-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-db6af2c86fbf-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.406249996740371,
+              -0.03125090981484391
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.050297270313105345,
+              "mean_signed_luma": 0.025597133719941406,
+              "mean_abs_contrast": 0.08418628862045006,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.026820509958022407,
+              "mean_signed_luma": 0.0034350285535092832,
+              "mean_abs_contrast": 0.030745730265089567,
+              "high_contrast_columns": 31,
+              "weak_columns": 1
+            }
+          }
+        },
+        "fe23350bc607": {
+          "label": "\u6807\u51c6 16 \u70b9",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-fe23350bc607-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-fe23350bc607-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.2812499937135726,
+              -0.09375091423862614
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.07606906177024085,
+              "mean_signed_luma": 0.05428787943538177,
+              "mean_abs_contrast": 0.07778364985662045,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03779537840522293,
+              "mean_signed_luma": 0.005255033760618946,
+              "mean_abs_contrast": 0.04004556327051874,
+              "high_contrast_columns": 31,
+              "weak_columns": 3
+            }
+          }
+        },
+        "1cf34b1e7c82": {
+          "label": "\u6807\u51c6 16 \u70b9\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-1cf34b1e7c82-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-1cf34b1e7c82-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.2812499937135726,
+              -0.09375091423862614
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.058220179067998534,
+              "mean_signed_luma": 0.026236547815092343,
+              "mean_abs_contrast": 0.09776366555597633,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03306155089991965,
+              "mean_signed_luma": 0.006111375342304153,
+              "mean_abs_contrast": 0.0369119806519885,
+              "high_contrast_columns": 31,
+              "weak_columns": 1
+            }
+          }
+        },
+        "4d5b96515248": {
+          "label": "\u6807\u51c6 32 \u70b9",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-4d5b96515248-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-4d5b96515248-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              0.09374999790452421,
+              -0.2812509163049981
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.07174276105457128,
+              "mean_signed_luma": 0.05183864736140122,
+              "mean_abs_contrast": 0.07836759019156452,
+              "high_contrast_columns": 60,
+              "weak_columns": 1
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03650915346552751,
+              "mean_signed_luma": 0.00566700058182967,
+              "mean_abs_contrast": 0.03478971849146528,
+              "high_contrast_columns": 31,
+              "weak_columns": 2
+            }
+          }
+        },
+        "a12df40cd026": {
+          "label": "\u6807\u51c6 32 \u70b9\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 658,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/Wire-Baseline-a12df40cd026-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/Wire-Baseline-a12df40cd026-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              0.09374999790452421,
+              -0.2812509163049981
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.05826928362548351,
+              "mean_signed_luma": 0.028989763662288625,
+              "mean_abs_contrast": 0.0934763524757698,
+              "high_contrast_columns": 60,
+              "weak_columns": 1
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.028185312709590144,
+              "mean_signed_luma": 0.009369961270333396,
+              "mean_abs_contrast": 0.03517992592024198,
+              "high_contrast_columns": 31,
+              "weak_columns": 3
+            }
+          }
+        }
+      },
+      "recent_reference": {
+        "receipt": {
+          "frame": 32,
+          "size": [
+            1200,
+            770
+          ],
+          "shading_size": [
+            2400,
+            1540
+          ],
+          "samples_per_pixel": 4,
+          "display_event": 658,
+          "pack_event": 549,
+          "messages": [],
+          "tool": "1.47",
+          "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+          "settings": {
+            "Direct": "All point lights",
+            "ExposureEV": 0,
+            "GTAO": true,
+            "HistoryWeight": 0.85,
+            "Indirect": "DDGI",
+            "PreviewWidth": 1200,
+            "SSR": false,
+            "Samples": 2,
+            "Shading": "Lit",
+            "Supersampling": true,
+            "TAA": true,
+            "ToneMapping": "ACES"
+          },
+          "capture": "output/captures/local/Wire-Spatial-fb0d6b17e588-1200-f32/studio_frame32.rdc",
+          "work": "tmp/material-reference/Wire-Spatial-fb0d6b17e588-1200-f32",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+        },
+        "metrics": {
+          "fb0d6b17e588": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.0315901944743636,
+              "mean_signed_luma": -0.005428096041697942,
+              "mean_abs_contrast": 0.058354422541009254,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03789815021888486,
+              "mean_signed_luma": 0.0008177209014232626,
+              "mean_abs_contrast": 0.03815815182708311,
+              "high_contrast_columns": 35,
+              "weak_columns": 2
+            }
+          },
+          "f7a4c52c734f": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.047568337560117475,
+              "mean_signed_luma": -0.03148367111704925,
+              "mean_abs_contrast": 0.07782882857383228,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03471914768311594,
+              "mean_signed_luma": 0.0012161323704570487,
+              "mean_abs_contrast": 0.040930806411824346,
+              "high_contrast_columns": 35,
+              "weak_columns": 3
+            }
+          },
+          "db6af2c86fbf": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.046480663838069376,
+              "mean_signed_luma": -0.029578190268712407,
+              "mean_abs_contrast": 0.059644081847940116,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.02662660110686507,
+              "mean_signed_luma": 0.0006911151753153092,
+              "mean_abs_contrast": 0.03022595339354829,
+              "high_contrast_columns": 35,
+              "weak_columns": 1
+            }
+          },
+          "fe23350bc607": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.0350743134921105,
+              "mean_signed_luma": -0.0008874445532720443,
+              "mean_abs_contrast": 0.06699626192862632,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03766530324509633,
+              "mean_signed_luma": 0.002511120382424972,
+              "mean_abs_contrast": 0.04102565195370409,
+              "high_contrast_columns": 35,
+              "weak_columns": 3
+            }
+          },
+          "1cf34b1e7c82": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.049768321321852466,
+              "mean_signed_luma": -0.02893877617356147,
+              "mean_abs_contrast": 0.08293209171737542,
+              "high_contrast_columns": 60,
+              "weak_columns": 1
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03260114313940385,
+              "mean_signed_luma": 0.0033674619641101775,
+              "mean_abs_contrast": 0.03724174679958301,
+              "high_contrast_columns": 35,
+              "weak_columns": 1
+            }
+          },
+          "4d5b96515248": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.03498200841394728,
+              "mean_signed_luma": -0.0033366766272525817,
+              "mean_abs_contrast": 0.061769147100881674,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.036709007399183306,
+              "mean_signed_luma": 0.002923087203635695,
+              "mean_abs_contrast": 0.033964002211867024,
+              "high_contrast_columns": 35,
+              "weak_columns": 2
+            }
+          },
+          "a12df40cd026": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.049666348347021445,
+              "mean_signed_luma": -0.02618556032636519,
+              "mean_abs_contrast": 0.07402867673723958,
+              "high_contrast_columns": 60,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.02787261903891074,
+              "mean_signed_luma": 0.006626047892139421,
+              "mean_abs_contrast": 0.03537816499875507,
+              "high_contrast_columns": 35,
+              "weak_columns": 3
+            }
+          }
+        }
+      },
+      "native_final": {
+        "receipt": {
+          "frame": 32,
+          "size": [
+            1391,
+            892
+          ],
+          "shading_size": [
+            1391,
+            892
+          ],
+          "samples_per_pixel": 1,
+          "display_event": 658,
+          "pack_event": 549,
+          "messages": [],
+          "tool": "1.47",
+          "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+          "settings": {
+            "Direct": "All point lights",
+            "ExposureEV": 0,
+            "GTAO": true,
+            "HistoryWeight": 0.85,
+            "Indirect": "DDGI",
+            "PreviewWidth": 0,
+            "SSR": false,
+            "Samples": 2,
+            "Shading": "Lit",
+            "Supersampling": false,
+            "TAA": true,
+            "ToneMapping": "ACES"
+          },
+          "capture": "output/captures/local/Wire-Baseline-a12df40cd026-0-f32/studio_frame32.rdc",
+          "work": "tmp/material-reference/Wire-Baseline-a12df40cd026-0-f32",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+        },
+        "camera": {
+          "shading_size": [
+            1391,
+            892
+          ],
+          "render_frame_index": 31,
+          "pixel_shift": [
+            0.09375000481668394,
+            -0.2812521039741114
+          ],
+          "stable_matrix": [
+            [
+              1.2005210692223045e-07,
+              4.2364003971506747e-10,
+              1.0065847635269165,
+              6.612186211896187e-07
+            ],
+            [
+              -0.05456480756402016,
+              1.5687369108200073,
+              6.504631944181938e-09,
+              3.1511149406433105
+            ],
+            [
+              1.000395655632019,
+              0.034796398133039474,
+              -1.19256455377581e-07,
+              5.478678226470947
+            ],
+            [
+              0.9993957281112671,
+              0.034761618822813034,
+              -1.1913725472822989e-07,
+              5.5731520652771
+            ]
+          ],
+          "eye": [
+            -5.5,
+            -2.200000047683716,
+            -8.526512829121202e-14
+          ],
+          "blend": 0.8500000238418579,
+          "edge_blend": 0.96875
+        }
+      },
+      "native_reference": {
+        "receipt": {
+          "frame": 32,
+          "size": [
+            1391,
+            892
+          ],
+          "shading_size": [
+            2782,
+            1784
+          ],
+          "samples_per_pixel": 4,
+          "display_event": 658,
+          "pack_event": 549,
+          "messages": [],
+          "tool": "1.47",
+          "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+          "settings": {
+            "Direct": "All point lights",
+            "ExposureEV": 0,
+            "GTAO": true,
+            "HistoryWeight": 0.85,
+            "Indirect": "DDGI",
+            "PreviewWidth": 0,
+            "SSR": false,
+            "Samples": 2,
+            "Shading": "Lit",
+            "Supersampling": true,
+            "TAA": true,
+            "ToneMapping": "ACES"
+          },
+          "capture": "output/captures/local/Wire-Spatial-fb0d6b17e588-0-f32/studio_frame32.rdc",
+          "work": "tmp/material-reference/Wire-Spatial-fb0d6b17e588-0-f32",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+        },
+        "metrics": {
+          "fb0d6b17e588": {
+            "near": {
+              "columns": 146,
+              "band_pixels": 584,
+              "mean_abs_luma": 0.030357633304256584,
+              "mean_signed_luma": -0.004563409322944199,
+              "mean_abs_contrast": 0.019948268559717968,
+              "high_contrast_columns": 143,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 158,
+              "band_pixels": 633,
+              "mean_abs_luma": 0.040533561913212425,
+              "mean_signed_luma": -0.0027678134280170108,
+              "mean_abs_contrast": 0.037700555499440305,
+              "high_contrast_columns": 141,
+              "weak_columns": 2
+            }
+          },
+          "a12df40cd026": {
+            "near": {
+              "columns": 146,
+              "band_pixels": 584,
+              "mean_abs_luma": 0.046446423773556206,
+              "mean_signed_luma": -0.010702968211306816,
+              "mean_abs_contrast": 0.0275961178494949,
+              "high_contrast_columns": 143,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 158,
+              "band_pixels": 633,
+              "mean_abs_luma": 0.028676403242187187,
+              "mean_signed_luma": 0.004397926975322938,
+              "mean_abs_contrast": 0.02305571115007506,
+              "high_contrast_columns": 141,
+              "weak_columns": 1
+            }
+          }
+        }
+      }
+    },
+    "baked": {
+      "reference": {
+        "frame": 32,
+        "size": [
+          1200,
+          770
+        ],
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "samples_per_pixel": 4,
+        "display_event": 646,
+        "pack_event": 549,
+        "messages": [],
+        "tool": "1.47",
+        "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+        "settings": {
+          "Direct": "All point lights",
+          "ExposureEV": 0,
+          "GTAO": true,
+          "HistoryWeight": 1.0,
+          "Indirect": "DDGI",
+          "PreviewWidth": 1200,
+          "SSR": false,
+          "Samples": 2,
+          "Shading": "Lit",
+          "Supersampling": true,
+          "TAA": true,
+          "ToneMapping": "ACES"
+        },
+        "capture": "output/captures/local/FixedGI-Reference-fb0d6b17e588-1200-f32/studio_frame32.rdc",
+        "work": "tmp/material-reference/FixedGI-Reference-fb0d6b17e588-1200-f32",
+        "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+      },
+      "camera_reference": {
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09258895275706891
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.96875,
+        "edge_blend": 0.0
+      },
+      "versions": {
+        "fb0d6b17e588": {
+          "label": "\u539f\u6709 TAA",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-fb0d6b17e588-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-fb0d6b17e588-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.4687500069849193,
+              0.09259168116841465
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.03791516731424322,
+              "mean_signed_luma": -0.007110998093965916,
+              "mean_abs_contrast": 0.04963199960778002,
+              "high_contrast_columns": 40,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03842933670345694,
+              "mean_signed_luma": 0.0011672938813961024,
+              "mean_abs_contrast": 0.038817667335574166,
+              "high_contrast_columns": 32,
+              "weak_columns": 1
+            }
+          }
+        },
+        "db6af2c86fbf": {
+          "label": "\u5c45\u4e2d\u659c\u6392\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-db6af2c86fbf-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-db6af2c86fbf-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.406249996740371,
+              -0.03125090981484391
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.02866173200671369,
+              "mean_signed_luma": -0.004397058443119205,
+              "mean_abs_contrast": 0.03395904644749825,
+              "high_contrast_columns": 40,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.02641938738721822,
+              "mean_signed_luma": 0.001891681284893837,
+              "mean_abs_contrast": 0.030862905651525312,
+              "high_contrast_columns": 32,
+              "weak_columns": 1
+            }
+          }
+        },
+        "fe23350bc607": {
+          "label": "\u6807\u51c6 16 \u70b9",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-fe23350bc607-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-fe23350bc607-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.2812499937135726,
+              -0.09375091423862614
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.043822191609772736,
+              "mean_signed_luma": -0.0016311332084557417,
+              "mean_abs_contrast": 0.056397870489209884,
+              "high_contrast_columns": 40,
+              "weak_columns": 1
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03730089370333722,
+              "mean_signed_luma": 0.0029116184405982527,
+              "mean_abs_contrast": 0.039863813519175506,
+              "high_contrast_columns": 32,
+              "weak_columns": 3
+            }
+          }
+        },
+        "1cf34b1e7c82": {
+          "label": "\u6807\u51c6 16 \u70b9\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-1cf34b1e7c82-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-1cf34b1e7c82-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.2812499937135726,
+              -0.09375091423862614
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.0391451394286485,
+              "mean_signed_luma": -0.0014323856878373392,
+              "mean_abs_contrast": 0.05592346646352671,
+              "high_contrast_columns": 40,
+              "weak_columns": 1
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.032555049782171844,
+              "mean_signed_luma": 0.004574759652476228,
+              "mean_abs_contrast": 0.03702110857168833,
+              "high_contrast_columns": 32,
+              "weak_columns": 2
+            }
+          }
+        },
+        "4d5b96515248": {
+          "label": "\u6807\u51c6 32 \u70b9",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-4d5b96515248-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-4d5b96515248-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              0.09374999790452421,
+              -0.2812509163049981
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.0433162295830099,
+              "mean_signed_luma": -0.006525210700395738,
+              "mean_abs_contrast": 0.049229284789692615,
+              "high_contrast_columns": 40,
+              "weak_columns": 2
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03612197703206646,
+              "mean_signed_luma": 0.003296244932131045,
+              "mean_abs_contrast": 0.03329731490018143,
+              "high_contrast_columns": 32,
+              "weak_columns": 2
+            }
+          }
+        },
+        "a12df40cd026": {
+          "label": "\u6807\u51c6 32 \u70b9\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 646,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "DDGI",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/FixedGI-Sponza-a12df40cd026-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/FixedGI-Sponza-a12df40cd026-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              0.09374999790452421,
+              -0.2812509163049981
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.034860740248122565,
+              "mean_signed_luma": 0.0010837307722883938,
+              "mean_abs_contrast": 0.048913060989161025,
+              "high_contrast_columns": 40,
+              "weak_columns": 2
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.027791394596573493,
+              "mean_signed_luma": 0.0077158812045784965,
+              "mean_abs_contrast": 0.03500440968756657,
+              "high_contrast_columns": 32,
+              "weak_columns": 3
+            }
+          }
+        }
+      },
+      "probe_sha256": "ec0ef54780cb75f99e651c2af89d2ab455041142ee513495dbd43985aca1a3d5"
+    },
+    "off": {
+      "reference": {
+        "frame": 32,
+        "size": [
+          1200,
+          770
+        ],
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "samples_per_pixel": 4,
+        "display_event": 622,
+        "pack_event": 549,
+        "messages": [],
+        "tool": "1.47",
+        "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+        "settings": {
+          "Direct": "All point lights",
+          "ExposureEV": 0,
+          "GTAO": true,
+          "HistoryWeight": 1.0,
+          "Indirect": "Off",
+          "PreviewWidth": 1200,
+          "SSR": false,
+          "Samples": 2,
+          "Shading": "Lit",
+          "Supersampling": true,
+          "TAA": true,
+          "ToneMapping": "ACES"
+        },
+        "capture": "output/captures/local/NoGI-Reference-fb0d6b17e588-1200-f32/studio_frame32.rdc",
+        "work": "tmp/material-reference/NoGI-Reference-fb0d6b17e588-1200-f32",
+        "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+      },
+      "camera_reference": {
+        "shading_size": [
+          2400,
+          1540
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09258895275706891
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.96875,
+        "edge_blend": 0.0
+      },
+      "versions": {
+        "fb0d6b17e588": {
+          "label": "\u539f\u6709 TAA",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 622,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "Off",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/NoGI-Sponza-fb0d6b17e588-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/NoGI-Sponza-fb0d6b17e588-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.4687500069849193,
+              0.09259168116841465
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.0
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.039122976221851576,
+              "mean_signed_luma": -0.007803561537930243,
+              "mean_abs_contrast": 0.04899044152845163,
+              "high_contrast_columns": 33,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03940549724288284,
+              "mean_signed_luma": 0.0012676329971743512,
+              "mean_abs_contrast": 0.03786731155921799,
+              "high_contrast_columns": 23,
+              "weak_columns": 0
+            }
+          }
+        },
+        "f7a4c52c734f": {
+          "label": "\u4ec5\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 622,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "Off",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/NoGI-Sponza-f7a4c52c734f-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/NoGI-Sponza-f7a4c52c734f-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.4687500069849193,
+              0.09259168116841465
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.03753467031189093,
+              "mean_signed_luma": -0.007741329576411368,
+              "mean_abs_contrast": 0.048222480740980234,
+              "high_contrast_columns": 33,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.03541998315870761,
+              "mean_signed_luma": 0.002220296292922326,
+              "mean_abs_contrast": 0.04046521708312025,
+              "high_contrast_columns": 23,
+              "weak_columns": 1
+            }
+          }
+        },
+        "db6af2c86fbf": {
+          "label": "\u5c45\u4e2d\u659c\u6392\uff0b\u8f6e\u5ed3\u7b49\u6743",
+          "receipt": {
+            "frame": 32,
+            "size": [
+              600,
+              385
+            ],
+            "shading_size": [
+              600,
+              385
+            ],
+            "samples_per_pixel": 1,
+            "display_event": 622,
+            "pack_event": 549,
+            "messages": [],
+            "tool": "1.47",
+            "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+            "settings": {
+              "Direct": "All point lights",
+              "ExposureEV": 0,
+              "GTAO": true,
+              "HistoryWeight": 0.85,
+              "Indirect": "Off",
+              "PreviewWidth": 600,
+              "SSR": false,
+              "Samples": 2,
+              "Shading": "Lit",
+              "Supersampling": false,
+              "TAA": true,
+              "ToneMapping": "ACES"
+            },
+            "capture": "output/captures/local/NoGI-Sponza-db6af2c86fbf-600-f32/studio_frame32.rdc",
+            "work": "tmp/material-reference/NoGI-Sponza-db6af2c86fbf-600-f32",
+            "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+          },
+          "camera": {
+            "shading_size": [
+              600,
+              385
+            ],
+            "render_frame_index": 31,
+            "pixel_shift": [
+              -0.406249996740371,
+              -0.03125090981484391
+            ],
+            "stable_matrix": [
+              [
+                1.2005210692223045e-07,
+                4.2364003971506747e-10,
+                1.0065847635269165,
+                6.612186211896187e-07
+              ],
+              [
+                -0.05456480756402016,
+                1.5687369108200073,
+                6.504631944181938e-09,
+                3.1511149406433105
+              ],
+              [
+                1.000395655632019,
+                0.034796398133039474,
+                -1.19256455377581e-07,
+                5.478678226470947
+              ],
+              [
+                0.9993957281112671,
+                0.034761618822813034,
+                -1.1913725472822989e-07,
+                5.5731520652771
+              ]
+            ],
+            "eye": [
+              -5.5,
+              -2.200000047683716,
+              -8.526512829121202e-14
+            ],
+            "blend": 0.8500000238418579,
+            "edge_blend": 0.96875
+          },
+          "metrics": {
+            "near": {
+              "columns": 64,
+              "band_pixels": 257,
+              "mean_abs_luma": 0.029590972694226975,
+              "mean_signed_luma": -0.005205465485573047,
+              "mean_abs_contrast": 0.03309237760023679,
+              "high_contrast_columns": 33,
+              "weak_columns": 0
+            },
+            "far": {
+              "columns": 69,
+              "band_pixels": 280,
+              "mean_abs_luma": 0.026753813769939756,
+              "mean_signed_luma": 0.001614243880558224,
+              "mean_abs_contrast": 0.028827154460614148,
+              "high_contrast_columns": 23,
+              "weak_columns": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "same_phase": {
+    "live": {
+      "frames": [
+        16,
+        32
+      ],
+      "same_materials_positions_and_sample": true,
+      "frame16": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 15,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "frame32": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "near": {
+        "mean_abs_linear_luma_change": 0.07812008988914307,
+        "mean_signed_linear_luma_change": 0.07806478987908215
+      },
+      "far": {
+        "mean_abs_linear_luma_change": 0.002078727472688935,
+        "mean_signed_linear_luma_change": -0.0008064660237719582
+      }
+    },
+    "baked": {
+      "frames": [
+        16,
+        32
+      ],
+      "same_materials_positions_and_sample": true,
+      "frame16": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 15,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "frame32": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "near": {
+        "mean_abs_linear_luma_change": 0.0,
+        "mean_signed_linear_luma_change": 0.0
+      },
+      "far": {
+        "mean_abs_linear_luma_change": 0.0,
+        "mean_signed_linear_luma_change": 0.0
+      }
+    },
+    "off": {
+      "frames": [
+        16,
+        32
+      ],
+      "same_materials_positions_and_sample": true,
+      "frame16": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 15,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "frame32": {
+        "shading_size": [
+          600,
+          385
+        ],
+        "render_frame_index": 31,
+        "pixel_shift": [
+          -0.4687500069849193,
+          0.09259168116841465
+        ],
+        "stable_matrix": [
+          [
+            1.2005210692223045e-07,
+            4.2364003971506747e-10,
+            1.0065847635269165,
+            6.612186211896187e-07
+          ],
+          [
+            -0.05456480756402016,
+            1.5687369108200073,
+            6.504631944181938e-09,
+            3.1511149406433105
+          ],
+          [
+            1.000395655632019,
+            0.034796398133039474,
+            -1.19256455377581e-07,
+            5.478678226470947
+          ],
+          [
+            0.9993957281112671,
+            0.034761618822813034,
+            -1.1913725472822989e-07,
+            5.5731520652771
+          ]
+        ],
+        "eye": [
+          -5.5,
+          -2.200000047683716,
+          -8.526512829121202e-14
+        ],
+        "blend": 0.8500000238418579,
+        "edge_blend": 0.0
+      },
+      "near": {
+        "mean_abs_linear_luma_change": 0.0,
+        "mean_signed_linear_luma_change": 0.0
+      },
+      "far": {
+        "mean_abs_linear_luma_change": 0.0,
+        "mean_signed_linear_luma_change": 0.0
+      }
+    }
+  }
+}

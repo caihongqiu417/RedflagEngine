@@ -4,19 +4,19 @@
     "frames.csv": "6225e2c62c1d4e878fbefb2807b801ec8bee72fff2420a1ccae5e108f587e7a2",
     "pixels.npz": "30576e164eac40a882309b72972df9ed17a5114f6c8733f8fdd0c80ea50b2284",
     "mask.png": "126c1a99e830583f5816135d9ba55672c442188c862fd8f8fafc94dac0dbfb54",
-    "MaskSupersamplingBaseline.exe": "c59c872b6548bf069ae17cfeca4e998c19fe4b91eff5e5567afe0bfd1ee81290",
-    "MaskSupersampling.exe": "547aeba7cd5848ee6ee5f0f034c8245954813bb0d8bc3e71de6e78665ce6abfc",
+    "MaskSupersamplingBaseline.exe": "165bb87c3df81d6e0fe73d5a8a687db04db5547e1d3df9ae9d70d9a4ce43a5f3",
+    "MaskSupersampling.exe": "d914c4e591b1124686fff0129b048dcdd66fcef995ba97bd997e53bea26080da",
     "resolve.spv": "1a211bd4d3ce3eb8bf09845055b7f8e06ce9256930901fc6f85e7bf21e391c2f",
-    "LightingPreview.comp.inc": "4aeac76cd0b479e9509cc7fde789f8b43cbeb44528fae7349d8673a3366c6e8e"
+    "LightingPreview.comp.inc": "da77d0a8d1421f7146d580ad624adb14eea0b36efc1e3480f988dedf34821fec"
   },
   "libraries": {
     "ssaa_off": {
       "path": "bin\\Debug-windows-x86_64\\Redflag\\Redflag.lib",
-      "sha256": "7e8d1738308cfdfca286838f74743100a21e9fcd0a1b83a4e1af02738748727c"
+      "sha256": "b5362f9700e31890ee7fff3a507c53bc5d3017d8a1af662255784316122d1be1"
     },
     "ssaa_on": {
       "path": "bin\\Debug-windows-x86_64\\Redflag\\Redflag.lib",
-      "sha256": "7e8d1738308cfdfca286838f74743100a21e9fcd0a1b83a4e1af02738748727c"
+      "sha256": "b5362f9700e31890ee7fff3a507c53bc5d3017d8a1af662255784316122d1be1"
     }
   },
   "frames": 325,

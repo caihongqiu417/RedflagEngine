@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform/Vulkan/VulkanComputeDevice.h"
+#include "Redflag/Renderer/EnvironmentLighting.h"
 #include "Redflag/Renderer/GI/GlobalIllumination.h"
 #include "Redflag/Renderer/ScreenSpace/ScreenEffects.h"
 #include <vulkan/vulkan.h>
@@ -23,9 +24,9 @@ namespace Redflag
 		~LightingPreview();
 
 		VkDescriptorSet Render(Scene& scene, const glm::mat4& projection, const glm::mat4& view,
-			glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating);
+			glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating, bool scenePreview = true);
 		void ResetHistory();
-		void DrawSettings(bool allowBake = true);
+		void DrawSettings(bool allowBake = true, bool scenePreview = true);
 		void DrawEffectsMenu();
 		void Load(const std::filesystem::path& scene);
 		void Save(const std::filesystem::path& path, Scene& scene);
@@ -34,6 +35,7 @@ namespace Redflag
 		Shading Mode = Shading::BaseColor;
 		bool FastNavigation = false;
 		bool CompareDirect = false;
+		bool NeedsModelOverlay() const { return m_OverlayModels; }
 		static const char* ModeName(Shading mode);
 
 	private:
@@ -46,8 +48,9 @@ namespace Redflag
 		bool RefreshEnvironment(const std::filesystem::path& path, bool readAgain = false);
 		Scope<GlobalIllumination> CreateProbeLighting(const std::vector<GIModel>& models,
 			const std::vector<GILight>& lights, glm::uvec2 size = { 1, 1 });
-		Ref<ComputeResource> RenderLit(const glm::mat4& projection, const glm::mat4& view,
-			const glm::mat4& stableProjection, bool directOnly);
+		Ref<ComputeResource> RenderLit(const glm::mat4& projection, const glm::mat4& view, bool directOnly);
+		void DrawSky(const Ref<ComputeResource>& color, const glm::mat4& projection, const glm::mat4& view);
+		VkDescriptorSet Display(const Ref<ComputeResource>& color);
 
 		VulkanContext& m_Context;
 		VulkanComputeDevice m_Device;
@@ -67,9 +70,11 @@ namespace Redflag
 		std::vector<Ref<Mesh>> m_AnimatedMeshes;
 		Ref<ComputePipeline> m_PackSurfaces;
 		Ref<ComputePipeline> m_Display;
+		Ref<ComputePipeline> m_Sky;
 		Ref<ComputePipeline> m_Combine;
 		Ref<ComputeResource> m_CombinedLight;
 		Ref<ComputeResource> m_Environment;
+		EnvironmentLighting::Panorama m_Panorama;
 		std::filesystem::path m_EnvironmentPath;
 		std::filesystem::file_time_type m_EnvironmentTime{};
 		uint64_t m_EnvironmentKey = 0;
@@ -86,6 +91,10 @@ namespace Redflag
 		VkExtent2D m_MaxExtent{};
 		uint64_t m_MaxPixels = 0;
 		bool m_Supersampling = false;
+		bool m_Filmic = false;
+		float m_ExposureEV = 0.0f;
+		bool m_SkyVisible = true;
+		bool m_OverlayModels = false;
 		uint32_t m_StillFrames = 0;
 		int m_Samples = 1;
 		int m_PreviewWidth = 0; // 0 表示按面板的实际像素绘制。

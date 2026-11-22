@@ -450,6 +450,11 @@ void main(){
 	// ---- 载入 HDR 全景 ----
 	void IBLPrecompute::Init(const std::string& hdrPath)
 	{
+		Reload(hdrPath);
+	}
+
+	bool IBLPrecompute::Reload(const std::string& hdrPath)
+	{
 		// 先读取文件；失败时不分配 GPU 资源，也不改变绘制状态。
 		stbi_set_flip_vertically_on_load(true);
 		int w = 0, h = 0, ch = 0;
@@ -457,8 +462,9 @@ void main(){
 		if (!pixels)
 		{
 			RF_CORE_ERROR("IBL: Failed to load HDR: {0}", hdrPath);
-			return;
+			return false;
 		}
+		Shutdown();
 
 		// 预计算从立方体内部绘制，不能继承主画面的剔除、混合或裁剪状态。
 		GLint prevFBO, prevReadFBO, prevVP[4], prevDepthFunc;
@@ -667,14 +673,9 @@ void main(){
 		if (scissorEnabled) glEnable(GL_SCISSOR_TEST);
 
 		s_Ready = true;
+		s_EnvironmentPath = hdrPath;
 		RF_CORE_INFO("IBL: All pre-computation complete!");
-	}
-
-	void IBLPrecompute::Reload(const std::string& hdrPath)
-	{
-		Shutdown();
-		Init(hdrPath);
-		if (s_Ready) s_EnvironmentPath = hdrPath;
+		return true;
 	}
 
 	bool IBLPrecompute::SaveBaked(const std::filesystem::path& path)
@@ -704,8 +705,11 @@ void main(){
 			if (LoadBaked(path)) return;
 			RF_CORE_WARN("Cannot load baked environment: {0}", path.u8string());
 		}
+		else if (!path.empty() && Reload(path.string()))
+			return;
+
+		// 打开另一个场景时，即使它指定的文件缺失，也要撤下上一场景的天空。
 		Shutdown();
-		if (!path.empty() && path.extension() != ".rfibl") Init(path.string());
 		s_EnvironmentPath = path;
 	}
 

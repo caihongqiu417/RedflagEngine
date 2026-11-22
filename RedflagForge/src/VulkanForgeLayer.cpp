@@ -1,6 +1,7 @@
 #include "rfpch.h"
 #include "VulkanForgeLayer.h"
 #include "CharacterInput.h"
+#include "EditorEnvironment.h"
 
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Core/Application.h"
@@ -76,9 +77,11 @@ namespace Redflag
 	{
 		if (m_EditScene) ToggleSimulation();
 		m_Scene = CreateRef<Scene>();
+		m_Scene->SetEnvironment(DefaultSky);
 		auto extent = m_Draw->GetExtent();
 		if (!extent.width) extent = GetWindowContext().GetExtent();
-		m_Scene->OnViewportResize(extent.width, extent.height);
+		const glm::uvec2 gameSize = m_GameViewport.Resolution({extent.width, extent.height});
+		m_Scene->OnViewportResize(gameSize.x, gameSize.y);
 		m_Hierarchy.SetContext(m_Scene);
 		AddCamera();
 		m_Camera = EditorCamera(45, float(extent.width) / extent.height, .1f, 1000);
@@ -134,7 +137,8 @@ namespace Redflag
 		auto extent = m_Draw->GetExtent();
 		if (extent.width == 0)
 			extent = GetWindowContext().GetExtent();
-		scene->OnViewportResize(extent.width, extent.height);
+		const glm::uvec2 gameSize = m_GameViewport.Resolution({extent.width, extent.height});
+		scene->OnViewportResize(gameSize.x, gameSize.y);
 
 		if (!SceneSerializer(scene).Deserialize(path.string()))
 		{
@@ -255,6 +259,11 @@ namespace Redflag
 		}
 		if (ImGui::BeginMenu("环境贴图"))
 		{
+			bool visible = m_Scene->IsSkyVisible();
+			if (ImGui::MenuItem("显示天空背景", nullptr, &visible))
+				m_Scene->SetSkyVisible(visible);
+			if (ImGui::MenuItem("使用默认天空"))
+				m_Scene->SetEnvironment(DefaultSky);
 			if (ImGui::MenuItem("选择 HDR 或烘焙文件…"))
 			{
 				auto path = FileDialogs::OpenFile("Environment (*.hdr;*.rfibl)\0*.hdr;*.rfibl\0");
@@ -373,7 +382,7 @@ namespace Redflag
 		ImGui::End();
 
 		m_Hierarchy.OnImguiRender("层级  Hierarchy", "属性  Inspector");
-		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings(!m_EditScene);
+		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings(!m_EditScene, !m_GameView);
 		ImGui::End();
 		auto asset = m_Project.Draw();
 		if (!asset.empty())
@@ -476,6 +485,7 @@ namespace Redflag
 			if (m_GameView != previous) { m_Lighting->ResetHistory(); m_HasSceneImage = false; }
 			if (!m_GameView) { DrawTransformTools(); ImGui::SameLine(); }
 			m_Lighting->DrawEffectsMenu();
+			if (m_GameView) { ImGui::SameLine(); m_GameViewport.DrawResolution(); }
 			if (!m_GameView)
 			{
 				ImGui::SameLine();
@@ -498,12 +508,12 @@ namespace Redflag
 			ImGui::TextWrapped("没有主相机。可在「场景对象」菜单中创建相机。");
 			visible = false;
 		}
-		const ImVec2 size = ImGui::GetContentRegionAvail();
-		if (visible && size.x >= 1 && size.y >= 1)
+		const ImVec2 available = ImGui::GetContentRegionAvail();
+		if (visible && available.x >= 1 && available.y >= 1)
 		{
-			const ImVec2 scale = ImGui::GetIO().DisplayFramebufferScale;
-			const auto width = (std::max)(1u, static_cast<uint32_t>(size.x * scale.x));
-			const auto height = (std::max)(1u, static_cast<uint32_t>(size.y * scale.y));
+			const GameViewport::Layout layout = m_GameViewport.Fit(available, ImGui::GetIO().DisplayFramebufferScale, m_GameView);
+			const uint32_t width = layout.Pixels.x, height = layout.Pixels.y;
+			const ImVec2 size = layout.Size;
 			if (m_Draw->Resize(width, height))
 			{
 				// Resize 已等显卡用完旧图，现在可把新的场景贴图登记给 ImGui。
@@ -511,7 +521,8 @@ namespace Redflag
 				m_PanelTexture = ImGui_ImplVulkan_AddTexture(m_Draw->GetSampler(), m_Draw->GetColorView(),
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 				m_Camera.SetViewportSize(float(width), float(height));
-				m_Scene->OnViewportResize(width, height);
+				const glm::uvec2 gameSize = m_GameViewport.Resolution(layout.Pixels);
+				m_Scene->OnViewportResize(gameSize.x, gameSize.y);
 				m_HasSceneImage = false;
 			}
 
@@ -535,12 +546,21 @@ namespace Redflag
 			if (m_Navigating != navigate) m_Lighting->ResetHistory();
 			m_Navigating = navigate;
 			VkDescriptorSet image = m_PanelTexture;
+			bool overlayModels = false;
 			if (m_Lighting->Mode != Shading::BaseColor)
 			{
-				VkDescriptorSet light = m_Lighting->Render(*m_Scene, projection, view, eye, width, height, navigate);
-				if (light) image = light;
+				VkDescriptorSet light = m_Lighting->Render(*m_Scene, projection, view, eye, width, height, navigate, !m_GameView);
+				if (light)
+				{
+					image = light;
+					overlayModels = m_Lighting->NeedsModelOverlay();
+				}
 			}
+			ImVec2 origin = ImGui::GetCursorScreenPos();
+			ImGui::SetCursorScreenPos({origin.x + layout.Offset.x, origin.y + layout.Offset.y});
 			ImGui::Image((ImTextureID)image, size);
+			if (overlayModels)
+				ImGui::GetWindowDrawList()->AddImage((ImTextureID)m_PanelTexture, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 			m_Hovered = ImGui::IsItemHovered();
 			const bool clicked = ImGui::IsItemClicked();
 			const auto corner = ImGui::GetItemRectMin();
@@ -557,7 +577,7 @@ namespace Redflag
 					? Entity{ id, m_Scene.get() } : Entity{});
 			}
 			// 点击用的物体编号已从上一张图读完，现在可以画新一帧的编号。ImGui 在帧末显示上面选好的颜色图。
-			m_Draw->BeginScene();
+			m_Draw->BeginScene(overlayModels);
 			SceneRenderer::DrawGeometry(*m_Scene, *m_Draw, projection * view);
 			m_Draw->EndScene();
 			m_HasSceneImage = true;

@@ -37,11 +37,13 @@ cd RedflagForge
 
 第一次读项目，可以先看 Cornell Box 的两张对照图。红墙旁边的地板本来是白色，打开间接光后却带上了红色。[经典场景实测](output/pdf/Redflag-Classic-Scenes.pdf) 保存了画面和相机设置，[渲染公式与实现](output/pdf/Redflag-Rendering-Math.pdf) 顺着同一块地面解释公式、着色器和读回的颜色值。
 
+中庭的天空可以从“环境贴图”菜单更换。比较两侧布帘的颜色，可以在“渲染设置 → 质量与参数”里切换色调映射，曝光先保持在 0 EV。想让 agent 查这份场景实际保存的设置，也可以使用项目自带的 MCP 和 skill。[天空与布帘的实机对照](output/validation/atrium-sky/README.md) · [引擎 MCP 用法](scripts/redflag_mcp/README.md)
+
 做游戏时，可在本地浏览器打开 API 手册，按类名、方法或用途查找 C++ 与 C# 入口。想理解画面时，从《实时光照与采样》选一章，跟着教材例子读公式、看着色器，最后用同一场景的测量检查猜想。[游戏开发 API](output/api/index.html) · [实时光照与采样](output/pdf/Redflag-Realtime-Lighting.pdf) · [分章笔记与原始资料](docs/latex/lighting/README.md)
 
 遇到错图时，可以在[排错记录](output/pdf/Redflag-Debugging-Notes.pdf)里找到对应的源码和 RenderDoc 帧。[技术选型](output/pdf/Redflag-Technical-Decisions-Updated.pdf)比较了让远处铁丝网在镜头移动时保持可见的几种取样方法。在编辑器的“渲染设置 → 质量与参数”中可以打开 SSAA 2×2。[渲染性能实测](output/pdf/Redflag-Rendering-Performance.pdf)记录了它在 Sponza 里的耗时与显存开销，也收录了深度预写、2D 批渲染和 3D 实例化的对照。各册的 LaTeX 源码与编译命令见[文档目录](docs/latex/README.md)。
 
-日常开发使用的[项目记忆](AGENTS.md)、[AI 协作工作流](docs/AI-Workflow.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)也随仓库保存。
+我在[《我用 Agent 开发 Redflag 的经验》](docs/AI-Workflow.md)里写了怎样让 agent 实际点一遍网页、查旧版本的库文档、读失败的构建和线上报错，也举了两个例子，讲 AI 查错方向时我会怎样接着问。仓库还保留了[项目记忆](AGENTS.md)、[图形学教材与课程](docs/Graphics-References.md)和[工程清理记录](docs/Cleanup-2026-11-21.md)。
 
 ## 编译与渲染测试
 

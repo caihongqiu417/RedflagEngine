@@ -1,0 +1,121 @@
+{
+  "new_executable_sha256": "fb0d6b17e58831ee70809ac55d243619bf7e49507caf3567d8a76f752b6390cf",
+  "scene": "Bunny-daylight.redflag",
+  "capture_settings": {
+    "Direct": "All point lights",
+    "ExposureEV": 0,
+    "GTAO": true,
+    "HistoryWeight": 0.85,
+    "Indirect": "DDGI",
+    "PreviewWidth": 320,
+    "SSR": false,
+    "Samples": 2,
+    "Shading": "Lit",
+    "TAA": true,
+    "ToneMapping": "ACES"
+  },
+  "frames": {
+    "before": {
+      "frame": 24,
+      "size": [
+        320,
+        205
+      ],
+      "pack": 44,
+      "display": 128,
+      "renderdoc": "1.47",
+      "tone_mapping": "Reinhard",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "a92b105a8559dc1108f48ddfaa4749b68ce9bde4e03325e00727819f489e0d94",
+      "debug_messages": [],
+      "capture": "output/captures/local/Bunny-before-27c6853cfa4d-320/studio_frame24.rdc"
+    },
+    "sky-no-specular": {
+      "frame": 24,
+      "size": [
+        320,
+        205
+      ],
+      "pack": 44,
+      "display": 140,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "69331398e7cb2ae936ac5acd69a35a9c4e3a2c18d38a608a45d87ebd5285b7c7",
+      "debug_messages": [],
+      "capture": "output/captures/local/Bunny-daylight-no-specular-fb0d6b17e588-320/studio_frame24.rdc"
+    },
+    "after": {
+      "frame": 24,
+      "size": [
+        320,
+        205
+      ],
+      "pack": 44,
+      "display": 153,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "69331398e7cb2ae936ac5acd69a35a9c4e3a2c18d38a608a45d87ebd5285b7c7",
+      "debug_messages": [],
+      "capture": "output/captures/local/Bunny-daylight-fb0d6b17e588-320/studio_frame24.rdc"
+    },
+    "hidden": {
+      "frame": 24,
+      "size": [
+        320,
+        205
+      ],
+      "pack": 44,
+      "display": 141,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "6824c01cdc7a1c27b565db9aacd209926f66d7aee87e0617720c81c0454650cc",
+      "debug_messages": [],
+      "capture": "output/captures/local/Bunny-daylight-hidden-fb0d6b17e588-320/studio_frame24.rdc"
+    }
+  },
+  "sky_pixels": 29173,
+  "sky_excluded_border_px": 2,
+  "sky_rgb8_mean": {
+    "before": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "sky-no-specular": [
+      169.02228087615262,
+      173.05707332122168,
+      188.60117231686834
+    ],
+    "after": [
+      169.02228087615262,
+      173.05707332122168,
+      188.60117231686834
+    ],
+    "hidden": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "sky_unique_rgb8": 3233,
+  "geometry": {
+    "pixels": 33877,
+    "mean_linear_luminance_gain": 0.019128094597706286,
+    "pixels_brighter_over_0_001": 33877
+  },
+  "mostly_metal": {
+    "pixels": 0
+  },
+  "hide_sky": {
+    "interior_geometry_pixels": 31595,
+    "max_abs_linear_rgb_difference": 0.0,
+    "mean_linear_luminance_gain_vs_no_specular": 0.019227673338537237
+  }
+}

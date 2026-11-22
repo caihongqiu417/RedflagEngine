@@ -101,7 +101,7 @@ static void Run(VulkanComputeDevice& device,const fs::path& model,const fs::path
         auto jitter=ScreenEffects::JitterProjection(projection,frame,w,h);
         gi.SetCamera(jitter*view,eye);
         gi.Render(GIMethod::DirectReference);
-        if (frame<16) save(("static-input-"+std::to_string(frame)).c_str(),gi.GetOutput());
+        save(("static-input-"+std::to_string(frame)).c_str(),gi.GetOutput());
         auto taa=effects.Render(ScreenEffect::TAA,gi,jitter,view,frame,{},&projection);
         if (frame>=16) save(("static-taa-"+std::to_string(frame)).c_str(),taa);
     }

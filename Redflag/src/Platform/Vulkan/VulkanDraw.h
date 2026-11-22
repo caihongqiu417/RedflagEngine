@@ -32,7 +32,8 @@ namespace Redflag {
         VkExtent2D GetExtent() const;
         VkImageView GetColorView() const;
         VkSampler GetSampler() const;
-        void BeginScene();
+        // 把模型叠在天空图上时，未画模型的像素需要保留透明度 0。
+        void BeginScene(bool transparentBackground = false);
         void DrawIndexed(const Ref<MeshGeometry>& mesh, const Ref<SampledTexture>& texture,
             const glm::mat4& viewProjection, const glm::mat4& transform,
             const glm::vec4& color, int entityID, const SurfaceMaterial& surface = {}) override;
@@ -57,7 +58,7 @@ namespace Redflag {
         Pixel ReadPixel(uint32_t x, uint32_t y);
     private:
         bool ResizeTarget(uint32_t width, uint32_t height, const VulkanDraw* opaque);
-        void BeginScene(VkCommandBuffer cmd);
+        void BeginScene(VkCommandBuffer cmd, bool transparentBackground = false);
         struct Data;
         Scope<Data> m_Data;
     };

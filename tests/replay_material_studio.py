@@ -104,9 +104,12 @@ def export(frame, directory):
     display = frame.GetPipelineState()
     resources = display.GetReadWriteResources(rd.ShaderStage.Compute)
     target = next(textures[r.descriptor.resource] for r in resources if r.descriptor.resource in textures)
-    # 旧版只有灰度开关。新版还记录宽高各取几个样点，决定了面板后面的光照图尺寸。
+    # 最早版本只有灰度开关，后续版本加了每边的样点数，再加入显示曲线与曝光倍数。
     options = display.GetShaderReflection(rd.ShaderStage.Compute).constantBlocks[0].byteSize
-    side = struct.unpack_from("<I", bytes(frame.GetVulkanPipelineState().pushconsts), 4)[0] if options == 8 else 1
+    push = bytes(frame.GetVulkanPipelineState().pushconsts)
+    assert options in (4, 8, 16), f"Unexpected panel display parameters: {options} bytes"
+    side = struct.unpack_from("<I", push, 4)[0] if options >= 8 else 1
+    filmic, exposure = struct.unpack_from("<If", push, 8) if options == 16 else (0, 1.0)
     assert side in (1, 2)
     width, height = target.width * side, target.height * side
     pixels = width * height
@@ -126,8 +129,24 @@ def export(frame, directory):
             break
     report = {"frame": frame.GetFrameInfo().frameNumber, "size": [target.width, target.height],
             "shading_size": [width, height], "samples_per_pixel": side * side,
+            "tone_mapping": "ACES" if filmic else "Reinhard", "exposure_multiplier": exposure,
             "dispatches": dispatches, "draws": draws, "pack_event": pack, "display_event": dispatches[-1],
             "messages": [m.description for m in frame.GetFrameInfo().debugMessages]}
+    if os.environ.get("RF_EXPORT_TAA") == "1":
+        for event in reversed(dispatches):
+            frame.SetFrameEvent(event, True)
+            state = frame.GetPipelineState()
+            shader = state.GetShaderReflection(rd.ShaderStage.Compute)
+            slots = {shader.readWriteResources[r.access.index].fixedBindNumber: r.descriptor.resource
+                     for r in state.GetReadWriteResources(rd.ShaderStage.Compute)}
+            # TAA 把颜色写到位置 5。显示着色器应当读取这同一份结果。
+            if set(slots) == set(range(7)) and slots[5] == source:
+                for binding, name in ((0, "taa-camera.bin"), (2, "taa-input.f32"), (6, "taa-position.f32")):
+                    (directory / name).write_bytes(frame.GetBufferData(slots[binding], 0, 0))
+                report["taa_event"] = event
+                break
+        if "taa_event" not in report:
+            raise ValueError("Could not trace the panel colors to the TAA output")
     if os.environ.get("RF_MEASURE_REFLECTIONS") == "1":
         report["reflection"] = measure_reflections(frame, dispatches, directory, pixels)
     return report

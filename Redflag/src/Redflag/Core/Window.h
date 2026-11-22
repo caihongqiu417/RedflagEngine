@@ -9,13 +9,14 @@
 namespace Redflag {
 	class GraphicsContext;
 	struct WindowProps {
+		static constexpr uint32_t DefaultWidth = 1920, DefaultHeight = 1080;
 		std::string Title;
 		uint32_t Width;
 		uint32_t Height;
 		bool Visible = true;
 		WindowProps(const std::string& title = "Redflag Engine", 
-					uint32_t width = 2560, uint32_t height = 1440)
-					:Title(title), Width(width), Height(height) 
+					uint32_t width = DefaultWidth, uint32_t height = DefaultHeight, bool visible = true)
+					:Title(title), Width(width), Height(height), Visible(visible)
 				{
 				}
 	};

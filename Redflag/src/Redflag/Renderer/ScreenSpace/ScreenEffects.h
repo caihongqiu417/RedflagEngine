@@ -21,7 +21,8 @@ namespace Redflag
     {
         float AORadius = 0.65f, AOIntensity = 1.0f;
         float Roughness = 0.2f, ReflectionDistance = 12.0f;
-        float HistoryWeight = 0.9f; // TAA 默认最多保留九成上一帧的颜色。调低后，当前帧的颜色占比更大。
+        // 设为 0 只显示当前帧。开启后，固定镜头下的轮廓按采样次数混色，其他像素最多保留这个比例的旧颜色。
+        float HistoryWeight = 0.9f;
         float LightRange = 4.0f; // 漫反射对照测试中各灯共用的照明半径，按场景长度计。编辑器读取每盏灯自己的半径。
         bool TraceReflections = true, SpecularEnvironment = true;
         bool TraceScene = false; // SSR 在画面里找不到物体时，继续查场景里的三角形。

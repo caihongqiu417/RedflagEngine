@@ -12,17 +12,21 @@
 \]
 找到旧位置以后，还要检查旧图里画的是不是同一面墙。设投影矩阵把观察坐标的高度乘以 $P_{yy}$，画面高 $H$ 像素。一个像素在标准化坐标中高 $2/H$，把透视除法和高度缩放倒过来，就得到它在墙面深度处对应的世界高度 $h=2w/(|P_{yy}|H)$。透视相机的 $w$ 是沿视线轴量出的深度，远墙的一个像素盖得更宽；正交相机的 $w=1$，同一面墙退远后仍占相同像素数。旧点与眼前的点若相距超过 $2.5h$，这里就舍掉旧颜色。2.5 是经验值，取大了容易把前景颜色拖到背后的墙上，取小了则会丢掉本可用的历史。
 
-像素最后得到 $C=(1-\alpha)C_t+\alpha C_{t-1}$。最初有 $n$ 帧历史时，$\alpha$ 最大为 $n/(n+1)$。相机移动时，四个邻居各带一份双线性权重。通过距离检查的权重之和若为 0.5，就把历史占比再减半。旧颜色也限制在当前 $3\times3$ 像素的亮暗范围内，以减轻重影。
+像素最后得到 $C=(1-\alpha)C_t+\alpha C_{t-1}$。镜头停住后，如果同一个像素先采到栏杆、又采到后面的墙，就按实际采样次数混色。已有 $n$ 次采样时取 $\alpha=n/(n+1)$，这样第 $n+1$ 次和前面每一次各占相同的一份。其余像素仍受用户设置的历史权重上限控制。移动镜头时，每块表面回到上一帧的位置各不相同，引擎会舍去已经混入两层表面的旧颜色。剩下四个邻居中，通过检查的插值权重之和若为 0.5，历史占比就再减半。
 \pair{screen-effects/taa.png}{静止八帧后的颜色}{screen-effects/taa-history.png}{横移相机后，亮处仍能采用旧帧}
 \clearpage
 % 逐行伪代码
 \subsection{找回上一帧的颜色}
 \noindent{\small\color{quiet}按 GLSL 与相机代码整理的伪代码\quad\href{run:../../Redflag/src/Redflag/Renderer/ScreenSpace/Shaders/TAA.comp}{\texttt{TAA.comp}}}\par\nopagebreak
 \begin{lstlisting}[escapeinside={(*@}{@*)}]
-jitter = halton(frame % 16 + 1, bases=(2,3)) - 0.5
+jitter = centeredSample16[frame % 16]
+if (frame / 16) % 2 == 1:
+    jitter = (-jitter.y, jitter.x)
 projection = shiftClipPositionByPixelFraction(projection, jitter)
 drawVisibleSurfacesAndColor(projection)
 if cameraIsStill and sceneHasNotChanged:
+    if sampledTwoSurfaces and historyWeight > 0:
+        weight = previousStillSamples / (previousStillSamples + 1)
     return blend(current, history[pixel], weight)
 motion = previousStablePixel(world) - currentStablePixel(world)
 (*@{\footnotesize\color{quiet}加上运动量才得到旧图里的位置。}@*)
@@ -48,6 +52,6 @@ writeSeparateHistory(currentColor, currentWorldPosition)
 % 验证标准
 用同一静态场景的八张抖动图求逐像素均值作对照。它代表这八个实际采样位置。检查 TAA 第一帧与当前输入逐像素相同；再侧移相机，刚露出的区域应拒绝历史。现阶段世界位置能处理静止几何上的相机运动，蒙皮或独立移动物体还需要它们自己的上一帧位置与运动向量。
 
-最后一张单帧与八张均值的 MSE 为 \measured{single_frame_vs_eight_jitters_mse}，混合后为 \measured{taa_vs_eight_jitters_mse}。另一组测试把红板放在蓝墙前，横移并旋转相机。正交视图中新露出的 54 个像素原先都混入红色，修正后误收为零；透视视图中新露出的 96 个像素在修改前后都正确。\href{run:../../output/profiling/taa-camera/fixed/measurements.csv}{逐项结果}
+早期八帧测试中，最后一张单帧与八张均值的 MSE 为 \measured{single_frame_vs_eight_jitters_mse}，混合后为 \measured{taa_vs_eight_jitters_mse}。另一组测试把红板放在蓝墙前，横移并旋转相机。正交视图中新露出的 54 个像素原先都混入红色，修正后误收为零；透视视图中新露出的 96 个像素在修改前后都正确。\href{run:../../output/profiling/taa-camera/fixed/measurements.csv}{逐项结果}
 
 相机和场景都没动时，编辑器仍让 TAA 合并多帧的颜色。画满 32 帧，面板就一直显示最后一张图。这里的 32 决定显卡要多画多久，程序没有逐帧测量噪点，也就不能据此判断所有场景都已足够平滑。再移动相机、调灯或改变效果，面板会重新绘制。

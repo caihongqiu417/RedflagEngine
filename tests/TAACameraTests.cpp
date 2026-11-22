@@ -33,8 +33,8 @@ static void Save(const fs::path& path, const Image& image)
 
 static float CheckJitter(const glm::mat4& projection)
 {
-    // Halton 序列开头三个点，先减去像素中心 (0.5, 0.5)。像素从左上角起算。
-    const glm::vec2 expected[] = {{0,-1.f/6}, {-.25f,1.f/6}, {.25f,-7.f/18}};
+    // 16 个位置均落在小格中心。像素从左上角起算，减去 (0.5, 0.5) 后得到相对中心的偏移。
+    const glm::vec2 expected[] = {{3.f/32,3.f/32}, {-7.f/32,-11.f/32}, {-3.f/32,13.f/32}};
     float error = 0;
     for (uint32_t frame=0; frame<3; ++frame)
     {
@@ -46,7 +46,218 @@ static float CheckJitter(const glm::mat4& projection)
             error = std::max(error,glm::length(shift-expected[frame]));
         }
     }
+    // Vulkan 规范的 16 样点表，这里按从上到下的行号查列号。顺序可以重排，集合与中心位置必须一致。
+    constexpr int columnForRow[] = {1,8,4,11,15,7,3,12,0,9,5,13,2,10,6,14};
+    uint32_t rows[2]{};
+    bool visited[16][16]{};
+    glm::vec2 center(0);
+    const glm::vec4 point{0,0,-4,1};
+    for (uint32_t frame=0; frame<32; ++frame)
+    {
+        glm::mat4 jitter = ScreenEffects::JitterProjection(projection,frame,Width,Height);
+        glm::vec2 shift = Pixel(jitter,point)-Pixel(projection,point);
+        glm::ivec2 cell = glm::ivec2(glm::floor((shift+.5f)*16.f));
+        if (cell.x<0 || cell.x>=16 || cell.y<0 || cell.y>=16 || visited[cell.y][cell.x]) return 1.f;
+        glm::vec2 expectedShift = (glm::vec2(cell)+.5f)/16.f-.5f;
+        error = std::max(error,glm::length(shift-expectedShift));
+        visited[cell.y][cell.x] = true;
+        if (frame>=16) cell = {cell.y,15-cell.x}; // 把第二组转回规范表的方向。
+        if (columnForRow[cell.y]!=cell.x) return 1.f;
+        rows[frame/16] |= 1u << cell.y;
+        center += shift/32.f;
+    }
+    if (rows[0]!=0xffffu || rows[1]!=0xffffu) return 1.f;
+    error = std::max(error,glm::length(center));
     return error;
+}
+
+// 每个像素内均匀取 64×64 个位置，用两根矩形细线的实际长宽求覆盖面积，参考值与 TAA 的采样顺序无关。
+static float WireCoverage(int x, int y, float eyeY)
+{
+    static const glm::vec2 directions[] = {{std::cos(.21f),std::sin(.21f)}, {std::cos(-.13f),std::sin(-.13f)}};
+    const glm::vec2 center{x+.5f-Width/2, Height/2+eyeY-y-.5f};
+    auto covered = [&](glm::vec2 point,float margin) {
+        for (glm::vec2 u : directions) {
+            float along = glm::dot(point,u), across = point.y*u.x-point.x*u.y;
+            if (std::abs(along)<=58.f+margin && std::abs(across)<=.16f+margin) return true;
+        }
+        return false;
+    };
+    if (!covered(center,.71f)) return 0.f; // 像素中心到最远的角约为 0.707 像素。
+    int hits = 0;
+    for (int j=0; j<64; ++j)
+        for (int i=0; i<64; ++i) {
+            glm::vec2 offset((i+.5f)/64.f-.5f,(j+.5f)/64.f-.5f);
+            hits += covered(center+offset,0.f);
+        }
+    return hits/4096.f;
+}
+
+static void WriteMotionError(std::ofstream& csv, int step, const Image& frame, const Image& previous,
+                             const std::vector<float>& reference, const std::vector<float>& oldReference)
+{
+    int edges = 0;
+    double imageError = 0., changeError = 0., area = 0., measured = 0.;
+    float trail = 0.f;
+    for (size_t i=0; i<reference.size(); ++i) {
+        area += reference[i];
+        measured += frame[i].r;
+        if (reference[i]==0.f) trail = std::max(trail,frame[i].r);
+        if (reference[i]==0.f && oldReference[i]==0.f) continue;
+        ++edges;
+        imageError += std::abs(frame[i].r-reference[i]);
+        changeError += std::abs((frame[i].r-previous[i].r) - (reference[i]-oldReference[i]));
+    }
+    csv << step << ',' << step/8.f << ',' << edges << ',' << imageError/edges << ','
+        << changeError/edges << ',' << trail << ',' << measured/area << '\n';
+}
+
+static bool CheckWires(VulkanComputeDevice& device, VulkanDraw& draw, const Ref<MeshGeometry>& quad,
+                       GlobalIllumination& gi, const Ref<ComputePipeline>& pack,
+                       const Ref<ComputeResource>& plain, const fs::path& out)
+{
+    const glm::mat4 projection = glm::ortho(-64.f,64.f,-32.f,32.f,.1f,32.f);
+    const glm::mat4 wall = glm::scale(glm::translate(glm::mat4(1),{-32,0,-12}),{32,32,1});
+    auto wire = [](float z, float angle) {
+        glm::mat4 center = glm::translate(glm::mat4(1),{0,0,z});
+        return glm::scale(glm::rotate(center,angle,{0,0,1}),{58.f,.16f,1.f});
+    };
+    const glm::mat4 first = wire(-7,.21f), second = wire(-8,-.13f);
+    ScreenEffects effects(device,Width,Height);
+    effects.GetSettings().HistoryWeight = .85f;
+    Image raw(Width*Height), filtered(Width*Height);
+    uint32_t frame = 0;
+    auto raster = [&](const glm::mat4& vp, bool wires) {
+        const glm::mat4 inv = glm::inverse(vp);
+        draw.DrawSurfaces([&](CommandList& list) {
+            list.DrawIndexed(quad,{},vp,wall,{0,0,.5f,1},1);
+            if (wires) {
+                list.DrawIndexed(quad,{},vp,first,glm::vec4(1),2);
+                list.DrawIndexed(quad,{},vp,second,glm::vec4(1),3);
+            }
+        });
+        device.Dispatch(pack,{draw.GetAlbedo(),draw.GetNormalDepth(),gi.GetSurfaces()},&inv,(Width+7)/8,(Height+7)/8);
+        device.Readback(draw.GetAlbedo(),raw.data(),raw.size()*sizeof(glm::vec4));
+    };
+    auto render = [&](float eyeY, bool wires) {
+        const glm::mat4 view = glm::translate(glm::mat4(1),{0,-eyeY,0});
+        const glm::mat4 jitter = ScreenEffects::JitterProjection(projection,frame,Width,Height);
+        raster(jitter*view,wires);
+        device.Upload(plain,raw.data(),raw.size()*sizeof(glm::vec4));
+        Ref<ComputeResource> result = effects.Render(ScreenEffect::TAA,gi,jitter,view,frame++,plain,&projection);
+        device.Readback(result,filtered.data(),filtered.size()*sizeof(glm::vec4));
+    };
+
+    // 同样的两根实心细线在左半图挡住墙，在右半图挡住天空。均值来自实际画出的 32 张未混合图。
+    std::ofstream csv(out/"wires.csv");
+    csv << "camera,background,edge_pixels,capped_blend_mae,coverage_mae,max_error\n";
+    std::ofstream motion(out/"wire-motion.csv");
+    motion << "uncovered_pixels,max_old_wire_color\n";
+    std::ofstream spatial(out/"wire-fixed-geometry.csv");
+    spatial << "camera,background,edge_pixels,coverage_mae\n";
+    bool passed = true;
+    for (float eyeY : {0.f,3.375f})
+    {
+        Image moving;
+        if (eyeY != 0.f) {
+            render(eyeY,true);
+            moving = filtered;
+        }
+        std::vector<float> coverage(raw.size()), oldBlend(raw.size());
+        for (int sample=0; sample<32; ++sample)
+        {
+            render(eyeY,true);
+            float oldWeight = std::min(.85f,sample/(sample+1.f));
+            for (size_t i=0; i<raw.size(); ++i) {
+                coverage[i] += raw[i].r / 32.f;
+                oldBlend[i] = glm::mix(raw[i].r,oldBlend[i],oldWeight);
+            }
+        }
+        for (int region=0; region<3; ++region)
+        {
+            int count = 0;
+            float error = 0.f, oldError = 0.f, largest = 0.f;
+            // 两根线在画面中心相交。另取交点两旁各 4 列，确认单根线上的结果也适用于这里。
+            const int starts[] = {0, Width/2, Width/2-4}, ends[] = {Width/2, Width, Width/2+4};
+            int geometricEdges = 0;
+            double areaError = 0.f;
+            for (int y=0; y<Height; ++y)
+                for (int x=starts[region]; x<ends[region]; ++x)
+                {
+                    size_t i = size_t(y)*Width+x;
+                    float area = WireCoverage(x,y,eyeY);
+                    if (area>0.f && area<1.f) {
+                        ++geometricEdges;
+                        areaError += std::abs(filtered[i].r-area);
+                    }
+                    if (coverage[i] <= 0.f || coverage[i] >= 1.f) continue;
+                    float difference = std::abs(filtered[i].r-coverage[i]);
+                    error += difference;
+                    oldError += std::abs(oldBlend[i]-coverage[i]);
+                    largest = std::max(largest,difference);
+                    ++count;
+                }
+            if (!count) return false;
+            const char* names[] = {"wall","sky","crossing"};
+            spatial << eyeY << ',' << names[region] << ',' << geometricEdges << ',' << areaError/geometricEdges << '\n';
+            csv << eyeY << ',' << names[region] << ',' << count << ',' << oldError/count
+                << ',' << error/count << ',' << largest << '\n';
+            passed &= count>(region==2 ? 8 : 100) && largest<.0001f && oldError/count>.01f;
+        }
+        if (!moving.empty())
+        {
+            size_t uncovered = 0;
+            float trail = 0.f;
+            for (size_t i=0; i<moving.size(); ++i) {
+                if (coverage[i] != 0.f) continue;
+                ++uncovered;
+                trail = std::max(trail,moving[i].r);
+            }
+            motion << uncovered << ',' << trail << '\n';
+            passed &= uncovered>100 && trail<.0001f;
+        }
+        Save(out/(eyeY == 0.f ? "wire-fixed.png" : "wire-stopped.png"),filtered);
+    }
+    effects.ResetHistory();
+    render(3.375f,false);
+    for (const glm::vec4& color : filtered) passed &= color.r == 0.f;
+    effects.GetSettings().HistoryWeight = 0.f;
+    render(3.375f,true);
+    for (size_t i=0; i<raw.size(); ++i) passed &= filtered[i].r == raw[i].r;
+
+    // 每帧沿 Y 平移 1/8 个像素。参考图在该机位独立画 32 次，再对 32 个位置的光栅化结果取算术平均。
+    effects.ResetHistory();
+    effects.GetSettings().HistoryWeight = .85f;
+    for (int sample=0; sample<32; ++sample) render(0.f,true);
+    Image lastFrame = filtered;
+    std::vector<float> lastCoverage(raw.size());
+    for (size_t i=0; i<raw.size(); ++i) lastCoverage[i] = filtered[i].r;
+
+    std::ofstream pan(out/"wire-pan.csv");
+    pan << "frame,pan_pixels,edge_pixels,coverage_mae,change_error_mae,max_color_outside_wire,coverage_ratio\n";
+    std::ofstream geometry(out/"wire-pan-geometry.csv");
+    geometry << "frame,pan_pixels,edge_pixels,coverage_mae,change_error_mae,max_color_outside_wire,coverage_ratio\n";
+    std::vector<float> lastArea(raw.size());
+    for (size_t i=0; i<raw.size(); ++i) lastArea[i]=WireCoverage(int(i%Width),int(i/Width),0.f);
+    for (int step=1; step<=16; ++step)
+    {
+        const float eyeY = step/8.f;
+        render(eyeY,true);
+        const glm::mat4 view = glm::translate(glm::mat4(1),{0,-eyeY,0});
+        std::vector<float> coverage(raw.size());
+        for (uint32_t phase=0; phase<32; ++phase) {
+            raster(ScreenEffects::JitterProjection(projection,phase,Width,Height)*view,true);
+            for (size_t i=0; i<raw.size(); ++i) coverage[i] += raw[i].r/32.f;
+        }
+        std::vector<float> area(raw.size());
+        for (size_t i=0; i<area.size(); ++i) area[i] = WireCoverage(int(i%Width),int(i/Width),eyeY);
+        WriteMotionError(pan,step,filtered,lastFrame,coverage,lastCoverage);
+        WriteMotionError(geometry,step,filtered,lastFrame,area,lastArea);
+        lastFrame = filtered;
+        lastCoverage = std::move(coverage);
+        lastArea = std::move(area);
+    }
+    return passed;
 }
 
 static bool Run(VulkanContext& context, VulkanComputeDevice& device, const fs::path& out, RenderDocCapture& capture)
@@ -157,7 +368,7 @@ static bool Run(VulkanContext& context, VulkanComputeDevice& device, const fs::p
         passed &= exposed > 5 && falseHistory==0 && stillValid>100 && colorError < 1.e-5f
             && jitterError < .0001f && (!ortho || std::abs(nearWeight-.5f) < .0001f);
     }
-    return passed;
+    return CheckWires(device,draw,quad,gi,pack,plain,out) && passed;
 }
 
 int main(int argc,char** argv)

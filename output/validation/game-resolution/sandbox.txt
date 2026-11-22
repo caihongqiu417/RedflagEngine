@@ -1,0 +1,7 @@
+[23:29:27] REDFLAG : Redflag App,1920,1080
+[23:29:27] REDFLAG : OpenGL Info:
+[23:29:27] REDFLAG :   Vendor: NVIDIA Corporation
+[23:29:27] REDFLAG :   Renderer: NVIDIA GeForce RTX 5070 Ti Laptop GPU/PCIe/SSE2
+[23:29:27] REDFLAG :   Version: 4.6.0 NVIDIA 616.56
+[23:29:27] REDFLAG : Framebuffer Size: 1920x1080
+[23:29:34] REDFLAG : Window resize event triggered

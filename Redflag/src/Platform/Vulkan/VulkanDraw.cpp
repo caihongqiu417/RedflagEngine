@@ -126,12 +126,12 @@ namespace Redflag {
     }
 
     // ---- 记录本次场景 ----
-    void VulkanDraw::BeginScene()
+    void VulkanDraw::BeginScene(bool transparentBackground)
     {
-        BeginScene(m_Data->Context.GetCommandBuffer());
+        BeginScene(m_Data->Context.GetCommandBuffer(), transparentBackground);
     }
 
-    void VulkanDraw::BeginScene(VkCommandBuffer cmd)
+    void VulkanDraw::BeginScene(VkCommandBuffer cmd, bool transparentBackground)
     {
         m_Data->Recording = cmd;
         auto& frame = m_Data->Frames[m_Data->Context.GetFrameIndex()];
@@ -144,7 +144,7 @@ namespace Redflag {
         VkClearValue clear[4]{};
         if (m_Data->Mode == Output::ColorAndEntity)
         {
-            clear[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+            clear[0].color = {{0.1f, 0.1f, 0.1f, transparentBackground ? 0.0f : 1.0f}};
             clear[1].color.int32[0] = -1; // 背景处没有可选的实体。
         }
         clear[colors].depthStencil.depth = 1.0f;

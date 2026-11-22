@@ -1,0 +1,76 @@
+{
+  "scene": "Character-Fox.redflag (camera and animated model only)",
+  "renderer": "Vulkan",
+  "configuration": "Release x64",
+  "executable_sha256": "c42cf30b05965e875d772d52a4c56574796784fd8d32d35e61dbe176c1c9673e",
+  "capture_tool": "RenderDoc 1.47",
+  "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "frame": 24,
+  "viewport_origin": [
+    437,
+    214
+  ],
+  "viewport_size": [
+    1391,
+    892
+  ],
+  "tone_mapping": "ACES",
+  "pose": {
+    "clip": "Walk",
+    "playing": false,
+    "time_seconds": 0
+  },
+  "sky_file_sha256": "fd94c84997b8a3c353b62c2125a9b44e19509956986a126e472684432a02d798",
+  "actor_mask": "alpha 255 in ImGui foreground texture",
+  "actor_pixels": 155563,
+  "background_pixels": 1085209,
+  "cases": {
+    "sky": {
+      "exposure_ev": 0,
+      "sky_visible": true,
+      "scene_sha256": "d764d127c95b60d5aad2f706e973bb6d361218df4ef8e3bb49ac8ffc04afe59a",
+      "settings_sha256": "89028c06aa4d9b96200f977415de668205fcfdea1e7a2065f664b1b26f6355f5",
+      "capture_path": "output/captures/local/fox-sky-c42cf30b0596/sky.rdc",
+      "capture_sha256": "b91458e67cf797fb74fb169147f49c7ca0bacfbf7612e335919e685a5a690582",
+      "imgui_viewport_draw_events": [
+        90,
+        93
+      ]
+    },
+    "hidden": {
+      "exposure_ev": 0,
+      "sky_visible": false,
+      "scene_sha256": "5d3009d2d5770786f82a7731a5bcd128ee00ae1b96ce819218b69e6c505c30cb",
+      "settings_sha256": "89028c06aa4d9b96200f977415de668205fcfdea1e7a2065f664b1b26f6355f5",
+      "capture_path": "output/captures/local/fox-sky-c42cf30b0596/hidden.rdc",
+      "capture_sha256": "879f08f47710710606ef08508f1f25bdc247dd92207333db4fccc5f154aacdc9",
+      "imgui_viewport_draw_events": [
+        90
+      ]
+    },
+    "exposure-plus-one": {
+      "exposure_ev": 1,
+      "sky_visible": true,
+      "scene_sha256": "d764d127c95b60d5aad2f706e973bb6d361218df4ef8e3bb49ac8ffc04afe59a",
+      "settings_sha256": "27f14e9f820e2d58e8cde9c4c1025e4e4536d5e0beca14172d0168058624217d",
+      "capture_path": "output/captures/local/fox-sky-c42cf30b0596/exposure-plus-one.rdc",
+      "capture_sha256": "5df4c2342531d1ec56f42f3d2d3c1e6f71ed16ee69057865e8e9381436279f8b",
+      "imgui_viewport_draw_events": [
+        90,
+        93
+      ]
+    }
+  },
+  "comparisons": {
+    "hidden_to_sky": {
+      "actor_pixels_changed": 0,
+      "actor_max_channel_difference_8bit": 0,
+      "background_pixels_changed": 1085209
+    },
+    "sky_to_exposure-plus-one": {
+      "actor_pixels_changed": 0,
+      "actor_max_channel_difference_8bit": 0,
+      "background_pixels_changed": 1085209
+    }
+  }
+}

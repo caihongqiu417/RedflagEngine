@@ -1,0 +1,31 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, binding = 0) readonly buffer Sky { vec4 environment[]; };
+layout(rgba32f, binding = 1) readonly uniform image2D surfaces;
+layout(std430, binding = 2) writeonly buffer Color { vec4 pixels[]; };
+layout(push_constant) uniform Camera { mat4 inverseSkyVP; ivec2 size; uint hasSurfaces; };
+const float pi = 3.14159265359;
+#include "Panorama.glsl"
+#include "EnvironmentCube.glsl"
+
+void main()
+{
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy), extent = imageSize(surfaces);
+    if (any(greaterThanEqual(p, extent))) return;
+    if (hasSurfaces != 0 && imageLoad(surfaces, p).a != 0.) return;
+
+    // 屏幕从左上角数像素。用同一像素在近、远两面的点求视线方向，透视和正交相机都适用。
+    vec2 ndc = (vec2(p) + .5) / vec2(extent) * vec2(2, -2) + vec2(-1, 1);
+    vec4 nearPoint = inverseSkyVP * vec4(ndc, -1, 1);
+    vec4 farPoint = inverseSkyVP * vec4(ndc, 1, 1);
+    vec3 direction = normalize(farPoint.xyz * nearPoint.w - nearPoint.xyz * farPoint.w);
+    if (size.x > 0 && all(equal(direction.xz, vec2(0))))
+    {
+        // 正上方和正下方没有唯一的经度。沿全景中央的经线，读顶行或底行的像素中心。
+        float latitude = direction.y * (.5 * pi - .5 * pi / float(size.y));
+        direction = vec3(cos(latitude), sin(latitude), 0);
+    }
+    // 有 HDR 原图时读全景。烘焙文件只保存了立方体图，其中最清晰的一层也用于镜面反射。
+    vec3 sky = size.x > 0 ? panorama(direction, 0.) : cubeLight(direction, reflectionOffset(0), reflectionSize);
+    pixels[p.y * extent.x + p.x] = vec4(sky, 1);
+}

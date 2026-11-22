@@ -3,6 +3,7 @@
 #include"Redflag.h"
 #include "ForgeLayer.h"
 #include "CharacterInput.h"
+#include "EditorEnvironment.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -172,8 +173,8 @@ namespace Redflag {
                                FramebufferTextureFormat::RED_INTEGER,
                                FramebufferTextureFormat::RGBA16F,
                                FramebufferTextureFormat::Depth };
-        fbSpec.Width  = 2560;
-        fbSpec.Height = 1440;
+        fbSpec.Width = m_ViewportSize.x;
+        fbSpec.Height = m_ViewportSize.y;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
         // 3D 测试：创建立方体 Mesh
@@ -181,7 +182,8 @@ namespace Redflag {
 
         // 初始化编辑场景
         m_EditorScene = CreateRef<Scene>();
-        m_EditorScene->OnViewportResize(2560, 1440);
+        m_EditorScene->SetEnvironment(DefaultSky);
+        m_EditorScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
 
@@ -364,13 +366,10 @@ namespace Redflag {
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my; // ImGui 从上往下数行，OpenGL 从下往上数。
-
-        int mouseX = (int)mx;
-        int mouseY = (int)my;
-
-        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        if (mx >= 0 && my >= 0 && mx < viewportSize.x && my < viewportSize.y)
         {
+            const int mouseX = int(mx * m_ViewportSize.x / viewportSize.x);
+            const int mouseY = int(m_ViewportSize.y) - 1 - int(my * m_ViewportSize.y / viewportSize.y);
             if (!ImGuizmo::IsUsing())
             {
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
@@ -389,6 +388,11 @@ namespace Redflag {
                 }
             }
         }
+        else
+        {
+            m_LastHoveredEntityID = -1;
+            m_HoveredEntity = {};
+        }
 
         m_Framebuffer->Unbind();
     }
@@ -396,14 +400,22 @@ namespace Redflag {
     void ForgeLayer::DrawEnvironmentMenu()
     {
         if (!ImGui::BeginMenu(u8"环境贴图", m_SceneState == SceneState::Edit)) return;
+        bool visible = m_EditorScene->IsSkyVisible();
+        if (ImGui::MenuItem(u8"显示天空背景", nullptr, &visible))
+            m_EditorScene->SetSkyVisible(visible);
+        if (ImGui::MenuItem(u8"使用默认天空"))
+        {
+            m_EditorScene->SetEnvironment(DefaultSky);
+            m_EnvironmentMessage.clear();
+        }
         if (ImGui::MenuItem(u8"载入 HDR 全景…"))
         {
             const std::string path = FileDialogs::OpenFile("HDR (*.hdr)\0*.hdr\0");
             if (!path.empty())
             {
-                IBLPrecompute::Reload(path);
-                if (IBLPrecompute::IsReady()) m_EditorScene->SetEnvironment(path);
-                m_EnvironmentMessage = IBLPrecompute::IsReady() ? u8"环境贴图已生成。" : u8"无法读取这张 HDR 图。";
+                const bool loaded = IBLPrecompute::Reload(path);
+                if (loaded) m_EditorScene->SetEnvironment(path);
+                m_EnvironmentMessage = loaded ? u8"环境贴图已生成。" : u8"无法读取这张 HDR 图。";
             }
         }
         if (ImGui::MenuItem(u8"保存烘焙结果…", nullptr, false, IBLPrecompute::IsReady()))
@@ -425,6 +437,11 @@ namespace Redflag {
                 if (loaded) m_EditorScene->SetEnvironment(path);
                 m_EnvironmentMessage = loaded ? u8"已载入烘焙环境光。" : u8"文件不完整或版本不匹配。";
             }
+        }
+        if (ImGui::MenuItem(u8"移除环境贴图", nullptr, false, !m_EditorScene->GetEnvironment().empty()))
+        {
+            m_EditorScene->SetEnvironment({});
+            m_EnvironmentMessage.clear();
         }
         if (!m_EnvironmentMessage.empty()) ImGui::TextDisabled("%s", m_EnvironmentMessage.c_str());
         ImGui::EndMenu();
@@ -1017,44 +1034,51 @@ namespace Redflag {
         m_ContentBrowserPanel.OnImGuiRender();
 
         // Viewport 面板
-        ImGui::Begin("Viewport");
-
-        // 记录 Viewport 屏幕边界（用于鼠标坐标转换和 Gizmo 绘制范围）
-        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-        auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-        auto viewportOffset    = ImGui::GetWindowPos();
-        m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x,
-                                viewportMinRegion.y + viewportOffset.y };
-        m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x,
-                                viewportMaxRegion.y + viewportOffset.y };
+        const bool visible = ImGui::Begin("Viewport");
 
         m_ViewportFocused = ImGui::IsWindowFocused();
-        m_ViewportHovered = ImGui::IsWindowHovered();
-        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
-
-        // Viewport 大小变化时同步帧缓冲和相机宽高比
-        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-        if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
+        const bool game = m_SceneState == SceneState::Play;
+        if (visible && game) m_GameViewport.DrawResolution();
+        ImVec2 available = ImGui::GetContentRegionAvail();
+        if (!visible || available.x < 1.f || available.y < 1.f)
         {
-            m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-            m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_ViewportBounds[0] = m_ViewportBounds[1] = {};
+            m_ViewportHovered = false;
+            Application::Get().GetImGuiLayer()->BlockEvents(true);
+            ImGui::End(); // Viewport
+            ImGui::End(); // DockSpace
+            return;
         }
+        const GameViewport::Layout layout = m_GameViewport.Fit(available, ImGui::GetIO().DisplayFramebufferScale, game);
+        if (m_ViewportSize != layout.Pixels)
+        {
+            m_ViewportSize = layout.Pixels;
+            m_EditorCamera.SetViewportSize(float(m_ViewportSize.x), float(m_ViewportSize.y));
+            const glm::uvec2 gameSize = m_GameViewport.Resolution(layout.Pixels);
+            m_ActiveScene->OnViewportResize(gameSize.x, gameSize.y);
+            m_Framebuffer->Resize(m_ViewportSize.x, m_ViewportSize.y);
+        }
+        ImVec2 origin = ImGui::GetCursorScreenPos();
+        ImGui::SetCursorScreenPos({origin.x + layout.Offset.x, origin.y + layout.Offset.y});
 
         // 面板显示后处理画好的图。曝光和色调映射保留了亮部的明暗差别。
         uint32_t textureID = SceneRenderer::GetFinalColorTextureID();
         if (textureID != 0)
         {
             ImGui::Image((void*)(uint64_t)textureID,
-                ImVec2(m_ViewportSize.x, m_ViewportSize.y),
+                layout.Size,
                 ImVec2(0, 1), ImVec2(1, 0));
         }
         else
         {
             // 第一张图还没画好，先给场景面板留出位置。
-            ImGui::Dummy(ImVec2(m_ViewportSize.x, m_ViewportSize.y));
+            ImGui::Dummy(layout.Size);
         }
+        ImVec2 topLeft = ImGui::GetItemRectMin(), bottomRight = ImGui::GetItemRectMax();
+        m_ViewportBounds[0] = {topLeft.x, topLeft.y};
+        m_ViewportBounds[1] = {bottomRight.x, bottomRight.y};
+        m_ViewportHovered = ImGui::IsItemHovered();
+        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
         // 拖拽 .redflag 场景文件到 Viewport 时直接打开
         if (ImGui::BeginDragDropTarget())
@@ -1070,7 +1094,8 @@ namespace Redflag {
                     m_HoveredEntity = {};
 
                     m_EditorScene = CreateRef<Scene>();
-                    m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+                    const glm::uvec2 gameSize = m_GameViewport.Resolution(m_ViewportSize);
+                    m_EditorScene->OnViewportResize(gameSize.x, gameSize.y);
                     m_ActiveScene = m_EditorScene;
                     m_SceneHierachyPanel.SetContext(m_EditorScene);
 
@@ -1300,7 +1325,8 @@ namespace Redflag {
             m_HoveredEntity = {};
 
             m_EditorScene = CreateRef<Scene>();
-            m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            const glm::uvec2 gameSize = m_GameViewport.Resolution(m_ViewportSize);
+            m_EditorScene->OnViewportResize(gameSize.x, gameSize.y);
 
             SceneSerializer serializer(m_EditorScene);
             if (serializer.Deserialize(filepath))
@@ -1330,7 +1356,9 @@ namespace Redflag {
         m_HoveredEntity = {};
 
         m_EditorScene = CreateRef<Scene>();
-        m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+        m_EditorScene->SetEnvironment(DefaultSky);
+        const glm::uvec2 gameSize = m_GameViewport.Resolution(m_ViewportSize);
+        m_EditorScene->OnViewportResize(gameSize.x, gameSize.y);
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
         m_SceneFilePath.clear();

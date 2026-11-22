@@ -1,4 +1,6 @@
 Shading: Lit
+ToneMapping: ACES
+ExposureEV: 0
 PreviewWidth: 0
 Samples: 2
 Direct: All point lights

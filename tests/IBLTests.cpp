@@ -81,7 +81,15 @@ static void CheckSkyboxAttachments()
     glViewport(0, 0, 4, 4);
     glDisable(GL_BLEND);
     glDisable(GL_SCISSOR_TEST);
+    const float clear[] = {0, 0, 0, 0};
+    glClearTexImage(attachments[0], 0, GL_RGBA, GL_FLOAT, clear);
+    IBLPrecompute::RenderSkybox(glm::mat4(1), glm::ortho(-1.f, 1.f, -1.f, 1.f));
+    float center[4];
+    glGetTextureSubImage(attachments[0], 0, 2, 2, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(center), center);
+    Check(center[0] == 0, "orthographic view keeps the 2D background");
     IBLPrecompute::RenderSkybox(glm::mat4(1), glm::perspective(glm::radians(60.0f), 1.0f, .1f, 100.0f));
+    glGetTextureSubImage(attachments[0], 0, 2, 2, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(center), center);
+    Check(std::abs(center[0] - 2.f) < .01f, "perspective sky shows the HDR red channel");
     int entities[16];
     float normals[64];
     glGetTextureImage(attachments[1], 0, GL_RED_INTEGER, GL_INT, sizeof(entities), entities);
@@ -213,6 +221,9 @@ int main(int argc, char** argv)
     IBLPrecompute::Reload(path.string());
     Check(IBLPrecompute::IsReady(), "constant HDR precomputation completes");
     const IBLTextures textures = IBLPrecompute::GetTextures();
+    Check(!IBLPrecompute::Reload("../bin-int/Tests/missing-ibl-file.hdr") &&
+          IBLPrecompute::GetTextures().EnvCubemap == textures.EnvCubemap && IBLPrecompute::IsReady(),
+          "selecting an unreadable panorama preserves the current sky");
     Check(IBLPrecompute::SaveBaked(baked), "export computed lighting for another process");
     CheckCube(textures.EnvCubemap, 0, {2, 1, .5f}, .015f);
     // 对线性红色 2，容差约等于 RGB16F 在这个量级的一档精度。

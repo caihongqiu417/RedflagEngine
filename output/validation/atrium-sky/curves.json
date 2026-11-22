@@ -1,0 +1,83 @@
+{
+  "frames": {
+    "Reinhard": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 658,
+      "renderdoc": "1.47",
+      "tone_mapping": "Reinhard",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-Reinhard-fb0d6b17e588-640/studio_frame24.rdc"
+    },
+    "ACES": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 658,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-fb0d6b17e588-640/studio_frame24.rdc"
+    }
+  },
+  "equal_linear_hdr": true,
+  "base_color_saturation_above": 0.65,
+  "colors": {
+    "red": {
+      "pixels": 56917,
+      "Reinhard": {
+        "mean_display_saturation": 0.28183583065193596,
+        "median_rgb8": [
+          68.0,
+          51.0,
+          48.0
+        ]
+      },
+      "ACES": {
+        "mean_display_saturation": 0.47169201617001255,
+        "median_rgb8": [
+          66.0,
+          39.0,
+          34.0
+        ]
+      }
+    },
+    "blue": {
+      "pixels": 10990,
+      "Reinhard": {
+        "mean_display_saturation": 0.3808575903454438,
+        "median_rgb8": [
+          72.0,
+          85.0,
+          113.0
+        ]
+      },
+      "ACES": {
+        "mean_display_saturation": 0.5175672684673781,
+        "median_rgb8": [
+          73.0,
+          98.0,
+          148.0
+        ]
+      }
+    }
+  },
+  "pixel_count": 262400,
+  "any_display_channel_255": {
+    "Reinhard": 0,
+    "ACES": 154
+  }
+}

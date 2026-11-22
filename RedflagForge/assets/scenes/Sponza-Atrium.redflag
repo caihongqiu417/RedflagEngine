@@ -1,4 +1,6 @@
 Scene: Sponza Atrium
+Environment: ../textures/sky/daylight.hdr
+SkyVisible: true
 Entities:
   - Entity: 4
     TagComponent:

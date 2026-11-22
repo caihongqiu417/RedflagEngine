@@ -12,7 +12,7 @@
 
 ## LaTeX 源码与编译
 
-[渲染性能实测](../../output/pdf/Redflag-Rendering-Performance.pdf) 记录深度预写、2D 批渲染和 3D 实例化的实际 RenderDoc 事件、离屏 CPU/GPU 计时，以及接下来值得做的对照。表格由原始 CSV 生成。新增优化的取证方式见[项目协作工作流](../AI-Workflow.md)。
+[渲染性能实测](../../output/pdf/Redflag-Rendering-Performance.pdf) 记录深度预写、2D 批渲染和 3D 实例化的实际 RenderDoc 事件、离屏 CPU/GPU 计时，以及接下来值得做的对照。表格由原始 CSV 生成。整理手册时怎样用浏览器检查源码跳转、用刻意排坏的插图试一份 skill，可以看[《我用 Agent 开发 Redflag 的经验》](../AI-Workflow.md)。
 
 在本目录用 PowerShell 运行对应的脚本。每个脚本调用两次 XeLaTeX，使交叉引用和图号更新，再将 PDF 放入 `output/pdf/`。中间文件留在各册的 `build/` 目录。TeX Live 需包含 ctex、TikZ、Fandol 和 TeX Gyre 字体。
 

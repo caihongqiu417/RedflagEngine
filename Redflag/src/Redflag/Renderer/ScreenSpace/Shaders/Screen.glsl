@@ -15,7 +15,7 @@ layout(std430, binding = 0) readonly buffer Frame
     uvec4 extent;    // 图宽、图高、帧编号、灯数
     vec4 material;   // 遮蔽半径、强度、反射粗糙度、反射距离
     vec4 temporal;   // x 是旧颜色的权重，y 表示上一帧是否可用，z 是漫反射对照测试的统一灯半径，w 表示相机矩阵没变。
-    vec4 depthRange; // x、y 用来划分灯簇的深度层。z 非零时按漫反射对照场景计算，所有灯共用 temporal.z 的半径。
+    vec4 depthRange; // x、y 用来划分灯簇的深度层。z 非零时使用统一灯半径。w 是 TAA 在轮廓像素使用的历史权重。
 };
 layout(std430, binding = 1) readonly buffer Geometry
 {

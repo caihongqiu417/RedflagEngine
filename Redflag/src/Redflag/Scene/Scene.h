@@ -67,6 +67,8 @@ namespace Redflag {
 
 		const std::filesystem::path& GetEnvironment() const { return m_Environment; }
 		void SetEnvironment(const std::filesystem::path& path) { m_Environment = path; }
+		bool IsSkyVisible() const { return m_SkyVisible; }
+		void SetSkyVisible(bool visible) { m_SkyVisible = visible; }
 	private:
 		void OnCameraAdded(CameraComponent& component);
 		void ResetCharacterControls();
@@ -84,6 +86,7 @@ namespace Redflag {
 	private:
 		entt::registry m_Registry;
 		std::filesystem::path m_Environment;
+		bool m_SkyVisible = true;
 
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

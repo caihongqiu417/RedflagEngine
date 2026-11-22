@@ -45,6 +45,8 @@ python tests/fetch_sponza.py
 
 \ui{主相机 Game}使用场景的主相机。切到这个标签，可以在保持镜头不动的情况下调灯、比较效果。想换机位时，回到场景标签自由观察。要改变游戏画面的机位，则在实体列表选中 \ui{Main Camera}，编辑它的变换。
 
+游戏画面默认绘制为 $1920\times1080$。缩小面板后，编辑器把整张图等比缩小，主相机仍能看到原来的范围。在\ui{游戏分辨率}中可以切换到 $1280\times720$，也可以选\ui{跟随面板}，让相机按面板的大小绘制。回到\ui{场景 Scene}后，可以继续用编辑器自己的分辨率检查物体。
+
 \numtag{4}\,是项目文件。首次打开会列出 \path{assets/scenes}，在此双击某个 \path{.redflag} 文件即可切换场景。要试一个单独的雕塑，从仓库根目录先运行 \code{python tests/fetch\_stanford.py}，再打开 \path{Reference-StanfordBunny.redflag}。每次换场景前可先保存自己的修改。
 
 \clearpage
@@ -57,13 +59,13 @@ python tests/fetch_sponza.py
 
 有了间接光，可以勾选\ui{GTAO}。看柱脚与地面的交界，附近表面挡住一部分反射光，交界处会变暗。关闭间接光时，此项变灰。勾选\ui{SSR}后可观察地面上的反射。沿地面寻找另一块表面时，只能找到当前镜头内已有的信息。
 
-打开\ui{TAA}，保持相机不动，观察远处细栏杆和布帘边缘。它会合并几个取样位置的颜色，需等待数帧。要在同一帧内多取几个位置，可试第\pageref{sec:ssaa}页的\ui{SSAA 2×2}。想单看某道效果，使用渲染设置中的\ui{显示模式}。返回\ui{组合光照 Lit}可继续看几种效果共同作用的画面。
+打开\ui{TAA}，让相机停在能看清细栏杆和布帘的位置。引擎在接下来的 32 帧中换 32 个位置取样，逐渐画出细栏杆在像素里所占的宽度。缓慢移动镜头也可能看到细线断续。想在移动中比较同一帧取四个位置的效果，可打开第\pageref{sec:ssaa}页的\ui{SSAA 2×2}。通过\ui{显示模式}可以单看一道效果，返回\ui{组合光照 Lit}即可查看合成结果。
 
 \clearpage
 \section{固定机位比较画面}
 \input{comparison-figure}
 
-切到\ui{主相机 Game}，将分辨率设为\ui{原始 Native}，选定一个物体作为观察位置。要看间接光，保留直接光和其他效果的设置，只改变间接光。要看环境遮蔽，保留同一种间接光，只开关 GTAO。这样可以分清阴影来自灯被挡住，还是周围表面遮住了反射光。
+切到\ui{主相机 Game}，选定一个物体作为观察位置，比较期间保持相同的游戏分辨率。要看间接光，保留直接光和其他效果的设置，只改变间接光。要看环境遮蔽，保留同一种间接光，只开关 GTAO。这样可以分清阴影来自灯被挡住，还是周围表面遮住了反射光。
 
 {\noindent\tabletype\begin{tabularx}{\linewidth}{@{}p{30mm}X@{}}\toprule
 \tabhead{想比较什么}&\tabhead{在哪儿看、怎样调整}\\\midrule
@@ -88,7 +90,7 @@ python tests/fetch_sponza.py
 
 想重新熟悉面板位置，打开窗口菜单，选择“恢复默认布局”。如果想重看灯光刚开启时的样子，在渲染设置展开“质量与参数”，点“重新积累”。灯和效果设置保留下来，画面从第一帧开始逐渐稳定。
 
-能看到实体名却看不到中庭时，先看控制台最近一条提示。模型文件可由第 1 页的下载命令补齐，然后重新打开 Sponza 场景。新建场景默认以材质底色显示，要试灯光，先从“场景对象”菜单分别创建“立方体”和“点光源”，在属性里把点光源放到立方体前上方，再按第 3 页的方法打开组合光照。
+能看到实体名却看不到中庭时，先看控制台最近一条提示。模型文件可由第 1 页的下载命令补齐，然后重新打开 Sponza 场景。新建场景会显示白天天空，默认使用组合光照。从“场景对象”菜单创建一个立方体，朝向不同的面就会收到不同方向的天光。再创建一盏点光源，把它放到立方体前上方，可以看到这盏灯单独照亮了哪几个面。
 
 \begin{figure}[H]\centering
 \begin{minipage}[c]{.49\linewidth}\includegraphics[width=\linewidth]{add-component.png}\end{minipage}\hfill
@@ -236,4 +238,31 @@ $forge = '..\bin\Debug-windows-x86_64\RedflagForge\RedflagForge.exe'
 
 先在本机启动支持图片的视觉模型，再从仓库根目录运行 \code{scripts/npc\_vision.py}，让它读取 \code{output/npc-vision/index.json}。\href{run:../npc-vision/README.md}{图片服务的启动说明}给出了完整命令和复测办法。
 
+\clearpage
+\section{天空、材质与曝光}
+
+在 Sponza 中庭，沿着两侧屋檐抬头，能从中间看见一小片天空。转向墙面，墙会把天空挡住。打开“环境贴图 → 选择 HDR 或烘焙文件…”可以为自己的场景换一张全景图。“使用默认天空”会重新选中项目随附的多云白天天空。保存场景后，再次打开仍使用你选的环境。
+
+\begin{figure}[H]\centering
+\shots{../../../output/validation/atrium-sky/after.png}{Sponza 中庭。相机只有从屋顶之间望出去，才能看到天色。}\hfill
+\shots{../../../output/validation/atrium-sky/bunny.png}{Stanford 兔子。换到空旷的场景，整个模型轮廓之外都能看到云层。}
+\end{figure}
+
+同一张全景图还有一个用途。金属会把周围的环境反射到镜头里，粗糙的表面会把倒影铺得更开。在中庭取消“环境贴图 → 显示天空背景”，屋顶外面会变黑，吊灯仍能映出环境的颜色。再从“实时效果”关闭“镜面 IBL”，就可以单独看这份反射给材质加了多少光。若想同时去掉环境光与天空，可以选择“移除环境贴图”。
+
+画面偏灰时，可以在“渲染设置 → 质量与参数”里切换\ui{色调映射}。它决定怎样把光照算出的亮度画到显示器上。中庭选用\ui{ACES 拟合}，能拉开暗红布帘与亮石柱之间的层次。切回\ui{Reinhard}可以用原来的曲线对照。\ui{曝光补偿}从 0 EV 开始，每增加 1 EV，送入这条曲线的光量加倍。这两项随场景旁的 \path{.render.yaml} 保存，适用于 Vulkan 组合光照视图。
+
+\captionline{天空照片为 Greg Zaal 拍摄、Jarod Guest 整理的 \href{https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky}{Kloofendal 48d Partly Cloudy (Pure Sky)}（Poly Haven，CC0）。两张配图均为 Redflag Vulkan 的 RenderDoc 实机帧。}
+
+\clearpage
+\section{布帘颜色的对照}
+
+\begin{figure}[H]\centering
+\shots{../../../output/validation/atrium-sky/reinhard.png}{Reinhard，曝光补偿 0 EV。看看左前方红布的褶皱，再看远处的蓝布。}\hfill
+\shots{../../../output/validation/atrium-sky/after.png}{ACES 拟合，同一机位、同一曝光。红布暗部更深，蓝布和旁边的石柱更容易分辨。}
+\end{figure}
+
+这两张图使用相同的材质和灯光。RenderDoc 读出的显示转换之前的 RGB 完全一致。我们从材质底色图选出以红色为主的一组像素，读取最终画面的 RGB。以 255 为最大值，红、绿、蓝三个通道的中位数从 $(68,51,48)$ 变为 $(66,39,34)$。红色通道只差两级，绿、蓝降得更多，所以布看起来更红。两张图里，屋檐下的布仍会反射一些环境光。可以单独关闭“镜面 IBL”观察这部分的影响。
+
+这里使用的是 Narkowicz 发表的简化曲线。在本机位的 262,400 个像素中，使用这条曲线后有 154 个像素至少一个颜色通道达到 255。若换到室外、白云的亮边丢了层次，可以先略降曝光补偿，再看暗处是否还清楚。\href{https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/}{作者的曲线与示例}\quad\href{run:../validation/atrium-sky/README.md}{本次截帧与测量方法}
 \end{document}

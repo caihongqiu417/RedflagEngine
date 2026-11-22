@@ -1,0 +1,123 @@
+{
+  "new_executable_sha256": "fb0d6b17e58831ee70809ac55d243619bf7e49507caf3567d8a76f752b6390cf",
+  "scene": "Sponza-Atrium.redflag",
+  "capture_settings": {
+    "Shading": "Lit",
+    "ToneMapping": "ACES",
+    "ExposureEV": 0,
+    "PreviewWidth": 640,
+    "Samples": 2,
+    "Direct": "All point lights",
+    "Indirect": "DDGI",
+    "GTAO": true,
+    "SSR": false,
+    "TAA": true,
+    "HistoryWeight": 0.85
+  },
+  "frames": {
+    "before": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 633,
+      "renderdoc": "1.47",
+      "tone_mapping": "Reinhard",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "c6d8a0970c001ca2ec8259a344a3f2fb89788441a399d1044530656afdb70e88",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-before-27c6853cfa4d-640/studio_frame24.rdc"
+    },
+    "sky-no-specular": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 645,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-no-specular-fb0d6b17e588-640/studio_frame24.rdc"
+    },
+    "after": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 658,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-fb0d6b17e588-640/studio_frame24.rdc"
+    },
+    "hidden": {
+      "frame": 24,
+      "size": [
+        640,
+        410
+      ],
+      "pack": 549,
+      "display": 646,
+      "renderdoc": "1.47",
+      "tone_mapping": "ACES",
+      "exposure_multiplier": 1.0,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "scene_sha256": "20b2152f198a073ec998110619d229a35a83342dce57399c1ebd673fdacf6887",
+      "debug_messages": [],
+      "capture": "output/captures/local/Sponza-Atrium-hidden-fb0d6b17e588-640/studio_frame24.rdc"
+    }
+  },
+  "sky_pixels": 2575,
+  "sky_excluded_border_px": 2,
+  "sky_rgb8_mean": {
+    "before": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "sky-no-specular": [
+      171.57514563106795,
+      197.49941747572817,
+      225.78174757281553
+    ],
+    "after": [
+      171.57514563106795,
+      197.49941747572817,
+      225.78174757281553
+    ],
+    "hidden": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "sky_unique_rgb8": 68,
+  "geometry": {
+    "pixels": 259332,
+    "mean_linear_luminance_gain": 0.037045232027977874,
+    "pixels_brighter_over_0_001": 259298
+  },
+  "mostly_metal": {
+    "pixels": 14904,
+    "mean_linear_luminance_gain": 0.041420676919201205,
+    "pixels_brighter_over_0_001": 14870
+  },
+  "hide_sky": {
+    "interior_geometry_pixels": 254938,
+    "max_abs_linear_rgb_difference": 0.0,
+    "mean_linear_luminance_gain_vs_no_specular": 0.03695291394886762
+  }
+}

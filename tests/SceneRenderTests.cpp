@@ -12,6 +12,7 @@
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Scene/SceneSerializer.h"
 #include "ScenePhysicsTests.h"
+#include "../RedflagForge/src/EditorEnvironment.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
@@ -24,6 +25,86 @@ static void Check(bool condition, const char* name)
 {
     std::cout << (condition ? "PASS " : "FAIL ") << name << '\n';
     s_Failures += !condition;
+}
+
+static void CheckSkySettings()
+{
+    const char* path = "../bin-int/Tests/sky-settings.redflag";
+    Ref<Scene> scene = CreateRef<Scene>();
+    scene->SetEnvironment(DefaultSky);
+    scene->SetSkyVisible(false);
+    SceneSerializer(scene).Serialize(path);
+
+    Ref<Scene> saved = CreateRef<Scene>();
+    Check(SceneSerializer(saved).Deserialize(path) && !saved->IsSkyVisible() &&
+          saved->GetEnvironment() == std::filesystem::absolute(DefaultSky).lexically_normal(), "reopen the hidden sky and its lighting map");
+    Ref<Scene> copy = Scene::Copy(scene);
+    scene->SetSkyVisible(true);
+    Check(!copy->IsSkyVisible() && copy->GetEnvironment() == DefaultSky, "the copied scene keeps its own sky setting");
+
+    std::ofstream(path) << "Scene: Legacy\nEntities: []\n";
+    Check(SceneSerializer(saved).Deserialize(path) && saved->IsSkyVisible() && saved->GetEnvironment().empty(),
+          "legacy scene defaults to visible sky and retains its empty environment");
+}
+
+static void CheckDaylight()
+{
+    Scene scene;
+    scene.SetEnvironment(DefaultSky);
+    Entity cube = scene.CreateEntity("Metal");
+    MeshRendererComponent& surface = cube.AddComponent<MeshRendererComponent>();
+    surface.MeshData = Mesh::CreateCube();
+    surface.Mat = Material::Create(glm::vec4(1));
+    surface.Mat->Metallic = 1.f;
+    surface.Mat->Roughness = .25f;
+
+    FramebufferSpecification spec;
+    spec.Width = 33; spec.Height = 17;
+    spec.Attachments = {FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RED_INTEGER,
+                        FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::DEPTH32F};
+    Ref<Framebuffer> target = Framebuffer::Create(spec);
+    SceneRenderer::SetMainSceneColorTarget(target->GetColorAttachmentRendererID(), 33, 17);
+    EditorCamera camera(45, 33.f / 17.f, .1f, 100);
+    camera.LookAt({0, 0, 4}, {0, 0, 0});
+
+    auto draw = [&](bool editor) {
+        target->Bind();
+        glDepthMask(GL_TRUE);
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        target->ClearAttachment(1, -1);
+        if (editor) SceneRenderer::RenderScene(scene, camera);
+        else SceneRenderer::RenderRuntime(scene, camera.GetProjection(), glm::inverse(camera.GetViewMatrix()));
+    };
+    auto color = [&](int x) {
+        glm::vec3 rgb;
+        glGetTextureSubImage(target->GetColorAttachmentRendererID(), 0, x, 8, 0, 1, 1, 1, GL_RGB, GL_FLOAT, sizeof(rgb), &rgb);
+        return rgb;
+    };
+
+    // 左侧看天空，中心看同一个金属面。只切换环境照明时，只有金属的读数应变化。
+    for (bool editor : {true, false})
+    {
+        SceneRenderer::GetIBLEnabled() = true;
+        draw(editor);
+        const glm::vec3 sky = color(1), metal = color(16);
+        scene.SetSkyVisible(false);
+        draw(editor);
+        Check(color(1) == glm::vec3(0) && color(16) == metal, "hiding the sky keeps the metal reflection");
+        scene.SetSkyVisible(true);
+        SceneRenderer::GetIBLEnabled() = false;
+        draw(editor);
+        target->Bind();
+        Check(target->ReadPixel(1, 1, 8) == -1 && target->ReadPixel(1, 16, 8) == int((entt::entity)cube),
+              "sky keeps the background ID and metal keeps its entity ID");
+        Check(glm::length(sky) > .001f && color(1) == sky, "switching IBL keeps the same daylight sky");
+        Check(glm::distance(metal, color(16)) > .001f, "switching IBL changes the lit metal");
+        std::cout << (editor ? "editor" : "runtime") << " sky RGB " << sky.r << ',' << sky.g << ',' << sky.b
+                  << " metal red with/without IBL " << metal.r << '/' << color(16).r << '\n';
+    }
+    scene.SetEnvironment({});
+    draw(true);
+    Check(color(1) == glm::vec3(0), "removing the environment restores the clear color");
 }
 
 static void CheckFoxScene()
@@ -367,6 +448,8 @@ int main(int argc, char** argv)
     SceneRenderer::GetShadowEnabled() = false;
     SceneRenderer::GetRSMSettings().Enabled = false;
     SceneRenderer::GetBloomSettings().Enabled = false;
+    CheckSkySettings();
+    CheckDaylight();
     CheckFoxScene();
     CheckEmission();
     {

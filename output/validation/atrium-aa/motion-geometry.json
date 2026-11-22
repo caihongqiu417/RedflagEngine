@@ -1,0 +1,423 @@
+{
+  "scene": "Sponza-Atrium.redflag",
+  "mesh_index": 0,
+  "primitive_index": 52,
+  "material_index": 13,
+  "width": 600,
+  "height": 385,
+  "camera_step_world": [
+    0,
+    0,
+    0.0055
+  ],
+  "subsamples_per_axis": 32,
+  "frames": [
+    {
+      "i": 0,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.8193359375,
+          "max_coverage": 1.0
+        },
+        "far": {
+          "area_px": 70.2509765625,
+          "max_coverage": 0.9970703125
+        }
+      }
+    },
+    {
+      "i": 1,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0055
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.775390625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6474609375
+        },
+        "far": {
+          "area_px": 70.7978515625,
+          "max_coverage": 0.9990234375,
+          "coverage_delta_px": 7.63671875
+        }
+      }
+    },
+    {
+      "i": 2,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.011
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7958984375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6533203125
+        },
+        "far": {
+          "area_px": 71.166015625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.1806640625
+        }
+      }
+    },
+    {
+      "i": 3,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0165
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.8203125,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6552734375
+        },
+        "far": {
+          "area_px": 71.2099609375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.2822265625
+        }
+      }
+    },
+    {
+      "i": 4,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.022
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.833984375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.587890625
+        },
+        "far": {
+          "area_px": 71.1259765625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.259765625
+        }
+      }
+    },
+    {
+      "i": 5,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.027499999999999997
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7978515625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6865234375
+        },
+        "far": {
+          "area_px": 70.673828125,
+          "max_coverage": 0.998046875,
+          "coverage_delta_px": 7.2080078125
+        }
+      }
+    },
+    {
+      "i": 6,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.033
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.806640625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6416015625
+        },
+        "far": {
+          "area_px": 70.1552734375,
+          "max_coverage": 0.998046875,
+          "coverage_delta_px": 7.6845703125
+        }
+      }
+    },
+    {
+      "i": 7,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0385
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.8427734375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6103515625
+        },
+        "far": {
+          "area_px": 69.826171875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.5693359375
+        }
+      }
+    },
+    {
+      "i": 8,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.044
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.79296875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6728515625
+        },
+        "far": {
+          "area_px": 69.56640625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.59375
+        }
+      }
+    },
+    {
+      "i": 9,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.049499999999999995
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7890625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.60546875
+        },
+        "far": {
+          "area_px": 69.318359375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.484375
+        }
+      }
+    },
+    {
+      "i": 10,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.05499999999999999
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.8408203125,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6630859375
+        },
+        "far": {
+          "area_px": 69.0947265625,
+          "max_coverage": 0.9990234375,
+          "coverage_delta_px": 7.0419921875
+        }
+      }
+    },
+    {
+      "i": 11,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0605
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7841796875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.666015625
+        },
+        "far": {
+          "area_px": 69.0615234375,
+          "max_coverage": 0.9970703125,
+          "coverage_delta_px": 7.208984375
+        }
+      }
+    },
+    {
+      "i": 12,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.066
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7763671875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.59375
+        },
+        "far": {
+          "area_px": 69.0771484375,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.30078125
+        }
+      }
+    },
+    {
+      "i": 13,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.0715
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.814453125,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6572265625
+        },
+        "far": {
+          "area_px": 69.0732421875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.423828125
+        }
+      }
+    },
+    {
+      "i": 14,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.077
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7998046875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6689453125
+        },
+        "far": {
+          "area_px": 69.0576171875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 7.396484375
+        }
+      }
+    },
+    {
+      "i": 15,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.08249999999999999
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.7763671875,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.626953125
+        },
+        "far": {
+          "area_px": 69.033203125,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 6.9365234375
+        }
+      }
+    },
+    {
+      "i": 16,
+      "eye": [
+        -5.5,
+        -2.20000005,
+        0.088
+      ],
+      "threshold_columns": [
+        258,
+        342
+      ],
+      "bands": {
+        "near": {
+          "area_px": 84.78515625,
+          "max_coverage": 1.0,
+          "coverage_delta_px": 8.6435546875
+        },
+        "far": {
+          "area_px": 68.923828125,
+          "max_coverage": 0.99609375,
+          "coverage_delta_px": 7.146484375
+        }
+      }
+    }
+  ],
+  "quantity": "CPU projected geometry only; independent of shading, TAA and frame timing."
+}

@@ -1,0 +1,9 @@
+[mcp_servers.redflag]
+command = "powershell.exe"
+tool_timeout_sec = 180
+args = ["-NoProfile", "-NonInteractive", "-Command", """
+$project = git rev-parse --show-toplevel
+if ($LASTEXITCODE) { exit $LASTEXITCODE }
+& (Join-Path $project 'bin-int/redflag-mcp/Scripts/python.exe') (Join-Path $project 'scripts/redflag_mcp/server.py')
+exit $LASTEXITCODE
+"""]

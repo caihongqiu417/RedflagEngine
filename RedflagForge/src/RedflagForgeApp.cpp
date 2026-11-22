@@ -12,8 +12,8 @@ namespace Redflag{
 	class RedflagForge :public Application
 	{
 	public:
-		explicit RedflagForge(const std::filesystem::path& scene = {})
-			:Application("Redflag Forge")
+		explicit RedflagForge(const std::filesystem::path& scene = {}, bool visible = true)
+			:Application(WindowProps("Redflag Forge", 2560, 1440, visible))
 		{
 			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 			{
@@ -37,10 +37,11 @@ namespace Redflag{
 		return new RedflagForge();
 	}
 
-	Application* OpenVulkanEditor(const std::filesystem::path& scene)
+	Application* CreateForgeEditor(const std::filesystem::path& scene, bool visible)
 	{
-		RendererAPI::SetAPI(RendererAPI::API::Vulkan);
-		return new RedflagForge(scene);
+		if (!scene.empty())
+			RendererAPI::SetAPI(RendererAPI::API::Vulkan);
+		return new RedflagForge(scene, visible);
 	}
 
 	void BakeSceneProbes(const std::filesystem::path& scene)

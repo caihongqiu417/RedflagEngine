@@ -24,7 +24,12 @@ namespace Redflag
 
 	Application* Application::s_Instance = nullptr;
 
-    Application::Application(const std::string& name, bool visible)
+	Application::Application(const std::string& name, bool visible)
+		: Application(WindowProps(name, WindowProps::DefaultWidth, WindowProps::DefaultHeight, visible))
+	{
+	}
+
+    Application::Application(const WindowProps& props)
     {
 		RF_PROFILE_FUNCTION();
 
@@ -33,8 +38,6 @@ namespace Redflag
         s_Instance = this;
 
         // 创建窗口并设置事件回调
-		WindowProps props(name);
-        props.Visible = visible;
         m_Window = Window::Create(props);
         m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 

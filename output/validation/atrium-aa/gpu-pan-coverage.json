@@ -1,0 +1,87 @@
+{
+  "scene": "Sponza-Atrium.redflag",
+  "mesh_index": 0,
+  "primitive": 52,
+  "size": [
+    600,
+    385
+  ],
+  "bounds_xyxy": [
+    258,
+    36,
+    342,
+    99
+  ],
+  "frame_count": 17,
+  "camera_step": [
+    0,
+    0,
+    0.0055
+  ],
+  "reference_per_axis": 32,
+  "jitter": false,
+  "color": "unlit white wire, black background; VulkanDraw::DrawSurfaces read back before any filtering.",
+  "scene_sha256": "c8e54cbc74085555761c2806c24b9574969b08fb71b1b7b12b01d9ec7056c770",
+  "cases": {
+    "1": {
+      "near": {
+        "edge_mae": 0.21338415255660015,
+        "motion_delta_mae": 0.10062310376213593,
+        "area_ratio_min": 1.0019569471624266,
+        "area_ratio_max": 1.037738239189267
+      },
+      "far": {
+        "edge_mae": 0.2264922114280245,
+        "motion_delta_mae": 0.08781091347101735,
+        "area_ratio_min": 0.9918580493009153,
+        "area_ratio_max": 1.0570883122392702
+      }
+    },
+    "2": {
+      "near": {
+        "edge_mae": 0.06816563639198005,
+        "motion_delta_mae": 0.07502616808252427,
+        "area_ratio_min": 0.9814978987968453,
+        "area_ratio_max": 0.9989295210469975
+      },
+      "far": {
+        "edge_mae": 0.07639320922664625,
+        "motion_delta_mae": 0.07219669570682177,
+        "area_ratio_min": 0.9845876419373926,
+        "area_ratio_max": 1.0062328036386097
+      }
+    },
+    "4": {
+      "near": {
+        "edge_mae": 0.01760248285207214,
+        "motion_delta_mae": 0.012459420509708738,
+        "area_ratio_min": 0.9953263497179694,
+        "area_ratio_max": 1.004849615832095
+      },
+      "far": {
+        "edge_mae": 0.019534988753828485,
+        "motion_delta_mae": 0.022244907704061515,
+        "area_ratio_min": 0.9981121974585107,
+        "area_ratio_max": 1.0047323528578311
+      }
+    }
+  },
+  "capture": "output/captures/local/wire-raster-pan/Wire-Raster_capture.rdc",
+  "capture_sha256": "c11ab808f71de23e2a4cbebe2cb8d8e8a6abefad3db1105a0319918da25bf9a9",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "build": "Debug",
+  "test_exe_sha256": "9ca600c9b65aa5dc39886cb2b476f91e116f9ea6720859d4938a0ed3fd9a093b",
+  "replay": {
+    "tool": "1.47",
+    "event": 11,
+    "indices": 16368,
+    "targets": [
+      168,
+      126
+    ],
+    "covered_subpixels": 617,
+    "mask_sha256": "a5361227b621f3beb2c6ea85c61edd51cdd72b588bdd1bc0d27f4f7ca36e0801",
+    "capture_matches_live_gpu_readback": true,
+    "validation": []
+  }
+}

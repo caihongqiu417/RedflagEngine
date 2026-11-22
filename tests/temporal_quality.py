@@ -1,4 +1,4 @@
-"""Measure shimmer across frames and texture blur against the exact 16-position sample mean."""
+"""Measure shimmer across frames and compare each frame with the mean of the full jitter pattern."""
 from argparse import ArgumentParser
 from hashlib import sha256
 from pathlib import Path
@@ -49,22 +49,26 @@ if __name__ == "__main__":
     baseline = out / "before.npz"
     if args.record_before:
         old = gather(args.record_before, "static-taa", range(16, 32))
-        inputs = gather(args.record_before, "static-input", range(16))
+        period = 32 if (args.record_before / "static-input-31.f32").exists() else 16
+        inputs = gather(args.record_before, "static-input", range(period))
         np.savez_compressed(baseline, movie=old, input_hash=sha256(inputs.tobytes()).hexdigest())
         print("Recorded", baseline)
     else:
         folder = root / "tmp/screen-effects"
         actual = gather(folder, "static-taa", range(16, 32))
-        inputs = gather(folder, "static-input", range(16))
+        inputs = gather(folder, "static-input", range(32))
         reference = inputs.mean(axis=0)
         with np.load(baseline) as stored:
             before = stored["movie"]
             same_input = str(stored["input_hash"]) == sha256(inputs.tobytes()).hexdigest()
         old_stats, new_stats = measure(before, reference), measure(actual, reference)
+        if not same_input:
+            # 旧帧的拍摄位置不同。相邻帧之间的亮度变化仍可比较，空间误差只能与各自的参考图比较。
+            old_stats = {key: value for key, value in old_stats.items() if key.startswith("adjacent_frame_")}
         def example(movie):
             pair = display(movie[:2, 61, 98, :]) @ luma
             return {"frame17": float(pair[0]), "frame18": float(pair[1]), "difference": float(pair[1] - pair[0])}
-        report = {"scene": "Khronos Sponza", "render_size": [161, 91], "samples_per_period": 16,
+        report = {"scene": "Khronos Sponza", "render_size": [161, 91], "samples_per_period": len(inputs),
                   "compared_frames_zero_based": [16, 31], "input_matches_original_device": same_input,
                   "display_exposure": 4, "pixel_differences": (len(actual)-1)*shape[0]*shape[1],
                   "example_pixel": {"x": 98, "y": 61, "before": example(before), "after": example(actual)},

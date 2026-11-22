@@ -686,6 +686,7 @@ namespace Redflag {
 			const std::filesystem::path relative = environment.lexically_relative(folder);
 			out << YAML::Key << "Environment" << YAML::Value << (relative.empty() ? environment : relative).generic_u8string();
 		}
+		out << YAML::Key << "SkyVisible" << YAML::Value << m_Scene->IsSkyVisible();
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		// 使用 view 或 storage 来遍历实体
 		const auto folder = std::filesystem::absolute(filepath).parent_path();
@@ -722,6 +723,7 @@ namespace Redflag {
             environment = (std::filesystem::absolute(filepath).parent_path() /
                 std::filesystem::u8path(data["Environment"].as<std::string>())).lexically_normal();
         m_Scene->SetEnvironment(environment);
+        m_Scene->SetSkyVisible(data["SkyVisible"].as<bool>(true));
 
         AssetManager::GetLibrary().Scan("assets");
 

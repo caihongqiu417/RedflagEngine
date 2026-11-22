@@ -1,0 +1,7 @@
+camera,background,edge_pixels,coverage_mae
+0,wall,167,0.0524296
+0,sky,167,0.0535728
+0,crossing,18,0.0459615
+3.375,wall,168,0.0566388
+3.375,sky,166,0.05571
+3.375,crossing,17,0.0631109

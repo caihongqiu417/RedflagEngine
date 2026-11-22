@@ -5,6 +5,7 @@
 #include "Redflag/Scene/Panel/SceneHierachyPanel.h"
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "LightingPreview.h"
+#include "GameViewport.h"
 #include "ProjectPanel.h"
 #include "NpcVisionPanel.h"
 
@@ -50,6 +51,7 @@ namespace Redflag
 		std::filesystem::path m_ScenePath;
 		std::deque<std::string> m_Messages;
 		bool m_GameView = false;
+		GameViewport m_GameViewport;
 		bool m_SelectSceneTab = false;
 		bool m_ResetLayout = false;
 		bool m_Hovered = false;

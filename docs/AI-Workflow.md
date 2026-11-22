@@ -1,47 +1,74 @@
-# Redflag 的 AI 协作工作流
+# 我用 Agent 开发 Redflag 的经验
 
-## 从教材例子到可复现的画面
+Redflag 的 API 手册有一个搜索框。输入 `AskNpcCandidate`，能找到让 NPC 从照片里寻找目标的接口。做游戏时，我还得点开这条结果，看看函数声明，才能弄清它接受什么参数。如果我只请 AI “测一下搜索”，它数一数页面上有几条结果，就可能告诉我功能正常。所以我会把要求说到最后一步：点开源码，读出函数声明，再关掉弹窗，看看能不能接着查。
 
-先用教材里的小例子确定可独立检查的量。以 TAA 为例，GAMES101 的相机变换给出一个静态场景应满足的条件：相机没动，同一块石墙在两张未抖动的投影中位移为零。固定场景后用程序绘制连续帧，保存线性读回，用同一组子像素采样的均值检查细节，用相邻帧亮度差检查闪动。最后另抓实际编辑器窗口，核对显示尺寸和内部图像是否匹配。[画质回归](../tests/temporal_quality.py) · [回归数据](../output/validation/temporal/metrics.json)
+我挑开发工具时，通常就从这样一件手边的小事开始。页面点起来顺不顺，需要打开浏览器。代码在别人机器上报错，则要找到那一次运行留下的日志。同样是让 AI 帮我查问题，给它看的东西会很不一样。下面的网页检查有实测，两段纠错对话则用假设的情境来讲。
 
-每篇算法的可编辑笔记与材料索引放在一起。运行 `python docs/latex/lighting/build_notes.py` 会检查六段顺序和源码入口，读取真实实验的 JSON，生成章节索引并用 XeLaTeX 编译。改公开接口时也重新生成离线 API 手册，读者就能从游戏操作找到方法和对应源码。[教材与实现索引](latex/lighting/README.md) · [API 生成器说明](api/README.md)
+## 在浏览器里走完一次操作
 
-核对渲染注释时，沿着变量读到实际使用它的那一行。比如组合光照先用 GTAO 减弱间接光，再加点光源的直接光。这样写，读者就能从代码判断调暗墙角会不会也调暗灯光。遇到试出来的数值，记下它量什么、单位是什么、加大后会多算什么。要验证“镜头没动时只画一帧”，就给同一个场景设好相机，数编辑器实际重画了几帧。[回归脚本](../tests/check_preview_frames.py)
+这次整理笔记时，我让 agent 用 Playwright 的 Python 接口打开 Chrome，照着这几个动作走了一遍。搜索 `AskNpcCandidate` 得到一条结果，点开源码，弹窗定位到 `NpcVision.h` 第 26 行。关掉弹窗后，搜索框里的词还在。我如果想继续查同一组接口，就省去了重新输入的麻烦。[Redflag 的离线 API 手册](../output/api/index.html) · [对应的函数声明](../Redflag/src/Redflag/Scene/NpcVision.h)
 
-## 做一次渲染优化
+下次想直接把这种检查交给 agent，可以用微软的 **`playwright-cli` skill**。它教 agent 用命令行打开网页、输入文字、点击按钮和读回浏览器状态。按作者的说明，在装有 Node.js 20 或更新版本的开发机上安装 `@playwright/cli`，然后在项目根目录运行 `playwright-cli install --skills=agents`。给 agent 页面地址和刚才那串操作，让它交回弹窗里高亮的声明、关闭后的搜索词。换成注册页也一样，操作的终点可以是“邮箱填错时，错误文字出现在对应输入框旁边”。[微软的 CLI 安装说明](https://github.com/microsoft/playwright-cli#installation) · [skill 的安装与用法](https://github.com/microsoft/playwright.dev/blob/main/agent-cli/skills.mdx)
 
-摄影棚的白地面曾出现一块亮、一块暗。先关闭场景灯、镜面倒影和屏幕空间效果，让一张 HDR 全景单独照亮 Stanford Bunny，保留同一机位的两张编辑器截帧。再把兔子移开，只留一块水平白板。504 个朝上且看得见整片天空的测点应该一样亮，这是检查斑块的方法。亮度本身还要另查。我们用 CPU 对原始全景做积分，发现第一版虽然消除了斑块，人工灯箱下整块白板仍偏暗约 9%。给方向向量归一化后，两种方法测得的红色亮度分别为 0.374260 和 0.374276。换一扇小天窗还能测出窗沿处的近似误差。[摄影棚实拍及数值](../output/validation/sky-probes/) · [独立积分脚本](../tests/check_sky_uniformity.py)
+还有些问题，拿鼠标顺利点过一遍也看不出来。比如只用键盘按 Tab 在一排按钮间移动，能不能看出下一次按回车会触发哪个按钮？这时可以用 Vercel 的 **`web-design-guidelines` skill** 审查网页源码。我的用法是把范围收在一个文件上，例如“检查 `docs/api/reference.html` 里搜索框、源码按钮和关闭按钮的键盘操作，只列出有问题的代码位置和用户会碰到的现象”。它若指出某个样式隐藏了焦点轮廓，我会再让 Playwright 用 Tab 走到那个控件。这样就知道这条意见在页面上长什么样了。[Vercel 的 skill 与审查规则](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines)
 
-排查铁丝网、树叶这类镂空材质时，可以先把点光源放在相机的位置，让薄片后方的白墙接光。镜头能透过孔看到哪几个像素，灯也该照亮那几个像素。再在孔后加一块小挡板，就能查出光线穿过第一层后有没有继续判断遮挡。先在这个小场景核对拾取、阴影和倒影，再回到 Sponza 测实际开销。 [带孔薄片的 GPU 读数](../output/validation/gi-mask/after.json) · [RenderDoc 记录](../output/validation/gi-mask/replay.json)
+## 一行看着正确的代码，放回旧项目就报错
 
-同一张铁丝网要看两种距离。近看时让一根铁丝占几个屏幕像素，在源图、上传到显卡的透明度、相机画出的轮廓和墙上阴影里找同一根线。远看时记录一个屏幕像素覆盖的原图列数，再去 RenderDoc 看相机实际读取的缩小纹理层。两种距离曾经都看起来像“铁丝消失”，却分别是导入时漏掉了原图的列，以及远处的材质把整片网裁掉了。验证程序和库先分别保存校验值，等其他测试结束再独占显卡计时。[近景与远景的复现方法](../output/validation/fine-mask/README.md)
+假设我在维护一个 Python 小工具，用 Pydantic 读取角色配置，现在想把名字和等级导出成字典。这个需求小到只要写一行，却很容易碰到版本问题。同一个操作，Pydantic 1.x 用 `dict()`，到了 2.x，推荐写法换成了 `model_dump()`。[Pydantic 官方迁移对照](https://docs.pydantic.dev/latest/migration/#changes-to-pydanticbasemodel)
 
-检查远处细线时，要试横纹、竖纹和斜纹，让镜头后退，也要横移。先按纹理在每个像素内的实际面积画出参考图，再比较每帧的误差以及相邻两帧变化了多少。曾有一种方法在竖纹上改善了两个读数，却让斜纹横移时的误差接近翻倍。还要试亮铁丝配暗背景、暗铁丝配亮背景，以及两片网互相遮挡。这样能分别查到算错亮度和算错遮挡的问题。[三种纹理的运动对照](../output/validation/mask-footprint-compare-rank/report.json) · [两层网的实测](../output/validation/mask-supersampling/subpixel-materials.csv)
+> **我**　帮我把角色名字和等级导出成字典，现有项目还要照常运行。
+>
+> **AI**　可以调用 `player.model_dump()`。
+>
+> **我**　我用启动这个项目的 Python 跑了这句，报的是“没有 `model_dump` 属性”。先用同一个 Python 查 Pydantic 的版本，再用 Context7 找这一版的写法。拿名字“小林”、等级 3 跑一遍，把返回的字典给我。依赖版本先保留。
+>
+> **AI**　这个服务的环境用的是 1.10。我用 `player.dict()` 跑了你给的样例，返回 `{'name': '小林', 'level': 3}`。导出函数可以用这一行。
 
-查材质换色后反光是否正确，要把读数放在另一件物体上。把红墙换成蓝墙，保留灰地板、白色点光源和原来的机位。先比较每个探针保存的 RGB，再从 RenderDoc 的底色图中选出两次都属于地板的像素，检查这些位置在最终光照图中有没有换色。这样可以发现相机已经画对墙面、烘焙却还在读旧图的错误。[测试脚本](../tests/check_probe_materials.py) · [地板与探针的读数](../output/profiling/probe-materials/after.json)
+**Context7** 是 Upstash 提供的文档检索插件。插件是可以安装的一包功能，Context7 里面既有指导检索的 skill，也有连接文档库的 MCP 工具。MCP 是 agent 向外部服务请求资料或操作时使用的协议。按作者的说明给 Codex 装上插件，完成账号授权，再开一个新会话，就可以像上面的对话一样给它库名、版本和问题。如果索引里找不到那个旧版本，我会要它给出缺的是哪一版，再回到作者保留的版本文档。这比读完一大段示例才发现版本不合适要省力。[Context7 的 Codex 安装与用法](https://github.com/upstash/context7/blob/master/plugins/codex/context7/README.md)
 
-检查反射降噪时，先看墙上的亮点有没有减少，再检查窗框和砖缝是否还在。用 RenderDoc 保存同一帧的相机、材质和灯，在测试里重画一次。每个像素都与截帧中的颜色一致后，只改变反射光线的方向，取 256 次结果的平均值作参照。比较的是 TAA 合并多帧之前的颜色。计时则单独运行编辑器，把真正重画场景的帧和只显示上一张图的帧分别统计。[浴室截帧与参考图](../output/profiling/rough-reflections/bathroom.json) · [整帧计时](../output/profiling/rough-reflections/editor-timing.json)
+## 本地通过了，GitHub 上还是红的
 
-发现倒影闪动时，让相机、镜面和像素内的取样位置都保持不动。先单独读取连续 16 帧的倒影颜色，再去看开着 TAA 的最终画面。若光滑镜面上的同一点有时读到亮条、有时读到黑框，就能沿反射方向继续查。镜面工作室还在灯牌前放过一块挡板，并用 RenderDoc 确认显卡只在反射这一步改变了哪一块颜色。换到 RTXGI Bathroom 后，再量一次这一步的耗时。[固定像素的测试](../output/profiling/scene-reflections/test-method.md) · [编辑器截帧与计时](../output/profiling/scene-reflections/frames.json)
+把修改提交给队友审查时，GitHub 上的拉取请求叫 PR。许多项目会在 PR 上自动编译、运行测试，这些检查通常合称 CI。如果本机测试通过，PR 上却亮了红叉，我会把**那一次失败检查的链接**发给 agent。在能读取相应仓库的 GitHub MCP 服务中，agent 可以找到失败的任务，展开它的 GitHub Actions 日志。若本机已经登录 GitHub CLI，也可以先用 `gh pr checks 42` 查看第 42 号 PR，再用 `gh run view <运行编号> --log-failed` 读失败步骤。从失败检查的链接里能找到 `/actions/runs/`，它后面的数字就是第二条命令要填的运行编号。[GitHub 官方 MCP 服务](https://github.com/github/github-mcp-server) · [查看 PR 检查](https://cli.github.com/manual/gh_pr_checks) · [读取运行日志](https://cli.github.com/manual/gh_run_view)
 
-修模型接缝时，可以用一张薄墙区分两种错误。先把两片三角形拼紧，查出有多少光线穿过了本该封住的墙；再把它们真正分开，确认光还能穿过窄缝。随后用同一场景、同一机位比较旧版、修正后的第一版和最终版，分别记录查阴影、更新探针和算雾的时间。这样既能发现错误，也能看出修正花掉的时间落在哪一步。[求交回归](../tests/TriangleIntersectionCheck.h) · [两个经典场景的 GPU 记录](../output/profiling/triangle-intersection/README.md)
+假设一个带网页图标的项目在 Windows 上能跑，提交后 Linux 构建失败。下面是我会怎样把一个看起来合理的猜测引回到报错现场。
 
-核对材质时，先将一个可手算的值送入正式编辑器。例如给两个三角形一张 2×2 材质图，在 RenderDoc 逐个读回粗糙度和金属度。再换成带多张真实贴图的古董相机，固定灯、相机、画幅和帧号，只切换镜面环境光。先核对两帧的底色与材质图完全相同，再比较同一小块机身边框的线性亮度。用于手册的 PNG 从编辑器最后一张图导出。这样，报告里的数字和读者看到的倒影可以在同一份原始帧中找到。[色板](../output/profiling/material-channels/README.md) · [摄影棚与复现命令](../output/profiling/material-studio/README.md)
+> **AI**　可能是 Linux 构建机缺少图片依赖，我可以在工作流里加安装步骤。
+>
+> **我**　先看看失败任务里，具体是哪个命令在读哪一个文件。把原始报错和仓库里登记的文件名放在一起，目录和大小写都保留。
+>
+> **AI**　日志里要读 `icons/Save.png`，Git 里登记的是 `icons/save.png`。
+>
+> **我**　那就改引用处的拼写，跑同一个 Linux 构建。等这个检查通过，再把修正和运行链接发给我。
 
-这次数学册的卡片图重画后，我们先算出 60° 时截获的光减半，再用纯色环境图查实际结果。旧程序以每格的起点代表整格，在 $(2,1,0.5)$ 的场景里烘焙出的颜色略暗。改取每格中心，维持 15,876 次采样，在六个面的 6,144 个半精度像素上都读回原色。数学册构建会重算几何例子，并在去掉教学注释后核对每个源码摘录；GPU 测试另从纹理读回结果。这样能分别发现讲义推导错误、片段过期和运行时误差。[数学复算](latex/math/verify.py) · [GPU 用例](../tests/IBLTests.cpp)
+我让它保留大小写，是因为 *Save* 和 *save* 在常见的 Windows 文件系统设置下可能指向同一个文件，而 Linux 构建机通常会区分它们。假如日志指向别的原因，这两行原文也足以让我们及时放弃这个猜测。
 
-从改动要节省的工作开始。2D 合批想减少重复提交，先固定同一组精灵，逐个画一遍，再整批画一遍。深度预写想少给被遮挡的表面着色，就要同时检查预写新增的工作和主绘制省下的工作。先读实际调用代码，再选能观察到这项差别的场景。
+## 只有用户的机器上发生了错误
 
-截帧时保留两种画法的输入，在 RenderDoc 找到对应事件，读出索引数、实例数和可用的硬件计数。对照同一张图的颜色、深度或拾取编号，确认画面的一致性。耗时另开进程采集。保留每一帧的 CPU 和 GPU 记录，LaTeX 性能册编译时从 CSV 生成统计表。原始帧、命令与本机条件随实验一起保存。[2D 精灵实验](../output/profiling/batch2d/README.md) · [3D 网格实验](../output/profiling/mesh/README.md) · [渲染性能实测](../output/pdf/Redflag-Rendering-Performance.pdf)
+发布之后，有时只能收到一句“我点导出，程序就退了”。上面的 CI 日志记录的是构建过程，想知道用户点按钮之后程序走到了哪里，需要那一次运行留下的信息。如果应用已经把错误上报给 Sentry，可以用 **Sentry MCP**，把问题链接交给有权读取该项目的 agent。我会请它在用户用的那个版本里找一次导出失败的记录，读出异常类型，再沿着出错时的函数调用记录（调用栈）找出最靠近报错的那行项目代码。如果这次还记录了用户点过的按钮，就把出错前的操作也一起列出来。[Sentry 官方 MCP 服务与接入方式](https://github.com/getsentry/toolkit#sentry-mcp) · [Sentry 事件详情里有哪些信息](https://docs.sentry.io/product/issues/issue-details/)
 
-本次用 RenderDoc 检查 2D 合批时，事件面板里清空拾取图的调用出现了意外的整数。查看测试才发现只传入一个整数，而 OpenGL 要求传入四个分量。拾取图只存第一分量，所以最终画面对比仍然通过。修正后，重新采集了捕获、事件截图和计时数据。为避免以后换了帧却沿用旧报告，性能册在编译时先核对四份捕获的 SHA-256，再从每帧计时重新生成表格。[Khronos 清屏接口原文](https://github.com/KhronosGroup/OpenGL-Refpages/blob/main/gl4/glClearBuffer.xml)
+假如调用栈指向保存文件的函数，我们就知道该从哪里开始读源码了。至于用户选了哪种文件、输入里有没有空名字，还得看事件中实际保存了什么。如果那次没有记录文件类型，我会把它列成待确认的问题，再用手边的样例尝试复现。这样别人接手时，能分清哪一步已经查到，哪一步还得继续找。
 
-## 查资料与接入工具
+## 哪些做法值得留下
 
-已有工具能回答的问题直接用现成入口。本次用开源的 renderdoc-mcp v0.3.0 打开原始帧、列出绘制事件，再用 RenderDoc 1.47 的回放 API 检查附件和硬件计数，事件面板截图保留选中的实际调用。引擎的 CPU 埋点和 OpenGL 的时间查询回答不同问题，计时时不加载截帧工具。[renderdoc-mcp 发布记录](https://github.com/JiaboLi-GitHub/renderdoc-mcp/releases/tag/v0.3.0) · [RenderDoc 事件面板](https://github.com/baldurk/renderdoc/blob/v1.x/docs/window/event_browser.rst) · [Khronos 计时查询](https://registry.khronos.org/OpenGL/extensions/ARB/ARB_timer_query.txt)
+我也可以给自己的引擎做工具。例如有人说“我选了天空，场景还是黑的”，先用 Redflag MCP 查这个场景保存的环境图、天空开关和显示模式，再让独立的编辑器打开它。如果对方刚刚改了设置，还没按保存，工具读到的和对方眼前的可能是两个版本。这时我会先对上场景与机位，随后再截帧。仓库里把这两种工作分别写成了 `$redflag-scene` 和 `$redflag-frame-check`，以后换场景也能用。[引擎工具的接入与用法](../scripts/redflag_mcp/README.md)
 
-遇到缺少的能力，可以查找和下载合适的开源工具或技能。先看上游仓库、许可、版本和它实际需要的访问范围，拿一个已有结果的项目样例试用。采用时在这里补上触发条件、版本、可复现入口和它补足的能力；与现有工具重复或在本项目中结果不可靠，也留下简短理由。设计和公式引用的章节仍归入[图形学资料索引](Graphics-References.md)。
+一次查错时，我会把链接、报错、希望看到的结果直接写在对话里。等到同一个过程反复出现，例如每次改手册都得重新编译、打开成品 PDF、找到改过的图、看箭头有没有压住字，我才会把这套做法写进 **`SKILL.md`**。试用时可以故意把一个图框缩窄，看它能否指出哪行字被遮住了。Redflag 里也有现成的样本可试别的工具。比如用 RenderDoc MCP 打开 2D 精灵的截帧，就能拿它读出的结果和已知的两组绘制次数核对，一组 64 次，一组 1 次。[Codex 的 skill 编写指南](https://learn.chatgpt.com/docs/build-skills) · [手册的编译入口](latex/README.md) · [精灵截帧与绘制记录](../output/profiling/batch2d/README.md)
 
-## 什么时候同步给用户
+项目规则 **`AGENTS.md`** 留给换一个任务也适用的约定。例如我希望新接口沿用早期 2D 代码的命名，就把一个能打开的头文件给 agent 看。至于“这次先保留旧版 Pydantic”，留在那次任务里就够了。过几个月真要升级依赖，我也不希望半年前随口交代的一句话，又把这次升级拦下来。[Redflag 的项目规则](../AGENTS.md) · [早期的 Renderer2D 接口](../Redflag/src/Redflag/Renderer/Renderer2D.h) · [Codex 如何读取项目规则](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 
-新工具在项目样例上验证可用时，说明它替代了哪项手工工作。排错改变了原来的判断时，给出事件号或像素读数。优化结果持平、变慢，或只对某一类场景有效时，说明测试条件和下一次怎样验证。最后把源码、原始数据、编译后的文档放在同一份交付里，让下一次工作可以从已有证据接着做。
+<details>
+<summary>我会怎样写一份检查 PDF 插图的 skill</summary>
+
+假设把下面这段存成 `.agents/skills/pdf-figure-review/SKILL.md`，下次就可以说“用 `$pdf-figure-review` 看一下 RHI 文档里的资源回收图”。
+
+```markdown
+---
+name: pdf-figure-review
+description: 修改 LaTeX 插图后，检查成品 PDF 的文字、箭头和图注。
+---
+用这本手册的命令编译 PDF，按图题找到所在页，导出并打开整页图片。
+如果箭头穿过文字或文字超出边框，指出是哪根箭头、哪个框、哪行字。
+交回页码和整页图，方便我按原尺寸阅读。
+```
+
+</details>

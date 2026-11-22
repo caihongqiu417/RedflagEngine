@@ -37,7 +37,28 @@ void main()
     // 相机矩阵没变时，直接取上一帧同一像素的颜色，避免把细线旁边的颜色也混进来。
     if (temporal.w != 0.)
     {
-        result[i] = vec4(mix(current, history[i].rgb, temporal.x), temporal.x);
+        float weight = temporal.x;
+        float edgeWeight = depthRange.w;
+        if (edgeWeight > 0.)
+        {
+            vec4 old = oldPosition[i];
+            // w 的低位记录上一次是否画到物体，第二位记录这个像素是否曾采到两层表面。
+            uint flags = uint(old.w);
+            bool oldSurface = (flags & 1u) != 0u;
+            bool edge = flags >= 2u || oldSurface != (pos.w != 0.);
+            if (!edge && oldSurface)
+            {
+                // 采样点沿斜墙移动，不表示它离开了墙面。沿法线量两点的间隔，以当前位置一个像素的宽度作比较。
+                float pixelWidth = 2. * (stableVP * pos).w / (abs(projection[1][1]) * float(extent.y));
+                edge = abs(dot(old.xyz - pos.xyz, surfaces[i].normal.xyz)) > pixelWidth;
+            }
+            if (edge)
+            {
+                newPosition[i].w = pos.w + 2.;
+                weight = edgeWeight;
+            }
+        }
+        result[i] = vec4(mix(current, history[i].rgb, weight), weight);
         return;
     }
     if (pos.w == 0.)
@@ -63,7 +84,8 @@ void main()
                 continue;
             uint j = indexOf(q);
             // 这里试取一个像素宽度的 2.5 倍。若一个像素覆盖 0.1 个场景单位，两帧中的点相距超过 0.25，就舍去上一帧的颜色。
-            if (oldPosition[j].w == 0. || distance(oldPosition[j].xyz, pos.xyz) > 2.5 * footprint)
+            // 细线和墙曾落在同一像素时，旧颜色来自两层；移动镜头后，一个表面位置无法带走两层颜色。
+            if (oldPosition[j].w != 1. || distance(oldPosition[j].xyz, pos.xyz) > 2.5 * footprint)
                 continue;
             float weight = (x == 0 ? 1. - part.x : part.x) * (y == 0 ? 1. - part.y : part.y);
             previous += history[j].rgb * weight;

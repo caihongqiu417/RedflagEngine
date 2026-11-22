@@ -1,4 +1,4 @@
-"""在独立 Windows 桌面打开场景，用 RenderDoc 保存、回放第 24 帧。"""
+"""在独立 Windows 桌面打开场景，用 RenderDoc 保存并回放指定帧。"""
 import argparse
 import hashlib
 import json
@@ -17,6 +17,7 @@ def capture():
     work = Path(os.environ["RF_STUDIO_WORK"])
     renderdoc = Path(os.environ["RF_STUDIO_TOOLS"])
     template = Path(os.environ["RF_STUDIO_CAPTURE"]).with_name("studio")
+    number = int(os.environ.get("RF_STUDIO_FRAME", "24"))
     # 只让编辑器加载 Vulkan 截帧层，回放进程需要使用正常的 Vulkan 设备。
     env = dict(os.environ, VK_ADD_LAYER_PATH=str(renderdoc), VK_INSTANCE_LAYERS="VK_LAYER_RENDERDOC_Capture")
     with (work / "editor.log").open("wb") as out, (work / "capture.log").open("wb") as err:
@@ -29,17 +30,17 @@ def capture():
     if not target or not target.Connected():
         raise RuntimeError("RenderDoc could not connect to the running editor")
     try:
-        target.QueueCapture(24, 1)
+        target.QueueCapture(number, 1)
         deadline = time.monotonic() + 150
         while target.Connected() and time.monotonic() < deadline:
             message = target.ReceiveMessage(None)
             if message.type == rd.TargetControlMessageType.NewCapture:
-                if message.newCapture.frameNumber != 24:
+                if message.newCapture.frameNumber != number:
                     raise RuntimeError("Unexpected frame number")
                 (work / "frame-path.txt").write_text(message.newCapture.path, encoding="utf8")
                 return
             time.sleep(.004)
-        raise RuntimeError("The editor ended before frame 24 was captured")
+        raise RuntimeError(f"The editor ended before frame {number} was captured")
     finally:
         target.Shutdown()
 
@@ -82,6 +83,7 @@ def main():
     parser.add_argument("--renderdoc", type=Path, required=True, help="Directory containing qrenderdoc.exe")
     parser.add_argument("--no-specular-ibl", action="store_true")
     parser.add_argument("--width", type=int, default=800)
+    parser.add_argument("--frame", type=int, default=24, choices=range(1, 57), metavar="1..56")
     scenes = parser.add_mutually_exclusive_group()
     scenes.add_argument("--baked-bathroom", action="store_true", help="Use the 160-pixel baked DDGI regression scene")
     scenes.add_argument("--scene", type=Path, help="Use this .redflag file and the settings saved beside it")
@@ -96,6 +98,8 @@ def main():
     if args.scene:
         scene = args.scene.resolve(strict=True)
         name = f"{scene.stem}-{sha[:12]}-{args.width}"
+    if args.frame != 24:
+        name += f"-f{args.frame}"
     work = root / "tmp/material-reference" / name
     prepare(work)
     entry = work / "assets/scenes/Sponza-Atrium.redflag"
@@ -124,13 +128,16 @@ def main():
     tools = args.renderdoc.resolve(strict=True)
     env = dict(os.environ, PATH=str(binaries) + os.pathsep + os.environ["PATH"], RF_VULKAN_VALIDATION="1",
                RF_STUDIO_WORK=str(work), RF_STUDIO_TOOLS=str(tools), RF_STUDIO_EXE=str(exe),
-               RF_STUDIO_CAPTURE=str(directory / "studio_frame24.rdc"), RF_STUDIO_EXPORT=str(work))
+               RF_STUDIO_CAPTURE=str(directory / f"studio_frame{args.frame}.rdc"), RF_STUDIO_EXPORT=str(work),
+               RF_STUDIO_FRAME=str(args.frame))
     run_renderdoc(tools, Path(__file__).resolve(), root, env)
     env["RF_STUDIO_CAPTURE"] = recorded.read_text(encoding="utf8")
     replay = "replay_baked_preview.py" if args.baked_bathroom else "replay_material_studio.py"
     run_renderdoc(tools, root / "tests" / replay, root, env)
     report = json.loads((work / "replay.json").read_text(encoding="utf8"))
-    assert report["frame"] == 24 and not report["messages"], report
+    if "error" in report:
+        raise RuntimeError(report["error"])
+    assert report["frame"] == args.frame and not report["messages"], report
     if not args.baked_bathroom and not args.scene:
         assert report["pack_event"], report
     print(f"{env['RF_STUDIO_CAPTURE']}\n{work / 'replay.json'}")

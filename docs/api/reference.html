@@ -362,6 +362,18 @@ namespace Sandbox {
           </div>
         </details>
         <details class="guide">
+          <summary>给场景换天空，保留材质反射</summary>
+          <div>
+            <p>场景保存环境图的位置。编辑器把这张图用在两个地方：镜头能从窗户看出去时，背景显示图中的天空；绘制金属时，材质按粗糙度读取周围的颜色。可以只隐藏背景，保留金属上的倒影。</p>
+            <pre><code>// Redflag/src/Redflag/Scene/Scene.h，从 RedflagForge 目录运行时使用此路径。
+scene-&gt;SetEnvironment("assets/textures/sky/daylight.hdr");
+scene-&gt;SetSkyVisible(false); // 背景隐藏，环境图仍然可以照亮材质。
+</code></pre>
+            <p>调用场景序列化器保存后，环境图和显示开关会随场景重开。Vulkan 的色调映射和曝光保存在这份场景旁的 .render.yaml 中。</p>
+            <button class="source" data-query="SetSkyVisible">查看场景的天空设置</button>
+          </div>
+        </details>
+        <details class="guide">
           <summary>调节环境遮蔽与反射阴影图</summary>
           <div>
             <p>
