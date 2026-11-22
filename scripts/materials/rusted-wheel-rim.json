@@ -1,0 +1,12 @@
+{
+  "source": "https://polyhaven.com/a/rusted_wheel_rim_01",
+  "license": "CC0-1.0",
+  "size": [1024, 1024],
+  "maps": {
+    "height": {
+      "file": "rusted_wheel_rim_01_disp_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/rusted_wheel_rim_01/rusted_wheel_rim_01_disp_2k.png",
+      "md5": "92f4c50952b48c1b9eefedc802bdac34"
+    }
+  }
+}

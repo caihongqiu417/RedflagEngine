@@ -1,0 +1,28 @@
+{
+  "baker": 1,
+  "source": "https://polyhaven.com/a/worn_metal_rack",
+  "license": "CC0-1.0",
+  "size": [
+    2048,
+    2048
+  ],
+  "recipe_sha256": "a9aebb8fe02c04511a70f56cb4303006d9bfa4f3823d2ae0fe422be1bb46b3fd",
+  "inputs": {
+    "base_color": {
+      "file": "worn_metal_rack_diff_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/worn_metal_rack/worn_metal_rack_diff_4k.jpg",
+      "md5": "5ce1d86dcdbf9359159d85a92620f9c8",
+      "sha256": "9ecc8b6a3cdb378ac5ab9b9c08e8a8bc2f88e2f9426d4daef61234bcd2c53c3c"
+    },
+    "normal_gl": {
+      "file": "worn_metal_rack_nor_gl_4k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/4k/worn_metal_rack/worn_metal_rack_nor_gl_4k.png",
+      "md5": "72afbd3431783f0b446119dc3dac4fcd",
+      "sha256": "43c1f2dd0666f2f61ebe0da5b5539fa2fbe0b930e103832c3365a2745e130f7a"
+    }
+  },
+  "outputs": {
+    "BaseColor.jpg": "c5ea31f8dc135405066a2b6aa269397cc297d070432067678a0d8edbd061735a",
+    "Normal.png": "309edbb28ef414b82ffbe208fca77ecbbb78565255f3ba6b3412c49788d02fc9"
+  }
+}

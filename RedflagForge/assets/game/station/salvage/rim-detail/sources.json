@@ -1,0 +1,21 @@
+{
+  "baker": 1,
+  "source": "https://polyhaven.com/a/rusted_wheel_rim_01",
+  "license": "CC0-1.0",
+  "size": [
+    1024,
+    1024
+  ],
+  "recipe_sha256": "16d0c7c413f9961d2ce355452d92e5011944185ba6fd8a2c5a1a26807070a77b",
+  "inputs": {
+    "height": {
+      "file": "rusted_wheel_rim_01_disp_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/rusted_wheel_rim_01/rusted_wheel_rim_01_disp_2k.png",
+      "md5": "92f4c50952b48c1b9eefedc802bdac34",
+      "sha256": "bbb7d169cf2dd111cec860ce1c096410594b4d69da1d496a23a4a607b4e72572"
+    }
+  },
+  "outputs": {
+    "Height.png": "43dd6ffb6e09ba53d60acca7df1436d74513d74fca78d180ebc4c9302f4e15b9"
+  }
+}

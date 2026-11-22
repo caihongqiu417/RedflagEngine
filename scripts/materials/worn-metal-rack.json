@@ -1,0 +1,17 @@
+{
+  "source": "https://polyhaven.com/a/worn_metal_rack",
+  "license": "CC0-1.0",
+  "size": [2048, 2048],
+  "maps": {
+    "base_color": {
+      "file": "worn_metal_rack_diff_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/worn_metal_rack/worn_metal_rack_diff_4k.jpg",
+      "md5": "5ce1d86dcdbf9359159d85a92620f9c8"
+    },
+    "normal_gl": {
+      "file": "worn_metal_rack_nor_gl_4k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/4k/worn_metal_rack/worn_metal_rack_nor_gl_4k.png",
+      "md5": "72afbd3431783f0b446119dc3dac4fcd"
+    }
+  }
+}
