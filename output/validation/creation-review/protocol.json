@@ -1,0 +1,11 @@
+{
+  "topics": [
+    "animation-events",
+    "animated-shadows"
+  ],
+  "verified_files": 8,
+  "all_three_mcp_tools": true,
+  "stale_evidence_detected": true,
+  "rejected_publish_preserved_manifest": true,
+  "cli_checks": true
+}

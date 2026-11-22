@@ -8,6 +8,7 @@
 #include "GameViewport.h"
 #include "Redflag/Debug/PlaytestSession.h"
 #include "UI/GameHudView.h"
+#include "UI/CreationReviewPanel.h"
 #include "ProjectPanel.h"
 #include "DecisionPanel.h"
 #include "CompanionPanel.h"
@@ -62,6 +63,7 @@ namespace Redflag
 		GameViewport m_GameViewport;
 		Scope<PlaytestSession> m_Playtest;
 		GameHudView m_Hud;
+		CreationReviewPanel m_Reviews;
 		bool m_SelectSceneTab = false;
 		bool m_SelectGameTab = false;
 		bool m_Playing = false;

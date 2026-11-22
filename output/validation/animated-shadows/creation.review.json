@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "title": "活动角色的方向光阴影",
+  "intent": "确认人物移动后，方向光投在地面上的阴影是否随角色移动。保留固定机位，分别观察直接光和环境光。",
+  "systems": [
+    {
+      "name": "角色动画",
+      "change": "用 Operator 的蒙皮网格投影，改变人物位置后重新取样。"
+    },
+    {
+      "name": "Vulkan 光照",
+      "change": "在主相机绘制前，从方向光的位置绘制深度，随后计算直接光照时读取这张深度图。"
+    },
+    {
+      "name": "RenderDoc",
+      "change": "回放同一机位的开关对照，分别读取地面遮挡像素数和环境光差值。"
+    }
+  ],
+  "steps": [
+    {
+      "action": "从仓库根目录运行 python tests/check_animated_shadows.py。这个采集入口需要 Debug Forge 和 RenderDoc。",
+      "expect": "得到相同相机、角色位置和显示设置下，有阴影及关闭阴影的画面。"
+    },
+    {
+      "action": "打开 left-off.png 和 left-on.png，看脚下和右侧地面，再对照 comparison.json 中的 left。",
+      "expect": "这次记录中有 2047 个地面像素受到人物遮挡，环境光通道的最大差值约为 4.77×10⁻⁷。"
+    },
+    {
+      "action": "将人物向右移再比较 right 的记录，也可用 python tests/check_animated_shadows.py --analyze 重算已有回放。",
+      "expect": "这组实测中地面阴影中心的世界 X 坐标从约 −0.038 米移至 1.774 米。"
+    }
+  ],
+  "evidence": [
+    {
+      "label": "固定机位 · 关闭人物阴影",
+      "file": "left-off.png",
+      "sha256": "03827a6eb18a3e12eee9d3379716cdb83e230fb17662bc76d8246839677db985"
+    },
+    {
+      "label": "相同机位 · 开启人物阴影",
+      "file": "left-on.png",
+      "sha256": "22f15050437e849818beb70ec530b3f878e8dbe99ef17ebe1e6c7f81ed089b4d"
+    },
+    {
+      "label": "地面、自遮挡和照明通道的实测数值",
+      "file": "comparison.json",
+      "sha256": "0bd88b0e83714d5ad6d3e98ec923dcee417b6c64ffe3b56db767309dd4d6d135"
+    },
+    {
+      "label": "开启阴影时的帧号、程序版本和采集记录",
+      "file": "left-on.json",
+      "sha256": "d541016d77087cd60752cf1f84ba43c26c2c129e51d0d5a665b15c529dc02669"
+    }
+  ]
+}

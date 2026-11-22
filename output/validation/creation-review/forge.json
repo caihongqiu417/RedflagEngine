@@ -1,0 +1,23 @@
+{
+  "exe_sha256": "d8e7e7465a287c1d9075ebe6678c1ee3d4738aa3e3d6b818c70d27cf937858dc",
+  "images": {
+    "animated-shadows": {
+      "screenshot": "animated-shadows.png",
+      "reference": "left-off.png",
+      "correlation": 0.9957505464553833,
+      "display_width": 406
+    },
+    "animation-events": {
+      "screenshot": "animation-events.png",
+      "reference": "forge-pose.png",
+      "correlation": 0.98279869556427,
+      "display_width": 406
+    }
+  },
+  "playtest": {
+    "session": "20261122T194339Z-5ae8636dfd",
+    "frame": 2520,
+    "baseline": "20261122T194326Z-76cb280dca",
+    "base_frame": 2677
+  }
+}

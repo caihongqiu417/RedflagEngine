@@ -6,12 +6,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AnimationPoseView.h" />
     <ClInclude Include="src\BehaviorTreePanel.h" />
     <ClInclude Include="src\CharacterInput.h" />
     <ClInclude Include="src\CompanionPanel.h" />
     <ClInclude Include="src\DecisionPanel.h" />
     <ClInclude Include="src\EditorEnvironment.h" />
     <ClInclude Include="src\ForgeLayer.h" />
+    <ClInclude Include="src\ForgeTool.h" />
     <ClInclude Include="src\GameViewport.h" />
     <ClInclude Include="src\LightingPreview.h" />
     <ClInclude Include="src\NpcAuthoringFiles.h" />
@@ -19,13 +21,26 @@
     <ClInclude Include="src\NpcCamera.h" />
     <ClInclude Include="src\NpcPhotoPanel.h" />
     <ClInclude Include="src\ProjectPanel.h" />
+    <ClInclude Include="src\UI\AssetChangeReview.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\CreationReviewPanel.h">
+      <Filter>UI</Filter>
+    </ClInclude>
     <ClInclude Include="src\UI\GameHudView.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\PlaytestReview.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\ReviewImage.h">
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="src\VoicePanel.h" />
     <ClInclude Include="src\VulkanForgeLayer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AnimationPoseView.cpp" />
     <ClCompile Include="src\BehaviorTreePanel.cpp" />
     <ClCompile Include="src\CompanionPanel.cpp" />
     <ClCompile Include="src\DecisionPanel.cpp" />
@@ -37,7 +52,19 @@
     <ClCompile Include="src\NpcPhotoPanel.cpp" />
     <ClCompile Include="src\ProjectPanel.cpp" />
     <ClCompile Include="src\RedflagForgeApp.cpp" />
+    <ClCompile Include="src\UI\AssetChangeReview.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\CreationReviewPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
     <ClCompile Include="src\UI\GameHudView.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\PlaytestReview.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\ReviewImage.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\VoicePanel.cpp" />

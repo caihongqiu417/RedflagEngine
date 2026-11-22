@@ -44,6 +44,7 @@ namespace Redflag
 		if (m_EditScene) StopScene();
 		GetWindowContext().WaitIdle();
 		m_Hud = {};
+		m_Reviews = {};
 		if (m_PanelTexture)
 			ImGui_ImplVulkan_RemoveTexture(m_PanelTexture);
 		m_Lighting.reset();
@@ -343,6 +344,7 @@ namespace Redflag
 		}
 		if (ImGui::BeginMenu("窗口"))
 		{
+			m_Reviews.DrawMenu();
 			if (ImGui::MenuItem("恢复默认布局")) m_ResetLayout = true;
 			ImGui::EndMenu();
 		}
@@ -449,6 +451,7 @@ namespace Redflag
 		ImGui::End();
 		DrawViewport();
 		m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
+		m_Reviews.Draw(GetWindowContext(), *m_Draw);
 	}
 
 	void VulkanForgeLayer::DrawTransformTools()

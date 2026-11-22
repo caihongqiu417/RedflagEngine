@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "title": "主角的落地恢复时间",
+  "intent": "核对动作表改过一个时间后，玩家读到的事件是否也跟着改变，并检查角色中途换动作时的回执。",
+  "systems": [
+    {
+      "name": "Forge 角色创作",
+      "change": "把 Recovery 的结束时间从 0.20833333 秒调为 0.30 秒，保存前用同一视角查看两幅姿势。"
+    },
+    {
+      "name": "动画系统",
+      "change": "每个角色分别记录动作进度和开启的时间区间。换动作时为仍开启的区间发出结束通知。"
+    },
+    {
+      "name": "C# 游戏脚本",
+      "change": "正式 Play 中的两名角色共用动作表。脚本通过 Animator.TryRead 取走各自的通知。"
+    }
+  ],
+  "steps": [
+    {
+      "action": "在 Forge 的角色创作中打开「动画事件」，选择 land，改 Recovery 的结束时间，再点「查看结束姿势」。",
+      "expect": "左边是保存值，右边是草稿。KneeBend 仍为 0.0833 秒。"
+    },
+    {
+      "action": "在仓库根目录运行 tests/run_behavior_tree.cmd --pose-image output/validation/animation-events/forge-pose.png。",
+      "expect": "测试通过面板输入、保存，再次读取的结果为 0.30 秒。临时动作表在 tmp/npc-authoring-panel。"
+    },
+    {
+      "action": "运行 python tests/check_watt_station.py --animation-actors --animator tmp/npc-authoring-panel/watt.animator.yaml --name edited-notices。",
+      "expect": "角色 1992 播完后收到 0.30 秒的 End，角色 1993 在第零秒换动作，End 的 Interrupted 值为 True。"
+    }
+  ],
+  "evidence": [
+    {
+      "label": "保存前对照 · 左边为原时刻，右边为草稿",
+      "file": "forge-pose.png",
+      "sha256": "3a1501b58e7fd4cf534c6805f332c57a562a9c715d6478d923c4195d0b5f6edd"
+    },
+    {
+      "label": "保存后重新读取的输入值",
+      "file": "forge-events.png",
+      "sha256": "0b7c1aaceae7cd0677a2865d155b994695d3d4343440bf9bc04ac88e8436df1b"
+    },
+    {
+      "label": "修改前的 C# 事件",
+      "file": "default-notices.json",
+      "sha256": "9a5314c1e596d3b566a7a1fda6f3e0d25f7fb1d408575a5f37fca22f349ae369"
+    },
+    {
+      "label": "修改后的 C# 事件",
+      "file": "edited-notices.json",
+      "sha256": "635392e4330b754410f222d2451b08a5ca2101c1903811d1501249990e4b0e29"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "open local playtest",
+    "real Apply button completes",
+    "apply preserves the author's other field",
+    "real Undo button completes",
+    "undo restores only Brightness",
+    "conflicting same field is preserved",
+    "human takes over in the panel",
+    "panel hands control back to the agent",
+    "actor selector opened",
+    "comment text box receives keyboard input",
+    "panel writes frame feedback",
+    "feedback retains the selected frame, actor and text",
+    "open original interrupted station recording",
+    "replay ends after the recorded 14700 device samples"
+  ],
+  "feedback": {
+    "seq": 1,
+    "entity": "101",
+    "text": "画面中主相机保持原位。",
+    "time": "2026-11-22T19:48:44.998504+00:00"
+  }
+}
