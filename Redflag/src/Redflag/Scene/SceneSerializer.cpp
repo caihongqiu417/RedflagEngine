@@ -335,7 +335,7 @@ namespace Redflag {
             path = std::filesystem::proximate(info->Path).generic_string();
     }
 
-    static void SerializeEntity(YAML::Emitter& out, Entity entity)
+    static void SerializeEntity(YAML::Emitter& out, Entity entity, const std::filesystem::path& folder)
     {
         RF_CORE_ASSERT(entity.HasComponent<IDComponent>());
         // 开始实体的 Map
@@ -525,6 +525,17 @@ namespace Redflag {
         if (entity.HasComponent<PickupComponent>())
             out << YAML::Key << "PickupComponent" << YAML::Value << YAML::BeginMap << YAML::EndMap;
 
+        if (entity.HasComponent<SkeletonAnimationComponent>())
+        {
+            const SkeletonAnimationComponent& player = entity.GetComponent<SkeletonAnimationComponent>();
+            const auto relative = player.File.lexically_relative(folder);
+            out << YAML::Key << "SkeletonAnimationComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "File" << YAML::Value << (relative.empty() ? player.File : relative).generic_u8string();
+            out << YAML::Key << "Playing" << YAML::Value << player.Playing;
+            out << YAML::Key << "Time" << YAML::Value << player.Time;
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<RigidBody3DComponent>())
         {
             const RigidBody3DComponent& body = entity.GetComponent<RigidBody3DComponent>();
@@ -654,11 +665,12 @@ namespace Redflag {
 		}
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		// 使用 view 或 storage 来遍历实体
+		const auto folder = std::filesystem::absolute(filepath).parent_path();
 		auto view = m_Scene->m_Registry.view<entt::entity>();
 		for (auto entityID : view)
 		{
 			Entity entity{ entityID, m_Scene.get() };
-			SerializeEntity(out, entity);
+			SerializeEntity(out, entity, folder);
 		}
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
@@ -799,6 +811,20 @@ namespace Redflag {
 
                 if (entity["PickupComponent"])
                     deserializedEntity.AddComponent<PickupComponent>();
+
+                if (const YAML::Node animation = entity["SkeletonAnimationComponent"])
+                {
+                    SkeletonAnimationComponent& player = deserializedEntity.AddComponent<SkeletonAnimationComponent>();
+                    player.Playing = animation["Playing"].as<bool>(true);
+                    const auto file = std::filesystem::u8path(animation["File"].as<std::string>());
+                    if (!file.empty())
+                    {
+                        player.File = (std::filesystem::absolute(filepath).parent_path() / file).lexically_normal();
+                        try { player.Load(player.File); }
+                        catch (const std::exception& error) { RF_CORE_WARN("BVH: {0}", error.what()); }
+                        if (player.Clip) player.Seek(animation["Time"].as<float>(0.f));
+                    }
+                }
 
                 if (const YAML::Node bodyNode = entity["RigidBody3DComponent"])
                 {

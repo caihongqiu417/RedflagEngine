@@ -863,6 +863,20 @@ namespace Redflag {
 			draw(mesh.MeshData, transform.GetTransform(), material, static_cast<int>(entity), 1.0f);
 		});
 
+		registry.view<TransformComponent, SkeletonAnimationComponent>().each(
+			[&](auto entity, TransformComponent& transform, SkeletonAnimationComponent& player)
+		{
+			if (!player.Clip) return;
+			if (!player.BoneMesh)
+			{
+				player.BoneMesh = Mesh::CreateCube();
+				player.BoneMaterial = Material::Create(glm::vec4(.84f, .52f, .22f, 1.f));
+			}
+			const glm::mat4 world = transform.GetTransform();
+			for (const glm::mat4& bone : player.Bones)
+				draw(player.BoneMesh, world * bone, player.BoneMaterial, static_cast<int>(entity), 1.f);
+		});
+
 		// 文件导入的模型可能含多个部件，实体的变换对它们全部生效。
 		registry.view<TransformComponent, ModelRendererComponent>().each(
 			[&](auto entity, TransformComponent& transform, ModelRendererComponent& component)

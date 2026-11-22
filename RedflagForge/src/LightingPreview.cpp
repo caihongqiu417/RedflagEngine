@@ -209,6 +209,14 @@ namespace Redflag
 		glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating)
 	{
 		SceneGeometry geometry = CollectModels(scene);
+		// 角色的骨段会改变相机看到的表面。房间的静态三角形和已烘焙的探针继续使用。
+		std::vector<glm::mat4> bones;
+		scene.GetRegistry().view<TransformComponent, SkeletonAnimationComponent>().each(
+			[&](const TransformComponent& transform, const SkeletonAnimationComponent& player) {
+				const glm::mat4 world = transform.GetTransform();
+				for (const glm::mat4& bone : player.Bones) bones.push_back(world * bone);
+			});
+		if (bones != m_Bones) { m_Bones = std::move(bones); ResetHistory(); }
 		// 改了简化模型的设置，场景面板就要重画。算反射光时仍用原来的精细模型。
 		if (geometry.LODs != m_LODSettings) { m_LODSettings = std::move(geometry.LODs); ResetHistory(); }
 		if (geometry.Glass != m_GlassSettings) { m_GlassSettings = std::move(geometry.Glass); ResetHistory(); }

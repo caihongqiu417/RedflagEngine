@@ -13,6 +13,18 @@
 \newcommand{\clipref}[2]{\href{https://github.com/GAMES-105/GAMES-105/tree/442b13ad9c50544889236d6541358c9c752f8458/#1}{#2}}
 \begin{document}
 \bodytype
+\section{场景里的骨骼动画}
+在 Redflag Forge 的“文件 → 打开场景”中选择 \path{assets/scenes/Character-Walk.redflag}。角色会在地面中央循环走动。点击层级中的“角色”，属性面板的“骨骼动画”会显示当前动作。取消“循环播放”可以停住，拖动“进度（秒）”能观察膝盖抬到哪里。此时保存场景，再从同一个文件打开，角色会停在刚才的姿势。
+
+\shot{scene.png}{正式 Vulkan 编辑器的场景面板，取自 RenderDoc 1.47 回放第 24 帧，640 × 410 像素。两只脚的位置和膝盖的弯曲来自课程提供的 \code{Walk.bvh}。}
+
+要在自己的场景使用，先建一个空对象，在“添加组件”中选“骨骼动画”，再点“选择 BVH 动作”。示例文件在 \path{assets/animations/GAMES105/}。此组件以米读取骨架，人物按实体的平移、旋转和缩放摆放。它保留骨盆的上下运动，固定根关节在地面上的位置，适合从同一机位检查循环步态。
+
+动作文件保存每个关节相对父关节的变化。\code{SkeletonAnimationComponent::Seek} 先在相邻动作帧间插值，再把各关节换算到角色坐标中。绘制时，一块细长的立方体连接两个相邻关节，19 根骨段都使用角色的拾取编号。这样，点中手或脚，属性面板都选中同一角色。在 Vulkan 光照视图里，骨段移动只需重画相机看到的表面。房间的烘焙仍可用，光线查询静态遮挡时只考虑房间里的静态模型。
+
+场景文件分别保存动作路径、播放开关和秒数。动作路径相对于场景文件，另存时重新计算。复制场景后，两份角色可以共用读入的动作，各自暂停或继续。实现见 \href{run:../../Redflag/src/Redflag/Animation/SkeletonAnimation.cpp}{\code{SkeletonAnimation.cpp}}。在仓库根目录运行 \path{tests/run_lighting_preview_edits.cmd}，加上 \code{--skeleton} 选项，可以重做保存、重开与拾取验证。下面的六项操作使用独立示例，其中带皮肤的角色和由关节力驱动的平地行走都在该示例中体验。
+
+\clearpage
 \section{角色与骨架}
 在仓库根目录打开 \path{Open-Character-Animation.cmd}。窗口左侧有六项操作。先选“正向运动学 FK”，拖动角度滑块。转动左肩时，肘和手腕一起移动，右手和双脚留在原处。浅蓝色线段画出两关节间的骨头，橙色方块标出关节的位置。
 

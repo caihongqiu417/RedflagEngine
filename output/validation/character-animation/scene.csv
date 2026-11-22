@@ -1,0 +1,2 @@
+scene,clip,bones,seconds,actor_pixels,changed_pixels,paused_roundtrip,independent_copy,retained_bake
+Character-Walk,Walk.bvh,19,0.23,119,146,pass,pass,pass

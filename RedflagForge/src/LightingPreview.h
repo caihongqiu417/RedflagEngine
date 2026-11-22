@@ -59,6 +59,7 @@ namespace Redflag
 		std::vector<glm::vec4> m_GlassSettings;
 		std::vector<std::pair<Ref<SampledTexture>, bool>> m_SurfaceSettings;
 		std::vector<std::pair<uint64_t, float>> m_LODSettings;
+		std::vector<glm::mat4> m_Bones;
 		Ref<ComputePipeline> m_PackSurfaces;
 		Ref<ComputePipeline> m_Display;
 		Ref<ComputePipeline> m_Combine;

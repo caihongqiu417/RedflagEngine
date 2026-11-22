@@ -1103,6 +1103,7 @@ namespace Redflag {
             if (AddComponentItem<MeshRendererComponent>(entity, "网格绘制"))
                 entity.GetComponent<MeshRendererComponent>().MeshData = Mesh::CreateCube();
             AddComponentItem<ModelRendererComponent>(entity, "模型绘制");
+            AddComponentItem<SkeletonAnimationComponent>(entity, "骨骼动画");
             if (!entity.HasComponent<RigidBody2DComponent>() && AddComponentItem<RigidBody3DComponent>(entity, "3D 刚体"))
             {
                 if (!entity.HasComponent<BoxCollider3DComponent>())
@@ -1416,6 +1417,37 @@ namespace Redflag {
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
                 ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.f, 1.f);
                 ImGui::DragFloat("Fade", &component.Fade, 0.0025f, 2.f, 1.f);
+            });
+
+        DrawComponent<SkeletonAnimationComponent>("骨骼动画", entity, [](SkeletonAnimationComponent& player)
+            {
+                if (!player.File.empty()) ImGui::TextWrapped("%s", player.File.filename().u8string().c_str());
+                if (ImGui::Button("选择 BVH 动作…"))
+                {
+                    const auto path = FileDialogs::OpenFile("BVH motion (*.bvh)\0*.bvh\0");
+                    if (!path.empty())
+                    {
+                        try { player.Load(std::filesystem::path(path)); }
+                        catch (const std::exception& error) { RF_CORE_WARN("BVH: {0}", error.what()); ImGui::OpenPopup("动作文件无法读取"); }
+                    }
+                }
+                if (ImGui::BeginPopup("动作文件无法读取"))
+                {
+                    ImGui::TextUnformatted("无法读取所选的 BVH。请检查动作文件。");
+                    ImGui::EndPopup();
+                }
+                if (!player.Clip)
+                {
+                    if (!player.File.empty()) ImGui::TextDisabled("找不到或无法读取此动作，请重新选择。");
+                    return;
+                }
+                ImGui::Checkbox("循环播放", &player.Playing);
+                float time = player.Time;
+                if (ImGui::SliderFloat("进度（秒）", &time, 0.f, player.Clip->Duration() - player.Clip->FrameTime, "%.2f"))
+                {
+                    player.Playing = false;
+                    player.Seek(time);
+                }
             });
 
         DrawComponent<PickupComponent>("可拿取", entity, []()

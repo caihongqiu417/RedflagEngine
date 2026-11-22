@@ -219,6 +219,7 @@ namespace Redflag
 
 	void VulkanForgeLayer::OnUpdate(Timestep ts)
 	{
+		m_Scene->OnUpdateAnimations(ts);
 		if (m_EditScene)
 			m_Scene->OnUpdatePhysics(ts);
 		if (m_Hovered && !m_GameView)

@@ -204,6 +204,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Animation\CharacterController.h" />
     <ClInclude Include="src\Redflag\Animation\Ragdoll.h" />
     <ClInclude Include="src\Redflag\Animation\Skeleton.h" />
+    <ClInclude Include="src\Redflag\Animation\SkeletonAnimation.h" />
     <ClInclude Include="src\Redflag\Animation\SkinnedMesh.h" />
     <ClInclude Include="src\Redflag\Assets\Asset.h" />
     <ClInclude Include="src\Redflag\Assets\AssetLibrary.h" />
@@ -740,6 +741,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\Skeleton.cpp" />
+    <ClCompile Include="src\Redflag\Animation\SkeletonAnimation.cpp" />
     <ClCompile Include="src\Redflag\Animation\SkinnedMesh.cpp" />
     <ClCompile Include="src\Redflag\Assets\AssetLibrary.cpp" />
     <ClCompile Include="src\Redflag\Core\Application.cpp" />

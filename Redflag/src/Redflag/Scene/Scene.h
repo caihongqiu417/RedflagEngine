@@ -38,6 +38,7 @@ namespace Redflag {
 
 		// 运行或模拟时推进物理。动态刚体的位置、旋转会写回场景，供渲染和脚本读取。
 		void OnUpdatePhysics(Timestep ts);
+		void OnUpdateAnimations(Timestep ts);
 
 		// 查询最近一次物理步中的碰撞体；距离和半径均以米为单位。
 		std::optional<RayHit3D> Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const;

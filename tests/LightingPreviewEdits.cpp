@@ -161,9 +161,12 @@ static void CheckScene(VulkanContext& context, VulkanDraw& draw, const fs::path&
     context.WaitIdle();
 }
 
+#include "SkeletonSceneCheck.h"
+
 int main(int argc, char** argv)
 {
-    if (argc != 3) return 1;
+    const bool skeleton = argc == 4 && std::string_view(argv[3]) == "--skeleton";
+    if (argc != 3 && !skeleton) return 1;
     const fs::path work = fs::absolute(argv[1]), evidence = fs::absolute(argv[2]);
     fs::create_directories(work);
     fs::create_directories(evidence.parent_path());
@@ -184,7 +187,8 @@ int main(int argc, char** argv)
         RendererAPI::SetAPI(RendererAPI::API::Vulkan);
         RenderDevice::SetCurrent(&draw);
         std::ostringstream report;
-        CheckScene(context, draw, work, report);
+        if (skeleton) CheckSkeletonScene(context, draw, work, report);
+        else CheckScene(context, draw, work, report);
         RenderDevice::SetCurrent(nullptr);
         std::ofstream file(evidence);
         file.exceptions(std::ios::failbit | std::ios::badbit);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Assets/Asset.h"
+#include "Redflag/Animation/SkeletonAnimation.h"
 #include "Redflag/Physics/PhysicsWorld.h"
 
 #include<glm/glm.hpp>

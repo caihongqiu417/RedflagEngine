@@ -117,6 +117,7 @@ namespace Redflag {
         CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<SkeletonAnimationComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<MeshRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ModelRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -234,12 +235,22 @@ namespace Redflag {
 
     void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera)
     {
+        OnUpdateAnimations(ts);
         SceneRenderer::RenderScene(*this, camera);
+    }
+
+    void Scene::OnUpdateAnimations(Timestep ts)
+    {
+        m_Registry.view<SkeletonAnimationComponent>().each([&](SkeletonAnimationComponent& player) {
+            if (player.Playing && player.Clip)
+                player.Seek(player.Time + ts.GetSeconds());
+        });
     }
 
     //runtime
     void Scene::OnUpdateRuntime(Timestep ts)
-    {   // ----------
+    {
+        OnUpdateAnimations(ts);
         // Scripts
         // ----------
         {
@@ -385,6 +396,7 @@ namespace Redflag {
         CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
         CopyComponentIfExist<PickupComponent>(newEntity, entity);
+        CopyComponentIfExist<SkeletonAnimationComponent>(newEntity, entity);
         CopyComponentIfExist<CircleCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExist<ScriptComponent>(newEntity, entity);
