@@ -8,6 +8,7 @@ namespace StationTest
     public class MotionCapture : Entity
     {
         public Entity Technician, Player;
+        public bool DeliverOnly;
         private ulong cursor;
         private float time;
         private bool asked;
@@ -17,7 +18,8 @@ namespace StationTest
             time += seconds;
             if (!asked && time > 1)
             {
-                asked = Npc.Submit(Technician.Id, "先捡起医疗包，再走到玩家身边把它交给玩家。");
+                asked = Npc.Submit(Technician.Id, DeliverOnly ? "走到我身边，把你包里的医疗包给我。" :
+                    "先捡起医疗包，再走到玩家身边把它交给玩家。");
                 if (!asked) return;
             }
             NpcEvent entry;

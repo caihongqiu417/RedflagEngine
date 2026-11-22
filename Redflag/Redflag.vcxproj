@@ -241,6 +241,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Core\UUID.h" />
     <ClInclude Include="src\Redflag\Core\Window.h" />
     <ClInclude Include="src\Redflag\Debug\Instrumentor.h" />
+    <ClInclude Include="src\Redflag\Debug\PlaytestAudio.h" />
     <ClInclude Include="src\Redflag\Debug\PlaytestInput.h" />
     <ClInclude Include="src\Redflag\Debug\PlaytestSession.h" />
     <ClInclude Include="src\Redflag\Events\ApplicationEvent.h" />
@@ -799,6 +800,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Core\LayerStack.cpp" />
     <ClCompile Include="src\Redflag\Core\Log.cpp" />
     <ClCompile Include="src\Redflag\Core\UUID.cpp" />
+    <ClCompile Include="src\Redflag\Debug\PlaytestAudio.cpp" />
     <ClCompile Include="src\Redflag\Debug\PlaytestInput.cpp" />
     <ClCompile Include="src\Redflag\Debug\PlaytestSession.cpp" />
     <ClCompile Include="src\Redflag\Gameplay\TerrainTraversal.cpp" />

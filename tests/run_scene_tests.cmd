@@ -33,6 +33,10 @@ if "%~1"=="--npc-environment" (
 )
 cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DGLFW_INCLUDE_NONE /DYAML_CPP_STATIC_DEFINE ^
  /I Redflag\vendor\entt\include /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include ^
+if "%~1"=="--playtest-audio" (
+    set "RF_TEST_SOURCE=tests\PlaytestAudioTests.cpp"
+    set "RF_TEST_NAME=PlaytestAudioTests"
+)
  /I Redflag\vendor\fmt\include /I Redflag\vendor\glm /I Redflag\vendor\Glad\include /I Redflag\vendor\GLFW\include /I Redflag\vendor\yaml-cpp\include ^
  /I Redflag\vendor\imgui /I "%VULKAN_SDK%\Include" "%RF_TEST_SOURCE%" %RF_TEST_EXTRA% /Fe:bin-int\Tests\%RF_TEST_NAME%.exe /Fo:bin-int\Tests\%RF_TEST_NAME%.obj ^
  /link bin\Debug-windows-x86_64\Redflag\Redflag.lib bin\Debug-windows-x86_64\GLFW\GLFW.lib ^

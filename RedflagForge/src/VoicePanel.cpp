@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "VoicePanel.h"
+#include "Redflag/Debug/PlaytestAudio.h"
 #include "Redflag/Utils/PlatformUtils.h"
 #include <imgui.h>
 #include <mmsystem.h>
@@ -71,6 +72,11 @@ namespace Redflag
 
 	VoicePanel::VoicePanel() = default;
 	VoicePanel::~VoicePanel() = default;
+
+	void VoicePanel::Speak(uint64_t speaker, const std::string& text, const std::string& voice)
+	{
+		m_Playback.Speak(text, voice, ObserveGameSpeech(speaker));
+	}
 
 	void VoicePanel::Reset()
 	{

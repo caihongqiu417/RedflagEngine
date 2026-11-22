@@ -13,26 +13,32 @@ namespace Redflag
 	void CompanionPanel::Stop()
 	{
 		m_Voice.Reset();
-		m_LastSpeech = -1.0;
+		m_SpeechCursor = 0;
 	}
 
 	void CompanionPanel::Draw(Scene& scene, bool playing, const std::function<void(uint64_t)>& drawPhoto)
 	{
-		m_Voice.UpdatePlayback();
-		if (playing && scene.GetNpcs() && m_Actor)
+		Entity actor = scene.GetEntityByUUID(m_Actor);
+		const auto actors = scene.GetRegistry().view<NpcComponent>();
+		if ((!actor || !actor.HasComponent<NpcComponent>()) && !actors.empty())
 		{
-			// 通讯窗口收起时也能听见新回执。只播动作真正完成后留下的台词。
-			const NpcState* speaker = scene.GetNpcs()->Inspect(m_Actor);
-			NpcDefinition* profile = scene.GetNpcs()->GetDefinition(m_Actor);
-			if (speaker && profile)
+			Stop();
+			actor = Entity(*actors.begin(), &scene);
+			m_Actor = actor.GetUUID();
+		}
+
+		m_Voice.UpdatePlayback();
+		if (playing && scene.GetNpcs() && actor && actor.HasComponent<NpcComponent>())
+		{
+			// 窗口还没打开时，默认队友也可以播报。按事件编号读取同一帧里的所有回执。
+			const std::string& voice = actor.GetComponent<NpcComponent>().VoiceOverride;
+			while (const NpcEvent* event = scene.GetNpcs()->NextEvent(m_Actor, m_SpeechCursor))
 			{
-				const std::string& voice = scene.GetEntityByUUID(m_Actor).GetComponent<NpcComponent>().VoiceOverride;
-				for (const NpcEvent& event : speaker->Events)
+				if (event->Kind == "玩家" || event->Kind == "中止") m_Voice.StopPlayback();
+				if (!event->Speech.empty())
 				{
-					if (event.Time <= m_LastSpeech) continue;
-					if (event.Kind == "玩家" || event.Kind == "中止") m_Voice.StopPlayback();
-					if (!event.Speech.empty()) m_Voice.Speak(event.Speech, voice.empty() ? profile->Voice : voice);
-					m_LastSpeech = event.Time;
+					const NpcDefinition* profile = scene.GetNpcs()->GetDefinition(m_Actor);
+					if (profile) m_Voice.Speak(m_Actor, event->Speech, voice.empty() ? profile->Voice : voice);
 				}
 			}
 		}
@@ -48,10 +54,6 @@ namespace Redflag
 
 		//========== 选择角色 ==========
 
-		Entity actor = scene.GetEntityByUUID(m_Actor);
-		const auto actors = scene.GetRegistry().view<NpcComponent>();
-		if ((!actor || !actor.HasComponent<NpcComponent>()) && !actors.empty())
-			actor = Entity(*actors.begin(), &scene);
 		if (!actor || !actor.HasComponent<NpcComponent>())
 		{
 			ImGui::TextWrapped("当前场景没有 AI 角色。在层级中选中物体，在属性中添加「AI 角色」并选择角色定义。");

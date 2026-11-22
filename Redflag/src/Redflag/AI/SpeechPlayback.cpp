@@ -54,17 +54,17 @@ namespace Redflag
 				throw std::runtime_error("无法向默认设备播放语音。");
 		}
 
-		bool ReachedVoice() const
+		int64_t DeviceSamples() const
 		{
 			MMTIME position{};
 			position.wType = TIME_SAMPLES;
-			if (waveOutGetPosition(Device, &position, sizeof(position)) != MMSYSERR_NOERROR) return false;
+			if (waveOutGetPosition(Device, &position, sizeof(position)) != MMSYSERR_NOERROR) return -1;
 			switch (position.wType)
 			{
-				case TIME_SAMPLES: return position.u.sample > FirstSample;
-				case TIME_BYTES: return position.u.cb / 2 > FirstSample;
-				case TIME_MS: return position.u.ms * 16 > FirstSample;
-				default: return false;
+				case TIME_SAMPLES: return position.u.sample;
+				case TIME_BYTES: return position.u.cb / 2;
+				case TIME_MS: return int64_t(position.u.ms) * 16;
+				default: return -1;
 			}
 		}
 
@@ -81,11 +81,13 @@ namespace Redflag
 
 	SpeechPlayback::SpeechPlayback(uint16_t port) : m_Port(port) {}
 
-	SpeechPlayback::~SpeechPlayback() = default;
+	SpeechPlayback::~SpeechPlayback() { Stop(); }
 
-	void SpeechPlayback::Speak(const std::string& text, const std::string& voice)
+	void SpeechPlayback::Speak(const std::string& text, const std::string& voice, Observer observe)
 	{
 		Stop();
+		m_Observe = std::move(observe);
+		if (m_Observe) m_Observe({"requested", m_Line, -1, nullptr});
 		m_Start = std::chrono::steady_clock::now();
 		m_FirstAudioMs = -1;
 		m_Error.clear();
@@ -98,10 +100,31 @@ namespace Redflag
 		}) });
 	}
 
+	void SpeechPlayback::PlayRecording(std::string wav, uint32_t samples, Observer observe)
+	{
+		Stop();
+		if (samples == 0) return;
+		auto recording = std::make_unique<Output>(std::move(wav));
+		const uint32_t available = recording->Header.dwBufferLength / 2;
+		if (samples > available) throw std::runtime_error("记录的采样数超过 WAV 中的音频长度。");
+
+		recording->Header.dwBufferLength = samples * 2;
+		recording->Start();
+		m_Output = std::move(recording);
+		m_Observe = std::move(observe);
+		m_Start = std::chrono::steady_clock::now();
+		m_FirstAudioMs = -1;
+		m_Error.clear();
+	}
+
 	void SpeechPlayback::Stop()
 	{
-		++m_Line;
+		const int64_t samples = m_Observe && m_Output ? m_Output->DeviceSamples() : -1;
+		const bool submitted = bool(m_Output);
 		m_Output.reset();
+		if (m_Observe) m_Observe({submitted ? "stopped" : "cancelled", m_Line, samples, nullptr});
+		m_Observe = {};
+		++m_Line;
 	}
 
 	void SpeechPlayback::Update()
@@ -114,16 +137,31 @@ namespace Redflag
 				try {
 					m_Output = std::make_unique<Output>(job->Wav.get());
 					m_Output->Start();
+					if (m_Observe) m_Observe({"submitted", m_Line, m_Output->DeviceSamples(), &m_Output->Wav});
 				} catch (const std::exception& error) {
 					m_Output.reset();
 					m_Error = error.what();
+					if (m_Observe) m_Observe({"failed", m_Line, -1, nullptr});
+					m_Observe = {};
 				}
 			}
 			job = m_Jobs.erase(job);
 		}
 		if (!m_Output) return;
-		if (m_FirstAudioMs < 0 && m_Output->ReachedVoice())
-			m_FirstAudioMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - m_Start).count();
-		if (m_Output->Header.dwFlags & WHDR_DONE) m_Output.reset();
+		if (m_FirstAudioMs < 0)
+		{
+			const int64_t samples = m_Output->DeviceSamples();
+			if (samples > m_Output->FirstSample)
+			{
+				m_FirstAudioMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - m_Start).count();
+				if (m_Observe) m_Observe({"first_voice", m_Line, samples, nullptr});
+			}
+		}
+		if (m_Output->Header.dwFlags & WHDR_DONE)
+		{
+			if (m_Observe) m_Observe({"finished", m_Line, m_Output->DeviceSamples(), nullptr});
+			m_Observe = {};
+			m_Output.reset();
+		}
 	}
 }

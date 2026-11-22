@@ -21,7 +21,7 @@ namespace Redflag
 	private:
 		uint64_t m_Actor = 0;
 		bool m_Open = false, m_ShowTree = false, m_Authoring = false;
-		double m_LastSpeech = -1.0;
+		uint64_t m_SpeechCursor = 0;
 		char m_Text[1024] = {};
 		std::string m_Path, m_Error;
 		NpcDefinition m_Editing;

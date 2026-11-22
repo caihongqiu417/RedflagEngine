@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -31,6 +32,7 @@ def main():
     parser.add_argument("--preview",action="store_true",help="只截正式游戏的开场画面")
     parser.add_argument("--npc-motion",action="store_true",help="通过游戏脚本要求队友取药和递药，记录第三人称窗口")
     parser.add_argument("--latency",choices=("reserve","walk"),help="在正式游戏内记录发令到保留库存或位置改变的耗时")
+    parser.add_argument("--recorded-speech",type=Path,help="把本局的队友回执和中断证据另存在这个目录")
     parser.add_argument("--trials",type=int,default=20)
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
     parser.add_argument("--animation-actors", action="store_true", help="在双角色测试场景检查 C# 通知与动作打断")
@@ -85,11 +87,14 @@ def main():
                 TransformComponent=dict(Translation=[0,-8,0],Rotation=[0,0,0],Scale=[1,1,1]),
                 ModelRendererComponent=operator["ModelRendererComponent"], ModelAnimationComponent=operator["ModelAnimationComponent"],
                 ScriptComponent=dict(Class="StationTest.NotifyActor",ScriptFields=[dict(Name="Interrupt",Type="Bool",Value=interrupt)])))
-    if args.npc_motion:
+    if args.npc_motion or args.recorded_speech:
         scene["Entities"].append(dict(Entity=1901,TagComponent=dict(Tag="动作测试"),
             TransformComponent=dict(Translation=[0,0,0],Rotation=[0,0,0],Scale=[1,1,1]),
             ScriptComponent=dict(Class="StationTest.MotionCapture",ScriptFields=[
                 dict(Name="Technician",Type="Entity",Value=1102),dict(Name="Player",Type="Entity",Value=1101)])))
+    if args.recorded_speech:
+        scene["Entities"][-1]["ScriptComponent"]["ScriptFields"].append(dict(Name="DeliverOnly",Type="Bool",Value=True))
+        scene["Entities"] = [actor for actor in scene["Entities"] if actor["Entity"] != 1900]
     if args.latency:
         scene["Entities"] = [actor for actor in scene["Entities"] if actor["Entity"] != 1900]
         scene["Entities"].append(dict(Entity=1902, TagComponent=dict(Tag="NPC 计时"),
@@ -110,8 +115,10 @@ def main():
     info = win32process.STARTUPINFO()
     info.lpDesktop = "WinSta0\\" + name
     command = subprocess.list2cmdline([str(exe),"--play",str(sample)])
+    game_env = dict(os.environ,RF_VULKAN_VALIDATION="1")
+    if args.recorded_speech: game_env["REDFLAG_PLAYTEST"] = str(work/"session")
     process, thread, pid, _ = win32process.CreateProcess(None, command, None, None, False, win32con.CREATE_NO_WINDOW,
-                                    dict(os.environ,RF_VULKAN_VALIDATION="1"),str(work),info)
+                                    game_env,str(work),info)
     thread.Close()
     data = work/"station.csv"
     def latest():
@@ -171,6 +178,28 @@ def main():
         def frame(name):
             time.sleep(.4)
             save_view(hwnd,output/(name+".png"))
+        if args.recorded_speech:
+            sys.path.insert(0,str(ROOT/"scripts/redflag_mcp"))
+            from playtest import issue
+            directory = work/"session"
+            media = directory/"media.jsonl"
+            def frames():
+                return [json.loads(row) for row in media.read_text(encoding="utf8").splitlines()] if media.exists() else []
+            wait_for(lambda: (directory/"frames.jsonl").is_file() and (directory/"frames.jsonl").stat().st_size>0,process)
+            issue(directory,1,"tap",key="T")  # 由当前拥有输入权的会话打开队友通讯。
+            wait_for(lambda:any(r["event"]=="first_voice" for r in frames()),process,90)
+            issue(directory,1,"tap",key="T")  # 收起通讯窗口会停止正在播的回执。
+            wait_for(lambda:any(r["event"]=="stopped" for r in frames()),process,10)
+            rows=frames()
+            cut=next(r for r in rows if r["event"]=="stopped")
+            assert cut["entity"]=="1102" and 0<cut["device_samples"]<((directory/cut["file"]).stat().st_size-44)//2
+            target=args.recorded_speech.resolve()
+            target.mkdir(parents=True,exist_ok=True)
+            for file in (media,directory/cut["file"],work/"station-motion.tsv"): shutil.copy2(file,target)
+            win32gui.PostMessage(hwnd,win32con.WM_CLOSE,0,0)
+            assert win32event.WaitForSingleObject(process,25000)==win32con.WAIT_OBJECT_0
+            print(target)
+            return
         if args.animation_actors or args.landing:
             win32gui.SetWindowPos(hwnd,None,0,0,840,540,win32con.SWP_NOMOVE|win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE)
         if args.animation_actors:

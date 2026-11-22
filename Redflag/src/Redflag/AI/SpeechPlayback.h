@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <chrono>
 #include <future>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,10 +13,21 @@ namespace Redflag
 	class SpeechPlayback
 	{
 	public:
+		struct Event
+		{
+			const char* Name;
+			uint64_t Line;
+			int64_t DeviceSamples; // 设备已读过的单声道采样数。查不到时为 -1。
+			const std::string* Wav; // 仅提交设备时提供，调用返回后失效。
+		};
+		using Observer = std::function<void(const Event&)>;
+
 		explicit SpeechPlayback(uint16_t port = 8717);
 		~SpeechPlayback();
 
-		void Speak(const std::string& text, const std::string& voice = {});
+		void Speak(const std::string& text, const std::string& voice = {}, Observer observe = {});
+		/// <summary>回听录制的 16 kHz 单声道 WAV。从开头播放设备实际读过的采样数。</summary>
+		void PlayRecording(std::string wav, uint32_t samples, Observer observe = {});
 		void Stop();
 		void Update();
 
@@ -32,6 +44,7 @@ namespace Redflag
 		std::chrono::steady_clock::time_point m_Start;
 		std::vector<Job> m_Jobs;
 		std::unique_ptr<Output> m_Output;
+		Observer m_Observe;
 		double m_FirstAudioMs = -1;
 		std::string m_Error;
 	};
