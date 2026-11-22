@@ -260,12 +260,12 @@ namespace Redflag
                 DrawRecords(context, device);
                 ImGui::EndTabItem();
             }
-            const bool jump = m_Page == "playtest";
+            const bool jump = m_Page == "playtest" || m_Page == "jobs";
             if (ImGui::BeginTabItem("试玩回放", nullptr, jump ? ImGuiTabItemFlags_SetSelected : 0))
             {
                 if (jump)
                 {
-                    m_Playtest.Select(m_DeepLink);
+                    m_Playtest.Select(m_DeepLink, m_Page == "jobs");
                     m_Page.clear();
                     m_DeepLink.clear();
                 }
@@ -295,7 +295,7 @@ namespace Redflag
         if (m_Refresh)
         {
             List();
-            if (!m_DeepLink.empty() && m_Page != "playtest" && m_Page != "change")
+            if (!m_DeepLink.empty() && m_Page != "playtest" && m_Page != "jobs" && m_Page != "change")
             {
                 for (const auto& [file, title] : m_Cases)
                     if (file.parent_path().filename().u8string() == m_DeepLink) m_Selected = file;

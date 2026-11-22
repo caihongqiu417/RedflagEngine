@@ -41,7 +41,7 @@ def picture_match(screenshot, reference):
 def capture(binary,case,page,project,output,focus=None):
     work=Path(tempfile.mkdtemp(prefix="forge-review-",dir=ROOT/"tmp"))
     prepare(work)
-    panel,outer=("1420,1100",(1600,1260)) if page=="playtest" else ("850,665",(1260,865))
+    panel,outer=("1420,1100",(1600,1260)) if page in ("playtest","jobs") else ("850,665",(1260,865))
     (work/"imgui-vulkan.ini").write_text(f"[Window][创作审查]\nPos=70,65\nSize={panel}\nCollapsed=0\n",encoding="utf8")
     name="CreationReview"+str(os.getpid())
     desktop=win32service.CreateDesktop(name,0,win32con.GENERIC_ALL,None)
@@ -69,7 +69,7 @@ def capture(binary,case,page,project,output,focus=None):
             with Image.open(output) as picture:
                 return max(np.asarray(picture.crop((70,80,890,730))).std(axis=(0,1)))>12
         wait_for(rendered,process)
-        if page=="playtest":
+        if page in ("playtest","jobs"):
             # 历史较长时两条时间线要分多批读入，指定的帧直到那一批到达才会选中。
             time.sleep(8)
         else: time.sleep(2)

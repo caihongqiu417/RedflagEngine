@@ -159,6 +159,7 @@
     <ClInclude Include="src\UI\AssetChangeReview.h" />
     <ClInclude Include="src\UI\CreationReviewPanel.h" />
     <ClInclude Include="src\UI\GameHudView.h" />
+    <ClInclude Include="src\UI\JobTimeline.h" />
     <ClInclude Include="src\UI\PlaytestReview.h" />
     <ClInclude Include="src\UI\ReviewImage.h" />
     <ClInclude Include="src\VoicePanel.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="src\UI\AssetChangeReview.cpp" />
     <ClCompile Include="src\UI\CreationReviewPanel.cpp" />
     <ClCompile Include="src\UI\GameHudView.cpp" />
+    <ClCompile Include="src\UI\JobTimeline.cpp" />
     <ClCompile Include="src\UI\PlaytestReview.cpp" />
     <ClCompile Include="src\UI\ReviewImage.cpp" />
     <ClCompile Include="src\VoicePanel.cpp" />

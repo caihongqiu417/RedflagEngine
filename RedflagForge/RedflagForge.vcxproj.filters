@@ -30,6 +30,9 @@
     <ClInclude Include="src\UI\GameHudView.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="src\UI\JobTimeline.h">
+      <Filter>UI</Filter>
+    </ClInclude>
     <ClInclude Include="src\UI\PlaytestReview.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -59,6 +62,9 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\GameHudView.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\JobTimeline.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\PlaytestReview.cpp">

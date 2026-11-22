@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ReviewImage.h"
+#include "JobTimeline.h"
 #include "Redflag/AI/SpeechPlayback.h"
 #include <filesystem>
 #include <future>
@@ -17,7 +18,7 @@ namespace Redflag
     class PlaytestReview
     {
       public:
-        void Select(const std::string& session);
+        void Select(const std::string& session, bool jobs = false);
         void StopAudio();
         void Draw(VulkanContext& context, VulkanDraw& device);
 
@@ -40,7 +41,8 @@ namespace Redflag
             std::vector<Frame> Frames;
             std::map<uint64_t, Media> Files;
             std::map<uint64_t, std::vector<YAML::Node>> VoiceEvents;
-            std::streamoff FrameOffset = 0, MediaOffset = 0;
+            JobTimeline Jobs;
+            std::streamoff FrameOffset = 0, MediaOffset = 0, JobOffset = 0;
         };
 
         struct Picture
@@ -56,6 +58,7 @@ namespace Redflag
         void DrawControl();
         void DrawTimeline();
         void OpenBaseline(const std::filesystem::path& folder);
+        void DrawBaselinePicker();
         static void ReadTrack(Track& track, const std::filesystem::path& folder);
         void DrawFrame(VulkanContext& context, VulkanDraw& device);
         void DrawPicture(const Track& track, const std::filesystem::path& folder, int frame, Picture& cached,
@@ -80,6 +83,7 @@ namespace Redflag
         uint64_t m_Generation = 0, m_PendingCommand = 0;
         double m_NextPoll = 0, m_PlayerClock = 0;
         bool m_Follow = true, m_Playing = false;
+        bool m_ShowJobs = false;
         char m_Comment[2048]{};
         Picture m_Now, m_Before;
         Scope<SpeechPlayback> m_Speech;

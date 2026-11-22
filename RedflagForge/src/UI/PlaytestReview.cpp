@@ -26,7 +26,7 @@ namespace Redflag
         // 留下游戏还没写完的最后一行。一次最多读一批，长回放也能边打开边操作。
         for (int count = 0; count < 600 && std::getline(stream, line) && !stream.eof(); ++count)
         {
-            visit(YAML::Load(line), offset);
+            visit(YAML::Load(line), offset, line.size() + 1);
             offset = stream.tellg();
         }
     }
@@ -44,9 +44,10 @@ namespace Redflag
 
     // ---- 读取会话和新写入的帧 ----
 
-    void PlaytestReview::Select(const std::string& session)
+    void PlaytestReview::Select(const std::string& session, bool jobs)
     {
         m_Requested = session;
+        m_ShowJobs = jobs;
         const char* frame = std::getenv("REDFLAG_REVIEW_FRAME");
         const char* baseline = std::getenv("REDFLAG_REVIEW_BASELINE");
         const char* baseFrame = std::getenv("REDFLAG_REVIEW_BASE_FRAME");
@@ -132,7 +133,7 @@ namespace Redflag
         }
         if (!m_ReferenceFolder.empty() && m_ReferenceFolder != m_Folder) ReadTrack(m_Reference, m_ReferenceFolder);
         ReadLines(m_Folder / "feedback.jsonl", m_NoteOffset,
-                  [&](const YAML::Node& row, std::streamoff) { m_Notes.push_back(row); });
+                  [&](const YAML::Node& row, std::streamoff, size_t) { m_Notes.push_back(row); });
         if (m_Follow && !m_Track.Frames.empty()) m_Selected = int(m_Track.Frames.size()) - 1;
         const auto seek = [](const Track& track, std::optional<uint64_t>& requested, int& index) {
             if (!requested) return false;
@@ -161,14 +162,14 @@ namespace Redflag
 
     void PlaytestReview::ReadTrack(Track& track, const fs::path& folder)
     {
-        ReadLines(folder / "frames.jsonl", track.FrameOffset, [&](const YAML::Node& row, std::streamoff offset) {
+        ReadLines(folder / "frames.jsonl", track.FrameOffset, [&](const YAML::Node& row, std::streamoff offset, size_t) {
             const uint64_t seq = row["seq"].as<uint64_t>();
             track.Frames.push_back({seq, row["seconds"].as<double>(), offset});
             if (row["image"] || row["audio"])
                 track.Files[seq] = {row["image"].as<std::string>(""), row["audio"].as<std::string>(""), seq};
         });
         // 截图进程读出画面的同时，游戏可能又画了几帧。保留采集前后两个帧号。
-        ReadLines(folder / "media.jsonl", track.MediaOffset, [&](const YAML::Node& row, std::streamoff) {
+        ReadLines(folder / "media.jsonl", track.MediaOffset, [&](const YAML::Node& row, std::streamoff, size_t) {
             const uint64_t seq = row["seq"].as<uint64_t>();
             Media& media = track.Files[seq];
             if (row["image"])
@@ -179,6 +180,9 @@ namespace Redflag
             if (row["audio"]) media.Audio = row["audio"].as<std::string>();
             if (row["kind"].as<std::string>("") == "audio") track.VoiceEvents[seq].push_back(row);
         });
+        ReadLines(folder / "jobs.jsonl", track.JobOffset, [&](const YAML::Node& row, std::streamoff, size_t bytes) {
+            track.Jobs.Add(row, bytes);
+        });
     }
 
     void PlaytestReview::OpenBaseline(const fs::path& folder)
@@ -188,6 +192,20 @@ namespace Redflag
         if (folder != m_Folder) ReadTrack(m_Reference, folder);
         const Track& track = folder == m_Folder ? m_Track : m_Reference;
         m_Baseline = track.Frames.empty() ? -1 : folder == m_Folder ? m_Selected : 0;
+    }
+
+    void PlaytestReview::DrawBaselinePicker()
+    {
+        if (!ImGui::BeginCombo("对照试玩", m_ReferenceFolder.empty() ? "选择一局作比较" : m_ReferenceFolder.filename().u8string().c_str())) return;
+        if (ImGui::Selectable("无对照", m_ReferenceFolder.empty()))
+        {
+            m_Baseline = -1;
+            m_ReferenceFolder.clear();
+            m_Reference = {};
+        }
+        for (const fs::path& folder : m_Sessions)
+            if (ImGui::Selectable(folder.filename().u8string().c_str(), folder == m_ReferenceFolder)) OpenBaseline(folder);
+        ImGui::EndCombo();
     }
 
     // ---- 交接操作与批注 ----
@@ -347,14 +365,7 @@ namespace Redflag
                 ImGui::EndPopup();
             }
         }
-        if (ImGui::BeginCombo("对照试玩", m_ReferenceFolder.empty() ? "选择一局作比较"
-                                                                    : m_ReferenceFolder.filename().u8string().c_str()))
-        {
-            for (const fs::path& folder : m_Sessions)
-                if (ImGui::Selectable(folder.filename().u8string().c_str(), folder == m_ReferenceFolder))
-                    OpenBaseline(folder);
-            ImGui::EndCombo();
-        }
+        DrawBaselinePicker();
         const Track& track = m_ReferenceFolder == m_Folder ? m_Track : m_Reference;
         if (m_Baseline >= 0)
         {
@@ -489,6 +500,33 @@ namespace Redflag
         }
         ImGui::Text("第 %llu 帧    %.2f 秒    %.2f 毫秒/帧", (unsigned long long)frame.Seq, frame.Seconds,
                     m_Current["frame_ms"].as<double>(0));
+        if (m_ShowJobs)
+        {
+            if (const auto selected = m_Track.Jobs.ChooseFrame(frame.Seq))
+            {
+                m_RequestedFrame = selected;
+                m_Follow = m_Playing = false;
+                m_NextPoll = 0;
+            }
+            if (ImGui::TreeNode("选择对照记录"))
+            {
+                DrawBaselinePicker();
+                if (m_Baseline >= 0)
+                {
+                    const Track& other = m_ReferenceFolder == m_Folder ? m_Track : m_Reference;
+                    if (const auto selected = other.Jobs.ChooseFrame(other.Frames[m_Baseline].Seq))
+                    {
+                        m_RequestedBaseFrame = selected;
+                        m_NextPoll = 0;
+                    }
+                }
+                ImGui::TreePop();
+            }
+            const Track& reference = m_ReferenceFolder == m_Folder ? m_Track : m_Reference;
+            m_Track.Jobs.Draw(frame.Seq, m_Baseline < 0 ? nullptr : &reference.Jobs,
+                              m_Baseline < 0 ? 0 : reference.Frames[m_Baseline].Seq);
+            return;
+        }
         if (m_Baseline >= 0)
         {
             const Track& reference = m_ReferenceFolder == m_Folder ? m_Track : m_Reference;
@@ -603,7 +641,10 @@ namespace Redflag
             if (m_Selected >= 0)
             {
                 ImGui::Separator();
-                DrawTimeline();
+                if (ImGui::RadioButton("画面与操作", !m_ShowJobs)) m_ShowJobs = false;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("CPU 任务", m_ShowJobs)) m_ShowJobs = true;
+                if (!m_ShowJobs) DrawTimeline();
                 DrawFrame(context, device);
             }
             else
