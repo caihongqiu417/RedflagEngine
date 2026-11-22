@@ -1,0 +1,145 @@
+{
+  "rms_threshold": 0.002,
+  "trials": [
+    {
+      "trial": 1,
+      "ack_ms": 0.75,
+      "last_loud_ms": 111.57,
+      "quiet_ms": 141.88,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 2,
+      "ack_ms": 0.75,
+      "last_loud_ms": 109.98,
+      "quiet_ms": 125.54,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 3,
+      "ack_ms": 1.34,
+      "last_loud_ms": 125.79,
+      "quiet_ms": 140.15,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 4,
+      "ack_ms": 1.23,
+      "last_loud_ms": 108.15,
+      "quiet_ms": 124.51,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 5,
+      "ack_ms": 1.02,
+      "last_loud_ms": 123.83,
+      "quiet_ms": 139.5,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 6,
+      "ack_ms": 0.91,
+      "last_loud_ms": 123.24,
+      "quiet_ms": 138.44,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 7,
+      "ack_ms": 0.8,
+      "last_loud_ms": 111.68,
+      "quiet_ms": 126.69,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 8,
+      "ack_ms": 1.11,
+      "last_loud_ms": 126.67,
+      "quiet_ms": 142.3,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 9,
+      "ack_ms": 0.95,
+      "last_loud_ms": 110.61,
+      "quiet_ms": 140.9,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 10,
+      "ack_ms": 1.15,
+      "last_loud_ms": 124.41,
+      "quiet_ms": 140.18,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 11,
+      "ack_ms": 0.88,
+      "last_loud_ms": 109.01,
+      "quiet_ms": 125.32,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 12,
+      "ack_ms": 1.28,
+      "last_loud_ms": 124.26,
+      "quiet_ms": 139.32,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 13,
+      "ack_ms": 0.71,
+      "last_loud_ms": 124.86,
+      "quiet_ms": 140.79,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 14,
+      "ack_ms": 0.91,
+      "last_loud_ms": 126.2,
+      "quiet_ms": 142.1,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 15,
+      "ack_ms": 0.75,
+      "last_loud_ms": 124.73,
+      "quiet_ms": 154.87,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 16,
+      "ack_ms": 0.84,
+      "last_loud_ms": 125.77,
+      "quiet_ms": 142.39,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 17,
+      "ack_ms": 0.78,
+      "last_loud_ms": 109.09,
+      "quiet_ms": 124.92,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 18,
+      "ack_ms": 0.87,
+      "last_loud_ms": 110.72,
+      "quiet_ms": 127.16,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 19,
+      "ack_ms": 0.64,
+      "last_loud_ms": 110.96,
+      "quiet_ms": 126.56,
+      "max_rms_after_400ms": 0.0
+    },
+    {
+      "trial": 20,
+      "ack_ms": 0.61,
+      "last_loud_ms": 110.99,
+      "quiet_ms": 126.26,
+      "max_rms_after_400ms": 0.0
+    }
+  ]
+}

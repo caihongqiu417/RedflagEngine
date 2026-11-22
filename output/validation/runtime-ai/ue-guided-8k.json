@@ -1,0 +1,333 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_ResidentShrewd_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "llm",
+  "model": "Qwen3-VL-2B-Instruct",
+  "guided_first_record": true,
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T19:00:57.458000",
+      "engine_frame": 1,
+      "message": "LogTemp: NpcLatency request=0B8A076C440FA45E09E40587A00B3CDA stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.138000",
+      "engine_frame": 81,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=0B8A076C440FA45E09E40587A00B3CDA stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.190000",
+      "engine_frame": 84,
+      "message": "LogTemp: NpcLatency request=0B8A076C440FA45E09E40587A00B3CDA stage=model_done sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.190000",
+      "engine_frame": 84,
+      "message": "LogTemp: NpcLatency request=601ABF9A482D76488AC785ACCDCA0272 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.494000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=381A4D3B482EE26A43EDE2A670FA52E9 stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.494000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=381A4D3B482EE26A43EDE2A670FA52E9 stage=listening"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.494000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=381A4D3B482EE26A43EDE2A670FA52E9 pending=1 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.495000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_ResidentShrewd_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T19:00:59.839000",
+      "engine_frame": 115,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=A9075C5E4D3F94F319612D82BD3730C6 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:00.096000",
+      "engine_frame": 128,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=A9075C5E4D3F94F319612D82BD3730C6 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:01.450000",
+      "engine_frame": 207,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 stage=reply_completed sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:03.202000",
+      "engine_frame": 311,
+      "message": "LogTemp: NpcLatency request=8F066593436443EE8B38D8BB3EC943DF stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:04.500000",
+      "engine_frame": 381,
+      "message": "LogTemp: NpcLatency request=499236D24E3634B19419D6BD9F36CC4B stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:05.583000",
+      "engine_frame": 445,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=8F066593436443EE8B38D8BB3EC943DF stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:05.649000",
+      "engine_frame": 449,
+      "message": "LogTemp: NpcLatency request=8F066593436443EE8B38D8BB3EC943DF stage=model_done sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:06.287000",
+      "engine_frame": 481,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=93B1B6284F9442BD8FA26BB4DA6D0EA1 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:06.548000",
+      "engine_frame": 496,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=93B1B6284F9442BD8FA26BB4DA6D0EA1 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:07.901000",
+      "engine_frame": 571,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 stage=reply_completed sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:10.532000",
+      "engine_frame": 722,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=499236D24E3634B19419D6BD9F36CC4B stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:10.611000",
+      "engine_frame": 726,
+      "message": "LogTemp: NpcLatency request=499236D24E3634B19419D6BD9F36CC4B stage=model_done sentences=2"
+    },
+    {
+      "utc": "2026-11-22T19:01:11.222000",
+      "engine_frame": 763,
+      "message": "LogTemp: NpcLatency speech=381A4D3B482EE26A43EDE2A670FA52E9 turn=3EBECAB545307051D496C7B45BB614F9 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:11.472000",
+      "engine_frame": 778,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=3EBECAB545307051D496C7B45BB614F9 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:13.121000",
+      "engine_frame": 876,
+      "message": "LogTemp: NpcLatency speech=381A4D3B482EE26A43EDE2A670FA52E9 turn=06BC9DCD41896120A587409FF08E4797 stage=play_scheduled sequence=1 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:13.371000",
+      "engine_frame": 891,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=06BC9DCD41896120A587409FF08E4797 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:16.154000",
+      "engine_frame": 58,
+      "message": "LogTemp: NpcLatency speech=381A4D3B482EE26A43EDE2A670FA52E9 stage=reply_completed sentences=2"
+    },
+    {
+      "utc": "2026-11-22T19:01:16.181000",
+      "engine_frame": 59,
+      "message": "LogTemp: NpcLatency request=4650669C4B89D7541D3C0FBCACBC152E stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:18.761000",
+      "engine_frame": 203,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=4650669C4B89D7541D3C0FBCACBC152E stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:18.809000",
+      "engine_frame": 206,
+      "message": "LogTemp: NpcLatency request=4650669C4B89D7541D3C0FBCACBC152E stage=model_done sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:18.811000",
+      "engine_frame": 206,
+      "message": "LogTemp: NpcLatency request=E0887E63425A546F24F500B0261C9E2C stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:19.449000",
+      "engine_frame": 242,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=FF6A6DFE48B816172712B9BAB2276960 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:19.707000",
+      "engine_frame": 255,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=FF6A6DFE48B816172712B9BAB2276960 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:21.051000",
+      "engine_frame": 331,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 stage=reply_completed sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:23.317000",
+      "engine_frame": 460,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=E0887E63425A546F24F500B0261C9E2C stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:23.374000",
+      "engine_frame": 463,
+      "message": "LogTemp: NpcLatency request=E0887E63425A546F24F500B0261C9E2C stage=model_done sentences=2"
+    },
+    {
+      "utc": "2026-11-22T19:01:24.049000",
+      "engine_frame": 504,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=9992AABA4A7CE2F28C3A39889CE01DA1 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:24.300000",
+      "engine_frame": 519,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=9992AABA4A7CE2F28C3A39889CE01DA1 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:25.951000",
+      "engine_frame": 618,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=177C8B7C4D11600B6E643DABE8F20C53 stage=play_scheduled sequence=1 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:26.201000",
+      "engine_frame": 633,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=177C8B7C4D11600B6E643DABE8F20C53 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:28.967000",
+      "engine_frame": 799,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 stage=reply_completed sentences=2"
+    },
+    {
+      "utc": "2026-11-22T19:01:28.995000",
+      "engine_frame": 800,
+      "message": "LogTemp: NpcLatency request=C401D63A49A5E652BEDD639AB354ECDD stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:31.415000",
+      "engine_frame": 934,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=C401D63A49A5E652BEDD639AB354ECDD stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:31.465000",
+      "engine_frame": 937,
+      "message": "LogTemp: NpcLatency request=C401D63A49A5E652BEDD639AB354ECDD stage=model_done sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:31.467000",
+      "engine_frame": 937,
+      "message": "LogTemp: NpcLatency request=D9964B3B496D5CD843B570824A4709A7 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:32.133000",
+      "engine_frame": 971,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 turn=71AEFF2D484CE2739B7CDA9BE7B338F9 stage=play_scheduled sequence=0 bytes=0"
+    },
+    {
+      "utc": "2026-11-22T19:01:32.388000",
+      "engine_frame": 984,
+      "message": "LogTemp: Warning: NpcSpeech text_only turn=71AEFF2D484CE2739B7CDA9BE7B338F9 reason=NoSynthesizedAudio"
+    },
+    {
+      "utc": "2026-11-22T19:01:33.747000",
+      "engine_frame": 57,
+      "message": "LogTemp: NpcLatency speech=00000000000000000000000000000000 stage=reply_completed sentences=1"
+    },
+    {
+      "utc": "2026-11-22T19:01:35.689000",
+      "engine_frame": 168,
+      "message": "LogDeliveryNpcAgent: NpcLatency request=D9964B3B496D5CD843B570824A4709A7 stage=approved"
+    },
+    {
+      "utc": "2026-11-22T19:01:35.758000",
+      "engine_frame": 172,
+      "message": "LogTemp: NpcLatency request=D9964B3B496D5CD843B570824A4709A7 stage=model_done sentences=2"
+    }
+  ],
+  "model_calls": [
+    {
+      "status": 200,
+      "request_bytes": 20212,
+      "duration_ms": 1693.6
+    },
+    {
+      "status": 200,
+      "request_bytes": 21038,
+      "duration_ms": 3334.1
+    },
+    {
+      "status": 200,
+      "request_bytes": 21642,
+      "duration_ms": 2407.1
+    },
+    {
+      "status": 200,
+      "request_bytes": 24171,
+      "duration_ms": 6100.7
+    },
+    {
+      "status": 200,
+      "request_bytes": 22336,
+      "duration_ms": 2617.6
+    },
+    {
+      "status": 200,
+      "request_bytes": 22191,
+      "duration_ms": 4537.1
+    },
+    {
+      "status": 200,
+      "request_bytes": 23040,
+      "duration_ms": 2460.8
+    },
+    {
+      "status": 200,
+      "request_bytes": 22888,
+      "duration_ms": 4253.3
+    }
+  ],
+  "player_responses": [
+    {
+      "request_id": "499236d2-4e36-34b1-9419-d6bd9f36cc4b",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": null,
+      "chosen_candidate_id": "6cb7ad80-435f-1abf-97e9-bca04b9c780a",
+      "speech": [
+        "哎，你这快递员，又来送东西了？",
+        "我跟你说了，别再当着人说让我当着人送东西，你这人真会挑时间。"
+      ],
+      "offered_actions": [
+        "Fight",
+        "Flee",
+        "LieDown",
+        "LookAt",
+        "MoveAside",
+        "MoveTo",
+        "Pace",
+        "StrikeOnce",
+        "Wait"
+      ],
+      "chosen": "Wait:-"
+    }
+  ],
+  "validation_errors": [
+    {
+      "request": "601abf9a-482d-7648-8ac7-85accdca0272",
+      "source": "ambient",
+      "reason": "model_cancelled_or_timeout",
+      "file": "streaming.py",
+      "line": 553,
+      "function": "stream_api"
+    }
+  ],
+  "raw_log_sha256": "0baecd1be6de67f581c14393e14ab6a08ee00fc19288d72356c006daa58197ca"
+}

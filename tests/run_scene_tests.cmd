@@ -19,6 +19,10 @@ if "%~1"=="--npc-memory" (
     set "RF_TEST_SOURCE=examples\npc-memory\MemoryHost.cpp"
     set "RF_TEST_NAME=MemoryHost"
 )
+if "%~1"=="--npc-voice-latency" (
+    set "RF_TEST_SOURCE=tests\NpcVoiceLatency.cpp"
+    set "RF_TEST_NAME=NpcVoiceLatency"
+)
 if "%~1"=="--npc-environment" (
     set "RF_TEST_SOURCE=tests\EnvironmentZoneTests.cpp"
     set "RF_TEST_NAME=EnvironmentZoneTests"

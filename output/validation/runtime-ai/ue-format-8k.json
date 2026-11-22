@@ -1,0 +1,238 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_ResidentShrewd_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "llm",
+  "model": "Qwen3-VL-2B-Instruct",
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T18:43:03.208000",
+      "engine_frame": 1,
+      "message": "LogTemp: NpcLatency request=FF40394245B7887F60ADDE9FE8ECC7FF stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:04.277000",
+      "engine_frame": 40,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=187329A545C717B88D739086F2B497B5 request=FF40394245B7887F60ADDE9FE8ECC7FF accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:04.277000",
+      "engine_frame": 40,
+      "message": "LogTemp: NpcLatency request=C56802AF43904FB1A010F29E7E7BA23E stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:05.492000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=8B34ADE34E4C6C51FDA44F9EADB0C834 stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:05.492000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=8B34ADE34E4C6C51FDA44F9EADB0C834 stage=listening"
+    },
+    {
+      "utc": "2026-11-22T18:43:05.492000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=8B34ADE34E4C6C51FDA44F9EADB0C834 pending=1 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:05.492000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_ResidentShrewd_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T18:43:07.585000",
+      "engine_frame": 221,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=08DAF86E49B0ACC384DBB788749EC840 request=C56802AF43904FB1A010F29E7E7BA23E accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:07.586000",
+      "engine_frame": 221,
+      "message": "LogTemp: NpcLatency request=E9C2C8344CE6433F2BF5848B1EB1A055 stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T18:43:11.685000",
+      "engine_frame": 452,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=08DAF86E49B0ACC384DBB788749EC840 request=E9C2C8344CE6433F2BF5848B1EB1A055 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:11.686000",
+      "engine_frame": 452,
+      "message": "LogTemp: NpcLatency request=361E66ED43BE583FA4657292510A49A6 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:13.607000",
+      "engine_frame": 559,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=187329A545C717B88D739086F2B497B5 request=361E66ED43BE583FA4657292510A49A6 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:15.607000",
+      "engine_frame": 679,
+      "message": "LogTemp: NpcLatency request=4D70F222494414FC728B9ABC7ED09EFB stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:15.692000",
+      "engine_frame": 684,
+      "message": "LogTemp: NpcLatency request=53E21B104115830176A93B8DC77BF0CE stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T18:43:16.692000",
+      "engine_frame": 744,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=187329A545C717B88D739086F2B497B5 request=4D70F222494414FC728B9ABC7ED09EFB accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:19.880000",
+      "engine_frame": 916,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=08DAF86E49B0ACC384DBB788749EC840 request=53E21B104115830176A93B8DC77BF0CE accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:43:20.695000",
+      "engine_frame": 965,
+      "message": "LogTemp: NpcLatency request=9A8CC2F148710D6FD21AD8AF0F85C463 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:43:22.550000",
+      "engine_frame": 68,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=187329A545C717B88D739086F2B497B5 request=9A8CC2F148710D6FD21AD8AF0F85C463 accepted=0 reason=TransportFailure"
+    }
+  ],
+  "model_calls": [
+    {
+      "status": 200,
+      "request_bytes": 35590,
+      "duration_ms": 1074.3
+    },
+    {
+      "status": 200,
+      "request_bytes": 36491,
+      "duration_ms": 3329.1
+    },
+    {
+      "status": 200,
+      "request_bytes": 40759,
+      "duration_ms": 4110.5
+    },
+    {
+      "status": 200,
+      "request_bytes": 36830,
+      "duration_ms": 1951.4
+    },
+    {
+      "status": 200,
+      "request_bytes": 36830,
+      "duration_ms": 1114.0
+    },
+    {
+      "status": 200,
+      "request_bytes": 40759,
+      "duration_ms": 4224.6
+    },
+    {
+      "status": 200,
+      "request_bytes": 36820,
+      "duration_ms": 1898.5
+    }
+  ],
+  "player_responses": [
+    {
+      "request_id": "e9c2c834-4ce6-433f-2bf5-848b1eb1a055",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "ValueError",
+      "chosen_candidate_id": null,
+      "speech": []
+    },
+    {
+      "request_id": "53e21b10-4115-8301-76a9-3b8dc77bf0ce",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "ValueError",
+      "chosen_candidate_id": null,
+      "speech": []
+    }
+  ],
+  "validation_errors": [
+    {
+      "request": "ff403942-45b7-887f-60ad-de9fe8ecc7ff",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 11,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "c56802af-4390-4fb1-a010-f29e7e7ba23e",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 42,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "e9c2c834-4ce6-433f-2bf5-848b1eb1a055",
+      "source": "player",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 38,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "361e66ed-43be-583f-a465-7292510a49a6",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 11,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "4d70f222-4944-14fc-728b-9abc7ed09efb",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 11,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "53e21b10-4115-8301-76a9-3b8dc77bf0ce",
+      "source": "player",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 20,
+      "emotion_present": false,
+      "emotion_allowed": false
+    },
+    {
+      "request": "9a8cc2f1-4871-0d6f-d21a-d8af0f85c463",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action",
+      "speech_chars": 11,
+      "emotion_present": false,
+      "emotion_allowed": false
+    }
+  ],
+  "raw_log_sha256": "9c5d6f25b421fd708bec0abc900c581c389edf2beedd01834255b7b2534dc702"
+}

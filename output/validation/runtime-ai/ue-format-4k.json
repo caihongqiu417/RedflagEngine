@@ -1,0 +1,336 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_ResidentShrewd_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "llm",
+  "model": "Qwen3-VL-2B-Instruct",
+  "guided_first_record": false,
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T19:02:09.925000",
+      "engine_frame": 2,
+      "message": "LogTemp: NpcLatency request=3CA2EEBE4AA65B95D7E2EEA32E226743 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:10.076000",
+      "engine_frame": 9,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=7BC89E6045D936B2AB54C1A7DD2B1AEE request=3CA2EEBE4AA65B95D7E2EEA32E226743 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:10.076000",
+      "engine_frame": 9,
+      "message": "LogTemp: NpcLatency request=8DA4FA4C42B969C649EFCA8C64779221 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:10.130000",
+      "engine_frame": 12,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A90044D94B51F7716EAC2BB333A97F25 request=8DA4FA4C42B969C649EFCA8C64779221 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.599000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=BB63C67B47A71D07CF4D15B1136C887D stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.599000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=BB63C67B47A71D07CF4D15B1136C887D stage=listening"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.599000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=BB63C67B47A71D07CF4D15B1136C887D pending=1 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.599000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_ResidentShrewd_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.614000",
+      "engine_frame": 101,
+      "message": "LogTemp: NpcLatency request=97EB3BFE49813078C80C52A0446DA86F stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.678000",
+      "engine_frame": 105,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A90044D94B51F7716EAC2BB333A97F25 request=97EB3BFE49813078C80C52A0446DA86F accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.861000",
+      "engine_frame": 116,
+      "message": "LogTemp: NpcLatency request=7F7327374DB13E98DC0E65986D392D4C stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:11.895000",
+      "engine_frame": 118,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=7BC89E6045D936B2AB54C1A7DD2B1AEE request=7F7327374DB13E98DC0E65986D392D4C accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:13.680000",
+      "engine_frame": 225,
+      "message": "LogTemp: NpcLatency request=7C63F6DE42A48829682C779B8313FCF2 stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T19:02:13.714000",
+      "engine_frame": 227,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A90044D94B51F7716EAC2BB333A97F25 request=7C63F6DE42A48829682C779B8313FCF2 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:13.897000",
+      "engine_frame": 238,
+      "message": "LogTemp: NpcLatency request=2CD24F52450B4ED96415FE9E3615DB67 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:13.946000",
+      "engine_frame": 241,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=7BC89E6045D936B2AB54C1A7DD2B1AEE request=2CD24F52450B4ED96415FE9E3615DB67 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:17.728000",
+      "engine_frame": 455,
+      "message": "LogTemp: NpcLatency request=472F9EB54389FE0B556B7C8FA77FDEFF stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T19:02:17.780000",
+      "engine_frame": 458,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=A90044D94B51F7716EAC2BB333A97F25 request=472F9EB54389FE0B556B7C8FA77FDEFF accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T19:02:17.961000",
+      "engine_frame": 469,
+      "message": "LogTemp: NpcLatency request=9B2C33324A99529C393F078F3DCC26D4 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T19:02:17.994000",
+      "engine_frame": 471,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=7BC89E6045D936B2AB54C1A7DD2B1AEE request=9B2C33324A99529C393F078F3DCC26D4 accepted=0 reason=TransportFailure"
+    }
+  ],
+  "model_calls": [
+    {
+      "status": 400,
+      "request_bytes": 35590,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4677,
+        "message": "request (4677 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 108.1
+    },
+    {
+      "status": 400,
+      "request_bytes": 36491,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4868,
+        "message": "request (4868 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 18.4
+    },
+    {
+      "status": 400,
+      "request_bytes": 40615,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 5763,
+        "message": "request (5763 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 30.1
+    },
+    {
+      "status": 400,
+      "request_bytes": 36830,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4931,
+        "message": "request (4931 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 16.2
+    },
+    {
+      "status": 400,
+      "request_bytes": 40759,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 5821,
+        "message": "request (5821 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 16.5
+    },
+    {
+      "status": 400,
+      "request_bytes": 36830,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4931,
+        "message": "request (4931 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 14.8
+    },
+    {
+      "status": 400,
+      "request_bytes": 40759,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 5827,
+        "message": "request (5827 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 32.6
+    },
+    {
+      "status": 400,
+      "request_bytes": 36830,
+      "reason": {
+        "type": "exceed_context_size_error",
+        "code": 400,
+        "n_ctx": 4096,
+        "n_prompt_tokens": 4931,
+        "message": "request (4931 tokens) exceeds the available context size (4096 tokens), try increasing it"
+      },
+      "duration_ms": 15.1
+    }
+  ],
+  "player_responses": [
+    {
+      "request_id": "97eb3bfe-4981-3078-c80c-52a0446da86f",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "HTTPError",
+      "chosen_candidate_id": null,
+      "speech": [],
+      "offered_actions": [
+        "Fight",
+        "Flee",
+        "LieDown",
+        "LookAt",
+        "MoveAside",
+        "Pace",
+        "StrikeOnce",
+        "Wait"
+      ]
+    },
+    {
+      "request_id": "7c63f6de-42a4-8829-682c-779b8313fcf2",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "HTTPError",
+      "chosen_candidate_id": null,
+      "speech": [],
+      "offered_actions": [
+        "Fight",
+        "Flee",
+        "LieDown",
+        "LookAt",
+        "MoveAside",
+        "MoveTo",
+        "Pace",
+        "StrikeOnce",
+        "Wait"
+      ]
+    },
+    {
+      "request_id": "472f9eb5-4389-fe0b-556b-7c8fa77fdeff",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "HTTPError",
+      "chosen_candidate_id": null,
+      "speech": [],
+      "offered_actions": [
+        "Fight",
+        "Flee",
+        "LieDown",
+        "LookAt",
+        "MoveAside",
+        "MoveTo",
+        "Pace",
+        "StrikeOnce",
+        "Wait"
+      ]
+    }
+  ],
+  "validation_errors": [
+    {
+      "request": "3ca2eebe-4aa6-5b95-d7e2-eea32e226743",
+      "source": "ambient",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "8da4fa4c-42b9-69c6-49ef-ca8c64779221",
+      "source": "ambient",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "97eb3bfe-4981-3078-c80c-52a0446da86f",
+      "source": "player",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "7f732737-4db1-3e98-dc0e-65986d392d4c",
+      "source": "ambient",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "7c63f6de-42a4-8829-682c-779b8313fcf2",
+      "source": "player",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "2cd24f52-450b-4ed9-6415-fe9e3615db67",
+      "source": "ambient",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "472f9eb5-4389-fe0b-556b-7c8fa77fdeff",
+      "source": "player",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    },
+    {
+      "request": "9b2c3332-4a99-529c-393f-078f3dcc26d4",
+      "source": "ambient",
+      "reason": "HTTPError",
+      "file": "request.py",
+      "line": 611,
+      "function": "http_error_default"
+    }
+  ],
+  "raw_log_sha256": "dbe46aae52792921c054bf949ad93f9f09bc1c6140fafa1f5ba24c4b2c479e4c"
+}

@@ -1,0 +1,172 @@
+{
+  "scene": "Watt-Station.redflag",
+  "npc": 1102,
+  "client": [
+    640,
+    360
+  ],
+  "exe_sha256": "3fdd4b8626ddbcce9dd088e6187a44a3552d675c3cc1a99f3d17338a03e48d90",
+  "endpoint": "local gateway",
+  "trials": [
+    {
+      "trial": 1,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 720.46,
+      "action_ms": 730.846,
+      "observed_updates": 2
+    },
+    {
+      "trial": 2,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 653.794,
+      "action_ms": 653.794,
+      "observed_updates": 2
+    },
+    {
+      "trial": 3,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 692.058,
+      "action_ms": 692.058,
+      "observed_updates": 2
+    },
+    {
+      "trial": 4,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 646.229,
+      "action_ms": 646.229,
+      "observed_updates": 2
+    },
+    {
+      "trial": 5,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 658.737,
+      "action_ms": 658.737,
+      "observed_updates": 2
+    },
+    {
+      "trial": 6,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 672.826,
+      "action_ms": 672.826,
+      "observed_updates": 2
+    },
+    {
+      "trial": 7,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 694.663,
+      "action_ms": 694.663,
+      "observed_updates": 2
+    },
+    {
+      "trial": 8,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 679.711,
+      "action_ms": 679.711,
+      "observed_updates": 2
+    },
+    {
+      "trial": 9,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 645.255,
+      "action_ms": 645.255,
+      "observed_updates": 2
+    },
+    {
+      "trial": 10,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 656.575,
+      "action_ms": 656.575,
+      "observed_updates": 2
+    },
+    {
+      "trial": 11,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 763.843,
+      "action_ms": 763.843,
+      "observed_updates": 2
+    },
+    {
+      "trial": 12,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 752.28,
+      "action_ms": 752.28,
+      "observed_updates": 2
+    },
+    {
+      "trial": 13,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 710.822,
+      "action_ms": 710.822,
+      "observed_updates": 2
+    },
+    {
+      "trial": 14,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 735.065,
+      "action_ms": 735.065,
+      "observed_updates": 2
+    },
+    {
+      "trial": 15,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 741.689,
+      "action_ms": 741.689,
+      "observed_updates": 2
+    },
+    {
+      "trial": 16,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 662.433,
+      "action_ms": 662.433,
+      "observed_updates": 2
+    },
+    {
+      "trial": 17,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 631.419,
+      "action_ms": 631.419,
+      "observed_updates": 2
+    },
+    {
+      "trial": 18,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 705.263,
+      "action_ms": 705.263,
+      "observed_updates": 2
+    },
+    {
+      "trial": 19,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 693.206,
+      "action_ms": 693.206,
+      "observed_updates": 2
+    },
+    {
+      "trial": 20,
+      "status": "moved",
+      "decision": "share → share",
+      "choice_ms": 718.753,
+      "action_ms": 718.753,
+      "observed_updates": 2
+    }
+  ]
+}

@@ -30,6 +30,8 @@ def main():
     parser.add_argument("--exe",type=Path,default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
     parser.add_argument("--preview",action="store_true",help="只截正式游戏的开场画面")
     parser.add_argument("--npc-motion",action="store_true",help="通过游戏脚本要求队友取药和递药，记录第三人称窗口")
+    parser.add_argument("--latency",choices=("reserve","walk"),help="在正式游戏内记录发令到保留库存或位置改变的耗时")
+    parser.add_argument("--trials",type=int,default=20)
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
     parser.add_argument("--animation-actors", action="store_true", help="在双角色测试场景检查 C# 通知与动作打断")
     parser.add_argument("--animator", type=Path, help="把另存的动作表用于本次落地测试")
@@ -56,7 +58,7 @@ def main():
     sources = sorted((ROOT/"SandboxProject/Source").rglob("*.cs"))
     subprocess.run([str(compiler),"/nologo","/target:library","/out:"+str(scripts/"Sandbox.dll"),
                     "/reference:"+str(core),*map(str,sources),str(ROOT/"tests/StationRecorder.cs"),
-                    str(ROOT/"tests/StationMotionCapture.cs")],check=True)
+                    str(ROOT/"tests/StationMotionCapture.cs"),str(ROOT/"tests/StationLatency.cs")],check=True)
     source = ROOT/"RedflagForge/assets/scenes/Watt-Station.redflag"
     scene = yaml.safe_load(source.read_text(encoding="utf8"))
     if args.start_xz:
@@ -88,6 +90,13 @@ def main():
             TransformComponent=dict(Translation=[0,0,0],Rotation=[0,0,0],Scale=[1,1,1]),
             ScriptComponent=dict(Class="StationTest.MotionCapture",ScriptFields=[
                 dict(Name="Technician",Type="Entity",Value=1102),dict(Name="Player",Type="Entity",Value=1101)])))
+    if args.latency:
+        scene["Entities"] = [actor for actor in scene["Entities"] if actor["Entity"] != 1900]
+        scene["Entities"].append(dict(Entity=1902, TagComponent=dict(Tag="NPC 计时"),
+            TransformComponent=dict(Translation=[0,0,0],Rotation=[0,0,0],Scale=[1,1,1]),
+            ScriptComponent=dict(Class="StationTest.Latency",ScriptFields=[
+                dict(Name="Technician", Type="Entity", Value=1102),dict(Name="Count",Type="Int",Value=args.trials),
+                dict(Name="Moving", Type="Bool", Value=args.latency=="walk")])))
     sample = work/"assets/scenes/Watt-Station.redflag"
     sample.write_text(yaml.safe_dump(scene,allow_unicode=True,sort_keys=False),encoding="utf8")
     shutil.copy2(str(source)+".render.yaml",str(sample)+".render.yaml")
@@ -127,6 +136,28 @@ def main():
     try:
         hwnd = wait_for(window,process)
         win32gui.PostMessage(hwnd,win32con.WM_SETFOCUS,0,0)
+        if args.latency:
+            # 两个游戏在相同的 640 × 360 客户区绘制，各自保留正式地图、渲染器和游戏时钟。
+            left,top,wx,wy=win32gui.GetWindowRect(hwnd)
+            _,_,cw,ch=win32gui.GetClientRect(hwnd)
+            win32gui.SetWindowPos(hwnd,None,0,0,640+wx-left-cw,360+wy-top-ch,
+                                  win32con.SWP_NOMOVE|win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE)
+            record=work/"latency.tsv"
+            def samples():
+                if not record.exists(): return []
+                return [row for row in csv.reader(record.read_text(encoding="utf8").splitlines(),delimiter="\t") if len(row)==6]
+            wait_for(lambda: len(samples())>=args.trials,process,45+12*args.trials)
+            _,_,cw,ch=win32gui.GetClientRect(hwnd)
+            trials=[dict(trial=int(i),status=status,decision=choice,choice_ms=float(answer),action_ms=float(action),
+                         observed_updates=int(frames)) for i,status,choice,answer,action,frames in samples()]
+            target=ROOT/"output/validation/runtime-ai"/("forge-"+args.latency+"-latency.json")
+            note=dict(scene=source.name,npc=1102,client=[cw,ch],exe_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),
+                      endpoint="local gateway", trials=trials)
+            target.write_text(json.dumps(note,ensure_ascii=False,indent=2)+"\n",encoding="utf8")
+            win32gui.PostMessage(hwnd,win32con.WM_CLOSE,0,0)
+            assert win32event.WaitForSingleObject(process,25000)==win32con.WAIT_OBJECT_0
+            print(target)
+            return
         def key(k, down):
             code = ord(k) if isinstance(k,str) else k
             flags = 1 | (win32api.MapVirtualKey(code,0)<<16)

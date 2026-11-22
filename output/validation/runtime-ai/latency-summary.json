@@ -1,0 +1,80 @@
+{
+  "percentile_method": "linear interpolation at (n−1)p, milliseconds",
+  "voice": {
+    "transcript_ms": {
+      "n": 20,
+      "p50_ms": 238.68,
+      "p95_ms": 257.34
+    },
+    "give_ms": {
+      "n": 20,
+      "p50_ms": 453.71,
+      "p95_ms": 523.6
+    },
+    "inventory_ms": {
+      "n": 20,
+      "p50_ms": 1187.26,
+      "p95_ms": 1257.61
+    },
+    "receipt_ms": {
+      "n": 20,
+      "p50_ms": 2454.09,
+      "p95_ms": 2521.15
+    },
+    "first_voice_ms": {
+      "n": 20,
+      "p50_ms": 3239.08,
+      "p95_ms": 3293.51
+    },
+    "stop_call_ms": {
+      "n": 20,
+      "p50_ms": 11.29,
+      "p95_ms": 14.98
+    }
+  },
+  "device": {
+    "first_voice": {
+      "n": 20,
+      "p50_ms": 717.01,
+      "p95_ms": 784.58
+    },
+    "stop_call": {
+      "n": 20,
+      "p50_ms": 9.71,
+      "p95_ms": 14.02
+    }
+  },
+  "webrtc": {
+    "ack_ms": {
+      "n": 20,
+      "p50_ms": 0.88,
+      "p95_ms": 1.28
+    },
+    "last_loud_ms": {
+      "n": 20,
+      "p50_ms": 117.46,
+      "p95_ms": 126.22
+    },
+    "quiet_ms": {
+      "n": 20,
+      "p50_ms": 139.41,
+      "p95_ms": 143.01
+    }
+  },
+  "reserve": {
+    "attempted": 20,
+    "actions": {
+      "n": 20,
+      "p50_ms": 748.61,
+      "p95_ms": 909.64
+    }
+  },
+  "walk": {
+    "attempted": 20,
+    "actions": {
+      "n": 20,
+      "p50_ms": 692.63,
+      "p95_ms": 752.86
+    }
+  }
+}

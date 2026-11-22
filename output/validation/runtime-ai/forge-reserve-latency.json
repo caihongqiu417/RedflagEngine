@@ -1,0 +1,172 @@
+{
+  "scene": "Watt-Station.redflag",
+  "npc": 1102,
+  "client": [
+    640,
+    360
+  ],
+  "exe_sha256": "3fdd4b8626ddbcce9dd088e6187a44a3552d675c3cc1a99f3d17338a03e48d90",
+  "endpoint": "local gateway",
+  "trials": [
+    {
+      "trial": 1,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 764.656,
+      "action_ms": 776.725,
+      "observed_updates": 2
+    },
+    {
+      "trial": 2,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 692.807,
+      "action_ms": 692.807,
+      "observed_updates": 2
+    },
+    {
+      "trial": 3,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 637.565,
+      "action_ms": 637.565,
+      "observed_updates": 2
+    },
+    {
+      "trial": 4,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 670.256,
+      "action_ms": 670.256,
+      "observed_updates": 2
+    },
+    {
+      "trial": 5,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 650.066,
+      "action_ms": 650.066,
+      "observed_updates": 2
+    },
+    {
+      "trial": 6,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 641.693,
+      "action_ms": 641.693,
+      "observed_updates": 2
+    },
+    {
+      "trial": 7,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 642.832,
+      "action_ms": 642.832,
+      "observed_updates": 2
+    },
+    {
+      "trial": 8,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 669.118,
+      "action_ms": 669.118,
+      "observed_updates": 2
+    },
+    {
+      "trial": 9,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 744.525,
+      "action_ms": 744.525,
+      "observed_updates": 2
+    },
+    {
+      "trial": 10,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 784.57,
+      "action_ms": 784.57,
+      "observed_updates": 2
+    },
+    {
+      "trial": 11,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 752.697,
+      "action_ms": 752.697,
+      "observed_updates": 2
+    },
+    {
+      "trial": 12,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 860.486,
+      "action_ms": 860.486,
+      "observed_updates": 2
+    },
+    {
+      "trial": 13,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 929.106,
+      "action_ms": 929.106,
+      "observed_updates": 2
+    },
+    {
+      "trial": 14,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 808.585,
+      "action_ms": 808.585,
+      "observed_updates": 2
+    },
+    {
+      "trial": 15,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 742.333,
+      "action_ms": 742.333,
+      "observed_updates": 2
+    },
+    {
+      "trial": 16,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 795.939,
+      "action_ms": 795.939,
+      "observed_updates": 2
+    },
+    {
+      "trial": 17,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 789.711,
+      "action_ms": 789.711,
+      "observed_updates": 2
+    },
+    {
+      "trial": 18,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 908.616,
+      "action_ms": 908.616,
+      "observed_updates": 2
+    },
+    {
+      "trial": 19,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 839.268,
+      "action_ms": 839.268,
+      "observed_updates": 2
+    },
+    {
+      "trial": 20,
+      "status": "reserved",
+      "decision": "reserve → reserve",
+      "choice_ms": 685.904,
+      "action_ms": 685.904,
+      "observed_updates": 2
+    }
+  ]
+}

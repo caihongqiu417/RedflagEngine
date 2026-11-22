@@ -1,0 +1,194 @@
+{
+  "engine": "Delivery Unreal 5.8 packaged Windows",
+  "exe_sha256": "15594c696cd8f2aa29caea902910a1d3289dd2b4b84c2bc129ba35ef44b62dde",
+  "npc": "BP_ResidentShrewd_C",
+  "prompt": "帮我留一份医疗包，等我过来再给我。",
+  "provider": "llm",
+  "model": "Qwen3-VL-2B-Instruct",
+  "null_rhi": false,
+  "window": [
+    640,
+    360
+  ],
+  "markers": [
+    {
+      "utc": "2026-11-22T18:41:32.054000",
+      "engine_frame": 1,
+      "message": "LogTemp: NpcLatency request=44A23F114C7E060920974F896C14BF2D stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.024000",
+      "engine_frame": 100,
+      "message": "LogTemp: NpcLatency reaction=A23242DE436F6566AB9E27B58FB067DE stage=reaction_play_requested kind=0 role=3 late_ms=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.025000",
+      "engine_frame": 100,
+      "message": "LogDeliveryNpcAgent: NpcLatency speech=A23242DE436F6566AB9E27B58FB067DE stage=listening"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.025000",
+      "engine_frame": 100,
+      "message": "LogTemp: ResidentConversation accepted: player=BP_DeliveryManPC_C_2147481841 resident=BP_ResidentShrewd_C_0 speech=A23242DE436F6566AB9E27B58FB067DE pending=1 activeAction=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.026000",
+      "engine_frame": 100,
+      "message": "Called 'Submit /Game/Level/TestForCharacter.TestForCharacter:PersistentLevel.BP_ResidentShrewd_C_0 帮我留一份医疗包，等我过来再给我。' on 1 instance(s) of class '/Script/Delivery.DeliveryConversationComponent' (1 succeeded)"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.990000",
+      "engine_frame": 158,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=FC2C4E4E41D86C9B8A203EB24C5E494F request=44A23F114C7E060920974F896C14BF2D accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:41:34.990000",
+      "engine_frame": 158,
+      "message": "LogTemp: NpcLatency request=CCDEF892407329BCB8C74BB582685DB5 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:38.257000",
+      "engine_frame": 344,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=4D2D127B4C66BB945EAE2D81D6E8CFEE request=CCDEF892407329BCB8C74BB582685DB5 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:41:38.258000",
+      "engine_frame": 344,
+      "message": "LogTemp: NpcLatency request=7E6F64BC4E9346A0594F45A4C4A69C03 stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T18:41:41.230000",
+      "engine_frame": 509,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=4D2D127B4C66BB945EAE2D81D6E8CFEE request=7E6F64BC4E9346A0594F45A4C4A69C03 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:41:41.230000",
+      "engine_frame": 509,
+      "message": "LogTemp: NpcLatency request=D87DBA5144A0DD36BC65ACBB725C9835 stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:43.338000",
+      "engine_frame": 629,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=FC2C4E4E41D86C9B8A203EB24C5E494F request=D87DBA5144A0DD36BC65ACBB725C9835 accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:41:45.237000",
+      "engine_frame": 743,
+      "message": "LogTemp: NpcLatency request=52EA7F4A438BF5C95C011FA4864928CE stage=http_start player=1"
+    },
+    {
+      "utc": "2026-11-22T18:41:50.107000",
+      "engine_frame": 18,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=4D2D127B4C66BB945EAE2D81D6E8CFEE request=52EA7F4A438BF5C95C011FA4864928CE accepted=0 reason=TransportFailure"
+    },
+    {
+      "utc": "2026-11-22T18:41:50.107000",
+      "engine_frame": 18,
+      "message": "LogTemp: NpcLatency request=63786EBF42B30044CBF802B2137D6B6E stage=http_start player=0"
+    },
+    {
+      "utc": "2026-11-22T18:41:52.108000",
+      "engine_frame": 130,
+      "message": "LogDeliveryNpcAgent: Display: Decision npc=FC2C4E4E41D86C9B8A203EB24C5E494F request=63786EBF42B30044CBF802B2137D6B6E accepted=0 reason=TransportFailure"
+    }
+  ],
+  "model_calls": [
+    {
+      "status": 200,
+      "request_bytes": 35590,
+      "duration_ms": 2935.4
+    },
+    {
+      "status": 200,
+      "request_bytes": 36491,
+      "duration_ms": 3298.5
+    },
+    {
+      "status": 200,
+      "request_bytes": 40759,
+      "duration_ms": 2992.1
+    },
+    {
+      "status": 200,
+      "request_bytes": 36378,
+      "duration_ms": 2140.8
+    },
+    {
+      "status": 200,
+      "request_bytes": 40759,
+      "duration_ms": 4933.9
+    },
+    {
+      "status": 200,
+      "request_bytes": 36368,
+      "duration_ms": 2027.2
+    }
+  ],
+  "player_responses": [
+    {
+      "request_id": "7e6f64bc-4e93-46a0-594f-45a4c4a69c03",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "ValueError",
+      "chosen_candidate_id": null,
+      "speech": []
+    },
+    {
+      "request_id": "52ea7f4a-438b-f5c9-5c01-1fa4864928ce",
+      "model": "Qwen3-VL-2B-Instruct",
+      "error": "ValueError",
+      "chosen_candidate_id": null,
+      "speech": []
+    }
+  ],
+  "validation_errors": [
+    {
+      "request": "44a23f11-4c7e-0609-2097-4f896c14bf2d",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    },
+    {
+      "request": "ccdef892-4073-29bc-b8c7-4bb582685db5",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    },
+    {
+      "request": "7e6f64bc-4e93-46a0-594f-45a4c4a69c03",
+      "source": "player",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    },
+    {
+      "request": "d87dba51-44a0-dd36-bc65-acbb725c9835",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    },
+    {
+      "request": "52ea7f4a-438b-f5c9-5c01-1fa4864928ce",
+      "source": "player",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    },
+    {
+      "request": "63786ebf-42b3-0044-cbf8-02b2137d6b6e",
+      "source": "ambient",
+      "reason": "invalid performance",
+      "file": "server.py",
+      "line": 306,
+      "function": "validate_action"
+    }
+  ],
+  "raw_log_sha256": "9f5b55b95f63b4ecab678ef9c5dd2cc1a400d7523b08515fdb89020ce7d19b2e"
+}

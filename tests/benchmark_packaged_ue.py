@@ -55,6 +55,14 @@ def run(args):
         def log_message(self, *args): pass
         def do_POST(self):
             body = self.rfile.read(int(self.headers["Content-Length"]))
+            if args.guide_format:
+                # 对照实验只限定第一条回答的字段。候选编号和台词仍由相同的模型决定。
+                request = json.loads(body)
+                schema = dict(type="object",properties=dict(candidate_index=dict(type="integer",minimum=0),
+                    speech=dict(type="string"),emotion=dict(type="string",enum=["Calm","Angry","Surprised"])),
+                    required=["candidate_index","speech","emotion"],additionalProperties=False)
+                request["response_format"] = dict(type="json_schema",json_schema=dict(name="first_record",strict=True,schema=schema))
+                body = json.dumps(request, ensure_ascii=False).encode("utf8")
             started = time.monotonic()
             try:
                 upstream = urlopen(Request(args.model_endpoint,data=body,headers={"Content-Type":"application/json"}),timeout=30)
@@ -98,9 +106,32 @@ def run(args):
     # 让 Delivery 将本轮测试日志写进 Redflag 的临时目录，保留其正式校验、调度和合成代码。
     trace = folder / "dialogue.ndjson"
     trace.write_text("",encoding="utf8")
-    launcher = ("import sys,runpy,pathlib; tools=sys.argv.pop(1); sys.path.insert(0,tools); "
-                "import dialogue_log; dialogue_log._path=pathlib.Path('dialogue.ndjson'); "
-                "runpy.run_path(str(pathlib.Path(tools)/'server.py'),run_name='__main__')")
+    launcher = """import json, pathlib, re, runpy, sys, traceback
+tools = pathlib.Path(sys.argv.pop(1))
+sys.path.insert(0, str(tools))
+import dialogue_log
+dialogue_log._path = pathlib.Path('dialogue.ndjson')
+record = dialogue_log.record
+def trace_error(*args, **kwargs):
+    error = sys.exc_info()[1]
+    if error is not None:
+        frame = traceback.extract_tb(error.__traceback__)[-1]
+        # 保存验证失败的位置；回答正文和模型请求留在本机。
+        reason = str(error)
+        if not re.fullmatch(r'[a-zA-Z0-9_ ]{1,96}', reason): reason = type(error).__name__
+        fault = dict(request=args[0], source=args[1], reason=reason,
+                     file=pathlib.Path(frame.filename).name, line=frame.lineno, function=frame.name)
+        if reason == 'invalid performance':
+            cause = error.__traceback__
+            while cause.tb_next: cause = cause.tb_next
+            speech = cause.tb_frame.f_locals.get('speech')
+            emotion = cause.tb_frame.f_locals.get('emotion')
+            fault.update(speech_chars=len(speech) if isinstance(speech, str) else None,
+                         emotion_present=emotion is not None, emotion_allowed=emotion in ('Calm','Angry','Surprised'))
+        print('validation '+json.dumps(fault), flush=True)
+    return record(*args, **kwargs)
+dialogue_log.record = trace_error
+runpy.run_path(str(tools/'server.py'),run_name='__main__')"""
     with (folder/"provider.log").open("w",encoding="utf8") as stream:
         gateway = start([sys.executable,"-u","-c",launcher,str(args.delivery_tools.resolve()),"--port",str(args.port),"--provider",args.provider],folder,stream,env)
         try:
@@ -122,7 +153,7 @@ def run(args):
     pattern = re.compile(r"^\[([\d.\-:]+)\]\[\s*(\d+)\](.+)")
     for line in raw.decode("utf8",errors="replace").splitlines():
         match = pattern.match(line)
-        if match and any(k in line for k in ("NpcLatency ","ResidentConversation accepted","ResidentConversation rejected","Called 'Submit ","stream failed","TransportFailure")):
+        if match and any(k in line for k in ("NpcLatency ","NpcSpeech text_only","ResidentConversation accepted","ResidentConversation rejected","Called 'Submit ","stream failed","TransportFailure")):
             stamp,frame,body = match.groups()
             t = datetime.strptime(stamp,"%Y.%m.%d-%H.%M.%S:%f")
             markers.append({"utc":t.isoformat(),"engine_frame":int(frame),"message":body})
@@ -132,10 +163,15 @@ def run(args):
     for line in trace.read_text(encoding="utf8").splitlines():
         captured = json.loads(line)
         if captured.get("source") == "player":
-            dialogues.append({k:captured.get(k) for k in ("request_id","model","error","chosen_candidate_id","speech")})
+            entry = {k:captured.get(k) for k in ("request_id","model","error","chosen","chosen_candidate_id","speech")}
+            entry["offered_actions"] = sorted({c.split(":")[0] for c in captured.get("candidates",[]) if isinstance(c,str)})
+            dialogues.append(entry)
     return dict(engine="Delivery Unreal 5.8 packaged Windows", exe_sha256=digest,
-                npc=args.npc, prompt=PROMPT, provider=args.provider, model=args.model, null_rhi=args.null_rhi, window=[640,360],
-                markers=markers, model_calls=calls, player_responses=dialogues, raw_log_sha256=hashlib.sha256(raw).hexdigest())
+                npc=args.npc, prompt=PROMPT, provider=args.provider, model=args.model, guided_first_record=args.guide_format,
+                null_rhi=args.null_rhi, window=[640,360],
+                markers=markers, model_calls=calls, player_responses=dialogues,
+                validation_errors=[json.loads(row[11:]) for row in (folder/"provider.log").read_text(encoding="utf8").splitlines()
+                                   if row.startswith("validation ")], raw_log_sha256=hashlib.sha256(raw).hexdigest())
 
 
 if __name__ == "__main__":
@@ -149,6 +185,7 @@ if __name__ == "__main__":
     parser.add_argument("--port",type=int,default=18765)
     parser.add_argument("--seconds",type=int,default=22)
     parser.add_argument("--null-rhi",action="store_true")
+    parser.add_argument("--guide-format",action="store_true",help="独立诊断：在模型端限定首条回答格式，和原样运行的数据分别记录")
     parser.add_argument("--out",type=Path,required=True)
     options = parser.parse_args()
     results = run(options)

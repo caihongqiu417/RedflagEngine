@@ -1,0 +1,9 @@
+{
+  "source": "Windows SpeechSynthesizer",
+  "text": "帮我留一份医疗包，等我过来再给我。",
+  "voice": "Microsoft Huihui Desktop",
+  "rate_hz": 16000,
+  "duration_seconds": 4.555,
+  "sha256": "59147630d9bea5408b195eb659fc1d7ffe88e7df9cea91330851ec89bc4c074f",
+  "actual_transcript": "帮我留一份医疗包等我过来再给我"
+}
