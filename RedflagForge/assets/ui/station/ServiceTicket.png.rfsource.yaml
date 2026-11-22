@@ -1,0 +1,26 @@
+operation: import
+original: exec-fd537674-1f50-4cbc-8bc5-e48228af40ce.png
+original_sha256: 
+  547e58bb5c97f06be03b5bf8e3b88b9700e0cc5581d686ba3966256dc9279d02
+original_size:
+- 1254
+- 1254
+creator: Codex built-in ImageGen
+prompt: One standalone polished original video-game HUD icon, centered on a 
+  transparent square, no background, no text or type, no surrounding frame. An 
+  easily recognized light ivory flat open-end mechanic wrench crossing the upper
+  right of a small rectangular folded repair work order tag, with a clearly 
+  visible thick burnt-amber stripe along the tag's bottom edge and a tiny filled
+  amber notch. Technical expedition gear marking, industrial screen-printed 
+  stencil on a service console, strong connected silhouettes, deliberately 
+  limited to warm ivory and signal orange, restrained wear only at edge, no 
+  shadows, no glow, no gradients. Straight front view. Legible when downsampled 
+  to 44px. Fill 80% of the canvas. No lettering, symbols from existing games, 
+  logos or watermark.
+processing: ImageMagick -trim +repage -thumbnail 128x128 -gravity center 
+  -background none -extent 128x128
+created_utc: '2026-11-22T18:28:17.101290+00:00'
+width: 128
+height: 128
+asset_sha256: e3c40fb8ee7ecaa88251b382d7f5c121adebb4e266ee67ad061d93c5d8862319
+asset_id: '3622894106996160234'
