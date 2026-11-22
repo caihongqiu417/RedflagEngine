@@ -420,7 +420,7 @@ effects.ResetHistory();  // 切换场景或跳切相机时调用一次。</code>
             <p>打开 Physics-Workshop 场景，红箱子有动态刚体，地面有静态刚体。游戏层调用一次 <code>OnSimulationStart()</code> 建立碰撞体，随后每帧用 <code>OnUpdatePhysics(dt)</code> 推进物理。此时读箱子的 Transform 就能得到它落下后的姿态。退出模拟时调用 <code>OnSimulationStop()</code> 释放这次模拟用的对象。</p>
             <p>主机连接 REDFServer 后，先用 <code>CapturePoses(scene, ids)</code> 读取这一刻要发的实体，再用 <code>WorldClient::Publish</code> 提交。上一份还在等待确认时，主机可以继续模拟。观看端每帧调用 <code>Update()</code>，收到新版本后用 <code>NetworkScene::Apply</code> 把位置写入自己的场景。两端按相同的实体编号认出箱子。</p>
             <button class="source" data-file="Redflag/src/Redflag/Scene/Scene.cpp" data-function="Scene::OnUpdatePhysics(">查看物理步</button>
-            · <button class="source" data-file="tests/WorldSessionTests.cpp" data-function="int main(">查看主机和两个观看端</button>
+            · <button class="source" data-file="examples/Network/WorldWorkshop.cpp" data-function="void WatchCrate(">查看观看端怎么更新箱子</button>
             · <a href="../pdf/Redflag-Source-Guide.pdf">实体同步与确认</a>
           </div>
         </details>
@@ -428,8 +428,9 @@ effects.ResetHistory();  // 切换场景或跳切相机时调用一次。</code>
           <summary>播放角色动作与驱动物理双腿</summary>
           <div>
             <p>BVH 动作文件保存骨架的父子关系和每一帧的关节姿势。<code>AnimationClip::LoadBVH</code> 读取它们，<code>Skeleton</code> 把关节相对父骨的姿势换成模型中的位置。给皮肤上的顶点指定关节权重后，<code>SkinnedMesh::Deform</code> 就能随骨架弯曲模型。角色演示从待机和走路动作开始，还可切换到双腿的物理模拟。</p>
-            <p>想在 Forge 里查看动作，可以打开 <code>Character-Walk.redflag</code>，在层级里选中角色，到“骨骼动画”暂停播放或拖动进度。场景保存动作文件和播放到的秒数。独立示例中的蒙皮和物理行走另见下方的角色动画手册。</p>
-            <p>模拟行走用 <code>Ragdoll::DriveWalk(seconds, speed)</code>，需在每个固定的物理步前调用。速度以米每秒计，沿模型的 +Z。髋、膝、踝关节的驱动与地面的接触共同决定实际位移。调用 <code>Relax()</code> 放松关节，双腿随重力倒下。</p>
+            <p>在 Forge 打开 <code>Character-Walk.redflag</code> 可以观察骨架。按 F5 开始模拟，点场景面板后用方向键移动。在属性面板还可以暂停播放或拖动进度。想看带皮肤的模型，打开 <code>Character-Fox.redflag</code>，在狐狸身上选择 Walk 或 Run。共享的 <code>ModelAnimation</code> 保存骨架、顶点权重和所有动作。每个实体有自己的 <code>ModelAnimationComponent</code>，两只狐狸可以在不同时间播放不同动作。</p>
+            <p>打开 <code>Character-Physics.redflag</code> 可以查看物理行走。带 <code>RagdollComponent</code> 的角色由场景在每个物理步调用 <code>Ragdoll::DriveWalk(seconds, speed)</code>。速度以米每秒计。髋、膝、踝的驱动和脚底接触决定实际位移。关闭行走会放松关节，双腿随重力倒下。</p>
+            <button class="source" data-file="Redflag/src/Redflag/Animation/ModelAnimation.cpp" data-function="ModelAnimation::Sample(">查看顶点怎样随骨骼移动</button>
             <button class="source" data-file="tests/CharacterAnimationTests.cpp" data-function="void CheckPhysics(">查看平地行走测试</button>
             · <a href="../pdf/Redflag-Character-Animation.pdf">角色动画、蒙皮与行走</a>
           </div>

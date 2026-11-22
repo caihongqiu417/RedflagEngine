@@ -1,0 +1,18 @@
+{
+  "frame": 24,
+  "renderdoc": "1.47",
+  "frame_sha256": "afab32e498f7cdb421800cfed90a7ef1d6356aa7dac62bcdb52ca8d43ced868a",
+  "dispatches": [
+    11,
+    54,
+    66,
+    78,
+    90,
+    103,
+    115,
+    127
+  ],
+  "gather_event": 78,
+  "probe_update_events": [],
+  "debug_messages": []
+}

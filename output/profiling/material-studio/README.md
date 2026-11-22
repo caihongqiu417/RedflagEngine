@@ -25,3 +25,7 @@ Antique Camera 来自 Khronos 的 glTF 示例库，作者 Maximillan Kamps / UX3
 ### 场景里的发光物体
 
 这次摄影棚实测留下了另一个问题。棚灯来自全景图，而 Sun Temple 火盆里的余烬由模型自己的贴图决定。拍这组相机照片时，引擎还会漏读余烬。后续实现给模型加上了自发光，并用一面白墙验证了灯牌对房间的照明。[灯牌和神庙火盆的对照实测](../emissive-studio/README.md)
+
+### 重开已烘焙的摄影棚
+
+现在摄影棚也随场景保存了环境光和墙面的漫反射。下载模型、环境图后直接打开即可。第 24 帧的 RenderDoc 记录里，事件 78 读取已有探针并为画面计算光照；这一帧没有重新计算探针。在模型上能看到棚灯的倒影，也能看到天光照亮的皮革和背景。复查实机图可运行 `python tests/check_sky_viewport.py camera-studio <RedflagForge.exe 路径>`。[当前画面](../../validation/sky-probes/camera-studio.png) · [回放事件](../../validation/sky-probes/camera-baked-frame.json) · [窗外的环境光](../../../docs/latex/lighting/sky-probes.tex)

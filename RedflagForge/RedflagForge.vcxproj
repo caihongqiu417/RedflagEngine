@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\CharacterInput.h" />
     <ClInclude Include="src\ForgeLayer.h" />
     <ClInclude Include="src\LightingPreview.h" />
     <ClInclude Include="src\NpcVisionPanel.h" />
