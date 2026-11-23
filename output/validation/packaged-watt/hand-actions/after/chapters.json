@@ -1,0 +1,152 @@
+[
+  {
+    "title": "玩家 · 拾起医疗包",
+    "capture": "player-pickup",
+    "start": 0.0,
+    "end": 6.625,
+    "original_seconds": [
+      4.079,
+      10.663
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 递给队友",
+    "capture": "player-give",
+    "start": 6.625,
+    "end": 10.917,
+    "original_seconds": [
+      3.959,
+      8.226
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 修理发电机",
+    "capture": "player-repair",
+    "start": 10.917,
+    "end": 17.375,
+    "original_seconds": [
+      4.619,
+      11.045
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 扶起队友",
+    "capture": "player-revive",
+    "start": 17.375,
+    "end": 24.125,
+    "original_seconds": [
+      5.212,
+      11.943
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 使用医疗包",
+    "capture": "player-heal",
+    "start": 24.125,
+    "end": 28.25,
+    "original_seconds": [
+      4.381,
+      8.489
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 拾起医疗包",
+    "capture": "watt-pickup",
+    "start": 28.25,
+    "end": 36.292,
+    "original_seconds": [
+      7.241,
+      15.281
+    ],
+    "voices": [
+      {
+        "id": "60-1102-6",
+        "seq": 61,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 43520
+      }
+    ]
+  },
+  {
+    "title": "瓦特 · 递给队友",
+    "capture": "watt-give",
+    "start": 36.292,
+    "end": 42.292,
+    "original_seconds": [
+      6.382,
+      12.352
+    ],
+    "voices": [
+      {
+        "id": "60-1102-6",
+        "seq": 61,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 25600
+      }
+    ]
+  },
+  {
+    "title": "瓦特 · 修理发电机",
+    "capture": "watt-repair",
+    "start": 42.292,
+    "end": 48.292,
+    "original_seconds": [
+      5.065,
+      11.041
+    ],
+    "voices": [
+      {
+        "id": "92-1102-6",
+        "seq": 93,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 24320
+      }
+    ]
+  },
+  {
+    "title": "瓦特 · 扶起队友",
+    "capture": "watt-revive",
+    "start": 48.292,
+    "end": 54.542,
+    "original_seconds": [
+      3.758,
+      10.001
+    ],
+    "voices": [
+      {
+        "id": "83-1102-2",
+        "seq": 84,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 33280
+      }
+    ]
+  },
+  {
+    "title": "瓦特 · 使用医疗包",
+    "capture": "watt-heal",
+    "start": 54.542,
+    "end": 59.042,
+    "original_seconds": [
+      5.209,
+      9.675
+    ],
+    "voices": [
+      {
+        "id": "62-1102-6",
+        "seq": 63,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 33280
+      }
+    ]
+  }
+]

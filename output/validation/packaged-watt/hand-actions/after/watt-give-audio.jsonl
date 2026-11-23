@@ -1,0 +1,4 @@
+{"kind":"audio","event":"requested","id":"60-1102-6","entity":"1102","seq":60,"seconds":10.4485931396,"generation":1,"rate_hz":16000,"file":null,"device_samples":null}
+{"kind":"audio","event":"submitted","id":"60-1102-6","entity":"1102","seq":61,"seconds":10.5832080841,"generation":1,"rate_hz":16000,"file":"speech-60-1102-6.wav","device_samples":0}
+{"kind":"audio","event":"first_voice","id":"60-1102-6","entity":"1102","seq":64,"seconds":10.9477529526,"generation":1,"rate_hz":16000,"file":"speech-60-1102-6.wav","device_samples":4935}
+{"kind":"audio","event":"finished","id":"60-1102-6","entity":"1102","seq":78,"seconds":12.2718935013,"generation":1,"rate_hz":16000,"file":"speech-60-1102-6.wav","device_samples":25600}

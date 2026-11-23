@@ -2,6 +2,7 @@
 import argparse
 import bisect
 import gzip
+import hashlib
 import io
 import json
 import math
@@ -104,18 +105,42 @@ def review(folder,package):
     # 较长的修理/扶人会先碰到目标，随后持续工作。分别保留首次、最后一次接触与游戏状态更新帧。
     near=[i for i in contact if records[i][ident]["contact"]["distance"]<=.04 and
           (action!="give" or records[i][other].get("contact",{}).get("distance",100)<=.04)]
-    last_touch=next((i for i in reversed(near) if tick is None or i<=tick),None)
+    touches_before=[i for i in near if tick is None or i<=tick]
+    last_touch=touches_before[-1] if touches_before else None
+    # 修理与救援会在原地保持接触。用中间一帧看清双手，避免选到已经松手的第一张窗口图。
+    steady=touches_before[len(touches_before)//2] if touches_before else None
     active=next((i for i,r in enumerate(records) if r[ident]["animation"]["clip"]==CLIPS[action]),None)
     later=next((i for i in range((tick or 0)+1,len(fs)) if records[i][ident]["animation"]["clip"] in ("Idle-cycle","walking_gun-cycle","walking_nogun-cycle")
                 and not records[i][ident].get("contact")),None) if tick is not None else None
+    receiver_idle=None
+    if action=="revive" and tick is not None:
+        receiver_idle=next((i for i in range(tick,len(fs)) if records[i][other]["animation"]["clip"]=="Idle-cycle"),None)
     contact_values=[r[ident]["contact"]["distance"] for r in records if r[ident].get("contact")]
     return dict(actor=t["actor"],action=action,trigger=t["trigger"],instruction=t["instruction"],archive_sha256=t["archive_sha256"],exe_sha256=t["exe_sha256"],
         camera=t.get("camera_view","side"),scene=t["scene"],frames=len(fs),window_frames=len(t["captures"]),changes=changes,
         event_seq=fs[tick]["seq"] if tick is not None else None,recovery_seq=fs[later]["seq"] if later is not None else None,
+        receiver_idle_seq=fs[receiver_idle]["seq"] if receiver_idle is not None else None,
         begin_seq=fs[active]["seq"] if active is not None else None,contact_seq=[fs[i]["seq"] for i in contact],
+        steady_touch_seq=fs[steady]["seq"] if steady is not None else None,
         first_touch=measure(near[0]) if near else None,last_touch_before_commit=measure(last_touch) if last_touch is not None else None,
         closest_logged_goal_m=round(min(contact_values),6) if contact_values else None,
         events=events,choices=choices,clips=clips,measurements=witnesses),fs,t
+
+
+def verify(result):
+    label=result["actor"]+"-"+result["action"]
+    event=result["event_seq"]
+    assert event and result["begin_seq"] and result["begin_seq"]<=event, label+" 未出现完整动作"
+    assert result["recovery_seq"] and result["recovery_seq"]>event, label+" 未恢复待机或移动"
+    assert len(result["changes"])==2,label+" 存在额外的库存或生命变化"
+    witness=next(s for s in result["measurements"] if s["seq"]==event)
+    contact=witness.get("contact",{})
+    assert "commit_distance" in contact and contact["commit_distance"]<=.04, label+" 生效时的手超出4厘米"
+    if result["action"]=="give":
+        recv=witness.get("receiver_contact",{})
+        assert "commit_distance" in recv and recv["commit_distance"]<=.04,label+" 接收方没有伸到交接点"
+    if result["action"]=="revive":
+        assert result["receiver_idle_seq"] and result["receiver_idle_seq"]>event,label+" 被扶者没有站起来"
 
 
 def contact_sheets(takes,out):
@@ -130,10 +155,10 @@ def contact_sheets(takes,out):
         for n,(folder,r,fs,t) in enumerate(rows):
             captures=t["captures"];clock={f["seq"]:f["seconds"] for f in fs};start=r["begin_seq"]
             event=r["event_seq"]
-            contact=(r["last_touch_before_commit"] or {}).get("seq") or event
+            contact=r["steady_touch_seq"] or event
             if event:
                 anchor=clock[event];start=clock[start] if start is not None else max(captures[0]["seconds"],anchor-.8)
-                finish=clock.get(r["recovery_seq"],anchor+.8)
+                finish=max(clock.get(r["recovery_seq"],anchor+.8),clock.get(r["receiver_idle_seq"],0))
                 moments=[("伸手前",max(captures[0]["seconds"],start-.22)),("目标接触" if r["last_touch_before_commit"] else "状态生效",clock[contact]),("动作结束后",finish+.25)]
             else:
                 pivot=(r["first_touch"] or {}).get("seq") or fs[len(fs)//2]["seq"];anchor=clock[pivot]
@@ -167,6 +192,24 @@ def recorded_sound(folder,start,length):
     return np.clip(data,-32768,32767).astype("<i2"),sounds
 
 
+def hand_detail(im,actor,spectator,small):
+    hand=actor.get("contact")
+    if not hand or not spectator:return
+    camera=spectator["TransformComponent"];pitch,yaw,_=camera["Rotation"]
+    u,v,w=np.asarray(hand["hand"])-camera["Translation"]
+    x=math.cos(yaw)*u-math.sin(yaw)*w;z=math.sin(yaw)*u+math.cos(yaw)*w
+    y=math.cos(pitch)*v+math.sin(pitch)*z;z=-math.sin(pitch)*v+math.cos(pitch)*z
+    focal=.5*im.height/math.tan(.5*spectator["CameraComponent"]["Camera"]["PerspectiveFov"])
+    if z>=0:return
+    x=im.width*.5-focal*x/z;y=im.height*.5+focal*y/z
+    # 直接裁同一帧。保留周围手腕与物件，读者可以在主画面核对近景的位置。
+    if x<62 or y<46 or x>=im.width-62 or y>=im.height-46:return
+    crop=im.crop((round(x-62),round(y-46),round(x+62),round(y+46))).resize((223,166),Image.Resampling.LANCZOS)
+    im.paste(crop,(12,27));d=ImageDraw.Draw(im)
+    d.rectangle((11,26,235,194),outline=(235,232,220),width=2);d.rectangle((11,6,235,26),fill=(25,29,33))
+    d.text((17,6),"手部近景 · 同一帧",font=small,fill=(245,243,233))
+
+
 def movie(takes,out):
     small=ImageFont.truetype("C:/Windows/Fonts/msyh.ttc",18);bold=ImageFont.truetype("C:/Windows/Fonts/msyhbd.ttc",26)
     size=(1104,680);meta=[";FFMETADATA1"];samples=[];chapters=[];frames_written=0
@@ -178,10 +221,10 @@ def movie(takes,out):
         for folder,r,fs,t in takes:
             captured=t["captures"]; timeline={f["seq"]:f["seconds"] for f in fs}; seqs=[x["seconds"] for x in captured]
             event=r["event_seq"]; start=next((f["seconds"] for f in fs if f["seq"]>=5),seqs[0]); close=seqs[-1]
-            if t["actor"]=="watt" and t.get("instruction") and r["choices"]:
-                start=max(start,timeline[r["choices"][-1]["seq"]]-.27)
+            if t["actor"]=="watt" and t.get("instruction") and r["choices"] and r["camera"]!="package original":
+                start=max(start,timeline[r["choices"][0]["seq"]]-.27)
             if event:
-                close=min(close,max(timeline[event]+1.75,timeline.get(r["recovery_seq"],0)+.65))
+                close=min(close,max(timeline[event]+1.75,timeline.get(r["recovery_seq"],0)+.65,timeline.get(r["receiver_idle_seq"],0)+.45))
             else:close=min(close,start+3.6)
             media=folder/"media.jsonl"
             if media.exists():
@@ -192,11 +235,15 @@ def movie(takes,out):
             title=WHO[t["actor"]]+" · "+ACTIONS[t["action"]]
             first=frames_written;duration=max(1,math.ceil((close-start)*RATE))
             sound,voices=recorded_sound(folder,start,duration/RATE);samples.append(sound)
+            frame_actors={f["seq"]:next(a for a in f["actors"] if a["id"]==IDS[t["actor"]]) for f in fs}
+            if event:assert start<timeline[event]<=close,folder.name+" 的剪辑没有保留状态生效帧"
+            if r["begin_seq"] and event:assert start<=timeline[r["begin_seq"]],folder.name+" 的剪辑从伸手以后才开始"
             art=None;last=None
             for n in range(duration):
                 now=start+n/RATE;i=max(0,bisect.bisect_right(seqs,now)-1);c=captured[i]
                 if last!=i:
                     im=Image.open(folder/"images"/f"{c['seq']:05}.jpg").convert("RGB").resize((1104,621),Image.Resampling.LANCZOS)
+                    hand_detail(im,frame_actors[c["seq"]],t.get("scene",{}).get("spectator"),small)
                     art=Image.new("RGB",size,(25,29,33));art.paste(im);d=ImageDraw.Draw(art);d.text((21,628),title,fill=(255,251,243),font=bold)
                     phase=("状态已更新" if event and c["seq"]>=event else "动作中" if r["begin_seq"] and c["seq"]>=r["begin_seq"] else "接近目标")
                     if not event:phase="本局未发生该项状态变化"
@@ -218,17 +265,29 @@ def movie(takes,out):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("archive",type=Path);p.add_argument("raw",type=Path);p.add_argument("output",type=Path)
-    p.add_argument("--film",action="store_true");a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+    p.add_argument("--film",action="store_true");p.add_argument("--verify",action="store_true");a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     takes=[]
     with zipfile.ZipFile(a.archive) as package:
+        audio={hashlib.sha256(package.read(name)).hexdigest():name for name in package.namelist()
+               if name.startswith("assets/audio/watt/") and name.endswith(".wav")}
         for who in WHO:
             for action in ACTIONS:
                 folder=a.raw/(who+"-"+action)
                 if not (folder/"take.json").exists():continue
                 r,fs,t=review(folder,package);takes.append((folder,r,fs,t))
+                if a.verify:verify(r)
+                media=folder/"media.jsonl"
+                if media.is_file():
+                    shutil.copy2(media,a.output/(folder.name+"-audio.jsonl"))
+                    r["voice_assets"]={}
+                    for wav in folder.glob("speech-*.wav"):
+                        digest=hashlib.sha256(wav.read_bytes()).hexdigest()
+                        r["voice_assets"][wav.name]={"sha256":digest,"package_file":audio.get(digest)}
+                        if a.verify and who=="watt":assert digest in audio,"录音与发行包的实际语音不匹配"
                 shutil.copy2(folder/"frames.jsonl.gz",a.output/(folder.name+".jsonl.gz"))
                 print(folder.name,r["event_seq"],[(w.get("mesh_surface_m"),w.get("hand_to_hand_m"),
                       w.get("contact",{}).get("distance")) for w in r["measurements"]],flush=True)
+    if a.verify:assert len(takes)==10,"两人的五个动作还未全部拍摄"
     dump(a.output/"measurements.json",[r for _,r,_,_ in takes])
     contact_sheets(takes,a.output)
     if a.film:movie(takes,a.output)

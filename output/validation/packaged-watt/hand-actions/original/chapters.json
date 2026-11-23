@@ -1,0 +1,21 @@
+[
+  {
+    "title": "瓦特 · 递给队友",
+    "capture": "watt-give",
+    "start": 0.0,
+    "end": 6.667,
+    "original_seconds": [
+      4.509,
+      11.136
+    ],
+    "voices": [
+      {
+        "id": "72-1102-6",
+        "seq": 73,
+        "event": "finished",
+        "sample_start": 0,
+        "sample_end": 25600
+      }
+    ]
+  }
+]

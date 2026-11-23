@@ -62,7 +62,13 @@ def stage(scene,who,action,camera_view):
         TransformComponent=dict(Translation=[-4.49,1.52,-2.75],Rotation=[-.13,math.pi,0],Scale=[1,1,1]))
     if camera_view=="yard":
         center=-6.9 if npc and action=="heal" else -5.5 if action=="heal" else -4.3
-        spectator["TransformComponent"].update(Translation=[center+1.55,1.45,4.92],Rotation=[-.16,.40,0])
+        eye=[center+1.55,1.45,4.92];look=[center,.85,1.4]
+        if action=="pickup":eye,look=[.35,1.20,1.12],[-3.6,.70,1.96]
+        if action=="revive":eye,look=[.46,1.40,2.38],[-3.45,.75,1.9]
+        if action=="repair":eye,look=[-.34,1.40,4.02],[-3.55,.82,1.8]
+        if action=="give":eye,look=[-1.60,1.56,4.77],[-3.85,.92,1.4]
+        dx,dy,dz=[v-u for u,v in zip(look,eye)]
+        spectator["TransformComponent"].update(Translation=eye,Rotation=[-math.atan2(dy,math.hypot(dx,dz)),math.atan2(dx,dz),0])
     spectator["CameraComponent"]["Primary"]=True
     spectator["CameraComponent"]["Camera"]["PerspectiveFov"]=.80
     scene["Entities"].append(spectator)

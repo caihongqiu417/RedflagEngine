@@ -1,0 +1,5701 @@
+[
+  {
+    "actor": "player",
+    "action": "pickup",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "TransformComponent": {
+            "Translation": [
+              -11.46,
+              2.62,
+              1.4
+            ],
+            "Rotation": [
+              -0.68,
+              -1.5707963,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -4.64,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.13,
+              2.02
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            0.35,
+            1.2,
+            1.12
+          ],
+          "Rotation": [
+            -0.12318666839438099,
+            1.7803331064494277,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 135,
+    "window_frames": 119,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          true
+        ]
+      },
+      {
+        "seq": 80,
+        "state": [
+          2,
+          false
+        ]
+      }
+    ],
+    "event_seq": 80,
+    "recovery_seq": 106,
+    "receiver_idle_seq": null,
+    "begin_seq": 60,
+    "contact_seq": [
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105
+    ],
+    "steady_touch_seq": 76,
+    "first_touch": {
+      "seq": 72,
+      "clip": "Station-Pickup",
+      "clip_s": 0.826189995,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "pickup",
+        "target": "1112",
+        "hand": [
+          -3.26635194,
+          0.207105845,
+          2.01178122
+        ],
+        "goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "distance": 0.0187561195,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.266352,
+        0.207106,
+        2.011781
+      ],
+      "mesh_surface_m": 0.00485
+    },
+    "last_touch_before_commit": {
+      "seq": 80,
+      "clip": "Station-Pickup",
+      "clip_s": 1.19999993,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "pickup",
+        "target": "1112",
+        "hand": [
+          -3.25,
+          0.203000233,
+          2.01999998
+        ],
+        "goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "distance": 2.38418579e-07,
+        "prop": "17098513817903060406",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.25,
+          0.203000233,
+          2.01999998
+        ],
+        "commit_goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "commit_distance": 2.38418579e-07
+      },
+      "hand_world": [
+        -3.25,
+        0.203,
+        2.02
+      ],
+      "mesh_surface_m": 0.00814
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 80,
+        "entity": "1101",
+        "kind": "pickup_contact",
+        "text": "1112"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 3.875303864479065,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 3,
+        "seconds": 3.953461766242981,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 23,
+        "seconds": 5.144808888435364,
+        "clip": "AIM-Center"
+      },
+      {
+        "seq": 37,
+        "seconds": 5.858857274055481,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 42,
+        "seconds": 6.145023465156555,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 60,
+        "seconds": 7.180850625038147,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 102,
+        "seconds": 9.75670301914215,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 115,
+        "seconds": 10.546105027198792,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 132,
+        "seconds": 11.516613602638245,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 78,
+        "clip": "Station-Pickup",
+        "clip_s": 1.1866312,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25,
+            0.202999964,
+            2.01999998
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 2.98023224e-08,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.25,
+          0.203,
+          2.02
+        ],
+        "mesh_surface_m": 0.00814
+      },
+      {
+        "seq": 79,
+        "clip": "Station-Pickup",
+        "clip_s": 1.19999993,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25,
+            0.203000233,
+            2.01999998
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 2.38418579e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.25,
+          0.203,
+          2.02
+        ],
+        "mesh_surface_m": 0.00814
+      },
+      {
+        "seq": 80,
+        "clip": "Station-Pickup",
+        "clip_s": 1.19999993,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25,
+            0.203000233,
+            2.01999998
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 2.38418579e-07,
+          "prop": "17098513817903060406",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.25,
+            0.203000233,
+            2.01999998
+          ],
+          "commit_goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "commit_distance": 2.38418579e-07
+        },
+        "hand_world": [
+          -3.25,
+          0.203,
+          2.02
+        ],
+        "mesh_surface_m": 0.00814
+      },
+      {
+        "seq": 81,
+        "clip": "Station-Pickup",
+        "clip_s": 1.25543129,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25463438,
+            0.201978639,
+            2.02253413
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 0.00537983002,
+          "prop": "17098513817903060406",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.25,
+            0.203000233,
+            2.01999998
+          ],
+          "commit_goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "commit_distance": 2.38418579e-07
+        },
+        "hand_world": [
+          -3.254635,
+          0.201979,
+          2.022534
+        ],
+        "mesh_surface_m": 0.00685
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "give",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -1.6,
+            1.56,
+            4.77
+          ],
+          "Rotation": [
+            -0.15664930277910466,
+            0.5886870661374629,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 89,
+    "window_frames": 86,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          1
+        ]
+      },
+      {
+        "seq": 40,
+        "state": [
+          0,
+          2
+        ]
+      }
+    ],
+    "event_seq": 40,
+    "recovery_seq": 60,
+    "receiver_idle_seq": null,
+    "begin_seq": 28,
+    "contact_seq": [
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59
+    ],
+    "steady_touch_seq": 39,
+    "first_touch": {
+      "seq": 38,
+      "clip": "Station-Give",
+      "clip_s": 0.724928856,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1102",
+        "hand": [
+          -3.68431377,
+          1.27566135,
+          1.39532173
+        ],
+        "goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "distance": 0.00030332373,
+        "prop": "1458141423053661757",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.684314,
+        1.275661,
+        1.395322
+      ],
+      "hand_to_hand_m": 0.01336,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1101",
+        "hand": [
+          -3.67268586,
+          1.27567899,
+          1.40189755
+        ],
+        "goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "distance": 0.0132932095,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      }
+    },
+    "last_touch_before_commit": {
+      "seq": 40,
+      "clip": "Station-Give",
+      "clip_s": 0.733334005,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1102",
+        "hand": [
+          -3.68439579,
+          1.27560008,
+          1.39560688
+        ],
+        "goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "distance": 5.33120158e-07,
+        "prop": "0",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.68439579,
+          1.27560008,
+          1.39560688
+        ],
+        "commit_goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "commit_distance": 5.33120158e-07
+      },
+      "hand_world": [
+        -3.684396,
+        1.2756,
+        1.395607
+      ],
+      "hand_to_hand_m": 0.0139,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1101",
+        "hand": [
+          -3.67206573,
+          1.27648926,
+          1.40196097
+        ],
+        "goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "distance": 0.0138997892,
+        "prop": "1458141423053661757",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.67206573,
+          1.27648926,
+          1.40196097
+        ],
+        "commit_goal": [
+          -3.68439627,
+          1.27560008,
+          1.39560711
+        ],
+        "commit_distance": 0.0138997892
+      }
+    },
+    "closest_logged_goal_m": 1e-06,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 28,
+        "entity": "1101",
+        "kind": "give_begin",
+        "text": "1102"
+      },
+      {
+        "seq": 40,
+        "entity": "1101",
+        "kind": "give_contact",
+        "text": "1102"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 3.756853699684143,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 3,
+        "seconds": 3.8249131441116333,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.156698822975159,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 28,
+        "seconds": 5.503286957740784,
+        "clip": "Station-Give"
+      },
+      {
+        "seq": 60,
+        "seconds": 7.57645046710968,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 72,
+        "seconds": 8.364008069038391,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 86,
+        "seconds": 9.360180020332336,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 38,
+        "clip": "Station-Give",
+        "clip_s": 0.724928856,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1102",
+          "hand": [
+            -3.68431377,
+            1.27566135,
+            1.39532173
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.00030332373,
+          "prop": "1458141423053661757",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.684314,
+          1.275661,
+          1.395322
+        ],
+        "hand_to_hand_m": 0.01336,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1101",
+          "hand": [
+            -3.67268586,
+            1.27567899,
+            1.40189755
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.0132932095,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 39,
+        "clip": "Station-Give",
+        "clip_s": 0.733334005,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1102",
+          "hand": [
+            -3.68439579,
+            1.27560008,
+            1.39560688
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 5.33120158e-07,
+          "prop": "1458141423053661757",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.684396,
+          1.2756,
+          1.395607
+        ],
+        "hand_to_hand_m": 0.0139,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1101",
+          "hand": [
+            -3.67206573,
+            1.27648926,
+            1.40196097
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.0138997892,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 40,
+        "clip": "Station-Give",
+        "clip_s": 0.733334005,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1102",
+          "hand": [
+            -3.68439579,
+            1.27560008,
+            1.39560688
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 5.33120158e-07,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.68439579,
+            1.27560008,
+            1.39560688
+          ],
+          "commit_goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "commit_distance": 5.33120158e-07
+        },
+        "hand_world": [
+          -3.684396,
+          1.2756,
+          1.395607
+        ],
+        "hand_to_hand_m": 0.0139,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1101",
+          "hand": [
+            -3.67206573,
+            1.27648926,
+            1.40196097
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.0138997892,
+          "prop": "1458141423053661757",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.67206573,
+            1.27648926,
+            1.40196097
+          ],
+          "commit_goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "commit_distance": 0.0138997892
+        }
+      },
+      {
+        "seq": 41,
+        "clip": "Station-Give",
+        "clip_s": 0.781190336,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1102",
+          "hand": [
+            -3.67360401,
+            1.28210926,
+            1.35861611
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.0390791036,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.68439579,
+            1.27560008,
+            1.39560688
+          ],
+          "commit_goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "commit_distance": 5.33120158e-07
+        },
+        "hand_world": [
+          -3.673604,
+          1.282109,
+          1.358616
+        ],
+        "hand_to_hand_m": 0.20191,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1101",
+          "hand": [
+            -3.56544876,
+            1.17762613,
+            1.49334824
+          ],
+          "goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "distance": 0.18248488,
+          "prop": "1458141423053661757",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.67206573,
+            1.27648926,
+            1.40196097
+          ],
+          "commit_goal": [
+            -3.68439627,
+            1.27560008,
+            1.39560711
+          ],
+          "commit_distance": 0.0138997892
+        }
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "repair",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1110": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              0,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -0.34,
+            1.4,
+            4.02
+          ],
+          "Rotation": [
+            -0.14752837176843298,
+            0.9657378080228003,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 88,
+    "window_frames": 86,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 52,
+        "state": [
+          100
+        ]
+      }
+    ],
+    "event_seq": 52,
+    "recovery_seq": 55,
+    "receiver_idle_seq": null,
+    "begin_seq": 31,
+    "contact_seq": [
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54
+    ],
+    "steady_touch_seq": 46,
+    "first_touch": {
+      "seq": 33,
+      "clip": "Station-Repair",
+      "clip_s": 0.289061546,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -3.23141098,
+          0.544446528,
+          1.61802292
+        ],
+        "goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 0.0394069403,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.231411,
+        0.544447,
+        1.618023
+      ],
+      "mesh_surface_m": 0.00682
+    },
+    "last_touch_before_commit": {
+      "seq": 52,
+      "clip": "Idle-cycle",
+      "clip_s": 0,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -3.23763967,
+          0.509079933,
+          1.63424969
+        ],
+        "goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 3.42402615e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -3.23763967,
+          0.509079933,
+          1.63424969
+        ],
+        "commit_goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "commit_distance": 3.42402615e-07
+      },
+      "hand_world": [
+        -3.23764,
+        0.50908,
+        1.63425
+      ],
+      "mesh_surface_m": 1e-05
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 52,
+        "entity": "1101",
+        "kind": "repair_contact",
+        "text": "1110"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 4.350949645042419,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 3,
+        "seconds": 4.454412341117859,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.917069315910339,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 20,
+        "seconds": 6.1225727796554565,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 31,
+        "seconds": 7.308459162712097,
+        "clip": "Station-Repair"
+      },
+      {
+        "seq": 52,
+        "seconds": 9.29503619670868,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 75,
+        "seconds": 11.403387904167175,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 85,
+        "seconds": 12.330936312675476,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 50,
+        "clip": "Station-Repair",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23763967,
+            0.509079933,
+            1.63424969
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 3.42402615e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 51,
+        "clip": "Station-Repair",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23763967,
+            0.509079933,
+            1.63424969
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 3.42402615e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 52,
+        "clip": "Idle-cycle",
+        "clip_s": 0,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23763967,
+            0.509079933,
+            1.63424969
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 3.42402615e-07,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.23763967,
+            0.509079933,
+            1.63424969
+          ],
+          "commit_goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "commit_distance": 3.42402615e-07
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 53,
+        "clip": "Idle-cycle",
+        "clip_s": 0.094119072,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.60397983,
+            0.773520172,
+            1.85611796
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 0.503347754,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.23763967,
+            0.509079933,
+            1.63424969
+          ],
+          "commit_goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "commit_distance": 3.42402615e-07
+        },
+        "hand_world": [
+          -3.60398,
+          0.77352,
+          1.856118
+        ],
+        "mesh_surface_m": 0.28413
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "revive",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          },
+          "HealthComponent": {
+            "Current": 0,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            0.46,
+            1.4,
+            2.38
+          ],
+          "Rotation": [
+            -0.16352829877647965,
+            1.4486453589059705,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 79,
+    "window_frames": 75,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 54,
+        "state": [
+          50
+        ]
+      }
+    ],
+    "event_seq": 54,
+    "recovery_seq": 57,
+    "receiver_idle_seq": 66,
+    "begin_seq": 34,
+    "contact_seq": [
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56
+    ],
+    "steady_touch_seq": 48,
+    "first_touch": {
+      "seq": 42,
+      "clip": "Station-Revive",
+      "clip_s": 1.12305927,
+      "receiver_clip": "Station-Down",
+      "contact": {
+        "action": "revive",
+        "target": "1102",
+        "hand": [
+          -3.08771157,
+          0.342146754,
+          1.72940326
+        ],
+        "goal": [
+          -3.09042335,
+          0.337504268,
+          1.72596169
+        ],
+        "distance": 0.0063836365,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.087711,
+        0.342147,
+        1.729403
+      ],
+      "hand_to_hand_m": 0.00638
+    },
+    "last_touch_before_commit": {
+      "seq": 54,
+      "clip": "Idle-cycle",
+      "clip_s": 0,
+      "receiver_clip": "Station-GetUp",
+      "contact": {
+        "action": "revive",
+        "target": "1102",
+        "hand": [
+          -3.09042311,
+          0.337504268,
+          1.72596169
+        ],
+        "goal": [
+          -3.09042335,
+          0.337504268,
+          1.72596169
+        ],
+        "distance": 2.38418579e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -3.09042311,
+          0.337504268,
+          1.72596169
+        ],
+        "commit_goal": [
+          -3.09042335,
+          0.337504268,
+          1.72596169
+        ],
+        "commit_distance": 2.38418579e-07
+      },
+      "hand_world": [
+        -3.090423,
+        0.337504,
+        1.725962
+      ],
+      "hand_to_hand_m": 0.01981
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "down"
+      },
+      {
+        "seq": 54,
+        "entity": "1101",
+        "kind": "revive_contact",
+        "text": "1102"
+      },
+      {
+        "seq": 54,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "getup"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 8.344650268554688e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 4.902164340019226,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 3,
+        "seconds": 5.007944464683533,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 5.494201064109802,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 22,
+        "seconds": 6.718803286552429,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 34,
+        "seconds": 7.964386820793152,
+        "clip": "Station-Revive"
+      },
+      {
+        "seq": 54,
+        "seconds": 9.866931796073914,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 70,
+        "seconds": 12.080384135246277,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 77,
+        "seconds": 13.17869746685028,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 52,
+        "clip": "Station-Revive",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Station-Down",
+        "contact": {
+          "action": "revive",
+          "target": "1102",
+          "hand": [
+            -3.09042311,
+            0.337504268,
+            1.72596169
+          ],
+          "goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "distance": 2.38418579e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.090423,
+          0.337504,
+          1.725962
+        ],
+        "hand_to_hand_m": 0.0
+      },
+      {
+        "seq": 53,
+        "clip": "Station-Revive",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Station-Down",
+        "contact": {
+          "action": "revive",
+          "target": "1102",
+          "hand": [
+            -3.09042311,
+            0.337504268,
+            1.72596169
+          ],
+          "goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "distance": 2.38418579e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.090423,
+          0.337504,
+          1.725962
+        ],
+        "hand_to_hand_m": 0.0
+      },
+      {
+        "seq": 54,
+        "clip": "Idle-cycle",
+        "clip_s": 0,
+        "receiver_clip": "Station-GetUp",
+        "contact": {
+          "action": "revive",
+          "target": "1102",
+          "hand": [
+            -3.09042311,
+            0.337504268,
+            1.72596169
+          ],
+          "goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "distance": 2.38418579e-07,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.09042311,
+            0.337504268,
+            1.72596169
+          ],
+          "commit_goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "commit_distance": 2.38418579e-07
+        },
+        "hand_world": [
+          -3.090423,
+          0.337504,
+          1.725962
+        ],
+        "hand_to_hand_m": 0.01981
+      },
+      {
+        "seq": 55,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0994873047,
+        "receiver_clip": "Station-GetUp",
+        "contact": {
+          "action": "revive",
+          "target": "1102",
+          "hand": [
+            -3.42200947,
+            0.724471927,
+            2.02446246
+          ],
+          "goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "distance": 0.590589583,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.09042311,
+            0.337504268,
+            1.72596169
+          ],
+          "commit_goal": [
+            -3.09042335,
+            0.337504268,
+            1.72596169
+          ],
+          "commit_distance": 2.38418579e-07
+        },
+        "hand_world": [
+          -3.422009,
+          0.724472,
+          2.024462
+        ],
+        "hand_to_hand_m": 0.59902
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "heal",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "HealthComponent": {
+            "Current": 40,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -3.95,
+            1.45,
+            4.92
+          ],
+          "Rotation": [
+            -0.15475268763214814,
+            0.4147924528730719,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 53,
+    "window_frames": 51,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          40
+        ]
+      },
+      {
+        "seq": 26,
+        "state": [
+          0,
+          90
+        ]
+      }
+    ],
+    "event_seq": 26,
+    "recovery_seq": 37,
+    "receiver_idle_seq": null,
+    "begin_seq": 16,
+    "contact_seq": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "steady_touch_seq": 23,
+    "first_touch": {
+      "seq": 20,
+      "clip": "Station-UseMedkit",
+      "clip_s": 0.531695366,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "heal",
+        "target": "1101",
+        "hand": [
+          -5.22245407,
+          1.26557302,
+          1.55551815
+        ],
+        "goal": [
+          -5.21841669,
+          1.27538705,
+          1.5510745
+        ],
+        "distance": 0.0115048466,
+        "prop": "12047925438803083129",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -5.222454,
+        1.265573,
+        1.555518
+      ],
+      "finger_to_chest_joint_m": 0.24553
+    },
+    "last_touch_before_commit": {
+      "seq": 26,
+      "clip": "Station-UseMedkit",
+      "clip_s": 1,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "heal",
+        "target": "1101",
+        "hand": [
+          -5.22784042,
+          1.27542782,
+          1.56359971
+        ],
+        "goal": [
+          -5.22784042,
+          1.2754277,
+          1.56360006
+        ],
+        "distance": 3.76972878e-07,
+        "prop": "12047925438803083129",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -5.22784042,
+          1.27542782,
+          1.56359971
+        ],
+        "commit_goal": [
+          -5.22784042,
+          1.2754277,
+          1.56360006
+        ],
+        "commit_distance": 3.76972878e-07
+      },
+      "hand_world": [
+        -5.22784,
+        1.275428,
+        1.5636
+      ],
+      "finger_to_chest_joint_m": 0.24735
+    },
+    "closest_logged_goal_m": 0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 16,
+        "entity": "1101",
+        "kind": "heal_begin",
+        "text": "1101"
+      },
+      {
+        "seq": 26,
+        "entity": "1101",
+        "kind": "heal_contact",
+        "text": "1101"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 4.76837158203125e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 4.068747043609619,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 3,
+        "seconds": 4.180907249450684,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.676418304443359,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 16,
+        "seconds": 5.510341167449951,
+        "clip": "Station-UseMedkit"
+      },
+      {
+        "seq": 36,
+        "seconds": 7.715045928955078,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 44,
+        "seconds": 8.779611587524414,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 51,
+        "seconds": 9.716748237609863,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 24,
+        "clip": "Station-UseMedkit",
+        "clip_s": 0.938971519,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1101",
+          "hand": [
+            -5.22784042,
+            1.27542794,
+            1.56359994
+          ],
+          "goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "distance": 2.66560079e-07,
+          "prop": "12047925438803083129",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -5.22784,
+          1.275428,
+          1.5636
+        ],
+        "finger_to_chest_joint_m": 0.24735
+      },
+      {
+        "seq": 25,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1101",
+          "hand": [
+            -5.22784042,
+            1.27542782,
+            1.56359971
+          ],
+          "goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "distance": 3.76972878e-07,
+          "prop": "12047925438803083129",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -5.22784,
+          1.275428,
+          1.5636
+        ],
+        "finger_to_chest_joint_m": 0.24735
+      },
+      {
+        "seq": 26,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1101",
+          "hand": [
+            -5.22784042,
+            1.27542782,
+            1.56359971
+          ],
+          "goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "distance": 3.76972878e-07,
+          "prop": "12047925438803083129",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -5.22784042,
+            1.27542782,
+            1.56359971
+          ],
+          "commit_goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "commit_distance": 3.76972878e-07
+        },
+        "hand_world": [
+          -5.22784,
+          1.275428,
+          1.5636
+        ],
+        "finger_to_chest_joint_m": 0.24735
+      },
+      {
+        "seq": 27,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1.10268927,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1101",
+          "hand": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "distance": 0,
+          "prop": "12047925438803083129",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -5.22784042,
+            1.27542782,
+            1.56359971
+          ],
+          "commit_goal": [
+            -5.22784042,
+            1.2754277,
+            1.56360006
+          ],
+          "commit_distance": 3.76972878e-07
+        },
+        "hand_world": [
+          -5.22784,
+          1.275428,
+          1.5636
+        ],
+        "finger_to_chest_joint_m": 0.24735
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "pickup",
+    "trigger": "game T chat",
+    "instruction": "请去捡地上的医疗包，收进你自己背包。",
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.13,
+              2.02
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            0.35,
+            1.2,
+            1.12
+          ],
+          "Rotation": [
+            -0.12318666839438099,
+            1.7803331064494277,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 87,
+    "window_frames": 85,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          true
+        ]
+      },
+      {
+        "seq": 48,
+        "state": [
+          2,
+          false
+        ]
+      }
+    ],
+    "event_seq": 48,
+    "recovery_seq": 62,
+    "receiver_idle_seq": null,
+    "begin_seq": 41,
+    "contact_seq": [
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61
+    ],
+    "steady_touch_seq": 47,
+    "first_touch": {
+      "seq": 46,
+      "clip": "Station-Pickup",
+      "clip_s": 0.928534508,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "pickup",
+        "target": "1112",
+        "hand": [
+          -3.26836753,
+          0.206258088,
+          2.02217078
+        ],
+        "goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "distance": 0.0187801402,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.268368,
+        0.206258,
+        2.022171
+      ],
+      "mesh_surface_m": 0.00565
+    },
+    "last_touch_before_commit": {
+      "seq": 48,
+      "clip": "Station-Pickup",
+      "clip_s": 1.11610413,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "pickup",
+        "target": "1112",
+        "hand": [
+          -3.25035763,
+          0.202926904,
+          2.01994038
+        ],
+        "goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "distance": 0.000369854795,
+        "prop": "6511165237847342262",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.25035763,
+          0.202926904,
+          2.01994038
+        ],
+        "commit_goal": [
+          -3.25,
+          0.202999994,
+          2.01999998
+        ],
+        "commit_distance": 0.000369854795
+      },
+      "hand_world": [
+        -3.250358,
+        0.202927,
+        2.01994
+      ],
+      "mesh_surface_m": 0.00806
+    },
+    "closest_logged_goal_m": 0.00037,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请去捡地上的医疗包，收进你自己背包。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请去捡地上的医疗包，收进你自己背包。"
+      },
+      {
+        "seq": 25,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "gather / 去捡一份医疗包 / 医疗包"
+      },
+      {
+        "seq": 25,
+        "entity": "1102",
+        "kind": "子树提问",
+        "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "gather / 去捡一份医疗包 / 医疗包"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "gather → gather"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 41,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "pickup"
+      },
+      {
+        "seq": 48,
+        "entity": "1102",
+        "kind": "库存",
+        "text": "物品已放入背包"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "gather"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "物品已经放进背包。请继续处理队友先前的要求。"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 66,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 75,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 75,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 75,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 75,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 79,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 79,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 79,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 79,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 82,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 82,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 82,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 82,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 85,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 85,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 85,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 85,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 25,
+        "text": "gather / 去捡一份医疗包 / 医疗包"
+      },
+      {
+        "seq": 27,
+        "text": "gather / 去捡一份医疗包 / 医疗包"
+      },
+      {
+        "seq": 62,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 66,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 69,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 72,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 75,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 79,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 82,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 85,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 27,
+        "seconds": 7.863460421562195,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 41,
+        "seconds": 9.819247126579285,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 60,
+        "seconds": 12.227344393730164,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 46,
+        "clip": "Station-Pickup",
+        "clip_s": 0.928534508,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.26836753,
+            0.206258088,
+            2.02217078
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 0.0187801402,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.268368,
+          0.206258,
+          2.022171
+        ],
+        "mesh_surface_m": 0.00565
+      },
+      {
+        "seq": 47,
+        "clip": "Station-Pickup",
+        "clip_s": 1.11610413,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25035763,
+            0.202926904,
+            2.01994038
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 0.000369854795,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.250358,
+          0.202927,
+          2.01994
+        ],
+        "mesh_surface_m": 0.00806
+      },
+      {
+        "seq": 48,
+        "clip": "Station-Pickup",
+        "clip_s": 1.11610413,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.25035763,
+            0.202926904,
+            2.01994038
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 0.000369854795,
+          "prop": "6511165237847342262",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.25035763,
+            0.202926904,
+            2.01994038
+          ],
+          "commit_goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "commit_distance": 0.000369854795
+        },
+        "hand_world": [
+          -3.250358,
+          0.202927,
+          2.01994
+        ],
+        "mesh_surface_m": 0.00806
+      },
+      {
+        "seq": 49,
+        "clip": "Station-Pickup",
+        "clip_s": 1.26138115,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "pickup",
+          "target": "1112",
+          "hand": [
+            -3.29573774,
+            0.194794863,
+            2.04264593
+          ],
+          "goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "distance": 0.0516924001,
+          "prop": "6511165237847342262",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.25035763,
+            0.202926904,
+            2.01994038
+          ],
+          "commit_goal": [
+            -3.25,
+            0.202999994,
+            2.01999998
+          ],
+          "commit_distance": 0.000369854795
+        },
+        "hand_world": [
+          -3.295738,
+          0.194795,
+          2.042646
+        ],
+        "mesh_surface_m": 0.00139
+      }
+    ],
+    "voice_assets": {
+      "speech-60-1102-6.wav": {
+        "sha256": "df2dad788efd01e8ee2d734682195bde405173fda9841c3f496d5b6afe27dcf2",
+        "package_file": "assets/audio/watt/gather.wav"
+      }
+    }
+  },
+  {
+    "actor": "watt",
+    "action": "give",
+    "trigger": "game T chat",
+    "instruction": "请把你背包里的一份医疗包亲手送到我手上。",
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -1.6,
+            1.56,
+            4.77
+          ],
+          "Rotation": [
+            -0.15664930277910466,
+            0.5886870661374629,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 83,
+    "window_frames": 81,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          1
+        ]
+      },
+      {
+        "seq": 49,
+        "state": [
+          0,
+          2
+        ]
+      }
+    ],
+    "event_seq": 49,
+    "recovery_seq": 60,
+    "receiver_idle_seq": null,
+    "begin_seq": 43,
+    "contact_seq": [
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59
+    ],
+    "steady_touch_seq": 49,
+    "first_touch": {
+      "seq": 48,
+      "clip": "Station-Give",
+      "clip_s": 0.687703133,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1101",
+        "hand": [
+          -3.68543959,
+          1.27651906,
+          1.39567769
+        ],
+        "goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "distance": 0.00873357523,
+        "prop": "15749864914754250287",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.685439,
+        1.276519,
+        1.395678
+      ],
+      "hand_to_hand_m": 0.04361,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1102",
+        "hand": [
+          -3.66059136,
+          1.25611162,
+          1.42514575
+        ],
+        "goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "distance": 0.0379887484,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      }
+    },
+    "last_touch_before_commit": {
+      "seq": 49,
+      "clip": "Station-Give",
+      "clip_s": 0.687703133,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1101",
+        "hand": [
+          -3.68543959,
+          1.27651906,
+          1.39567769
+        ],
+        "goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "distance": 0.00873357523,
+        "prop": "0",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.68543959,
+          1.27651906,
+          1.39567769
+        ],
+        "commit_goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "commit_distance": 0.00873357523
+      },
+      "hand_world": [
+        -3.685439,
+        1.276519,
+        1.395678
+      ],
+      "hand_to_hand_m": 0.04361,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1102",
+        "hand": [
+          -3.66059136,
+          1.25611162,
+          1.42514575
+        ],
+        "goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "distance": 0.0379887484,
+        "prop": "15749864914754250287",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -3.66059136,
+          1.25611162,
+          1.42514575
+        ],
+        "commit_goal": [
+          -3.68571568,
+          1.27560008,
+          1.40435839
+        ],
+        "commit_distance": 0.0379887484
+      }
+    },
+    "closest_logged_goal_m": 0.008734,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "子树提问",
+        "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。"
+      },
+      {
+        "seq": 31,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 31,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "share → share"
+      },
+      {
+        "seq": 31,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 43,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "give"
+      },
+      {
+        "seq": 49,
+        "entity": "1102",
+        "kind": "库存",
+        "text": "物品已交到队友手中"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "share"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 60,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 27,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 31,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 4.76837158203125e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 31,
+        "seconds": 7.244683265686035,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 43,
+        "seconds": 8.501333236694336,
+        "clip": "Station-Give"
+      },
+      {
+        "seq": 60,
+        "seconds": 10.448593139648438,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 47,
+        "clip": "Station-Give",
+        "clip_s": 0.566670418,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -3.6830368,
+            1.30670285,
+            1.3153373
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.0943361744,
+          "prop": "15749864914754250287",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.683037,
+          1.306703,
+          1.315337
+        ],
+        "hand_to_hand_m": 0.46551,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -3.42256284,
+            1.07369602,
+            1.62284243
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.397177458,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 48,
+        "clip": "Station-Give",
+        "clip_s": 0.687703133,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -3.68543959,
+            1.27651906,
+            1.39567769
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.00873357523,
+          "prop": "15749864914754250287",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.685439,
+          1.276519,
+          1.395678
+        ],
+        "hand_to_hand_m": 0.04361,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -3.66059136,
+            1.25611162,
+            1.42514575
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.0379887484,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 49,
+        "clip": "Station-Give",
+        "clip_s": 0.687703133,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -3.68543959,
+            1.27651906,
+            1.39567769
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.00873357523,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.68543959,
+            1.27651906,
+            1.39567769
+          ],
+          "commit_goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "commit_distance": 0.00873357523
+        },
+        "hand_world": [
+          -3.685439,
+          1.276519,
+          1.395678
+        ],
+        "hand_to_hand_m": 0.04361,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -3.66059136,
+            1.25611162,
+            1.42514575
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.0379887484,
+          "prop": "15749864914754250287",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.66059136,
+            1.25611162,
+            1.42514575
+          ],
+          "commit_goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "commit_distance": 0.0379887484
+        }
+      },
+      {
+        "seq": 50,
+        "clip": "Station-Give",
+        "clip_s": 0.773589134,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -3.66908884,
+            1.27118194,
+            1.33375144
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.0726726353,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.68543959,
+            1.27651906,
+            1.39567769
+          ],
+          "commit_goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "commit_distance": 0.00873357523
+        },
+        "hand_world": [
+          -3.669089,
+          1.271182,
+          1.333751
+        ],
+        "hand_to_hand_m": 0.39708,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -3.44384456,
+            1.08684933,
+            1.60386646
+          ],
+          "goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "distance": 0.365967155,
+          "prop": "15749864914754250287",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -3.66059136,
+            1.25611162,
+            1.42514575
+          ],
+          "commit_goal": [
+            -3.68571568,
+            1.27560008,
+            1.40435839
+          ],
+          "commit_distance": 0.0379887484
+        }
+      }
+    ],
+    "voice_assets": {
+      "speech-60-1102-6.wav": {
+        "sha256": "00d37f8f7a78467254ed16cae25ba8609c0e124af5af58f3053db427762323bf",
+        "package_file": "assets/audio/watt/share.wav"
+      }
+    }
+  },
+  {
+    "actor": "watt",
+    "action": "repair",
+    "trigger": "game T chat",
+    "instruction": "请去修好旁边的应急发电机。",
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1110": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              0,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -0.34,
+            1.4,
+            4.02
+          ],
+          "Rotation": [
+            -0.14752837176843298,
+            0.9657378080228003,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 147,
+    "window_frames": 145,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 92,
+        "state": [
+          100
+        ]
+      }
+    ],
+    "event_seq": 92,
+    "recovery_seq": 96,
+    "receiver_idle_seq": null,
+    "begin_seq": 58,
+    "contact_seq": [
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95
+    ],
+    "steady_touch_seq": 83,
+    "first_touch": {
+      "seq": 62,
+      "clip": "Station-Repair",
+      "clip_s": 0.29710865,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -3.23364258,
+          0.521945953,
+          1.63632703
+        ],
+        "goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 0.0136317974,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.233643,
+        0.521946,
+        1.636327
+      ],
+      "mesh_surface_m": 0.00312
+    },
+    "last_touch_before_commit": {
+      "seq": 92,
+      "clip": "Idle-cycle",
+      "clip_s": 0,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -3.23764038,
+          0.509080052,
+          1.63425004
+        ],
+        "goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 4.95113341e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -3.23764038,
+          0.509080052,
+          1.63425004
+        ],
+        "commit_goal": [
+          -3.2376399,
+          0.509079993,
+          1.63424993
+        ],
+        "commit_distance": 4.95113341e-07
+      },
+      "hand_world": [
+        -3.23764,
+        0.50908,
+        1.63425
+      ],
+      "mesh_surface_m": 1e-05
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请去修好旁边的应急发电机。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请去修好旁边的应急发电机。"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "repair → repair"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 58,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "repair"
+      },
+      {
+        "seq": 92,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "repair"
+      },
+      {
+        "seq": 92,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 92,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 92,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 27,
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 4.76837158203125e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 27,
+        "seconds": 5.335189342498779,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 58,
+        "seconds": 7.303691387176514,
+        "clip": "Station-Repair"
+      },
+      {
+        "seq": 92,
+        "seconds": 9.28878927230835,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 90,
+        "clip": "Station-Repair",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23764038,
+            0.509080052,
+            1.63425004
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 4.95113341e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 91,
+        "clip": "Station-Repair",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23764038,
+            0.509080052,
+            1.63425004
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 4.95113341e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 92,
+        "clip": "Idle-cycle",
+        "clip_s": 0,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.23764038,
+            0.509080052,
+            1.63425004
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 4.95113341e-07,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.23764038,
+            0.509080052,
+            1.63425004
+          ],
+          "commit_goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "commit_distance": 4.95113341e-07
+        },
+        "hand_world": [
+          -3.23764,
+          0.50908,
+          1.63425
+        ],
+        "mesh_surface_m": 1e-05
+      },
+      {
+        "seq": 93,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0567359924,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "repair",
+          "target": "1110",
+          "hand": [
+            -3.55546498,
+            0.79153645,
+            1.85346568
+          ],
+          "goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "distance": 0.478382677,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.23764038,
+            0.509080052,
+            1.63425004
+          ],
+          "commit_goal": [
+            -3.2376399,
+            0.509079993,
+            1.63424993
+          ],
+          "commit_distance": 4.95113341e-07
+        },
+        "hand_world": [
+          -3.555465,
+          0.791536,
+          1.853466
+        ],
+        "mesh_surface_m": 0.29938
+      }
+    ],
+    "voice_assets": {
+      "speech-92-1102-6.wav": {
+        "sha256": "09b35565244ca6f7b6280b31b245c85928991458be9e3603badc47cdfe57039f",
+        "package_file": "assets/audio/watt/repair.wav"
+      }
+    }
+  },
+  {
+    "actor": "watt",
+    "action": "revive",
+    "trigger": "NPC RescueIntent",
+    "instruction": null,
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "HealthComponent": {
+            "Current": 0,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            0.46,
+            1.4,
+            2.38
+          ],
+          "Rotation": [
+            -0.16352829877647965,
+            1.4486453589059705,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 138,
+    "window_frames": 124,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 83,
+        "state": [
+          50
+        ]
+      }
+    ],
+    "event_seq": 83,
+    "recovery_seq": 88,
+    "receiver_idle_seq": 110,
+    "begin_seq": 41,
+    "contact_seq": [
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87
+    ],
+    "steady_touch_seq": 72,
+    "first_touch": {
+      "seq": 61,
+      "clip": "Station-Revive",
+      "clip_s": 1.06951427,
+      "receiver_clip": "Station-Down",
+      "contact": {
+        "action": "revive",
+        "target": "1101",
+        "hand": [
+          -3.08437371,
+          0.349942148,
+          1.76202083
+        ],
+        "goal": [
+          -3.08377433,
+          0.348233581,
+          1.73954344
+        ],
+        "distance": 0.0225501992,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -3.084374,
+        0.349942,
+        1.762021
+      ],
+      "hand_to_hand_m": 0.02255
+    },
+    "last_touch_before_commit": {
+      "seq": 83,
+      "clip": "Idle-cycle",
+      "clip_s": 0,
+      "receiver_clip": "Station-Down",
+      "contact": {
+        "action": "revive",
+        "target": "1101",
+        "hand": [
+          -3.08377433,
+          0.3482337,
+          1.7395432
+        ],
+        "goal": [
+          -3.08377433,
+          0.348233581,
+          1.73954344
+        ],
+        "distance": 2.66560079e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -3.08377433,
+          0.3482337,
+          1.7395432
+        ],
+        "commit_goal": [
+          -3.08377433,
+          0.348233581,
+          1.73954344
+        ],
+        "commit_distance": 2.66560079e-07
+      },
+      "hand_world": [
+        -3.083774,
+        0.348234,
+        1.739543
+      ],
+      "hand_to_hand_m": 0.0
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1101",
+        "kind": "player_down",
+        "text": "玩家倒地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "队友刚刚倒下了。 扶起倒地的队友 / 玩家"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "revive → revive"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 3,
+        "entity": "1101",
+        "kind": "player_down",
+        "text": "玩家倒地"
+      },
+      {
+        "seq": 41,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "revive"
+      },
+      {
+        "seq": 83,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "revive"
+      },
+      {
+        "seq": 83,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 83,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 83,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 84,
+        "entity": "1101",
+        "kind": "player_revived",
+        "text": "玩家恢复行动"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 3.5459717512130737,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 41,
+        "seconds": 5.724264025688171,
+        "clip": "Station-Revive"
+      },
+      {
+        "seq": 83,
+        "seconds": 7.715708613395691,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 81,
+        "clip": "Station-Revive",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Station-Down",
+        "contact": {
+          "action": "revive",
+          "target": "1101",
+          "hand": [
+            -3.08377433,
+            0.3482337,
+            1.7395432
+          ],
+          "goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "distance": 2.66560079e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.083774,
+          0.348234,
+          1.739543
+        ],
+        "hand_to_hand_m": 0.0
+      },
+      {
+        "seq": 82,
+        "clip": "Station-Revive",
+        "clip_s": 1.29999995,
+        "receiver_clip": "Station-Down",
+        "contact": {
+          "action": "revive",
+          "target": "1101",
+          "hand": [
+            -3.08377433,
+            0.3482337,
+            1.7395432
+          ],
+          "goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "distance": 2.66560079e-07,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -3.083774,
+          0.348234,
+          1.739543
+        ],
+        "hand_to_hand_m": 0.0
+      },
+      {
+        "seq": 83,
+        "clip": "Idle-cycle",
+        "clip_s": 0,
+        "receiver_clip": "Station-Down",
+        "contact": {
+          "action": "revive",
+          "target": "1101",
+          "hand": [
+            -3.08377433,
+            0.3482337,
+            1.7395432
+          ],
+          "goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "distance": 2.66560079e-07,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.08377433,
+            0.3482337,
+            1.7395432
+          ],
+          "commit_goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "commit_distance": 2.66560079e-07
+        },
+        "hand_world": [
+          -3.083774,
+          0.348234,
+          1.739543
+        ],
+        "hand_to_hand_m": 0.0
+      },
+      {
+        "seq": 84,
+        "clip": "Idle-cycle",
+        "clip_s": 0.046875,
+        "receiver_clip": "Station-GetUp",
+        "contact": {
+          "action": "revive",
+          "target": "1101",
+          "hand": [
+            -3.37396073,
+            0.748636305,
+            2.01036859
+          ],
+          "goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "distance": 0.56380558,
+          "prop": "0",
+          "passed": true,
+          "released": true,
+          "commit_hand": [
+            -3.08377433,
+            0.3482337,
+            1.7395432
+          ],
+          "commit_goal": [
+            -3.08377433,
+            0.348233581,
+            1.73954344
+          ],
+          "commit_distance": 2.66560079e-07
+        },
+        "hand_world": [
+          -3.37396,
+          0.748636,
+          2.010369
+        ],
+        "hand_to_hand_m": 0.55984
+      }
+    ],
+    "voice_assets": {
+      "speech-83-1102-2.wav": {
+        "sha256": "ab08a239cdf1e481cf62665a5529a1f93b4bf1ac2e880140a9ba5af4513af5c5",
+        "package_file": "assets/audio/watt/revive.wav"
+      }
+    }
+  },
+  {
+    "actor": "watt",
+    "action": "heal",
+    "trigger": "game T chat",
+    "instruction": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。",
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "yard",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -12.2,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          },
+          "HealthComponent": {
+            "Current": 40,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1921": {
+          "TransformComponent": {
+            "Translation": [
+              -6.0,
+              0.08,
+              3.45
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -5.3500000000000005,
+            1.45,
+            4.92
+          ],
+          "Rotation": [
+            -0.15475268763214814,
+            0.4147924528730719,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 101,
+    "window_frames": 99,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          40
+        ]
+      },
+      {
+        "seq": 45,
+        "state": [
+          0,
+          90
+        ]
+      }
+    ],
+    "event_seq": 45,
+    "recovery_seq": 65,
+    "receiver_idle_seq": null,
+    "begin_seq": 29,
+    "contact_seq": [
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+    ],
+    "steady_touch_seq": 41,
+    "first_touch": {
+      "seq": 36,
+      "clip": "Station-UseMedkit",
+      "clip_s": 0.518709183,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "heal",
+        "target": "1102",
+        "hand": [
+          -6.74809265,
+          1.21113789,
+          1.54500198
+        ],
+        "goal": [
+          -6.75002527,
+          1.22759545,
+          1.5495553
+        ],
+        "distance": 0.0171848461,
+        "prop": "16185501474038474872",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -6.748093,
+        1.211138,
+        1.545002
+      ],
+      "finger_to_chest_joint_m": 0.23471
+    },
+    "last_touch_before_commit": {
+      "seq": 45,
+      "clip": "Station-UseMedkit",
+      "clip_s": 1,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "heal",
+        "target": "1102",
+        "hand": [
+          -6.75583458,
+          1.22761071,
+          1.55705571
+        ],
+        "goal": [
+          -6.75583458,
+          1.22761035,
+          1.55705595
+        ],
+        "distance": 4.29815202e-07,
+        "prop": "16185501474038474872",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -6.75583458,
+          1.22761071,
+          1.55705571
+        ],
+        "commit_goal": [
+          -6.75583458,
+          1.22761035,
+          1.55705595
+        ],
+        "commit_distance": 4.29815202e-07
+      },
+      "hand_world": [
+        -6.755835,
+        1.227611,
+        1.557056
+      ],
+      "finger_to_chest_joint_m": 0.23745
+    },
+    "closest_logged_goal_m": 0.0,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "heal_begin",
+        "text": "1102"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "heal / 我受伤了，给我自己使用一份背包中的医疗包"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "heal → Sandbox.StationSelfCare"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "Sandbox.StationSelfCare"
+      },
+      {
+        "seq": 45,
+        "entity": "1102",
+        "kind": "heal_contact",
+        "text": "1102"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "Sandbox.StationSelfCare"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 62,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 29,
+        "text": "heal / 我受伤了，给我自己使用一份背包中的医疗包"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 3.5762786865234375e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 29,
+        "seconds": 5.479171395301819,
+        "clip": "Station-UseMedkit"
+      },
+      {
+        "seq": 62,
+        "seconds": 7.456117749214172,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 43,
+        "clip": "Station-UseMedkit",
+        "clip_s": 0.946825027,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1102",
+          "hand": [
+            -6.75583458,
+            1.22761059,
+            1.55705583
+          ],
+          "goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "distance": 2.66560079e-07,
+          "prop": "16185501474038474872",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -6.755835,
+          1.227611,
+          1.557056
+        ],
+        "finger_to_chest_joint_m": 0.23745
+      },
+      {
+        "seq": 44,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1102",
+          "hand": [
+            -6.75583458,
+            1.22761071,
+            1.55705571
+          ],
+          "goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "distance": 4.29815202e-07,
+          "prop": "16185501474038474872",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -6.755835,
+          1.227611,
+          1.557056
+        ],
+        "finger_to_chest_joint_m": 0.23745
+      },
+      {
+        "seq": 45,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1102",
+          "hand": [
+            -6.75583458,
+            1.22761071,
+            1.55705571
+          ],
+          "goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "distance": 4.29815202e-07,
+          "prop": "16185501474038474872",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.75583458,
+            1.22761071,
+            1.55705571
+          ],
+          "commit_goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "commit_distance": 4.29815202e-07
+        },
+        "hand_world": [
+          -6.755835,
+          1.227611,
+          1.557056
+        ],
+        "finger_to_chest_joint_m": 0.23745
+      },
+      {
+        "seq": 46,
+        "clip": "Station-UseMedkit",
+        "clip_s": 1.0530858,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "heal",
+          "target": "1102",
+          "hand": [
+            -6.75583458,
+            1.22761047,
+            1.55705595
+          ],
+          "goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "distance": 1.1920929e-07,
+          "prop": "16185501474038474872",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.75583458,
+            1.22761071,
+            1.55705571
+          ],
+          "commit_goal": [
+            -6.75583458,
+            1.22761035,
+            1.55705595
+          ],
+          "commit_distance": 4.29815202e-07
+        },
+        "hand_world": [
+          -6.755835,
+          1.22761,
+          1.557056
+        ],
+        "finger_to_chest_joint_m": 0.23746
+      }
+    ],
+    "voice_assets": {
+      "speech-62-1102-6.wav": {
+        "sha256": "2c595c659df8b1da9ca2e3b80aeeb386fdaae1682c67860ae7d89abb5a568102",
+        "package_file": "assets/audio/watt/heal.wav"
+      }
+    }
+  }
+]

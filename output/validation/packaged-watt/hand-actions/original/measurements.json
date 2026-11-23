@@ -1,0 +1,588 @@
+[
+  {
+    "actor": "watt",
+    "action": "give",
+    "trigger": "game T chat",
+    "instruction": "请把你背包里的一份医疗包亲手送到我手上。",
+    "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+    "exe_sha256": "85627901da8b108eacb20cfaf05128493834c6caae2d9175f00793dd6f9911eb",
+    "camera": "package original",
+    "scene": {},
+    "frames": 103,
+    "window_frames": 99,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          1
+        ]
+      },
+      {
+        "seq": 53,
+        "state": [
+          0,
+          2
+        ]
+      }
+    ],
+    "event_seq": 53,
+    "recovery_seq": 72,
+    "receiver_idle_seq": null,
+    "begin_seq": 42,
+    "contact_seq": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71
+    ],
+    "steady_touch_seq": 53,
+    "first_touch": {
+      "seq": 52,
+      "clip": "Station-Give",
+      "clip_s": 0.729880333,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1101",
+        "hand": [
+          -6.51307106,
+          1.27559865,
+          1.04858255
+        ],
+        "goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "distance": 5.19188943e-05,
+        "prop": "10388393719686099726",
+        "passed": false,
+        "released": false
+      },
+      "hand_world": [
+        -6.513071,
+        1.275599,
+        1.048582
+      ],
+      "hand_to_hand_m": 0.00023,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1102",
+        "hand": [
+          -6.51324511,
+          1.2754842,
+          1.04848671
+        ],
+        "goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "distance": 0.000194927998,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      }
+    },
+    "last_touch_before_commit": {
+      "seq": 53,
+      "clip": "Station-Give",
+      "clip_s": 0.729880333,
+      "receiver_clip": "Idle-cycle",
+      "contact": {
+        "action": "give",
+        "target": "1101",
+        "hand": [
+          -6.51307106,
+          1.27559865,
+          1.04858255
+        ],
+        "goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "distance": 5.19188943e-05,
+        "prop": "0",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -6.51307106,
+          1.27559865,
+          1.04858255
+        ],
+        "commit_goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "commit_distance": 5.19188943e-05
+      },
+      "hand_world": [
+        -6.513071,
+        1.275599,
+        1.048582
+      ],
+      "hand_to_hand_m": 0.00023,
+      "receiver_contact": {
+        "action": "receive",
+        "target": "1102",
+        "hand": [
+          -6.51324511,
+          1.2754842,
+          1.04848671
+        ],
+        "goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "distance": 0.000194927998,
+        "prop": "10388393719686099726",
+        "passed": true,
+        "released": false,
+        "commit_hand": [
+          -6.51324511,
+          1.2754842,
+          1.04848671
+        ],
+        "commit_goal": [
+          -6.51309681,
+          1.27560008,
+          1.04853749
+        ],
+        "commit_distance": 0.000194927998
+      }
+    },
+    "closest_logged_goal_m": 5.2e-05,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 离开待命位置跟随队友一起走 / 玩家"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "follow → follow"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 6,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "follow"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "子树提问",
+        "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。"
+      },
+      {
+        "seq": 33,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 33,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "share → share"
+      },
+      {
+        "seq": 33,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 42,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "give"
+      },
+      {
+        "seq": 53,
+        "entity": "1102",
+        "kind": "库存",
+        "text": "物品已交到队友手中"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "share"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 离开待命位置跟随队友一起走 / 玩家"
+      },
+      {
+        "seq": 72,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "follow → follow"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 29,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 33,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 9.5367431640625e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 4.274868965148926,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 6,
+        "seconds": 4.573009967803955,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 33,
+        "seconds": 6.648603439331055,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 42,
+        "seconds": 7.276416778564453,
+        "clip": "Station-Give"
+      },
+      {
+        "seq": 72,
+        "seconds": 9.274048805236816,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 51,
+        "clip": "Station-Give",
+        "clip_s": 0.668041229,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -6.50309706,
+            1.27834404,
+            1.06351888
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.0182199441,
+          "prop": "10388393719686099726",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -6.503097,
+          1.278344,
+          1.063519
+        ],
+        "hand_to_hand_m": 0.07669,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -6.56059599,
+            1.23830855,
+            1.03232944
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.0625262409,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 52,
+        "clip": "Station-Give",
+        "clip_s": 0.729880333,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -6.51307106,
+            1.27559865,
+            1.04858255
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 5.19188943e-05,
+          "prop": "10388393719686099726",
+          "passed": false,
+          "released": false
+        },
+        "hand_world": [
+          -6.513071,
+          1.275599,
+          1.048582
+        ],
+        "hand_to_hand_m": 0.00023,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -6.51324511,
+            1.2754842,
+            1.04848671
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.000194927998,
+          "prop": "0",
+          "passed": false,
+          "released": false
+        }
+      },
+      {
+        "seq": 53,
+        "clip": "Station-Give",
+        "clip_s": 0.729880333,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -6.51307106,
+            1.27559865,
+            1.04858255
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 5.19188943e-05,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.51307106,
+            1.27559865,
+            1.04858255
+          ],
+          "commit_goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "commit_distance": 5.19188943e-05
+        },
+        "hand_world": [
+          -6.513071,
+          1.275599,
+          1.048582
+        ],
+        "hand_to_hand_m": 0.00023,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -6.51324511,
+            1.2754842,
+            1.04848671
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.000194927998,
+          "prop": "10388393719686099726",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.51324511,
+            1.2754842,
+            1.04848671
+          ],
+          "commit_goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "commit_distance": 0.000194927998
+        }
+      },
+      {
+        "seq": 54,
+        "clip": "Station-Give",
+        "clip_s": 0.781961441,
+        "receiver_clip": "Idle-cycle",
+        "contact": {
+          "action": "give",
+          "target": "1101",
+          "hand": [
+            -6.49101305,
+            1.27353346,
+            1.0869714
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.0443748645,
+          "prop": "0",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.51307106,
+            1.27559865,
+            1.04858255
+          ],
+          "commit_goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "commit_distance": 5.19188943e-05
+        },
+        "hand_world": [
+          -6.491013,
+          1.273533,
+          1.086972
+        ],
+        "hand_to_hand_m": 0.19505,
+        "receiver_contact": {
+          "action": "receive",
+          "target": "1102",
+          "hand": [
+            -6.63968229,
+            1.17723954,
+            1.00531483
+          ],
+          "goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "distance": 0.166032761,
+          "prop": "10388393719686099726",
+          "passed": true,
+          "released": false,
+          "commit_hand": [
+            -6.51324511,
+            1.2754842,
+            1.04848671
+          ],
+          "commit_goal": [
+            -6.51309681,
+            1.27560008,
+            1.04853749
+          ],
+          "commit_distance": 0.000194927998
+        }
+      }
+    ],
+    "voice_assets": {
+      "speech-72-1102-6.wav": {
+        "sha256": "00d37f8f7a78467254ed16cae25ba8609c0e124af5af58f3053db427762323bf",
+        "package_file": "assets/audio/watt/share.wav"
+      }
+    }
+  }
+]
