@@ -1,0 +1,241 @@
+{
+  "archive_sha256": "6be7e0b53d3ec575b8599f26070f09d4906159aff052c564703da701c08375b9",
+  "exe_sha256": "cc3ad128b9b096d470fdd5aa057ba2b50ef82d11a031b31537bba160de4158ae",
+  "replaced_native": false,
+  "gameplay_sha256": "36e516e67ab7a97ebd587742fb3eb84ee36da2c1821301734d854e39a7026320",
+  "images": 180,
+  "first_image": 8,
+  "last_image": 191,
+  "max_screenshot_readback_frames": 2,
+  "walk": {
+    "samples": 19,
+    "duration_s": 1.012716293334961,
+    "travelled_m": 2.7390776781362343,
+    "speed_m_s": 2.7046841214692203,
+    "start_xyz": [
+      -6.83923149,
+      0.0799999982,
+      1.41221058
+    ],
+    "end_xyz": [
+      -4.18756771,
+      0.0799999982,
+      1.97944009
+    ]
+  },
+  "run": {
+    "samples": 13,
+    "duration_s": 0.7013587951660156,
+    "travelled_m": 2.505707319429709,
+    "speed_m_s": 3.5726468915765057,
+    "start_xyz": [
+      -4.18756771,
+      0.0799999982,
+      2.02642393
+    ],
+    "end_xyz": [
+      -2.01074076,
+      0.0799999982,
+      2.74919844
+    ]
+  },
+  "turn": {
+    "samples": 11,
+    "duration_s": 0.6412801742553711,
+    "travelled_m": 3.069720747321189,
+    "speed_m_s": 4.786863637076612,
+    "start_xyz": [
+      -1.82196796,
+      0.0799999982,
+      2.78712988
+    ],
+    "end_xyz": [
+      -0.981610775,
+      0.0799999982,
+      -0.128134698
+    ]
+  },
+  "watt_follow": {
+    "samples": 60,
+    "duration_s": 3.659976005554199,
+    "travelled_m": 4.330938849429666,
+    "speed_m_s": 1.1833243832356406,
+    "start_xyz": [
+      -5.60470295,
+      0.0799999982,
+      -0.123878263
+    ],
+    "end_xyz": [
+      -2.27494788,
+      0.0799999982,
+      0.908149362
+    ]
+  },
+  "jump_height_m": 1.1234322763,
+  "punches": [
+    {
+      "applied_seq": 34,
+      "peak_visible_change_px": 10819,
+      "changed": [
+        {
+          "seq": 34,
+          "changed_px": 867
+        },
+        {
+          "seq": 35,
+          "changed_px": 1563
+        },
+        {
+          "seq": 36,
+          "changed_px": 2203
+        },
+        {
+          "seq": 36,
+          "changed_px": 2203
+        },
+        {
+          "seq": 38,
+          "changed_px": 3248
+        },
+        {
+          "seq": 38,
+          "changed_px": 3248
+        },
+        {
+          "seq": 39,
+          "changed_px": 3248
+        },
+        {
+          "seq": 40,
+          "changed_px": 4003
+        },
+        {
+          "seq": 41,
+          "changed_px": 4237
+        },
+        {
+          "seq": 42,
+          "changed_px": 4237
+        },
+        {
+          "seq": 43,
+          "changed_px": 4681
+        },
+        {
+          "seq": 43,
+          "changed_px": 4681
+        },
+        {
+          "seq": 44,
+          "changed_px": 4873
+        },
+        {
+          "seq": 45,
+          "changed_px": 4983
+        },
+        {
+          "seq": 46,
+          "changed_px": 5128
+        },
+        {
+          "seq": 47,
+          "changed_px": 5219
+        },
+        {
+          "seq": 48,
+          "changed_px": 10819
+        },
+        {
+          "seq": 48,
+          "changed_px": 10819
+        },
+        {
+          "seq": 49,
+          "changed_px": 8244
+        }
+      ]
+    },
+    {
+      "applied_seq": 57,
+      "peak_visible_change_px": 5616,
+      "changed": [
+        {
+          "seq": 57,
+          "changed_px": 1060
+        },
+        {
+          "seq": 58,
+          "changed_px": 1694
+        },
+        {
+          "seq": 59,
+          "changed_px": 2288
+        },
+        {
+          "seq": 59,
+          "changed_px": 2288
+        },
+        {
+          "seq": 60,
+          "changed_px": 2904
+        },
+        {
+          "seq": 61,
+          "changed_px": 3379
+        },
+        {
+          "seq": 62,
+          "changed_px": 3885
+        },
+        {
+          "seq": 63,
+          "changed_px": 4286
+        },
+        {
+          "seq": 63,
+          "changed_px": 4286
+        },
+        {
+          "seq": 64,
+          "changed_px": 4614
+        },
+        {
+          "seq": 65,
+          "changed_px": 4892
+        },
+        {
+          "seq": 66,
+          "changed_px": 5101
+        },
+        {
+          "seq": 67,
+          "changed_px": 5316
+        },
+        {
+          "seq": 67,
+          "changed_px": 5316
+        },
+        {
+          "seq": 69,
+          "changed_px": 5446
+        },
+        {
+          "seq": 69,
+          "changed_px": 5446
+        },
+        {
+          "seq": 70,
+          "changed_px": 5559
+        },
+        {
+          "seq": 71,
+          "changed_px": 5595
+        },
+        {
+          "seq": 72,
+          "changed_px": 5616
+        }
+      ]
+    }
+  ]
+}
