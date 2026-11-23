@@ -37,6 +37,8 @@ def main():
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
     parser.add_argument("--melee", choices=("hit","miss","wall","cancel","movement"), help="验证维修站玩家的移动、镜头和近战")
     parser.add_argument("--interaction", choices=("pickup","repair","revive","equipment"), help="实际按 E、H 与装备键，检查动作和交互结果")
+    parser.add_argument("--sentinel", action="store_true", help="核对巡检机追赶玩家时的实体、根骨和脚步")
+    parser.add_argument("--watt-terrain",choices=("gap","climb"),help="在测试平台观察瓦特自主跟随领队跨沟、攀台和恢复移动")
     parser.add_argument("--animation-actors", action="store_true", help="在双角色测试场景检查 C# 通知与动作打断")
     parser.add_argument("--animator", type=Path, help="把另存的动作表用于本次落地测试")
     parser.add_argument("--orbit-yaw",type=float,help="在运行副本中指定第三人称环视起始角度（度）")
@@ -84,6 +86,12 @@ def main():
         if args.interaction:
             from station_interactions import place_targets
             place_targets(scene, args.interaction)
+    if args.sentinel:
+        from station_guard_gait import arrange
+        arrange(scene)
+    if args.watt_terrain:
+        from station_npc_traversal import arrange
+        arrange(scene,args.watt_terrain)
     if args.animation_actors:
         operator = next(row for row in scene["Entities"] if row["Entity"]==1101)
         camera = next(row for row in scene["Entities"] if row["Entity"]==1100)
@@ -116,7 +124,7 @@ def main():
     shutil.copy2(str(source)+".render.yaml",str(sample)+".render.yaml")
     if args.animation_actors:
         Path(str(sample)+".render.yaml").write_text("Shading: Lit\nSamples: 1\nIndirect: Off\nTAA: false\n",encoding="utf8")
-    if args.melee or args.interaction:
+    if args.melee or args.interaction or args.sentinel or args.watt_terrain:
         Path(str(sample)+".render.yaml").write_text("Shading: Base color\n",encoding="utf8")
     output = ROOT/"output/validation/watt-station"
     output.mkdir(parents=True,exist_ok=True)
@@ -128,10 +136,11 @@ def main():
     command = subprocess.list2cmdline([str(exe),"--play",str(sample)])
     game_env = dict(os.environ,RF_VULKAN_VALIDATION="1")
     if args.recorded_speech: game_env["REDFLAG_PLAYTEST"] = str(work/"session")
-    if args.melee or args.interaction:
+    if args.melee or args.interaction or args.sentinel or args.watt_terrain or args.npc_motion:
         session = work/"session"
         session.mkdir()
-        (session/"session.json").write_text(json.dumps({"pose_nodes":["hand.L","foot.L","foot.R"]}),encoding="utf8")
+        nodes = ["MASTER","Body","L-RearFoot","hand.L"] if args.sentinel else ["hand.L","foot.L","foot.R"]
+        (session/"session.json").write_text(json.dumps({"pose_nodes":nodes}),encoding="utf8")
         game_env["REDFLAG_PLAYTEST"] = str(session)
     process, thread, pid, _ = win32process.CreateProcess(None, command, None, None, False, win32con.CREATE_NO_WINDOW,
                                     game_env,str(work),info)
@@ -159,9 +168,15 @@ def main():
     try:
         hwnd = wait_for(window,process)
         win32gui.PostMessage(hwnd,win32con.WM_SETFOCUS,0,0)
-        if args.melee or args.interaction:
+        if args.melee or args.interaction or args.sentinel or args.watt_terrain:
             win32gui.SetWindowPos(hwnd,None,0,0,840,540,win32con.SWP_NOMOVE|win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE)
-            if args.melee:
+            if args.watt_terrain:
+                from station_npc_traversal import verify
+                verify(args.watt_terrain,session,process,exe,ROOT/"output/validation/terrain-traversal/watt-follow",hwnd)
+            elif args.sentinel:
+                from station_guard_gait import verify
+                verify(session,process,exe,ROOT/"output/validation/station-actions/sentinel.json")
+            elif args.melee:
                 from station_melee import verify
                 verify(args.melee, session, process, exe, output/"melee")
             else:
@@ -318,6 +333,8 @@ def main():
             (pictures/"screens.json").write_text(json.dumps(shots,indent=2)+"\n",encoding="utf8")
             if "delivered" not in seen:
                 raise RuntimeError(f"物品尚未交给玩家。实际动作记录在 {pictures}")
+            from station_companion_pose import verify
+            verify(session, pictures/"pose.json")
         else:
             if args.show_help:
                 key(win32con.VK_F1, True)
