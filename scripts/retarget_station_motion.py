@@ -6,6 +6,11 @@ import numpy as np
 from scipy.spatial.transform import Rotation, Slerp
 
 
+# 源剪辑、游戏剪辑。同一份表也写入模型的来源清单。
+GESTURES = [("Interact", "Station-Give"), ("Punch_Jab", "Station-Punch"),
+            ("Crouch_Idle_Loop", "Station-Crouch"), ("Crouch_Fwd_Loop", "Station-CrouchWalk")]
+
+
 def read_glb(path):
     raw = path.read_bytes()
     size = struct.unpack_from("<I", raw, 12)[0]
@@ -31,10 +36,11 @@ class Rig:
     def values(self, index):
         accessor = self.doc["accessors"][index]
         view = self.doc["bufferViews"][accessor["bufferView"]]
-        width = {"SCALAR": 1, "VEC3": 3, "VEC4": 4}[accessor["type"]]
+        width = {"SCALAR": 1, "VEC3": 3, "VEC4": 4, "MAT4": 16}[accessor["type"]]
+        element = np.dtype({5121: "u1", 5123: "<u2", 5126: "<f4"}[accessor["componentType"]])
         offset = view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
-        return np.ndarray((accessor["count"], width), dtype="<f4", buffer=self.data, offset=offset,
-                          strides=(view.get("byteStride", width * 4), 4))
+        return np.ndarray((accessor["count"], width), dtype=element, buffer=self.data, offset=offset,
+                          strides=(view.get("byteStride", width * element.itemsize), element.itemsize))
 
     def clip(self, name):
         return next(a for a in self.doc["animations"] if a["name"] == name)
@@ -69,11 +75,48 @@ class Rig:
             world[i] = pos, rotation, scale
         return world
 
+    def shoe_vertices(self):
+        """按关节整理靴子的蒙皮顶点，保存它们在关节坐标中的位置和权重。"""
+        vertices = []
+        for node in self.nodes:
+            if "skin" not in node:
+                continue
+            skin = self.doc["skins"][node["skin"]]
+            inverse_bind = self.values(skin["inverseBindMatrices"]).reshape(-1, 4, 4).transpose(0, 2, 1)
+            joints = np.array(skin["joints"])
+            shoes = [i for i in joints if self.nodes[i]["name"].startswith(("foot.", "toe.", "footcover."))]
+            for primitive in self.doc["meshes"][node["mesh"]]["primitives"]:
+                attrs = primitive["attributes"]
+                weights = self.values(attrs["WEIGHTS_0"])
+                indices = self.values(attrs["JOINTS_0"])
+                keep = np.any(np.isin(joints[indices], shoes) & (weights > 0), axis=1)
+                if not np.any(keep):
+                    continue
+                indices, weights = indices[keep], weights[keep]
+                position = np.column_stack((self.values(attrs["POSITION"])[keep], np.ones(keep.sum())))
+                bound = np.einsum("vkij,vj->vki", inverse_bind[indices], position)
+                vertices.append((joints[indices], weights, bound))
+        return vertices
+
+    def shoe_height(self, world, vertices):
+        # 只计算世界坐标 Y，和引擎对顶点使用的蒙皮矩阵、四个关节权重一致。
+        frames = max(len(pos) for pos, rotation, scale in world.values())
+        row = np.empty((frames, len(self.nodes), 4))
+        for i, (pos, rotation, scale) in world.items():
+            row[:, i, :3] = rotation.as_matrix()[:, 1, :] * scale
+            row[:, i, 3] = pos[:, 1]
+        floor = np.full(frames, np.inf)
+        for indices, weights, bound in vertices:
+            height = np.einsum("fvki,vki,vk->fv", row[:, indices], bound, weights)
+            floor = np.minimum(floor, height.min(axis=1))
+        return floor
+
 
 def add_interactions(doc, data, gestures, floor_motion):
     dest = Rig(doc, data)
     idle = dest.pose(dest.clip("Idle-cycle"), [0])
     rest = dest.world(idle)
+    shoes = dest.shoe_vertices()
     # 目标骨架多出的活塞、前臂滑轨和指节沿用作者待机时的局部姿势，会随父骨骼运动。
     mapping = {"spine1": "spine_01", "spine2": "spine_02", "chest": "spine_03",
                "neck": "neck_01", "head.001": "Head"}
@@ -100,12 +143,14 @@ def add_interactions(doc, data, gestures, floor_motion):
         doc["accessors"].append(item)
         return len(doc["accessors"]) - 1
 
-    clips = [(floor_motion, "Farm_Harvest", "Station-Pickup"), (gestures, "Interact", "Station-Give")]
+    clips = [(floor_motion, "Farm_Harvest", "Station-Pickup")]
+    clips.extend((gestures, original, name) for original, name in GESTURES)
     for source_path, clip_name, robot_clip in clips:
         picking = robot_clip == "Station-Pickup"
+        player_motion = robot_clip not in ("Station-Give", "Station-Pickup")
         source = Rig(*read_glb(source_path))
         joints, directions = mapping.copy(), ends.copy()
-        if picking:
+        if picking or player_motion:
             joints["hips"] = "pelvis"
             for side in ("L", "R"):
                 for robot, person in (("thigh", "thigh"), ("knee", "calf"), ("foot", "foot")):
@@ -113,6 +158,18 @@ def add_interactions(doc, data, gestures, floor_motion):
                 directions["thigh." + side] = "knee." + side, "calf_" + side.lower()
                 directions["knee." + side] = "foot." + side, "foot_" + side.lower()
                 directions["foot." + side] = "toe." + side, "ball_" + side.lower()
+        if player_motion:
+            directions.update({"hips": ("spine1", "spine_01"), "spine1": ("spine2", "spine_02"),
+                               "spine2": ("chest", "spine_03"), "chest": ("neck", "neck_01"),
+                               "neck": ("head.001", "Head")})
+        if robot_clip == "Station-Punch":
+            # 用源动画指节的方向重建握拳。只移动手腕会让原模型张着手掌向前伸。
+            for side in ("L", "R"):
+                for robot, finger in (("f_index", "index"), ("f_middle", "middle"), ("f_ring", "ring"), ("thumb", "thumb")):
+                    for part in (1, 2):
+                        name = f"{robot}.0{part}.{side}"
+                        joints[name] = f"{finger}_0{part}_{side.lower()}"
+                        directions[name] = f"{robot}.0{part+1}.{side}", f"{finger}_0{part+1}_{side.lower()}"
         original = source.clip(clip_name)
         duration = max(source.values(s["input"])[-1, 0] for s in original["samplers"])
         # 原动作以 30 Hz 采样。保留同一秒数和帧数，关键帧之间由引擎做球面插值。
@@ -153,7 +210,20 @@ def add_interactions(doc, data, gestures, floor_motion):
                     dest_end, source_end = directions[name]
                     before = rest[dest.names[dest_end]][0][0] - rest[i][0][0]
                     after = source_bone(source_end)[0][0] - start[0]
-                    correction, _ = Rotation.align_vectors([after / np.linalg.norm(after)], [before / np.linalg.norm(before)])
+                    before = [before / np.linalg.norm(before)]
+                    after = [after / np.linalg.norm(after)]
+                    # 一条骨能定伸展方向，第二个方向定转身或翻掌的角度。
+                    if player_motion and name in ("hips", "spine1", "spine2", "chest"):
+                        before.append(rest[dest.names["upper_arm.L"]][0][0] - rest[dest.names["upper_arm.R"]][0][0])
+                        after.append(source_bone("upperarm_l")[0][0] - source_bone("upperarm_r")[0][0])
+                    elif player_motion and name in ("hand.L", "hand.R"):
+                        side = name[-1]
+                        before.append(rest[dest.names["f_index.01." + side]][0][0] - rest[dest.names["f_ring.01." + side]][0][0])
+                        after.append(source_bone("index_01_" + side.lower())[0][0] - source_bone("ring_01_" + side.lower())[0][0])
+                    if len(before) == 2:
+                        before[1] /= np.linalg.norm(before[1])
+                        after[1] /= np.linalg.norm(after[1])
+                    correction, _ = Rotation.align_vectors(after, before)
                     reference = correction * reference
                 # 将源骨相对第一帧的转动施加到目标骨骼，再换回它在父骨骼下的旋转。
                 world = motion * motion[0].inv() * reference
@@ -166,17 +236,47 @@ def add_interactions(doc, data, gestures, floor_motion):
                 tall = np.linalg.norm(rest[i][0][0] - rest[dest.names["foot.L"]][0][0])
                 displacement = (hip - hip[0]) * (tall / np.linalg.norm(hip[0] - ankle))
                 result[i]["translation"] = idle[i]["translation"] + parent.inv().apply(displacement) / rest[dest.parents[i]][2]
-        if picking:
-            # 两台角色的腿长不同。以机器人原来较低的脚尖为地面，逐帧消除重定向后双脚的上下漂移。
-            feet = [dest.names["toe.L"], dest.names["toe.R"]]
-            ground = min(rest[i][0][0, 1] for i in feet)
+            if player_motion and name == "hips":
+                # 人与机器人的腿长不同。按大腿与小腿的总长缩放骨盆轨迹，接着由双脚决定离地高度。
+                def leg(lookup, names):
+                    hip, knee, foot = [lookup(j) for j in names]
+                    return np.linalg.norm(hip-knee) + np.linalg.norm(knee-foot)
+                robot_length = leg(lambda j: rest[dest.names[j]][0][0], ("thigh.L", "knee.L", "foot.L"))
+                human_length = leg(lambda j: source_bone(j)[0][0], ("thigh_l", "calf_l", "foot_l"))
+                displacement = source_bone("pelvis")[0] * (robot_length / human_length) - rest[i][0][0]
+                result[i]["translation"] = idle[i]["translation"] + parent.inv().apply(displacement) / rest[dest.parents[i]][2]
+        if picking or player_motion:
             posed = dest.world(result)
             delta = np.zeros((len(times), 3))
-            delta[:, 1] = ground - np.minimum(posed[feet[0]][0][:, 1], posed[feet[1]][0][:, 1])
+            if player_motion:
+                # 蹲行会翻滚脚掌，只看脚尖会让脚跟穿地。用实际靴底最低的顶点贴住地面。
+                delta[:, 1] = -dest.shoe_height(posed, shoes)
+            else:
+                # 拾取动作保留原来的脚尖接触高度，手指随后也相对于同一地面定位。
+                feet = [dest.names["toe.L"], dest.names["toe.R"]]
+                ground = min(rest[i][0][0, 1] for i in feet)
+                delta[:, 1] = ground - np.minimum(posed[feet[0]][0][:, 1], posed[feet[1]][0][:, 1])
             pelvis = dest.names["hips"]
             _, parent, scale = rest[dest.parents[pelvis]]
             result[pelvis]["translation"] += parent.inv().apply(delta) / scale
 
+        if robot_clip == "Station-CrouchWalk":
+            # 原动作在原地踏步。脚尖离最低点不到 2 厘米且向后移时，用它估计身体向前的速度。
+            posed = dest.world(result)
+            support_speeds = []
+            for foot in ("toe.L", "toe.R"):
+                toe = posed[dest.names[foot]][0]
+                speed = -np.diff(toe[:, 2]) / np.diff(times)
+                supporting = (toe[:-1, 1] < toe[:, 1].min() + .02) & (speed > 0)
+                support_speeds.extend(speed[supporting])
+            # 走路和跑步原件都把前进距离写在 root。游戏可按同一约定读取步幅，再固定 root 播放。
+            root = dest.names["root"]
+            _, parent, scale = posed[dest.parents[root]]
+            travel = np.zeros((len(times), 3))
+            travel[:, 2] = times * np.median(support_speeds)
+            result[root]["translation"] = result[root]["translation"] + parent.inv().apply(travel) / scale
+
+        if picking:
             # 机器人的指节更长。在腕部调整伸手的角度，让指节留在地面上方，手腕仍走作者的路径。
             posed = dest.world(result)
             hand = dest.names["hand.L"]

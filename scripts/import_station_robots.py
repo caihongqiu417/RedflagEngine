@@ -60,7 +60,7 @@ def import_robot(cache, enemy, motion, floor_motion):
     doc["animations"] = [clip for clip in doc["animations"] if "noexp" not in clip["name"].lower()
                          or clip["name"] == "Cannon_activation-noexp"]
     if not enemy:
-        from retarget_station_motion import add_interactions
+        from retarget_station_motion import add_interactions, GESTURES
         geometry = add_interactions(doc, geometry, motion, floor_motion)
     doc["buffers"][0]["byteLength"] = len(geometry)
     header = json.dumps(doc, separators=(",", ":")).encode()
@@ -76,8 +76,8 @@ def import_robot(cache, enemy, motion, floor_motion):
         record["additional_motion"] = [
             dict(author="Quaternius", license="CC0-1.0", source="https://quaternius.com/packs/" + pack + ".html",
                  file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(), original=clip, imported=name)
-            for path, pack, clip, name in [(floor_motion, "universalanimationlibrary2", "Farm_Harvest", "Station-Pickup"),
-                                            (motion, "universalanimationlibrary", "Interact", "Station-Give")]]
+            for path, pack, clip, name in [(floor_motion, "universalanimationlibrary2", "Farm_Harvest", "Station-Pickup")]
+            + [(motion, "universalanimationlibrary", clip, name) for clip, name in GESTURES]]
     return record
 
 

@@ -4,7 +4,7 @@
     "upstream": "player/model/player.glb",
     "commit": "a82f15448e9b015440d3bbdf5e10801b260c4e9f",
     "original_sha256": "16b783ec2e19245d034326d401796b9bd2635de75f4e38917854316abeee4f9c",
-    "sha256": "0ab78bc959555a52031bddbf52ad88dedec112a317e4a4324533af48968c4a44",
+    "sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
     "additional_motion": [
       {
         "author": "Quaternius",
@@ -23,6 +23,33 @@
         "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
         "original": "Interact",
         "imported": "Station-Give"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "file": "UAL1_Standard.glb",
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+        "original": "Punch_Jab",
+        "imported": "Station-Punch"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "file": "UAL1_Standard.glb",
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+        "original": "Crouch_Idle_Loop",
+        "imported": "Station-Crouch"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "file": "UAL1_Standard.glb",
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+        "original": "Crouch_Fwd_Loop",
+        "imported": "Station-CrouchWalk"
       }
     ]
   },
