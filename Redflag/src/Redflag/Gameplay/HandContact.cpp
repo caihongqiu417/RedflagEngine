@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "HandContact.h"
+#include "ColliderBounds.h"
 #include "TraversalRig.h"
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Animation/ActorAnimator.h"
@@ -126,8 +127,7 @@ namespace Redflag
 		} else if (s && glm::length(Flat(s->Stand)) > .001f) {
 			mark = goal + glm::vec3(objectModel * glm::vec4(s->Stand,0));
 		}
-		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
-			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(tr.Scale.x) : .3f;
+		const float radius = CharacterRadius(owner);
 		const glm::vec3 finalMark = mark;
 		if (s && glm::length(Flat(s->Stand))>.001f) mark = NextBoxCorner(object,tr.Translation,mark,radius);
 		glm::vec3 offset = Flat(mark-tr.Translation);

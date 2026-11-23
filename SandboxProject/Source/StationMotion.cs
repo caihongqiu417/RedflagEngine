@@ -17,14 +17,11 @@ namespace Sandbox
         private TraversalMode traversal;
         private bool jumpWasDown;
 
-        public void Update(Entity actor, TransformComponent pose, float yaw, bool aiming, float walkSpeed,
-            float seconds, bool busy)
+        internal void Update(Entity actor, TransformComponent pose, float yaw, bool aiming, float walkSpeed,
+            float seconds, bool busy, OperatorCollision body, float crouchHeight)
         {
-            bool crouch = !busy && Input.IsKeyDown(KeyCode.LeftControl) && !Airborne;
-            if (crouch != Crouched) {
-                Crouched = crouch;
-                GameWorld.BodyHeight(actor.Id,crouch ? 1.40f : 1.84f);
-            }
+            Crouched = !busy && Input.IsKeyDown(KeyCode.LeftControl) && !Airborne;
+            body.Crouch(Crouched, crouchHeight);
             float sin = (float)Math.Sin(yaw), cos = (float)Math.Cos(yaw);
             Vector3 forward = new Vector3(-sin,0,-cos), right = new Vector3(cos,0,-sin);
             Vector3 direction = (forward*Axis(KeyCode.W,KeyCode.S)+right*Axis(KeyCode.D,KeyCode.A)).Normalized();
@@ -57,6 +54,16 @@ namespace Sandbox
                 float turn = (float)Math.Atan2(Math.Sin(angle),Math.Cos(angle));
                 pose.Rotation = new Vector3(0,rotation+turn*(1f-(float)Math.Exp(-12f*seconds)),0);
             }
+        }
+
+        public void UpdateDown(ulong id, float seconds)
+        {
+            // 脚离开地面之后仍须逐帧走完这次下落。停止接受移动输入，保留原来的落点。
+            velocity = Vector3.Zero;
+            Crouched = Walking = Running = landing = Recovering = false;
+            Vector3 delta = Vector3.Zero;
+            traversal = GameWorld.Traverse(id, ref delta, .34f, seconds, TraversalInput.Walk);
+            Airborne = traversal == TraversalMode.Jump || traversal == TraversalMode.Climb;
         }
 
         public void OnNotice(AnimationEvent notice)

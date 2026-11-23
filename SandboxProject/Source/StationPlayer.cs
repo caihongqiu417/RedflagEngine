@@ -8,6 +8,9 @@ namespace Sandbox
     {
         public Entity Watt, Guard, Relay, Supply, Exit, Camera;
         public float MoveSpeed = 3f;
+        // 局部尺寸（米），按 Operator 靴底到头顶、卧姿背甲到胸口量取。
+        public float CrouchHeight = 1.33f, DownRadius = .33f, DownLength = 1.83f;
+        public Vector3 DownCenter = new Vector3(-.01f, .33f, -.197f);
         // 玩家进入闸口后，瓦特走到闸口附近也算到齐。距离以米计，可在场景中调整。
         public float ExitRadius = 1.6f;
         public float TeamExitRadius = 3.5f;
@@ -30,11 +33,14 @@ namespace Sandbox
         private int rescues;
         private string notice = "";
         private StationHud hud;
+        private OperatorCollision playerBody, wattBody;
 
         void OnCreate()
         {
             Animator.Bind(Id,"assets/ai/watt.animator.yaml");
             hud = new StationHud(Id);
+            playerBody = new OperatorCollision(this);
+            wattBody = new OperatorCollision(Watt);
             SetOperatorLimbs(Id);
             SetOperatorLimbs(Watt.Id);
             pose = GetComponent<TransformComponent>();
@@ -57,6 +63,11 @@ namespace Sandbox
 
         void OnUpdate(float seconds)
         {
+            bool playerDown = GameWorld.Health(Id) <= 0;
+            CapsuleShape lying = new CapsuleShape { Axis = CapsuleAxis.Z, Center = DownCenter, Radius = DownRadius, Height = DownLength };
+            playerBody.UpdateDown(playerDown, lying);
+            wattBody.UpdateDown(GameWorld.Health(Watt.Id) <= 0, lying);
+            if (playerDown) motion.UpdateDown(Id, seconds);
             if (won || lost) return;
             noticeSeconds -= seconds;
             bool punchPressed = melee.ReadPress();
@@ -66,7 +77,7 @@ namespace Sandbox
             giveHeld = give;
 
             // 倒地后有十二秒等队友来救。站起动作结束，玩家才重新接手移动。
-            if (GameWorld.Health(Id) <= 0) {
+            if (playerDown) {
                 if (melee.Active) melee.End(Id, true);
                 if (downSeconds == 0) {
                     medicine.Cancel();
@@ -116,7 +127,8 @@ namespace Sandbox
             if (feedback != null) Notice(feedback);
 
             bool busy = melee.Active || medicine.Active || interaction.Active || gettingUp;
-            motion.Update(this,pose,camera.Rotation.Y,Input.IsMouseButtonDown(MouseButton.Left),MoveSpeed,seconds,busy);
+            motion.Update(this, pose, camera.Rotation.Y, Input.IsMouseButtonDown(MouseButton.Left),
+                MoveSpeed, seconds, busy, playerBody, CrouchHeight);
             if (!busy) motion.Animate(Id,equipment);
 
             bool power = GameWorld.Health(Relay.Id) >= 100;

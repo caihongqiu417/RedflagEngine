@@ -95,6 +95,41 @@ namespace Redflag {
         return bool(ScriptEngine::GetSceneContext()->GetEntityByUUID(id));
     }
 
+    // ---- C# 胶囊碰撞体 ----
+
+    struct ScriptCapsuleShape
+    {
+        int Axis;
+        glm::vec3 Center;
+        float Radius, Height;
+    };
+
+    static bool CapsuleCollider3DComponent_Get(UUID id, ScriptCapsuleShape* shape)
+    {
+        Entity entity = ScriptEngine::GetSceneContext()->GetEntityByUUID(id);
+        if (!entity || !entity.HasComponent<CapsuleCollider3DComponent>()) return false;
+        const auto& capsule = entity.GetComponent<CapsuleCollider3DComponent>();
+        *shape = {int(capsule.Axis), capsule.Center, capsule.Radius, capsule.Height};
+        return true;
+    }
+
+    static bool CapsuleCollider3DComponent_Set(UUID id, const ScriptCapsuleShape* shape)
+    {
+        Entity entity = ScriptEngine::GetSceneContext()->GetEntityByUUID(id);
+        if (!entity || !entity.HasComponent<CapsuleCollider3DComponent>() ||
+            shape->Axis < 0 || shape->Axis > 2 || !(shape->Radius > 0 && shape->Height >= 2.f * shape->Radius))
+            return false;
+
+        auto& capsule = entity.GetComponent<CapsuleCollider3DComponent>();
+        capsule.Axis = CapsuleAxis(shape->Axis);
+        capsule.Center = shape->Center;
+        capsule.Radius = shape->Radius;
+        capsule.Height = shape->Height;
+        return true;
+    }
+
+    // ---- 灯光与地形 ----
+
     static float PointLightComponent_GetIntensity(UUID id)
     {
         Entity light = ScriptEngine::GetSceneContext()->GetEntityByUUID(id);
@@ -197,6 +232,8 @@ namespace Redflag {
         RegisterNpcCalls();
         RF_ADD_INTERNAL_CALL(TerrainComponent_GetSurface);
         RF_ADD_INTERNAL_CALL(PointLightComponent_GetIntensity);
+        RF_ADD_INTERNAL_CALL(CapsuleCollider3DComponent_Get);
+        RF_ADD_INTERNAL_CALL(CapsuleCollider3DComponent_Set);
         RF_ADD_INTERNAL_CALL(PointLightComponent_SetIntensity);
         RF_ADD_INTERNAL_CALL(NativeLog);
         RF_ADD_INTERNAL_CALL(NativeLog_Vector);

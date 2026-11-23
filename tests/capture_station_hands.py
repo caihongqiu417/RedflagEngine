@@ -39,7 +39,7 @@ def stage(scene,who,action,camera_view):
     npc=who=="watt"
     def place(ident,x,z,yaw=None):
         tr=entities[ident]["TransformComponent"]
-        tr["Translation"]=[x,.08,z]
+        tr["Translation"]=[x,tr["Translation"][1],z]  # 侧拍只移动平面位置，沿用发行场景的摆放高度。
         if yaw is not None:tr["Rotation"][1]=yaw
     mover=WATT if npc else PLAYER
     other=PLAYER if npc else WATT
@@ -47,7 +47,6 @@ def stage(scene,who,action,camera_view):
     place(other,-3.25,1.4,-math.pi/2) if action in ("give","revive") else place(other,-12.2,1.4,-math.pi/2)
     if action=="pickup":
         place(BOX,-3.25,2.02)
-        if "1921" in entities: entities[BOX]["TransformComponent"]["Translation"][1] = .13
     else: place(BOX,-2.5,4.0)
     if "1921" in entities:place("1921",-6.0,3.45)  # 旧工具箱留下作布景，别让它遮住地上的小包。
     if action=="repair":place(RELAY,-3.25,1.4)

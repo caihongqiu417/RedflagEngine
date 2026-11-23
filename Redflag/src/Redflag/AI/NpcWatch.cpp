@@ -1,6 +1,7 @@
 #include "rfpch.h"
 #include "NpcSystem.h"
 #include "NpcPhoto.h"
+#include "Redflag/Gameplay/ColliderBounds.h"
 #include "Redflag/Scene/Entity.h"
 
 namespace Redflag
@@ -9,8 +10,7 @@ namespace Redflag
 
 	static const NpcCue* PlayingCue(Entity target, const NpcDefinition& role)
 	{
-		if (!target || !target.HasComponent<HealthComponent>() || !target.HasComponent<ModelAnimationComponent>() ||
-			!target.HasComponent<BoxCollider3DComponent>()) return nullptr;
+		if (!target || !target.HasComponent<HealthComponent>() || !target.HasComponent<ModelAnimationComponent>()) return nullptr;
 		const HealthComponent& health = target.GetComponent<HealthComponent>();
 		const ModelAnimationComponent& animation = target.GetComponent<ModelAnimationComponent>();
 		if (health.Current <= 0.f || !animation.Playing) return nullptr;
@@ -23,9 +23,9 @@ namespace Redflag
 	{
 		const TransformComponent& pose = owner.GetComponent<TransformComponent>();
 		const glm::vec3 eye = NpcEyePosition(pose, role);
-		const glm::vec3 center = target.GetComponent<TransformComponent>().GetTransform() *
-			glm::vec4(target.GetComponent<BoxCollider3DComponent>().Center, 1.f);
-		const glm::vec3 line = center - eye;
+		const auto bounds = GetColliderBounds(target);
+		if (!bounds) return false;
+		const glm::vec3 line = bounds->Center - eye;
 		const float distance = glm::length(line);
 		if (distance <= 0.f || distance > role.Sight) return false;
 
@@ -91,7 +91,7 @@ namespace Redflag
 
 		if (!scan || !role.ObserveWorld || role.Watch.empty()) return;
 
-		for (entt::entity handle : m_Scene.GetRegistry().view<HealthComponent, ModelAnimationComponent, BoxCollider3DComponent>())
+		for (entt::entity handle : m_Scene.GetRegistry().view<HealthComponent, ModelAnimationComponent>())
 		{
 			Entity target(handle, &m_Scene);
 			const uint64_t id = target.GetUUID();

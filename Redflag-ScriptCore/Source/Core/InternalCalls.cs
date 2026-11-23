@@ -5,6 +5,12 @@ namespace Redflag
     internal static class InternalCalls
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool CapsuleCollider3DComponent_Get(ulong id, out CapsuleShape shape);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool CapsuleCollider3DComponent_Set(ulong id, ref CapsuleShape shape);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool TerrainComponent_GetSurface(ulong id, float x, float z, out float height, out Vector3 normal);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

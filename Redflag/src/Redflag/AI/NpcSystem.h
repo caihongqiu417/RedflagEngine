@@ -89,7 +89,7 @@ namespace Redflag
 		void Execute(uint64_t actor, NpcState& state, float seconds);
 		void FollowClue(uint64_t actor, NpcState& state, float seconds);
 		void Observe(uint64_t actor, NpcState& state, const NpcDefinition& role, float seconds);
-		void Stop(uint64_t actor, NpcState& state);
+		void Stop(uint64_t actor, NpcState& state, bool cancelTraversal = true);
 		/// <summary>让角色朝目标走一步。目标在交互距离内且两者之间没有遮挡时停步。</summary>
 		/// <param name="range">这次动作允许的距离，单位为米。</param>
 		/// <returns>此时已经够到目标才返回 true。还在走或被墙挡住时返回 false。</returns>

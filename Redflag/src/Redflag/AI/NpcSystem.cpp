@@ -2,6 +2,7 @@
 #include "NpcSystem.h"
 #include "Redflag/Gameplay/HandContact.h"
 #include "EnvironmentSense.h"
+#include "Redflag/Gameplay/ColliderBounds.h"
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Gameplay/TerrainTraversal.h"
 #include "Redflag/Scripting/NpcScriptAction.h"
@@ -181,9 +182,9 @@ namespace Redflag
 		else Record(state, "提问", event.empty() ? state.Instruction : event);
 	}
 
-	void NpcSystem::Stop(uint64_t actor, NpcState& state)
+	void NpcSystem::Stop(uint64_t actor, NpcState& state, bool cancelTraversal)
 	{
-		CancelTraversal(m_Scene, actor);
+		if (cancelTraversal) CancelTraversal(m_Scene, actor);
 		state.WalkCorner.reset();
 		EndContact(m_Scene,actor);
 		state.Look = 0;
@@ -369,10 +370,10 @@ namespace Redflag
 				const auto hit=scene.Raycast(start+glm::vec3(0,.8f,0)+width*side,dir,nearest,actor.GetUUID());
 				if (!hit || hit->Entity==leader) continue;
 				Entity other=scene.GetEntityByUUID(hit->Entity);
-				if (!other || !other.HasComponent<BoxCollider3DComponent>()) continue;
-				const auto& box=other.GetComponent<BoxCollider3DComponent>();
-				const auto& tr=other.GetComponent<TransformComponent>();
-				if (!other.HasComponent<HealthComponent>() && (box.Center.y+box.HalfSize.y)*std::abs(tr.Scale.y)+tr.Translation.y-start.y <= 1.65f)
+				if (!other) continue;
+				const auto bounds = GetColliderBounds(other);
+				if (!bounds) continue;
+				if (!other.HasComponent<HealthComponent>() && bounds->Center.y + bounds->HalfSize.y - start.y <= 1.65f)
 					continue;
 				nearest=hit->Distance;
 				obstacle=other;
@@ -391,8 +392,7 @@ namespace Redflag
 	{
 		Entity owner = m_Scene.GetEntityByUUID(actor);
 		const TransformComponent& transform = owner.GetComponent<TransformComponent>();
-		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
-			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(transform.Scale.x) : .30f;
+		const float radius = CharacterRadius(owner);
 		const bool follow = state.Action == "follow";
 		if (follow) {
 			if (state.WalkCorner && glm::distance(transform.Translation,*state.WalkCorner)<.07f) state.WalkCorner.reset();
@@ -664,7 +664,9 @@ namespace Redflag
 			NpcState& state = m_Actors[id];
 			if (owner.HasComponent<HealthComponent>() && owner.GetComponent<HealthComponent>().Current <= 0)
 			{
-				if (state.Request || state.Watch.Request || !state.Action.empty()) Stop(id, state);
+				if (state.Request || state.Watch.Request || !state.Action.empty()) Stop(id, state, false);
+				// 倒地会中断队友任务。已离开地面的队友继续沿原来的轨迹落地。
+				MoveCharacter(m_Scene, id, glm::vec3(0), CharacterRadius(owner), seconds);
 				if (!state.Down) {
 					const auto* role = GetDefinition(id);
 					if (role && role->Controller.Find("down")) Enter(id,state,"down");

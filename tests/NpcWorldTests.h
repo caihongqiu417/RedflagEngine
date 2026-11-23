@@ -81,6 +81,39 @@ inline void CheckStationWorkDistance(void (*check)(bool,const char*))
     room.OnSimulationStop();
 }
 
+inline void CheckGroundRescue(void (*check)(bool,const char*))
+{
+    using namespace Redflag;
+    Scene room;
+    Entity worker = room.CreateEntityWithUUID(1,"worker");
+    worker.GetComponent<TransformComponent>().Translation = {-5.24f,-.0250000358f,1.4f};
+    worker.AddComponent<RigidBody3DComponent>();
+    worker.AddComponent<CapsuleCollider3DComponent>().Center.y = .9f;
+    Entity patient = room.CreateEntityWithUUID(2,"patient");
+    patient.GetComponent<TransformComponent>().Translation = {-3.25f,-.0249999762f,1.4f};
+    patient.GetComponent<TransformComponent>().Rotation.y = -glm::half_pi<float>();
+    patient.AddComponent<RigidBody3DComponent>();
+    auto& capsule = patient.AddComponent<CapsuleCollider3DComponent>();
+    capsule.Axis = CapsuleAxis::Z;
+    capsule.Radius = .33f;
+    capsule.Height = 1.83f;
+    capsule.Center = {-.01f,.33f,-.197f};
+    Entity floor = room.CreateEntityWithUUID(3,"gravel");
+    floor.GetComponent<TransformComponent>().Translation = {0,-.525f,0};
+    floor.AddComponent<RigidBody3DComponent>();
+    floor.AddComponent<BoxCollider3DComponent>().HalfSize = {50,.5f,50};
+    room.OnSimulationStart();
+    check(CanReach(room,1,2,2.f),"a grounded rescuer can reach the horizontal capsule");
+    check(!CanReach(room,1,2,1.8f),"interaction range still uses the two entity origins");
+    Entity partition = room.CreateEntityWithUUID(4,"partition");
+    partition.GetComponent<TransformComponent>().Translation = {-4.49f,.75f,1.4f};
+    partition.AddComponent<RigidBody3DComponent>();
+    partition.AddComponent<BoxCollider3DComponent>().HalfSize = {.05f,.8f,1};
+    room.OnUpdatePhysics(1.f/60.f);
+    check(!CanReach(room,1,2,2.f),"a real partition blocks the same rescue");
+    room.OnSimulationStop();
+}
+
 inline void CheckStationFollowCorner(void (*check)(bool,const char*))
 {
     using namespace Redflag;

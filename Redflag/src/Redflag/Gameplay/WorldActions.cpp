@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "WorldActions.h"
+#include "ColliderBounds.h"
 #include "HandContact.h"
 #include "Redflag/Scene/Entity.h"
 #include <limits>
@@ -38,13 +39,15 @@ namespace Redflag
 		if (!CanAct(from) || !to || from == to || range < 0.0f)
 			return false;
 
-		const glm::vec3 origin = from.GetComponent<TransformComponent>().Translation;
-		const glm::vec3 delta = to.GetComponent<TransformComponent>().Translation - origin;
-		const float distance = glm::length(delta);
-		if (distance > range) return false;
+		const glm::vec3 start = from.GetComponent<TransformComponent>().Translation;
+		const glm::vec3 finish = to.GetComponent<TransformComponent>().Translation;
+		if (glm::distance(start, finish) > range) return false;
 
-		// 射线从角色身上出发。途中先碰到墙，角色就够不到墙后的物体。
-		const std::optional<RayHit3D> hit = scene.Raycast(origin, delta, distance, actor);
+		// 双脚的原点就在地表。遮挡从身体查到物体，避免脚底的砂石挡住伸手救人。
+		const auto body = GetColliderBounds(from), object = GetColliderBounds(to);
+		const glm::vec3 origin = body ? body->Center : start;
+		const glm::vec3 delta = (object ? object->Center : finish) - origin;
+		const auto hit = scene.Raycast(origin, delta, glm::length(delta), actor);
 		return !hit || hit->Entity == target;
 	}
 

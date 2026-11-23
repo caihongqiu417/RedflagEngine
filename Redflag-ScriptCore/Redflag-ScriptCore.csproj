@@ -71,6 +71,7 @@
     <Compile Include="Source\AI\NpcAction.cs" />
     <Compile Include="Source\AI\NpcNotes.cs" />
     <Compile Include="Source\AI\NpcSense.cs" />
+    <Compile Include="Source\Components\CapsuleCollider3DComponent.cs" />
     <Compile Include="Source\Components\PointLightComponent.cs" />
     <Compile Include="Source\Components\SkeletonAnimationComponent.cs" />
     <Compile Include="Source\Components\TerrainComponent.cs" />
