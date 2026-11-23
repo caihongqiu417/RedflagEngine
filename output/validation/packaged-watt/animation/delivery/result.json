@@ -1,0 +1,73 @@
+{
+  "scene": "assets/scenes/Watt-Station.redflag",
+  "verified_files": 621,
+  "client": [
+    1920,
+    1080
+  ],
+  "launcher": "Play-720p.cmd",
+  "archive_sha256": "b6332574a23e6158c62121540282719f3f40c70e6f81796ea3e4de945d30c896",
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "before": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.19999981,
+        0.0799999982,
+        -0.600000024
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    }
+  },
+  "after": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 2
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.60470343,
+        0.0799999982,
+        -0.123878472
+      ],
+      "health": 100,
+      "inventory": {},
+      "action": "share",
+      "stage": "give"
+    }
+  },
+  "delivered": true,
+  "frame_ms": {
+    "samples": 42,
+    "p50": 121.51408195495605,
+    "p95": 210.3696346282959
+  }
+}

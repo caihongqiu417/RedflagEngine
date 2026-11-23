@@ -4,6 +4,8 @@
 
 ## 开始游戏
 
+用 **WASD** 移动，按住 **Shift** 跑，按住 **Ctrl** 蹲着走。按 **F** 用左手出拳，收拳后可以再按。**鼠标左键** 使用右臂选中的工具，**1** 选臂炮，**2** 选扫描器。对准可拾取物品按 **E**，机器人会先伸手，碰到物品时才把它放进背包。
+
 交付目录为 `output/releases`。本机已经解压好，打开 `Watt-Station-Win64`，双击 `Play-With-Companion.cmd`。换一台电脑时，把 `Redflag-Watt-Station-Win64.zip` 与 `Redflag-CompanionRuntime-Win64.zip` 解压到同一个文件夹。启动脚本旁应当能看见 `CompanionRuntime`。需要 Windows x64、支持 Vulkan 1.3 的显卡驱动和足够的显存。要让瓦特用中文朗读，请在 Windows 安装中文音色。第一次启动时，程序需要把本地模型载入内存。[离线启动、看图和中文语音实测](../output/validation/packaged-companion/README.md)
 
 维修棚里的应急发电机还没通电。你可以过去按住 **E** 维修，也可以告诉瓦特「去东面的应急发电机，把它修好」，自己先去西侧闸口。要等机器供电、两人都到闸口，任务才会结算。按住 **F1** 查看键位，结束后按 **R** 重新开局。一次发布包验收记录了两人撤离，另一次交战记录了瓦特两次扶起玩家、最终任务失败和重新开局。[任务经过](../output/validation/packaged-watt/release-mission/mission.json) · [逐帧动作与输入](../output/validation/packaged-watt/release-mission/frames.jsonl)
@@ -19,6 +21,8 @@
 瓦特没来扶人时，在 Forge 的「AI 队友 → 角色创作 → 候选」查看救援一项。玩家仍站着时，这里会显示「目标尚未倒地」。玩家倒地后再看，可以读到目标和距离。「最近一次提问的候选」保留发问时的那一刻，方便对照当时的决定和现在的局势。[Forge 实机界面](../output/validation/teammate-candidates/README.md)
 
 ## 验收记录
+
+走路时，只看角色的位置很容易漏掉滑步。新版把画面、按键和骨骼位置一起记录，可以对着地面看蓝色机器人的靴底，也可以从侧面看左拳何时伸直、何时收回。逐项记录里列出了玩家、瓦特和巡检机各自动作的验证方式。[新旧实机录像](../output/validation/packaged-watt/animation/compare.mp4) · [角色动作检查表](Station-Animation-Coverage.md)
 
 完整试玩在开发机上从新目录解包，逐项校验清单，通过游戏窗口输入中文、移动和重新开局。离线服务另用三个空闲端口启动，确认使用的是包内的模型、解释器和语音识别程序。SDK 的独立测试也做了真实的文字、图像和语音调用。第二台 Windows 电脑的安装及实际操作手感仍待试玩。[游戏运行文件](../output/validation/packaged-watt/release-runtime.json) · [独立 SDK 测试](../output/validation/runtime-ai/portable-sdk.json)
 

@@ -17,13 +17,13 @@
 
 脚本先用 \code{Animator.Bind} 把动作表交给角色。此后调用 \code{Animator.Play(Id, "land", true)}，引擎按名找到模型里的着地剪辑，从头播放。动作表可以共用，两名角色各有自己的播放时间。其中一位提前站起，不会关掉另一位的恢复区间。
 
-\picturecaption{C\# 示例，摘自 \code{SandboxProject/Source/StationMotion.cs} 的 \code{Update}，以下用角色编号 \code{id} 简写。}
+\picturecaption{C\# 示例。\code{SandboxProject/Source/StationPlayer.cs} 在每帧读出通知；同目录下的 \code{StationMotion.cs} 接收落地通知。}
 \begin{verbatim}
 AnimationEvent notice;
-while (Animator.TryRead(id, out notice))
+while (Animator.TryRead(Id, out notice))
 {
-    if (notice.State == "land" && notice.Name == "Recovery")
-        Recovering = notice.Phase == NotifyPhase.Begin;
+    motion.OnNotice(notice); // 落地时更新屈膝恢复状态
+    // 出拳和拾取也在这里接收各自的接触通知。
 }
 \end{verbatim}
 

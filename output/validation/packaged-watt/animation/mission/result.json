@@ -1,0 +1,88 @@
+{
+  "scene": "assets/scenes/Watt-Station.redflag",
+  "verified_files": 621,
+  "client": [
+    1920,
+    1080
+  ],
+  "launcher": "Play-With-Companion.cmd",
+  "archive_sha256": "b6332574a23e6158c62121540282719f3f40c70e6f81796ea3e4de945d30c896",
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "before": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.19999981,
+        0.0799999982,
+        -0.600000024
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    }
+  },
+  "after": {
+    "玩家": {
+      "id": "1101",
+      "name": "玩家",
+      "position": [
+        -6.9000001,
+        0.0799999982,
+        1.39999998
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      }
+    },
+    "瓦特": {
+      "id": "1102",
+      "name": "瓦特",
+      "position": [
+        -5.60470343,
+        0.0799999982,
+        -0.123878554
+      ],
+      "health": 100,
+      "inventory": {
+        "medkit": 1
+      },
+      "action": "follow",
+      "stage": "idle"
+    }
+  },
+  "delivered": false,
+  "mission": [
+    "spawn",
+    "repair_order",
+    "beside_gate",
+    "in_gate",
+    "power_on",
+    "both_at_gate",
+    "restart",
+    "approach_guard",
+    "down",
+    "defeat",
+    "recover_after_defeat"
+  ],
+  "frame_ms": {
+    "samples": 668,
+    "p50": 90.10124206542969,
+    "p95": 121.78089618682861
+  }
+}
