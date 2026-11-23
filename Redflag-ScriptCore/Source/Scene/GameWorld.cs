@@ -29,6 +29,10 @@ namespace Redflag
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetTraversalLimb(ulong actor, TraversalLimb limb, string upper, string lower, string tip);
 
+        /// <summary>设置腿骨后，在鞋跟、前掌等位置登记脚底点。坐标相对指定的骨头，随它一起运动。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void AddFootContact(ulong actor, TraversalLimb foot, string bone, ref Vector3 point);
+
         /// <summary>指出动画中带整个人移动的根骨。用物理移动角色时，由引擎保留这根骨的初始位置。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetMovementRoot(ulong actor, string node);

@@ -184,6 +184,7 @@ namespace Redflag
 			bool HasMatrix;
 		};
 		std::vector<NodePose> Rest;
+		std::vector<glm::mat4> RestTransforms;
 		std::vector<Node> Nodes;
 		std::vector<std::pair<size_t, size_t>> Bones;
 		std::unordered_map<std::string, size_t> NamedNodes;
@@ -243,6 +244,7 @@ namespace Redflag
 			for (size_t i = 0; i < file->nodes_count; ++i)
 				if (!file->nodes[i].parent && std::find(data.Order.begin(), data.Order.end(), i) == data.Order.end())
 					visit(file->nodes[i], !scene);
+			asset->GetModelTransforms(data.Rest, data.RestTransforms);
 			// 预览只连实际带动顶点的关节。动画师布在身体外面的 IK 控制器不属于人物轮廓。
 			for (size_t child = 0; child < deforming.size(); ++child) {
 				if (!deforming[child]) continue;
@@ -369,6 +371,11 @@ namespace Redflag
 		return true;
 	}
 
+	bool ModelAnimation::GetRestTransform(const std::string& name, glm::mat4& result) const
+	{
+		return GetNodeTransform(name, m_Data->RestTransforms, result);
+	}
+
 	void ModelAnimation::PinMovementRoot(std::vector<NodePose>& local, const std::string& node) const
 	{
 		const auto found = m_Data->NamedNodes.find(node);
@@ -388,7 +395,7 @@ namespace Redflag
 	}
 
 	bool ModelAnimation::SolveLimb(std::vector<NodePose>& local, const std::vector<glm::mat4>& world,
-		const Limb& limb, glm::vec3 target) const
+		const Limb& limb, glm::vec3 target, bool keepTipRotation) const
 	{
 		const auto upper = m_Data->NamedNodes.find(limb.Upper), lower = m_Data->NamedNodes.find(limb.Lower),
 			tip = m_Data->NamedNodes.find(limb.Tip);
@@ -418,6 +425,11 @@ namespace Redflag
 		local[a].Rotation = glm::normalize(glm::inverse(orientation(m_Data->Nodes[a].Parent)) * pose[0].Rotation);
 		local[b].Rotation = glm::normalize(glm::inverse(upperTurn * orientation(m_Data->Nodes[b].Parent)) *
 			pose[0].Rotation * pose[1].Rotation);
+		if (keepTipRotation) {
+			// 调膝盖可改变脚踝高度，脚掌仍按原片的角度落到地面上。
+			const glm::quat lowerTurn = pose[0].Rotation * pose[1].Rotation * glm::inverse(second);
+			local[c].Rotation = glm::normalize(glm::inverse(lowerTurn * orientation(m_Data->Nodes[c].Parent)) * orientation(int(c)));
+		}
 		return true;
 	}
 

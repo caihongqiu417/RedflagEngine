@@ -14,8 +14,10 @@ namespace Redflag
 	/* 不同模型的骨头名字由游戏指定。同一套求解器可以用于人的腿，也可以用于机器人的手臂。 */
 	struct TraversalRig
 	{
+		struct FootContact { std::string Bone; glm::vec3 Point; };
 		std::string MovementRoot;
 		std::array<ModelAnimation::Limb, 4> Limbs;
+		std::array<std::vector<FootContact>, 2> Soles;
 		std::optional<glm::vec3> PreviousPosition;
 	};
 

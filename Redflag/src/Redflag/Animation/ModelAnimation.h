@@ -40,9 +40,10 @@ namespace Redflag
 		void PinMovementRoot(std::vector<NodePose>& local, const std::string& node) const;
 		/// <summary>在当前模型姿势中把脚踝或手腕移向目标。未指定或不属于同一肢体的关节不会修改姿势。</summary>
 		bool SolveLimb(std::vector<NodePose>& local, const std::vector<glm::mat4>& world,
-			const Limb& limb, glm::vec3 target) const;
+			const Limb& limb, glm::vec3 target, bool keepTipRotation = false) const;
 		std::vector<Part> BuildParts(const std::vector<NodePose>& local, std::vector<glm::mat4>& modelSpace) const;
 		bool GetNodeTransform(const std::string& name, const std::vector<glm::mat4>& modelSpace, glm::mat4& result) const;
+		bool GetRestTransform(const std::string& name, glm::mat4& result) const;
 
 	private:
 		struct Data;

@@ -52,6 +52,15 @@ namespace Redflag
 			if (!entity || index < 0 || index >= 4) return;
 			auto& rig = World().GetRegistry().get_or_emplace<TraversalRig>(static_cast<entt::entity>(entity));
 			rig.Limbs[index] = { Text(upper), Text(lower), Text(tip) };
+			if (index < 2) rig.Soles[index].clear();
+		}
+
+		void AddFootContact(uint64_t actor, int foot, MonoString* bone, const glm::vec3* point)
+		{
+			Entity entity = World().GetEntityByUUID(actor);
+			if (!entity || foot < 0 || foot > 1) return;
+			auto& rig = World().GetRegistry().get_or_emplace<TraversalRig>(static_cast<entt::entity>(entity));
+			rig.Soles[foot].push_back({Text(bone), *point});
 		}
 
 		void SelectClip(uint64_t actor, MonoString* name, bool locomotion)
@@ -237,6 +246,7 @@ namespace Redflag
 		mono_add_internal_call("Redflag.GameWorld::Traverse", (const void*)Traverse);
 		mono_add_internal_call("Redflag.GameWorld::CancelTraversal", (const void*)StopTraversal);
 		mono_add_internal_call("Redflag.GameWorld::SetTraversalLimb", (const void*)SetTraversalLimb);
+		mono_add_internal_call("Redflag.GameWorld::AddFootContact", (const void*)AddFootContact);
 		mono_add_internal_call("Redflag.GameWorld::SetMovementRoot", (const void*)SetMovementRoot);
 		mono_add_internal_call("Redflag.GameWorld::PlayClip", (const void*)PlayClip);
 		mono_add_internal_call("Redflag.GameWorld::PlayLocomotion", (const void*)PlayLocomotion);

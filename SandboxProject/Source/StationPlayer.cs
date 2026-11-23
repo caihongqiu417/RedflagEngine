@@ -51,6 +51,7 @@ namespace Sandbox
             GameWorld.SetTraversalLimb(actor,TraversalLimb.RightFoot,"thigh.R","shin.R","foot.R");
             GameWorld.SetTraversalLimb(actor,TraversalLimb.LeftHand,"upper_arm.L","forearm.L","hand.L");
             GameWorld.SetTraversalLimb(actor,TraversalLimb.RightHand,"upper_arm.R","forearm.R","hand.R");
+            OperatorSoles.Bind(actor);
         }
 
         void OnUpdate(float seconds)

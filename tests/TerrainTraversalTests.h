@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Gameplay/TerrainTraversal.h"
+#include "TerrainFootTests.h"
 
 inline void CheckTraversal()
 {
@@ -85,6 +86,7 @@ inline void CheckTraversal()
     // 用正式维修站角色求脚踝、手腕的目标。脚踝上方有额外的小骨头，三根关节不必紧邻。
     const auto rig = ModelAnimation::Load("assets/game/station/crew/Operator.glb");
     Check(bool(rig),"load the station operator for IK");
+    if (rig) CheckTerrainFeet(rig);
     if (rig) for (const ModelAnimation::Limb& limb : {
         ModelAnimation::Limb{"thigh.L","shin.L","foot.L"}, ModelAnimation::Limb{"upper_arm.L","forearm.L","hand.L"}}) {
         std::vector<ModelAnimation::NodePose> pose;

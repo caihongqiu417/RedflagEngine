@@ -1,5 +1,7 @@
 # 维修站机器人
 
+地形碰撞使用的靴底标记来自角色自身的网格。每个点所属的骨头、顶点编号、局部坐标和标定误差见[鞋底接触点](Operator-Soles.md)。
+
 角色模型、骨架、动作和贴图来自 Godot 的 Third Person Shooter Demo。作者为 Juan Linietsky 和 Fernando Miguel Calabró，原作于 2018 年按 CC BY 3.0 发布。Redflag 将样例材质引用的颜色、法线、金属度、粗糙度与自发光贴图装入 GLB，保留骨骼动画，并移除了作者标为试作的部分动作。具体版本和文件校验值见同目录的 sources.json。[Godot 第三人称样例](https://github.com/godotengine/tps-demo/tree/a82f15448e9b015440d3bbdf5e10801b260c4e9f) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
 
 瓦特弯腰取物时用的 `Station-Pickup` 改编自 Quaternius《Universal Animation Library 2》的 `Farm_Harvest`。作者的角色用右手拿东西，这个机器人右臂带有设备，因此导入时交换左右骨骼，在角色正中面对称动作。两者臂长、手指长度不同，导入器保留脚尖接地高度，并在机器人手指接近地面时调整腕部角度。递物时用的 `Station-Give` 来自第一册的 `Interact`，采用原来的左手前伸动作。两段原动作都按 CC0 发布。[第一册](https://quaternius.com/packs/universalanimationlibrary.html) · [第二册](https://quaternius.com/packs/universalanimationlibrary2.html) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
