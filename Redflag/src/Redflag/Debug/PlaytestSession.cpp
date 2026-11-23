@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "PlaytestSession.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Core/Application.h"
 #include "Redflag/Events/KeyEvent.h"
@@ -400,6 +401,25 @@ namespace Redflag
                         out << name << YAML::BeginSeq << point.x << point.y << point.z << YAML::EndSeq;
                     }
                     out << YAML::EndMap << YAML::EndMap;
+                }
+            }
+            if (const auto* hand = registry.try_get<HandContact>(handle)) {
+                Entity owner(handle,&scene);
+                glm::vec3 grip;
+                if (ReadContactSocket(owner,"grip",grip)) {
+                    const glm::vec3 goal = hand->Goal;
+                    out << "contact" << YAML::BeginMap << "action" << hand->Action << "target" << std::to_string(hand->Target)
+                        << "hand" << YAML::BeginSeq << grip.x << grip.y << grip.z << YAML::EndSeq
+                        << "goal" << YAML::BeginSeq << goal.x << goal.y << goal.z << YAML::EndSeq
+                        << "distance" << glm::distance(grip,goal) << "prop" << std::to_string(hand->Prop)
+                        << "passed" << hand->Passed << "released" << hand->Released;
+                    if (hand->Passed) {
+                        const auto& h=hand->CommitHand; const auto& g=hand->CommitGoal;
+                        out << "commit_hand" << YAML::BeginSeq << h.x << h.y << h.z << YAML::EndSeq
+                            << "commit_goal" << YAML::BeginSeq << g.x << g.y << g.z << YAML::EndSeq
+                            << "commit_distance" << glm::distance(h,g);
+                    }
+                    out << YAML::EndMap;
                 }
             }
             if (const auto *inventory = registry.try_get<InventoryComponent>(handle))

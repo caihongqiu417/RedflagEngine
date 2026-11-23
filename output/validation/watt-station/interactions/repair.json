@@ -1,114 +1,205 @@
 {
-  "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+  "exe_sha256": "5fa226a69ea33570d0ac11e11ec30dc80ba734c77349cd75a9ada6b607379c4e",
   "case": "repair",
   "samples": [
     {
       "step": "ready",
       "frame": 6,
-      "seconds": 0.8867610692977905,
+      "seconds": 5.844586730003357,
       "clip": "Idle-cycle",
-      "clip_time": 0.158977985,
+      "clip_time": 1.36824274,
       "player_health": 100,
       "hand": [
-        -7.25536966,
-        0.892639101,
-        0.875280082
+        -7.27157974,
+        0.915544212,
+        0.895971894
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
+      "contact": null,
       "events": []
     },
     {
       "step": "start",
-      "frame": 10,
-      "seconds": 1.0273858308792114,
-      "clip": "Cannon_Charge-cycle",
-      "clip_time": 0.0346670151,
+      "frame": 12,
+      "seconds": 8.29346787929535,
+      "clip": "Station-Repair",
+      "clip_time": 0.28239727,
       "player_health": 100,
       "hand": [
-        -7.25588274,
-        0.891834497,
-        0.877726018
+        -5.5010438,
+        0.655952632,
+        1.74936163
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -5.38914299,
+          0.54784447,
+          1.62568021
+        ],
+        "goal": [
+          -5.38764,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 0.0397288762,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
       "events": []
     },
     {
       "step": "partial",
-      "frame": 27,
-      "seconds": 1.6840853691101074,
-      "clip": "Cannon_Charge-cycle",
-      "clip_time": 0.274699897,
+      "frame": 14,
+      "seconds": 9.139216780662537,
+      "clip": "Station-Repair",
+      "clip_time": 1.12814617,
       "player_health": 100,
       "hand": [
-        -7.25576258,
-        0.890928268,
-        0.879008114
+        -5.45986462,
+        0.65495944,
+        1.73652112
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -5.38655233,
+          0.502039254,
+          1.6328541
+        ],
+        "goal": [
+          -5.38764,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 0.0072597065,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
       "events": []
     },
     {
       "step": "released",
-      "frame": 30,
-      "seconds": 1.7912108898162842,
+      "frame": 16,
+      "seconds": 9.967539191246033,
       "clip": "Idle-cycle",
-      "clip_time": 0.0360159874,
+      "clip_time": 0.397738457,
       "player_health": 100,
       "hand": [
-        -7.25644064,
-        0.89154309,
-        0.879459798
+        -6.26344252,
+        0.890309751,
+        2.15990758
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
+      "contact": null,
       "events": []
     },
     {
       "step": "restart",
-      "frame": 33,
-      "seconds": 1.9037110805511475,
-      "clip": "Cannon_Charge-cycle",
-      "clip_time": 0.0345687866,
+      "frame": 18,
+      "seconds": 10.838332533836365,
+      "clip": "Station-Repair",
+      "clip_time": 0.426224709,
       "player_health": 100,
       "hand": [
-        -7.25635576,
-        0.893108904,
-        0.876181841
+        -5.43770266,
+        0.607670724,
+        1.6956706
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -5.33631754,
+          0.480922163,
+          1.58094454
+        ],
+        "goal": [
+          -5.38764,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 0.0791727379,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
       "events": []
     },
     {
       "step": "completed",
-      "frame": 83,
-      "seconds": 3.952378511428833,
+      "frame": 23,
+      "seconds": 12.612486243247986,
       "clip": "Idle-cycle",
-      "clip_time": 0.0870323181,
+      "clip_time": 0,
       "player_health": 100,
       "hand": [
-        -7.2563405,
-        0.892555773,
-        0.877267659
+        -5.46409559,
+        0.66087997,
+        1.7372911
       ],
       "kits": 1,
       "relay": 100,
       "watt": 100,
       "guard": 75,
-      "events": []
+      "contact": {
+        "action": "repair",
+        "target": "1110",
+        "hand": [
+          -5.38764,
+          0.509079874,
+          1.63425016
+        ],
+        "goal": [
+          -5.38764,
+          0.509079993,
+          1.63424993
+        ],
+        "distance": 2.66560079e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -5.38764,
+          0.509079874,
+          1.63425016
+        ],
+        "commit_goal": [
+          -5.38764,
+          0.509079993,
+          1.63424993
+        ],
+        "commit_distance": 2.66560079e-07
+      },
+      "events": [
+        {
+          "entity": "1101",
+          "kind": "repair_contact",
+          "text": "1110"
+        }
+      ]
     }
   ]
 }

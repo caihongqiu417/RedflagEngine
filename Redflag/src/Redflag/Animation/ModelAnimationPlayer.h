@@ -19,7 +19,7 @@ namespace Redflag
 
 		using AdjustPose = std::function<void(const ModelAnimation&, std::vector<ModelAnimation::NodePose>&)>;
 		struct GaitStep { const std::string& Root; float Distance; };
-		void Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust = {}, const GaitStep* gait = nullptr);
+		void Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust = {}, const GaitStep* gait = nullptr, bool poseChanged = false);
 		const Ref<ModelAnimation>& GetAnimation() const { return m_Animation; }
 		const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
 		const glm::mat4& GetTransform(size_t part) const { return m_Transforms[part]; }

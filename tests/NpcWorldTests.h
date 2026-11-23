@@ -57,6 +57,30 @@ inline void CheckWorldActions(void (*check)(bool, const char*))
     room.OnSimulationStop();
 }
 
+// 维修站的发电机放在十几米外。以实际卡住的位置开局，瓦特应能再走一步，开始工作。
+inline void CheckStationWorkDistance(void (*check)(bool,const char*))
+{
+    using namespace Redflag;
+    Scene room;
+    Entity actor = room.CreateEntityWithUUID(41,"worker");
+    actor.AddComponent<NpcComponent>() = {"assets/ai/watt.npc.yaml","",42};
+    actor.AddComponent<HealthComponent>().Team = "crew";
+    actor.GetComponent<TransformComponent>().Translation = {10.2072849f,.08f,1.22944653f};
+    Entity target = room.CreateEntityWithUUID(42,"generator");
+    target.GetComponent<TransformComponent>().Translation = {12.1999998f,.08f,1.39999998f};
+    target.AddComponent<HealthComponent>().Current = 0;
+    target.AddComponent<InteractionComponent>() = {"repair",2.f,2.f,100.f,false};
+    room.OnSimulationStart();
+    NpcSystem npc(room);
+    auto& role = *npc.GetDefinition(41);
+    role.IdleIntent = role.RescueIntent = "repair";
+    check(!CanReach(room,41,42,2.f),"the recorded starting point is just outside the two-metre work range");
+    for (int frame=0; frame<190; ++frame) npc.Update(1.f/60.f);
+    check(CanReach(room,41,42,2.f) && target.GetComponent<HealthComponent>().Current==100.f,
+        "worker crosses the range boundary and completes two seconds of repair");
+    room.OnSimulationStop();
+}
+
 // 从正常决策客户端发出同一句指令，读取角色走过的动作和两个人的库存。
 inline bool CheckCompanionGame(uint16_t port, bool hasMedicine)
 {

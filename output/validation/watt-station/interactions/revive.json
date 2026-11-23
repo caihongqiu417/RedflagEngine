@@ -1,60 +1,119 @@
 {
-  "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+  "exe_sha256": "5fa226a69ea33570d0ac11e11ec30dc80ba734c77349cd75a9ada6b607379c4e",
   "case": "revive",
   "samples": [
     {
       "step": "ready",
       "frame": 6,
-      "seconds": 0.985309898853302,
+      "seconds": 5.675448179244995,
       "clip": "Idle-cycle",
-      "clip_time": 0.178559065,
+      "clip_time": 1.54405117,
       "player_health": 100,
       "hand": [
-        -7.25527048,
-        0.892115057,
-        0.875952184
+        -7.27158833,
+        0.919077396,
+        0.891366661
       ],
       "kits": 1,
       "relay": 0,
       "watt": 0,
       "guard": 75,
+      "contact": null,
       "events": []
     },
     {
       "step": "start",
-      "frame": 8,
-      "seconds": 1.078855574131012,
-      "clip": "Station-Pickup",
-      "clip_time": 0.0454919338,
+      "frame": 16,
+      "seconds": 8.31475567817688,
+      "clip": "Station-Revive",
+      "clip_time": 0.11073494,
       "player_health": 100,
       "hand": [
-        -7.22586632,
-        0.879586756,
-        0.885404646
+        -5.03560066,
+        0.885309875,
+        1.96108484
       ],
       "kits": 1,
       "relay": 0,
       "watt": 0,
       "guard": 75,
+      "contact": {
+        "action": "revive",
+        "target": "1102",
+        "hand": [
+          -5.10421562,
+          0.725996673,
+          1.85441053
+        ],
+        "goal": [
+          -5.04788876,
+          0.337504268,
+          1.48793936
+        ],
+        "distance": 0.537029028,
+        "prop": "0",
+        "passed": false,
+        "released": false
+      },
       "events": []
     },
     {
       "step": "completed",
-      "frame": 52,
-      "seconds": 3.0843083262443542,
+      "frame": 24,
+      "seconds": 10.237786531448364,
       "clip": "Idle-cycle",
-      "clip_time": 0.0541703701,
+      "clip_time": 0,
       "player_health": 100,
       "hand": [
-        -7.00083399,
-        0.832538426,
-        0.892915964
+        -5.01100302,
+        0.483023345,
+        1.61820734
       ],
       "kits": 1,
       "relay": 0,
       "watt": 50,
       "guard": 75,
-      "events": []
+      "contact": {
+        "action": "revive",
+        "target": "1102",
+        "hand": [
+          -5.04788876,
+          0.337504268,
+          1.48793912
+        ],
+        "goal": [
+          -5.04788876,
+          0.337504268,
+          1.48793936
+        ],
+        "distance": 2.38418579e-07,
+        "prop": "0",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -5.04788876,
+          0.337504268,
+          1.48793912
+        ],
+        "commit_goal": [
+          -5.04788876,
+          0.337504268,
+          1.48793936
+        ],
+        "commit_distance": 2.38418579e-07
+      },
+      "events": [
+        {
+          "entity": "1101",
+          "kind": "revive_contact",
+          "text": "1102"
+        },
+        {
+          "entity": "1102",
+          "kind": "动作",
+          "text": "getup"
+        }
+      ]
     }
   ]
 }

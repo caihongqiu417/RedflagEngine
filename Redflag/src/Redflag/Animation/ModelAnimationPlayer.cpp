@@ -9,7 +9,7 @@ namespace Redflag
 		return m_Animation && m_Animation->GetNodeTransform(name, m_NodeTransforms, localToModel);
 	}
 
-	void ModelAnimationComponent::Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust, const GaitStep* gait)
+	void ModelAnimationComponent::Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust, const GaitStep* gait, bool poseChanged)
 	{
 		if (model != m_Model) {
 			m_Model = model;
@@ -56,7 +56,7 @@ namespace Redflag
 			m_Previous = m_Local;
 			m_BlendTime = 0.f;
 		}
-		if (Time == m_LastTime && Clip == m_LastClip && m_Previous.empty()) return;
+		if (Time == m_LastTime && Clip == m_LastClip && m_Previous.empty() && !poseChanged) return;
 		m_LastTime = Time;
 		m_LastClip = Clip;
 

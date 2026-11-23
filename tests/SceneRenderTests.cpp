@@ -447,6 +447,10 @@ int main(int argc, char** argv)
         ResaveTerrain(argv[2], argv[3]);
         return s_Failures ? 1 : 0;
     }
+    if (argc == 2 && std::string(argv[1]) == "--station-reach") {
+        CheckStationWorkDistance(Check);
+        return s_Failures ? 1 : 0;
+    }
     if (argc == 2 && std::string(argv[1]) == "--npc-animation")
     {
         CheckNpcMotion();

@@ -48,7 +48,7 @@ namespace Redflag
 		std::string Instruction, Action;
 		std::string Stage;
 		float PhaseTime = 0.0f;
-		bool ContactMade = false;
+		bool ContactMade = false, ContactPending = false, Down = false;
 		bool Started = false, LeaderDown = false;
 	};
 

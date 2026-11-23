@@ -1,0 +1,3 @@
+Debug x64, tests/run_scene_tests.cmd --station-reach
+PASS the recorded starting point is just outside the two-metre work range
+PASS worker crosses the range boundary and completes two seconds of repair

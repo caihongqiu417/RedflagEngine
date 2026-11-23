@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "WorldActions.h"
+#include "HandContact.h"
 #include "Redflag/Scene/Entity.h"
 #include <limits>
 
@@ -47,6 +48,14 @@ namespace Redflag
 		return !hit || hit->Entity == target;
 	}
 
+	// 配置了手部动作的角色只允许向本次碰到的目标提交结果。没有播放交互的宿主仍沿用物理距离检查。
+	static bool Touches(Scene& scene, Entity actor, uint64_t target, const std::string& action)
+	{
+		if (!actor.HasComponent<HandContact>()) return true;
+		const auto& hand = actor.GetComponent<HandContact>();
+		return hand.Target == target && hand.Action == action && !hand.Passed && AtContact(scene,actor.GetUUID());
+	}
+
 	//========== 拾取与交付 ==========
 
 	ActionResult CheckPickup(Scene& scene, uint64_t actor, uint64_t target, float range)
@@ -71,7 +80,9 @@ namespace Redflag
 		const ActionResult result = CheckPickup(scene, actor, target, range);
 		if (result != ActionResult::Completed) return result;
 
-		Entity object = scene.GetEntityByUUID(target);
+		Entity owner = scene.GetEntityByUUID(actor), object = scene.GetEntityByUUID(target);
+		if (!Touches(scene,owner,target,"pickup")) return ActionResult::OutOfReach;
+		CommitContact(scene,actor);
 		const PickupComponent& pickup = object.GetComponent<PickupComponent>();
 		scene.GetEntityByUUID(actor).GetComponent<InventoryComponent>().Items[pickup.Item] += pickup.Count;
 		scene.DestroyEntity(object);
@@ -89,8 +100,10 @@ namespace Redflag
 		auto& stock = giver.GetComponent<InventoryComponent>().Items;
 		const auto found = stock.find(item);
 		if (found == stock.end() || found->second < count) return ActionResult::Unavailable;
+		if (!Touches(scene,giver,recipient,"give")) return ActionResult::OutOfReach;
 		int& other = receiver.GetComponent<InventoryComponent>().Items[item];
 		if (other > std::numeric_limits<int>::max() - count) return ActionResult::Unavailable;
+		CommitContact(scene,actor);
 		other += count;
 		found->second -= count;
 		if (found->second == 0) stock.erase(found);
@@ -130,6 +143,9 @@ namespace Redflag
 		m_Progress = interaction.Seconds > 0.0f ? std::min(1.0f, m_Elapsed / interaction.Seconds) : 1.0f;
 		if (m_Progress < 1.0f) return ActionResult::Running;
 
+		Entity actor = scene.GetEntityByUUID(m_Actor);
+		if (!Touches(scene,actor,m_Target,m_Action)) return m_Result = ActionResult::OutOfReach;
+		CommitContact(scene,m_Actor);
 		health.Current = std::min(health.Maximum, health.Current + interaction.Restore);
 		return m_Result = ActionResult::Completed;
 	}

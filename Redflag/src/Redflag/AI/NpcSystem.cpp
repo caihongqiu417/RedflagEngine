@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "NpcSystem.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "EnvironmentSense.h"
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Gameplay/TerrainTraversal.h"
@@ -183,6 +184,7 @@ namespace Redflag
 	void NpcSystem::Stop(uint64_t actor, NpcState& state)
 	{
 		CancelTraversal(m_Scene, actor);
+		EndContact(m_Scene,actor);
 		state.Look = 0;
 		if (state.Watch.Request)
 		{
@@ -283,6 +285,7 @@ namespace Redflag
 	void NpcSystem::Enter(uint64_t actor, NpcState& state, const std::string& stage)
 	{
 		if (state.Stage == stage) return;
+		state.ContactPending = false;
 		state.Stage = stage;
 		state.PhaseTime = 0.0f;
 		state.ActionEvents = {};
@@ -356,7 +359,8 @@ namespace Redflag
 
 		const float distance = glm::length(offset);
 		const glm::vec3 direction = distance > 0.f ? offset / distance : glm::vec3(0.f);
-		const float remaining = std::max(0.f, distance - std::nextafter(stopDistance, 0.f));
+		// 停在交互范围内一厘米。只缩短距离的最后一位，在加回十几米的世界坐标时会被舍掉。
+		const float remaining = std::max(0.f,distance-std::max(0.f,stopDistance-.01f));
 		const float step = std::min(remaining, GetDefinition(actor)->Speed * seconds);
 		Face(actor, place, seconds);
 		const glm::vec3 forward(std::sin(transform.Rotation.y), 0.0f, std::cos(transform.Rotation.y));
@@ -370,11 +374,12 @@ namespace Redflag
 
 	void NpcSystem::Finish(uint64_t actor, NpcState& state, ActionResult result)
 	{
+		EndContact(m_Scene,actor);
 		const bool success = result == ActionResult::Completed;
 		const std::string action = state.Action;
 		const NpcDefinition& definition = *GetDefinition(actor);
 		const auto intent = std::find_if(definition.Intents.begin(), definition.Intents.end(),
-			[&](const NpcIntent& item) { return item.Key == action; });
+			[&](const NpcIntent& item) { return item.Key == state.Goal.Intent; });
 		const std::string speech = success && intent != definition.Intents.end() ? intent->Reply : "";
 		Record(state, success ? "完成" : "失败", action, state.Goal.Target, speech);
 
@@ -507,6 +512,16 @@ namespace Redflag
 		}
 
 		// 救援和维修按目标设定的时间进行。模型可以改主意，已经做完的交互只生效一次。
+		Entity owner = m_Scene.GetEntityByUUID(actor);
+		const std::string contactName = state.Action == "gather" ? "pickup" :
+			state.Action == "reserve" || state.Action == "share" ? "give" : state.Action;
+		const bool hasSocket = UsesHandContact(owner,target,contactName);
+		auto approach = [&](float range) {
+			if (!hasSocket) return Approach(actor,state,range,seconds) && Face(actor,target.GetComponent<TransformComponent>().Translation,seconds);
+			if (!CanReach(m_Scene,actor,state.Goal.Target,range)) { Approach(actor,state,range,seconds); return false; }
+			if (!ApproachContact(m_Scene,actor,state.Goal.Target,contactName,seconds)) { Enter(actor,state,"walk"); return false; }
+			return BeginContact(m_Scene,actor,state.Goal.Target,contactName);
+		};
 		const bool useTarget = target && target.HasComponent<InteractionComponent>() &&
 			target.GetComponent<InteractionComponent>().Action == state.Action;
 		if (useTarget)
@@ -514,7 +529,7 @@ namespace Redflag
 			if (!state.Use.IsRunning())
 			{
 				const float range = target.GetComponent<InteractionComponent>().Range;
-				if (!Approach(actor, state, range, seconds) || !Face(actor, target.GetComponent<TransformComponent>().Translation, seconds)) return;
+				if (!approach(range)) return;
 				Enter(actor, state, state.Action);
 				const ActionResult start = state.Use.Start(m_Scene, actor, state.Goal.Target, state.Action);
 				if (start != ActionResult::Running)
@@ -547,9 +562,7 @@ namespace Redflag
 					return;
 				}
 			}
-			else if (!Approach(actor, state, definition.Reach, seconds)) return;
-
-			if (!Face(actor, target.GetComponent<TransformComponent>().Translation, seconds)) return;
+			if (!approach(definition.Reach)) return;
 			Enter(actor, state, stage);
 		}
 
@@ -557,12 +570,17 @@ namespace Redflag
 		const float duration = animation ? animation->Seconds : 0.0f;
 		state.PhaseTime += seconds;
 		state.ActionEvents.Advance(seconds);
-		bool contactDue = duration == 0.f;
+		bool contactDue = state.ContactPending || duration == 0.f;
 		AnimationNotice notice;
 		while (state.ActionEvents.Read(notice))
 			if (notice.Phase == NotifyPhase::Point && notice.Name == "contact") contactDue = true;
 		if (!state.ContactMade && contactDue)
 		{
+			state.ContactPending = true;
+			if (hasSocket && !AtContact(m_Scene,actor)) {
+				if (state.PhaseTime >= duration) Finish(actor,state,ActionResult::OutOfReach);
+				return;
+			}
 			const ActionResult contact = pickingUp
 				? CollectItem(m_Scene, actor, state.Goal.Target, definition.Reach)
 				: GiveItem(m_Scene, actor, state.Goal.Target, state.Goal.Item, 1, definition.Reach);
@@ -571,6 +589,7 @@ namespace Redflag
 				Finish(actor, state, contact);
 				return;
 			}
+			state.ContactPending = false;
 			state.ContactMade = true;
 			Record(state, "库存", pickingUp ? "物品已放入背包" : "物品已交到队友手中", state.Goal.Target);
 		}
@@ -598,8 +617,27 @@ namespace Redflag
 			if (owner.HasComponent<HealthComponent>() && owner.GetComponent<HealthComponent>().Current <= 0)
 			{
 				if (state.Request || state.Watch.Request || !state.Action.empty()) Stop(id, state);
+				if (!state.Down) {
+					const auto* role = GetDefinition(id);
+					if (role && role->Controller.Find("down")) Enter(id,state,"down");
+				}
+				state.Down = true;
 				state.Started = false;
 				continue;
+			}
+			if (state.Down) {
+				const auto* role = GetDefinition(id);
+				const auto* rise = role ? role->Controller.Find("getup") : nullptr;
+				if (rise && state.Stage != "getup") Enter(id,state,"getup");
+				if (rise && owner.HasComponent<ModelAnimationComponent>()) {
+					const auto& player = owner.GetComponent<ModelAnimationComponent>();
+					if (player.GetAnimation()) {
+						const auto& clips = player.GetAnimation()->GetClips();
+						const auto clip = std::find_if(clips.begin(), clips.end(), [&](const auto& c){ return c.Name==rise->Clip; });
+						if (clip!=clips.end() && player.Time < clip->Duration) continue;
+					}
+				}
+				state.Down = false;
 			}
 			Entity leader = m_Scene.GetEntityByUUID(owner.GetComponent<NpcComponent>().Leader);
 			const bool down = leader && leader.HasComponent<HealthComponent>() && leader.GetComponent<HealthComponent>().Current <= 0.0f;
