@@ -1,0 +1,36 @@
+{
+  "fixture": "维修站玩家、摄像机与地台，独立场景文件",
+  "edited_process": 62004,
+  "reopened_process": 91432,
+  "exe_sha256": "d7dc2d036c54fb5ee42e93c678937c731150c20ab0dee9dbd9493434ed45aacb",
+  "differences": [
+    {
+      "field": ".Entities[1].CapsuleCollider3DComponent.Radius",
+      "previous": 0.349999994,
+      "current": 0.419999987
+    },
+    {
+      "field": ".Entities[1].ModelAnimationComponent.Time",
+      "previous": 0.27110672,
+      "current": 0.280749917
+    }
+  ],
+  "axis": "Y",
+  "height": 1.84,
+  "radius_displayed_at_reopen": 0.42,
+  "scene_notes_sha256": "25f5d7280d26d59ea24c7945312bf1f597b4562e3c1854d070bbabd63182478a",
+  "radius_note": {
+    "entities": [
+      1101,
+      1102
+    ],
+    "component": "CapsuleCollider3DComponent",
+    "field": "Radius",
+    "reason": "最初的站立半径 0.35 米沿用了旧碰撞盒的水平半宽。移动时，在胸口和头部各用一个球向前检测障碍，球半径取角色半径的 0.9 倍。0.9 是旧移动代码选的经验系数。两种半径的贴墙测试记录了停靠距离，尚未比较不同系数的效果。",
+    "evidence": [
+      "git:4d7a4a1:RedflagForge/assets/scenes/Watt-Station.redflag",
+      "Redflag/src/Redflag/Gameplay/TerrainTraversal.cpp",
+      "output/validation/packaged-watt/ground-contact/radius.json"
+    ]
+  }
+}
