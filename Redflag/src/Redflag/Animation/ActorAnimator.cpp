@@ -26,6 +26,7 @@ namespace Redflag
 		player.Time=0.f;
 		player.Playing=true;
 		player.Loop=state->Loop;
+		player.MatchTravel=false;
 		player.BlendSeconds=state->Blend;
 		return true;
 	}

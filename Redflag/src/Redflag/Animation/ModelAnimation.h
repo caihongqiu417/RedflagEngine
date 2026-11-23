@@ -28,6 +28,8 @@ namespace Redflag
 
 		/// <summary>取得各节点相对父节点的位置、旋转和缩放。多个动作共用这套骨架。</summary>
 		void SamplePose(size_t clip, float seconds, std::vector<NodePose>& local) const;
+		// 一个循环里运动根沿地面走了多远。以模型为坐标系，包含骨架父节点的旋转和缩放。
+		float GetStrideLength(size_t clip, const std::string& root) const;
 		/// <summary>按节点从上一帧的姿势过渡到当前姿势。旋转沿四元数的短弧插值。</summary>
 		/// <param name="weight">0 保留来源姿势，1 到达新动作。</param>
 		static void BlendPose(const std::vector<NodePose>& from, float weight, std::vector<NodePose>& to);

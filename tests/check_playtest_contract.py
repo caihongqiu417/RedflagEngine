@@ -46,8 +46,9 @@ def contract(project):
     asset_changes.apply(project,change,undo=True)
     assert ui.read_text("utf8")=="Font: 12 # 人工编辑\n"
 
-    meta = begin(project,"assets/scenes/room.redflag","手动接管测试",launch=False)
+    meta = begin(project,"assets/scenes/room.redflag","手动接管测试",launch=False,pose_nodes=["hip","foot","hip"])
     folder = run_folder(project,meta["session"])
+    assert json.loads((folder/"session.json").read_bytes())["pose_nodes"] == ["hip","foot"]
     with ThreadPoolExecutor(3) as pool:
         commands = list(pool.map(lambda key:issue(folder,1,"tap",key=key),("W","S","E")))
     assert sorted(c["id"] for c in commands)==[1,2,3]

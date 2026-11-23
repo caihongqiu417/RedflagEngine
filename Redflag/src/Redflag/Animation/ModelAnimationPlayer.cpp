@@ -9,7 +9,7 @@ namespace Redflag
 		return m_Animation && m_Animation->GetNodeTransform(name, m_NodeTransforms, localToModel);
 	}
 
-	void ModelAnimationComponent::Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust)
+	void ModelAnimationComponent::Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust, const GaitStep* gait)
 	{
 		if (model != m_Model) {
 			m_Model = model;
@@ -20,6 +20,7 @@ namespace Redflag
 			m_Local.clear();
 			m_Previous.clear();
 			m_LastTime = -1.f;
+			m_StrideRoot.clear();
 		}
 		if (!m_Animation) return;
 
@@ -33,7 +34,20 @@ namespace Redflag
 		// 深度、颜色和拾取可能重复读取同一姿势。读取时保留上一步的过渡进度。
 		if (seconds == 0.f && Time == m_LastTime && Clip == m_LastClip) return;
 		if (Playing && seconds > 0.f && active->Duration > 0.f)
-			Time = Loop ? std::fmod(Time + seconds, active->Duration) : std::min(Time + seconds, active->Duration);
+		{
+			float advance = seconds;
+			if (MatchTravel && gait && !gait->Root.empty())
+			{
+				if (Clip != m_LastClip || gait->Root != m_StrideRoot) {
+					m_Stride = m_Animation->GetStrideLength(active - clips.begin(), gait->Root);
+					m_StrideRoot = gait->Root;
+				}
+				// 走过半个步态周期的距离，就播放半个周期。原地制作、没有位移曲线的片段沿用原速。
+				if (m_Stride > .0001f) advance = active->Duration * gait->Distance / m_Stride;
+			}
+			else m_StrideRoot.clear();
+			Time = Loop ? std::fmod(Time + advance, active->Duration) : std::min(Time + advance, active->Duration);
+		}
 		if (!Playing || seconds <= 0.f || BlendSeconds <= 0.f)
 			m_Previous.clear();
 		else if (Clip != m_LastClip)

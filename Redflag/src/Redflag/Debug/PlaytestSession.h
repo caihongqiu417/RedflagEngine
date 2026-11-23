@@ -66,6 +66,7 @@ namespace Redflag
         PlaytestInput m_Input;
         std::ofstream m_Frames;
         std::vector<Entry> m_Events;
+        std::vector<std::string> m_PoseNodes;
         std::vector<InputSample> m_Inputs;
         std::optional<std::pair<float, float>> m_HumanPointer;
         std::map<uint64_t, uint64_t> m_NpcEvents;

@@ -49,7 +49,7 @@ namespace Redflag
 
 	//========== 拾取与交付 ==========
 
-	ActionResult CollectItem(Scene& scene, uint64_t actor, uint64_t target, float range)
+	ActionResult CheckPickup(Scene& scene, uint64_t actor, uint64_t target, float range)
 	{
 		Entity owner = scene.GetEntityByUUID(actor), object = scene.GetEntityByUUID(target);
 		if (!object) return ActionResult::MissingTarget;
@@ -59,9 +59,21 @@ namespace Redflag
 
 		const PickupComponent& pickup = object.GetComponent<PickupComponent>();
 		if (pickup.Item.empty() || pickup.Count <= 0) return ActionResult::Unavailable;
-		int& total = owner.GetComponent<InventoryComponent>().Items[pickup.Item];
-		if (total > std::numeric_limits<int>::max() - pickup.Count) return ActionResult::Unavailable;
-		total += pickup.Count;
+		const auto& stock = owner.GetComponent<InventoryComponent>().Items;
+		const auto found = stock.find(pickup.Item);
+		if (found != stock.end() && found->second > std::numeric_limits<int>::max() - pickup.Count)
+			return ActionResult::Unavailable;
+		return ActionResult::Completed;
+	}
+
+	ActionResult CollectItem(Scene& scene, uint64_t actor, uint64_t target, float range)
+	{
+		const ActionResult result = CheckPickup(scene, actor, target, range);
+		if (result != ActionResult::Completed) return result;
+
+		Entity object = scene.GetEntityByUUID(target);
+		const PickupComponent& pickup = object.GetComponent<PickupComponent>();
+		scene.GetEntityByUUID(actor).GetComponent<InventoryComponent>().Items[pickup.Item] += pickup.Count;
 		scene.DestroyEntity(object);
 		return ActionResult::Completed;
 	}

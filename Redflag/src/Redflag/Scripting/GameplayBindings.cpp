@@ -54,7 +54,7 @@ namespace Redflag
 			rig.Limbs[index] = { Text(upper), Text(lower), Text(tip) };
 		}
 
-		void PlayClip(uint64_t actor, MonoString* name)
+		void SelectClip(uint64_t actor, MonoString* name, bool locomotion)
 		{
 			Entity entity = World().GetEntityByUUID(actor);
 			if (!entity || !entity.HasComponent<ModelAnimationComponent>()) return;
@@ -62,9 +62,18 @@ namespace Redflag
 			const std::string clip = Text(name);
 			auto* animator = World().GetRegistry().try_get<ActorAnimator>(static_cast<entt::entity>(entity));
 			if (animator && animator->Clip != clip) animator->Timeline.Cancel();
-			if (animation.Clip != clip) { animation.Clip = clip; animation.Time = 0.f; }
+			if (animation.Clip != clip) {
+				if (animator && animation.Clip == animator->Clip) animation.Loop = true;
+				animation.Clip = clip;
+				animation.Time = 0.f;
+			}
+			animation.MatchTravel = locomotion;
+			if (locomotion) animation.Loop = true;
 			animation.Playing = true;
 		}
+
+		void PlayClip(uint64_t actor, MonoString* name) { SelectClip(actor, name, false); }
+		void PlayLocomotion(uint64_t actor, MonoString* name) { SelectClip(actor, name, true); }
 
 		void HoldPose(uint64_t actor, MonoString* name, float seconds)
 		{
@@ -76,6 +85,7 @@ namespace Redflag
 			animation.Clip = Text(name);
 			animation.Time = seconds;
 			animation.Playing = false;
+			animation.MatchTravel = false;
 		}
 
 		// ---- 生命、补给与交互 ----
@@ -116,6 +126,11 @@ namespace Redflag
 		bool Hit(uint64_t source, uint64_t target, float range, float amount)
 		{
 			return CanReach(World(),source,target,range) && ApplyDamage(World(),source,target,amount);
+		}
+
+		bool CanCollect(uint64_t actor, uint64_t target, float range)
+		{
+			return CheckPickup(World(),actor,target,range) == ActionResult::Completed;
 		}
 
 		bool Collect(uint64_t actor, uint64_t target, float range)
@@ -224,12 +239,14 @@ namespace Redflag
 		mono_add_internal_call("Redflag.GameWorld::SetTraversalLimb", (const void*)SetTraversalLimb);
 		mono_add_internal_call("Redflag.GameWorld::SetMovementRoot", (const void*)SetMovementRoot);
 		mono_add_internal_call("Redflag.GameWorld::PlayClip", (const void*)PlayClip);
+		mono_add_internal_call("Redflag.GameWorld::PlayLocomotion", (const void*)PlayLocomotion);
 		mono_add_internal_call("Redflag.GameWorld::Pose", (const void*)HoldPose);
 		mono_add_internal_call("Redflag.GameWorld::MaxHealth", (const void*)MaxHealth);
 		mono_add_internal_call("Redflag.GameWorld::Health", (const void*)Health);
 		mono_add_internal_call("Redflag.GameWorld::ItemCount", (const void*)ItemCount);
 		mono_add_internal_call("Redflag.GameWorld::Heal", (const void*)Heal);
 		mono_add_internal_call("Redflag.GameWorld::Hit", (const void*)Hit);
+		mono_add_internal_call("Redflag.GameWorld::CanCollect", (const void*)CanCollect);
 		mono_add_internal_call("Redflag.GameWorld::Collect", (const void*)Collect);
 		mono_add_internal_call("Redflag.GameWorld::Interact", (const void*)Interact);
 		mono_add_internal_call("Redflag.GameWorld::Hud", (const void*)Hud);

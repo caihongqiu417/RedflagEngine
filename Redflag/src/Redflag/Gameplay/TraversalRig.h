@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Animation/ModelAnimation.h"
+#include <optional>
 
 namespace Redflag
 {
@@ -15,6 +16,7 @@ namespace Redflag
 	{
 		std::string MovementRoot;
 		std::array<ModelAnimation::Limb, 4> Limbs;
+		std::optional<glm::vec3> PreviousPosition;
 	};
 
 	void AdjustTerrainPose(Scene& scene, uint64_t actor, const TransformComponent& transform,

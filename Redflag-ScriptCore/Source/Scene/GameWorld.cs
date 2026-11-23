@@ -36,6 +36,10 @@ namespace Redflag
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void PlayClip(ulong actor, string clip);
 
+        /// <summary>按角色在地面上实际移动的距离播放步态。使用 SetMovementRoot 指定剪辑中记录步幅的骨骼。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void PlayLocomotion(ulong actor, string clip);
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void Pose(ulong actor, string clip, float seconds);
 
@@ -56,6 +60,10 @@ namespace Redflag
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool Hit(ulong actor, ulong target, float range, float amount);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool CanCollect(ulong actor, ulong target, float range);
+
+        /// <summary>手碰到物品时再次查距离和库存，成功后把物品交给角色。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool Collect(ulong actor, ulong target, float range);
 

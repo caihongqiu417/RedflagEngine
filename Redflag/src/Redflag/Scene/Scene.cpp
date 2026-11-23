@@ -352,13 +352,19 @@ namespace Redflag {
 
         m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](entt::entity handle, ModelRendererComponent& renderer, ModelAnimationComponent& player) {
             if (!renderer.ModelAsset && renderer.ModelID) renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
-            const auto* rig = m_Registry.try_get<TraversalRig>(handle);
+            auto* rig = m_Registry.try_get<TraversalRig>(handle);
             const auto* motion = m_Registry.try_get<TerrainTraversal>(handle);
             if (rig && motion) {
                 Entity owner(handle,this);
+                const TransformComponent& transform = owner.GetComponent<TransformComponent>();
+                glm::vec3 delta = transform.Translation - rig->PreviousPosition.value_or(transform.Translation);
+                rig->PreviousPosition = transform.Translation;
+                delta.y = 0.f;
+                const glm::vec3 local = glm::inverse(glm::mat3(transform.GetTransform())) * delta;
+                const ModelAnimationComponent::GaitStep step{rig->MovementRoot, glm::length(glm::vec2(local.x, local.z))};
                 player.Update(renderer.ModelAsset, ts.GetSeconds(), [&](const ModelAnimation& animation, std::vector<ModelAnimation::NodePose>& pose) {
-                    AdjustTerrainPose(*this,owner.GetUUID(),owner.GetComponent<TransformComponent>(),*rig,*motion,animation,pose);
-                });
+                    AdjustTerrainPose(*this,owner.GetUUID(),transform,*rig,*motion,animation,pose);
+                }, &step);
             } else player.Update(renderer.ModelAsset, ts.GetSeconds());
             if (auto* animator = m_Registry.try_get<ActorAnimator>(handle)) {
                 if (player.Clip != animator->Clip || !player.Playing) animator->Timeline.Cancel();

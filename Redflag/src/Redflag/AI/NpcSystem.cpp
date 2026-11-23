@@ -304,6 +304,7 @@ namespace Redflag
 		ModelAnimationComponent& animation = owner.GetComponent<ModelAnimationComponent>();
 		const std::string& clip = shot ? shot->Clip : stage == "walk" ? definition->WalkClip : definition->IdleClip;
 		if (clip.empty()) return;
+		animation.MatchTravel = stage == "walk" || stage == "run";
 		if (shot)
 		{
 			animation.BlendSeconds = shot->Blend;

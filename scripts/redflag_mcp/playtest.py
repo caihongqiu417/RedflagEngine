@@ -69,7 +69,7 @@ def run_folder(project: Path, session: str) -> Path:
     return folder
 
 
-def begin(project: Path, scene: str, intent: str, launch=True, executable=None):
+def begin(project: Path, scene: str, intent: str, launch=True, executable=None, pose_nodes=None):
     project = project.resolve()
     path = (project / scene).resolve()
     if path.suffix != ".redflag" or not path.is_relative_to(project / "assets/scenes") or not path.is_file():
@@ -86,6 +86,8 @@ def begin(project: Path, scene: str, intent: str, launch=True, executable=None):
     write_json(folder / "handoff.json", {"owner":"agent", "generation":1})
     metadata = {"version":1, "session":session, "scene":path.relative_to(project).as_posix(), "intent":intent,
                 "scene_sha256":hashlib.sha256(path.read_bytes()).hexdigest(), "created":datetime.now(timezone.utc).isoformat()}
+    if pose_nodes:
+        metadata["pose_nodes"] = list(dict.fromkeys(pose_nodes))
     write_json(folder / "session.json", metadata)
     if launch:
         args = [str(exe), "--vulkan", "--play", str(path)]

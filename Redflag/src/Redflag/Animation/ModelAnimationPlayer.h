@@ -14,10 +14,12 @@ namespace Redflag
 		float Time = 0.f; // 秒，可在暂停时拖动。
 		bool Playing = true;
 		bool Loop = true;
+		bool MatchTravel = false; // 走、跑按这帧实际走过的距离迈步。跳跃和交互仍按时间播放。
 		float BlendSeconds = .18f; // 切换动作时用于衔接前后姿势的时间，单位为秒。设为零就直接换姿势。
 
 		using AdjustPose = std::function<void(const ModelAnimation&, std::vector<ModelAnimation::NodePose>&)>;
-		void Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust = {});
+		struct GaitStep { const std::string& Root; float Distance; };
+		void Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust = {}, const GaitStep* gait = nullptr);
 		const Ref<ModelAnimation>& GetAnimation() const { return m_Animation; }
 		const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
 		const glm::mat4& GetTransform(size_t part) const { return m_Transforms[part]; }
@@ -33,6 +35,8 @@ namespace Redflag
 		std::vector<ModelAnimation::NodePose> m_Local, m_Previous;
 		float m_BlendTime = 0.0f;
 		std::string m_LastClip;
+		float m_Stride = 0.f;
+		std::string m_StrideRoot;
 		float m_LastTime = -1.f;
 	};
 }

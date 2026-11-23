@@ -24,6 +24,9 @@ namespace Redflag
 
 	//========== 拾取与交付 ==========
 
+	/// <summary>检查目标是否仍可拾取、角色能否够到它，以及背包能否装下整份物品。</summary>
+	ActionResult CheckPickup(Scene& scene, uint64_t actor, uint64_t target, float range);
+
 	/// <summary>角色够到物体后，将整份物品放进库存，再从场景中移除这个物体。</summary>
 	ActionResult CollectItem(Scene& scene, uint64_t actor, uint64_t target, float range);
 

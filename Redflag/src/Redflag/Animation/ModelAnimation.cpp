@@ -322,6 +322,22 @@ namespace Redflag
 		}
 	}
 
+	float ModelAnimation::GetStrideLength(size_t clip, const std::string& root) const
+	{
+		const auto found = m_Data->NamedNodes.find(root);
+		if (found == m_Data->NamedNodes.end()) return 0.f;
+
+		std::vector<NodePose> pose;
+		std::vector<glm::mat4> joints;
+		SamplePose(clip, 0.f, pose);
+		GetModelTransforms(pose, joints);
+		const glm::vec3 start(joints[found->second][3]);
+		SamplePose(clip, m_Clips[clip].Duration, pose);
+		GetModelTransforms(pose, joints);
+		const glm::vec3 travel = glm::vec3(joints[found->second][3]) - start;
+		return glm::length(glm::vec2(travel.x, travel.z));
+	}
+
 	std::vector<std::pair<glm::vec3, glm::vec3>> ModelAnimation::SampleBones(size_t clip, float seconds) const
 	{
 		std::vector<NodePose> local;

@@ -109,6 +109,8 @@ namespace Redflag
             const YAML::Node config = Read(dir / "session.json"), owner = Read(dir / "handoff.json"),
                              status = Read(dir / "status.json");
             info.Intent = config["intent"].as<std::string>("");
+            if (config["pose_nodes"])
+                session->m_PoseNodes = config["pose_nodes"].as<std::vector<std::string>>();
             info.Owner = owner["owner"].as<std::string>("agent");
             if (info.Owner != "human" && info.Owner != "agent") throw std::runtime_error("Invalid playtest owner");
             info.Generation = owner["generation"].as<uint64_t>(1);
@@ -377,10 +379,29 @@ namespace Redflag
                                  CameraComponent, RigidBody2DComponent, RigidBody3DComponent>(handle))
                 continue;
             const uint64_t id = registry.get<IDComponent>(handle).ID;
-            const glm::vec3 p = registry.get<TransformComponent>(handle).Translation;
+            const auto &transform = registry.get<TransformComponent>(handle);
+            const glm::vec3 p = transform.Translation;
             out << YAML::BeginMap << "id" << std::to_string(id) << "name" << registry.get<TagComponent>(handle).Tag
                 << "position" << YAML::BeginSeq << p.x << p.y << p.z << YAML::EndSeq;
             if (const auto *health = registry.try_get<HealthComponent>(handle)) out << "health" << health->Current;
+            if (!m_PoseNodes.empty())
+            {
+                if (const auto *animation = registry.try_get<ModelAnimationComponent>(handle))
+                {
+                    // 读取贴地、混合之后的姿势。世界坐标让录像能区分角色向前走和脚掌在地上滑。
+                    out << "animation" << YAML::BeginMap << "clip" << animation->Clip << "time" << animation->Time
+                        << "yaw" << transform.Rotation.y << "nodes" << YAML::BeginMap;
+                    const glm::mat4 model = transform.GetTransform();
+                    for (const std::string &name : m_PoseNodes)
+                    {
+                        glm::mat4 joint;
+                        if (!animation->GetNodeTransform(name, joint)) continue;
+                        const glm::vec3 point(model * joint[3]);
+                        out << name << YAML::BeginSeq << point.x << point.y << point.z << YAML::EndSeq;
+                    }
+                    out << YAML::EndMap << YAML::EndMap;
+                }
+            }
             if (const auto *inventory = registry.try_get<InventoryComponent>(handle))
             {
                 out << "inventory" << YAML::BeginMap;

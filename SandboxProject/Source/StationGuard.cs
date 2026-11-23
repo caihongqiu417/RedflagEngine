@@ -10,7 +10,12 @@ namespace Sandbox
         private float cooldown;
         private TransformComponent pose;
 
-        void OnCreate() { pose = GetComponent<TransformComponent>(); }
+        void OnCreate()
+        {
+            pose = GetComponent<TransformComponent>();
+            // 巡检机的行走片段把整台机器移了两米。场景负责移动机身，动画只负责迈步。
+            GameWorld.SetMovementRoot(Id, "MASTER");
+        }
 
         void OnUpdate(float seconds)
         {
@@ -33,9 +38,10 @@ namespace Sandbox
             if (distance > 2.1f) {
                 Vector3 direction = delta / distance;
                 Vector3 step = direction * Math.Min(1.7f * seconds, distance - 2.1f);
-                GameWorld.Move(Id, ref step, .34f);
+                bool moved = GameWorld.Move(Id, ref step, .34f);
                 pose.Rotation = new Vector3(0, (float)Math.Atan2(direction.X,direction.Z), 0);
-                GameWorld.PlayClip(Id, "Walk-cycle");
+                if (moved) GameWorld.PlayLocomotion(Id, "Walk-cycle");
+                else GameWorld.PlayClip(Id, "Idle-cycle");
             } else {
                 GameWorld.PlayClip(Id, "Cannon_Fire_Recoil");
                 // 两次放电至少间隔一秒，持续接触时也不会每帧扣血。

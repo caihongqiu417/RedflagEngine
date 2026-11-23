@@ -76,10 +76,10 @@ def comment_dev_task(task: str, text: str) -> dict[str, object]:
 
 
 @app.tool()
-def begin_playtest(scene: str, intent: str) -> dict[str, object]:
-    """在正式游戏窗口打开项目的场景，开始记录状态、输入和画面。scene 使用 list_scenes 的名字。"""
+def begin_playtest(scene: str, intent: str, pose_nodes: list[str] | None = None) -> dict[str, object]:
+    """在游戏窗口记录输入、状态和画面。检查动作时可填模型的骨骼名，逐帧记录这些关节在场景中的位置。"""
     path = scene_file(scene)
-    return playtest.begin(FORGE, path.relative_to(FORGE).as_posix(), intent)
+    return playtest.begin(FORGE, path.relative_to(FORGE).as_posix(), intent, pose_nodes=pose_nodes)
 
 
 @app.tool(annotations=READ_ONLY)
