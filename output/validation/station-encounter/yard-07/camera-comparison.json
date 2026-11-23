@@ -1,0 +1,1030 @@
+{
+  "original": {
+    "archive": "Redflag-Watt-Yard-05.zip",
+    "sandbox_sha256": "48d62dfbca7632be33a58d71bb8c535d6ea237ab95b74917ede36d26050bcb76",
+    "minimum_horizontal_metres": 0.7171486757908992,
+    "samples": [
+      {
+        "seq": 46,
+        "player_x": 1.15825081,
+        "camera_position": [
+          -3.86075783,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.057158097785228
+      },
+      {
+        "seq": 47,
+        "player_x": 1.35364151,
+        "camera_position": [
+          -3.66281819,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.054628395769975
+      },
+      {
+        "seq": 48,
+        "player_x": 1.5514698,
+        "camera_position": [
+          -3.46465135,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.0542924024117735
+      },
+      {
+        "seq": 49,
+        "player_x": 1.74957275,
+        "camera_position": [
+          -3.26648951,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.05423395716862
+      },
+      {
+        "seq": 50,
+        "player_x": 1.94294071,
+        "camera_position": [
+          1.5825212,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7171486757908992
+      },
+      {
+        "seq": 51,
+        "player_x": 2.1654253,
+        "camera_position": [
+          1.79492331,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7222684574269876
+      },
+      {
+        "seq": 52,
+        "player_x": 2.37683773,
+        "camera_position": [
+          2.00637674,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7222474265179353
+      },
+      {
+        "seq": 53,
+        "player_x": 2.60625458,
+        "camera_position": [
+          2.22885728,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7258296784007181
+      },
+      {
+        "seq": 54,
+        "player_x": 2.8867178,
+        "camera_position": [
+          2.48334551,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7396683069726891
+      },
+      {
+        "seq": 55,
+        "player_x": 3.11093044,
+        "camera_position": [
+          2.72220159,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7317855688808865
+      },
+      {
+        "seq": 56,
+        "player_x": 3.32668304,
+        "camera_position": [
+          2.94692945,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7270576243447889
+      },
+      {
+        "seq": 57,
+        "player_x": 3.55759335,
+        "camera_position": [
+          3.17589402,
+          1.46000004,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.7280758054780072
+      },
+      {
+        "seq": 58,
+        "player_x": 3.8086338,
+        "camera_position": [
+          3.20043302,
+          1.49062574,
+          2.01999998
+        ],
+        "distance_xz_metres": 0.8685091759979329
+      },
+      {
+        "seq": 59,
+        "player_x": 3.92580509,
+        "camera_position": [
+          3.13346267,
+          1.53427541,
+          2.01999998
+        ],
+        "distance_xz_metres": 1.0060847432157274
+      },
+      {
+        "seq": 60,
+        "player_x": 3.98343253,
+        "camera_position": [
+          1.62520576,
+          1.77106595,
+          2.02000022
+        ],
+        "distance_xz_metres": 2.4383670347887927
+      },
+      {
+        "seq": 61,
+        "player_x": 4.00897932,
+        "camera_position": [
+          0.804084063,
+          1.89968276,
+          2.02000022
+        ],
+        "distance_xz_metres": 3.264315227722524
+      },
+      {
+        "seq": 62,
+        "player_x": 4.02110767,
+        "camera_position": [
+          0.335697651,
+          1.97237861,
+          2.02000022
+        ],
+        "distance_xz_metres": 3.7371977878814016
+      },
+      {
+        "seq": 63,
+        "player_x": 4.02742577,
+        "camera_position": [
+          0.04378438,
+          2.01719308,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.031600057262772
+      },
+      {
+        "seq": 64,
+        "player_x": 4.03110933,
+        "camera_position": [
+          -0.168250084,
+          2.0493598,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.244881598531398
+      },
+      {
+        "seq": 65,
+        "player_x": 4.03320265,
+        "camera_position": [
+          -0.321162701,
+          2.0722909,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.398283518327282
+      },
+      {
+        "seq": 66,
+        "player_x": 4.03428698,
+        "camera_position": [
+          -0.417394161,
+          2.08658409,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.494648515594419
+      },
+      {
+        "seq": 67,
+        "player_x": 4.03489161,
+        "camera_position": [
+          -0.484384537,
+          2.09644794,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.561606864959235
+      },
+      {
+        "seq": 68,
+        "player_x": 4.03521729,
+        "camera_position": [
+          -0.528884411,
+          2.10295153,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.606020477013878
+      },
+      {
+        "seq": 69,
+        "player_x": 4.03539038,
+        "camera_position": [
+          -0.557477474,
+          2.10710549,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.634526450664255
+      },
+      {
+        "seq": 70,
+        "player_x": 4.03548765,
+        "camera_position": [
+          -0.577129364,
+          2.10994577,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.654098840317246
+      },
+      {
+        "seq": 71,
+        "player_x": 4.13305092,
+        "camera_position": [
+          -0.591166019,
+          2.11196518,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.764727272817888
+      },
+      {
+        "seq": 72,
+        "player_x": 4.30159664,
+        "camera_position": [
+          -0.542505741,
+          2.11339903,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.883618348643751
+      },
+      {
+        "seq": 73,
+        "player_x": 4.52221155,
+        "camera_position": [
+          -0.417547226,
+          2.1143713,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.978515548099561
+      },
+      {
+        "seq": 74,
+        "player_x": 4.79205799,
+        "camera_position": [
+          -0.220584393,
+          2.11501503,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.050839925937861
+      }
+    ]
+  },
+  "shoulder_only": {
+    "archive": "Redflag-Watt-Yard-05.zip",
+    "sandbox_sha256": "2e26a1f0430f98dd84284f4a2dabd12b152f37ab8bbff72b20d70fedaa4048ea",
+    "minimum_horizontal_metres": 0.7094616957697548,
+    "samples": [
+      {
+        "seq": 36,
+        "player_x": 1.28814316,
+        "camera_position": [
+          -3.79076385,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.116609884858059
+      },
+      {
+        "seq": 37,
+        "player_x": 1.57026577,
+        "camera_position": [
+          -3.50333357,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.111341366065125
+      },
+      {
+        "seq": 38,
+        "player_x": 1.8588171,
+        "camera_position": [
+          -3.21604753,
+          2.11585259,
+          2.00738335
+        ],
+        "distance_xz_metres": 5.111082622202227
+      },
+      {
+        "seq": 39,
+        "player_x": 2.11722183,
+        "camera_position": [
+          -2.94490147,
+          2.11585259,
+          1.980178
+        ],
+        "distance_xz_metres": 5.095262391603989
+      },
+      {
+        "seq": 40,
+        "player_x": 2.41653347,
+        "camera_position": [
+          -2.66005206,
+          2.11585259,
+          1.95159805
+        ],
+        "distance_xz_metres": 5.106464635560801
+      },
+      {
+        "seq": 41,
+        "player_x": 2.70792866,
+        "camera_position": [
+          -2.3692143,
+          2.11585259,
+          1.92241704
+        ],
+        "distance_xz_metres": 5.1039494727962
+      },
+      {
+        "seq": 42,
+        "player_x": 3.00436211,
+        "camera_position": [
+          -2.07536125,
+          2.11585259,
+          1.89293325
+        ],
+        "distance_xz_metres": 5.103584291730919
+      },
+      {
+        "seq": 43,
+        "player_x": 3.31349564,
+        "camera_position": [
+          1.11822331,
+          1.70837736,
+          1.8626231
+        ],
+        "distance_xz_metres": 2.2434885232650874
+      },
+      {
+        "seq": 44,
+        "player_x": 3.66896915,
+        "camera_position": [
+          3.20909071,
+          1.46000004,
+          1.9402293
+        ],
+        "distance_xz_metres": 0.7094616957697548
+      },
+      {
+        "seq": 45,
+        "player_x": 4.07145786,
+        "camera_position": [
+          3.1756773,
+          1.51656103,
+          2.01999998
+        ],
+        "distance_xz_metres": 1.0894139762615098
+      },
+      {
+        "seq": 46,
+        "player_x": 4.19242764,
+        "camera_position": [
+          1.25819993,
+          1.84188902,
+          2.02000022
+        ],
+        "distance_xz_metres": 2.999015263671044
+      },
+      {
+        "seq": 47,
+        "player_x": 4.23032331,
+        "camera_position": [
+          0.488538027,
+          1.97341526,
+          2.02000022
+        ],
+        "distance_xz_metres": 3.792803369761666
+      },
+      {
+        "seq": 48,
+        "player_x": 4.24452114,
+        "camera_position": [
+          0.081489563,
+          2.04080749,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.208946686369306
+      },
+      {
+        "seq": 49,
+        "player_x": 4.249897,
+        "camera_position": [
+          -0.122618675,
+          2.07356668,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.416253347094204
+      },
+      {
+        "seq": 50,
+        "player_x": 4.25214386,
+        "camera_position": [
+          -0.234662056,
+          2.09107423,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.529440100658432
+      },
+      {
+        "seq": 51,
+        "player_x": 4.25316191,
+        "camera_position": [
+          -0.304789066,
+          2.1017797,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.599925803447205
+      },
+      {
+        "seq": 52,
+        "player_x": 4.25359488,
+        "camera_position": [
+          -0.344171524,
+          2.10768461,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.639381015108713
+      },
+      {
+        "seq": 53,
+        "player_x": 4.25378752,
+        "camera_position": [
+          -0.368047714,
+          2.11121273,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.663235060324956
+      },
+      {
+        "seq": 54,
+        "player_x": 4.25387096,
+        "camera_position": [
+          -0.38417244,
+          2.11356449,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.679299827739576
+      },
+      {
+        "seq": 55,
+        "player_x": 4.45254374,
+        "camera_position": [
+          -0.391676903,
+          2.11464906,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.883735653745746
+      },
+      {
+        "seq": 56,
+        "player_x": 4.88069344,
+        "camera_position": [
+          -0.228250504,
+          2.1153841,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.146426772094823
+      }
+    ]
+  },
+  "shoulder_and_lift": {
+    "archive": "Redflag-Watt-Yard-05.zip",
+    "sandbox_sha256": "64a2c32531b37925a2a58aed0d0f0ec5b03e7f72f8ba8d1b9d5b0209d83c768b",
+    "minimum_horizontal_metres": 4.695744666350169,
+    "samples": [
+      {
+        "seq": 46,
+        "player_x": 1.10007095,
+        "camera_position": [
+          -3.92436171,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.062541244520852
+      },
+      {
+        "seq": 47,
+        "player_x": 1.2935276,
+        "camera_position": [
+          -3.72479725,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.056479466756251
+      },
+      {
+        "seq": 48,
+        "player_x": 1.4870615,
+        "camera_position": [
+          -3.52847147,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.0537086650060346
+      },
+      {
+        "seq": 49,
+        "player_x": 1.6926775,
+        "camera_position": [
+          -3.32578564,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.056616713291478
+      },
+      {
+        "seq": 50,
+        "player_x": 1.90743732,
+        "camera_position": [
+          -3.11570644,
+          2.11585259,
+          1.99731588
+        ],
+        "distance_xz_metres": 5.058533336652013
+      },
+      {
+        "seq": 51,
+        "player_x": 2.11947346,
+        "camera_position": [
+          -2.90464187,
+          2.11585259,
+          1.97613883
+        ],
+        "distance_xz_metres": 5.057041706731351
+      },
+      {
+        "seq": 52,
+        "player_x": 2.34822941,
+        "camera_position": [
+          -2.6827693,
+          2.11585259,
+          1.95387733
+        ],
+        "distance_xz_metres": 5.061395868618131
+      },
+      {
+        "seq": 53,
+        "player_x": 2.56911469,
+        "camera_position": [
+          -2.46159935,
+          2.11585259,
+          1.93168604
+        ],
+        "distance_xz_metres": 5.058732432008186
+      },
+      {
+        "seq": 54,
+        "player_x": 2.76502323,
+        "camera_position": [
+          -2.25695515,
+          2.11585259,
+          1.91115344
+        ],
+        "distance_xz_metres": 5.047924792313907
+      },
+      {
+        "seq": 55,
+        "player_x": 2.9505434,
+        "camera_position": [
+          -2.06418729,
+          2.11585259,
+          1.89181209
+        ],
+        "distance_xz_metres": 5.038789839313655
+      },
+      {
+        "seq": 56,
+        "player_x": 3.1478796,
+        "camera_position": [
+          -1.86728787,
+          2.11585259,
+          1.87205625
+        ],
+        "distance_xz_metres": 5.037334798699855
+      },
+      {
+        "seq": 57,
+        "player_x": 3.37301064,
+        "camera_position": [
+          -1.65289211,
+          2.47203875,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.064000271530169
+      },
+      {
+        "seq": 58,
+        "player_x": 3.59257984,
+        "camera_position": [
+          -1.43552303,
+          2.61454844,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.066183846733386
+      },
+      {
+        "seq": 59,
+        "player_x": 3.8108902,
+        "camera_position": [
+          -1.2176528,
+          2.67354846,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.066620668695166
+      },
+      {
+        "seq": 60,
+        "player_x": 3.9212358,
+        "camera_position": [
+          -1.00960684,
+          2.69704795,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.969668946523725
+      },
+      {
+        "seq": 61,
+        "player_x": 3.98284507,
+        "camera_position": [
+          -0.848988771,
+          2.35983276,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.871449328960825
+      },
+      {
+        "seq": 62,
+        "player_x": 4.01494169,
+        "camera_position": [
+          -0.746013403,
+          2.21854305,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.801155454175869
+      },
+      {
+        "seq": 63,
+        "player_x": 4.03096294,
+        "camera_position": [
+          -0.688640594,
+          2.16345,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.760153129442933
+      },
+      {
+        "seq": 64,
+        "player_x": 4.03968382,
+        "camera_position": [
+          -0.655097246,
+          2.13910794,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.735543216492924
+      },
+      {
+        "seq": 65,
+        "player_x": 4.04500246,
+        "camera_position": [
+          -0.632832527,
+          2.12640691,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.718743525897688
+      },
+      {
+        "seq": 66,
+        "player_x": 4.04792881,
+        "camera_position": [
+          -0.619925976,
+          2.1206882,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.708850029548952
+      },
+      {
+        "seq": 67,
+        "player_x": 4.04954338,
+        "camera_position": [
+          -0.61253643,
+          2.11810637,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.703125391950516
+      },
+      {
+        "seq": 68,
+        "player_x": 4.0504446,
+        "camera_position": [
+          -0.608297825,
+          2.1169219,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.699817153900239
+      },
+      {
+        "seq": 69,
+        "player_x": 4.05093145,
+        "camera_position": [
+          -0.606010914,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.698032830793966
+      },
+      {
+        "seq": 70,
+        "player_x": 4.0512352,
+        "camera_position": [
+          -0.604545593,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.6968814217593104
+      },
+      {
+        "seq": 71,
+        "player_x": 4.05142069,
+        "camera_position": [
+          -0.603624344,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.696152102111697
+      },
+      {
+        "seq": 72,
+        "player_x": 4.05152464,
+        "camera_position": [
+          -0.60310936,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.695744666350169
+      },
+      {
+        "seq": 73,
+        "player_x": 4.14473104,
+        "camera_position": [
+          -0.602764606,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.787809019414728
+      },
+      {
+        "seq": 74,
+        "player_x": 4.31211615,
+        "camera_position": [
+          -0.546544075,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.898058746033688
+      },
+      {
+        "seq": 75,
+        "player_x": 4.50721693,
+        "camera_position": [
+          -0.424659252,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.970694415489546
+      },
+      {
+        "seq": 76,
+        "player_x": 4.73374176,
+        "camera_position": [
+          -0.252048492,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.024191948417007
+      },
+      {
+        "seq": 77,
+        "player_x": 4.94501066,
+        "camera_position": [
+          -0.0585327148,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.041809853723664
+      }
+    ]
+  },
+  "packaged_07": {
+    "archive": "Redflag-Watt-Yard-07.zip",
+    "sandbox_sha256": "a215c82a7a103abf1407e2107da9926db7c168811d07b7cd82419f4662db929e",
+    "minimum_horizontal_metres": 4.695135879980634,
+    "samples": [
+      {
+        "seq": 27,
+        "player_x": 1.45359612,
+        "camera_position": [
+          -3.78241467,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.272590377660347
+      },
+      {
+        "seq": 28,
+        "player_x": 1.8976326,
+        "camera_position": [
+          -3.29894447,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.23343229076768
+      },
+      {
+        "seq": 29,
+        "player_x": 2.3113451,
+        "camera_position": [
+          -2.86007738,
+          2.11585259,
+          1.97166741
+        ],
+        "distance_xz_metres": 5.202923612467528
+      },
+      {
+        "seq": 30,
+        "player_x": 2.73114014,
+        "camera_position": [
+          -2.43918037,
+          2.11585259,
+          1.92943656
+        ],
+        "distance_xz_metres": 5.19735675784997
+      },
+      {
+        "seq": 31,
+        "player_x": 3.14915276,
+        "camera_position": [
+          -2.01986885,
+          2.11585259,
+          1.88736546
+        ],
+        "distance_xz_metres": 5.191946601780744
+      },
+      {
+        "seq": 32,
+        "player_x": 3.57465267,
+        "camera_position": [
+          -1.59875751,
+          2.60646152,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.210429271003272
+      },
+      {
+        "seq": 33,
+        "player_x": 4.00812626,
+        "camera_position": [
+          -1.17108512,
+          2.69653463,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.216189300276741
+      },
+      {
+        "seq": 34,
+        "player_x": 4.11592245,
+        "camera_position": [
+          -0.70833683,
+          2.18489814,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.863936461166632
+      },
+      {
+        "seq": 35,
+        "player_x": 4.13981819,
+        "camera_position": [
+          -0.568048,
+          2.12800169,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.748516016667225
+      },
+      {
+        "seq": 36,
+        "player_x": 4.14620399,
+        "camera_position": [
+          -0.522879124,
+          2.11781144,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.710067666503316
+      },
+      {
+        "seq": 37,
+        "player_x": 4.14775372,
+        "camera_position": [
+          -0.509790421,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.698629345134971
+      },
+      {
+        "seq": 38,
+        "player_x": 4.14810944,
+        "camera_position": [
+          -0.506837845,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.696055208760745
+      },
+      {
+        "seq": 39,
+        "player_x": 4.14820099,
+        "camera_position": [
+          -0.506061554,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.6953764626578565
+      },
+      {
+        "seq": 40,
+        "player_x": 4.14822531,
+        "camera_position": [
+          -0.505856514,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.695197325149096
+      },
+      {
+        "seq": 41,
+        "player_x": 4.14823151,
+        "camera_position": [
+          -0.505799294,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.695146751932355
+      },
+      {
+        "seq": 42,
+        "player_x": 4.14823294,
+        "camera_position": [
+          -0.505786896,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 4.695135879980634
+      },
+      {
+        "seq": 43,
+        "player_x": 4.59187889,
+        "camera_position": [
+          -0.505782604,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.135226675134251
+      },
+      {
+        "seq": 44,
+        "player_x": 4.91700888,
+        "camera_position": [
+          -0.172107697,
+          2.11585259,
+          2.02000022
+        ],
+        "distance_xz_metres": 5.126744369665437
+      }
+    ]
+  }
+}

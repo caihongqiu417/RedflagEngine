@@ -1,0 +1,43 @@
+{
+  "archive_sha256": "214f172252edcac651d1ba9d9aa9416cf017796b15451990380ae31c77af2073",
+  "sandbox_sha256": "a215c82a7a103abf1407e2107da9926db7c168811d07b7cd82419f4662db929e",
+  "replaced_sandbox": false,
+  "cases": {
+    "open": {
+      "x_metres": -4.69999981,
+      "y_metres": 1.38,
+      "shoulder_metres": 0.619999826,
+      "closest_surface_metres": null
+    },
+    "crate": {
+      "x_metres": -4.69998646,
+      "y_metres": 1.9799999,
+      "shoulder_metres": 0.6199998999999998,
+      "closest_surface_metres": 0.20208844269915827
+    },
+    "wall": {
+      "x_metres": -0.590000033,
+      "y_metres": 1.38,
+      "shoulder_metres": 0.6200007999999997,
+      "closest_surface_metres": 0.20999996700000007
+    },
+    "ceiling": {
+      "x_metres": -0.594040871,
+      "y_metres": 1.38,
+      "shoulder_metres": 0.6199988999999988,
+      "closest_surface_metres": 0.2098074422379689
+    },
+    "side_wall": {
+      "x_metres": -4.69999981,
+      "y_metres": 1.38,
+      "shoulder_metres": 0.330001799999998,
+      "closest_surface_metres": 0.2099982000000054
+    },
+    "lift_disabled": {
+      "x_metres": -0.594040871,
+      "y_metres": 1.38,
+      "shoulder_metres": 0.6200027000000006,
+      "closest_surface_metres": 0.2098074422379689
+    }
+  }
+}

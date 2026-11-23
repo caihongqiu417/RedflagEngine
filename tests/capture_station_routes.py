@@ -5,6 +5,7 @@ import json
 import math
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import time
@@ -34,7 +35,7 @@ def video(images, destination):
                     "-movflags","+faststart",str(destination)],check=True)
 
 
-def play(archive,project,output,route):
+def play(archive,project,output,route,override=False):
     output.mkdir(parents=True,exist_ok=False)
     pictures=project/("frames-"+route)
     pictures.mkdir()
@@ -60,7 +61,8 @@ def play(archive,project,output,route):
     # 绕行先从西货柜的背面进入北道，在东货柜后面折向发电机。区间为场景世界坐标（米）。
     central=[("W","encounter",None),("","observe",0),("W","east",11.08)]
     north=[("S","west",-8.87),("A","cover",-6.95),("W","east",11.05),("D","generator",1.21)]
-    stages=central if route=="central" else north
+    hide=[("W","seen",4.35),("D","south_cover",6.8),("S","retreat",-7.5),("","search_end",None)]
+    stages={"central":central,"north":north,"hide":hide}[route]
     samples=[]; events=[]; shots=[]; tickets=[]; transitions=[]; saved=set()
     begin_at=None; stop_reason=""; offset=0; stage=-1; since=0.; furthest=0.; progress_at=0.
     held=""; guard=""; target=""; last_picture=-99.; recent=None; last_renew=0.
@@ -107,16 +109,22 @@ def play(archive,project,output,route):
                     events.append(dict(seq=frame["seq"],seconds=now,kind=event["kind"],value=value,
                                        player=recent,enemy=enemy["position"]))
                 samples.append(dict(seq=frame["seq"],seconds=now,player=recent,health=player["health"],
+                                    camera=actors["1100"]["position"],watt=actors["1102"]["position"],
                                     enemy=enemy["position"],action=guard,target=target))
             if not samples:continue
             sample=samples[-1]; now=sample["seconds"];seq=sample["seq"];x,_,z=recent
             if not saved:special.append("start")
+            if route=="central" and 2.4<=x<=2.95 and "beside-crate" not in saved:special.append("beside-crate")
             if stage<0:advance(now)
             else:
                 key,step,end=stages[stage]
                 done=((step=="encounter" and (guard in ("charge","discharge","cool") or x>=3.7))
                       or (step=="observe" and (fired or now-since>4.5))
-                      or (step=="west" and x<=end) or (step=="east" and x>=end)
+                      or (step=="seen" and x>=end and target=="1101")
+                      or (step=="south_cover" and z>=end) or (step=="retreat" and x<=end)
+                      or (step=="search_end" and guard=="patrol" and any(e["value"]=="search" for e in events))
+                      or (step=="west" and x<=end) or (step=="east" and (x>=end or
+                          (route=="central" and math.dist(recent,(12.2,.08,1.4))<1.18)))
                       or (step=="cover" and z<=end) or (step=="generator" and z>=end))
                 if done:
                     special.append(step);advance(now)
@@ -161,12 +169,15 @@ def play(archive,project,output,route):
                metres_from_generator=math.dist(walking[-1]["player"],goal),ending_health=walking[-1]["health"],
                guard_action_seconds=duration,guard_target_seconds=targeted,captured_images=len(shots))
     report=dict(archive=archive.name,archive_sha256=digest(archive),exe_sha256=digest(exe),
+                sandbox_sha256=digest(project/"Resources/Scripts/Sandbox.dll"),replaced_sandbox=override,
                 scene_sha256=digest(project/scene),render_size="1280x720",route=route,result=stop_reason,
                 origin_seconds=begin_at,statistics=stats,transitions=transitions,commands=tickets,events=events,samples=samples)
     (output/"route.json").write_text(json.dumps(report,ensure_ascii=False,separators=(",",":")),encoding="utf8")
+    if (project/"camera.csv").is_file():shutil.move(str(project/"camera.csv"),output/"camera.csv")
     video(shots,output/"route.mp4")
     print(route,stop_reason,recent,len(shots),"images",flush=True)
-    assert stop_reason=="arrived" and stats["metres_from_generator"]<1.35,stats
+    assert stop_reason=="arrived",stats
+    if route!="hide":assert stats["metres_from_generator"]<1.35,stats
     if route=="north":
         assert min(s["player"][2] for s in walking)<-6.5,stats
 
@@ -175,11 +186,13 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive",type=Path)
     parser.add_argument("output",type=Path)
-    parser.add_argument("--route",choices=["central","north","both"],default="both")
+    parser.add_argument("--route",choices=["central","north","hide","both"],default="both")
+    parser.add_argument("--sandbox",type=Path,help="仅用于脚本前后对照，在解压副本内替换 Sandbox.dll，文件指纹另行记录")
     args=parser.parse_args()
     ctypes.windll.user32.SetProcessDPIAware()
     with tempfile.TemporaryDirectory(prefix="redflag-yard-") as folder:
         project=Path(folder)
         with zipfile.ZipFile(args.archive) as z:z.extractall(project)
+        if args.sandbox:shutil.copyfile(args.sandbox,project/"Resources/Scripts/Sandbox.dll")
         for route in (["central","north"] if args.route=="both" else [args.route]):
-            play(args.archive.resolve(),project,args.output.resolve()/route,route)
+            play(args.archive.resolve(),project,args.output.resolve()/route,route,bool(args.sandbox))
