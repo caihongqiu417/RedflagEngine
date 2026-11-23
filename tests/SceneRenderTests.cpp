@@ -421,6 +421,7 @@ static void TestTemporalProjection()
 #include "NpcMotionTests.h"
 #include "TerrainTests.h"
 #include "TerrainTraversalTests.h"
+#include "ComponentReflectionTests.h"
 #include "AnimationNotifyTests.h"
 
 int main(int argc, char** argv)
@@ -429,6 +430,15 @@ int main(int argc, char** argv)
     if (argc == 2 && std::string(argv[1]) == "--animation-events")
     {
         CheckAnimationEvents();
+        return s_Failures ? 1 : 0;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--write-component-defaults") {
+        std::ofstream defaults("../output/api/component-defaults.json");
+        defaults << ComponentDefaults();
+        return defaults.good() ? 0 : 1;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--component-reflection") {
+        CheckComponentReflection();
         return s_Failures ? 1 : 0;
     }
     if (argc == 2 && std::string(argv[1]) == "--traversal")

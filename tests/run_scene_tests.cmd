@@ -1,6 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0.."
+if "%~1"=="--component-reflection" (
+    python scripts\generate_component_fields.py --check
+    if errorlevel 1 exit /b 1
+)
 set "RF_VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 for /f "usebackq tokens=*" %%i in (`"%RF_VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "RF_VS=%%i"
 if not defined RF_VS exit /b 1

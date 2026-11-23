@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "name": "CapsuleCollider3DComponent", "label": "3D 胶囊碰撞体",
+      "diameter": {"radius": "Radius", "height": "Height"},
+      "fields": [
+        {"name": "Center", "optional": true, "label": "中心偏移", "type": "vec3", "unit": "米", "help": "从模型原点量到胶囊中心。调整 Y 可以让碰撞体的底部对齐角色的鞋底。"},
+        {"name": "Axis", "optional": true, "label": "长轴", "type": "enum", "choices": ["X", "Y", "Z"], "help": "选择胶囊沿模型的哪个方向放置。站立角色一般沿 Y 轴，躺下时可沿身体长度放置。"},
+        {"name": "Radius", "label": "半径", "type": "float", "unit": "米", "positive": true, "constraint": "半径必须大于零，且不能超过当前总长的一半。", "help": "从胶囊中轴量到外沿。调大后身体更宽，走过同一条窄道时需要更大的空隙。"},
+        {"name": "Height", "label": "总长", "type": "float", "unit": "米", "positive": true, "constraint": "总长至少等于直径。", "help": "沿长轴从一个圆头量到另一个圆头，包含两端的半球。总长等于直径时，胶囊变成球。"}
+      ]
+    },
+    {
+      "name": "BoxCollider3DComponent", "label": "3D 盒形碰撞体",
+      "fields": [
+        {"name": "Center", "optional": true, "label": "中心偏移", "type": "vec3", "unit": "米", "help": "模型原点到盒子中心的偏移，沿模型自己的三个轴填写。"},
+        {"name": "HalfSize", "label": "半尺寸", "type": "vec3", "unit": "米", "positive": true, "constraint": "三个方向的半尺寸都必须大于零。", "help": "场景文件记录从中心到各面的距离。属性面板中的尺寸 XYZ 是这里的两倍。"}
+      ]
+    },
+    {
+      "name": "RigidBody3DComponent", "label": "3D 刚体",
+      "fields": [
+        {"name": "BodyType", "member": "Type", "label": "类型", "type": "enum", "choices": ["Static", "Dynamic", "Kinematic"], "help": "地面通常选静态。动态物体会在重力作用下落；运动学物体由游戏设置位置，物理系统按这个位置检查碰撞。"},
+        {"name": "Density", "label": "密度", "type": "float", "unit": "千克/立方米", "positive": true, "constraint": "密度必须大于零。", "help": "物理系统用密度乘以碰撞形状的体积，求出动态刚体的质量。同样大小的箱子，密度越大就越重。"}
+      ]
+    }
+  ]
+}

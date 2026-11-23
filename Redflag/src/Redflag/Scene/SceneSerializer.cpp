@@ -5,6 +5,7 @@
 
 #include"Entity.h"
 #include"Components.h"
+#include "ComponentReflection.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Renderer/Model.h"
 #include "Redflag/Utils/FileSystem.h"
@@ -1054,10 +1055,12 @@ namespace Redflag {
                     if (deserializedEntity.HasComponent<RigidBody2DComponent>())
                         throw std::runtime_error("An entity cannot use both a 2D and a 3D rigid body");
                     RigidBody3DComponent& body = deserializedEntity.AddComponent<RigidBody3DComponent>();
-                    body.Type = ReadBodyType<BodyType3D>(bodyNode["BodyType"].as<std::string>());
+                    const auto& fields = *Reflection::FindComponent("RigidBody3DComponent");
+                    if (!fields.FindField("BodyType")->Write(deserializedEntity, bodyNode["BodyType"].as<std::string>()))
+                        throw std::runtime_error("3D body type must be Static, Dynamic or Kinematic");
                     body.Density = bodyNode["Density"].as<float>();
-                    if (!(body.Density > 0.f))
-                        throw std::runtime_error("3D rigid body density must be positive");
+                    if (!fields.IsValid(deserializedEntity))
+                        throw std::runtime_error("3D rigid body density must be positive and finite");
                 }
 
                 if (const YAML::Node ragdoll = entity["RagdollComponent"])
@@ -1074,25 +1077,23 @@ namespace Redflag {
                 {
                     BoxCollider3DComponent& box = deserializedEntity.AddComponent<BoxCollider3DComponent>();
                     box.HalfSize = boxNode["HalfSize"].as<glm::vec3>();
-                    box.Center = boxNode["Center"].as<glm::vec3>(glm::vec3(0));
-                    if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))))
-                        throw std::runtime_error("3D collision box half sizes must be positive");
+                    if (boxNode["Center"]) box.Center = boxNode["Center"].as<glm::vec3>();
+                    if (!Reflection::FindComponent("BoxCollider3DComponent")->IsValid(deserializedEntity))
+                        throw std::runtime_error("3D collision box needs a finite centre and positive finite half sizes");
                 }
 
                 if (const YAML::Node node = entity["CapsuleCollider3DComponent"])
                 {
                     if (entity["BoxCollider3DComponent"]) throw std::runtime_error("Choose one 3D collider per rigid body");
                     auto& capsule = deserializedEntity.AddComponent<CapsuleCollider3DComponent>();
+                    const auto& fields = *Reflection::FindComponent("CapsuleCollider3DComponent");
+                    if (node["Axis"] && !fields.FindField("Axis")->Write(deserializedEntity, node["Axis"].as<std::string>()))
+                        throw std::runtime_error("Capsule axis must be X, Y or Z");
                     capsule.Radius = node["Radius"].as<float>();
                     capsule.Height = node["Height"].as<float>();
-                    capsule.Center = node["Center"].as<glm::vec3>(glm::vec3(0));
-                    const std::string axis = node["Axis"].as<std::string>("Y");
-                    if (axis == "X") capsule.Axis = CapsuleAxis::X;
-                    else if (axis == "Z") capsule.Axis = CapsuleAxis::Z;
-                    else if (axis != "Y") throw std::runtime_error("Capsule axis must be X, Y or Z");
-                    if (!(capsule.Radius > 0.f && capsule.Height >= 2.f * capsule.Radius) ||
-                        !std::isfinite(capsule.Height))
-                        throw std::runtime_error("Capsule needs a positive radius and a total height at least twice its radius");
+                    if (node["Center"]) capsule.Center = node["Center"].as<glm::vec3>();
+                    if (!fields.IsValid(deserializedEntity))
+                        throw std::runtime_error("Capsule needs finite dimensions and centre, a positive radius and a total height at least its diameter");
                 }
 
                 //BoxCollider2DComponent
