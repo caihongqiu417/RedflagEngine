@@ -1322,17 +1322,16 @@ namespace Redflag {
                 {
                     ImGui::TextDisabled("No supported public fields");
                 }
-                else if (!scriptInstance)
-				{
-					// 编辑器模式：通过字段缓存编辑，进入 Play 时这些值会被写入 ScriptInstance
-					auto& fieldCache = component.Fields;
-					for (const ScriptField& field : fields)
-						DrawEditorScriptFieldControl(field, fieldCache, m_Context.get());
-				}
                 else
                 {
                     for (const ScriptField& field : fields)
-                        DrawRuntimeScriptFieldControl(field, scriptInstance, m_Context.get());
+                    {
+                        if (scriptInstance)
+                            DrawRuntimeScriptFieldControl(field, scriptInstance, m_Context.get());
+                        else
+                            DrawEditorScriptFieldControl(field, component.Fields, m_Context.get());
+                        m_Fields.DrawNote(entity.GetUUID(), "ScriptComponent", field.Name, component.ClassName);
+                    }
                 }
 
                 ImGui::Spacing();
@@ -1638,31 +1637,14 @@ namespace Redflag {
                 ImGui::TextWrapped("变换位置在骨盆中心。平地站立时，骨盆离地约 0.91 米。七个碰撞盒使用固定尺寸。");
             });
 
-        DrawComponent<RigidBody3DComponent>("3D 刚体", entity, [](RigidBody3DComponent& body)
+        DrawComponent<RigidBody3DComponent>("3D 刚体", entity, [&](RigidBody3DComponent&)
             {
-                const char* types[] = { "静态", "动态", "运动学" };
-                int selected = static_cast<int>(body.Type);
-                if (ImGui::Combo("类型", &selected, types, IM_ARRAYSIZE(types)))
-                    body.Type = static_cast<BodyType3D>(selected);
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("静态用于地面，动态物体会掉落，运动学物体跟随场景设置的位置和旋转。");
-                if (body.Type == BodyType3D::Dynamic)
-                {
-                    float density = body.Density;
-                    if (ImGui::DragFloat("密度（kg/m³）", &density, 0.1f) && density > 0.f)
-                        body.Density = density;
-                }
+                m_Fields.Draw(entity, "RigidBody3DComponent");
             });
 
         DrawComponent<BoxCollider3DComponent>("3D 盒形碰撞体", entity, [&](BoxCollider3DComponent& box)
             {
-                glm::vec3 size = box.HalfSize * 2.f;
-                ImGui::DragFloat3("中心偏移（米）", glm::value_ptr(box.Center), .02f);
-                if (ImGui::DragFloat3("尺寸 XYZ（米）", glm::value_ptr(size), 0.01f) &&
-                    glm::all(glm::greaterThan(size, glm::vec3(0))))
-                    box.HalfSize = size * .5f;
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("三个数分别沿本地 X、Y、Z 轴。模拟时还会乘以物体的缩放。");
+                m_Fields.Draw(entity, "BoxCollider3DComponent");
                 if (ImGui::Button("改为胶囊"))
                 {
                     auto& capsule = entity.AddComponent<CapsuleCollider3DComponent>();
@@ -1675,27 +1657,13 @@ namespace Redflag {
 
         DrawComponent<CapsuleCollider3DComponent>("3D 胶囊碰撞体", entity, [&](CapsuleCollider3DComponent& capsule)
             {
-                ImGui::DragFloat3("中心偏移（米）", glm::value_ptr(capsule.Center), .01f);
-                int axis = int(capsule.Axis);
-                const char* axes[] = { "X", "Y", "Z" };
-                if (ImGui::Combo("长轴", &axis, axes, IM_ARRAYSIZE(axes)))
-                    capsule.Axis = static_cast<CapsuleAxis>(axis);
-
-                float radius = capsule.Radius, height = capsule.Height;
-                if (ImGui::DragFloat("半径（米）", &radius, .01f) && radius > 0.f)
-                {
-                    capsule.Radius = radius;
-                    capsule.Height = std::max(capsule.Height, 2.f * radius);
-                }
-                if (ImGui::DragFloat("总长（米）", &height, .01f))
-                    capsule.Height = std::max(height, 2.f * capsule.Radius);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("总长从一个圆头量到另一个圆头，最短等于直径。");
+                m_Fields.Draw(entity, "CapsuleCollider3DComponent");
                 if (ImGui::Button("改为盒形"))
                 {
                     auto& box = entity.AddComponent<BoxCollider3DComponent>();
                     box.Center = capsule.Center;
                     box.HalfSize = glm::vec3(capsule.Radius);
-                    box.HalfSize[axis] = .5f * capsule.Height;
+                    box.HalfSize[int(capsule.Axis)] = .5f * capsule.Height;
                     entity.RemoveComponent<CapsuleCollider3DComponent>();
                 }
             });

@@ -21,6 +21,7 @@ namespace Redflag
 	struct SampledTexture;
 
 	enum class Shading { BaseColor, Direct, DDGI, ReSTIRDI, ReSTIRGI, GTAO, Clustered, Reflections, TAA, Lit };
+	enum class RenderPanel { General, Shadows, AO, Fog, AntiAliasing };
 
 	/* 场景网格、相机和灯光来自编辑器。计算结果在显卡上转成一张可以贴到面板的纹理。 */
 	class LightingPreview
@@ -33,7 +34,8 @@ namespace Redflag
 			glm::vec3 eye, uint32_t viewportWidth, uint32_t viewportHeight, bool navigating, bool scenePreview = true);
 		void ResetHistory();
 		void DrawSettings(bool allowBake = true, bool scenePreview = true);
-		void DrawEffectsMenu();
+		void DrawEffectSettings(RenderPanel panel, bool scenePreview);
+		void DrawQuickLighting();
 		void Load(const std::filesystem::path& scene);
 		void Save(const std::filesystem::path& path, Scene& scene);
 		void BakeProbes(Scene& scene);
@@ -52,6 +54,10 @@ namespace Redflag
 
 		bool UsesFrameHistory(bool directOnly) const;
 		bool DrawLitOptions();
+		bool DrawShadowSettings();
+		bool DrawAOSettings();
+		bool DrawFogSettings();
+		bool DrawAASettings(bool scenePreview);
 		bool RefreshEnvironment(const std::filesystem::path& path, bool readAgain = false);
 		Scope<GlobalIllumination> CreateProbeLighting(const std::vector<GIModel>& models,
 			const std::vector<GILight>& lights, glm::uvec2 size = { 1, 1 });

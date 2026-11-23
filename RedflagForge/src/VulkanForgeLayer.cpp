@@ -20,6 +20,14 @@
 
 namespace Redflag
 {
+	static constexpr struct { RenderPanel Panel; const char* Title; } s_RenderPanels[] = {
+		{ RenderPanel::General, "渲染设置  Lighting" },
+		{ RenderPanel::Shadows, "阴影" },
+		{ RenderPanel::AO, "AO" },
+		{ RenderPanel::Fog, "体积雾" },
+		{ RenderPanel::AntiAliasing, "抗锯齿（AA）" }
+	};
+
 	static VulkanContext& GetWindowContext()
 	{
 		return static_cast<VulkanContext&>(Application::Get().GetWindow().GetGraphicsContext());
@@ -92,6 +100,7 @@ namespace Redflag
 		m_Camera = EditorCamera(45, float(extent.width) / extent.height, .1f, 1000);
 		m_Camera.LookAt({ 0, 0, 6 }, { 0, 0, 0 });
 		m_ScenePath.clear();
+		m_Hierarchy.OpenFieldNotes({});
 		m_Lighting->Load({});
 		m_HasSceneImage = false;
 		Report("Created an untitled scene.");
@@ -111,6 +120,7 @@ namespace Redflag
 			SceneSerializer(m_Scene).Serialize(path.string());
 			sceneWritten = true;
 			m_Lighting->Save(path, *m_Scene);
+			m_Hierarchy.SaveFieldNotesAs(path);
 			m_ScenePath = path;
 			Report("Saved scene and rendering settings to " + path.u8string());
 		}
@@ -154,6 +164,7 @@ namespace Redflag
 		m_Scene = scene;
 		m_ScenePath = path;
 		m_Hierarchy.SetContext(scene);
+		m_Hierarchy.OpenFieldNotes(path);
 		if (Entity primary = scene->GetPrimaryCameraEntity())
 		{
 			auto& settings = primary.GetComponent<CameraComponent>().Camera;
@@ -353,6 +364,8 @@ namespace Redflag
 		}
 		if (ImGui::BeginMenu("窗口"))
 		{
+			DrawRenderPanelMenu();
+			ImGui::Separator();
 			m_Reviews.DrawMenu();
 			m_DevContext.DrawMenu();
 			if (ImGui::MenuItem("恢复默认布局")) m_ResetLayout = true;
@@ -375,6 +388,33 @@ namespace Redflag
 		ImGui::EndMenuBar();
 		if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
 			SaveScene(ImGui::GetIO().KeyShift);
+	}
+
+	void VulkanForgeLayer::DrawRenderPanelMenu()
+	{
+		for (const auto& panel : s_RenderPanels)
+			if (ImGui::MenuItem(panel.Title)) m_FocusRenderPanel = panel.Title;
+	}
+
+	void VulkanForgeLayer::DrawRenderPanels()
+	{
+		ImGuiID dock = 0;
+		for (const auto& panel : s_RenderPanels)
+		{
+			// 打开旧布局时，新标签跟随原渲染设置。拖到其他位置后保留用户的摆放。
+			if (dock) ImGui::SetNextWindowDockID(dock, ImGuiCond_FirstUseEver);
+			if (m_FocusRenderPanel == panel.Title) ImGui::SetNextWindowFocus();
+			const bool visible = ImGui::Begin(panel.Title, nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
+			if (panel.Panel == RenderPanel::General)
+			{
+				dock = ImGui::GetWindowDockID();
+				if (visible) m_Lighting->DrawSettings(!m_EditScene, !m_GameView);
+			}
+			else if (visible)
+				m_Lighting->DrawEffectSettings(panel.Panel, !m_GameView);
+			ImGui::End();
+		}
+		m_FocusRenderPanel = nullptr;
 	}
 
 	// ImGui 默认在缩小主窗口时保持侧栏的像素宽度。按原比例一起缩放，给中间场景留出空间。
@@ -432,7 +472,8 @@ namespace Redflag
 			ImGui::DockBuilderDockWindow("层级  Hierarchy", hierarchy);
 			ImGui::DockBuilderDockWindow("场景视口", scene);
 			ImGui::DockBuilderDockWindow("属性  Inspector", inspector);
-			ImGui::DockBuilderDockWindow("渲染设置  Lighting", lighting);
+			for (const auto& panel : s_RenderPanels)
+				ImGui::DockBuilderDockWindow(panel.Title, lighting);
 			ImGui::DockBuilderDockWindow("项目  Project", project);
 			ImGui::DockBuilderDockWindow("控制台  Console", project);
 			ImGui::DockBuilderFinish(dock);
@@ -450,8 +491,7 @@ namespace Redflag
                 m_ActorTree.Draw(behavior.Tree, std::filesystem::u8path(behavior.File), &behavior.Trace, "角色行为树");
         }
 
-		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings(!m_EditScene, !m_GameView);
-		ImGui::End();
+		DrawRenderPanels();
 		auto asset = m_Project.Draw();
 		if (!asset.empty())
 		{
@@ -596,7 +636,15 @@ namespace Redflag
 			ImGui::EndTabBar();
 			if (m_GameView != previous) { m_Lighting->ResetHistory(); m_HasSceneImage = false; }
 			if (!m_GameView) { DrawTransformTools(); ImGui::SameLine(); }
-			m_Lighting->DrawEffectsMenu();
+			if (ImGui::Button("实时效果")) ImGui::OpenPopup("ViewportEffects");
+			ImGui::SetNextWindowSizeConstraints({ ImGui::GetFontSize() * 13, 0 }, { FLT_MAX, FLT_MAX });
+			if (ImGui::BeginPopup("ViewportEffects"))
+			{
+				DrawRenderPanelMenu();
+				ImGui::Separator();
+				m_Lighting->DrawQuickLighting();
+				ImGui::EndPopup();
+			}
 			if (m_GameView) { ImGui::SameLine(); m_GameViewport.DrawResolution(); }
 			if (!m_GameView)
 			{

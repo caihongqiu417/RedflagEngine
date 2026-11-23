@@ -802,32 +802,6 @@ namespace Redflag
 		ImGui::SetNextItemWidth(-1);
 		changed |= ImGui::Combo("##Direct", &m_DirectLight, s_DirectLabels, IM_ARRAYSIZE(s_DirectLabels));
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("“全部光源”逐盏计算场景中的点光源和方向光。");
-		const std::string shadowWidth = m_ShadowSize ? std::to_string(m_ShadowSize) : "关闭";
-		ImGui::BeginDisabled(m_CascadeCount > 0);
-		if (ImGui::BeginCombo("角色阴影", shadowWidth.c_str())) {
-			for (int side : {0, 256, 512, 1024}) {
-				const std::string name = side ? std::to_string(side) : "关闭";
-				if (ImGui::Selectable(name.c_str(), m_ShadowSize == side)) { m_ShadowSize = side; changed = true; }
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::EndDisabled();
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-			ImGui::SetTooltip(m_CascadeCount ? "级联阴影已包含角色。每层分辨率决定角色投影的精细程度。"
-				: "每盏开启投影的方向光都绘制角色深度。图越宽，阴影轮廓越清楚，占用显存越多。");
-		if (ImGui::TreeNode("级联阴影 CSM"))
-		{
-			changed |= ImGui::SliderInt("级联层数", &m_CascadeCount, 0, 4);
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip("0 沿用原阴影。开启后按离相机的距离分层绘制，近处的阴影纹素更密。");
-			if (m_CascadeCount)
-			{
-				changed |= ImGui::SliderInt("每层分辨率", &m_CascadeSize, 128, 2048);
-				changed |= ImGui::SliderFloat("阴影距离", &m_ShadowDistance, 1.f, 250.f, "%.1f m");
-				changed |= ImGui::SliderFloat("太阳角半径", &m_SunRadius, 0.f, 5.f, "%.2f°");
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip("设为 0 时只有阴影图的边缘过滤。增大角半径，离地越高的物体会投下越宽的半影。");
-			}
-			ImGui::TreePop();
-		}
 		ImGui::TextUnformatted("间接光");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("光先照到其他表面，再反射到这里。");
 		ImGui::SetNextItemWidth(-1);
@@ -835,11 +809,6 @@ namespace Redflag
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("DDGI 或 ReSTIR GI 计算场景里的漫反射；选择环境漫反射 IBL 时，按表面朝向从所选环境取光。");
 		if (m_IndirectLight == EnvironmentDiffuse && !m_Environment)
 			ImGui::TextWrapped("请在“环境贴图”菜单选择 HDR 全景或烘焙文件。");
-		ImGui::BeginDisabled(m_IndirectLight == NoIndirectLight);
-		changed |= ImGui::Checkbox("GTAO", &m_AO);
-		ImGui::EndDisabled();
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-			ImGui::SetTooltip(m_IndirectLight != NoIndirectLight ? "减弱墙角等遮挡处的间接光。" : "先选择一种间接光，再用 GTAO 减弱遮挡处的反光。");
 		changed |= ImGui::Checkbox("SSR", &m_Reflections);
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("用当前画面中能看到的物体计算表面的倒影。");
 		ImGui::BeginDisabled(!m_Reflections);
@@ -855,34 +824,130 @@ namespace Redflag
 		changed |= ImGui::Checkbox("镜面 IBL", &m_Settings.SpecularEnvironment);
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("按材质的粗糙度反射场景环境。启用 SSR 时，能在屏幕上找到的物体会出现在倒影中。");
 		if (!m_Environment && !m_EnvironmentPath.empty()) ImGui::TextWrapped("环境文件读取失败，请重新选择。");
-		changed |= ImGui::Checkbox("体积雾", &m_FogEnabled);
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("点光源照亮空气里的雾，墙面能挡住穿过雾的光。");
-		changed |= ImGui::Checkbox("TAA", &m_TAA);
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("合并最近几帧的采样，减轻物体边缘的锯齿和闪烁。");
 		return changed;
 	}
 
-	void LightingPreview::DrawEffectsMenu()
+	void LightingPreview::DrawQuickLighting()
 	{
-		if (ImGui::Button("实时效果")) ImGui::OpenPopup("ViewportEffects");
-		ImGui::SetNextWindowSizeConstraints({ ImGui::GetFontSize() * 13, 0 }, { FLT_MAX, FLT_MAX });
-		if (!ImGui::BeginPopup("ViewportEffects")) return;
-		ImGui::TextDisabled("组合光照设置");
-		if (Mode != Shading::Lit)
-			ImGui::TextWrapped("当前在单项视图。更改效果将切换到组合光照。");
 		if (DrawLitOptions())
 		{
 			Mode = Shading::Lit;
 			CompareDirect = false;
 			ResetHistory();
 		}
-		ImGui::Separator();
 		if (ImGui::Checkbox("对照：只显示直接光", &CompareDirect))
 		{
 			Mode = Shading::Lit;
 			ResetHistory();
 		}
-		ImGui::EndPopup();
+	}
+
+	bool LightingPreview::DrawShadowSettings()
+	{
+		bool changed = false;
+		const std::string resolution = m_ShadowSize ? std::to_string(m_ShadowSize) : "关闭";
+		ImGui::BeginDisabled(m_CascadeCount > 0);
+		if (ImGui::BeginCombo("角色阴影", resolution.c_str()))
+		{
+			for (int side : { 0, 256, 512, 1024 })
+			{
+				const std::string label = side ? std::to_string(side) : "关闭";
+				if (ImGui::Selectable(label.c_str(), m_ShadowSize == side))
+				{
+					m_ShadowSize = side;
+					changed = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip(m_CascadeCount ? "级联阴影已包含角色。每层分辨率决定角色投影的精细程度。"
+				: "每盏开启投影的方向光都绘制角色深度。图越宽，阴影轮廓越清楚，占用显存越多。");
+
+		changed |= ImGui::SliderInt("级联层数", &m_CascadeCount, 0, 4);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("0 沿用原阴影。开启后按离相机的距离分层绘制，近处的阴影纹素更密。");
+		if (m_CascadeCount)
+		{
+			changed |= ImGui::SliderInt("每层分辨率", &m_CascadeSize, 128, 2048);
+			changed |= ImGui::SliderFloat("阴影距离", &m_ShadowDistance, 1.f, 250.f, "%.1f m");
+			changed |= ImGui::SliderFloat("太阳角半径", &m_SunRadius, 0.f, 5.f, "%.2f°");
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("增大角半径会让投影边缘变软，物体离地越高越明显。");
+		}
+		return changed;
+	}
+
+	bool LightingPreview::DrawAOSettings()
+	{
+		bool changed = false;
+		ImGui::BeginDisabled(m_IndirectLight == NoIndirectLight);
+		changed |= ImGui::Checkbox("GTAO", &m_AO);
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip(m_IndirectLight != NoIndirectLight ? "减弱墙角等遮挡处的间接光。" : "先选择一种间接光，再用 GTAO 减弱遮挡处的反光。");
+		if (m_IndirectLight == NoIndirectLight)
+			ImGui::TextWrapped("组合光照中的 GTAO 需要间接光。可在「渲染设置」中选择 DDGI、ReSTIR GI 或环境漫反射 IBL。");
+		ImGui::BeginDisabled(Mode != Shading::GTAO && (!m_AO || m_IndirectLight == NoIndirectLight));
+		changed |= ImGui::SliderFloat("遮蔽半径", &m_Settings.AORadius, .05f, 3.f);
+		changed |= ImGui::SliderFloat("遮蔽强度", &m_Settings.AOIntensity, .05f, 3.f);
+		ImGui::EndDisabled();
+		return changed;
+	}
+
+	bool LightingPreview::DrawFogSettings()
+	{
+		bool changed = false;
+		changed |= ImGui::Checkbox("体积雾", &m_FogEnabled);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("点光源照亮空气里的雾，墙面能挡住穿过雾的光。");
+		ImGui::BeginDisabled(!m_FogEnabled);
+		changed |= ImGui::SliderFloat("雾密度", &m_Fog.Density, 0.f, .5f, "%.3f");
+		changed |= ImGui::SliderFloat("散射比例", &m_Fog.Albedo, 0.f, 1.f);
+		changed |= ImGui::SliderFloat("散射方向", &m_Fog.Anisotropy, -.8f, .8f);
+		changed |= ImGui::SliderFloat("雾的最远距离", &m_Fog.Distance, 1.f, 100.f);
+		changed |= ImGui::SliderInt("雾采样步数", &m_Fog.Steps, 4, 48);
+		ImGui::EndDisabled();
+		return changed;
+	}
+
+	bool LightingPreview::DrawAASettings(bool scenePreview)
+	{
+		bool changed = false;
+		changed |= ImGui::Checkbox("TAA", &m_TAA);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("合并最近几帧的采样，减轻物体边缘的锯齿和闪烁。");
+		ImGui::BeginDisabled(Mode != Shading::TAA && !m_TAA);
+		changed |= ImGui::SliderFloat("历史权重", &m_Settings.HistoryWeight, 0.f, .98f);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("设为 0 只显示当前帧。开启后，镜头停住时按细线和背景各被采到的次数混色。\n其他像素保留的旧颜色最多占这个比例。");
+		ImGui::EndDisabled();
+		changed |= ImGui::Checkbox("SSAA 2×2", &m_Supersampling);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("每个像素取四个位置，分别算光照再平均。细线更平滑，但需要更多显存和绘制时间。");
+		if (m_Supersampling && m_SampleSide == 1 && m_Width > 0)
+			ImGui::TextWrapped(scenePreview ? "要使用四个样点，请在「渲染设置」中降低预览分辨率。" : "要使用四个样点，请降低主相机 Game 的游戏分辨率。");
+		return changed;
+	}
+
+	void LightingPreview::DrawEffectSettings(RenderPanel panel, bool scenePreview)
+	{
+		// 在单项视图中调参数时继续显示该效果。切换开关时用组合光照看结果。
+		const bool ao = m_AO, taa = m_TAA, supersampling = m_Supersampling;
+		bool changed = false;
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * .48f);
+		switch (panel)
+		{
+		case RenderPanel::Shadows: changed = DrawShadowSettings(); break;
+		case RenderPanel::AO: changed = DrawAOSettings(); break;
+		case RenderPanel::Fog: changed = DrawFogSettings(); break;
+		case RenderPanel::AntiAliasing: changed = DrawAASettings(scenePreview); break;
+		case RenderPanel::General: break;
+		}
+		ImGui::PopItemWidth();
+		if (!changed) return;
+
+		const bool keepPreview = (panel == RenderPanel::AO && Mode == Shading::GTAO && ao == m_AO)
+			|| (panel == RenderPanel::AntiAliasing && Mode == Shading::TAA && taa == m_TAA)
+			|| (supersampling != m_Supersampling && Mode != Shading::BaseColor);
+		if (!keepPreview) Mode = Shading::Lit;
+		CompareDirect = false;
+		ResetHistory();
 	}
 
 	void LightingPreview::DrawSettings(bool allowBake, bool scenePreview)
@@ -898,15 +963,12 @@ namespace Redflag
 		}
 		if (Mode == Shading::BaseColor)
 		{
-			ImGui::TextWrapped("查看网格的底色和贴图。可在视口的「实时效果」中启用光照。");
+			ImGui::TextWrapped("查看网格的底色和贴图。选择「组合光照 Lit」可查看照明。");
 			return;
 		}
 		bool changed = false;
 		if (Mode == Shading::Lit && ImGui::CollapsingHeader("实时效果", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			if (DrawLitOptions()) { CompareDirect = false; changed = true; }
-			changed |= ImGui::Checkbox("对照：只显示直接光", &CompareDirect);
-		}
+			DrawQuickLighting();
 		if (ImGui::CollapsingHeader("质量与参数", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * .50f);
@@ -917,10 +979,6 @@ namespace Redflag
 					if (ImGui::Selectable(w ? std::to_string(w).c_str() : "原始 Native", w == m_PreviewWidth)) m_PreviewWidth = w;
 				ImGui::EndCombo();
 			}
-			changed |= ImGui::Checkbox("SSAA 2×2", &m_Supersampling);
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip("每个像素取四个位置，分别算光照再平均。细线更平滑，但需要更多显存和绘制时间。");
-			if (m_Supersampling && m_SampleSide == 1 && m_Width > 0)
-				ImGui::TextWrapped(scenePreview ? "要使用四个样点，请降低上面的分辨率。" : "要使用四个样点，请降低主相机 Game 的游戏分辨率。");
 			if (Mode == Shading::Lit)
 			{
 				int curve = m_Filmic ? 1 : 0;
@@ -934,14 +992,6 @@ namespace Redflag
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("增加 1 EV，显示前的亮度加倍。灯和材质的数值保持原样。");
 				ImGui::Checkbox("移动时仅算直接光", &FastNavigation);
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("拖动时保留点光源照明，停手后恢复间接光和其他已选效果。");
-				if (m_FogEnabled)
-				{
-					changed |= ImGui::SliderFloat("雾密度", &m_Fog.Density, 0.f, .5f, "%.3f");
-					changed |= ImGui::SliderFloat("散射比例", &m_Fog.Albedo, 0.f, 1.f);
-					changed |= ImGui::SliderFloat("散射方向", &m_Fog.Anisotropy, -.8f, .8f);
-					changed |= ImGui::SliderFloat("雾的最远距离", &m_Fog.Distance, 1.f, 100.f);
-					changed |= ImGui::SliderInt("雾采样步数", &m_Fog.Steps, 4, 48);
-				}
 			}
 			const bool showProbes = Mode == Shading::DDGI || (Mode == Shading::Lit && m_IndirectLight == ProbeLighting);
 			const bool baked = m_GI && m_GI->HasBakedProbes();
@@ -969,11 +1019,6 @@ namespace Redflag
 				}
 				if (!m_ProbeMessage.empty()) ImGui::TextWrapped("%s", m_ProbeMessage.c_str());
 			}
-			if (Mode == Shading::GTAO || (Mode == Shading::Lit && m_AO && m_IndirectLight != NoIndirectLight))
-			{
-				changed |= ImGui::SliderFloat("遮蔽半径", &m_Settings.AORadius, .05f, 3.f);
-				changed |= ImGui::SliderFloat("遮蔽强度", &m_Settings.AOIntensity, .05f, 3.f);
-			}
 			if (Mode == Shading::Clustered || (Mode == Shading::Lit && m_DirectLight == ClusteredLights))
 				ImGui::TextDisabled("在点光源的属性中调整影响半径。");
 			if (Mode == Shading::Reflections || (Mode == Shading::Lit && m_Reflections))
@@ -986,11 +1031,6 @@ namespace Redflag
 					changed |= ImGui::SliderFloat("示例粗糙度", &m_Settings.Roughness, 0.f, 1.f);
 				}
 				changed |= ImGui::SliderFloat("反射距离", &m_Settings.ReflectionDistance, .1f, 30.f);
-			}
-			if (Mode == Shading::TAA || (Mode == Shading::Lit && m_TAA))
-			{
-				changed |= ImGui::SliderFloat("历史权重", &m_Settings.HistoryWeight, 0.f, .98f);
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip("设为 0 只显示当前帧。开启后，镜头停住时按细线和背景各被采到的次数混色。\n其他像素保留的旧颜色最多占这个比例。");
 			}
 			ImGui::PopItemWidth();
 			if (Mode == Shading::DDGI || Mode == Shading::ReSTIRDI || Mode == Shading::ReSTIRGI || Mode == Shading::TAA || Mode == Shading::Lit)

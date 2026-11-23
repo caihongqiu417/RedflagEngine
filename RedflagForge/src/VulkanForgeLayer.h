@@ -48,6 +48,8 @@ namespace Redflag
 		void DrawTransformTools();
 		bool DrawSceneGizmos(const glm::mat4& projection, const glm::mat4& view, ImVec2 corner, ImVec2 size);
 		void DrawMenu();
+		void DrawRenderPanelMenu();
+		void DrawRenderPanels();
 
 		Scope<VulkanDraw> m_Draw;
 		Scope<LightingPreview> m_Lighting;
@@ -77,6 +79,7 @@ namespace Redflag
 		bool m_EditGameView = false;
 		UUID m_EditSelection{0};
 		bool m_ResetLayout = false;
+		const char* m_FocusRenderPanel = nullptr;
 		bool m_Hovered = false;
 		bool m_ViewportFocused = false;
 		bool m_HasSceneImage = false;

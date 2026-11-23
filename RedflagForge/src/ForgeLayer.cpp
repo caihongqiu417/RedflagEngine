@@ -1110,10 +1110,13 @@ namespace Redflag {
                     if (serializer.Deserialize(std::string(droppedPath)))
                     {
                         m_SceneFilePath = std::string(droppedPath);
+                        m_SceneHierachyPanel.OpenFieldNotes(m_SceneFilePath);
                         RF_CORE_INFO("Successfully opened scene: {0}", m_SceneFilePath);
                     }
                     else
                     {
+                        m_SceneFilePath.clear();
+                        m_SceneHierachyPanel.OpenFieldNotes({});
                         RF_CORE_ERROR("Failed to open scene: {0}", droppedPath);
                     }
                 }
@@ -1316,7 +1319,10 @@ namespace Redflag {
                 filepath += ".redflag";
 
             if (SaveSceneFile(m_ActiveScene, filepath))
+            {
+                m_SceneHierachyPanel.SaveFieldNotesAs(filepath);
                 m_SceneFilePath = filepath;
+            }
         }
     }
 
@@ -1340,6 +1346,7 @@ namespace Redflag {
             {
                 m_ActiveScene   = m_EditorScene;
                 m_SceneFilePath = filepath;
+                m_SceneHierachyPanel.OpenFieldNotes(filepath);
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
                 RF_CORE_INFO("Successfully opened scene: {0}", filepath);
             }
@@ -1348,6 +1355,8 @@ namespace Redflag {
                 // 场景文件没能读完，层级面板显示这次新建的场景。
                 m_ActiveScene = m_EditorScene;
                 m_SceneHierachyPanel.SetContext(m_EditorScene);
+                m_SceneFilePath.clear();
+                m_SceneHierachyPanel.OpenFieldNotes({});
                 RF_CORE_ERROR("Failed to open scene: {0}", filepath);
             }
         }
@@ -1369,6 +1378,7 @@ namespace Redflag {
         m_ActiveScene = m_EditorScene;
         m_SceneHierachyPanel.SetContext(m_EditorScene);
         m_SceneFilePath.clear();
+        m_SceneHierachyPanel.OpenFieldNotes({});
 
         m_Framebuffer->Bind();
         m_Framebuffer->ClearAttachment(1, -1);

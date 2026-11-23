@@ -531,6 +531,9 @@
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h">
       <Filter>src\Redflag\Scene\Panel</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\Panel\FieldInspector.h">
+      <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h">
       <Filter>src\Redflag\Scene\Panel</Filter>
     </ClInclude>
@@ -541,6 +544,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\SceneCamera.h">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scene\ComponentReflection.h">
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scene\SceneSerializer.h">
@@ -2171,6 +2177,9 @@
     <ClCompile Include="src\Redflag\Scene\Panel\ContentBrowserPanel.cpp">
       <Filter>src\Redflag\Scene\Panel</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\Panel\FieldInspector.cpp">
+      <Filter>src\Redflag\Scene\Panel</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp">
       <Filter>src\Redflag\Scene\Panel</Filter>
     </ClCompile>
@@ -2181,6 +2190,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\ComponentReflection.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp">

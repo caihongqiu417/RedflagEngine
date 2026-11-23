@@ -316,10 +316,12 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Scene\Entity.h" />
     <ClInclude Include="src\Redflag\Scene\EnvironmentZoneComponent.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\ContentBrowserPanel.h" />
+    <ClInclude Include="src\Redflag\Scene\Panel\FieldInspector.h" />
     <ClInclude Include="src\Redflag\Scene\Panel\SceneHierachyPanel.h" />
     <ClInclude Include="src\Redflag\Scene\Pickup.h" />
     <ClInclude Include="src\Redflag\Scene\Scene.h" />
     <ClInclude Include="src\Redflag\Scene\SceneCamera.h" />
+    <ClInclude Include="src\Redflag\Scene\ComponentReflection.h" />
     <ClInclude Include="src\Redflag\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Redflag\Scene\ScriptableEntity.h" />
     <ClInclude Include="src\Redflag\Scripting\AnimatorBindings.h" />
@@ -870,10 +872,12 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClCompile Include="src\Redflag\Scene\CameraControllerScript.cpp" />
     <ClCompile Include="src\Redflag\Scene\Entity.cpp" />
     <ClCompile Include="src\Redflag\Scene\Panel\ContentBrowserPanel.cpp" />
+    <ClCompile Include="src\Redflag\Scene\Panel\FieldInspector.cpp" />
     <ClCompile Include="src\Redflag\Scene\Panel\SceneHierachyPanel.cpp" />
     <ClCompile Include="src\Redflag\Scene\Pickup.cpp" />
     <ClCompile Include="src\Redflag\Scene\Scene.cpp" />
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp" />
+    <ClCompile Include="src\Redflag\Scene\ComponentReflection.cpp" />
     <ClCompile Include="src\Redflag\Scene\SceneSerializer.cpp" />
     <ClCompile Include="src\Redflag\Scripting\AnimatorBindings.cpp" />
     <ClCompile Include="src\Redflag\Scripting\CoroutineBindings.cpp" />

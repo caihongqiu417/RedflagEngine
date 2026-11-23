@@ -113,6 +113,14 @@ namespace Redflag
                     ImGui::TextWrapped("%s", YAML::Dump(edit["after"]).c_str());
                     ImGui::EndTable();
                 }
+                if (edit["reason"])
+                    ImGui::TextWrapped("修改理由  %s", edit["reason"].Scalar().c_str());
+                if (edit["evidence"] && edit["evidence"].size() && ImGui::TreeNode("查看依据"))
+                {
+                    for (const YAML::Node& source : edit["evidence"])
+                        ImGui::TextWrapped("%s", source.Scalar().c_str());
+                    ImGui::TreePop();
+                }
                 ImGui::PopID();
             }
             ImGui::Spacing();
