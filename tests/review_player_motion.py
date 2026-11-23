@@ -124,8 +124,13 @@ def review(take_dir, output, require_animation):
             assert lo < -.04 and hi > .04, kind
         for (phase,hit) in zip(("punch","punch-repeat"),punches):
             last = hit["clip_samples"][-1]
-            # 慢帧可能让松拳和 D 开始移动落在同一帧，此时应直接恢复行走。
-            resumed = "walking_gun-cycle" if times[phase]+last["offset_s"] >= times["walk"] else "Idle-cycle"
+            # 慢帧可能让收拳与按 D 落在同一帧。侧拍中按住右键时还会切到瞄准。
+            moment=times[phase]+last["offset_s"]
+            orbit=False
+            for event in contacts:
+                if event.get("key")=="MouseRight" and by_seq[event["applied_seq"]]["seconds"]<=moment:
+                    orbit=event["op"]=="hold"
+            resumed = "walking_gun-cycle" if moment >= times["walk"] else ("AIM-Center" if orbit else "Idle-cycle")
             assert any("punch" in clip.lower() for clip in hit["clips"]) and last["clip"]==resumed, hit
             arm = max(hit["arms"].values(), key=lambda a: a["peak_forward_m"])
             # 待机本身会抬腕。要求收回 80% 的前伸量，最后恢复当前输入对应的动作。

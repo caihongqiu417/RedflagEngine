@@ -95,7 +95,16 @@ def record(archive, output, render_size, native, profile):
                     continue
                 last = frame["seq"]
                 elapsed = frame["seconds"] - origin
-                if len(sent) < len(actions) and elapsed >= actions[len(sent)][0]:
+                ready = len(sent)<len(actions) and elapsed>=actions[len(sent)][0]
+                if ready and len(sent) in (2,3):
+                    # 低帧率下等游戏实际收到右键并读过两次鼠标位置，再拖动或松开。
+                    ready = last-sent[-1]["requested_seq"]>=4
+                if ready and len(sent)==4:
+                    eye=next(a["position"] for a in frame["actors"] if a["id"]=="1100")
+                    ready=eye[2]>5.8 and eye[0]>-7.6
+                    if not ready and elapsed>3:
+                        raise RuntimeError("侧面机位没有转到位；请确认没有其他窗口正在控制本局的鼠标。")
+                if ready:
                     _, phase, op, key = actions[len(sent)]
                     options = dict(x=key[0], y=key[1]) if op == "move" else dict(key=key)
                     if op == "hold":
