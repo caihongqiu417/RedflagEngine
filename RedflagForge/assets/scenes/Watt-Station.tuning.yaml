@@ -1,0 +1,36 @@
+# 模型测量使用角色自己的坐标（米）。场景里玩家按原尺寸显示，瓦特的缩放为 0.96。
+notes:
+  - entities: [1101, 1102]
+    component: CapsuleCollider3DComponent
+    field: Height
+    reason: 最初的站立高度 1.84 米沿用了旧碰撞盒。旧盒子从中心到顶部是 0.92 米，总高是它的两倍。模型待机时头顶最高约 1.929 米，使用原设置时头盔顶端会露出碰撞体。
+    evidence: ["git:4d7a4a1:RedflagForge/assets/scenes/Watt-Station.redflag", output/validation/packaged-watt/ground-contact/model.json]
+  - entities: [1101, 1102]
+    component: CapsuleCollider3DComponent
+    field: Radius
+    reason: 最初的站立半径 0.35 米沿用了旧碰撞盒的水平半宽。移动时，在胸口和头部各用一个球向前检测障碍，球半径取角色半径的 0.9 倍。0.9 是旧移动代码选的经验系数。两种半径的贴墙测试记录了停靠距离，尚未比较不同系数的效果。
+    evidence: ["git:4d7a4a1:RedflagForge/assets/scenes/Watt-Station.redflag", Redflag/src/Redflag/Gameplay/TerrainTraversal.cpp, output/validation/packaged-watt/ground-contact/radius.json]
+  - entities: [1101]
+    component: ScriptComponent
+    script: Sandbox.StationPlayer
+    field: CrouchHeight
+    reason: 每秒取 120 个姿势，量出蹲行时头顶最高约 1.33088 米，取到厘米得到 1.33 米。单独蹲着时头顶最高约 1.297 米。玩家移动脚本采用这里的蹲姿高度。
+    evidence: [output/validation/packaged-watt/ground-contact/model.json, SandboxProject/Source/StationPlayer.cs]
+  - entities: [1101]
+    component: ScriptComponent
+    script: Sandbox.StationPlayer
+    field: DownRadius
+    reason: 倒地动作结束时，从背甲最低处到身体最高处约 0.65759 米，取一半约为 0.329 米，据此把原半径定为 0.33 米。玩家和瓦特共用这组倒地参数。
+    evidence: [output/validation/packaged-watt/ground-contact/model.json, SandboxProject/Source/StationPlayer.cs]
+  - entities: [1101]
+    component: ScriptComponent
+    script: Sandbox.StationPlayer
+    field: DownLength
+    reason: 倒地动作结束时，沿模型 Z 轴的两个端点约在 −1.114 和 0.720 米，相距约 1.834 米。最初用 1.83 米作为横放胶囊的总长。
+    evidence: [output/validation/packaged-watt/ground-contact/model.json]
+  - entities: [1101]
+    component: ScriptComponent
+    script: Sandbox.StationPlayer
+    field: DownCenter
+    reason: 取倒地姿势在三个轴上的最小、最大坐标的中点，得到横放胶囊的中心。Y 约 0.329 米，使胶囊底部贴到模型的地面。
+    evidence: [output/validation/packaged-watt/ground-contact/model.json]

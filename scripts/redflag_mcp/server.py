@@ -20,6 +20,7 @@ import playtest_metrics
 import playtest_workflow
 import job_timeline
 import asset_changes
+import component_fields
 import creation_reviews
 from project import ENGINE, PROJECT
 
@@ -145,14 +146,20 @@ def iterate_playtest(scene: str, profile: str, intent: str, rounds: int = 4, rev
 
 @app.tool()
 def propose_asset_change(intent: str, operations: list[dict]) -> dict[str, object]:
-    """预览同一意图涉及的多个资产。每项给出 asset、field 路径、before 原值、after 新值。列表行用 Entity、Key 或 ID 选择。"""
-    return asset_changes.propose(FORGE,intent,operations)
+    """预览同一意图涉及的多个资产。每项给出 asset、field、before、after，可附 reason 和 evidence。组件字段可从 inspect_scene_fields 取得。"""
+    try:
+        return asset_changes.propose(FORGE, intent, operations)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 @app.tool()
 def apply_asset_change(change: str, undo: bool = False) -> dict[str, object]:
     """保存或撤销这次创作修改。先核对全部目标字段，保留作者同时改动的其他字段。"""
-    return asset_changes.apply(FORGE,change,undo)
+    try:
+        return asset_changes.apply(FORGE, change, undo)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 def scene_files() -> dict[str, Path]:
@@ -165,6 +172,16 @@ def scene_file(name: str) -> Path:
     if path is None:
         raise ToolError("Unknown scene. Choose an exact name from list_scenes.")
     return path
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_scene_fields(scene: str, entity: str, component: str,
+                         proposed: dict | None = None) -> dict[str, object]:
+    """读取磁盘场景中一个实体的组件字段、单位、约束与项目取值记录。proposed 可预览一组候选值，返回可供创作审查的 operations。运行中或暂停的游戏仍使用自己的场景副本。"""
+    try:
+        return component_fields.inspect(FORGE, scene_file(scene), entity, component, proposed)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 @app.tool(annotations=READ_ONLY)
@@ -226,6 +243,8 @@ def get_capabilities() -> dict[str, object]:
                         "profiles": sorted(p.relative_to(FORGE/"assets/playtests").as_posix() for p in (FORGE/"assets/playtests").rglob("*.json")),
                         "human_control":"Forge / F6","native_events":"Redflag.Playtest.Record"},
             "environment": {"source": "saved scene", "tools": ["inspect_environment", "set_zone_description"]},
+            "component_fields": {"components": list(component_fields.component_types()), "scope": "saved_scene",
+                                 "tools": ["inspect_scene_fields", "propose_asset_change", "apply_asset_change"]},
             "editable_assets": ["environment zone descriptions", "UI layouts", "UI images and source records"] +
                               (["NPC profile", "NPC behavior links", "NPC animation states"] if npc_assets.TOOL.is_file() else []),
             "npc_tool": npc_assets.TOOL.relative_to(ROOT).as_posix(), "npc_tool_exists": npc_assets.TOOL.is_file(),

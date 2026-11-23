@@ -19,6 +19,7 @@ codex mcp get redflag
 | `get_capabilities()` | 想知道这次能不能启动引擎 | 场景目录、实际要用的编辑器是否存在，以及服务可执行的操作范围 |
 | `list_scenes()` | 只记得场景叫“中庭” | 由项目目录读出的可用场景文件名 |
 | `inspect_scene(scene)` | 想查哪盏灯放在走廊里，或天空是否被隐藏 | 场景的环境图、背景开关、分批返回的实体及组件 |
+| `inspect_scene_fields(scene, entity, component, proposed)` | 改角色尺寸前，先看当前的值和原设计依据 | 读保存的组件字段、单位、引擎默认值和项目取值记录，比较候选值 |
 | `inspect_environment(scene)` | 想知道维修棚用哪盏灯、采石坡引用哪张图 | 保存的地形与区域、位置、地貌与植被说明、关联灯的编号及配置 |
 | `set_zone_description(scene, entity, field, previous, text)` | 只把棚边植被改成旱草 | 按实体编号改一段文字。作者在此期间改过相同字段时，先读回新值 |
 | `get_render_settings(scene)` | 不确定同一场景是否打开镜面 IBL、用了哪条显示曲线 | 场景旁保存的渲染设置；没有写入的选项沿用引擎默认值 |
@@ -49,6 +50,12 @@ $python = ".\bin-int\redflag-mcp\Scripts\python.exe"
 Forge 的「角色创作 → 表格」也可以导出和导入这三种表。除了角色属性和行为树连线，`intents` 用来改候选说明、目标来源和物品。以 `.csv` 结尾使用逗号，以 `.tsv` 结尾使用制表符。两种格式均使用 UTF-8。
 
 在「动画」页找到 `pickup`，可以从当前模型的剪辑里挑选拾取动作。手碰到医疗包的时刻用动作长度的比例表示。如果一段动作指定为 0.9 秒、接触比例是 0.58，游戏在约 0.52 秒时完成交互。MCP 的 `inspect_npc` 会列出同一份动作表。`set_npc_animation(npc="medic.npc.yaml", state="pickup", contact=0.58)` 只修改这一项。输入 1.2 时引擎会拒绝保存，原来的时间仍可使用。[动画状态的读取与校验](../../Redflag/src/Redflag/Animation/AnimationController.cpp)
+## 用 MCP 审查碰撞体改动
+
+例如想把维修站玩家的站立半径试调到 0.38 米，用 `inspect_scene_fields(scene="Watt-Station.redflag", entity="1101", component="CapsuleCollider3DComponent", proposed={"Radius": 0.38})`。返回的 `value` 取自磁盘场景，`default` 来自引擎创建新组件时的设置，`proposed` 是这次准备试的尺寸。原作者选值时的记录放在 `tuning` 中，改过尺寸后仍可以查。把组件换为 `ScriptComponent` 可以查看场景中已保存的脚本字段，当前支持预览其中的 Float 和 Vector3。[引擎字段定义](../../Redflag/src/Redflag/Scene/ComponentFields.json) · [维修站的取值记录](../../RedflagForge/assets/scenes/Watt-Station.tuning.yaml)
+
+读完后，把返回的 `operations` 和这次修改的意图交给 `propose_asset_change`。每项可以另填 `reason` 说明这次改值的理由，用 `evidence` 列出测试文件。保留返回的修改编号，在 Forge 的创作审查中核对，或用 `apply_asset_change(change=编号)` 保存。有其他人改过同一项时，工具会显示新的值。用 `undo=True` 可以撤销。游戏运行或暂停时都有自己的场景副本，重新从已保存的场景开局即可测试新尺寸。[字段修改与撤销](asset_changes.py) · [使用临时项目的验收脚本](../../tests/check_component_authoring.py)
+
 ## 项目的界面图片
 
 先用 `list_ui_layouts` 找到当前游戏的布局，用 `inspect_ui_layout` 看哪些文字和图片正在使用。假设维修站的工单图叫 `ticket`，想换成另一张 PNG，就把布局路径、`ticket`、刚读到的原文件名和新图在项目里的路径交给 `set_ui_sprite`。已有布局中的字号、文字间距和其他图片都能保留。重新打开游戏就可以在真实画面上检查。换一个游戏时，用 `REDFLAG_PROJECT` 指向那个项目的根目录，仍用这一组工具。[图片导入与生成](../../docs/Creator-Images.md)
