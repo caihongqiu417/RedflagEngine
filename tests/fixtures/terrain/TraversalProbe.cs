@@ -29,14 +29,20 @@ namespace TerrainTest
             string clip = mode == TraversalMode.Climb ? "Station-Pickup" :
                 mode == TraversalMode.Jump ? "jump_3_midair-cycle" : "walking_nogun-cycle";
             GameWorld.PlayClip(Id,clip);
+            Vector3 p=GetComponent<TransformComponent>().Translation;
+            if (Expected==(int)TraversalMode.Slope) {
+                File.AppendAllText("slope.csv",string.Format(CultureInfo.InvariantCulture,
+                    "{0},{1:F5},{2:F5}\n",mode,p.Z,p.Y));
+                // 越过坡顶后再停下，记录里会同时留下上坡和下坡的脚底高度。
+                if (p.Z<2.6f) return;
+            }
             bool match = (int)mode == Expected;
             if (match) ++movingFrames;
 
             // 跨台阶那一帧就抓图。跳跃和攀爬留到身体已离开地面，再停下来看四肢。
-            if (!match || movingFrames < (mode == TraversalMode.Step ? 1 : 12)) return;
+            if (!match || (mode != TraversalMode.Slope && movingFrames < (mode == TraversalMode.Step ? 1 : 12))) return;
             captured = true;
             GameWorld.Pose(Id,clip,.23f);
-            Vector3 p=GetComponent<TransformComponent>().Translation;
             File.WriteAllText("capture.txt",String.Format(CultureInfo.InvariantCulture,"{0} {1:F3} {2:F3} {3:F3}",mode,p.X,p.Y,p.Z));
         }
     }

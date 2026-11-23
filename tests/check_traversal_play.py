@@ -1,6 +1,7 @@
 """在正式 Vulkan Play 窗口抓台阶、越沟和攀爬时的角色姿势。"""
 import argparse
 import ctypes
+import csv
 import hashlib
 import json
 import os
@@ -17,6 +18,8 @@ import win32process
 import win32service
 import pywintypes
 import yaml
+import numpy as np
+from PIL import Image
 
 from check_forge_play import wait_for
 from profile_native_navigation import prepare, ROOT, save_view
@@ -60,6 +63,15 @@ def capture(exe, work, output, name, expected, rise):
     first = platform(11,-1.5,0,[.27,.28,.25,1])
     other = platform(12,2.45 if name=="gap" else 1.5,rise,[.45,.39,.26,1])
     scene.update(Scene="通行测试", SkyVisible=False, Entities=[camera,actor,first,other,lamp])
+    if name=="slope":
+        # 16 位单通道高度图。每走 0.5 米升高 0.2 米，经过中心的坡顶后以相同坡度下降。
+        rows=np.array([0,0,0,16384,32768,49151,65535,49151,32768,16384,0,0],dtype=np.uint16)
+        terrain=work/"assets/scenes/test-ramp.png"
+        Image.fromarray(np.repeat(rows[:,None],5,axis=1)).save(terrain)
+        ground=dict(Entity=13,TagComponent=dict(Tag="折返坡面"),TransformComponent=transform((-1,0,-1.75)),
+                    TerrainComponent=dict(Heightmap="assets/scenes/test-ramp.png",HeightScale=.8,CellSize=.5,
+                                          Collision=True,ChunkCells=4,Tint=[.48,.42,.28,1]))
+        scene["Entities"]=[camera,actor,ground,lamp]
     sample=work/"assets/scenes/Traversal.redflag"
     sample.write_text(yaml.safe_dump(scene,allow_unicode=True,sort_keys=False),encoding="utf8")
     Path(str(sample)+".render.yaml").write_text("Shading: Lit\nSamples: 1\nIndirect: Off\nTAA: true\n",encoding="utf8")
@@ -86,7 +98,15 @@ def capture(exe, work, output, name, expected, rise):
         save_view(hwnd,output/(name+".png"))
         win32gui.PostMessage(hwnd,win32con.WM_CLOSE,0,0)
         print(name,readout,flush=True)
-        return readout
+        if name!="slope": return readout
+        with (work/"slope.csv").open(encoding="utf-8-sig") as trace:
+            route=[dict(mode=mode,z_m=float(z),y_m=float(y)) for mode,z,y in csv.reader(trace)]
+        assert all(r["mode"]=="Slope" for r in route), route
+        heights=[r["y_m"] for r in route]
+        assert max(heights)-heights[0]>.75 and max(heights)-heights[-1]>.48
+        error=max(abs(r["y_m"]-(.07+.8-.4*abs(r["z_m"]-1.25))) for r in route)
+        assert error<.002, error
+        return dict(pose=readout,height_error_m=error,route=route)
     finally:
         if win32event.WaitForSingleObject(process,3000)!=win32con.WAIT_OBJECT_0:
             win32process.TerminateProcess(process,1)
@@ -97,15 +117,16 @@ def capture(exe, work, output, name, expected, rise):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--exe",type=Path,default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
+    parser.add_argument("--output",type=Path,default=ROOT/"output/validation/terrain-traversal")
     args=parser.parse_args()
     exe=args.exe.resolve(strict=True)
     ctypes.windll.user32.SetProcessDPIAware()
     work=Path(tempfile.mkdtemp(prefix="traversal-play-",dir=ROOT/"tmp"))
     setup(work)
-    output=ROOT/"output/validation/terrain-traversal"
+    output=args.output.resolve()
     output.mkdir(parents=True,exist_ok=True)
     report=dict(executable_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),backend="Vulkan Play",samples={})
-    for name,mode,height in (("step",2,.2),("gap",3,0),("climb",4,1.42)):
+    for name,mode,height in (("step",2,.2),("gap",3,0),("climb",4,1.42),("slope",1,0)):
         report["samples"][name]=capture(exe,work,output,name,mode,height)
     (output/"play.json").write_text(json.dumps(report,indent=2)+"\n",encoding="utf8")
 

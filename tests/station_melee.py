@@ -19,6 +19,10 @@ def arrange(scene, case):
     guard["TransformComponent"]["Rotation"] = [0,0,0]
     # 朝 +X 的玩家站在 -6.9；巡检机的前表面与玩家相距约 0.63 米。
     guard["TransformComponent"]["Translation"] = [-2 if case in ("miss","movement") else -5.5,.08,1.4]
+    if case=="movement":
+        # 为落地后的三个完整步态周期留出直线距离，去掉岔路旁会挡住脚的补给箱。
+        guard["TransformComponent"]["Translation"]=[6.5,.08,-3]
+        entities[1112]["TransformComponent"]["Translation"]=[6,.08,-4]
     if case=="wall":
         scene["Entities"].append(dict(Entity=1910,TagComponent=dict(Tag="测试隔板"),
             TransformComponent=dict(Translation=[-6.47,1.27,1.4],Rotation=[0,0,0],Scale=[1,1,1]),
@@ -42,6 +46,8 @@ def verify(case, session, process, exe, output):
 
     wait_for(lambda: any(row["seq"]>=4 for row in frames()),process,70)
     if case=="movement":
+        from station_landing_gait import verify as verify_gait
+        verify_gait(session,process,frames,actor,output/"landing-walk.json",exe)
         check_movement(session, process, frames, actor, output, exe)
         return
     issue(session,1,"hold",key="F",lease_ms=10000)

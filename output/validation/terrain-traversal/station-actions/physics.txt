@@ -1,0 +1,22 @@
+SceneRenderTests.exe --traversal
+SHA-256 de04ecf2c059a2b1f4d4fc841f82d6ffc2c3602212e905472e6028bde850d205
+step onto a 20 cm platform x=0.824998 y=0.27
+PASS step onto a 20 cm platform
+jump onto a 72 cm platform x=0.805 y=0.79
+PASS jump onto a 72 cm platform
+climb a 1.42 m ledge x=0.805 y=1.49
+PASS climb a 1.42 m ledge
+reject a 2.20 m wall x=-0.3 y=0.07
+PASS reject a 2.20 m wall
+jump across a 95 cm gap x=1.005 y=0.0700002
+PASS jump across a 95 cm gap
+reject a jump under the low overhead beam x=-0.3 y=0.07
+PASS reject a jump under the low overhead beam
+PASS removing the landing platform during a jump cancels the crossing
+PASS cancel the climb and stand on the takeoff surface
+PASS ascend and descend the PhysX heightfield at the sampled height
+PASS load the station operator for IK
+foot.L IK error (m) = 1.15638e-06
+PASS operator glTF reaches the requested limb position within 2 mm
+hand.L IK error (m) = 2.32764e-07
+PASS operator glTF reaches the requested limb position within 2 mm
