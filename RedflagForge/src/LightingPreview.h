@@ -101,7 +101,7 @@ namespace Redflag
 		VkDescriptorSet m_Texture = VK_NULL_HANDLE;
 		Scope<GlobalIllumination> m_GI;
 		Scope<ScreenEffects> m_Effects;
-		std::vector<GIModel> m_Models;
+		std::vector<GIModel> m_Models, m_Items;
 		ScreenEffectSettings m_Settings;
 		Shading m_PreviousMode = Shading::BaseColor;
 		glm::mat4 m_LastViewProjection{ 0 };

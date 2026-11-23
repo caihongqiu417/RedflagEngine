@@ -5,6 +5,7 @@
 #include "Platform/Vulkan/VulkanDraw.h"
 #include "Platform/Vulkan/VulkanCascadeMaps.h"
 #include "Redflag/Assets/AssetManager.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/Renderer/SceneRenderer.h"
 #include "Redflag/Scene/Scene.h"
 #include "Redflag/Utils/FileSystem.h"
@@ -60,6 +61,7 @@ namespace Redflag
 	struct SceneGeometry
 	{
 		std::vector<GIModel> Models;
+		std::vector<GIModel> Items;
 		std::vector<glm::vec4> Glass;
 		std::vector<std::tuple<Ref<SampledTexture>, bool, Ref<SampledTexture>, int, glm::vec2>> Surfaces;
 		std::vector<std::pair<uint64_t, float>> LODs;
@@ -130,6 +132,13 @@ namespace Redflag
 			geometry.Glass.emplace_back(material->RefractionIndex, material->Thickness, 0, 0);
 		};
 		auto& registry = scene.GetRegistry();
+		auto collect = [&](entt::entity entity, GIModel input) {
+			// 手中的道具每帧跟着骨骼走，地上的物品也能被拿走。两者只需重画表面和动态阴影。
+			if (registry.any_of<HandProp, PickupComponent>(entity))
+				geometry.Items.push_back(std::move(input));
+			else
+				geometry.Models.push_back(std::move(input));
+		};
 		registry.view<TransformComponent, ModelRendererComponent>().each([&](auto entity, auto& transform, auto& model) {
 			if (!model.ModelAsset && model.ModelID) model.ModelAsset = AssetManager::Load<Model>(model.ModelID);
 			if (!model.ModelAsset) return;
@@ -167,7 +176,7 @@ namespace Redflag
 				}
 				inspect(input, i, material, original.get(), model.Color.a);
 			}
-			geometry.Models.push_back(std::move(input));
+			collect(entity, std::move(input));
 		});
 		registry.view<TransformComponent, MeshRendererComponent>().each([&](auto entity, auto& transform, auto& mesh) {
 			// 内置的立方体用 MeshRenderer 保存，导入的模型由上面的 ModelRenderer 读取。
@@ -179,7 +188,7 @@ namespace Redflag
 			inspect(input, 0, material, nullptr, 1.f);
 			if (!material && mesh.Texture)
 				input.MaterialMaps[0].BaseColor = mesh.Texture->GetPath();
-			geometry.Models.push_back(std::move(input));
+			collect(entity, std::move(input));
 		});
 		registry.view<TransformComponent, TerrainComponent>().each([&](entt::entity entity, TransformComponent& transform, TerrainComponent& terrain)
 		{
@@ -190,6 +199,10 @@ namespace Redflag
 			input.TerrainChunks = surface->GetChunks();
 			inspect(input, 0, surface->GetMaterial(), nullptr, 1.f);
 			geometry.Models.push_back(std::move(input));
+		});
+		// 删除一个物品会改变 ECS 的遍历顺序，同一组静态模型仍可沿用上帧的光照数据。
+		std::sort(geometry.Models.begin(), geometry.Models.end(), [](const GIModel& a, const GIModel& b) {
+			return a.EntityID < b.EntityID;
 		});
 		return geometry;
 	}
@@ -393,7 +406,7 @@ namespace Redflag
 			ResetHistory();
 		}
 		const std::vector<GILight> lights = CollectLights(scene);
-		const bool hasActor = geometry.HasAnimatedModel || !m_Bones.empty();
+		const bool hasActor = geometry.HasAnimatedModel || !m_Bones.empty() || !geometry.Items.empty();
 		// 只放角色、尚未布光时，沿用材质底色来预览动作。加灯或选择环境后按正常光照绘制。
 		m_OverlayModels = geometry.Models.empty() && hasActor && lights.empty() && !m_Environment;
 		const bool emptyScene = geometry.Models.empty() && (!hasActor || m_OverlayModels);
@@ -444,11 +457,16 @@ namespace Redflag
 		}
 
 		auto sameModel = [](const GIModel& a, const GIModel& b) {
-			return a.Path == b.Path && a.Transform == b.Transform && a.Tint == b.Tint && a.TerrainChunks == b.TerrainChunks && a.MaterialColors == b.MaterialColors &&
+			return a.EntityID == b.EntityID && a.Path == b.Path && a.Transform == b.Transform && a.Tint == b.Tint && a.TerrainChunks == b.TerrainChunks && a.MaterialColors == b.MaterialColors &&
 				a.MaterialFactors == b.MaterialFactors && a.MaterialEmissions == b.MaterialEmissions &&
 				a.EmissionOverrides == b.EmissionOverrides && a.TransparentParts == b.TransparentParts &&
 				a.MaterialMaps == b.MaterialMaps && a.MaterialMasks == b.MaterialMasks;
 		};
+		if (!std::equal(geometry.Items.begin(), geometry.Items.end(), m_Items.begin(), m_Items.end(), sameModel))
+		{
+			m_Items = std::move(geometry.Items);
+			ResetHistory();
+		}
 		bool geometryChanged = !m_GI || !std::equal(geometry.Models.begin(), geometry.Models.end(), m_Models.begin(), m_Models.end(), sameModel);
 		if (geometryChanged)
 		{

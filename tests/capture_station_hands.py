@@ -43,7 +43,7 @@ def stage(scene,who,action,camera_view):
         if yaw is not None:tr["Rotation"][1]=yaw
     mover=WATT if npc else PLAYER
     other=PLAYER if npc else WATT
-    place(mover,-6.9,1.4,math.pi/2)
+    place(mover,-4.64 if action=="pickup" and not npc else -6.9,1.4,math.pi/2)
     place(other,-3.25,1.4,-math.pi/2) if action in ("give","revive") else place(other,-12.2,1.4,-math.pi/2)
     if action=="pickup":
         place(BOX,-3.25,2.02)
@@ -130,7 +130,12 @@ def play(project,archive,scene_file,npc_file,who,action,output,routine,camera_vi
                 nonlocal phase,at_seq,at_time
                 phase+=1;at_time=now;at_seq=seq
             if who=="player":
-                if phase==0 and seq>=7:send("hold","W");next_phase()
+                if phase==0 and seq>=7:
+                    if action=="pickup":
+                        # 玩家已走到拾取半径，随后按 E，角色自己走完到药包面前的一段。
+                        phase=1
+                    else:send("hold","W")
+                    next_phase()
                 elif phase==1 and owner["position"][0]>=(-5.7 if action=="heal" else -5.04 if action=="pickup" else -4.65):
                     send("release","W");next_phase()
                 elif phase==2 and action=="pickup" and now-at_time>.65:
@@ -187,6 +192,9 @@ def play(project,archive,scene_file,npc_file,who,action,output,routine,camera_vi
     # 只保留这局真正提交给声音设备的文件。回放按 stopped/finished 的样本数截短。
     for pattern in ("media.jsonl","speech-*.wav","decisions.jsonl"):
         for recording in session.glob(pattern):shutil.copy2(recording,output/recording.name)
+    profile=project/"RedflagProfile-Runtime.json"
+    if profile.is_file():
+        (output/"cpu-trace.json.gz").write_bytes(gzip.compress(profile.read_bytes(),mtime=0))
     frames=(session/"frames.jsonl").read_bytes()
     (output/"frames.jsonl.gz").write_bytes(gzip.compress(frames,mtime=0))
     result=dict(actor=who,action=action,archive_sha256=digest(archive),exe_sha256=digest(project/"RedflagForge.exe"),

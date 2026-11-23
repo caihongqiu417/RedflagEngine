@@ -6,6 +6,7 @@
 #include "Redflag/Scene/Scene.h"
 #include "Redflag/Scene/Entity.h"
 #include "Redflag/Scene/Components.h"
+#include "Redflag/Gameplay/HandContact.h"
 
 #include "Redflag/Renderer/Renderer2D.h"
 #include "Redflag/Renderer/Renderer3D.h"
@@ -869,10 +870,10 @@ namespace Redflag {
 		});
 
 		// 直接创建的单个网格用组件上的材质、贴图或颜色。
-		if (!animatedOnly) registry.view<TransformComponent, MeshRendererComponent>().each(
+		registry.view<TransformComponent, MeshRendererComponent>().each(
 			[&](auto entity, TransformComponent& transform, MeshRendererComponent& mesh)
 		{
-			if (!mesh.MeshData)
+			if (!mesh.MeshData || (animatedOnly && !registry.any_of<HandProp, PickupComponent>(entity)))
 				return;
 			auto material = mesh.Mat;
 			if (!material)
@@ -920,7 +921,7 @@ namespace Redflag {
 			FoliageComponent* patch = registry.try_get<FoliageComponent>(entity);
 			Foliage* foliage = patch && patch->Visible ? patch->Get() : nullptr;
 			if (patch && (!foliage || !foliage->Count)) return;
-			if (animatedOnly && !posed && !foliage) return;
+			if (animatedOnly && !posed && !foliage && !registry.any_of<HandProp, PickupComponent>(entity)) return;
 			const std::vector<glm::mat4>* placements = foliage ? &patch->Placements() : nullptr;
 			const auto& model = posed ? *component.ModelAsset : *SelectModel(component, lodViewProjection * world);
 			const auto& parts = model.GetSubMeshes();
