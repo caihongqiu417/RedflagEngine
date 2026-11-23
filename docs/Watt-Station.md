@@ -22,7 +22,7 @@
 
 ## 验收记录
 
-走路时，只看角色的位置很容易漏掉滑步。新版把画面、按键和骨骼位置一起记录，可以对着地面看蓝色机器人的靴底，也可以从侧面看左拳何时伸直、何时收回。逐项记录里列出了玩家、瓦特和巡检机各自动作的验证方式。[新旧实机录像](../output/validation/packaged-watt/animation/compare.mp4) · [角色动作检查表](Station-Animation-Coverage.md)
+走路时，只看角色的位置很容易漏掉滑步。新版把画面、按键和骨骼位置一起记录，可以对着地面看蓝色机器人的靴底，也可以从侧面看左拳何时伸直、何时收回。逐项记录里列出了玩家、瓦特和巡检机各自动作的验证方式。[新旧实机录像](../output/validation/packaged-watt/animation/after-ik/compare.mp4) · [角色动作检查表](Station-Animation-Coverage.md)
 
 完整试玩在开发机上从新目录解包，逐项校验清单，通过游戏窗口输入中文、移动和重新开局。离线服务另用三个空闲端口启动，确认使用的是包内的模型、解释器和语音识别程序。SDK 的独立测试也做了真实的文字、图像和语音调用。第二台 Windows 电脑的安装及实际操作手感仍待试玩。[游戏运行文件](../output/validation/packaged-watt/release-runtime.json) · [独立 SDK 测试](../output/validation/runtime-ai/portable-sdk.json)
 

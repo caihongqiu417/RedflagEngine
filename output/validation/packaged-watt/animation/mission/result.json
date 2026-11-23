@@ -6,8 +6,8 @@
     1080
   ],
   "launcher": "Play-With-Companion.cmd",
-  "archive_sha256": "b6332574a23e6158c62121540282719f3f40c70e6f81796ea3e4de945d30c896",
-  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+  "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
   "before": {
     "玩家": {
       "id": "1101",
@@ -56,7 +56,7 @@
       "position": [
         -5.60470343,
         0.0799999982,
-        -0.123878554
+        -0.123878591
       ],
       "health": 100,
       "inventory": {
@@ -81,8 +81,8 @@
     "recover_after_defeat"
   ],
   "frame_ms": {
-    "samples": 668,
-    "p50": 90.10124206542969,
-    "p95": 121.78089618682861
+    "samples": 685,
+    "p50": 87.55874633789062,
+    "p95": 128.95126342773438
   }
 }
