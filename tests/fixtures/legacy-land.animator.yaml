@@ -1,0 +1,9 @@
+# 旧版动作表直接保存通知。继续用它检查原有资产能在 Forge 编辑和回读。
+States:
+  - ID: land
+    Clip: jump_5_hardlanding
+    Loop: false
+    Blend: 0.1
+    Events:
+      - {Name: KneeBend, Start: 0.08333333}
+      - {Name: Recovery, Start: 0, End: 0.20833333}

@@ -33,9 +33,11 @@ codex mcp get redflag
 
 ## 角色、音色和行为树
 
-在仓库根目录运行 `scripts\redflag_mcp\build_npc_tool.cmd`。这个小程序与编辑器使用同一份角色加载器和行为树代码。先让 agent 调用 `list_npcs`，再用 `inspect_npc` 打开 `watt.npc.yaml`。瓦特有一个叫 `reserve` 的候选。收到这个键时，引擎从节点 1 走到节点 12，得到「等待队友取药」的动作。游戏中角色能不能提出这个候选，还取决于队友和库存。工具可以直接试走这条线，无须启动游戏或联系模型服务。
+从空白建一个人，可以调用 `create_npc(new_file="guide.npc.yaml", display_name="引路人")`。返回的 `file` 是角色定义，`tree` 是它自己的行为树。新角色能够交谈，空闲时留在原地。写好人设后再加行为或选音色。在工程已经有同名角色或同名树时，本次创建会停止，手写内容会保留。
 
-给 agent 的一段示例请求是：“把瓦特复制成医护员，新文件叫 `medic.npc.yaml`。保留瓦特原来的行为，把医护员的 `reserve` 连到分享物资，再只换医护员的音色。” `copy_npc` 为医护员创建独立的角色和树。查看医护员的图可以找到分享物资的编号 5。调用 `rewire_npc(npc="medic.npc.yaml", source=1, key="reserve", target=5)` 后，试跑结果会显示路径 `[1, 5]` 和动作 `share`。若把终点填成 1，引擎发现角色会回到根节点，原文件继续可用。最后用 `set_npc_voice` 写入语音服务使用的音色名。角色名称和设定文字由 `update_npc_role` 修改。音色是否能发声还需连接实际语音服务试听。[角色定义](../../Redflag/src/Redflag/AI/NpcDefinition.cpp) · [行为树](../../Redflag/src/Redflag/AI/BehaviorTree.cpp)
+在仓库根目录运行 `scripts\redflag_mcp\build_npc_tool.cmd`。这个小程序与编辑器使用同一份角色加载器和行为树代码。先让 agent 调用 `list_npcs`，再用 `inspect_npc` 打开 `watt.npc.yaml`。瓦力有一个叫 `reserve` 的候选。收到这个键时，引擎从节点 1 走到节点 12，得到「等待队友取药」的动作。游戏中角色能不能提出这个候选，还取决于队友和库存。工具可以直接试走这条线，无须启动游戏或联系模型服务。
+
+给 agent 的一段示例请求是：“把瓦力复制成医护员，新文件叫 `medic.npc.yaml`。保留瓦力原来的行为，把医护员的 `reserve` 连到分享物资，再只换医护员的音色。” `copy_npc` 为医护员创建独立的角色和树。查看医护员的图可以找到分享物资的编号 5。调用 `rewire_npc(npc="medic.npc.yaml", source=1, key="reserve", target=5)` 后，试跑结果会显示路径 `[1, 5]` 和动作 `share`。若把终点填成 1，引擎发现角色会回到根节点，原文件继续可用。最后用 `set_npc_voice` 写入语音服务使用的音色名。角色名称和设定文字由 `update_npc_role` 修改。音色是否能发声还需连接实际语音服务试听。[角色定义](../../Redflag/src/Redflag/AI/NpcDefinition.cpp) · [行为树](../../Redflag/src/Redflag/AI/BehaviorTree.cpp)
 
 也可以用 Excel 或其他电子表格编辑器修改同一份角色资产。下面的命令从仓库根目录运行。先导出角色表，在表中只改目标行的「改成」列，按原格式保存为 UTF-8 制表符分隔文件，再导入。表里同时保留导出时的原值。假如同事已经改了这个音色，导入会提醒你重新导出；同事改过的其他字段可以保留。
 
@@ -49,7 +51,9 @@ $python = ".\bin-int\redflag-mcp\Scripts\python.exe"
 
 Forge 的「角色创作 → 表格」也可以导出和导入这三种表。除了角色属性和行为树连线，`intents` 用来改候选说明、目标来源和物品。以 `.csv` 结尾使用逗号，以 `.tsv` 结尾使用制表符。两种格式均使用 UTF-8。
 
-在「动画」页找到 `pickup`，可以从当前模型的剪辑里挑选拾取动作。手碰到医疗包的时刻用动作长度的比例表示。如果一段动作指定为 0.9 秒、接触比例是 0.58，游戏在约 0.52 秒时完成交互。MCP 的 `inspect_npc` 会列出同一份动作表。`set_npc_animation(npc="medic.npc.yaml", state="pickup", contact=0.58)` 只修改这一项。输入 1.2 时引擎会拒绝保存，原来的时间仍可使用。[动画状态的读取与校验](../../Redflag/src/Redflag/Animation/AnimationController.cpp)
+想把落地恢复时间从约 0.21 秒改为 0.30 秒，先从 `inspect_npc("watt.npc.yaml")` 返回的 `states` 找到 `land`。这一行的 `Montage` 是相对于动作表的文件名，`Slot` 是播放它的全身层。调用 `inspect_animation_montage(montage="ai/montages/land.montage.yaml")`，在 `Events` 里找出 `Recovery` 的 `End`。将读到的旧值和新值传给 `set_montage_event_time(montage="ai/montages/land.montage.yaml", event="Recovery", field="End", original=0.20833333, seconds=0.30)`。这一操作沿用引擎加载器检查时间，文件中其余动作和作者注释保留原文。人若刚刚调过同一时刻，先重新读取再决定。独立时刻填 `At`，有始末的区间填 `Start` 或 `End`。[正式落地动作](../../RedflagForge/assets/ai/montages/land.montage.yaml)
+
+要调持炮走路到待机的整身过渡，先用 `inspect_animation_transitions(animator="ai/watt.animator.yaml")` 查出 `walk_armed` 到 `idle` 的 `Seconds` 和 `Control`，原样交给 `set_animation_transition` 的 `original`。把新的秒数与两个控制点写入 `value`。没有自定义过渡时，目标状态的 `Blend` 决定所用秒数，引擎使用两端平滑的曲线。
 ## 用 MCP 审查碰撞体改动
 
 例如想把维修站玩家的站立半径试调到 0.38 米，用 `inspect_scene_fields(scene="Watt-Station.redflag", entity="1101", component="CapsuleCollider3DComponent", proposed={"Radius": 0.38})`。返回的 `value` 取自磁盘场景，`default` 来自引擎创建新组件时的设置，`proposed` 是这次准备试的尺寸。原作者选值时的记录放在 `tuning` 中，改过尺寸后仍可以查。把组件换为 `ScriptComponent` 可以查看场景中已保存的脚本字段，当前支持预览其中的 Float 和 Vector3。[引擎字段定义](../../Redflag/src/Redflag/Scene/ComponentFields.json) · [维修站的取值记录](../../RedflagForge/assets/scenes/Watt-Station.tuning.yaml)

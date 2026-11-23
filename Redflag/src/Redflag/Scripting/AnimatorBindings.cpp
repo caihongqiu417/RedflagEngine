@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "AnimatorBindings.h"
+#include "MontageBindings.h"
 #include "Redflag/Animation/ActorAnimator.h"
 #include "Redflag/Scene/Entity.h"
 #include <mono/metadata/appdomain.h>
@@ -47,9 +48,10 @@ namespace Redflag
 
 		bool Read(uint64_t id, MonoString** state, MonoString** name, int* phase, float* seconds, uint8_t* interrupted)
 		{
-			ActorAnimator* animator=Animator(Actor(id));
+			Entity actor=Actor(id);
+			ActorAnimator* animator=Animator(actor);
 			AnimationNotice notice;
-			if (!animator || !animator->Timeline.Read(notice)) return false;
+			if (!animator || !animator->Read(actor,notice)) return false;
 			*state=mono_string_new(mono_domain_get(),notice.State.c_str());
 			*name=mono_string_new(mono_domain_get(),notice.Name.c_str());
 			*phase=int(notice.Phase);
@@ -61,18 +63,19 @@ namespace Redflag
 		bool IsOpen(uint64_t id, MonoString* name)
 		{
 			ActorAnimator* animator=Animator(Actor(id));
-			return animator && animator->Timeline.IsOpen(Text(name));
+			return animator && animator->IsOpen(Actor(id),Text(name));
 		}
 
 		bool IsPlaying(uint64_t id)
 		{
 			ActorAnimator* animator=Animator(Actor(id));
-			return animator && animator->Timeline.Playing();
+			return animator && animator->IsPlaying(Actor(id));
 		}
 	}
 
 	void RegisterAnimatorBindings()
 	{
+		RegisterMontageBindings();
 		mono_add_internal_call("Redflag.Animator::Bind",(const void*)Bind);
 		mono_add_internal_call("Redflag.Animator::Play",(const void*)Play);
 		mono_add_internal_call("Redflag.Animator::Read",(const void*)Read);

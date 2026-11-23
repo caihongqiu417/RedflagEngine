@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ModelAnimation.h"
+#include "AnimationController.h"
 #include <functional>
 
 namespace Redflag
@@ -19,6 +20,8 @@ namespace Redflag
 
 		using AdjustPose = std::function<void(const ModelAnimation&, std::vector<ModelAnimation::NodePose>&)>;
 		struct GaitStep { const std::string& Root; float Distance; };
+		void PlayClip(const std::string& clip, const AnimationController* controller = nullptr,
+			const AnimationState* state = nullptr, bool restart = false);
 		void Update(const Ref<Model>& model, float seconds, const AdjustPose& adjust = {}, const GaitStep* gait = nullptr, bool poseChanged = false);
 		const Ref<ModelAnimation>& GetAnimation() const { return m_Animation; }
 		const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
@@ -34,6 +37,8 @@ namespace Redflag
 		std::vector<glm::mat4> m_NodeTransforms;
 		std::vector<ModelAnimation::NodePose> m_Local, m_Previous;
 		float m_BlendTime = 0.0f;
+		AnimationTransition m_Transition;
+		bool m_ChangePending = false;
 		std::string m_LastClip;
 		float m_Stride = 0.f;
 		std::string m_StrideRoot;

@@ -13,6 +13,8 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from ruamel.yaml import YAML
 import npc_assets
+import animation_transitions
+import montage_assets
 import image_assets
 import playtest
 import playtest_agent
@@ -357,6 +359,12 @@ def list_npcs() -> dict[str, list[str]]:
     return {"files": npc_assets.list_roles()}
 
 
+@app.tool()
+def create_npc(new_file: str, display_name: str) -> dict[str, object]:
+    """新建可交谈的角色和独立行为树。文件名以 .npc.yaml 结尾，同名文件会保留。"""
+    return npc_assets.create(new_file, display_name)
+
+
 @app.tool(annotations=READ_ONLY)
 def inspect_npc(npc: str) -> dict[str, object]:
     """查看已保存的角色设定、音色、节点及连线，以及每个候选在本机构建中走过的节点。"""
@@ -371,10 +379,10 @@ def copy_npc(npc: str, new_file: str, display_name: str) -> dict[str, object]:
 
 @app.tool()
 def update_npc_role(npc: str, name: str | None = None, instructions: str | None = None,
-                    leader_relationship: str | None = None) -> dict[str, object]:
-    """修改角色名称、描述或与场景指定队友的约定，只写入此次提供的字段。传空字符串可以清除旧约定。"""
+                    leader_relationship: str | None = None, persona: str | None = None) -> dict[str, object]:
+    """修改名称、行动说明、队友约定或交谈时的角色设定。只写入提供的字段。"""
     return npc_assets.update(npc, {k: v for k, v in (("Name", name), ("Instructions", instructions),
-                            ("LeaderRelationship", leader_relationship)) if v is not None})
+                            ("LeaderRelationship", leader_relationship), ("Persona", persona)) if v is not None})
 
 
 @app.tool()
@@ -395,6 +403,32 @@ def set_npc_animation(npc: str, state: str, clip: str | None = None, loop: bool 
     """按状态 ID 编辑动画。blend、seconds 以秒计，contact 是本段动作的接触时刻（0 到 1）。"""
     fields = {"Clip": clip, "Loop": loop, "Blend": blend, "Contact": contact, "Seconds": seconds}
     return npc_assets.edit_states(npc, {state: {k: v for k, v in fields.items() if v is not None}})
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_animation_transitions(animator: str) -> dict[str, object]:
+    """查看动作表里的状态和过渡。例如 ai/watt.animator.yaml；时间用秒，Control 是两个控制点的纵坐标。"""
+    return animation_transitions.inspect(animation_transitions.asset(animator))
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_animation_montage(montage: str) -> dict[str, object]:
+    """读取已保存的原片、骨骼、播放段、动作通知和混合设置，例如 ai/montages/land.montage.yaml。"""
+    return montage_assets.inspect(montage)
+
+
+@app.tool()
+def set_montage_event_time(montage: str, event: str, field: str, original: float, seconds: float) -> dict[str, object]:
+    """修改现有动作通知的一个时刻。field 可选 At、Start、End，original 填上次读到的秒数。"""
+    return montage_assets.set_event_time(montage, event, field, original, seconds)
+
+
+@app.tool()
+def set_animation_transition(animator: str, source: str, target: str, original: dict | None, value: dict | None) -> dict[str, object]:
+    """按起止状态保存一条过渡。original、value 均为 {Seconds, Control}；新建时 original 传 null，删除时 value 传 null。"""
+    path = animation_transitions.asset(animator)
+    animation_transitions.save(path, source, target, original, value)
+    return animation_transitions.inspect(path)
 
 
 @app.tool(annotations=READ_ONLY)

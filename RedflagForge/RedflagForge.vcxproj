@@ -160,7 +160,12 @@
     <ClInclude Include="src\UI\AssetChangeReview.h" />
     <ClInclude Include="src\UI\CreationReviewPanel.h" />
     <ClInclude Include="src\UI\DevContextPanel.h" />
+    <ClInclude Include="src\UI\GameConversation.h" />
     <ClInclude Include="src\UI\GameHudView.h" />
+    <ClInclude Include="src\UI\NpcDecisionView.h" />
+    <ClInclude Include="src\UI\AnimationTransitionPanel.h" />
+    <ClInclude Include="src\UI\AnimationFields.h" />
+    <ClInclude Include="src\UI\AnimationMontagePanel.h" />
     <ClInclude Include="src\UI\JobTimeline.h" />
     <ClInclude Include="src\UI\PlaytestReview.h" />
     <ClInclude Include="src\UI\ReviewImage.h" />
@@ -172,6 +177,9 @@
     <ClCompile Include="src\BehaviorTreePanel.cpp" />
     <ClCompile Include="src\CompanionPanel.cpp" />
     <ClCompile Include="src\DecisionPanel.cpp" />
+    <ClCompile Include="src\AIServiceSettings.cpp" />
+    <ClCompile Include="src\UI\AnimationTransitionPanel.cpp" />
+    <ClCompile Include="src\UI\AnimationMontagePanel.cpp" />
     <ClCompile Include="src\ForgeLayer.cpp" />
     <ClCompile Include="src\LightingPreview.cpp" />
     <ClCompile Include="src\NpcAuthoringFiles.cpp" />
@@ -183,7 +191,9 @@
     <ClCompile Include="src\UI\AssetChangeReview.cpp" />
     <ClCompile Include="src\UI\CreationReviewPanel.cpp" />
     <ClCompile Include="src\UI\DevContextPanel.cpp" />
+    <ClCompile Include="src\UI\GameConversation.cpp" />
     <ClCompile Include="src\UI\GameHudView.cpp" />
+    <ClCompile Include="src\UI\NpcDecisionView.cpp" />
     <ClCompile Include="src\UI\JobTimeline.cpp" />
     <ClCompile Include="src\UI\PlaytestReview.cpp" />
     <ClCompile Include="src\UI\ReviewImage.cpp" />

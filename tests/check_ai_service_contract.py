@@ -1,12 +1,14 @@
 """本机端口上的协议测试。分别改变模型是否可用和输出格式，复查同一客户端能继续提问。"""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import sys
 import threading
 import time
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
@@ -18,6 +20,8 @@ class ModelStub(BaseHTTPRequestHandler):
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        type(self).last_body = body
+        type(self).received_test_key = self.headers.get("Authorization") == "Bearer service-contract-test-key"
         if self.mode in ("context","busy","provider_down"):
             self.send_response({"context":400,"busy":429,"provider_down":503}[self.mode])
             self.end_headers()
@@ -40,9 +44,9 @@ def call(address, method="GET", data=None):
 
 
 def main():
-    with ThreadingHTTPServer(("127.0.0.1",0),ModelStub) as upstream:
+    with patch.dict(os.environ, REDFLAG_MODEL_TOKEN="service-contract-test-key"), ThreadingHTTPServer(("127.0.0.1",0),ModelStub) as upstream:
         threading.Thread(target=upstream.serve_forever,daemon=True).start()
-        model = ChatModel(f"http://127.0.0.1:{upstream.server_port}/v1/chat/completions","test",False)
+        model = ChatModel(f"http://127.0.0.1:{upstream.server_port}/v1/chat/completions","test",True)
         with Server(model,0) as service:
             threading.Thread(target=service.serve_forever,daemon=True).start()
             url = f"http://127.0.0.1:{service.server_port}/v1"
@@ -63,6 +67,31 @@ def main():
                     assert call(path,"DELETE")[0] == 200 and call(path)[0] == 404
                 assert call(url+"/decisions","POST",{"prompt":"选道具"}) == (400,{"error":"candidates_required"})
                 assert call(url+"/replies","POST",{"prompt":"提问","model":"elsewhere"}) == (400,{"error":"model_unavailable"})
+                job = call(url+"/decisions","POST",{"prompt":"选道具","trace_model":True,
+                    "candidates":[{"id":"key","description":"铜钥匙"}]})[1]["id"]
+                path = url+"/decisions/"+job
+                end = time.monotonic()+3
+                while time.monotonic()<end:
+                    _, answer = call(path)
+                    if answer["status"] != "pending": break
+                    time.sleep(.01)
+                trace = answer["model_trace"]
+                assert ModelStub.received_test_key and "service-contract-test-key" not in json.dumps(trace)
+                assert json.loads(trace["input"]) == ModelStub.last_body
+                assert trace["output"] == '{"choice":"key"}' and answer["choice"] == "key"
+                assert call(path,"DELETE")[0] == 200
+                turns = [{"role":"user","content":"我叫青桐。"},{"role":"assistant","content":"你好，青桐！"}]
+                ask = {"history":turns, "prompt":"我叫什么？"}
+                assert call(url+"/replies", "POST", dict(ask,history=[{"role":"system","content":"invalid"}])) == (400,{"error":"invalid_history"})
+                job = call(url+"/replies","POST",ask)[1]["id"]
+                path = url+"/replies/"+job
+                end = time.monotonic()+3
+                while time.monotonic()<end:
+                    _,answer = call(path)
+                    if answer["status"] != "pending": break
+                    time.sleep(.01)
+                assert ModelStub.last_body["messages"][1:] == turns+[{"role":"user","content":ask["prompt"]}]
+                assert "model_trace" not in answer and call(path,"DELETE")[0] == 200
             finally:
                 service.shutdown()
                 upstream.shutdown()

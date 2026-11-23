@@ -4,7 +4,7 @@
 
 角色模型、骨架、动作和贴图来自 Godot 的 Third Person Shooter Demo。作者为 Juan Linietsky 和 Fernando Miguel Calabró，原作于 2018 年按 CC BY 3.0 发布。Redflag 将样例材质引用的颜色、法线、金属度、粗糙度与自发光贴图装入 GLB，保留骨骼动画，并移除了作者标为试作的部分动作。具体版本和文件校验值见同目录的 sources.json。[Godot 第三人称样例](https://github.com/godotengine/tps-demo/tree/a82f15448e9b015440d3bbdf5e10801b260c4e9f) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
 
-瓦特弯腰取物时用的 `Station-Pickup` 改编自 Quaternius《Universal Animation Library 2》的 `Farm_Harvest`。作者的角色用右手拿东西，这个机器人右臂带有设备，因此导入时交换左右骨骼，在角色正中面对称动作。两者臂长、手指长度不同，导入器保留脚尖接地高度，并在机器人手指接近地面时调整腕部角度。递物时用的 `Station-Give` 来自第一册的 `Interact`，采用原来的左手前伸动作。两段原动作都按 CC0 发布。[第一册](https://quaternius.com/packs/universalanimationlibrary.html) · [第二册](https://quaternius.com/packs/universalanimationlibrary2.html) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+瓦力弯腰取物时用的 `Station-Pickup` 改编自 Quaternius《Universal Animation Library 2》的 `Farm_Harvest`。作者的角色用右手拿东西，这个机器人右臂带有设备，因此导入时交换左右骨骼，在角色正中面对称动作。两者臂长、手指长度不同，导入器保留脚尖接地高度，并在机器人手指接近地面时调整腕部角度。递物时用的 `Station-Give` 来自第一册的 `Interact`，采用原来的左手前伸动作。两段原动作都按 CC0 发布。[第一册](https://quaternius.com/packs/universalanimationlibrary.html) · [第二册](https://quaternius.com/packs/universalanimationlibrary2.html) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
 
 在仓库根目录运行下面的命令可以重新导入。先从作者两册的 Standard 压缩包分别解出 Unreal-Godot 目录里的 `UAL1_Standard.glb`、`UAL2_Standard.glb`，放到 `tmp/animation-sources/`。原始文件的 SHA-256 在 `sources.json` 中。Godot 模型和贴图由导入脚本按指定提交下载。NumPy 和 SciPy 用于离线骨骼旋转计算。
 
@@ -20,6 +20,8 @@ tests/run_scene_tests.cmd --npc-animation
 ## 行走和蹲行
 
 Godot 的原动作每迈完左右两步，名为 `root` 的节点也向前走一个完整步幅。引擎可以据此把游戏里的移动距离换算为动画时间。例如，角色走出 0.875 米，普通行走便应该播完半个循环，原先在前面的左脚此时已经移到右脚后面。把角色的位置交给游戏移动后，绘制骨骼时要把 `root` 固定在角色身上，否则同一段路会走两遍。持炮和徒手的四段走跑剪辑与上游文件逐轨比对，采样时间和数值都相同。
+
+原版的待机、举炮和亮出手炮用另一处原点。实际松开 W 时，角色碰撞体继续向前减速，屏幕上的腰却在切入待机时后退了约 24 厘米。导入器在一个完整走路循环里取骨盆的平均水平位置，将这五个原地动作的起始位置移到那里。所有关键帧平移相同的水平距离，骨盆高度、左右摆动和手臂角度保持原有变化。游戏内的移动和碰撞继续决定角色的位置。
 
 | 剪辑 | 一个循环 | 向前步幅 | 按原速播放时的移动速度 |
 | --- | ---: | ---: | ---: |

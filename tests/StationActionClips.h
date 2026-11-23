@@ -1,6 +1,7 @@
 #pragma once
 #include "Redflag/Animation/AnimationTimeline.h"
 #include "Redflag/Animation/ModelAnimation.h"
+#include "Redflag/Animation/MontagePlayer.h"
 
 // 只检查正式模型和事件时间轴。游戏中何时选这些剪辑由玩家脚本和随从状态机决定。
 static void CheckStationActionClips(const Redflag::ModelAnimation& rig, bool sentinel)
@@ -123,36 +124,43 @@ static void CheckStationCare(const Redflag::ModelAnimation& rig)
     std::cout<<"rescue head_ground_then_raised_m="<<downHead<<","<<raisedHead<<" max_pose_difference="<<jump<<'\n';
 }
 
-static void CheckStationActionEvents(const Redflag::ModelAnimation& rig, const Redflag::AnimationController& controller)
+static void CheckStationActionEvents(const Redflag::Ref<Redflag::ModelAnimation>& rig, const Redflag::AnimationController& controller)
 {
     using namespace Redflag;
     AnimationTimeline timeline;
     auto play = [&](const char* id) {
         const AnimationState* state = controller.Find(id);
         if (!state) throw std::runtime_error(std::string("Missing animator state: ") + id);
-        for (const ModelAnimation::Clip& clip : rig.GetClips())
+        for (const ModelAnimation::Clip& clip : rig->GetClips())
             if (clip.Name == state->Clip && timeline.Play(*state, clip.Duration)) return clip.Duration;
         throw std::runtime_error(std::string("Cannot play: ") + id);
     };
-    for (const char* id : {"pickup", "give", "heal", "punch", "land", "repair", "revive", "down", "getup"})
+    for (const char* id : {"pickup", "give", "heal", "punch", "land", "fire", "repair", "revive", "down", "getup"})
     {
-        const float duration = play(id);
-        const bool looping = controller.Find(id)->Loop;
-        timeline.Advance(duration+.01f);
-        Check(timeline.Playing() == looping, id);
-        AnimationNotice event;
+        const AnimationState& state = *controller.Find(id);
         std::vector<std::string> notices;
-        while (timeline.Read(event))
-        {
-            notices.push_back(event.Name);
-            std::cout << "state_event " << id << " " << event.Name << " at_s=" << event.Seconds << '\n';
+        if (state.MontageAsset) {
+            MontagePlayer player;
+            std::string error;
+            Check(player.Play(state.MontageAsset,rig,"",id,true,error),id);
+            player.Advance(state.Seconds+.01f);
+            Check(!player.IsPlaying(state.MontageAsset->Slot),id);
+            MontageEvent event;
+            uint64_t cursor = 0;
+            while (player.Read(cursor,event)) {
+                notices.push_back(event.Notice.Name);
+                std::cout << "state_event " << id << " " << event.Notice.Name << " at_s=" << event.Notice.Seconds << '\n';
+            }
+        } else {
+            const float duration = play(id);
+            timeline.Advance(duration+.01f);
+            Check(timeline.Playing() == state.Loop, id);
         }
-        const std::string state = id;
-        if (state=="pickup" || state=="give" || state=="heal")
+        if (state.ID=="pickup" || state.ID=="give" || state.ID=="heal")
             Check(notices == std::vector<std::string>{"contact"}, "one inventory contact per reach");
-        if (state=="punch")
+        if (state.ID=="punch")
             Check(notices == std::vector<std::string>{"Contact"}, "one melee contact per punch");
-        if (state=="land")
+        if (state.ID=="land")
             Check(notices == std::vector<std::string>{"Recovery","KneeBend","Recovery"}, "landing opens and closes recovery around the knee bend");
         play("idle");
         Check(timeline.State()=="idle" && timeline.Playing() && timeline.Time()==0.f, "next idle state starts with its own clock");

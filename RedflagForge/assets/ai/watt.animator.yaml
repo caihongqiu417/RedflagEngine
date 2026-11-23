@@ -1,28 +1,26 @@
-# ID 是游戏动作，Clip 是导入模型的剪辑名。Contact 表示手接触物品时，动作已播完的比例。
+# ID 是游戏使用的动作名。Clip 直接播放模型中的剪辑，Montage 还规定用哪些骨骼、何时通知游戏。
 States:
   - {ID: idle, Clip: Idle-cycle, Loop: true, Blend: 0.18}
   - {ID: walk, Clip: walking_nogun-cycle, Loop: true, Blend: 0.18}
+  - {ID: walk_armed, Clip: walking_gun-cycle, Loop: true, Blend: 0.18}
   - {ID: run, Clip: running_nogun-cycle, Loop: true, Blend: 0.15}
   - {ID: wait, Clip: Idle-cycle, Loop: true, Blend: 0.25}
-  # 拾取时左腕在第 36 帧降到最低；递物时第 22 帧伸到最前。作者的两段动作均为每秒 30 帧。
-  - {ID: pickup, Clip: Station-Pickup, Seconds: 2.5, Contact: 0.48, Loop: false, Blend: 0.14}
-  - {ID: give, Clip: Station-Give, Seconds: 2.0, Contact: 0.366667, Loop: false, Blend: 0.14}
-  # 左手将医疗包贴在胸甲上，保持片刻再放下。用药通知在整段动作的正中发出。
-  - {ID: heal, Clip: Station-UseMedkit, Seconds: 2.0, Contact: 0.5, Loop: false, Blend: 0.14}
+  - {ID: pickup, Montage: montages/pickup.montage.yaml, Loop: false}
+  - {ID: give, Montage: montages/give.montage.yaml, Loop: false}
+  - {ID: heal, Montage: montages/heal.montage.yaml, Loop: false}
   - {ID: revive, Clip: Station-Revive, Seconds: 2.6, Loop: false, Blend: 0.16}
   - {ID: repair, Clip: Station-Repair, Seconds: 2.6, Loop: true, Blend: 0.16}
   - {ID: down, Clip: Station-Down, Seconds: 1.0, Loop: false, Blend: 0.12}
   - {ID: getup, Clip: Station-GetUp, Loop: false, Blend: 0.12}
   - {ID: aim, Clip: AIM-Center, Loop: false, Blend: 0.12}
-  - {ID: fire, Clip: Cannon_Charge, Loop: false, Blend: 0.08}
-  # Quaternius Punch_Jab 每秒 30 帧，第 6 帧左拳伸到最前。
-  - {ID: punch, Clip: Station-Punch, Loop: false, Blend: 0.055, Events: [{Name: Contact, Start: 0.2}]}
+  - {ID: fire, Montage: montages/fire.montage.yaml, Loop: false}
+  - {ID: punch, Montage: montages/punch.montage.yaml, Loop: false}
   - {ID: equip, Clip: Cannon_activation-noexp, Loop: false, Blend: 0.12}
   - {ID: jump, Clip: jump_1_up, Loop: false, Blend: 0.1}
   - {ID: climb, Clip: Station-Pickup, Loop: false, Blend: 0.12}
-  - ID: land
-    Clip: jump_5_hardlanding
-    Loop: false
-    Blend: 0.1
-    # 每秒 24 帧：第 2 帧骨盆最低。第 5 帧结束缓冲是游戏设定，可在 Forge 调整。
-    Events: [{Name: KneeBend, Start: 0.08333333}, {Name: Recovery, Start: 0, End: 0.20833333}]
+  - {ID: land, Montage: montages/land.montage.yaml, Loop: false}
+
+# 松开移动键用 0.16 秒站稳；收炮只影响上身，时长在 fire.montage.yaml 的 BlendOut。
+Transitions:
+  - {From: walk, To: idle, Seconds: 0.16, Control: [0, 1]}
+  - {From: walk_armed, To: idle, Seconds: 0.16, Control: [0, 1]}

@@ -1,166 +1,168 @@
 #include "CompanionPanel.h"
+#include "UI/NpcDecisionView.h"
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Scene/Entity.h"
 #include <imgui.h>
 
 namespace Redflag
 {
-	void CompanionPanel::DrawMenu()
+	void CompanionPanel::OpenAssets()
 	{
-		if (ImGui::MenuItem("AI 队友", "T")) m_Open = true;
+		m_AuthorActor = 0;
+		m_Authoring = true;
+	}
+
+	void CompanionPanel::DrawInspector(Entity actor, bool playing)
+	{
+		NpcComponent& npc = actor.GetComponent<NpcComponent>();
+		if (ImGui::Button("编辑角色资产"))
+		{
+			m_Asset = npc.Definition;
+			m_AuthorActor = actor.GetUUID();
+			m_Authoring = true;
+		}
+		if (!playing && !m_Asset.empty() && m_Asset != npc.Definition)
+		{
+			if (ImGui::Button("绑定当前角色资产")) npc.Definition = m_Asset;
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", m_Asset.c_str());
+		}
+		if (playing && ImGui::Button("本局请求与动作"))
+		{
+			if (m_Actor != actor.GetUUID()) m_Request = 0;
+			m_Actor = actor.GetUUID();
+			m_Open = true;
+		}
 	}
 
 	void CompanionPanel::Stop()
 	{
 		m_Voice.Reset();
 		m_SpeechCursor = 0;
+		m_Request = 0;
+		m_Chat = {};
+		m_Speaker = 0;
+	}
+
+	void CompanionPanel::Update(Scene& scene)
+	{
+		if (!scene.GetNpcs()) return;
+		const auto hud = scene.GetRegistry().view<HudComponent>();
+		const uint64_t speaker = hud.empty() ? 0 : hud.get<HudComponent>(*hud.begin()).ConversationActor;
+		if (speaker != m_Speaker)
+		{
+			m_Voice.Reset();
+			m_SpeechCursor = 0;
+			m_Chat = {};
+			m_Speaker = speaker;
+		}
+		Entity actor = scene.GetEntityByUUID(m_Speaker);
+		m_Voice.UpdatePlayback();
+		if (actor && actor.HasComponent<NpcComponent>())
+		{
+			// 游戏界面关闭输入框时，场景指定的角色仍可播报。按事件编号读取同一帧里的所有回执。
+			m_Voice.UpdateInput(scene, m_Speaker, [&](const std::string& text) { scene.GetNpcs()->Say(m_Speaker, text); });
+			const std::string& voice = actor.GetComponent<NpcComponent>().VoiceOverride;
+			while (const NpcEvent* event = scene.GetNpcs()->NextEvent(m_Speaker, m_SpeechCursor))
+			{
+				m_Chat.Receive(*event);
+				if (event->Kind == "玩家" || event->Kind == "中止") m_Voice.StopPlayback();
+				if (!event->Speech.empty())
+				{
+					const NpcDefinition* profile = scene.GetNpcs()->GetDefinition(m_Speaker);
+					if (profile) m_Voice.Speak(m_Speaker, event->Speech, voice.empty() ? profile->Voice : voice);
+				}
+			}
+		}
+	}
+
+	void CompanionPanel::DrawGame(Scene& scene, const ConversationStyle& style, ImVec2 corner, ImVec2 size)
+	{
+		Entity actor = scene.GetEntityByUUID(m_Speaker);
+		if (actor && actor.HasComponent<NpcComponent>() && scene.GetNpcs())
+			m_Chat.Draw(actor, *scene.GetNpcs(), m_Voice, style, corner, size);
 	}
 
 	void CompanionPanel::Draw(Scene& scene, bool playing, const std::function<void(uint64_t)>& drawPhoto)
 	{
 		Entity actor = scene.GetEntityByUUID(m_Actor);
-		const auto actors = scene.GetRegistry().view<NpcComponent>();
-		if ((!actor || !actor.HasComponent<NpcComponent>()) && !actors.empty())
-		{
-			Stop();
-			actor = Entity(*actors.begin(), &scene);
-			m_Actor = actor.GetUUID();
-		}
-
-		m_Voice.UpdatePlayback();
-		if (playing && scene.GetNpcs() && actor && actor.HasComponent<NpcComponent>())
-		{
-			// 窗口还没打开时，默认队友也可以播报。按事件编号读取同一帧里的所有回执。
-			const std::string& voice = actor.GetComponent<NpcComponent>().VoiceOverride;
-			while (const NpcEvent* event = scene.GetNpcs()->NextEvent(m_Actor, m_SpeechCursor))
-			{
-				if (event->Kind == "玩家" || event->Kind == "中止") m_Voice.StopPlayback();
-				if (!event->Speech.empty())
-				{
-					const NpcDefinition* profile = scene.GetNpcs()->GetDefinition(m_Actor);
-					if (profile) m_Voice.Speak(m_Actor, event->Speech, voice.empty() ? profile->Voice : voice);
-				}
-			}
-		}
-		if (playing && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_T, false))
-		{
-			m_Open = !m_Open;
-			if (!m_Open) m_Voice.Reset();
-		}
-		if (!m_Open) return;
-
-		ImGui::SetNextWindowSize({570, 470}, ImGuiCond_FirstUseEver);
-		if (!ImGui::Begin("队友通讯", &m_Open)) { ImGui::End(); return; }
-
-		//========== 选择角色 ==========
-
-		if (!actor || !actor.HasComponent<NpcComponent>())
-		{
-			ImGui::TextWrapped("当前场景没有 AI 角色。在层级中选中物体，在属性中添加「AI 角色」并选择角色定义。");
-			ImGui::End();
-			return;
-		}
-
-		if (ImGui::BeginCombo("队友", actor.GetName().c_str()))
-		{
-			for (entt::entity handle : actors)
-			{
-				Entity option(handle, &scene);
-				ImGui::PushID(static_cast<int>(handle));
-				if (ImGui::Selectable(option.GetName().c_str(), option == actor)) actor = option;
-				ImGui::PopID();
-			}
-			ImGui::EndCombo();
-		}
-		if (m_Actor != actor.GetUUID())
-		{
-			Stop();
-			m_Actor = actor.GetUUID();
-		}
-		NpcComponent& npc = actor.GetComponent<NpcComponent>();
-		NpcSystem* game = scene.GetNpcs();
-		const NpcState* state = game ? game->Inspect(m_Actor) : nullptr;
-
-		//========== 玩家发言与游戏回执 ==========
-
-		if (playing && game)
-		{
-			if (drawPhoto) drawPhoto(m_Actor);
-			m_Voice.Draw(scene, m_Actor, [&](const std::string& text) { game->Submit(m_Actor, text); });
-			ImGui::SetNextItemWidth(-82);
-			const bool entered = ImGui::InputTextWithHint("##speech", "告诉队友你现在需要什么", m_Text, sizeof(m_Text), ImGuiInputTextFlags_EnterReturnsTrue);
-			ImGui::SameLine();
-			if ((ImGui::Button("发送") || entered) && m_Text[0] && game->Submit(m_Actor, m_Text))
-				m_Text[0] = 0;
-
-			if (state)
-			{
-				if (state->Request) ImGui::TextUnformatted("队友正在考虑这次指令…");
-				else if (!state->Action.empty()) ImGui::Text("正在执行  %s", state->Action.c_str());
-				if (!state->Stage.empty()) ImGui::Text("当前动作  %s", state->Stage.c_str());
-				if (state->Use.IsRunning()) ImGui::ProgressBar(state->Use.Progress());
-				if (ImGui::CollapsingHeader("最近一次提问的候选"))
-					for (const NpcCandidate& c : state->Candidates)
-						ImGui::TextWrapped("%s   %s   %.1f 米", c.ID.c_str(), c.Description.c_str(), c.Distance);
-
-				ImGui::Separator();
-				ImGui::BeginChild("对局记录", {0, ImGui::GetTextLineHeightWithSpacing()*7}, true);
-				for (auto it = state->Events.rbegin(); it != state->Events.rend(); ++it)
-					ImGui::TextWrapped("%.2f  %s   %s", it->Time, it->Kind.c_str(), it->Text.c_str());
-				ImGui::EndChild();
-			}
-		}
-		else ImGui::TextWrapped("按 F6 播放后可以和队友交谈。");
-
-		//========== 角色定义与行为树 ==========
-
-		NpcDefinition* definition = nullptr;
-		if (game) definition = game->GetDefinition(m_Actor);
-		else
-		{
-			if (m_Path != npc.Definition)
-			{
-				m_Path = npc.Definition;
-				m_Error.clear();
-				m_Editing.Load(std::filesystem::u8path(m_Path), m_Error);
-			}
-			if (m_Error.empty() && !m_Path.empty()) definition = &m_Editing;
-		}
-		if (definition)
-		{
-			ImGui::TextWrapped("音色  %s", (npc.VoiceOverride.empty() ? definition->Voice : npc.VoiceOverride).c_str());
-			ImGui::Checkbox("显示行为树", &m_ShowTree);
-			ImGui::SameLine();
-			ImGui::Checkbox("角色创作", &m_Authoring);
-		}
-		else if (!m_Error.empty()) ImGui::TextWrapped("%s", m_Error.c_str());
-		ImGui::End();
-		if (m_ShowTree && definition) m_TreePanel.Draw(definition->Tree, definition->TreeFile, state ? &state->Trace : nullptr);
 		if (m_Authoring)
 		{
+			// 从实体进入时可以预览它的动作剪辑。浏览其他资产后，不再把旧实体的状态叠在新角色上。
+			Entity owner = scene.GetEntityByUUID(m_AuthorActor);
+			const bool bound = owner && owner.HasComponent<NpcComponent>() && owner.GetComponent<NpcComponent>().Definition == m_Asset;
+			const NpcState* live = bound && scene.GetNpcs() ? scene.GetNpcs()->Inspect(m_AuthorActor) : nullptr;
 			std::vector<std::string> clips;
 			const ModelAnimation* animation = nullptr;
-			if (actor.HasComponent<ModelRendererComponent>())
+			if (bound && owner.HasComponent<ModelRendererComponent>())
 			{
-				const auto& model = actor.GetComponent<ModelRendererComponent>().ModelAsset;
+				const auto& model = owner.GetComponent<ModelRendererComponent>().ModelAsset;
 				if (model && model->GetAnimation())
 				{
 					animation = model->GetAnimation().get();
 					for (const auto& clip : animation->GetClips()) clips.push_back(clip.Name);
 				}
 			}
-			// 「候选」页按当前场景检查。上方通讯记录仍显示提问当时留下的选项。
-			auto drawSceneCheck = [&] {
-				if (!definition) return;
-				for (const NpcIntent& intent : definition->Intents)
-				{
-					if (intent.Target != "teammate") continue;
-					NpcTeammateCheck check = CheckTeammateIntent(scene, m_Actor, *definition, intent);
-					m_Author.DrawTeammateCheck(intent, check);
-				}
+			auto inspect = [&](const NpcDefinition& role) {
+				if (!bound) return;
+				for (const NpcIntent& intent : role.Intents)
+					if (intent.Target == "teammate")
+						m_Author.DrawTeammateCheck(intent, CheckTeammateIntent(scene, m_AuthorActor, role, intent));
 			};
-			if (m_Author.Draw(npc.Definition, state ? &state->Trace : nullptr, state ? state->Stage : "", clips, animation, drawSceneCheck))
-				m_Path.clear();
+			m_Author.Draw(m_Asset, live ? &live->Trace : nullptr, live ? live->Stage : "", clips, animation, inspect, &m_Authoring);
 		}
+		if (!m_Open || !playing || !actor || !actor.HasComponent<NpcComponent>()) return;
+
+		ImGui::SetNextWindowSize({640, 620}, ImGuiCond_FirstUseEver);
+		const std::string title = actor.GetName() + " · 本局请求与动作###NpcRuntimeInspector";
+		if (!ImGui::Begin(title.c_str(), &m_Open)) { ImGui::End(); return; }
+		NpcComponent& npc = actor.GetComponent<NpcComponent>();
+		NpcSystem* game = scene.GetNpcs();
+		const NpcState* state = game ? game->Inspect(m_Actor) : nullptr;
+
+		NpcDefinition* definition = game->GetDefinition(m_Actor);
+		//========== 请求记录、动作库与创作工具 ==========
+
+		if (ImGui::BeginTabBar("角色调试"))
+		{
+			if (ImGui::BeginTabItem("请求记录"))
+			{
+				DrawNpcRequests(state, m_Request);
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("动作库"))
+			{
+				if (definition)
+				{
+					DrawNpcActions(*definition, state, m_Request);
+					ImGui::Checkbox("显示行为树", &m_ShowTree);
+				}
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("角色工具"))
+			{
+				if (definition)
+				{
+					if (ImGui::Button("编辑角色资产"))
+					{
+						m_Asset = npc.Definition;
+						m_AuthorActor = m_Actor;
+						m_Authoring = true;
+					}
+					ImGui::TextWrapped("音色  %s", (npc.VoiceOverride.empty() ? definition->Voice : npc.VoiceOverride).c_str());
+				}
+				if (drawPhoto) drawPhoto(m_Actor);
+				if (m_Speaker == m_Actor) m_Voice.DrawTools();
+				if (state && state->Use.IsRunning()) ImGui::ProgressBar(state->Use.Progress());
+				if (state && ImGui::CollapsingHeader("对局记录"))
+					for (auto it = state->Events.rbegin(); it != state->Events.rend(); ++it)
+						ImGui::TextWrapped("%.2f  %s  %s", it->Time, it->Kind.c_str(), it->Text.c_str());
+				ImGui::EndTabItem();
+			}
+			ImGui::EndTabBar();
+		}
+		ImGui::End();
+		if (m_ShowTree && definition)
+			m_TreePanel.Draw(definition->Tree, definition->TreeFile, state ? &state->Trace : nullptr, "角色实例 · 行为树",
+				state ? &state->Blackboard : nullptr);
 	}
 }

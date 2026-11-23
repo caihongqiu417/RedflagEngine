@@ -4,6 +4,7 @@
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Assets/AssetManager.h"
 #include "Redflag/Core/Application.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/Gameplay/TerrainTraversal.h"
 #include "Redflag/Renderer/RendererAPI.h"
 #include "Redflag/Scene/Entity.h"
@@ -128,11 +129,10 @@ static void Watch(Scene& scene, uint16_t port, const std::string& scenario)
     scene.OnRuntimeStop();
 }
 
-static void Run(Scene& scene, uint16_t port, const std::string& scenario)
+static void Run(Scene& scene, NpcSystem& actors, const std::string& scenario)
 {
     constexpr uint64_t robot = 1102, player = 1101, supply = 1112;
     constexpr float step = 1.f / 60.f;
-    NpcSystem actors(scene, port);
     uint64_t cursor = 0;
     auto point = [&](uint64_t id) { return scene.GetEntityByUUID(id).GetComponent<TransformComponent>().Translation; };
     auto inventory = [&](uint64_t id) {
@@ -142,18 +142,26 @@ static void Run(Scene& scene, uint16_t port, const std::string& scenario)
     };
     auto health = [&]() { return scene.GetEntityByUUID(player).GetComponent<HealthComponent>().Current; };
     auto tick = [&]() {
-        actors.Update(step);
-        scene.OnUpdatePhysics(step);
+        if (scenario == "dialogue")
+            scene.UpdateGame(step);
+        else
+        {
+            actors.Update(step);
+            scene.OnUpdatePhysics(step);
+        }
         while (const NpcEvent* event = actors.NextEvent(robot, cursor))
             std::cout << "EVENT\t" << event->Sequence << '\t' << event->Kind << '\t' << event->Text << '\t' << event->Target
                       << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
     };
     auto until = [&](const char* title, const std::function<bool(const NpcState&)>& done) {
-        const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+        // 完整一帧还会更新角色骨骼。Debug 运行一秒游戏可能花几秒墙钟时间。
+        const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(scenario == "dialogue" ? 120 : 20);
+        int frames = 0;
         do
         {
             tick();
+            ++frames;
             if (done(*actors.Inspect(robot)))
             {
                 Check(true, title);
@@ -161,8 +169,15 @@ static void Run(Scene& scene, uint16_t port, const std::string& scenario)
             }
         } while (std::chrono::steady_clock::now() < end);
         const auto& state = *actors.Inspect(robot);
-        std::cerr << "Timeout " << title << ": action=" << state.Action << ", stage=" << state.Stage
-                  << ", request=" << state.Request << std::endl;
+        const glm::vec3 actorPosition = point(robot), playerPosition = point(player);
+        glm::vec3 socket;
+        std::cerr << "Timeout " << title << ": frames=" << frames << ", action=" << state.Action << ", stage=" << state.Stage
+                  << ", request=" << state.Request << ", actor=(" << actorPosition.x << "," << actorPosition.y << ","
+                  << actorPosition.z << "), player=(" << playerPosition.x << "," << playerPosition.y << ","
+                  << playerPosition.z << "), reachable=" << CanReach(scene, robot, player, actors.GetDefinition(robot)->Reach)
+                  << ", actor hand=" << ReadContactSocket(scene.GetEntityByUUID(robot), "grip", socket)
+                  << ", player hand=" << ReadContactSocket(scene.GetEntityByUUID(player), "grip", socket) << std::endl;
+        if (!state.Decisions.empty()) std::cerr << "MODEL_INPUT\t" << state.Decisions.back().ModelInput << '\n';
         Check(false, title);
     };
 
@@ -170,9 +185,47 @@ static void Run(Scene& scene, uint16_t port, const std::string& scenario)
     const glm::vec3 start = point(robot);
     until("silent companion walks toward the player",
           [&](const NpcState& s) { return s.Action == "follow" && glm::distance(start, point(robot)) > .1f; });
+    if (scenario == "dialogue")
+    {
+        Check(actors.Inspect(robot)->Decisions.empty(), "standalone play does not record model traffic");
+        actors.SetDecisionTracing(true);
+    }
     Check(actors.Submit(robot, "在这里等我，不要跟过来。"), "submit hold command");
     until("real model picks wait", [](const NpcState& s) { return s.Action == "wait"; });
     const glm::vec3 held = point(robot);
+    if (scenario == "dialogue")
+    {
+        auto say = [&](const std::string& message, const std::string& expected) {
+            uint64_t first = cursor;
+            Check(actors.Say(robot, message), "send a spoken line through the player conversation API");
+            until("companion answers the question aloud", [&](const NpcState&) {
+                while (const NpcEvent* event = actors.NextEvent(robot, first))
+                    if (event->Kind == "对话")
+                    {
+                        Check(!event->Speech.empty() && event->Text == event->Speech && event->Speech.find(expected) != std::string::npos,
+                              "the spoken answer addresses the current question");
+                        return true;
+                    }
+                return false;
+            });
+            Check(actors.Inspect(robot)->Action == "wait" && glm::distance(held, point(robot)) < .001f,
+                  "conversation preserves the current order and position");
+        };
+        say("你好，我是小林。你叫什么名字？", actors.GetDefinition(robot)->Name);
+        say("太阳系里哪颗行星最大？", "木星");
+        say("你还记得我叫什么吗？", "小林");
+        say("今天考试没考好，我挺难过。", "");
+        say("给我讲个笑话。", "");
+        const auto& records = actors.Inspect(robot)->Decisions;
+        const auto recall = std::find_if(records.begin(), records.end(), [](const NpcDecisionTrace& entry) {
+            return entry.Kind == "角色答话" && entry.Input.find("你还记得我叫什么吗") != std::string::npos &&
+                entry.Input.find("小林") != std::string::npos;
+        });
+        Check(recall != records.end() && records.back().Kind == "角色答话" && !records.back().Output.empty(),
+              "Forge keeps the player and companion turns actually used for recall");
+        std::cout << "TRACE\t" << records.back().ID << "\tmodel_input=" << records.back().ModelInput.size()
+                  << "\tmodel_output=" << records.back().ModelOutput << std::endl;
+    }
     auto walkPlayer = [&](glm::vec3 destination) {
         for (int frame = 0; frame < 300; ++frame)
         {
@@ -183,7 +236,7 @@ static void Run(Scene& scene, uint16_t port, const std::string& scenario)
             tick();
         }
     };
-    if (scenario == "deliver" || scenario == "reserve")
+    if (scenario == "deliver" || scenario == "reserve" || scenario == "dialogue")
     {
         walkPlayer({-7.5f, .08f, 4.96f});
         const glm::vec3 playerStart = point(player);
@@ -191,11 +244,19 @@ static void Run(Scene& scene, uint16_t port, const std::string& scenario)
         const int stock = inventory(robot), bag = inventory(player);
         Check(separation >= 5.f && glm::distance(held, point(robot)) < .001f,
               "start with the characters at least five metres apart");
-        const bool deliver = scenario == "deliver";
+        const bool deliver = scenario != "reserve";
         const std::string order = deliver ? "请把你背包里的一份医疗包送到我手上。" : "帮我留一份医疗包，等我过来再给我。";
-        Check(actors.Submit(robot, order), "send the player's exact order");
+        Check(scenario == "dialogue" ? actors.Say(robot, order) : actors.Submit(robot, order), "send the player's exact order");
         until("model distinguishes delivery from a reservation",
               [&](const NpcState& s) { return s.Action == (deliver ? "share" : "reserve"); });
+        if (scenario == "dialogue")
+        {
+            const auto& records = actors.Inspect(robot)->Decisions;
+            Check(std::any_of(records.begin(), records.end(), [&](const NpcDecisionTrace& choice) {
+                return choice.Action == "share" && choice.Intent == "share" && choice.Target == player &&
+                       choice.Choice == "share" && !choice.Candidates.empty() && !choice.Output.empty();
+            }), "the recorded model choice dispatches the actual handoff to the player");
+        }
         if (!deliver)
         {
             for (int i = 0; i < 180; ++i)
@@ -275,10 +336,18 @@ try
     const uint16_t port = argc > 2 ? static_cast<uint16_t>(std::stoi(argv[2])) : 8716;
     const std::string scenario = argc > 3 ? argv[3] : "race";
     if (scenario.find("watch-") == 0) Watch(*scene, port, scenario);
+    else if (scenario == "dialogue")
+    {
+        // 递药需要角色脚本设置手臂骨骼，并让双方的手在动画中碰到药盒。
+        scene->OnRuntimeStart(port);
+        Run(*scene, *scene->GetNpcs(), scenario);
+        scene->OnRuntimeStop();
+    }
     else
     {
         scene->OnSimulationStart();
-        Run(*scene, port, scenario);
+        NpcSystem actors(*scene, port);
+        Run(*scene, actors, scenario);
         scene->OnSimulationStop();
     }
     scene.reset();

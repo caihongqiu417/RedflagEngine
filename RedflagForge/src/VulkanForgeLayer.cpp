@@ -36,6 +36,8 @@ namespace Redflag
 	// ---- 场景与资源 ----
 	void VulkanForgeLayer::OnAttach()
 	{
+		m_Hierarchy.DrawNpcTools = [this](Entity actor) { m_Companions.DrawInspector(actor, m_Playing); };
+		m_Companions.SetMontageEditor([this](const std::filesystem::path& file) { m_Montages.Open(file); });
 		m_Draw = CreateScope<VulkanDraw>(GetWindowContext());
 		RenderDevice::SetCurrent(m_Draw.get());
 		m_Lighting = CreateScope<LightingPreview>(GetWindowContext(), m_Draw->GetSampler());
@@ -236,7 +238,8 @@ namespace Redflag
 		if (play) {
 			m_FirstGameTick = true;
 			m_Playtest = PlaytestSession::Open(m_ScenePath);
-			m_Scene->OnRuntimeStart();
+			const bool traceDecisions = !m_Standalone || (m_Playtest && m_Playtest->CapturesDialogue());
+			m_Scene->OnRuntimeStart(0, traceDecisions);
 			m_Photos.Connect(GetWindowContext(), m_Scene, m_ScenePath);
 			m_SelectGameTab = true;
 		} else {
@@ -367,6 +370,8 @@ namespace Redflag
 			DrawRenderPanelMenu();
 			ImGui::Separator();
 			m_Reviews.DrawMenu();
+			m_Transitions.DrawMenu();
+			m_Montages.DrawMenu();
 			m_DevContext.DrawMenu();
 			if (ImGui::MenuItem("恢复默认布局")) m_ResetLayout = true;
 			ImGui::EndMenu();
@@ -382,8 +387,13 @@ namespace Redflag
 			(shortcuts && ImGui::IsKeyPressed(m_Playing ? ImGuiKey_F6 : ImGuiKey_F5, false))) {
 			StopScene();
 		}
-		m_Decisions.Draw(m_Scene);
-		m_Companions.DrawMenu();
+		if (ImGui::BeginMenu("AI"))
+		{
+			if (ImGui::MenuItem("角色资产…")) m_Companions.OpenAssets();
+			m_Decisions.DrawSettingsMenu();
+			m_Decisions.Draw(m_Scene);
+			ImGui::EndMenu();
+		}
 		ImGui::TextDisabled("%s   /   Vulkan", m_ScenePath.empty() ? "未命名" : m_ScenePath.stem().u8string().c_str());
 		ImGui::EndMenuBar();
 		if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
@@ -432,6 +442,7 @@ namespace Redflag
 	void VulkanForgeLayer::OnImGuiRender()
 	{
 		m_Photos.Update();
+		m_Companions.Update(*m_Scene);
 		const auto photoPanel = [&](uint64_t actor) { m_Photos.Draw(GetWindowContext(), m_Scene, m_ScenePath, actor); };
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -441,7 +452,6 @@ namespace Redflag
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			DrawViewport();
 			ImGui::PopStyleVar();
-			m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
 			return;
 		}
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -488,7 +498,8 @@ namespace Redflag
         if (actor && actor.HasComponent<BehaviorTreeComponent>()) {
             auto& behavior = m_Scene->GetRegistry().get_or_emplace<ActorBehavior>(static_cast<entt::entity>(actor));
             if (behavior.Open(actor.GetComponent<BehaviorTreeComponent>().File))
-                m_ActorTree.Draw(behavior.Tree, std::filesystem::u8path(behavior.File), &behavior.Trace, "角色行为树");
+                m_ActorTree.Draw(behavior.Tree, std::filesystem::u8path(behavior.File), &behavior.Trace, "角色行为树",
+                    &behavior.Facts, behavior.Tree.UsesTasks() ? &behavior.Run : nullptr);
         }
 
 		DrawRenderPanels();
@@ -496,6 +507,7 @@ namespace Redflag
 		if (!asset.empty())
 		{
 			if (asset.extension() == ".redflag") OpenScene(asset);
+			else if (asset.stem().extension() == ".montage") m_Montages.Open(asset);
 			else ImportModel(asset);
 		}
 		if (ImGui::Begin("控制台  Console", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
@@ -508,6 +520,9 @@ namespace Redflag
 		ImGui::End();
 		DrawViewport();
 		m_Companions.Draw(*m_Scene, m_Playing, photoPanel);
+		m_Decisions.DrawSettingsWindow();
+		m_Transitions.Draw();
+		m_Montages.Draw(actor);
 		m_Reviews.Draw(GetWindowContext(), *m_Draw);
 		m_DevContext.Draw();
 	}
@@ -729,7 +744,12 @@ namespace Redflag
 			m_Hovered = ImGui::IsItemHovered();
 			const bool clicked = ImGui::IsItemClicked();
 			const auto corner = ImGui::GetItemRectMin();
-			if (m_GameView && m_Playing) m_Hud.Draw(*m_Scene, *m_Draw, projection * view, corner, size);
+			if (m_GameView && m_Playing)
+			{
+				const glm::mat4 vp = projection * view;
+				const ConversationStyle& chat = m_Hud.Draw(*m_Scene, *m_Draw, vp, corner, size);
+				m_Companions.DrawGame(*m_Scene, chat, corner, size);
+			}
 			bool gizmo = !m_GameView && DrawSceneGizmos(projection, view, corner, size);
 			if (!m_GameView && !gizmo && m_HasSceneImage && clicked && !ImGui::GetIO().KeyAlt)
 			{

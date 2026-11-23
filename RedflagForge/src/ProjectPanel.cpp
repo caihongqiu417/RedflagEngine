@@ -5,7 +5,7 @@
 
 namespace Redflag
 {
-	enum class AssetKind { Folder, Scene, Model, SurfaceStrip, Other };
+	enum class AssetKind { Folder, Scene, Model, Montage, SurfaceStrip, Other };
 
 	static AssetKind GetAssetKind(const std::filesystem::directory_entry& entry)
 	{
@@ -13,6 +13,7 @@ namespace Redflag
 		std::string ext = entry.path().extension().string();
 		std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 		if (ext == ".redflag") return AssetKind::Scene;
+		if (ext == ".yaml" && entry.path().stem().extension() == ".montage") return AssetKind::Montage;
 		if (ext == ".rfstrip") return AssetKind::SurfaceStrip;
 		if (ext == ".obj" || ext == ".fbx" || ext == ".gltf" || ext == ".glb" || ext == ".ply") return AssetKind::Model;
 		return AssetKind::Other;
@@ -100,7 +101,7 @@ namespace Redflag
 					}
 					ImGui::TableNextColumn();
 					ImGui::TextDisabled("%s", kind == AssetKind::Folder ? "文件夹" : kind == AssetKind::Scene ? "场景" :
-						kind == AssetKind::SurfaceStrip ? "地表带" : "模型");
+						kind == AssetKind::SurfaceStrip ? "地表带" : kind == AssetKind::Montage ? "动画蒙太奇" : "模型");
 				}
 				ImGui::EndTable();
 			}

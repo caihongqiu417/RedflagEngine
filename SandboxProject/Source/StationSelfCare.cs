@@ -2,7 +2,7 @@ using Redflag;
 
 namespace Sandbox
 {
-    /* 瓦特选择给自己用药时，播放与玩家按 H 相同的动作。 */
+    /* 队友选择给自己用药时，播放与玩家按 H 相同的动作。 */
     public sealed class StationSelfCare : NpcAction
     {
         private readonly StationMedicine medicine = new StationMedicine();

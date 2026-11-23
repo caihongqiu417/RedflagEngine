@@ -8,7 +8,7 @@ namespace Redflag
 {
 	struct NpcIntent
 	{
-		std::string Key, Description, Target, Item, Reply;
+		std::string Key, Description, Target, Item, Reply, OnStart;
 	};
 
 	/* 作者选定角色能认出的表演。看到指定队伍正在播放这个动作时，才有这条观察。 */
@@ -19,7 +19,7 @@ namespace Redflag
 
 	struct NpcDefinition
 	{
-		std::string Name, Instructions, Model, Voice, IdleClip, WalkClip;
+		std::string Name, Instructions, Persona, Model, Voice, IdleClip, WalkClip;
 		std::string IdleIntent, RescueIntent, MissingTargetIntent; // 无人发令、队友倒地或最后一个目标消失时的约定。
 		std::string LeaderRelationship; // 与场景里指定队友的约定，例如物资是留在原地还是送到对方手里。
 		float Sight = 18.0f, Speed = 2.0f, Reach = 2.0f;

@@ -45,6 +45,17 @@ inline void CheckOperatorMotion(const Redflag::ModelAnimation& rig)
         std::cout << name << " period_s=" << duration << " stride_m=" << stride.z << " speed_m/s=" << stride.z/duration
                   << " left_minus_right_m=" << leading << "," << middle << '\n';
     }
+    glm::vec3 standingCenter(0.f);
+    const size_t walking = find("walking_nogun-cycle");
+    for (int i=0; i<60; ++i) {
+        pose(walking, clips[walking].Duration*i/60.f, true);
+        standingCenter += joint("hips") / 60.f;
+    }
+    for (const char* name : {"Idle-cycle", "Idlecombat-cycle", "AIM-Center", "Cannon_Charge", "Cannon_activation-noexp"}) {
+        pose(find(name), 0.f, true);
+        const glm::vec3 offset = joint("hips") - standingCenter;
+        Check(std::hypot(offset.x,offset.z) < .001f, "standing clips begin over the same stance as walking");
+    }
     pose(find("Station-Crouch"), 0.f, true);
     const float crouched = joint("hips").y;
     pose(find("Idle-cycle"), 0.f, true);
@@ -116,7 +127,7 @@ inline void CheckNpcMotion()
     CheckOperatorMotion(*rig);
     CheckStationActionClips(*rig, false);
     CheckStationCare(*rig);
-    CheckStationActionEvents(*rig, character.Controller);
+    CheckStationActionEvents(rig, character.Controller);
     const auto sentinel = ModelAnimation::Load("assets/game/station/crew/Sentinel.glb");
     Check(bool(sentinel), "load actual station guard");
     if (sentinel) CheckStationActionClips(*sentinel, true);

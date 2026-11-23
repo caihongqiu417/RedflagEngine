@@ -74,6 +74,34 @@ static void CheckModelAnimationScene(VulkanContext& context, VulkanDraw& draw, c
     Check(other.GetMeshes()[0] != restored.GetMeshes()[0] && restored.Clip == "Walk" &&
           restored.Time == .2f, "Copy changed original pose");
 
+    // 使用真实狐狸的前脚检查连续切换与重播。切换发生后，即使本帧没有推进，也能取到上一次显示的姿势。
+    const fs::path controllerFile = work / "fox.animator.yaml";
+    std::ofstream(controllerFile) << "States: [{ID: walk, Clip: Walk}, {ID: run, Clip: Run}, {ID: look, Clip: Survey}]\n"
+        "Transitions: [{From: walk, To: run, Seconds: 0.2, Control: [0,1]}]\n";
+    AnimationController controller;
+    std::string error;
+    Check(controller.Load(controllerFile,error), "read the Fox per-pair transition");
+    auto foot = [&]() {
+        glm::mat4 node;
+        Check(restored.GetNodeTransform("b_LeftHand_011",node), "read rendered Fox paw");
+        return glm::vec3(node[3]);
+    };
+    const glm::vec3 before = foot();
+    restored.PlayClip("Run",&controller);
+    reopened->OnUpdateAnimations(0.f);
+    Check(glm::distance(before,foot()) < .0001f, "switch starts from the last visible paw position");
+    reopened->OnUpdateAnimations(.1f);
+    const glm::vec3 middle = foot();
+    Check(glm::distance(before,middle) > .001f, "the paw moves during the first blend");
+    restored.PlayClip("Survey",&controller);
+    reopened->OnUpdateAnimations(0.f);
+    Check(glm::distance(middle,foot()) < .0001f, "interruption starts at the blended paw");
+    reopened->OnUpdateAnimations(.04f);
+    const glm::vec3 interrupted = foot();
+    restored.PlayClip("Survey",&controller,nullptr,true);
+    reopened->OnUpdateAnimations(0.f);
+    Check(restored.Time == 0.f && glm::distance(interrupted,foot()) < .0001f, "replay rewinds the clip and preserves the current pose");
+
     report << "scene,clip,seconds,vertices,triangles,actor_pixels,changed_pixels,paused_roundtrip,independent_copy\n"
            << "Character-Fox,Walk,0.2,1728,576," << visible << ',' << changed << ",pass,pass\n";
     context.WaitIdle();

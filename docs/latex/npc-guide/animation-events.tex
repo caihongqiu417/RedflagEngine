@@ -5,46 +5,44 @@
 
 有些事情会持续一段时间。主角的 \code{Recovery} 从着地开始，到第 5 帧结束。这 $5/24\approx0.2083$ 秒是本关对落地缓冲的设定。把结束时间调到 0.30 秒，脚本里的恢复状态就会多持续约 0.092 秒，模型仍按原速站直。
 
-\begin{center}
-\includegraphics[width=.81\linewidth,trim=0 150 158 0,clip]{../../../output/validation/animation-events/forge-events.png}
-\end{center}
-\picturecaption{Forge 的角色创作面板，由界面测试运行相同的面板代码并截图。上面是屈膝的时刻，下面是恢复区间。图中已保存 0.30 秒，再次读取后仍显示新值。}
+在 Forge 的层级里选维修员，再点\button{窗口 → 动画蒙太奇…}。点\button{打开文件…}，打开 \path{assets/ai/montages/land.montage.yaml}。在\button{动作通知}里找到 \code{Recovery}，调整它的结束时间，点\button{保存}。重新开始试玩，落地时便会使用新值。
 
-在\button{队友通讯}勾选\button{角色创作}，选中 \code{watt.npc.yaml}，打开\button{动画事件}。在“动作”里选 \code{land}，改完点\button{保存动作表}。编辑器会写入 \code{assets/ai/watt.animator.yaml}。在维修站，玩家和瓦特引用的都是这张表。停止并重新开始游戏后，主角会读取刚保存的时间。
+\begin{center}
+\includegraphics[width=.88\linewidth,trim=0 184 474 30,clip]{../../../output/validation/animation-montage/montage-notices-before.png}
+\end{center}
+\picturecaption{正式 Forge 窗口。图中 \code{KneeBend} 只有一个时刻；\code{Recovery} 分成开始和结束两个时刻。}
 
 \clearpage
-\section*{游戏脚本接收动画事件}
+\section*{移动中开火}
 
-脚本先用 \code{Animator.Bind} 把动作表交给角色。此后调用 \code{Animator.Play(Id, "land", true)}，引擎按名找到模型里的着地剪辑，从头播放。动作表可以共用，两名角色各有自己的播放时间。其中一位提前站起，不会关掉另一位的恢复区间。
+按住 W 让维修员往前走，点一下鼠标左键。臂炮抬起来以后，两只脚仍按角色走出的距离交替迈步。引擎先取出这一帧的走路姿势，再把开火动作叠到脊柱和它下面的胸、肩、手臂上。骨盆和腿没有被选入开火动作，能接着播放原来的步态。
 
-\picturecaption{C\# 示例。\code{SandboxProject/Source/StationPlayer.cs} 在每帧读出通知；同目录下的 \code{StationMotion.cs} 接收落地通知。}
+在\button{动画蒙太奇}打开 \path{assets/ai/montages/fire.montage.yaml}。\button{原片与骨骼}里可以看到原片 \code{Cannon\_Charge}、使用的上身层 \code{UpperBody} 和起始骨骼 \code{spine1}。到\button{播放段}看，开火只取原片的前 0.22 秒。再看\button{淡入淡出}，抬臂逐渐加入走路姿势需要 0.08 秒；动作结束后，右臂用 0.14 秒回到当时的走路或待机姿势。这两个时间可以分别调节。
+
+松开移动键时，整个身体都会从走路转到待机。打开\button{窗口 → 动画过渡…}，选 \path{assets/ai/watt.animator.yaml}。\button{离开状态}选 \code{walk\_armed}，\button{进入状态}选 \code{idle}。当前时长 0.16 秒。图中横轴是经过的时间，纵轴是待机姿势占的比重。默认曲线的两端平缓，身体会从脚步姿势缓缓起动，中段换姿较快，快要站稳时再次放慢。拖动任一个控制点就能看到不同曲线；点\button{保存这条过渡}后，重新开局试手感。
+
+\begin{center}
+\includegraphics[width=.83\linewidth,trim=0 180 599 27,clip]{../../../output/validation/animation-montage/transition-walk-idle.png}
+\end{center}
+\picturecaption{正式 Forge 的动画过渡窗口。这里选了徒手行走 \code{walk} 到待机；持炮行走 \code{walk\_armed} 有自己的一条过渡。}
+
+\clearpage
+\section*{游戏脚本接收动作通知}
+
+维修员的脚本在创建时将 \path{watt.animator.yaml} 交给 \code{Animator.Bind}。着地时调用 \code{Animator.Play(Id, "land", true)}，引擎按表找到 \path{land.montage.yaml}。两名角色可以共用它；各自的播放时间和已读通知都保存在角色身上。
+
+\picturecaption{C\# 实际入口。\path{SandboxProject/Source/StationPlayer.cs} 在每帧读取通知，同目录的 \path{StationMotion.cs} 更新落地状态。}
 \begin{verbatim}
 AnimationEvent notice;
 while (Animator.TryRead(Id, out notice))
 {
-    motion.OnNotice(notice); // 落地时更新屈膝恢复状态
-    // 出拳和拾取也在这里接收各自的接触通知。
+    motion.OnNotice(notice); // 地面恢复区间的开始或结束
+    // 用药与交互也从这里读各自动作的接触通知。
 }
 \end{verbatim}
 
-读到 \code{Begin}，恢复开始；读到 \code{End}，恢复结束。这里用循环，是因为画一帧所花的时间有长有短。一帧如果从 0.07 秒跳到 0.22 秒，脚本会先收到 0.0833 秒的屈膝通知，再收到 0.2083 秒的结束通知。脚本读走一条，下一次就读下一条。只需判断某个区间此刻是否开启时，可以直接调用 \code{Animator.IsOpen(id, "Recovery")}。
+每次读出的一条通知带有 \code{State}、\code{Name} 和 \code{Phase}。例如 \code{land} 的 \code{Recovery} 在第零秒发出 \code{Begin}，在 0.2083 秒发出 \code{End}。假如一帧从 0.07 秒走到 0.22 秒，循环会先读到屈膝，再读到恢复结束。动作受到打断时，如果恢复区间已经打开，它仍会收到一次结束通知，并带有 \code{Interrupted} 标记。
 
-动作播到一半也可能被替换。假如恢复刚开始就切到待机，脚本仍会收到 \code{End}，其中的 \code{Interrupted} 为真，\code{Seconds} 是切换时动作已播了几秒。将来做连续动作时，可以在第一段剪辑上添加名为 \code{NextInput} 的区间。它开启期间是否接受输入、接着播哪段动作，由游戏脚本决定。
+要看两个时间究竟相差什么姿势，层级里选中维修员，回到\button{动画蒙太奇 → 动作通知}。把 \code{Recovery} 的结束时间改为 0.30 秒，点\button{查看结束姿势}。预览会在同一机位比较已保存的时刻和刚修改的时刻，可以看膝盖和脚踝是否已经站稳，再决定保存或撤销。
 
-引擎在 \code{AnimationTimeline::Advance} 中比较这次更新前后的剪辑时间。循环动作走到结尾时，先发完本轮最后的事件，再处理下一轮第零秒的事件。实测用两名角色播放同一份动作表，一名播完，一名在第零秒改播待机。前者依次收到恢复开始、屈膝和恢复结束，后者只收到开始和被打断的结束。输出在 \code{output/validation/animation-events/}。
-
-\picturecaption{可对照 Epic 的 \href{https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine}{Animation Notifies} 中的 Notify 与 Notify State。Redflag 提供时刻、区间起止和区间查询，使用秒数在表单中编辑。}
-
-\clearpage
-\section*{保存前检查角色姿势}
-
-假设有人建议把落地恢复延长到 0.30 秒。在\button{动画事件}页改好数值，先点 \code{Recovery} 下面的\button{查看结束姿势}。左边的蓝色骨架是这张动作表已经保存的 0.2083 秒，右边的橙色骨架是输入框里的 0.30 秒。两幅图使用相同的投影和比例。可以先沿着脚踝、膝盖和髋部看腿有没有伸直，再看摆臂到了哪里。
-
-\begin{center}
-\includegraphics[width=.91\linewidth,trim=0 220 0 85,clip]{../../../output/validation/animation-events/forge-pose.png}
-\end{center}
-\picturecaption{实际角色创作面板。两边取自同一个 Operator 模型的着地剪辑，蓝图和橙图共用地面位置。橙色一侧的髋部、肩部比原时刻更高，右侧的手也往身体方向收回。}
-
-想检查区间开始时角色在哪里，就点\button{查看开始姿势}。单一时刻则点\button{查看姿势}。新增一个事件时，左边会说明这项记录还没有保存。预览只读当前选中的模型；队友仍按自己的动作播放。认可修改后点\button{保存动作表}，要放弃草稿可以点\button{重新读取}。
-
-预览图只连真正带动网格顶点的关节。这个模型还有位于身体外的动画控制器，作者用它们摆放手肘和膝盖。如果也把控制器画成骨头，图里就会出现几根长过整个人物的线。筛选以后，面板显示 99 段骨骼。测试逐个比较同一个骨段末端在两个时刻的三维位置，最远的一处移动了约 0.350 米。这是一个关节在模型中的移动距离。
+\picturecaption{可对照 Epic 的 \href{https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine}{Animation Notifies} 中的时刻与区间；Redflag 的交互时机以秒保存在动作资产里。}

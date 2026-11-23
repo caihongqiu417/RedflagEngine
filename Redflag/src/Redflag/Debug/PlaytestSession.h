@@ -12,6 +12,7 @@ namespace Redflag
     class Scene;
     class Event;
     class JobSystem;
+    struct NpcState;
 
     struct PlaytestInfo
     {
@@ -37,6 +38,7 @@ namespace Redflag
         void Event(uint64_t entity, const std::string &kind, const std::string &text);
         const PlaytestInfo &Info() const { return m_Info; }
         const PlaytestInput &Input() const { return m_Input; }
+        bool CapturesDialogue() const { return m_Dialogue.is_open(); }
 
         // ---- 人工接管与回看批注 ----
         bool HandOff(const std::string &owner);
@@ -49,6 +51,7 @@ namespace Redflag
         void SaveStatus(const char *state);
         void SaveOwner();
         void SaveJobs();
+        void RecordDialogue(uint64_t actor, const NpcState &npc);
         JobSystem* m_Jobs = nullptr;
         uint64_t m_JobsFrom = 0;
         struct Entry
@@ -65,11 +68,13 @@ namespace Redflag
         PlaytestInfo m_Info;
         PlaytestInput m_Input;
         std::ofstream m_Frames;
+        std::ofstream m_Dialogue;
         std::vector<Entry> m_Events;
         std::vector<std::string> m_PoseNodes;
         std::vector<InputSample> m_Inputs;
         std::optional<std::pair<float, float>> m_HumanPointer;
         std::map<uint64_t, uint64_t> m_NpcEvents;
+        std::map<uint64_t, uint64_t> m_LastDialogue;
         unsigned m_LastCommand = 0;
         std::filesystem::file_time_type m_CommandDirectoryTime{};
         void *m_Writer = nullptr;

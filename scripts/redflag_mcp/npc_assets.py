@@ -4,7 +4,7 @@ import os
 import subprocess
 import struct
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkstemp
 from threading import RLock
 
 from mcp.server.mcpserver.exceptions import ToolError
@@ -76,7 +76,7 @@ def inspect(name: str) -> dict:
     result = run(role)
     profile = YAML(typ="safe").load(read(role))
     graph = YAML(typ="safe").load(read(tree))
-    return {**result, "file": name, "instructions": profile["Instructions"], "graph": graph,
+    return {**result, "file": name, "instructions": profile["Instructions"], "persona": profile.get("Persona", ""), "graph": graph,
             "source": "saved NPC files and native BehaviorTree::Tick"}
 
 
@@ -170,6 +170,58 @@ def update(name: str, changes: dict, expected: dict | None = None) -> dict:
         return inspect(name)
 
 
+def publish_role(role: Path, files: list) -> dict:
+    created = []
+    try:
+        # 树和动作表先就位，最后再发布引用它们的角色文件。同名文件由系统拒绝覆盖。
+        for path, data in files:
+            fd, name = mkstemp(dir=path.parent, suffix=".tmp")
+            temporary = Path(name)
+            try:
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(data)
+                if os.name == "nt":
+                    temporary.rename(path)
+                else:
+                    os.link(temporary, path)
+            except FileExistsError as error:
+                raise ToolError(f"已经存在 {path.name}，请选择新的文件名。") from error
+            finally:
+                temporary.unlink(missing_ok=True)
+            created.append(path)
+        return inspect(role.name)
+    except Exception:
+        for path in reversed(created):
+            path.unlink(missing_ok=True)
+        raise
+
+
+def create(new_file: str, display_name: str) -> dict:
+    with _write_lock:
+        role = asset(new_file, ".npc.yaml", existing=False)
+        stem = new_file.removesuffix(".npc.yaml")
+        if not stem.strip() or not display_name.strip():
+            raise ToolError("请填写角色的文件名和显示名。")
+        tree = asset(stem + ".tree.yaml", ".tree.yaml", existing=False)
+        profile = (
+            f"Name: {json.dumps(display_name.strip(), ensure_ascii=False)}\n"
+            "Persona: 你乐意听别人说话，也会结合自己的见闻回答。看不清或不确定时，可以请对方补充。\n"
+            "Instructions: 有人请你等候时，留在当前位置。\n"
+            f"Tree: {json.dumps(tree.name, ensure_ascii=False)}\n"
+            "IdleIntent: wait\n"
+            "Intents:\n"
+            "  - {Key: wait, Description: 留在当前位置等候, Target: self}\n"
+        )
+        graph = (
+            "Root: 1\nNextID: 3\nNodes:\n"
+            "  - {ID: 1, Kind: ModelSelector, Name: 选择行动, Position: [0, 0]}\n"
+            "  - {ID: 2, Kind: Action, Name: 原地等候, Action: wait, Position: [240, 0]}\n"
+            "Edges:\n  - {From: 1, Key: wait, To: 2}\n"
+        )
+        ASSETS.mkdir(parents=True, exist_ok=True)
+        return publish_role(role, [(tree, graph.encode("utf-8")), (role, profile.encode("utf-8"))])
+
+
 def copy(name: str, new_file: str, display_name: str) -> dict:
     with _write_lock:
         source = asset(name, ".npc.yaml")
@@ -186,25 +238,7 @@ def copy(name: str, new_file: str, display_name: str) -> dict:
             refs["Animator"] = own.name
         role_text = change_fields(read(source), refs)
         files.append((role, role_text.encode("utf-8")))
-        created = []
-        try:
-            # 先建立独立的树，再发布引用它的角色。Windows 的 rename 遇到同名文件会拒绝覆盖。
-            for path, data in files:
-                with NamedTemporaryFile(dir=path.parent, suffix=".tmp", delete=False) as f:
-                    temporary = Path(f.name)
-                    f.write(data)
-                try:
-                    temporary.rename(path)
-                except FileExistsError as error:
-                    raise ToolError(f"已经存在 {path.name}，请选择新的文件名。") from error
-                finally:
-                    temporary.unlink(missing_ok=True)
-                created.append(path)
-            return inspect(role.name)
-        except Exception:
-            for path in reversed(created):
-                path.unlink(missing_ok=True)
-            raise
+        return publish_role(role, files)
 
 
 # 连接表中的一行由起点和候选键共同确定。

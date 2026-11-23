@@ -90,7 +90,7 @@ namespace Redflag
 	}
 
 	// ---- 录音、文件与浏览器语音房 ----
-	void VoicePanel::Draw(Scene& scene, uint64_t actor, const std::function<void(const std::string&)>& submit)
+	void VoicePanel::UpdateInput(Scene& scene, uint64_t actor, const std::function<void(const std::string&)>& submit)
 	{
 		if (m_Scene != &scene || m_Actor != actor) {
 			Reset();
@@ -103,14 +103,23 @@ namespace Redflag
 				m_Message = "语音房已打开，浏览器识别的文字会送给当前同伴。";
 			} else if (event->Type == SpeechEventType::Error) {
 				m_RoomOpen = false;
-				m_Message = "语音服务：" + event->Text;
+				RF_CORE_WARN("Speech recognition: {0}", event->Text);
+				m_Message = "语音识别暂时不可用，可以直接打字。";
 			} else if (!event->Text.empty()) {
-				m_Message = "你说：" + event->Text;
+				m_Message.clear();
 				submit(event->Text);
 			} else m_Message = "这段录音没有识别到文字。";
 		}
+	}
 
-		ImGui::Button(m_Microphone ? "录音中，松开发送###NpcVoiceCapture" : "按住说话（V）###NpcVoiceCapture");
+	void VoicePanel::CancelRecording()
+	{
+		m_Microphone.reset();
+	}
+
+	void VoicePanel::DrawCapture()
+	{
+		ImGui::Button(m_Microphone ? "松开发送###NpcVoiceCapture" : "按住说话###NpcVoiceCapture");
 		bool press = ImGui::IsItemActivated();
 		bool release = ImGui::IsItemDeactivated();
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::GetIO().WantTextInput)
@@ -130,7 +139,11 @@ namespace Redflag
 			}
 		}
 
-		ImGui::SameLine();
+		if (!m_Message.empty()) ImGui::TextWrapped("%s",m_Message.c_str());
+	}
+
+	void VoicePanel::DrawTools()
+	{
 		if (ImGui::Button("从 WAV 发送")) {
 			std::string file = FileDialogs::OpenFile("WAV audio (*.wav)\0*.wav\0");
 			if (!file.empty()) {

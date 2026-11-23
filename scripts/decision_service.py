@@ -2,7 +2,9 @@
 import argparse
 import base64
 import binascii
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -21,12 +23,44 @@ class ProviderFailure(RuntimeError):
     pass
 
 
+# 只有请求调试记录的调用方会收到本次模型输入和输出。
+_model_trace = ContextVar("model_trace", default=None)
+
+
+def trace_input(body):
+    trace = _model_trace.get()
+    if trace is None:
+        return
+    def for_display(value):
+        if isinstance(value, list):
+            return [for_display(item) for item in value]
+        if isinstance(value, dict):
+            return {k: for_display(v) for k, v in value.items()}
+        if isinstance(value, str) and value.startswith("data:image/") and ";base64," in value:
+            prefix, _, data = value.partition(";base64,")
+            return f"{prefix};base64,[omitted {len(data)} encoded characters]"
+        return value
+    trace["input"] = json.dumps(for_display(body), ensure_ascii=False, indent=2)
+
+
+def trace_output(text):
+    trace = _model_trace.get()
+    if trace is not None:
+        trace["output"] = text
+    return text
+
+
 # ---- 游戏发来的观察与候选 ----
 def validate(request, choices=True):
     if not isinstance(request, dict) or not isinstance(request.get("prompt"), str) or not request["prompt"].strip():
         raise ValueError("prompt_required")
     if not isinstance(request.get("instructions", ""), str):
         raise ValueError("invalid_instructions")
+    history = request.get("history", [])
+    if not isinstance(history, list) or any(not isinstance(turn, dict)
+            or turn.get("role") not in ("user", "assistant")
+            or not isinstance(turn.get("content"), str) for turn in history):
+        raise ValueError("invalid_history")
     fields = request.get("reply_fields")
     if fields is not None:
         kinds = ("boolean","integer","number","string")
@@ -73,7 +107,10 @@ def messages(request, choices=True):
     for image in images:
         content.extend([{"type":"text", "text":"Image ID: " + image["id"]},
                         {"type":"image_url", "image_url":{"url":"data:" + image["mime"] + ";base64," + image["data"]}}])
-    return [{"role":"system", "content":author}, {"role":"user", "content":content}]
+    conversation = [{"role":"system", "content":author}]
+    conversation.extend({"role":turn["role"], "content":turn["content"]} for turn in request.get("history", []))
+    conversation.append({"role":"user", "content":content})
+    return conversation
 
 
 def choice_prompt(request, author):
@@ -114,6 +151,8 @@ class LocalModel:
         prompt = self.tokenizer.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True,
                                                     enable_thinking=False)
         inputs = self.tokenizer(prompt, return_tensors="pt")
+        trace_input({"messages": conversation, "max_new_tokens": limit, "do_sample": False,
+                     "allowed_token_ids": allowed})
         # 推理时只允许拼出本次提供的编号，多个编号有相同前缀时，下一步仍可继续区分。
         prefix_size = inputs["input_ids"].shape[1]
         end = self.tokenizer.eos_token_id
@@ -126,7 +165,7 @@ class LocalModel:
             output = self.model.generate(**inputs, do_sample=False, max_new_tokens=limit,
                                          pad_token_id=end, prefix_allowed_tokens_fn=next_tokens if allowed else None,
                                          stopping_criteria=StoppingCriteriaList([Cancelled()]))
-        return self.tokenizer.decode(output[0, prefix_size:], skip_special_tokens=True)
+        return trace_output(self.tokenizer.decode(output[0, prefix_size:], skip_special_tokens=True))
 
     def choose(self, request, cancel):
         # 编号只在这一轮使用，返回前还原成作者给的候选 ID。
@@ -164,6 +203,7 @@ class ChatModel:
     def complete(self, conversation, cancel, limit, output_format=None):
         body = {"model":self.name, "messages":conversation, "temperature":0, "max_tokens":limit, "stream":True}
         if output_format: body["response_format"] = output_format
+        trace_input(body)
         headers = {"Content-Type":"application/json"}
         if token := os.environ.get("REDFLAG_MODEL_TOKEN"):
             headers["Authorization"] = "Bearer " + token
@@ -184,7 +224,7 @@ class ChatModel:
                     choices = json.loads(data).get("choices", [])
                     if choices:
                         pieces.append(choices[0]["delta"].get("content") or "")
-        return "".join(pieces)
+        return trace_output("".join(pieces))
 
 
 # ---- 请求队列与取消 ----
@@ -203,15 +243,23 @@ class Decisions:
             raise ValueError("images_unsupported")
         cancel = threading.Event()
         key = uuid4().hex
+        trace = {} if request.get("trace_model") is True else None
         with self.lock:
-            self.jobs[(route,key)] = (cancel, self.pool.submit(self.answer, route, request, cancel), time.monotonic())
+            self.jobs[(route,key)] = (cancel, self.pool.submit(self.answer, route, request, cancel, trace), time.monotonic(), trace)
             # 已离开的客户端可能没能归还请求，只清理五分钟前已经结束的回答。
-            for stale in [k for k, (_, future, started) in self.jobs.items()
+            for stale in [k for k, (_, future, started, _) in self.jobs.items()
                           if future.done() and time.monotonic() - started > 300]:
                 del self.jobs[stale]
         return key
 
-    def answer(self, route, request, cancel):
+    def answer(self, route, request, cancel, trace=None):
+        token = _model_trace.set(trace)
+        try:
+            return self.generate(route, request, cancel)
+        finally:
+            _model_trace.reset(token)
+
+    def generate(self, route, request, cancel):
         if route == "replies":
             text = self.model.reply(request, cancel)
             if not text.strip(): raise ValueError("empty_reply")
@@ -223,30 +271,31 @@ class Decisions:
 
     def result(self, key):
         with self.lock:
-            _, future, _ = self.jobs[key]
+            _, future, _, trace = self.jobs[key]
             if not future.done():
                 return {"status":"pending"}
+            evidence = {"model_trace":trace} if trace else {}
             try:
-                return {"status":"completed", **future.result()}
+                return {"status":"completed", **future.result(), **evidence}
             except InvalidChoice:
-                return {"status":"failed", "error":"invalid_choice"}
+                return {"status":"failed", "error":"invalid_choice", **evidence}
             except ProviderFailure as error:
-                return {"status":"failed", "error":str(error)}
+                return {"status":"failed", "error":str(error), **evidence}
             except (URLError, TimeoutError):
-                return {"status":"failed", "error":"provider_unavailable"}
+                return {"status":"failed", "error":"provider_unavailable", **evidence}
             except Exception:
-                return {"status":"failed", "error":"model_failed"}
+                return {"status":"failed", "error":"model_failed", **evidence}
 
     def discard(self, key):
         with self.lock:
             # 排队中的任务可以立即撤回。已开始生成时由模型检查 cancel，编号先从查询列表移除。
-            cancel, future, _ = self.jobs.pop(key)
+            cancel, future, _, _ = self.jobs.pop(key)
             cancel.set()
             future.cancel()
 
     def close(self):
         with self.lock:
-            for cancel, _, _ in self.jobs.values():
+            for cancel, _, _, _ in self.jobs.values():
                 cancel.set()
         self.pool.shutdown(wait=True, cancel_futures=True)
 
@@ -292,7 +341,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/v1/health":
             model = self.server.decisions.model
             return self.reply(200, {"protocol":1, "model":model.name, "models":[model.name], "text":True, "images":model.images,
-                                   "capabilities":["decisions","replies"]})
+                                   "endpoint_id":hashlib.sha256(getattr(model, "endpoint", "").encode()).hexdigest(),
+                                   "capabilities":["decisions","replies"], "model_trace":True, "history":True})
         self.job(remove=False)
 
     def do_DELETE(self):

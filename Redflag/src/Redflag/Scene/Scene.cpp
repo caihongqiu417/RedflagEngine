@@ -6,6 +6,8 @@
 #include "Redflag/Gameplay/TraversalRig.h"
 #include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/Animation/ActorAnimator.h"
+#include "Redflag/Animation/MontagePlayer.h"
+#include "Redflag/Gameplay/ColliderBounds.h"
 
 #include"Redflag/Renderer/SceneRenderer.h"
 
@@ -218,12 +220,13 @@ namespace Redflag {
 		m_EntityMap.erase(entityID);
     }
 
-    void Scene::OnRuntimeStart(uint16_t decisionPort)
+    void Scene::OnRuntimeStart(uint16_t decisionPort, bool traceDecisions)
     {
         ResetCharacterControls();
         OnPhysics2DStart();
         SyncPhysics3D();
         m_Npcs = CreateScope<NpcSystem>(*this, decisionPort);
+        m_Npcs->SetDecisionTracing(traceDecisions);
 
         //脚本系统
         {
@@ -317,6 +320,7 @@ namespace Redflag {
     {
         m_Registry.clear<TerrainTraversal>();
         m_Registry.clear<ActorAnimator>();
+        m_Registry.clear<MontagePlayer>();
         m_Registry.view<SkeletonAnimationComponent>().each([](SkeletonAnimationComponent& player) { player.RestartControl(); });
     }
 
@@ -336,63 +340,6 @@ namespace Redflag {
         if (!actor || !actor.HasComponent<SkeletonAnimationComponent>() || direction == glm::vec2(0)) return false;
         actor.GetComponent<TransformComponent>().Rotation.y = std::atan2(direction.x, direction.y);
         return true;
-    }
-
-    void Scene::OnUpdateAnimations(Timestep ts, std::optional<glm::vec2> movement)
-    {
-        for (entt::entity id : m_Registry.view<FoliageComponent>())
-        {
-            FoliageComponent& patch = m_Registry.get<FoliageComponent>(id);
-            if (patch.Visible && patch.Wind) patch.Seconds += ts.GetSeconds();
-        }
-        if (movement && glm::length(*movement) > 1.f) *movement = glm::normalize(*movement);
-        m_Registry.view<TransformComponent, SkeletonAnimationComponent>().each([&](TransformComponent& transform, SkeletonAnimationComponent& player) {
-            if (movement && player.HasControl())
-            {
-                const glm::vec2 velocity = player.Movement.value_or(*movement) * player.MoveSpeed;
-                const glm::vec3 world(velocity.x, 0.f, velocity.y);
-                transform.Translation += world * ts.GetSeconds();
-
-                // 方向键沿世界地面移动。实体若已绕 Y 轴旋转，骨架要把同一个方向换算到自己的坐标中。
-                const glm::vec3 local = glm::angleAxis(-transform.Rotation.y, glm::vec3(0,1,0)) * world;
-                player.Move(ts.GetSeconds(), {local.x, local.z});
-            }
-            else if (player.Playing && player.Clip)
-                player.Seek(player.Time + ts.GetSeconds());
-        });
-
-        PrepareContacts(*this,ts.GetSeconds());
-        m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](entt::entity handle, ModelRendererComponent& renderer, ModelAnimationComponent& player) {
-            if (!renderer.ModelAsset && renderer.ModelID) renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
-            auto* rig = m_Registry.try_get<TraversalRig>(handle);
-            const auto* motion = m_Registry.try_get<TerrainTraversal>(handle);
-            auto* hand = m_Registry.try_get<HandContact>(handle);
-            float timelineSeconds = ts.GetSeconds();
-            if (rig && (motion || hand)) {
-                Entity owner(handle,this);
-                const TransformComponent& transform = owner.GetComponent<TransformComponent>();
-                glm::vec3 delta = transform.Translation - rig->PreviousPosition.value_or(transform.Translation);
-                rig->PreviousPosition = transform.Translation;
-                delta.y = 0.f;
-                const glm::vec3 local = glm::inverse(glm::mat3(transform.GetTransform())) * delta;
-                const ModelAnimationComponent::GaitStep step{rig->MovementRoot, glm::length(glm::vec2(local.x, local.z))};
-                float advance = ts.GetSeconds();
-                // 即使这一帧很慢，也让玩家先看到手碰到目标的姿势。通知仍按游戏时间发出。
-                if (hand && hand->Timed && !hand->Passed && !hand->Released) {
-                    advance = std::min(advance,std::max(0.f,hand->ReachAt-player.Time));
-                    if (player.Time < hand->ReachAt) timelineSeconds = advance;
-                }
-                if (!hand || !hand->ShowContact) player.Update(renderer.ModelAsset, advance, [&](const ModelAnimation& animation, std::vector<ModelAnimation::NodePose>& pose) {
-                    if (motion) AdjustTerrainPose(*this,owner.GetUUID(),transform,*rig,*motion,animation,pose);
-                    if (hand) AdjustHandPose(owner,*rig,*hand,animation,pose);
-                }, &step, hand != nullptr);
-            } else player.Update(renderer.ModelAsset, ts.GetSeconds());
-            if (auto* animator = m_Registry.try_get<ActorAnimator>(handle)) {
-                if (player.Clip != animator->Clip || !player.Playing) animator->Timeline.Cancel();
-                else animator->Timeline.Advance(timelineSeconds);
-            }
-        });
-        UpdateHandProps(*this,ts.GetSeconds());
     }
 
     // ---- 游戏脚本、动画与物理 ----
@@ -823,9 +770,10 @@ namespace Redflag {
         return m_Physics3D->Raycast(origin, direction, maxDistance, ignore);
     }
 
-    float Scene::SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore) const
+    float Scene::SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore,
+        bool allowSeparation) const
     {
-        return m_Physics3D ? m_Physics3D->SweepSphere(center, direction, radius, distance, ignore) : distance;
+        return m_Physics3D ? m_Physics3D->SweepSphere(center, direction, radius, distance, ignore, allowSeparation) : distance;
     }
 
     std::vector<uint64_t> Scene::OverlapSphere(glm::vec3 center, float radius) const

@@ -1,0 +1,86 @@
+{
+  "before": {
+    "archive_sha256": "2dd1dfc0bac03f4ec2246885c77694314f9ff46961f4f78f38a15e7d8aec89fb",
+    "exe_sha256": "432b708f9f94e67ac318a80b9479efcef5642e0a2efcd642f70946855ceb8ef8",
+    "turns": [
+      {
+        "question": "你好，我叫青桐。你叫什么名字？",
+        "reply": "我叫瓦力，是你的救援机器人伙伴。你刚来的时候，我看到你穿的那件工装，挺像你家的旧工装，我猜你可能在维修站附近工作？",
+        "input_to_speech_request_s": 5.35,
+        "speech_request_to_first_sound_s": 57.64,
+        "input_to_first_sound_s": 62.99,
+        "played_samples": 198400,
+        "observed_buffer_gaps_ms": null
+      },
+      {
+        "question": "我刚告诉你我叫什么名字？",
+        "reply": "我叫瓦力，是你的救援机器人伙伴。你刚来的时候，我看到你穿的那件工装，挺像你家的旧工装，我猜你可能在维修站附近工作？",
+        "input_to_speech_request_s": 5.37,
+        "speech_request_to_first_sound_s": 10.97,
+        "input_to_first_sound_s": 16.34,
+        "played_samples": 198400,
+        "observed_buffer_gaps_ms": null
+      },
+      {
+        "question": "你对我们现在待的这个维修站有什么印象？",
+        "reply": "这地方挺有意思的，我刚来的时候，看到你穿的工装，挺像你家的旧工装，我猜你可能在维修站附近工作？",
+        "input_to_speech_request_s": 4.51,
+        "speech_request_to_first_sound_s": 7.37,
+        "input_to_first_sound_s": 11.88,
+        "played_samples": 143360,
+        "observed_buffer_gaps_ms": null
+      },
+      {
+        "question": "我考试没考好，有点失落。你会怎么安慰我？",
+        "reply": "你考试没考好，我理解。不过你别太在意，我刚来的时候也遇到过类似的情况。你要是愿意，可以和我聊聊，我听着呢。",
+        "input_to_speech_request_s": 4.56,
+        "speech_request_to_first_sound_s": 10.28,
+        "input_to_first_sound_s": 14.84,
+        "played_samples": 183040,
+        "observed_buffer_gaps_ms": null
+      }
+    ]
+  },
+  "after": {
+    "archive_sha256": "9fac608783efdb7d242beb42646c09ebae331720f8d9a4b9c5b33c5caae78a1e",
+    "exe_sha256": "3327f1a8cc57ed1736978817a7264580b75fd347f5d944cd37f2e1fe75afd72d",
+    "turns": [
+      {
+        "question": "你好，我叫青桐。你叫什么名字？",
+        "reply": "我叫瓦力，潮汐维修站的救援机器人。",
+        "input_to_speech_request_s": 0.82,
+        "speech_request_to_first_sound_s": 32.76,
+        "input_to_first_sound_s": 33.58,
+        "played_samples": 66560,
+        "observed_buffer_gaps_ms": []
+      },
+      {
+        "question": "我刚告诉你我叫什么名字？",
+        "reply": "青桐",
+        "input_to_speech_request_s": 0.54,
+        "speech_request_to_first_sound_s": 1.09,
+        "input_to_first_sound_s": 1.63,
+        "played_samples": 20480,
+        "observed_buffer_gaps_ms": []
+      },
+      {
+        "question": "你对我们现在待的这个维修站有什么印象？",
+        "reply": "维修站环境简陋，有砂石路和旧油桶。",
+        "input_to_speech_request_s": 0.61,
+        "speech_request_to_first_sound_s": 1.07,
+        "input_to_first_sound_s": 1.68,
+        "played_samples": 62720,
+        "observed_buffer_gaps_ms": []
+      },
+      {
+        "question": "我考试没考好，有点失落。你会怎么安慰我？",
+        "reply": "别担心，我理解你的失落。考试没考好是正常的，但你已经尽力了。别太苛责自己，下次努力就好。",
+        "input_to_speech_request_s": 0.85,
+        "speech_request_to_first_sound_s": 1.64,
+        "input_to_first_sound_s": 2.5,
+        "played_samples": 186880,
+        "observed_buffer_gaps_ms": []
+      }
+    ]
+  }
+}

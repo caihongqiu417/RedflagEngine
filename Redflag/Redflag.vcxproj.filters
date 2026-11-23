@@ -231,6 +231,15 @@
     <ClInclude Include="src\Redflag\Animation\ActorAnimator.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\Montage.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\MontagePlayer.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Animation\MontageRuntime.h">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Animation\AnimationClip.h">
       <Filter>src\Redflag\Animation</Filter>
     </ClInclude>
@@ -556,6 +565,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\AnimatorBindings.h">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Scripting\MontageBindings.h">
       <Filter>src\Redflag\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Scripting\CoroutineBindings.h">
@@ -1934,6 +1946,9 @@
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\AI\BehaviorTasks.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\AI\BehaviorTree.cpp">
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>
@@ -1955,6 +1970,12 @@
     <ClCompile Include="src\Redflag\AI\NpcQuery.cpp">
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcDialogue.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\AI\NpcDecisionTrace.cpp">
+      <Filter>src\Redflag\AI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\AI\NpcSystem.cpp">
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>
@@ -1971,6 +1992,15 @@
       <Filter>src\Redflag\AI</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\ActorAnimator.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\Montage.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\MontagePlayer.cpp">
+      <Filter>src\Redflag\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Animation\MontageRuntime.cpp">
       <Filter>src\Redflag\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Animation\AnimationClip.cpp">
@@ -2189,6 +2219,9 @@
     <ClCompile Include="src\Redflag\Scene\Scene.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\Redflag\Scene\SceneAnimation.cpp">
+      <Filter>src\Redflag\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\Redflag\Scene\SceneCamera.cpp">
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
@@ -2199,6 +2232,9 @@
       <Filter>src\Redflag\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\AnimatorBindings.cpp">
+      <Filter>src\Redflag\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Scripting\MontageBindings.cpp">
       <Filter>src\Redflag\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Scripting\CoroutineBindings.cpp">

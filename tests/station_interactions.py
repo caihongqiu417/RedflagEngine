@@ -3,6 +3,7 @@ import hashlib
 import json
 from check_forge_play import wait_for
 from playtest import issue
+from station_pose import visible_pose
 
 
 def place_targets(scene,case):
@@ -41,8 +42,9 @@ def verify(case,session,process,exe,output):
             return next((r for r in frames() if r["seq"]>after and condition(r)),None)
         row=wait_for(find,process,20)
         player=actor(row)
-        samples.append(dict(step=title,frame=row["seq"],seconds=row["seconds"],clip=player["animation"]["clip"],
-                            clip_time=player["animation"]["time"],player_health=player["health"],
+        pose = visible_pose(player)
+        samples.append(dict(step=title,frame=row["seq"],seconds=row["seconds"],clip=pose["clip"],
+                            clip_time=pose["time"],layers=pose.get("montages",[]),player_health=player["health"],
                             hand=player["animation"]["nodes"]["hand.L"],kits=player["inventory"].get("medkit",0),
                             relay=actor(row,1110)["health"],watt=actor(row,1102)["health"],
                             guard=actor(row,1103)["health"],contact=player.get("contact"),events=row["events"]))
@@ -51,24 +53,24 @@ def verify(case,session,process,exe,output):
     start=until("ready",lambda r:r["seq"]>=6 and r["seconds"]>=.8)
     if case=="pickup":
         key("tap","E")
-        begin=until("reach",lambda r:actor(r)["animation"]["clip"]=="Station-Pickup",start["seq"])
-        middle=until("before contact",lambda r:actor(r)["animation"]["time"]>=.85,begin["seq"])
+        begin=until("reach",lambda r:visible_pose(actor(r))["clip"]=="Station-Pickup",start["seq"])
+        middle=until("before contact",lambda r:visible_pose(actor(r))["time"]>=.85,begin["seq"])
         assert actor(middle)["inventory"]["medkit"]==1
         contact=until("contact",lambda r:event(r,"pickup_contact"),middle["seq"])
         prev=next(r for r in frames() if r["seq"]==contact["seq"]-1)
-        assert 1.19<=actor(prev)["animation"]["time"]<=1.20+prev["frame_ms"]/1000+.01
+        assert 1.19<=visible_pose(actor(prev))["time"]<=1.20+prev["frame_ms"]/1000+.01
         assert actor(prev)["inventory"]["medkit"]==1 and actor(contact)["inventory"]["medkit"]==2
         assert actor(contact)["contact"]["commit_distance"] <= .04
         assert actor(contact)["contact"]["prop"] != "0"
         assert event(contact,"pickup_contact")["text"]=="1112" and not any(a["id"]=="1112" for a in contact["actors"])
-        returned=until("stand",lambda r:actor(r)["animation"]["clip"]=="Idle-cycle",contact["seq"])
+        returned=until("stand",lambda r:visible_pose(actor(r))["clip"]=="Idle-cycle",contact["seq"])
         key("hold","H")
         open_kit=until("raise medkit",lambda r:event(r,"heal_begin"),returned["seq"])
-        assert actor(open_kit)["animation"]["clip"]=="Station-UseMedkit"
+        assert visible_pose(actor(open_kit))["clip"]=="Station-UseMedkit"
         assert actor(open_kit)["health"]==40 and actor(open_kit)["inventory"]["medkit"]==2
         healed=until("heal",lambda r:event(r,"heal_contact"),open_kit["seq"])
         assert actor(healed)["health"]==90 and actor(healed)["inventory"]["medkit"]==1
-        wait=until("still holding H after stowing",lambda r:actor(r)["animation"]["clip"]=="Idle-cycle",healed["seq"])
+        wait=until("still holding H after stowing",lambda r:visible_pose(actor(r))["clip"]=="Idle-cycle",healed["seq"])
         assert actor(wait)["inventory"]["medkit"]==1 and actor(wait)["health"]==90
         key("release","H")
     elif case in ("repair","revive"):
@@ -103,7 +105,7 @@ def verify(case,session,process,exe,output):
         aim=until("aim",lambda r:actor(r)["animation"]["clip"]=="AIM-Center",ready["seq"])
         key("tap","MouseLeft")
         shot=until("pulse",lambda r:event(r,"pulse"),aim["seq"])
-        assert actor(shot)["animation"]["clip"]=="Cannon_Charge" and actor(shot,1103)["health"]==50
+        assert visible_pose(actor(shot),"UpperBody")["clip"]=="Cannon_Charge" and actor(shot,1103)["health"]==50
         key("release","MouseRight")
     output.mkdir(parents=True,exist_ok=True)
     path=output/(case+".json")

@@ -1,0 +1,10 @@
+Name: 拾取
+Clip: Station-Pickup
+Slot: FullBody
+BlendIn: {Seconds: 0.14, Curve: [0, 1]}
+BlendOut: {Seconds: 0.14, Curve: [0, 1]}
+Sections:
+  - {Name: Reach, Start: 0, End: 1.2, Next: Rise}
+  - {Name: Rise, Start: 1.2, End: 2.5}
+# 原片第 36 帧手腕最低。只有游戏确认碰到物品以后才改变库存。
+Events: [{Name: contact, At: 1.2}]

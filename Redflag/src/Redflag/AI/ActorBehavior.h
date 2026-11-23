@@ -9,12 +9,17 @@ namespace Redflag
     {
         BehaviorTree Tree;
         BehaviorBlackboard Facts;
+        std::map<std::string, std::string> SavedValues;
         BehaviorTrace Trace;
+        BehaviorRun Run;
         std::string File, Error;
 
         bool Open(const std::string& path)
         {
             if (File != path) {
+                Run = {};
+                Facts = {};
+                Trace = {};
                 File = path;
                 Tree.Load(std::filesystem::u8path(path), Error);
             }

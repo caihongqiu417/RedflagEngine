@@ -11,7 +11,7 @@ namespace Sandbox
         // 局部尺寸（米），按 Operator 靴底到头顶、卧姿背甲到胸口量取。
         public float CrouchHeight = 1.33f, DownRadius = .33f, DownLength = 1.83f;
         public Vector3 DownCenter = new Vector3(-.01f, .33f, -.197f);
-        // 玩家进入闸口后，瓦特走到闸口附近也算到齐。距离以米计，可在场景中调整。
+        // 玩家进入闸口后，队友走到闸口附近也算到齐。距离以米计，可在场景中调整。
         public float ExitRadius = 1.6f;
         public float TeamExitRadius = 3.5f;
         public bool Crouched => motion.Crouched;
@@ -38,7 +38,7 @@ namespace Sandbox
         void OnCreate()
         {
             Animator.Bind(Id,"assets/ai/watt.animator.yaml");
-            hud = new StationHud(Id);
+            hud = new StationHud(Id, GameWorld.Name(Watt.Id));
             playerBody = new OperatorCollision(this);
             wattBody = new OperatorCollision(Watt);
             SetOperatorLimbs(Id);
@@ -81,6 +81,8 @@ namespace Sandbox
                 if (melee.Active) melee.End(Id, true);
                 if (downSeconds == 0) {
                     medicine.Cancel();
+                    Montage.Stop(Id, "UpperBody");
+                    Montage.Stop(Id, "FullBody");
                     gettingUp = false;
                     Animator.Play(Id, "down", true);
                     Playtest.Record(Id, "player_down", "玩家倒地");
@@ -90,7 +92,7 @@ namespace Sandbox
                 downSeconds += seconds;
                 lost = downSeconds >= 12f || rescues >= 2 || GameWorld.Health(Watt.Id) <= 0;
                 if (lost) Playtest.Record(Id, "mission_failed", "维修班组失去联系");
-                Display(lost ? "任务失败" : "等待队友救援", lost ? "维修班组失去联系。" : "瓦特可以靠近并扶起你。",
+                Display(lost ? "任务失败" : "等待队友救援", lost ? "维修班组失去联系。" : "队友可以靠近并扶起你。",
                     "救援剩余 " + Math.Max(0, (int)Math.Ceiling(12f - downSeconds)) + " 秒");
                 return;
             }
@@ -115,13 +117,14 @@ namespace Sandbox
             if (melee.Active && !Animator.IsPlaying(Id)) melee.End(Id, false);
             if (gettingUp && !Animator.IsPlaying(Id)) gettingUp = false;
             if (punchPressed && !melee.Active && !motion.Airborne && !motion.Landing && !Input.IsKeyDown(KeyCode.LeftControl)
-                && !gettingUp && !medicine.Active && !interaction.Active && equipment.ChangeTime<=0 && equipment.ShotTime<=0)
+                && !gettingUp && !medicine.Active && !interaction.Active && equipment.ChangeTime<=0 && !Montage.IsPlaying(Id,"UpperBody"))
                 melee.Begin(Id, pose, camera.Rotation.Y);
 
             bool freeHands = !melee.Active && !interaction.Active && !gettingUp && !motion.Airborne && !motion.Landing;
             HandleMedicine(healPressed, givePressed, freeHands, seconds);
 
-            string feedback = equipment.Update(this,camera,seconds,!melee.Active && !interaction.Active && !medicine.Active && !gettingUp);
+            string feedback = equipment.Update(this,camera,seconds,
+                !melee.Active && !interaction.Active && !medicine.Active && !gettingUp && !motion.Landing);
             if (feedback != null) Notice(feedback);
             feedback = interaction.Update(this, pose, !melee.Active && !medicine.Active && !gettingUp && !motion.Airborne && !motion.Landing, seconds);
             if (feedback != null) Notice(feedback);
@@ -140,7 +143,7 @@ namespace Sandbox
                 Vector3 companion = Watt.GetComponent<TransformComponent>().Translation;
                 won = (companion - exit).Length() <= TeamExitRadius;
             }
-            if (won) Playtest.Record(Id, "mission_complete", "玩家与瓦特已从西侧闸口撤离");
+            if (won) Playtest.Record(Id, "mission_complete", "玩家与队友已从西侧闸口撤离");
             string hint = noticeSeconds > 0 ? notice : "";
             if (hint == "" && Supply != null
                 && equipment.Focus == Supply.Id && Distance(Supply) < 1.7f)
@@ -148,9 +151,9 @@ namespace Sandbox
             if (hint == "" && !power && Distance(Relay) < 2f) hint = "按住 E   维修发电机";
 
             hud.Team(Id, Watt.Id, equipment.Cannon, motion.Crouched, motion.Recovering);
-            string objective = power ? "带瓦特返回西侧出口" : "到东侧铁皮棚恢复供电";
+            string objective = power ? "和队友返回西侧出口" : "到东侧铁皮棚恢复供电";
             if (atExit && !won)
-                objective = allyDown ? "瓦特倒下了，靠近后按住 E 救援" : "等瓦特到闸口，按 T 可以呼叫它";
+                objective = allyDown ? "队友倒下了，靠近后按住 E 救援" : "等队友到闸口，按 T 可以呼叫它";
             Display(won ? "任务完成" : "潮汐维修站", won ? "维修班组已撤离" : objective, hint);
         }
 
@@ -167,7 +170,7 @@ namespace Sandbox
             string message = null;
             if (available && !medicine.Active) {
                 if (heal) message = medicine.Start(Id, Id);
-                else if (give) message = Distance(Watt) <= 2f ? medicine.Start(Id, Watt.Id) : "靠近瓦特后按 G 递药";
+                else if (give) message = Distance(Watt) <= 2f ? medicine.Start(Id, Watt.Id) : "靠近队友后按 G 递药";
             }
             Vector3 previous = pose.Translation;
             if (message == null) message = medicine.Update(seconds);

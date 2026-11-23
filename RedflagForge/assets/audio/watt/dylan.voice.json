@@ -3,6 +3,7 @@
   "Revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
   "Speaker": "Dylan",
   "Profile": "ergou",
+  "FallbackLanguage": "zh-CN",
   "Lines": {
     "我在这里等你。": "preview.wav",
     "我的维修面板已恢复。": "heal.wav",

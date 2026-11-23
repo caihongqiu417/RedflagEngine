@@ -2,6 +2,7 @@
 #include "NpcAuthoringFiles.h"
 #include "Redflag/AI/NpcQuery.h"
 #include "Redflag/Animation/ModelAnimation.h"
+#include "Redflag/Animation/Montage.h"
 #include "imgui_internal.h"
 #include <iostream>
 #include <fstream>
@@ -35,9 +36,7 @@ int main(int argc, char** argv)
         fs::create_directories(dir);
         for (const char* file : {"watt.npc.yaml", "watt.tree.yaml"})
             fs::copy_file(data / file, dir / file, fs::copy_options::overwrite_existing);
-        if (fs::is_regular_file(data / "watt.animator.yaml"))
-            fs::copy_file(data / "watt.animator.yaml", dir / "watt.animator.yaml",
-                          fs::copy_options::overwrite_existing);
+        fs::copy_file("tests/fixtures/legacy-land.animator.yaml", dir / "watt.animator.yaml", fs::copy_options::overwrite_existing);
         std::string role = (dir / "watt.npc.yaml").u8string();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
                 ImGui::SetNextWindowPos({0, 0});
                 ImGui::SetNextWindowSize(io.DisplaySize);
                 if (voiceCapture) ImGui::LogToFile(0,voiceLog.string().c_str());
-                bool changed = panel.Draw(role, nullptr, {}, {}, model.get(), [&] {
+                bool changed = panel.Draw(role, nullptr, {}, {}, model.get(), [&](const NpcDefinition&) {
                     ImGui::LogToBuffer();
                     NpcAuthoringPanel::DrawTeammateCheck(rescue, current);
                     displayed = GImGui->LogBuffer.c_str();
@@ -84,7 +83,7 @@ int main(int argc, char** argv)
             frame();
             if (argc == 2)
                 SavePanelCapture(argv[1]);
-            ImGuiWindow* window = ImGui::FindWindowByName("角色创作");
+            ImGuiWindow* window = ImGui::FindWindowByName("角色资产");
             Check(window, "Missing authoring panel");
             ImGuiTabBar* bar = GImGui->TabBars.GetByKey(window->GetID("创作"));
             if (voiceCapture) {
@@ -211,6 +210,34 @@ int main(int argc, char** argv)
             }
 
             checkCandidates();
+
+            // 游戏里的落地状态现在引用独立蒙太奇。编辑副本后，角色重新加载能读到新的通知时间。
+            AnimationController gameController;
+            const fs::path gameTable = data / "watt.animator.yaml";
+            Check(gameController.Load(gameTable, error), error);
+            const AnimationState* landing = gameController.Find("land");
+            Check(landing && landing->MontageAsset && landing->Events.empty(), "Game landing should read its own montage");
+            fs::copy_file(landing->MontageFile(gameTable), dir / "land.montage.yaml", fs::copy_options::overwrite_existing);
+            std::ofstream(dir / "watt.animator.yaml") << "States: [{ID: land, Montage: land.montage.yaml, Loop: false}]\n";
+            ImGui::ActivateItem(window->GetID("重新读取"));
+            frame();
+            ImGui::TabBarQueueFocus(bar, ImGui::TabBarFindTabByID(bar, animation));
+            frame(); frame();
+            fs::path opened;
+            panel.OpenMontage = [&](const fs::path& file) { opened = file; };
+            ImGui::ActivateItem(ImHashStr("编辑蒙太奇", 0, animation));
+            frame();
+            Check(opened == dir / "land.montage.yaml", "Montage button did not select the referenced asset");
+            AnimationMontage draft;
+            Check(draft.Load(opened, error), error);
+            auto recovery = std::find_if(draft.Events.begin(), draft.Events.end(), [](const AnimationMarker& e) { return e.Name == "Recovery"; });
+            Check(recovery != draft.Events.end(), "Missing recovery interval");
+            recovery->End = .30f;
+            Check(draft.Save(opened, error) && reopened.Load(fs::u8path(role), error), error);
+            const auto& savedEvents = reopened.Controller.Find("land")->MontageAsset->Events;
+            Check(std::any_of(savedEvents.begin(), savedEvents.end(), [](const AnimationMarker& e) { return e.Name == "Recovery" && e.End == .30f; }),
+                "Game controller did not read the changed montage");
+            std::cout << "PASS: Forge opened the montage referenced by land; controller read the saved Recovery.Notify end\n";
         }
         ImGui::DestroyContext();
         std::cout << "PASS: real authoring panel, toggle memory, native save/reopen, independent link edit survives\n"

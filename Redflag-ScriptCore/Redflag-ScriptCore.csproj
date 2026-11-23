@@ -82,6 +82,7 @@
     <Compile Include="Source\Math\Vector3.cs" />
     <Compile Include="Source\Playtest.cs" />
     <Compile Include="Source\Scene\Animator.cs" />
+    <Compile Include="Source\Scene\Montage.cs" />
     <Compile Include="Source\Scene\Component.cs" />
     <Compile Include="Source\Scene\Coroutine.cs" />
     <Compile Include="Source\Scene\Entity.Coroutines.cs" />

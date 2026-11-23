@@ -95,6 +95,12 @@ class AssetBundle:
                     self.add(path.parent / npc[key], name)
             if str(npc.get("Voice","")).endswith(".voice.json"):
                 self.add(self.root / npc["Voice"], name)
+        elif path.name.endswith(".animator.yaml"):
+            for state in YAML(typ="safe").load(path.read_bytes()).get("States", []):
+                reference = state.get("Montage")
+                if reference:
+                    source = self.root / reference if reference.startswith("assets/") else path.parent / reference
+                    self.add(source, name)
         elif path.name.endswith(".voice.json"):
             for wav in json.loads(path.read_bytes())["Lines"].values():
                 self.add(path.parent / wav, name)

@@ -13,6 +13,7 @@ def play_station(state, command, say, screenshot, folder, output, scene_path, te
     entities = {row["Entity"]: row for row in scene["Entities"]}
     player = next(e for e in entities.values() if e.get("ScriptComponent", {}).get("Class") == "Sandbox.StationPlayer")
     settings = {field["Name"]: field["Value"] for field in player["ScriptComponent"]["ScriptFields"]}
+    companion = entities[settings["Watt"]]["TagComponent"]["Tag"]
     gate = entities[settings["Exit"]]["TransformComponent"]["Translation"]
     events = set()
     event_offset = 0
@@ -23,7 +24,7 @@ def play_station(state, command, say, screenshot, folder, output, scene_path, te
     def checkpoint(name):
         frame = state()["frame"]
         stages[name] = {"seq": frame["seq"], "actors": {a["name"]: a for a in frame["actors"]
-                        if a["name"] in ("玩家", "瓦特", "应急发电机")}}
+                        if a["name"] in ("玩家", companion, "应急发电机")}}
         (output / "mission.json").write_text(json.dumps(stages, ensure_ascii=False, indent=2), encoding="utf8")
         print(name, frame["seq"], flush=True)
 
@@ -56,10 +57,9 @@ def play_station(state, command, say, screenshot, folder, output, scene_path, te
             event_offset = batch["offset"]
 
     checkpoint("spawn")
-    say("瓦特，去东面的应急发电机，把它修好。")
-    wait_for("repair_order", lambda a: a["瓦特"].get("action") == "repair")
-    command("tap", "T")
-    # 面朝维修棚出生，往左是闸口。让玩家先到，再检查瓦特仍在维修期间能否提前结算。
+    say(f"{companion}，去东面的应急发电机，把它修好。")
+    wait_for("repair_order", lambda a: a[companion].get("action") == "repair")
+    # 面朝维修棚出生，往左是闸口。让玩家先到，再检查队友仍在维修期间能否提前结算。
     walk("A", "beside_gate", lambda p: p[2] <= -1.75)
     if actors()["玩家"]["position"][0] > -7.4:
         walk("S", "in_gate", lambda p: p[0] <= -7.4)
@@ -69,7 +69,7 @@ def play_station(state, command, say, screenshot, folder, output, scene_path, te
     wait_for("both_at_gate", lambda _: has_event("mission_complete"), 50)
     final = stages["both_at_gate"]["actors"]
     assert math.dist(final["玩家"]["position"], gate) <= settings["ExitRadius"]
-    assert math.dist(final["瓦特"]["position"], gate) <= settings["TeamExitRadius"] and final["瓦特"]["health"] > 0
+    assert math.dist(final[companion]["position"], gate) <= settings["TeamExitRadius"] and final[companion]["health"] > 0
     screenshot("extracted")
 
     command("tap", "R")
@@ -77,7 +77,7 @@ def play_station(state, command, say, screenshot, folder, output, scene_path, te
              and math.dist(a["玩家"]["position"], stages["spawn"]["actors"]["玩家"]["position"]) < .1)
     screenshot("restart")
     if test_defeat:
-        # 站在巡检机前承受伤害。若瓦特赶到并扶起玩家，继续保留这一段过程。
+        # 站在巡检机前承受伤害。若队友赶到并扶起玩家，继续保留这一段过程。
         walk("W", "approach_guard", lambda p: p[0] > -1.5)
         wait_for("down", lambda a: a["玩家"]["health"] == 0, 50)
         screenshot("down")

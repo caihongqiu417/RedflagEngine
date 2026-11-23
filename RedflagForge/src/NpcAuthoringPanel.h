@@ -2,6 +2,7 @@
 
 #include "Redflag/AI/DecisionClient.h"
 #include "Redflag/AI/NpcDefinition.h"
+#include "BehaviorTreePanel.h"
 #include <functional>
 #include <future>
 #include <yaml-cpp/yaml.h>
@@ -16,12 +17,13 @@ namespace Redflag
     {
     public:
         ~NpcAuthoringPanel();
+        std::function<void(const std::filesystem::path&)> OpenMontage;
 
         static void DrawTeammateCheck(const NpcIntent& intent, const NpcTeammateCheck& check);
 
         bool Draw(std::string& definitionPath, const BehaviorTrace* trace = nullptr, const std::string& stage = {},
                   const std::vector<std::string>& modelClips = {}, const ModelAnimation* model = nullptr,
-                  const std::function<void()>& drawSceneCheck = {});
+                  const std::function<void(const NpcDefinition&)>& drawSceneCheck = {}, bool* open = nullptr);
 
     private:
         void Open(const std::filesystem::path& path);
@@ -43,6 +45,8 @@ namespace Redflag
         bool m_PreviewEnd = false;
         std::future<YAML::Node> m_Task;
         DecisionClient m_Client;
+        BehaviorTreePanel m_Tree;
+        bool m_ShowTree = false;
         uint64_t m_Request = 0;
         std::vector<std::string> m_Voices;
         std::string m_Message, m_Operation, m_CopyName, m_CopyFile, m_DefaultVoice;

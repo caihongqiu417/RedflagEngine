@@ -1,5 +1,6 @@
 """Forge 把一次编辑写入临时文件，本程序用与 MCP、表格相同的校验保存，并返回结果。"""
 import json
+import os
 import sys
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -15,7 +16,12 @@ def execute(request):
     profile = Path(request["profile"]).resolve()
     npc_assets.ASSETS = profile.parent
     cmd = request["operation"]
-    if cmd == "save":
+    if cmd == "transition":
+        from animation_transitions import save
+        save(profile, request["from"], request["to"], request["original"], request["value"])
+    elif cmd == "create":
+        npc_assets.create(profile.name, request["name"])
+    elif cmd == "save":
         npc_assets.update(profile.name, request["changes"], request["original"])
     elif cmd == "states":
         npc_assets.edit_states(profile.name, request["changes"], request["original"])
@@ -27,7 +33,8 @@ def execute(request):
     elif cmd in ("export", "apply"):
         getattr(npc_table, cmd)(profile.name, request["table"], Path(request["file"]))
     elif cmd == "voices":
-        with urlopen("http://127.0.0.1:8717/v1/speech/voices", timeout=6) as response:
+        port = int(os.environ.get("REDFLAG_SPEECH_PORT", 8717))
+        with urlopen(f"http://127.0.0.1:{port}/v1/speech/voices", timeout=6) as response:
             return json.load(response)
     elif cmd == "speak":
         root = next((directory.parent for directory in profile.parents if directory.name=="assets"),PROJECT)
@@ -37,7 +44,8 @@ def execute(request):
             Path(request["audio"]).write_bytes(fixed.read_bytes())
             return {"profile":str(profile)}
         data = json.dumps({"text": request["text"], "voice": request["voice"]}).encode()
-        query = Request("http://127.0.0.1:8717/v1/speech/synthesize", data, {"Content-Type": "application/json"})
+        port = int(os.environ.get("REDFLAG_SPEECH_PORT", 8717))
+        query = Request(f"http://127.0.0.1:{port}/v1/speech/synthesize", data, {"Content-Type": "application/json"})
         with urlopen(query, timeout=90 if bank else 20) as response:
             wave = response.read()
         if wave[:4] != b"RIFF" or wave[8:12] != b"WAVE":

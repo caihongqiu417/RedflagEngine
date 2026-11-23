@@ -1,0 +1,10 @@
+Name: 递物
+Clip: Station-Give
+Slot: FullBody
+BlendIn: {Seconds: 0.14, Curve: [0, 1]}
+BlendOut: {Seconds: 0.14, Curve: [0, 1]}
+Sections:
+  - {Name: Offer, Start: 0, End: 0.7333333, Next: Withdraw}
+  - {Name: Withdraw, Start: 0.7333333, End: 2}
+# 第 22 帧左手伸到最前，源剪辑每秒 30 帧。
+Events: [{Name: contact, At: 0.7333333}]

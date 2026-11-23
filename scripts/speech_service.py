@@ -10,7 +10,9 @@ import wave
 from pathlib import Path
 import subprocess
 import os
+import re
 import threading
+import sys
 from uuid import uuid4
 from collections import deque
 
@@ -23,25 +25,66 @@ from voice_bank import PROJECT, load_bank, recording, read_pcm
 
 
 # ---- 回复音轨与打断 ----
+def spoken_phrases(text, limit):
+    for sentence in re.findall(r"[^。！？!?；;\n]+[。！？!?；;]*|[。！？!?；;]+", text):
+        sentence = sentence.strip()
+        while len(sentence) > limit:
+            ends = [pause.end() for pause in re.finditer(r"[，、,:：\s]", sentence[:limit])]
+            end = ends[-1] if ends else limit
+            yield sentence[:end]
+            sentence = sentence[end:]
+        if sentence: yield sentence
+
+
 class BankSpeech:
     def __init__(self, project):
         self.project = project
         self.provider = None
 
-    async def generate(self, bank, text):
+    def voice(self):
+        if not self.provider:
+            from qwen_speech import QwenVoice
+            self.provider = QwenVoice(self.project)
+        return self.provider
+
+    async def generate(self, bank, text, emit=None):
         path = recording(bank,text)
         if path:
             return read_pcm(path)
         if not self.project:
+            language = bank[1].get("FallbackLanguage")
+            if language:
+                return await windows_speech(text, language=language)
             raise RuntimeError("qwen_voice_runtime_not_configured")
-        if len(text)>120:
-            raise ValueError("qwen_voice_limit_120_characters")
-        if not self.provider:
-            from qwen_speech import QwenVoice
-            self.provider = QwenVoice(self.project)
+        provider = self.voice()
         cancel = threading.Event()
         try:
-            return await asyncio.to_thread(self.provider.speak,bank[1],text,cancel)
+            # 模型每次最多接收 120 字，音频也有时长限制。完整句子分开朗读，仍用同一个说话人。
+            pcm = bytearray()
+            # 已送进声卡的字不能重读。流式先在停顿处分句，无标点时每次至多读 18 个字符；
+            # 它给单段 12 秒的声音上限留余量，离线整句仍沿用模型的 120 字输入限制。
+            pending = deque(spoken_phrases(text, 18 if emit is not None else 120))
+            while pending:
+                line = pending.popleft()
+                try:
+                    if emit is None:
+                        pcm.extend(await asyncio.to_thread(provider.speak, bank[1], line, cancel))
+                    else:
+                        partial = False
+                        def receive(block):
+                            nonlocal partial
+                            partial = True
+                            emit(block)
+                        await asyncio.to_thread(provider.speak_stream, bank[1], line, cancel, receive)
+                except RuntimeError as error:
+                    if str(error) != "neural_tts_audio_too_long" or len(line) < 2 or (emit is not None and partial):
+                        raise
+                    # 某些长句即使字数合规，读出来也超过单段时长。在接近中间的停顿处重试。
+                    half = len(line)//2
+                    breaks = [m.end() for m in re.finditer(r"[，、,:：\s]", line[:-1])]
+                    end = min(breaks, key=lambda i: abs(i-half)) if breaks else half
+                    pending.extendleft(reversed([part for part in (line[:end].strip(), line[end:].strip()) if part]))
+            return bytes(pcm)
         except asyncio.CancelledError:
             cancel.set()
             raise
@@ -55,12 +98,16 @@ async def synthesize(text, voice, banks):
     bank = load_bank(voice)
     if bank:
         return await banks.generate(bank,text)
+    return await windows_speech(text, voice)
+
+
+async def windows_speech(text, voice="", language=""):
     cmd = Path(__file__).with_name("speech_synthesize.ps1")
     proc = await asyncio.create_subprocess_exec("powershell.exe","-NoLogo","-NoProfile","-NonInteractive",
             "-ExecutionPolicy","Bypass","-File",str(cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
     try:
-        body = json.dumps({"text":text,"voice":voice},ensure_ascii=False).encode()
+        body = json.dumps({"text":text,"voice":voice,"language":language},ensure_ascii=False).encode()
         pcm, _ = await asyncio.wait_for(proc.communicate(base64.b64encode(body)),15)
         if proc.returncode: raise RuntimeError("synthesis_failed")
         return pcm
@@ -142,6 +189,7 @@ def application(recognizer,qwen_project=None):
     peers = set()
     rooms = {}
     banks = BankSpeech(qwen_project)
+    streams = {}
 
     # ---- 游戏角色与浏览器房间 ----
     async def new_room(req):
@@ -173,6 +221,13 @@ def application(recognizer,qwen_project=None):
         except (ValueError, EOFError, wave.Error) as error:
             return web.json_response({"error":str(error)},status=400)
 
+    speaker_settings = {"bank_speech": 4, "asset_root": str(PROJECT.resolve()),
+                        "qwen_project": str(Path(banks.project).resolve()) if banks.project else "",
+                        "qwen_free_text_configured": banks.project is not None}
+
+    async def health(req):
+        return web.json_response(speaker_settings)
+
     async def voices(req):
         cmd = Path(__file__).with_name("speech_synthesize.ps1")
         proc = await asyncio.create_subprocess_exec("powershell.exe","-NoProfile","-NonInteractive","-ExecutionPolicy",
@@ -180,7 +235,7 @@ def application(recognizer,qwen_project=None):
         data, _ = await proc.communicate()
         available = json.loads(data.decode("utf-8-sig"))
         available["voices"].extend(p.relative_to(PROJECT).as_posix() for p in sorted((PROJECT/"assets/audio").rglob("*.voice.json")))
-        available["qwen_free_text_configured"] = banks.project is not None
+        available.update(speaker_settings)
         return web.json_response(available)
 
     async def audition(req):
@@ -195,6 +250,49 @@ def application(recognizer,qwen_project=None):
         with wave.open(output,"wb") as result:
             result.setparams((1,2,16000,0,"NONE",""));result.writeframes(pcm)
         return web.Response(body=output.getvalue(),content_type="audio/wav")
+
+    # 游戏线程一直可以操作角色。合成线程每有一块 PCM 就交给这次请求，客户端只读自己的编号。
+    async def start_stream(req):
+        body = await req.json()
+        if not isinstance(body, dict): return web.json_response({"error":"invalid_speech"}, status=400)
+        text, voice = body.get("text"), body.get("voice", "")
+        if not isinstance(text, str) or not 0 < len(text) <= 300 or not isinstance(voice, str):
+            return web.json_response({"error":"invalid_speech"}, status=400)
+        key = uuid4().hex
+        queue = asyncio.Queue()
+        loop = asyncio.get_running_loop()
+        async def produce():
+            try:
+                bank = load_bank(voice)
+                if bank:
+                    pcm = await banks.generate(bank, text, lambda block: loop.call_soon_threadsafe(queue.put_nowait, block))
+                else:
+                    pcm = await windows_speech(text, voice)
+                if pcm: queue.put_nowait(pcm)
+                queue.put_nowait(None)
+            except Exception as error:
+                # 请求已经发给客户端。合成器报错也要交回终态，避免播放器一直等下一块。
+                queue.put_nowait(error)
+        streams[key] = {"queue":queue, "task":asyncio.create_task(produce()), "read":monotonic()}
+        return web.json_response({"id":key}, status=201)
+
+    async def stream(req):
+        key = req.match_info["id"]
+        current = streams.get(key)
+        if current is None: return web.json_response({"error":"unknown_speech"}, status=404)
+        if req.method == "DELETE":
+            streams.pop(key)["task"].cancel()
+            return web.Response(status=204)
+        current["read"] = monotonic()
+        try:
+            # 客户端可在等待第一块期间打断，最长等 100 毫秒就能重新检查取消操作。
+            block = await asyncio.wait_for(current["queue"].get(), .1)
+        except TimeoutError:
+            return web.Response(status=202)
+        if isinstance(block, bytes): return web.Response(body=block, content_type="application/octet-stream")
+        streams.pop(key, None)
+        if block is None: return web.Response(status=204)
+        return web.json_response({"error":str(block)}, status=400)
 
     async def offer(req):
         desc = await req.json()
@@ -264,6 +362,9 @@ def application(recognizer,qwen_project=None):
         return web.json_response({"type":"answer","sdp":peer.localDescription.sdp})
 
     async def cleanup(_):
+        workers = [item["task"] for item in streams.values()]
+        for worker in workers: worker.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
         await asyncio.gather(*(peer.close() for peer in list(peers)))
         await asyncio.to_thread(recognizer.close)
         await asyncio.to_thread(banks.close)
@@ -274,6 +375,8 @@ def application(recognizer,qwen_project=None):
             while True:
                 await asyncio.sleep(15)
                 cutoff = monotonic() - 60
+                for key, current in list(streams.items()):
+                    if current["read"] < cutoff: streams.pop(key)["task"].cancel()
                 for key in list(rooms):
                     current = rooms.get(key)
                     if current and current["last_poll"] < cutoff:
@@ -284,9 +387,29 @@ def application(recognizer,qwen_project=None):
         worker.cancel()
         await asyncio.gather(worker,return_exceptions=True)
 
+    async def warm_voice(_):
+        cancel = threading.Event()
+        async def prepare():
+            try:
+                await asyncio.to_thread(banks.voice().prepare, cancel)
+            except (RuntimeError, ValueError, OSError, ImportError) as error:
+                print(f"角色语音预加载失败：{error}", file=sys.stderr, flush=True)
+
+        # 载入场景时就开始准备音色。已录好的台词可以立即播放。
+        worker = asyncio.create_task(prepare())
+        yield
+        cancel.set()
+        await worker
+
+    if qwen_project:
+        app.cleanup_ctx.append(warm_voice)
     app.router.add_post("/v1/speech/transcribe",transcribe)
+    app.router.add_get("/v1/speech/health",health)
     app.router.add_get("/v1/speech/voices",voices)
     app.router.add_post("/v1/speech/synthesize",audition)
+    app.router.add_post("/v1/speech/streams",start_stream)
+    app.router.add_get("/v1/speech/streams/{id}",stream)
+    app.router.add_delete("/v1/speech/streams/{id}",stream)
     app.router.add_post("/v1/speech/offer",offer)
     app.router.add_post("/v1/speech/rooms",new_room)
     app.router.add_get("/v1/speech/rooms/{room}",room)

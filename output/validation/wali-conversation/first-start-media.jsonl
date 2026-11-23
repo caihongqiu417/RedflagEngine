@@ -1,0 +1,16 @@
+{"kind":"audio","event":"requested","id":"25-1102-4","entity":"1102","seq":25,"seconds":6.77511978149,"generation":1,"rate_hz":16000,"file":null,"device_samples":null}
+{"kind":"audio","event":"submitted","id":"25-1102-4","entity":"1102","seq":289,"seconds":39.1408853531,"generation":1,"rate_hz":16000,"file":"speech-25-1102-4.wav","device_samples":0}
+{"kind":"audio","event":"first_voice","id":"25-1102-4","entity":"1102","seq":291,"seconds":39.5383234024,"generation":1,"rate_hz":16000,"file":"speech-25-1102-4.wav","device_samples":4036}
+{"kind":"audio","event":"finished","id":"25-1102-4","entity":"1102","seq":324,"seconds":43.4875078201,"generation":1,"rate_hz":16000,"file":"speech-25-1102-4.wav","device_samples":66560}
+{"kind":"audio","event":"requested","id":"348-1102-6","entity":"1102","seq":348,"seconds":45.8371095657,"generation":1,"rate_hz":16000,"file":null,"device_samples":null}
+{"kind":"audio","event":"submitted","id":"348-1102-6","entity":"1102","seq":354,"seconds":46.6302881241,"generation":1,"rate_hz":16000,"file":"speech-348-1102-6.wav","device_samples":0}
+{"kind":"audio","event":"first_voice","id":"348-1102-6","entity":"1102","seq":356,"seconds":46.9279146194,"generation":1,"rate_hz":16000,"file":"speech-348-1102-6.wav","device_samples":3981}
+{"kind":"audio","event":"finished","id":"348-1102-6","entity":"1102","seq":367,"seconds":47.9973306656,"generation":1,"rate_hz":16000,"file":"speech-348-1102-6.wav","device_samples":20480}
+{"kind":"audio","event":"requested","id":"391-1102-8","entity":"1102","seq":391,"seconds":50.4093141556,"generation":1,"rate_hz":16000,"file":null,"device_samples":null}
+{"kind":"audio","event":"submitted","id":"391-1102-8","entity":"1102","seq":397,"seconds":51.1801195145,"generation":1,"rate_hz":16000,"file":"speech-391-1102-8.wav","device_samples":0}
+{"kind":"audio","event":"first_voice","id":"391-1102-8","entity":"1102","seq":399,"seconds":51.4815759659,"generation":1,"rate_hz":16000,"file":"speech-391-1102-8.wav","device_samples":3998}
+{"kind":"audio","event":"finished","id":"391-1102-8","entity":"1102","seq":430,"seconds":55.1692590714,"generation":1,"rate_hz":16000,"file":"speech-391-1102-8.wav","device_samples":62720}
+{"kind":"audio","event":"requested","id":"457-1102-10","entity":"1102","seq":457,"seconds":57.8493394852,"generation":1,"rate_hz":16000,"file":null,"device_samples":null}
+{"kind":"audio","event":"submitted","id":"457-1102-10","entity":"1102","seq":462,"seconds":58.5354166031,"generation":1,"rate_hz":16000,"file":"speech-457-1102-10.wav","device_samples":0}
+{"kind":"audio","event":"first_voice","id":"457-1102-10","entity":"1102","seq":469,"seconds":59.4914903641,"generation":1,"rate_hz":16000,"file":"speech-457-1102-10.wav","device_samples":14330}
+{"kind":"audio","event":"finished","id":"457-1102-10","entity":"1102","seq":553,"seconds":70.3558931351,"generation":1,"rate_hz":16000,"file":"speech-457-1102-10.wav","device_samples":186880}

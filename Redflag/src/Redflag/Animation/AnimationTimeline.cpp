@@ -5,7 +5,7 @@ namespace Redflag
 {
 	bool AnimationTimeline::Play(const AnimationState& state, float clipSeconds)
 	{
-		if (!(clipSeconds > 0.f)) return false;
+		if (state.MontageAsset || !(clipSeconds > 0.f)) return false;
 		for (const auto& marker : state.Events)
 			if (marker.End.value_or(marker.Start) > clipSeconds) return false;
 		Cancel();

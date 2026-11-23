@@ -1,0 +1,10 @@
+Name: 左拳
+Clip: Station-Punch
+Slot: FullBody
+BlendIn: {Seconds: 0.055, Curve: [0, 1]}
+BlendOut: {Seconds: 0.12, Curve: [0, 1]}
+Sections:
+  - {Name: Extend, Start: 0, End: 0.2, Next: Recover}
+  - {Name: Recover, Start: 0.2, End: 0.8666667}
+# 这段动作每秒 30 帧。第 6 帧拳头伸到最远，游戏此时检查是否碰到目标。
+Events: [{Name: Contact, At: 0.2}]

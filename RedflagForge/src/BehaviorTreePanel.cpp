@@ -18,6 +18,12 @@ namespace Redflag
             return "子树";
         case BehaviorKind::Action:
             return "动作";
+        case BehaviorKind::Selector:
+            return "选择器";
+        case BehaviorKind::Sequence:
+            return "顺序执行";
+        case BehaviorKind::Decorator:
+            return "黑板条件";
         }
         return "";
     }
@@ -30,10 +36,12 @@ namespace Redflag
         std::snprintf(m_Name, sizeof(m_Name), "%s", node.Name.c_str());
         std::snprintf(m_Question, sizeof(m_Question), "%s", node.Question.c_str());
         std::snprintf(m_Action, sizeof(m_Action), "%s", node.Action.c_str());
+        std::snprintf(m_Fact, sizeof(m_Fact), "%s", node.Key.c_str());
+        std::snprintf(m_Value, sizeof(m_Value), "%s", node.Value.c_str());
     }
 
     void BehaviorTreePanel::Draw(BehaviorTree& tree, const std::filesystem::path& asset,
-                                 const BehaviorTrace* trace, const char* title)
+                                 const BehaviorTrace* trace, const char* title, const BehaviorBlackboard* board, const BehaviorRun* run)
     {
         if (!ImGui::Begin(title))
         {
@@ -57,7 +65,8 @@ namespace Redflag
             ImGui::OpenPopup("NodeMenu");
         if (ImGui::BeginPopup("NodeMenu"))
         {
-            for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree, BehaviorKind::Action})
+            for (BehaviorKind kind : {BehaviorKind::Selector, BehaviorKind::Sequence, BehaviorKind::Decorator,
+                                      BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree, BehaviorKind::Action})
             {
                 if (ImGui::MenuItem(NodeLabel(kind)))
                 {
@@ -74,17 +83,24 @@ namespace Redflag
                 m_Pan = glm::vec2(32, 80) - root->Position;
         }
         ImGui::SetNextItemWidth(125);
-        ImGui::InputText("候选或条件", m_Key, sizeof(m_Key));
+        ImGui::InputText("新连线标签或试跑候选", m_Key, sizeof(m_Key));
         ImGui::SameLine();
         if (ImGui::Button("试跑"))
         {
             BehaviorBlackboard actor;
             std::istringstream inputs(m_Key);
-            for (std::string fact; inputs >> fact;) actor.Values[fact] = "true";
+            for (std::string fact; inputs >> fact;)
+            {
+                const size_t equals = fact.find('=');
+                if (equals == std::string::npos) actor.Values[fact] = "true";
+                else actor.Values[fact.substr(0, equals)] = fact.substr(equals + 1);
+            }
             m_Preview = tree.Tick(actor, m_Key);
             m_ShowPreview = true;
             m_Message = m_Preview.Action.empty() ? "这个候选没有连到动作。" : "执行动作：" + m_Preview.Action;
         }
+        if (tree.UsesTasks() && ImGui::IsItemHovered())
+            ImGui::SetTooltip("例如输入 alarm=true，查看树会进入哪个动作。播放场景后可观察实际中止。");
         if (m_ShowPreview && trace)
         {
             ImGui::SameLine();
@@ -92,7 +108,18 @@ namespace Redflag
                 m_ShowPreview = false;
         }
         ImGui::TextDisabled("用鼠标中键平移画布。从节点右侧圆点拖到下一节点的左侧圆点。");
-        DrawCanvas(tree, m_ShowPreview ? &m_Preview : trace);
+        if (board && ImGui::CollapsingHeader("角色黑板"))
+        {
+            if (board->Values.empty()) ImGui::TextDisabled("尚无记录");
+            for (const auto& [key, value] : board->Values)
+                ImGui::TextWrapped("%s  =  %s", key.c_str(), value.c_str());
+        }
+        if (run && run->Aborted)
+        {
+            const BehaviorNode* stopped = tree.Find(run->Aborted);
+            if (stopped) ImGui::TextWrapped("最近中止  %s", stopped->Name.c_str());
+        }
+        DrawCanvas(tree, m_ShowPreview ? &m_Preview : (run ? &run->Trace : trace), run && !m_ShowPreview ? run->Aborted : 0);
         DrawNodeSettings(tree);
         if (!m_Message.empty())
             ImGui::TextWrapped("%s", m_Message.c_str());
@@ -101,7 +128,7 @@ namespace Redflag
 
     // ---- 画布与连线 ----
 
-    void BehaviorTreePanel::DrawCanvas(BehaviorTree& tree, const BehaviorTrace* trace)
+    void BehaviorTreePanel::DrawCanvas(BehaviorTree& tree, const BehaviorTrace* trace, uint32_t aborted)
     {
         const float height = std::max(160.f, ImGui::GetContentRegionAvail().y * .64f);
         ImGui::BeginChild("BehaviorCanvas", {0, height}, true,
@@ -120,7 +147,7 @@ namespace Redflag
         ImDrawList* draw = ImGui::GetWindowDrawList();
         auto port = [&](const BehaviorNode& node, const std::string& key) {
             ImVec2 p = location(node);
-            if (node.Kind == BehaviorKind::Subtree)
+            if (node.Kind == BehaviorKind::Subtree || node.Kind == BehaviorKind::Decorator)
                 return ImVec2(p.x + width, p.y + header * .5f);
             int index = 0;
             for (const BehaviorEdge& edge : tree.GetEdges())
@@ -156,8 +183,9 @@ namespace Redflag
         for (const BehaviorNode& node : tree.GetNodes())
         {
             ImVec2 p = location(node);
-            float boxHeight =
-                (node.Kind == BehaviorKind::ModelSelector || node.Kind == BehaviorKind::Priority) ? port(node, "").y - p.y + row * .5f : header;
+            const bool branches = node.Kind == BehaviorKind::ModelSelector || node.Kind == BehaviorKind::Priority ||
+                                  node.Kind == BehaviorKind::Selector || node.Kind == BehaviorKind::Sequence;
+            float boxHeight = branches ? port(node, "").y - p.y + row * .5f : header;
             ImVec2 end{p.x + width, p.y + boxHeight}, input{p.x, p.y + header * .5f};
             bool visited =
                 trace && std::find(trace->Nodes.begin(), trace->Nodes.end(), node.ID) != trace->Nodes.end();
@@ -167,6 +195,7 @@ namespace Redflag
             draw->PushClipRect(p, end, true);
             std::string kind =
                 node.ID == tree.GetRoot() ? std::string("根 · ") + NodeLabel(node.Kind) : NodeLabel(node.Kind);
+            if (node.ID == aborted) kind += " · 已中止";
             draw->AddText({p.x + 12, p.y + 2}, visited ? active : line, kind.c_str());
             draw->AddText({p.x + 12, p.y + 2 + ImGui::GetTextLineHeightWithSpacing()}, IM_COL32_WHITE,
                           node.Name.c_str());
@@ -199,14 +228,14 @@ namespace Redflag
                 }
                 ImGui::PopID();
             };
-            if (node.Kind == BehaviorKind::Subtree)
+            if (node.Kind == BehaviorKind::Subtree || node.Kind == BehaviorKind::Decorator)
                 outputPort("", nullptr);
-            if (node.Kind == BehaviorKind::ModelSelector || node.Kind == BehaviorKind::Priority)
+            if (branches)
             {
                 for (const BehaviorEdge& edge : tree.GetEdges())
                     if (edge.From == node.ID)
                         outputPort(edge.Key, edge.Key.c_str());
-                outputPort("", node.Kind == BehaviorKind::Priority ? "+ 条件" : "+ 候选键");
+                outputPort("", node.Kind == BehaviorKind::Priority ? "+ 条件" : "+ 连线标签");
             }
             if (m_From && released &&
                 ImGui::IsMouseHoveringRect({input.x - 10, input.y - 10}, {input.x + 10, input.y + 10}))
@@ -214,7 +243,7 @@ namespace Redflag
                 if (tree.Connect(m_From, m_FromKey, node.ID, m_Message))
                 {
                     m_ShowPreview = false;
-                    m_Message = m_FromKey.empty() ? "已连接子树入口。" : "已连接候选 " + m_FromKey;
+                    m_Message = m_FromKey.empty() ? "已连接子节点。" : "已连接 " + m_FromKey;
                 }
                 m_From = 0;
             }
@@ -237,6 +266,17 @@ namespace Redflag
         if (node->Kind == BehaviorKind::ModelSelector &&
             ImGui::InputTextWithHint("模型问题", "留空沿用上次回答", m_Question, sizeof(m_Question)))
             tree.SetQuestion(node->ID, m_Question);
+        if (node->Kind == BehaviorKind::Decorator)
+        {
+            bool invert = node->Invert;
+            int abort = int(node->Abort);
+            const char* policies[] = {"不中断", "中断当前分支", "中断低优先级分支", "两者都中断"};
+            bool changed = ImGui::InputText("黑板字段", m_Fact, sizeof(m_Fact));
+            changed |= ImGui::InputText("期望值", m_Value, sizeof(m_Value));
+            changed |= ImGui::Checkbox("条件取反", &invert);
+            changed |= ImGui::Combo("条件改变时", &abort, policies, IM_ARRAYSIZE(policies));
+            if (changed) tree.SetCondition(node->ID, m_Fact, m_Value, invert, BehaviorAbort(abort));
+        }
         if (node->Kind == BehaviorKind::Action && ImGui::InputText("动作键", m_Action, sizeof(m_Action)))
             tree.SetAction(node->ID, m_Action);
         if (node->Kind == BehaviorKind::Action && ImGui::BeginCombo("项目脚本", "选择 C# 动作"))
@@ -268,9 +308,10 @@ namespace Redflag
                         tree.Find(edge.To)->Name.c_str());
             ImGui::SameLine();
             bool remove = ImGui::SmallButton("断开");
-            if (node->Kind == BehaviorKind::Priority && edge.Key != "*") {
+            if ((node->Kind == BehaviorKind::Priority && edge.Key != "*") ||
+                node->Kind == BehaviorKind::Selector || node->Kind == BehaviorKind::Sequence) {
                 ImGui::SameLine();
-                if (ImGui::SmallButton("优先检查") && tree.RaisePriority(node->ID, edge.Key))
+                if (ImGui::SmallButton("上移") && tree.RaisePriority(node->ID, edge.Key))
                     m_ShowPreview = false;
             }
             ImGui::PopID();

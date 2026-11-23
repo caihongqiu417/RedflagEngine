@@ -3,7 +3,7 @@ using Redflag;
 
 namespace Sandbox
 {
-    /* 巡检机在货场两端巡逻。脚本观察场景，sentinel.tree.yaml 决定执行哪个动作。 */
+    /* 巡检机把看见的人和线圈状态写给行为树。巡逻、蓄能和搜索都从上帧继续。 */
     public class StationGuard : Entity
     {
         public Entity Player, Watt, PatrolEnd, WarningLamp;
@@ -14,15 +14,20 @@ namespace Sandbox
         private PointLightComponent light;
         private Vector3 home, lastSeen;
         private Entity target;
-        private float charge, cooling, search, peakLight;
+        private float charge, cooling, recoil, search, peakLight;
         private Vector3 lampOffset;
         private bool returning;
         private string action;
-        private readonly string[] facts = new string[6];
+        private readonly string[] facts = new string[5];
+        private Func<string, BehaviorStatus> tickTask;
+        private Action<string> abortTask;
+        private float frameSeconds;
 
         void OnCreate()
         {
             pose = GetComponent<TransformComponent>();
+            tickTask = TickTask;
+            abortTask = AbortTask;
             home = pose.Translation;
             if (WarningLamp != null) {
                 light = WarningLamp.GetComponent<PointLightComponent>();
@@ -37,6 +42,7 @@ namespace Sandbox
         void OnUpdate(float seconds)
         {
             cooling = Math.Max(0f, cooling - seconds);
+            recoil = Math.Max(0f, recoil - seconds);
             search = Math.Max(0f, search - seconds);
             Entity seen = null;
             if (GameWorld.Health(Id) > 0) {
@@ -51,32 +57,48 @@ namespace Sandbox
                 search = SearchTime;
                 near = (lastSeen - pose.Translation).Length() <= Reach;
             }
-            if (seen != target) Playtest.Record(Id, "sentinel_target", seen == null ? "lost" : seen.Id.ToString());
-            if (!near || seen != target) charge = 0;
+            if (seen != target) {
+                Playtest.Record(Id, "sentinel_target", seen == null ? "lost" : seen.Id.ToString());
+                charge = 0;
+            }
             target = seen;
             facts[0] = GameWorld.Health(Id) <= 0 ? "damaged" : null;
             facts[1] = seen != null ? "visible" : null;
             facts[2] = !near ? "outside_reach" : null;
             facts[3] = cooling > 0 ? "cooling" : null;
-            facts[4] = charge >= ChargeTime ? "ready" : null;
-            facts[5] = search > 0 ? "last_seen" : null;
-            string next = GameWorld.ChooseBehavior(Id, facts);
+            facts[4] = search > 0 ? "last_seen" : null;
+            frameSeconds = seconds;
+            GameWorld.TickBehavior(Id, facts, tickTask, abortTask);
+
+            if (light != null) {
+                WarningLamp.GetComponent<TransformComponent>().Translation = pose.Translation + lampOffset;
+                // 缓慢点亮给玩家预警；脉冲那一帧使用美术在场景里设置的完整灯光强度。
+                light.Intensity = action == "charge" ? peakLight * (.2f + .6f * Math.Min(1f, charge / ChargeTime)) :
+                                  action == "discharge" ? peakLight : 0f;
+            }
+        }
+
+        //========== 行为树的动作 ==========
+
+        BehaviorStatus TickTask(string next)
+        {
             if (next != action) {
                 action = next;
-                Playtest.Record(Id, "sentinel", action ?? "缺少行为树");
+                Playtest.Record(Id, "sentinel", action);
             }
-
             // 动作键来自行为树。下面的 Cannon-N、Walk-cycle 等名称保留 Sentinel.glb 的原名。
             switch (action) {
                 case "damaged": GameWorld.Pose(Id, "Damage_heavy", .3f); break;
-                case "chase": Walk(lastSeen, WalkSpeed, Reach * .94f, seconds); break;
+                case "chase": Walk(lastSeen, WalkSpeed, Reach * .94f, frameSeconds); break;
                 case "charge":
                     Face(lastSeen);
                     GameWorld.PlayClip(Id, "Cannon-N");
-                    charge += seconds;
+                    charge += frameSeconds;
+                    if (charge >= ChargeTime) return BehaviorStatus.Success;
                     break;
                 case "discharge":
                     GameWorld.PlayClip(Id, "Cannon_Fire_Recoil");
+                    recoil = GameWorld.ClipDuration(Id, "Cannon_Fire_Recoil");
                     Vector3 origin = pose.Translation + new Vector3(0,1.3f,0);
                     Vector3 end = lastSeen + new Vector3(0,.9f,0);
                     // 露出头部仍能被看到。放电时再沿实际画出的线检查，箱体会截住脉冲。
@@ -87,21 +109,32 @@ namespace Sandbox
                     Playtest.Record(Id, "sentinel_pulse", struck.ToString());
                     cooling = Cooldown;
                     charge = 0;
+                    return BehaviorStatus.Success;
+                case "cool":
+                    Face(lastSeen);
+                    // 放电后的回弹用模型中的原片时长，冷却动作会等它播完。
+                    if (recoil <= 0) GameWorld.PlayClip(Id, "Idle-cycle");
                     break;
-                case "cool": Face(lastSeen); GameWorld.PlayClip(Id, "Idle-cycle"); break;
-                case "search": Walk(lastSeen, WalkSpeed * .7f, .24f, seconds); break;
+                case "search": Walk(lastSeen, WalkSpeed * .7f, .24f, frameSeconds); break;
                 case "patrol":
                     if (PatrolEnd == null) { GameWorld.PlayClip(Id, "Idle-Eyes"); break; }
                     Vector3 mark = returning ? home : PatrolEnd.GetComponent<TransformComponent>().Translation;
-                    if (Walk(mark, WalkSpeed * .55f, .16f, seconds)) returning = !returning;
+                    if (Walk(mark, WalkSpeed * .55f, .16f, frameSeconds)) returning = !returning;
                     break;
+                default: return BehaviorStatus.Failure;
             }
-            if (light != null) {
-                WarningLamp.GetComponent<TransformComponent>().Translation = pose.Translation + lampOffset;
-                // 缓慢点亮给玩家预警；脉冲那一帧使用美术在场景里设置的完整灯光强度。
-                light.Intensity = action == "charge" ? peakLight * (.2f + .6f * Math.Min(1f, charge / ChargeTime)) :
-                                  action == "discharge" ? peakLight : 0f;
-            }
+            return BehaviorStatus.Running;
+        }
+
+        void AbortTask(string interrupted)
+        {
+            if (interrupted == "charge") charge = 0;
+            Playtest.Record(Id, "sentinel_abort", interrupted);
+        }
+
+        void OnDestroy()
+        {
+            GameWorld.HaltBehavior(Id, abortTask);
         }
 
         bool Visible(Entity other)

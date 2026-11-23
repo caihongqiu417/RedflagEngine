@@ -3,6 +3,7 @@
 #include "Redflag/AI/NpcQuery.h"
 #include "NpcAuthoringFiles.h"
 #include "AnimationPoseView.h"
+#include "UI/AnimationFields.h"
 #include <imgui.h>
 #include <mmsystem.h>
 
@@ -12,27 +13,14 @@ namespace Redflag
 {
     namespace fs = std::filesystem;
 
-    static bool Edit(const char* label, std::string& value, bool multiline = false)
-    {
-        auto resize = [](ImGuiInputTextCallbackData* event) {
-            std::string& text = *static_cast<std::string*>(event->UserData);
-            text.resize(event->BufTextLen);
-            event->Buf = text.data();
-            return 0;
-        };
-        if (multiline)
-            return ImGui::InputTextMultiline(label, value.data(), value.capacity() + 1,
-                                             {-1, ImGui::GetTextLineHeight() * 4}, ImGuiInputTextFlags_CallbackResize,
-                                             resize, &value);
-        return ImGui::InputText(label, value.data(), value.capacity() + 1, ImGuiInputTextFlags_CallbackResize, resize,
-                                &value);
-    }
+    using AnimationFields::Edit;
 
     static YAML::Node Profile(const NpcDefinition& npc)
     {
         YAML::Node data;
         data["Name"] = npc.Name;
         data["Instructions"] = npc.Instructions;
+        data["Persona"] = npc.Persona;
         data["IdleIntent"] = npc.IdleIntent;
         data["RescueIntent"] = npc.RescueIntent;
         data["MissingTargetIntent"] = npc.MissingTargetIntent;
@@ -68,6 +56,8 @@ namespace Redflag
                 row["Item"] = intent.Item;
             if (!intent.Reply.empty())
                 row["Reply"] = intent.Reply;
+            if (!intent.OnStart.empty())
+                row["OnStart"] = intent.OnStart;
             rows.push_back(row);
         }
         data["Intents"] = rows;
@@ -81,6 +71,7 @@ namespace Redflag
         if (m_Path != path)
         {
             StopAudio();
+            m_ShowTree = false;
             m_PreviewEvent = -1;
         }
         m_Path = path;
@@ -93,7 +84,7 @@ namespace Redflag
             if (!m_Saved.Controller.Find(m_EventState) && !m_States.empty())
             {
                 const auto marked = std::find_if(m_States.begin(), m_States.end(),
-                    [](const AnimationState& state) { return !state.Events.empty(); });
+                    [](const AnimationState& state) { return !state.Events.empty() || !state.Montage.empty(); });
                 m_EventState = (marked == m_States.end() ? m_States.front() : *marked).ID;
             }
         }
@@ -101,7 +92,7 @@ namespace Redflag
 
     void NpcAuthoringPanel::Start(YAML::Node request)
     {
-        request["profile"] = fs::absolute(m_Path).u8string();
+        if (!request["profile"]) request["profile"] = fs::absolute(m_Path).u8string();
         m_TaskOwner = m_Path;
         m_Operation = request["operation"].as<std::string>();
         m_Task = std::async(std::launch::async, RunNpcAuthoringTool, request);
@@ -120,7 +111,7 @@ namespace Redflag
 
     bool NpcAuthoringPanel::Draw(std::string& definitionPath, const BehaviorTrace* trace, const std::string& stage,
                                  const std::vector<std::string>& modelClips, const ModelAnimation* model,
-                                 const std::function<void()>& drawSceneCheck)
+                                 const std::function<void(const NpcDefinition&)>& drawSceneCheck, bool* open)
     {
         bool changed = false;
         const fs::path selected = fs::u8path(definitionPath);
@@ -152,7 +143,9 @@ namespace Redflag
             else
             {
                 const fs::path saved = fs::u8path(reply["profile"].as<std::string>());
-                if (m_Operation == "copy")
+                if (m_Operation == "create")
+                    definitionPath = fs::relative(saved).generic_u8string();
+                else if (m_Operation == "copy")
                     definitionPath = (selected.parent_path() / saved.filename()).generic_u8string();
                 Open(fs::u8path(definitionPath));
                 changed = m_Loaded;
@@ -182,14 +175,40 @@ namespace Redflag
         }
 
         ImGui::SetNextWindowSize({640, 600}, ImGuiCond_FirstUseEver);
-        if (!ImGui::Begin("角色创作"))
+        if (!ImGui::Begin("角色资产", open))
         {
             ImGui::End();
             return changed;
         }
         ImGui::BeginDisabled(m_Task.valid());
         fs::path directory = selected.empty() ? fs::path("assets/ai") : selected.parent_path();
-        if (ImGui::BeginCombo("角色资产", m_Path.filename().u8string().c_str()))
+        if (ImGui::Button("新建角色…"))
+        {
+            m_CopyName.clear();
+            m_CopyFile.clear();
+            ImGui::OpenPopup("新建角色");
+        }
+        if (ImGui::BeginPopup("新建角色"))
+        {
+            Edit("角色名称", m_CopyName);
+            Edit("资产文件", m_CopyFile);
+            ImGui::TextDisabled("例如 guide.npc.yaml");
+            const fs::path file = fs::u8path(m_CopyFile);
+            const bool valid = !m_CopyName.empty() && file == file.filename() && file.stem().extension() == ".npc" && file.extension() == ".yaml";
+            ImGui::BeginDisabled(!valid);
+            if (ImGui::Button("创建"))
+            {
+                YAML::Node request;
+                request["operation"] = "create";
+                request["profile"] = fs::absolute(directory / file).u8string();
+                request["name"] = m_CopyName;
+                Start(request);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndDisabled();
+            ImGui::EndPopup();
+        }
+        if (ImGui::BeginCombo("项目资产", m_Path.empty() ? "选择角色" : m_Path.filename().u8string().c_str()))
         {
             std::error_code error;
             for (const fs::directory_entry& file : fs::directory_iterator(directory, error))
@@ -263,8 +282,14 @@ namespace Redflag
                 }
                 if (ImGui::BeginTabItem("候选"))
                 {
-                    if (drawSceneCheck) drawSceneCheck();
+                    if (drawSceneCheck) drawSceneCheck(m_Draft);
                     DrawIntents();
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("行为树"))
+                {
+                    ImGui::TextWrapped("%s", m_Draft.TreeFile.generic_u8string().c_str());
+                    ImGui::Checkbox("打开行为树编辑器", &m_ShowTree);
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("动画"))
@@ -305,6 +330,8 @@ namespace Redflag
         if (!m_Message.empty())
             ImGui::TextWrapped("%s", m_Message.c_str());
         ImGui::End();
+        if (m_ShowTree && m_Loaded)
+            m_Tree.Draw(m_Draft.Tree, m_Draft.TreeFile, trace, "角色资产 · 行为树");
         return changed;
     }
 
@@ -315,6 +342,8 @@ namespace Redflag
         Edit("名称", m_Draft.Name);
         ImGui::TextUnformatted("性格及行动约定");
         Edit("##Instructions", m_Draft.Instructions, true);
+        ImGui::TextUnformatted("交谈时的角色设定");
+        Edit("##Persona", m_Draft.Persona, true);
         ImGui::TextUnformatted("与指定队友的约定");
         Edit("##LeaderRelationship", m_Draft.LeaderRelationship, true);
         auto routine = [&](const char* label, std::string& key) {
@@ -385,9 +414,9 @@ namespace Redflag
     {
         if (ImGui::Button("新增候选"))
             m_Draft.Intents.emplace_back();
-        if (!ImGui::BeginTable("候选表", 5, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_Resizable))
+        if (!ImGui::BeginTable("候选表", 7, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_Resizable))
             return;
-        for (const char* column : {"动作键", "交给模型的说明", "目标来源", "物品", "操作"})
+        for (const char* column : {"动作键", "交给模型的说明", "目标来源", "物品", "接令台词", "完成台词", "操作"})
             ImGui::TableSetupColumn(column);
         ImGui::TableHeadersRow();
         for (size_t i = 0; i < m_Draft.Intents.size(); ++i)
@@ -395,7 +424,7 @@ namespace Redflag
             NpcIntent& row = m_Draft.Intents[i];
             ImGui::PushID(int(i));
             ImGui::TableNextRow();
-            for (std::string* cell : {&row.Key, &row.Description, &row.Target, &row.Item})
+            for (std::string* cell : {&row.Key, &row.Description, &row.Target, &row.Item, &row.OnStart, &row.Reply})
             {
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1);
@@ -475,11 +504,18 @@ namespace Redflag
         AnimationState& state = *std::find_if(m_States.begin(), m_States.end(),
             [&](const AnimationState& row) { return row.ID == m_EventState; });
         ImGui::Text("剪辑   %s", state.Clip.c_str());
+        if (!state.Montage.empty())
+        {
+            ImGui::TextWrapped("接触时刻和动作通知保存在 %s。", state.Montage.c_str());
+            if (ImGui::Button("编辑蒙太奇") && OpenMontage) OpenMontage(state.MontageFile(m_Saved.AnimatorFile));
+            return;
+        }
         ImGui::TextWrapped("时间从剪辑开头算起。填一个时刻会通知脚本一次，填一段时间会分别通知开始和结束。");
         if (model && m_PreviewEvent >= 0 && m_PreviewEvent < (int)state.Events.size())
         {
             const AnimationMarker& event = state.Events[m_PreviewEvent];
-            DrawAnimationPose(*model, *m_Saved.Controller.Find(state.ID), state, event, m_PreviewEnd && event.End.has_value());
+            const AnimationState& saved = *m_Saved.Controller.Find(state.ID);
+            DrawAnimationPose(*model, saved.Clip, saved.Events, state.Clip, event, m_PreviewEnd && event.End.has_value());
             if (ImGui::SmallButton("收起姿势对照"))
                 m_PreviewEvent = -1;
         }
@@ -490,10 +526,7 @@ namespace Redflag
         {
             AnimationMarker& event = state.Events[i];
             ImGui::PushID(i);
-            Edit("事件名称", event.Name);
-            ImGui::InputFloat(event.End ? "开始（秒）" : "时刻（秒）", &event.Start, 0, 0, "%.4f");
-            if (event.End)
-                ImGui::InputFloat("结束（秒）", &*event.End, 0, 0, "%.4f");
+            AnimationFields::EditMarker(event);
             if (model)
             {
                 if (ImGui::SmallButton(event.End ? "查看开始姿势" : "查看姿势"))
@@ -583,7 +616,12 @@ namespace Redflag
                 ImGui::TextUnformatted(state.ID.c_str());
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1);
-                if (modelClips.empty())
+                if (!state.Montage.empty())
+                {
+                    if (ImGui::SmallButton("编辑蒙太奇") && OpenMontage) OpenMontage(state.MontageFile(m_Saved.AnimatorFile));
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", state.Montage.c_str());
+                }
+                else if (modelClips.empty())
                     Edit("##clip", state.Clip);
                 else if (ImGui::BeginCombo("##clip", state.Clip.c_str()))
                 {
@@ -599,10 +637,13 @@ namespace Redflag
                 ImGui::InputFloat("##blend", &state.Blend, 0, 0, "%.2f");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1);
-                ImGui::InputFloat("##contact", &state.Contact, 0, 0, "%.2f");
+                if (state.Montage.empty()) ImGui::InputFloat("##contact", &state.Contact, 0, 0, "%.2f");
+                else if (state.HasContact) ImGui::Text("%.2f", state.Contact);
+                else ImGui::TextDisabled("—");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1);
-                ImGui::InputFloat("##seconds", &state.Seconds, 0, 0, "%.2f");
+                if (state.Montage.empty()) ImGui::InputFloat("##seconds", &state.Seconds, 0, 0, "%.2f");
+                else ImGui::Text("%.2f", state.Seconds);
                 ImGui::PopID();
             }
             ImGui::EndTable();

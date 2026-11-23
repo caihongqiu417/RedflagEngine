@@ -1,6 +1,7 @@
 """把伸手期间的库存变化对回同一帧的角色剪辑和手腕世界坐标。"""
 import json
 import math
+from station_pose import visible_pose
 
 
 def verify(session, output):
@@ -11,7 +12,7 @@ def verify(session, output):
         watt, player = actors["1102"], actors["1101"]
         stage = watt.get("stage")
         if stage not in phases: continue
-        motion = watt["animation"]
+        motion = visible_pose(watt)
         phases[stage].append(dict(seq=frame["seq"],time=motion["time"],clip=motion["clip"],
                                   wrist=motion["nodes"]["hand.L"],position=watt["position"],
                                   watt_kits=watt["inventory"].get("medkit",0),

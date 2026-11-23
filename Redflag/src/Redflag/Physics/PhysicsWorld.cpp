@@ -79,6 +79,22 @@ namespace Redflag
 		private:
 			std::optional<uint64_t> m_Entity;
 		};
+
+		// 球起步时若已贴进墙面，只挡住往墙里走的那一步。后方还有别的墙时仍会继续查询。
+		class MovementFilter : public IgnoreEntity
+		{
+		public:
+			MovementFilter(uint64_t actor, PxVec3 direction) : IgnoreEntity(actor), m_Direction(direction) {}
+
+			PxQueryHitType::Enum postFilter(const PxFilterData&, const PxQueryHit& query, const PxShape*, const PxRigidActor*) override
+			{
+				const PxSweepHit& hit = static_cast<const PxSweepHit&>(query);
+				if (hit.distance <= 0.f && m_Direction.dot(hit.normal) >= 0.f) return PxQueryHitType::eNONE;
+				return PxQueryHitType::eBLOCK;
+			}
+		private:
+			PxVec3 m_Direction;
+		};
 	}
 
 	struct PhysicsWorld::World
@@ -237,17 +253,25 @@ namespace Redflag
 			FromPx(face.position), FromPx(face.normal), face.distance };
 	}
 
-	float PhysicsWorld::SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore) const
+	float PhysicsWorld::SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore,
+		bool allowSeparation) const
 	{
 		const float length = glm::length(direction);
 		if (distance <= 0 || length == 0 || radius <= 0) return 0.f;
 		PxQueryFilterData filter;
 		filter.flags |= PxQueryFlag::ePREFILTER;
-		IgnoreEntity skip(ignore);
+		const PxVec3 unit = ToPx(direction / length);
+		MovementFilter skip(ignore, unit);
+		PxHitFlags flags = PxHitFlag::eDEFAULT;
+		if (allowSeparation)
+		{
+			filter.flags |= PxQueryFlag::ePOSTFILTER;
+			flags |= PxHitFlag::eMTD;
+		}
 		PxSweepBuffer hit;
 		bool blocked = m_World->Scene->sweep(PxSphereGeometry(radius), PxTransform(ToPx(center)),
-			ToPx(direction / length), distance, hit, PxHitFlag::eDEFAULT, filter, &skip);
-		return blocked ? hit.block.distance : distance;
+			unit, distance, hit, flags, filter, &skip);
+		return blocked ? std::max(0.f, hit.block.distance) : distance;
 	}
 
 	std::vector<uint64_t> PhysicsWorld::OverlapSphere(glm::vec3 center, float radius) const

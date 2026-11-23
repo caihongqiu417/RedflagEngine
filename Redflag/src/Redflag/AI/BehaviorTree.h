@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -14,8 +15,14 @@ namespace Redflag
         ModelSelector,
         Priority,
         Subtree,
-        Action
+        Action,
+        Selector,
+        Sequence,
+        Decorator
     };
+
+    enum class BehaviorStatus { Running, Success, Failure };
+    enum class BehaviorAbort { None, Self, LowerPriority, Both };
 
     struct BehaviorNode
     {
@@ -24,6 +31,9 @@ namespace Redflag
         std::string Name, Action;
         glm::vec2 Position; // 编辑器画布坐标。
         std::string Question; // 进入这个选择节点时，带上眼前仍可执行的候选再问一次。
+        std::string Key, Value;
+        bool Invert = false;
+        BehaviorAbort Abort = BehaviorAbort::None;
     };
 
     struct BehaviorEdge
@@ -47,6 +57,16 @@ namespace Redflag
         std::map<std::string, std::string> Values;
     };
 
+    /* 每个角色各存一份。动作跨帧时，Stack 记住它的父节点以及各自已经尝试的子节点。 */
+    struct BehaviorRun
+    {
+        struct Frame { uint32_t Node; size_t Next = 0; };
+        std::vector<Frame> Stack;
+        std::map<uint32_t, bool> Conditions;
+        BehaviorTrace Trace;
+        uint32_t Aborted = 0;
+    };
+
     class BehaviorTree
     {
       public:
@@ -59,6 +79,12 @@ namespace Redflag
 
         void Advance(BehaviorBlackboard& actor, const std::string& candidate, BehaviorTrace& trace) const;
         bool Offers(uint32_t selector, const std::string& candidate) const;
+
+        bool UsesTasks() const;
+        using Task = std::function<BehaviorStatus(const BehaviorNode&)>;
+        using AbortTask = std::function<void(const BehaviorNode&)>;
+        BehaviorStatus Update(BehaviorBlackboard& board, BehaviorRun& run, const Task& tick, const AbortTask& abort) const;
+        void Halt(BehaviorRun& run, const AbortTask& abort) const;
 
         uint32_t AddNode(BehaviorKind kind, const std::string& name, glm::vec2 position);
         void RemoveNode(uint32_t id);
@@ -73,11 +99,14 @@ namespace Redflag
         void Rename(uint32_t id, const std::string& name);
         void SetQuestion(uint32_t id, const std::string& question);
         void SetAction(uint32_t id, const std::string& action);
+        void SetCondition(uint32_t id, const std::string& key, const std::string& value, bool invert, BehaviorAbort abort);
         const std::vector<BehaviorNode>& GetNodes() const { return m_Nodes; }
         const std::vector<BehaviorEdge>& GetEdges() const { return m_Edges; }
 
       private:
         BehaviorNode* Edit(uint32_t id);
+        const BehaviorEdge* Child(uint32_t parent, size_t index) const;
+        bool Interrupt(const BehaviorBlackboard& board, BehaviorRun& run, const AbortTask& abort) const;
         const BehaviorEdge* Branch(const BehaviorNode& node, const std::string& candidate, const BehaviorBlackboard* facts = nullptr) const;
         bool Reaches(uint32_t from, uint32_t to) const;
         uint32_t m_Root = 0, m_NextID = 1;

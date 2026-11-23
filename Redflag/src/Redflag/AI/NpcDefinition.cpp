@@ -18,6 +18,7 @@ namespace Redflag
 			NpcDefinition data;
 			data.Name = file["Name"].as<std::string>();
 			data.Instructions = file["Instructions"].as<std::string>();
+			data.Persona = file["Persona"].as<std::string>("");
 			data.LeaderRelationship = file["LeaderRelationship"].as<std::string>("");
 			data.IdleIntent = file["IdleIntent"].as<std::string>("");
 			data.RescueIntent = file["RescueIntent"].as<std::string>("");
@@ -78,6 +79,11 @@ namespace Redflag
 			}
 			data.TreeFile = path.parent_path() / std::filesystem::u8path(file["Tree"].as<std::string>());
 			if (!data.Tree.Load(data.TreeFile, error)) return false;
+			if (data.Tree.UsesTasks() && data.Tree.Find(data.Tree.GetRoot())->Kind != BehaviorKind::Action)
+			{
+				error = "该资源按帧执行任务，请挂到实体的行为树组件，由脚本调用 TickBehavior。NPC 的 Tree 需要按动作候选选择分支。";
+				return false;
+			}
 			if (const YAML::Node animator = file["Animator"])
 			{
 				data.AnimatorFile = path.parent_path() / std::filesystem::u8path(animator.as<std::string>());
@@ -87,7 +93,8 @@ namespace Redflag
 			for (const YAML::Node& node : file["Intents"])
 			{
 				NpcIntent intent{node["Key"].as<std::string>(), node["Description"].as<std::string>(),
-					node["Target"].as<std::string>(), node["Item"].as<std::string>(""), node["Reply"].as<std::string>("")};
+					node["Target"].as<std::string>(), node["Item"].as<std::string>(""), node["Reply"].as<std::string>(""),
+					node["OnStart"].as<std::string>("")};
 				if (intent.Key.empty() || !keys.insert(intent.Key).second || intent.Target.empty())
 				{
 					error = "候选需要唯一的动作键和目标来源：" + intent.Key;

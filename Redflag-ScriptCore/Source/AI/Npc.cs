@@ -12,6 +12,10 @@ namespace Redflag
     /* 指令交给当前游戏中的一个角色。脚本每帧可读取这个角色的回答和动作记录。 */
     public static class Npc
     {
+        /// <summary>把玩家的话交给角色。闲聊时角色继续原来的工作，回答从事件的 Speech 读取。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool Say(ulong actor, string text);
+
         /// <returns>角色有可执行的候选并开始请求模型时返回 true。动作的结果随后从 TryReadEvent 读取。</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool Submit(ulong actor, string instruction);

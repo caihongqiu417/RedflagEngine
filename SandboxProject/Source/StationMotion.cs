@@ -78,7 +78,6 @@ namespace Sandbox
             else if (Airborne) clip=verticalSpeed>2.2f ? "jump_1_up" : "jump_3_midair-cycle";
             else if (landing) return; // 已由动作表播放落地片段，等剪辑结束再切回行走。
             else if (!Crouched && equipment.ChangeTime>0) clip="Cannon_activation-noexp";
-            else if (!Crouched && equipment.ShotTime>0) clip="Cannon_Charge";
             else if (Walking) {
                 if (Crouched) clip="Station-CrouchWalk";
                 else if (Running) clip=equipment.Cannon ? "running_gun-cycle" : "running_nogun-cycle";

@@ -18,7 +18,7 @@ namespace Sandbox
             Completed = false;
             if (GameWorld.ItemCount(actor, "medkit") == 0) return "背包里没有医疗包";
             if (actor == target && GameWorld.Health(actor) >= GameWorld.MaxHealth(actor)) return "生命已满";
-            if (actor != target && GameWorld.Health(target) <= 0) return "按住 E 先扶起瓦特";
+            if (actor != target && GameWorld.Health(target) <= 0) return "按住 E 先扶起队友";
 
             owner = actor;
             recipient = target;
@@ -59,7 +59,7 @@ namespace Sandbox
                 Completed = Giving ? GameWorld.Give(owner, recipient, "medkit", 1, TransferRange)
                                    : GameWorld.Heal(owner, "medkit", 50);
                 Playtest.Record(owner, State + (Completed ? "_contact" : "_missed"), recipient.ToString());
-                result = Completed ? (Giving ? "已把医疗包递给瓦特" : "已使用医疗包") : "医疗包没有使用";
+                result = Completed ? (Giving ? "已把医疗包递给队友" : "已使用医疗包") : "医疗包没有使用";
             }
             if (!Animator.IsPlaying(owner)) {
                 if (!attempted) {

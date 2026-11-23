@@ -43,7 +43,7 @@ namespace Redflag
 			// 在胸口和头顶各扫一个球。角色向墙边靠近时，头顶的横梁也必须能通过。
 			const float bodyRadius = radius * .9f;
 			for (float level : {height * .48f, height - bodyRadius}) {
-				if (scene.SweepSphere(from + Up * level, direction, bodyRadius, distance, actor) < distance - .001f)
+				if (scene.SweepSphere(from + Up * level, direction, bodyRadius, distance, actor, true) < distance)
 					return false;
 			}
 			return true;

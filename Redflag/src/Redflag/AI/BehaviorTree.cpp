@@ -18,16 +18,33 @@ namespace Redflag
             return "Subtree";
         case BehaviorKind::Action:
             return "Action";
+        case BehaviorKind::Selector: return "Selector";
+        case BehaviorKind::Sequence: return "Sequence";
+        case BehaviorKind::Decorator: return "Decorator";
         }
         throw std::runtime_error("未知的行为节点类型。");
     }
 
     static BehaviorKind ReadKind(const std::string& name)
     {
-        for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree, BehaviorKind::Action})
+        for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree,
+                                 BehaviorKind::Action, BehaviorKind::Selector, BehaviorKind::Sequence, BehaviorKind::Decorator})
             if (name == KindName(kind))
                 return kind;
         throw std::runtime_error("未知的行为节点类型：" + name);
+    }
+
+    static const char* const AbortNames[] = {"None", "Self", "LowerPriority", "Both"};
+
+    void BehaviorTree::SetCondition(uint32_t id, const std::string& key, const std::string& value, bool invert, BehaviorAbort abort)
+    {
+        if (BehaviorNode* node = Edit(id); node && node->Kind == BehaviorKind::Decorator)
+        {
+            node->Key = key;
+            node->Value = value;
+            node->Invert = invert;
+            node->Abort = abort;
+        }
     }
 
     // ---- 节点与根节点 ----
@@ -130,10 +147,10 @@ namespace Redflag
             error = "连线的两端都需要节点。";
         else if (source->Kind == BehaviorKind::Action)
             error = "动作是这次决策的终点。";
-        else if ((source->Kind == BehaviorKind::ModelSelector || source->Kind == BehaviorKind::Priority) && key.empty())
+        else if (source->Kind != BehaviorKind::Subtree && source->Kind != BehaviorKind::Decorator && key.empty())
             error = "请填写连线的条件或候选键。";
-        else if (source->Kind == BehaviorKind::Subtree && !key.empty())
-            error = "子树只有一个入口，无须候选键。";
+        else if ((source->Kind == BehaviorKind::Subtree || source->Kind == BehaviorKind::Decorator) && !key.empty())
+            error = "该节点只有一个子节点，连线无需条件。";
         else if (Reaches(to, from))
             error = "这条连线会让执行回到先前的节点。";
         else
@@ -166,10 +183,11 @@ namespace Redflag
     bool BehaviorTree::RaisePriority(uint32_t from, const std::string& key)
     {
         const BehaviorNode* parent = Find(from);
-        if (!parent || parent->Kind != BehaviorKind::Priority || key == "*") return false;
+        if (!parent || (parent->Kind != BehaviorKind::Priority && parent->Kind != BehaviorKind::Sequence &&
+                        parent->Kind != BehaviorKind::Selector) || (parent->Kind == BehaviorKind::Priority && key == "*")) return false;
         BehaviorEdge* previous = nullptr;
         for (BehaviorEdge& edge : m_Edges) {
-            if (edge.From != from || edge.Key == "*") continue;
+            if (edge.From != from || (parent->Kind == BehaviorKind::Priority && edge.Key == "*")) continue;
             if (edge.Key == key) {
                 if (!previous) return false;
                 std::swap(*previous, edge);
@@ -189,6 +207,11 @@ namespace Redflag
         }
         for (const BehaviorNode& node : m_Nodes)
         {
+            if (node.Kind == BehaviorKind::Decorator && node.Key.empty())
+            {
+                error = node.Name + "：请选择要读取的黑板键。";
+                return false;
+            }
             bool connected = std::any_of(m_Edges.begin(), m_Edges.end(),
                                          [&](const BehaviorEdge& edge) { return edge.From == node.ID; });
             if (node.Kind == BehaviorKind::Action ? node.Action.empty() : !connected)
@@ -256,6 +279,13 @@ namespace Redflag
 
     BehaviorTrace BehaviorTree::Tick(BehaviorBlackboard& actor, const std::string& candidate) const
     {
+        if (UsesTasks())
+        {
+            actor.Candidate = candidate;
+            BehaviorRun preview;
+            Update(actor, preview, [](const BehaviorNode&) { return BehaviorStatus::Running; }, [](const BehaviorNode&) {});
+            return preview.Trace;
+        }
         BehaviorTrace trace;
         // 编辑器试跑只给了一个候选键。逐段沿这个键预览完整路径，不向模型发请求。
         do { Advance(actor, candidate, trace); } while (trace.Waiting);
@@ -288,6 +318,16 @@ namespace Redflag
                 if (!std::isfinite(node.Position.x) || !std::isfinite(node.Position.y))
                     throw std::runtime_error("节点位置必须是有限数值。");
                 if (node.Kind == BehaviorKind::ModelSelector) node.Question = data["Question"].as<std::string>("");
+                if (node.Kind == BehaviorKind::Decorator)
+                {
+                    node.Key = data["Key"].as<std::string>();
+                    node.Value = data["Value"].as<std::string>("");
+                    node.Invert = data["Invert"].as<bool>(false);
+                    const std::string mode = data["Abort"].as<std::string>("None");
+                    const auto found = std::find(std::begin(AbortNames), std::end(AbortNames), mode);
+                    if (found == std::end(AbortNames)) throw std::runtime_error("未知的中止方式：" + mode);
+                    node.Abort = static_cast<BehaviorAbort>(found - std::begin(AbortNames));
+                }
                 loaded.m_Nodes.push_back(std::move(node));
                 loaded.m_NextID = std::max(loaded.m_NextID, id + 1);
             }
@@ -332,6 +372,13 @@ namespace Redflag
                 if (node.Kind == BehaviorKind::Action)
                     data["Action"] = node.Action;
                 if (!node.Question.empty()) data["Question"] = node.Question;
+                if (node.Kind == BehaviorKind::Decorator)
+                {
+                    data["Key"] = node.Key;
+                    if (!node.Value.empty()) data["Value"] = node.Value;
+                    if (node.Invert) data["Invert"] = true;
+                    data["Abort"] = AbortNames[static_cast<size_t>(node.Abort)];
+                }
                 data["Position"].push_back(node.Position.x);
                 data["Position"].push_back(node.Position.y);
                 data["Position"].SetStyle(YAML::EmitterStyle::Flow);

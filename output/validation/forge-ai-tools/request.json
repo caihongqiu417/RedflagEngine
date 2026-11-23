@@ -1,0 +1,67 @@
+{
+  "scene": "Robot.redflag",
+  "actor": 17,
+  "gatewayInput": {
+    "prompt": "请原地等待我回来。",
+    "instructions": "有人请你等候时，留在当前位置。\n你的名字是引路人。",
+    "model": "",
+    "trace_model": true,
+    "observations": [],
+    "candidates": [
+      {
+        "id": "wait",
+        "description": "留在当前位置等候"
+      }
+    ],
+    "images": []
+  },
+  "modelInput": {
+    "model": "Qwen3-VL-2B-Instruct",
+    "messages": [
+      {
+        "role": "system",
+        "content": "有人请你等候时，留在当前位置。\n你的名字是引路人。\nYou select a game action. Return only one of these exact IDs: [\"wait\"]"
+      },
+      {
+        "role": "user",
+        "content": "Observations: []\n请原地等待我回来。\nCandidates (ID, description): [[\"wait\", \"留在当前位置等候\"]]\nAnswer with the ID only."
+      }
+    ],
+    "temperature": 0,
+    "max_tokens": 128,
+    "stream": true,
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "decision",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "choice": {
+              "type": "string",
+              "enum": [
+                "wait"
+              ]
+            }
+          },
+          "required": [
+            "choice"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "modelOutput": {
+    "choice": "wait"
+  },
+  "gatewayOutput": {
+    "status": "completed",
+    "choice": "wait",
+    "model_trace": {
+      "input": "{\n  \"model\": \"Qwen3-VL-2B-Instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"有人请你等候时，留在当前位置。\\n你的名字是引路人。\\nYou select a game action. Return only one of these exact IDs: [\\\"wait\\\"]\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Observations: []\\n请原地等待我回来。\\nCandidates (ID, description): [[\\\"wait\\\", \\\"留在当前位置等候\\\"]]\\nAnswer with the ID only.\"\n    }\n  ],\n  \"temperature\": 0,\n  \"max_tokens\": 128,\n  \"stream\": true,\n  \"response_format\": {\n    \"type\": \"json_schema\",\n    \"json_schema\": {\n      \"name\": \"decision\",\n      \"strict\": true,\n      \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"choice\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"wait\"\n            ]\n          }\n        },\n        \"required\": [\n          \"choice\"\n        ],\n        \"additionalProperties\": false\n      }\n    }\n  }\n}",
+      "output": "{\"choice\": \"wait\"}"
+    }
+  }
+}

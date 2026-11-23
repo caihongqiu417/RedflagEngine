@@ -14,7 +14,7 @@ namespace Redflag
 	class PhotoQuestion
 	{
 	public:
-		explicit PhotoQuestion(uint16_t port = 8716) : m_Client(port) {}
+		explicit PhotoQuestion(uint16_t port = 0) : m_Client(port) {}
 		bool Start(const Ref<Scene>& scene, NpcPhoto photo, PhotoSubject subject, const std::string& question, bool suggestPlace = true);
 		bool Update();
 		bool Pending() const { return m_Request != 0; }

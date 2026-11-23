@@ -80,10 +80,10 @@ namespace Sandbox
 
             bool rescue = action == "revive";
             InteractionResult result = GameWorld.Interact(actor,target,action,seconds,false);
-            if (result == InteractionResult.Running) return rescue ? "正在扶起瓦特" : "正在维修";
+            if (result == InteractionResult.Running) return rescue ? "正在扶起队友" : "正在维修";
             if (result == InteractionResult.Completed) Playtest.Record(actor,action+"_contact",target.ToString());
             Reset();
-            return result == InteractionResult.Completed ? (rescue ? "瓦特已恢复行动" : "供电已恢复") : null;
+            return result == InteractionResult.Completed ? (rescue ? "队友已恢复行动" : "供电已恢复") : null;
         }
     }
 }

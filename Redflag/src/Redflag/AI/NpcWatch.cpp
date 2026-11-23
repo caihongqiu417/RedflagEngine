@@ -60,8 +60,7 @@ namespace Redflag
 				state.Memory.LoseSight(seen->first);
 				if (watch.Request && seen->first == watch.Target)
 				{
-					m_Client.Cancel(watch.Request);
-					m_Cancelled.push_back(watch.Request);
+					CancelDecision(state, watch.Request);
 					watch.Request = 0;
 					Record(state, "观察结束", "没有再次看见刚才的动作，未发出提醒。", watch.Target);
 				}
@@ -72,7 +71,7 @@ namespace Redflag
 		}
 		if (watch.Request)
 		{
-			const auto reply = m_Client.Take(watch.Request);
+			const auto reply = TakeDecision(state, watch.Request);
 			if (!reply) return;
 			watch.Request = 0;
 			Entity target = m_Scene.GetEntityByUUID(watch.Target);
@@ -110,7 +109,7 @@ namespace Redflag
 			request.Candidates = {{"announce", "现在通过电台提醒队友"}, {"quiet", "安静观察，只在记录中保留"}};
 			watch.SeenClips[id] = cue->Clip;
 			watch.Target = id;
-			watch.Request = m_Client.Start(std::move(request));
+			watch.Request = StartDecision(state, "主动观察", std::move(request), false, id);
 			Record(state, "主动观察", cue->Message, id);
 			break;
 		}

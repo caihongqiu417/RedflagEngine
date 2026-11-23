@@ -1,0 +1,8 @@
+Name: 臂炮抬臂
+Clip: Cannon_Charge
+Slot: UpperBody
+Bones: [spine1]
+BlendIn: {Seconds: 0.08, Curve: [0, 1]}
+BlendOut: {Seconds: 0.14, Curve: [0, 1]}
+# 沿用游戏原来播放的前 0.22 秒；脚步继续读当前走跑动作。
+Sections: [{Name: Pulse, Start: 0, End: 0.22}]

@@ -1541,6 +1541,7 @@ namespace Redflag {
                 ImGui::InputScalar("队友实体编号", ImGuiDataType_U64, &npc.Leader);
                 EditText("覆盖音色", npc.VoiceOverride);
                 if (npc.VoiceOverride.empty()) ImGui::TextDisabled("使用角色定义中的音色");
+                if (DrawNpcTools) DrawNpcTools(entity);
                 if (ImGui::TreeNode("当前位置的环境"))
                 {
                     const std::vector<DecisionFact> facts = SenseEnvironment(*m_Context, entity.GetUUID());
@@ -1606,6 +1607,7 @@ namespace Redflag {
 
         DrawComponent<HudComponent>("游戏界面", entity, [](HudComponent& hud) {
             EditText("布局文件", hud.Layout);
+            ImGui::InputScalar("对话对象编号", ImGuiDataType_U64, &hud.ConversationActor);
         });
 
         DrawComponent<InventoryComponent>("库存", entity, [this](InventoryComponent& inventory)

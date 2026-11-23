@@ -1,5 +1,5 @@
 {
-  "model_sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+  "model_sha256": "f5d71661a55b124712e27a75a4a87e66741707350fbbf741da734dd67680465a",
   "clips": {
     "walking_gun-cycle": {
       "L_heel": {
@@ -13,9 +13,9 @@
           ]
         ],
         "standing_up": [
-          -2.577424602332349e-06,
+          -2.5774246023323475e-06,
           0.9999999999962168,
-          9.609526937936902e-07
+          9.609526937936904e-07
         ],
         "min_y_m": -0.004630313400687823,
         "phases": {
@@ -56,32 +56,32 @@
           ]
         ],
         "standing_up": [
-          -2.404652213763595e-06,
-          0.9999999999970213,
-          4.1830523022466866e-07
+          -2.404652197252211e-06,
+          0.9999999999970215,
+          4.1830535297977335e-07
         ],
         "min_y_m": -0.004630313400687823,
         "phases": {
           "shoe_near_ground": {
             "samples": 139,
-            "max_tilt_deg": 53.12497147278856,
-            "max_axial_twist_deg": 9.155592115497257,
+            "max_tilt_deg": 53.124971472781496,
+            "max_axial_twist_deg": 9.155591221343514,
             "inverted_samples": 0,
             "worst_seconds": 0.9583333333333334,
             "lowest_shoe_at_worst_m": 0.019163777030128466
           },
           "triangle_near_ground": {
             "samples": 74,
-            "max_tilt_deg": 18.49345600173837,
-            "max_axial_twist_deg": 2.854684007567016,
+            "max_tilt_deg": 18.49345600173125,
+            "max_axial_twist_deg": 2.854683714012509,
             "inverted_samples": 0,
             "worst_seconds": 0.725,
             "lowest_shoe_at_worst_m": 0.005803075908335729
           },
           "swing": {
             "samples": 12,
-            "max_tilt_deg": 20.765566569977036,
-            "max_axial_twist_deg": 3.2815449382516704,
+            "max_tilt_deg": 20.76556656998396,
+            "max_axial_twist_deg": 3.281544608309389,
             "inverted_samples": 0,
             "worst_seconds": 1.1833333333333333,
             "lowest_shoe_at_worst_m": 0.03716768612424337
@@ -99,32 +99,32 @@
           ]
         ],
         "standing_up": [
-          -0.02430720079387386,
-          0.9915493129860382,
-          0.1274328054563729
+          -0.024307194286638106,
+          0.9915493123792696,
+          0.12743281141883891
         ],
         "min_y_m": -0.010972421595821541,
         "phases": {
           "shoe_near_ground": {
             "samples": 133,
-            "max_tilt_deg": 45.81828895519063,
-            "max_axial_twist_deg": 6.34329392067238,
+            "max_tilt_deg": 45.818288603205545,
+            "max_axial_twist_deg": 6.343293271180357,
             "inverted_samples": 0,
             "worst_seconds": 0.3333333333333333,
             "lowest_shoe_at_worst_m": 0.0193228902370664
           },
           "triangle_near_ground": {
             "samples": 54,
-            "max_tilt_deg": 22.725004404788457,
-            "max_axial_twist_deg": 3.6283952861245155,
+            "max_tilt_deg": 22.725004722303225,
+            "max_axial_twist_deg": 3.628394795618732,
             "inverted_samples": 0,
             "worst_seconds": 0.6916666666666667,
             "lowest_shoe_at_worst_m": -0.010939031098576246
           },
           "swing": {
             "samples": 18,
-            "max_tilt_deg": 26.32743738396018,
-            "max_axial_twist_deg": 4.184395035302941,
+            "max_tilt_deg": 26.327437705305044,
+            "max_axial_twist_deg": 4.184394498646981,
             "inverted_samples": 0,
             "worst_seconds": 0.575,
             "lowest_shoe_at_worst_m": 0.035948214730698175
@@ -142,32 +142,32 @@
           ]
         ],
         "standing_up": [
-          2.7518153273932266e-05,
-          0.9999999921462223,
-          -0.00012227144695310007
+          2.7518147256571357e-05,
+          0.9999999921462249,
+          -0.00012227142645213594
         ],
         "min_y_m": -0.010972421595821541,
         "phases": {
           "shoe_near_ground": {
             "samples": 133,
-            "max_tilt_deg": 53.13195381710157,
-            "max_axial_twist_deg": 6.029408646712369,
+            "max_tilt_deg": 53.13195381592695,
+            "max_axial_twist_deg": 6.0294104364341194,
             "inverted_samples": 0,
             "worst_seconds": 0.3333333333333333,
             "lowest_shoe_at_worst_m": 0.0193228902370664
           },
           "triangle_near_ground": {
             "samples": 90,
-            "max_tilt_deg": 42.353086850839105,
-            "max_axial_twist_deg": 4.666238602873875,
+            "max_tilt_deg": 42.35308684966453,
+            "max_axial_twist_deg": 4.666239991150036,
             "inverted_samples": 0,
             "worst_seconds": 0.23333333333333334,
             "lowest_shoe_at_worst_m": -0.00014939791393680894
           },
           "swing": {
             "samples": 18,
-            "max_tilt_deg": 30.276032564047178,
-            "max_axial_twist_deg": 3.344407439342831,
+            "max_tilt_deg": 30.276032562873425,
+            "max_axial_twist_deg": 3.3444084090920967,
             "inverted_samples": 0,
             "worst_seconds": 0.43333333333333335,
             "lowest_shoe_at_worst_m": 0.03461754620664673
@@ -187,9 +187,9 @@
           ]
         ],
         "standing_up": [
-          -2.577424602332349e-06,
+          -2.5774246023323475e-06,
           0.9999999999962168,
-          9.609526937936902e-07
+          9.609526937936904e-07
         ],
         "min_y_m": -0.004631542858433833,
         "phases": {
@@ -212,7 +212,7 @@
           "swing": {
             "samples": 12,
             "max_tilt_deg": 23.259495864253346,
-            "max_axial_twist_deg": 3.818894557523862,
+            "max_axial_twist_deg": 3.8188945575238336,
             "inverted_samples": 0,
             "worst_seconds": 1.0916666666666666,
             "lowest_shoe_at_worst_m": 0.0345154204544392
@@ -230,32 +230,32 @@
           ]
         ],
         "standing_up": [
-          -2.404652213763595e-06,
-          0.9999999999970213,
-          4.1830523022466866e-07
+          -2.404652197252211e-06,
+          0.9999999999970215,
+          4.1830535297977335e-07
         ],
         "min_y_m": -0.004631542858433833,
         "phases": {
           "shoe_near_ground": {
             "samples": 139,
-            "max_tilt_deg": 53.12497147280582,
-            "max_axial_twist_deg": 9.15559211561694,
+            "max_tilt_deg": 53.12497147279876,
+            "max_axial_twist_deg": 9.155591221463197,
             "inverted_samples": 0,
             "worst_seconds": 0.9583333333333334,
             "lowest_shoe_at_worst_m": 0.019163777012367558
           },
           "triangle_near_ground": {
             "samples": 74,
-            "max_tilt_deg": 18.493455898778073,
-            "max_axial_twist_deg": 2.8546951942495298,
+            "max_tilt_deg": 18.493455898770975,
+            "max_axial_twist_deg": 2.854694900695108,
             "inverted_samples": 0,
             "worst_seconds": 0.725,
             "lowest_shoe_at_worst_m": 0.005777528298082559
           },
           "swing": {
             "samples": 12,
-            "max_tilt_deg": 20.76557522863672,
-            "max_axial_twist_deg": 3.2815801403847615,
+            "max_tilt_deg": 20.765575228643645,
+            "max_axial_twist_deg": 3.281579810442537,
             "inverted_samples": 0,
             "worst_seconds": 1.1833333333333333,
             "lowest_shoe_at_worst_m": 0.037172370996107346
@@ -273,32 +273,32 @@
           ]
         ],
         "standing_up": [
-          -0.02430720079387386,
-          0.9915493129860382,
-          0.1274328054563729
+          -0.024307194286638106,
+          0.9915493123792696,
+          0.12743281141883891
         ],
         "min_y_m": -0.009558119119870867,
         "phases": {
           "shoe_near_ground": {
             "samples": 133,
-            "max_tilt_deg": 45.818288954938915,
-            "max_axial_twist_deg": 6.3393721884480385,
+            "max_tilt_deg": 45.81828860295383,
+            "max_axial_twist_deg": 6.339371538434904,
             "inverted_samples": 0,
             "worst_seconds": 0.3333333333333333,
             "lowest_shoe_at_worst_m": 0.01932289184335361
           },
           "triangle_near_ground": {
             "samples": 54,
-            "max_tilt_deg": 22.72498700416213,
-            "max_axial_twist_deg": 3.6283857047408503,
+            "max_tilt_deg": 22.724987321679897,
+            "max_axial_twist_deg": 3.6283852142354363,
             "inverted_samples": 0,
             "worst_seconds": 0.6916666666666667,
             "lowest_shoe_at_worst_m": -0.009558119119870867
           },
           "swing": {
             "samples": 18,
-            "max_tilt_deg": 26.32745016218165,
-            "max_axial_twist_deg": 4.183805218041215,
+            "max_tilt_deg": 26.327450483521375,
+            "max_axial_twist_deg": 4.18380468139128,
             "inverted_samples": 0,
             "worst_seconds": 0.575,
             "lowest_shoe_at_worst_m": 0.03578715125666648
@@ -316,32 +316,32 @@
           ]
         ],
         "standing_up": [
-          2.7518153273932266e-05,
-          0.9999999921462223,
-          -0.00012227144695310007
+          2.7518147256571357e-05,
+          0.9999999921462249,
+          -0.00012227142645213594
         ],
         "min_y_m": -0.009558119119870867,
         "phases": {
           "shoe_near_ground": {
             "samples": 133,
-            "max_tilt_deg": 53.131953816991704,
-            "max_axial_twist_deg": 6.029408637969453,
+            "max_tilt_deg": 53.131953815817084,
+            "max_axial_twist_deg": 6.029410427691204,
             "inverted_samples": 0,
             "worst_seconds": 0.3333333333333333,
             "lowest_shoe_at_worst_m": 0.01932289184335361
           },
           "triangle_near_ground": {
             "samples": 86,
-            "max_tilt_deg": 34.927596472098266,
-            "max_axial_twist_deg": 3.766725506841226,
+            "max_tilt_deg": 34.927596470923625,
+            "max_axial_twist_deg": 3.7667266350907482,
             "inverted_samples": 0,
             "worst_seconds": 0.2,
             "lowest_shoe_at_worst_m": 0.004112344402887772
           },
           "swing": {
             "samples": 18,
-            "max_tilt_deg": 30.275950218012916,
-            "max_axial_twist_deg": 3.343574739821861,
+            "max_tilt_deg": 30.275950216839185,
+            "max_axial_twist_deg": 3.3435757095742815,
             "inverted_samples": 0,
             "worst_seconds": 0.43333333333333335,
             "lowest_shoe_at_worst_m": 0.03463378369436713
@@ -361,9 +361,9 @@
           ]
         ],
         "standing_up": [
-          -2.577424602332349e-06,
+          -2.5774246023323475e-06,
           0.9999999999962168,
-          9.609526937936902e-07
+          9.609526937936904e-07
         ],
         "min_y_m": -0.014559560388731928,
         "phases": {
@@ -404,32 +404,32 @@
           ]
         ],
         "standing_up": [
-          -2.404652213763595e-06,
-          0.9999999999970213,
-          4.1830523022466866e-07
+          -2.404652197252211e-06,
+          0.9999999999970215,
+          4.1830535297977335e-07
         ],
         "min_y_m": -0.014559560388731928,
         "phases": {
           "shoe_near_ground": {
             "samples": 29,
-            "max_tilt_deg": 31.03616128894542,
-            "max_axial_twist_deg": 5.005844411818629,
+            "max_tilt_deg": 31.036161288938313,
+            "max_axial_twist_deg": 5.005843912531191,
             "inverted_samples": 0,
             "worst_seconds": 0.4249999898672104,
             "lowest_shoe_at_worst_m": 0.017684178421900874
           },
           "triangle_near_ground": {
             "samples": 26,
-            "max_tilt_deg": 29.016337722650213,
-            "max_axial_twist_deg": 4.662235655254108,
+            "max_tilt_deg": 29.01633772264314,
+            "max_axial_twist_deg": 4.6622351898078875,
             "inverted_samples": 0,
             "worst_seconds": 0.4166666567325592,
             "lowest_shoe_at_worst_m": -0.01066982555805655
           },
           "swing": {
             "samples": 72,
-            "max_tilt_deg": 132.82369141365004,
-            "max_axial_twist_deg": 40.28532201414578,
+            "max_tilt_deg": 132.82369141364308,
+            "max_axial_twist_deg": 40.285318380681076,
             "inverted_samples": 20,
             "worst_seconds": 0.541666653752327,
             "lowest_shoe_at_worst_m": 0.6545567103383991
@@ -447,32 +447,32 @@
           ]
         ],
         "standing_up": [
-          -0.02430720079387386,
-          0.9915493129860382,
-          0.1274328054563729
+          -0.024307194286638106,
+          0.9915493123792696,
+          0.12743281141883891
         ],
         "min_y_m": -0.01723824595905859,
         "phases": {
           "shoe_near_ground": {
             "samples": 34,
-            "max_tilt_deg": 54.962869502528285,
-            "max_axial_twist_deg": 8.23724544340456,
+            "max_tilt_deg": 54.96286914704679,
+            "max_axial_twist_deg": 8.237244737049792,
             "inverted_samples": 0,
             "worst_seconds": 0.04166666567325592,
             "lowest_shoe_at_worst_m": 0.002339563792180725
           },
           "triangle_near_ground": {
             "samples": 19,
-            "max_tilt_deg": 7.469457829701622,
-            "max_axial_twist_deg": 2.193257644938683,
+            "max_tilt_deg": 7.469458090375445,
+            "max_axial_twist_deg": 2.1932572210886576,
             "inverted_samples": 0,
             "worst_seconds": 0.724999982714653,
             "lowest_shoe_at_worst_m": -0.0023145212078108926
           },
           "swing": {
             "samples": 67,
-            "max_tilt_deg": 125.4881570583906,
-            "max_axial_twist_deg": 23.767168386830946,
+            "max_tilt_deg": 125.48815672163978,
+            "max_axial_twist_deg": 23.767166835041962,
             "inverted_samples": 21,
             "worst_seconds": 0.12499999701976777,
             "lowest_shoe_at_worst_m": 0.6543851216719967
@@ -490,32 +490,32 @@
           ]
         ],
         "standing_up": [
-          2.7518153273932266e-05,
-          0.9999999921462223,
-          -0.00012227144695310007
+          2.7518147256571357e-05,
+          0.9999999921462249,
+          -0.00012227142645213594
         ],
         "min_y_m": -0.01723824595905859,
         "phases": {
           "shoe_near_ground": {
             "samples": 34,
-            "max_tilt_deg": 27.73024631379693,
-            "max_axial_twist_deg": 3.04365009370386,
+            "max_tilt_deg": 27.730246312622292,
+            "max_axial_twist_deg": 3.043650928825997,
             "inverted_samples": 0,
             "worst_seconds": 0.8333333134651184,
             "lowest_shoe_at_worst_m": -0.0014530154107667281
           },
           "triangle_near_ground": {
             "samples": 32,
-            "max_tilt_deg": 27.73024631379693,
-            "max_axial_twist_deg": 3.04365009370386,
+            "max_tilt_deg": 27.730246312622292,
+            "max_axial_twist_deg": 3.043650928825997,
             "inverted_samples": 0,
             "worst_seconds": 0.8333333134651184,
             "lowest_shoe_at_worst_m": -0.0014530154107667281
           },
           "swing": {
             "samples": 67,
-            "max_tilt_deg": 132.83080118142487,
-            "max_axial_twist_deg": 27.133749952378366,
+            "max_tilt_deg": 132.8308011802503,
+            "max_axial_twist_deg": 27.133757720126056,
             "inverted_samples": 18,
             "worst_seconds": 0.12499999701976777,
             "lowest_shoe_at_worst_m": 0.6543851216719967
@@ -535,9 +535,9 @@
           ]
         ],
         "standing_up": [
-          -2.577424602332349e-06,
+          -2.5774246023323475e-06,
           0.9999999999962168,
-          9.609526937936902e-07
+          9.609526937936904e-07
         ],
         "min_y_m": -0.00914729409093192,
         "phases": {
@@ -552,7 +552,7 @@
           "triangle_near_ground": {
             "samples": 23,
             "max_tilt_deg": 11.333428197550512,
-            "max_axial_twist_deg": 1.7653872439747147,
+            "max_axial_twist_deg": 1.7653872439746863,
             "inverted_samples": 0,
             "worst_seconds": 0.17499999582767486,
             "lowest_shoe_at_worst_m": 0.023054479920042614
@@ -578,32 +578,32 @@
           ]
         ],
         "standing_up": [
-          -2.404652213763595e-06,
-          0.9999999999970213,
-          4.1830523022466866e-07
+          -2.404652197252211e-06,
+          0.9999999999970215,
+          4.1830535297977335e-07
         ],
         "min_y_m": -0.00914729409093192,
         "phases": {
           "shoe_near_ground": {
             "samples": 31,
-            "max_tilt_deg": 29.70259338405843,
-            "max_axial_twist_deg": 4.876486992312493,
+            "max_tilt_deg": 29.70259338405133,
+            "max_axial_twist_deg": 4.876486515943554,
             "inverted_samples": 0,
             "worst_seconds": 0.4249999898672104,
             "lowest_shoe_at_worst_m": 0.026805502825957173
           },
           "triangle_near_ground": {
             "samples": 26,
-            "max_tilt_deg": 23.432865558690544,
-            "max_axial_twist_deg": 4.030208526479498,
+            "max_tilt_deg": 23.432865558683442,
+            "max_axial_twist_deg": 4.030208154839556,
             "inverted_samples": 0,
             "worst_seconds": 0.408333323597908,
             "lowest_shoe_at_worst_m": -0.006966215622190151
           },
           "swing": {
             "samples": 70,
-            "max_tilt_deg": 132.8236359214587,
-            "max_axial_twist_deg": 40.28500599546635,
+            "max_tilt_deg": 132.8236359214517,
+            "max_axial_twist_deg": 40.285002361997726,
             "inverted_samples": 16,
             "worst_seconds": 0.541666653752327,
             "lowest_shoe_at_worst_m": 0.654558364537454
@@ -621,32 +621,32 @@
           ]
         ],
         "standing_up": [
-          -0.02430720079387386,
-          0.9915493129860382,
-          0.1274328054563729
+          -0.024307194286638106,
+          0.9915493123792696,
+          0.12743281141883891
         ],
         "min_y_m": -0.017892371055199283,
         "phases": {
           "shoe_near_ground": {
             "samples": 36,
-            "max_tilt_deg": 64.40289296838581,
-            "max_axial_twist_deg": 9.515254057425608,
+            "max_tilt_deg": 64.40289261540649,
+            "max_axial_twist_deg": 9.515253286737732,
             "inverted_samples": 0,
             "worst_seconds": 0.04166666567325592,
             "lowest_shoe_at_worst_m": -0.0005848054748488086
           },
           "triangle_near_ground": {
             "samples": 21,
-            "max_tilt_deg": 13.063971833453472,
-            "max_axial_twist_deg": 2.01355792104809,
+            "max_tilt_deg": 13.063972132828727,
+            "max_axial_twist_deg": 2.0135574970168477,
             "inverted_samples": 0,
             "worst_seconds": 0.6083333188295365,
             "lowest_shoe_at_worst_m": 0.011518901652507546
           },
           "swing": {
             "samples": 65,
-            "max_tilt_deg": 125.48811285056098,
-            "max_axial_twist_deg": 23.767549537842342,
+            "max_tilt_deg": 125.4881125138098,
+            "max_axial_twist_deg": 23.76754798605438,
             "inverted_samples": 20,
             "worst_seconds": 0.12499999701976777,
             "lowest_shoe_at_worst_m": 0.6543833773388417
@@ -664,32 +664,32 @@
           ]
         ],
         "standing_up": [
-          2.7518153273932266e-05,
-          0.9999999921462223,
-          -0.00012227144695310007
+          2.7518147256571357e-05,
+          0.9999999921462249,
+          -0.00012227142645213594
         ],
         "min_y_m": -0.017892371055199283,
         "phases": {
           "shoe_near_ground": {
             "samples": 36,
-            "max_tilt_deg": 29.676150780477105,
-            "max_axial_twist_deg": 3.296138054180915,
+            "max_tilt_deg": 29.676150779302482,
+            "max_axial_twist_deg": 3.2961389756596873,
             "inverted_samples": 0,
             "worst_seconds": 0.04166666567325592,
             "lowest_shoe_at_worst_m": -0.0005848054748488086
           },
           "triangle_near_ground": {
             "samples": 33,
-            "max_tilt_deg": 29.676150780477105,
-            "max_axial_twist_deg": 3.296138054180915,
+            "max_tilt_deg": 29.676150779302482,
+            "max_axial_twist_deg": 3.2961389756596873,
             "inverted_samples": 0,
             "worst_seconds": 0.04166666567325592,
             "lowest_shoe_at_worst_m": -0.0005848054748488086
           },
           "swing": {
             "samples": 65,
-            "max_tilt_deg": 132.830831235243,
-            "max_axial_twist_deg": 27.134294794303855,
+            "max_tilt_deg": 132.83083123406843,
+            "max_axial_twist_deg": 27.13430256203577,
             "inverted_samples": 15,
             "worst_seconds": 0.12499999701976777,
             "lowest_shoe_at_worst_m": 0.6543833773388417
@@ -709,16 +709,16 @@
           ]
         ],
         "standing_up": [
-          -2.577424602332349e-06,
+          -2.5774246023323475e-06,
           0.9999999999962168,
-          9.609526937936902e-07
+          9.609526937936904e-07
         ],
         "min_y_m": -0.0004404277573860915,
         "phases": {
           "shoe_near_ground": {
             "samples": 143,
             "max_tilt_deg": 24.591786109234686,
-            "max_axial_twist_deg": 11.599748825878748,
+            "max_axial_twist_deg": 11.59974882587872,
             "inverted_samples": 0,
             "worst_seconds": 1.8333333333333333,
             "lowest_shoe_at_worst_m": -1.5288685775716182e-07
@@ -726,7 +726,7 @@
           "triangle_near_ground": {
             "samples": 140,
             "max_tilt_deg": 24.591786109234686,
-            "max_axial_twist_deg": 11.599748825878748,
+            "max_axial_twist_deg": 11.59974882587872,
             "inverted_samples": 0,
             "worst_seconds": 1.8333333333333333,
             "lowest_shoe_at_worst_m": -1.5288685775716182e-07
@@ -752,32 +752,32 @@
           ]
         ],
         "standing_up": [
-          -2.404652213763595e-06,
-          0.9999999999970213,
-          4.1830523022466866e-07
+          -2.404652197252211e-06,
+          0.9999999999970215,
+          4.1830535297977335e-07
         ],
         "min_y_m": -0.0004404277573860915,
         "phases": {
           "shoe_near_ground": {
             "samples": 143,
-            "max_tilt_deg": 24.591814340906446,
-            "max_axial_twist_deg": 11.599760688426528,
+            "max_tilt_deg": 24.591814340912943,
+            "max_axial_twist_deg": 11.599760358895594,
             "inverted_samples": 0,
             "worst_seconds": 1.8333333333333333,
             "lowest_shoe_at_worst_m": -1.5288685775716182e-07
           },
           "triangle_near_ground": {
             "samples": 91,
-            "max_tilt_deg": 8.826948838091166,
-            "max_axial_twist_deg": 7.847005014122999,
+            "max_tilt_deg": 8.826948838094774,
+            "max_axial_twist_deg": 7.847004959971514,
             "inverted_samples": 0,
             "worst_seconds": 1.9666666666666666,
             "lowest_shoe_at_worst_m": -1.187832449345283e-07
           },
           "swing": {
             "samples": 98,
-            "max_tilt_deg": 49.77580449794454,
-            "max_axial_twist_deg": 6.951921519096544,
+            "max_tilt_deg": 49.77580449793791,
+            "max_axial_twist_deg": 6.951921483672891,
             "inverted_samples": 0,
             "worst_seconds": 1.1,
             "lowest_shoe_at_worst_m": 0.06097260096736227
@@ -795,32 +795,32 @@
           ]
         ],
         "standing_up": [
-          -0.02430720079387386,
-          0.9915493129860382,
-          0.1274328054563729
+          -0.024307194286638106,
+          0.9915493123792696,
+          0.12743281141883891
         ],
         "min_y_m": -0.00036201659027268115,
         "phases": {
           "shoe_near_ground": {
             "samples": 177,
-            "max_tilt_deg": 41.44950118144725,
-            "max_axial_twist_deg": 7.748763361346164,
+            "max_tilt_deg": 41.449500918611065,
+            "max_axial_twist_deg": 7.748763003746802,
             "inverted_samples": 0,
             "worst_seconds": 0.0,
             "lowest_shoe_at_worst_m": 0.006930749814935392
           },
           "triangle_near_ground": {
             "samples": 112,
-            "max_tilt_deg": 26.48973717159399,
-            "max_axial_twist_deg": 7.748763361346164,
+            "max_tilt_deg": 26.489737367537636,
+            "max_axial_twist_deg": 7.748763003746802,
             "inverted_samples": 0,
             "worst_seconds": 1.0416666666666667,
             "lowest_shoe_at_worst_m": -0.00019796966071400357
           },
           "swing": {
             "samples": 64,
-            "max_tilt_deg": 40.03880162043466,
-            "max_axial_twist_deg": 6.953179254167793,
+            "max_tilt_deg": 40.03880135223253,
+            "max_axial_twist_deg": 6.953178853595233,
             "inverted_samples": 0,
             "worst_seconds": 0.09166666666666666,
             "lowest_shoe_at_worst_m": 0.03055042934960047
@@ -838,32 +838,32 @@
           ]
         ],
         "standing_up": [
-          2.7518153273932266e-05,
-          0.9999999921462223,
-          -0.00012227144695310007
+          2.7518147256571357e-05,
+          0.9999999921462249,
+          -0.00012227142645213594
         ],
         "min_y_m": -0.00036201659027268115,
         "phases": {
           "shoe_near_ground": {
             "samples": 177,
-            "max_tilt_deg": 41.44946698690589,
-            "max_axial_twist_deg": 6.944426230468991,
+            "max_tilt_deg": 41.449466985686506,
+            "max_axial_twist_deg": 6.9444259330009,
             "inverted_samples": 0,
             "worst_seconds": 0.0,
             "lowest_shoe_at_worst_m": 0.006930749814935392
           },
           "triangle_near_ground": {
             "samples": 84,
-            "max_tilt_deg": 40.46451501393372,
-            "max_axial_twist_deg": 6.9008107099472795,
+            "max_tilt_deg": 40.46451501271481,
+            "max_axial_twist_deg": 6.900810410839881,
             "inverted_samples": 0,
             "worst_seconds": 1.9666666666666666,
             "lowest_shoe_at_worst_m": 0.0006782597109367561
           },
           "swing": {
             "samples": 64,
-            "max_tilt_deg": 40.03978709368069,
-            "max_axial_twist_deg": 6.8449495282978035,
+            "max_tilt_deg": 40.03978709246269,
+            "max_axial_twist_deg": 6.84494931077154,
             "inverted_samples": 0,
             "worst_seconds": 0.09166666666666666,
             "lowest_shoe_at_worst_m": 0.03055042934960047

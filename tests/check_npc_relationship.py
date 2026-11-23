@@ -74,6 +74,7 @@ if __name__ == "__main__":
         assets.mkdir(parents=True)
         for name in (*NAMES, "watt.tree.yaml", "watt.animator.yaml"):
             shutil.copy2(ROOT/"RedflagForge/assets/ai"/name,assets/name)
+        shutil.copytree(ROOT/"RedflagForge/assets/ai/montages",assets/"montages")
         with urlopen(f"http://127.0.0.1:{args.port}/v1/health",timeout=5) as reply:
             model=json.load(reply)["model"]
         result=asyncio.run(exercise(work,args.port))

@@ -4,7 +4,13 @@
 
 ## 角色和设备
 
-第一次读源码，可以先跟一次玩家发话。游戏脚本调用 `Npc.Submit`，场景中的 `NpcSystem::Ask` 把当前能做的动作和这个角色记得的事情放进请求。网络请求返回时，`Accept` 认回提问时的那条候选，让行为树选出接下来要执行的动作。之后每帧由 `Execute` 推进。想弄清瓦特为什么选了箱子，先看提问时的候选和连线。想弄清伸手以后有没有拿到，才需要看交互和背包。[玩家发话到动作执行](../Redflag/src/Redflag/AI/NpcSystem.cpp) · [收集候选](../Redflag/src/Redflag/AI/NpcQuery.cpp) · [世界中的拿取与交付](../Redflag/src/Redflag/Gameplay/WorldActions.cpp)
+在 Forge 顶栏打开「AI → 角色资产…」可以从空场景开始制作角色。先写角色怎样称呼自己、如何与人相处，再选择能观察什么、记住什么，以及能执行哪些操作。保存角色后，在场景实体的「AI 角色」组件中引用这份资产。同一个救援机器人可以出现在不同关卡，实体各自保留本局的记忆和进度。
+
+玩家输入一句话时，游戏调用 `Npc.Say`。比如“发电机旁边是什么”和“我今天考试没考好”都可以得到口头答复；“去修发电机”才需要挑选并执行动作。模型读取最近几句交谈时，每句话都带着发言人的身份。玩家刚说过“我叫青桐”，再次提问时，模型看到的是玩家说的这句话，角色自己的回答另占一条。可在角色资产的「交谈时的角色设定」修改语气，行动说明单独决定角色接令时考虑什么。[对话与追问的实现](../Redflag/src/Redflag/AI/NpcDialogue.cpp) · [瓦力的设定](../RedflagForge/assets/ai/watt.npc.yaml)
+
+旧版曾在问名字时编出玩家的工装，接着把同一段话又念了一遍。现在问现场才带上场景观察，追问之前说过的事才调出带发言人姓名的记录。听感还取决于声音模型是否已经载入。进入维修站就会开始加载音色，之后生成一段声音就送进声卡，播放过程中也可以重新开口。两次实机对话保留了实际模型输入、最终台词和首个有声采样到达的时间。[前后对照和录音](../output/validation/wali-conversation/README.md)
+
+如果游戏脚本已经知道玩家要下达工作指令，可以直接调用 `Npc.Submit`。例如按下电梯旁的维修按钮时，`NpcSystem::Ask` 会把维修员能做的动作和它记得的事情放进请求。网络请求返回时，`Accept` 认回提问时的那条候选，让行为树选出接下来要执行的动作。之后每帧由 `Execute` 推进。想弄清瓦力为什么选了箱子，先看提问时的候选和连线。想弄清伸手以后有没有拿到，才需要看交互和背包。[玩家发话到动作执行](../Redflag/src/Redflag/AI/NpcSystem.cpp) · [收集候选](../Redflag/src/Redflag/AI/NpcQuery.cpp) · [世界中的拿取与交付](../Redflag/src/Redflag/Gameplay/WorldActions.cpp)
 
 把 `NpcComponent` 加在维修员身上，让 `Definition` 指向角色 YAML。示例只给维修员一种工作。配置中的 `Target: interaction` 表示寻找场景里提供交互的设备，`Key: repair` 要与设备的 `InteractionComponent.Action` 对应。行为树把模型选中的 `repair` 连到执行维修的动作。角色定义里的 `Tree` 相对于这份 YAML 查找。为电梯添加 `HealthComponent` 和 `InteractionComponent` 后，游戏就能知道要修多久、能修多少。[维修员的定义](../examples/npc-runtime/technician.npc.yaml) · [两节点的行为树](../examples/npc-runtime/technician.tree.yaml) · [示例中创建实体的代码](../tests/NpcRuntimeSmoke.h)
 
@@ -12,8 +18,10 @@
 
 ```powershell
 .\scripts\Start-NpcServices.ps1 -ModelEndpoint http://127.0.0.1:8000/v1/chat/completions -ModelName your-model -SkipSpeech -RequireAll
-Invoke-RestMethod http://127.0.0.1:8716/v1/health
+Invoke-RestMethod "http://127.0.0.1:$env:REDFLAG_DECISION_PORT/v1/health"
 ```
+
+「AI → 模型与语音设置…」保存这台电脑使用的模型服务和语音模型目录。下次从启动脚本运行时，Forge 和游戏会读取同一份设置。遇到旧服务占了原端口，启动器会另选可用端口并传给游戏。瓦力已有的动作台词直接读录音，新台词使用已配置的 Dylan 语音模型；便携包单独使用时，可以用 Windows 安装的简体中文语音朗读。[启动设置](../scripts/Start-NpcServices.ps1) · [角色音色资产](../RedflagForge/assets/audio/watt/dylan.voice.json)
 
 ## 从游戏脚本发出指令
 
@@ -58,19 +66,27 @@ C++ 的 `actors->Submit(id, text)` 也能发令，`NextEvent(id, cursor)` 每次
 
 本机已有决策服务时，在相同目录加上 `--port 8716`，工作间会把同一条维修指令交给这个真实模型。本机的 Qwen3-VL-2B-Instruct 也跑过这个示例。中途取消后设备保持 40，重新发令后升到 70，C# 收到了设备 82 的一次维修完成回执。[实测记录](../output/validation/runtime-ai/scene-sdk.json)
 
-## 瓦特的跟随与补给
+## 瓦力的跟随与补给
 
-在维修站里先保持沉默。瓦特会走到玩家身边，到了角色设置的两米交互距离就停下。玩家说“在这里等我”，瓦特留在当前位置，允许玩家独自走开。两人相隔几米时说“跟我走”，才会看到他追上来。可以在 Forge 的「角色创作」面板为自己的角色设置「无人发令时」「队友倒地时」「最后一个目标消失时」的动作，也可以选择“交给模型选择”。瓦特的前两项分别指定跟随和救助，所以玩家倒地的当帧就会打断旧工作，使用场景中已有的救助距离和耗时。其他角色可保留原来的设定。[瓦特角色设置](../RedflagForge/assets/ai/watt.npc.yaml) · [NpcSystem::Update](../Redflag/src/Redflag/AI/NpcSystem.cpp)
+在维修站里先保持沉默。瓦力会走到玩家身边，到了角色设置的两米交互距离就停下。玩家说“在这里等我”，瓦力留在当前位置，允许玩家独自走开。两人相隔几米时说“跟我走”，才会看到他追上来。可以在 Forge 的「AI → 角色资产…」窗口为自己的角色设置「无人发令时」「队友倒地时」「最后一个目标消失时」的动作，也可以选择“交给模型选择”。瓦力的前两项分别指定跟随和救助，所以玩家倒地的当帧就会打断旧工作，使用场景中已有的救助距离和耗时。其他角色可保留原来的设定。[瓦力角色设置](../RedflagForge/assets/ai/watt.npc.yaml) · [NpcSystem::Update](../Redflag/src/Redflag/AI/NpcSystem.cpp)
 
-“把药送到我手上”和“等我过来拿药”最终都会使背包里多一份药。分清这两种指令，要看谁移动。瓦特收到指令后，模型先选择工作。进入「补给」子树时，Forge 在「选择补给动作」节点上保存了一个问题。引擎会重新查看背包和现场，把玩家的原话、这个问题和子树现在允许的候选交给模型。第二次回答决定去捡、送药上门，还是原地留药。两次提问之间，如果另一个人先捡走了物品，场景会按实体编号复查；附近还有替代品时，再请模型挑选，最后一个也被拿走时则按角色约定回到队友身边。[节点问题与连线](../RedflagForge/assets/ai/watt.tree.yaml) · [BehaviorTree::Advance](../Redflag/src/Redflag/AI/BehaviorTree.cpp)
+“把药送到我手上”和“等我过来拿药”最终都会使背包里多一份药。分清这两种指令，要看谁移动。瓦力收到指令后，模型先选择工作。进入「补给」子树时，Forge 在「选择补给动作」节点上保存了一个问题。引擎会重新查看背包和现场，把玩家的原话、这个问题和子树现在允许的候选交给模型。第二次回答决定去捡、送药上门，还是原地留药。两次提问之间，如果另一个人先捡走了物品，场景会按实体编号复查；附近还有替代品时，再请模型挑选，最后一个也被拿走时则按角色约定回到队友身边。[节点问题与连线](../RedflagForge/assets/ai/watt.tree.yaml) · [BehaviorTree::Advance](../Redflag/src/Redflag/AI/BehaviorTree.cpp)
 
 要在另一棵树上使用这种追问，选中「模型选择」节点，在「模型问题」里填上到了这一步还需要弄清楚什么，并把允许的动作键连到下一个节点。留空会沿用上一次的选择。玩家临时改令时，角色先停步并取消正在等待的请求；被取消的回答无法开始旧动作。行为树画布会显示这局实际到达的节点，模型原本提出什么、现场接受了什么，分别记在“模型选择”和“选择”两种回执里。手动预览连线时，可以单独检查同一个候选键会沿哪些线到达动作。[正式运行记录与远距离对照](../output/validation/station-companion/README.md)
 
+## 黑板和跨帧任务
+
+货场巡检机会巡视、接近目标、蓄能和放电。脚本每帧更新「看见目标」等黑板值。黑板属于这一台巡检机，两台机器可以读同一棵树，同时做不同的事。选择节点（Selector）依次尝试子节点，直到其中一个开始工作或成功。顺序节点（Sequence）要等前一个子节点成功，再开始下一个。实际巡检机把蓄能和放电连成顺序，所以蓄能仍在进行时，后面的放电动作还不会运行。[巡检机的任务树](../RedflagForge/assets/ai/sentinel-patrol.tree.yaml)
+
+「看见目标」是黑板条件装饰器（Decorator）。它守在一条分支前面，决定角色什么时候能进去。巡检机巡视时发现玩家，条件可以中止优先级较低的巡视；玩家在蓄能期间走进遮挡，条件也可以中止正在执行的蓄能。旧任务先收到中止通知清理自己的进度，然后树才运行另一个任务。Forge 的行为树窗口可以检查黑板值、当时执行的节点和最近中止的节点。这里的条件在游戏更新时检查。[跨帧执行代码](../Redflag/src/Redflag/AI/BehaviorTasks.cpp) · [Epic 的黑板与条件中止示例](https://dev.epicgames.com/documentation/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide)
+
+瓦力的模型动作选择是另一种操作。模型从当时允许的候选中选出 `share`，场景仍要检查它是否真的够到玩家、背包里是否还有药，才能完成交接。选中实体，在「AI 角色 → 本局请求与动作」查看一次请求，能区别模型选了什么和游戏最后做到了什么。模型返回的对话是文字，动作选择是结构化结果。带图的 JSON 记录保留图像说明与大小，省略图片编码。[角色请求记录](../Redflag/src/Redflag/AI/NpcDecisionTrace.cpp)
+
 ## 队友的主动报点
 
-维修站里，玩家没说话，瓦特也会留意正前方的巡检机。巡检机靠近玩家并播放放电动作时，如果瓦特能看见它，会把“故障巡检机正在放电。”记下来。此时瓦特仍可以跟随或待命。模型读到现场观察和本局的提醒偏好，决定是否通过电台开口。每次开口前，引擎再查一遍巡检机还在不在视野里、是否还在做这个动作。一次持续的放电只提醒一次。[巡检机的动作](../SandboxProject/Source/StationGuard.cs) · [视线与电台](../Redflag/src/Redflag/AI/NpcWatch.cpp)
+维修站里，玩家没说话，瓦力也会留意正前方的巡检机。巡检机靠近玩家并播放放电动作时，如果瓦力能看见它，会把“故障巡检机正在放电。”记下来。此时瓦力仍可以跟随或待命。模型读到现场观察和本局的提醒偏好，决定是否通过电台开口。每次开口前，引擎再查一遍巡检机还在不在视野里、是否还在做这个动作。一次持续的放电只提醒一次。[巡检机的动作](../SandboxProject/Source/StationGuard.cs) · [视线与电台](../Redflag/src/Redflag/AI/NpcWatch.cpp)
 
-在 Forge 的「角色创作 → 角色 → 主动报点」里，添加观察，填入目标的队伍、动画片段和要说的话。引擎从队友的眼睛向目标身体的碰撞盒中心看，隔板和中间的角色都能挡住视线。这种观察使用游戏作者登记的动作和场景的物理形状。作者还可以让玩家选择电台是否保持安静。瓦特在角色资料里把「提醒方式」登记为本局偏好，游戏脚本可调用 `NpcNotes.SetPreference(wattId, "提醒方式", "保持安静，只在记录里记下。")`。它会继续观察，把结果放在「对局记录」里。[角色资料](../RedflagForge/assets/ai/watt.npc.yaml) · [C# 的 NpcNotes.SetPreference](../Redflag-ScriptCore/Source/AI/NpcNotes.cs) · [同一场景的五组对照](../output/validation/station-companion/watch.json)
+在 Forge 的「角色创作 → 角色 → 主动报点」里，添加观察，填入目标的队伍、动画片段和要说的话。引擎从队友的眼睛向目标身体的碰撞盒中心看，隔板和中间的角色都能挡住视线。这种观察使用游戏作者登记的动作和场景的物理形状。作者还可以让玩家选择电台是否保持安静。瓦力在角色资料里把「提醒方式」登记为本局偏好，游戏脚本可调用 `NpcNotes.SetPreference(wattId, "提醒方式", "保持安静，只在记录里记下。")`。它会继续观察，把结果放在「对局记录」里。[角色资料](../RedflagForge/assets/ai/watt.npc.yaml) · [C# 的 NpcNotes.SetPreference](../Redflag-ScriptCore/Source/AI/NpcNotes.cs) · [同一场景的五组对照](../output/validation/station-companion/watch.json)
 
 ## 巡检员的观察和转述
 
@@ -91,17 +107,17 @@ NpcNotes.Report(Id, 0, "玩家拍下了控制面板", "panel-b.png"); // 这张�
 第一版把“确认阀门颜色”的目标填成了队友。隔板升起以后队友还在旁边，因此模型仍能选“确认”。在四轮输入中，本地 Qwen3-VL-2B 都选了它。把动作目标改成可见的阀门备件后，角色面对阀门时可以选“确认”或“复查”，隔板挡住阀门时只能选“复查”。实际模型在四轮里依次确认、复查、复查、复查，行为树也确实执行了相应动作。过去见过的东西可以帮助角色交谈；要执行现在才能做的事，还要把那个实体填成动作的目标。[初版选择](../output/validation/runtime-ai/memory-unrestricted.json) · [修正后的真实模型与宿主](../output/validation/runtime-ai/memory-model.json)
 ## 队友相机
 
-在 Vulkan 游戏里按 T 打开「队友通讯」，选中角色并展开「从队友眼中观察」。想看它正对着什么，可以选「描述所见」，输入“描述面前的地表和设施”，点击「拍照并提问」。相机从这个角色的眼睛向前拍，游戏的第三人称镜头和 HUD 都不会出现在照片里。「保存这张原图」能把实际发给模型的 PNG 存到游戏工作目录的 `captures/npc`。下面是维修站开局时瓦特拍到的画面。[相机的绘制与读回](../RedflagForge/src/NpcCamera.cpp)
+在 Vulkan 编辑器中播放关卡，在层级中选中角色，从「AI 角色 → 本局请求与动作 → 角色工具」展开「从队友眼中观察」。想看它正对着什么，可以选「描述所见」，输入“描述面前的地表和设施”，点击「拍照并提问」。相机从这个角色的眼睛向前拍，游戏的第三人称镜头和 HUD 都不会出现在照片里。「保存这张原图」能把实际发给模型的 PNG 存到游戏工作目录的 `captures/npc`。下面是维修站开局时瓦力拍到的画面。[相机的绘制与读回](../RedflagForge/src/NpcCamera.cpp)
 
-![瓦特的视角，画面左侧有金属架，右侧有一名机器人，地面上有一丛浅色植被](../output/validation/npc-live-camera/station.png)
+![瓦力的视角，画面左侧有金属架，右侧有一名机器人，地面上有一丛浅色植被](../output/validation/npc-live-camera/station.png)
 
-Qwen3-VL-2B 在这张图上认出了裸露的棕色地面、金属架和机器人，也把架子前面的浅色植物描述成了“类似蛋的物体”。自由描述会以「照片」为来源留在瓦特自己的记录中。通过 `NpcNotes.TryRead` 可以查到拍摄时经过的秒数、照片编号和模型原话。只有游戏查回具体实体时，记录里才会有对应的实体编号。照片回答不会修改物品、地形或灯。[角色记录接口](../Redflag-ScriptCore/Source/AI/NpcNotes.cs) · [原始答复](../output/validation/npc-live-camera/observations.tsv)
+Qwen3-VL-2B 在这张图上认出了裸露的棕色地面、金属架和机器人，也把架子前面的浅色植物描述成了“类似蛋的物体”。自由描述会以「照片」为来源留在瓦力自己的记录中。通过 `NpcNotes.TryRead` 可以查到拍摄时经过的秒数、照片编号和模型原话。只有游戏查回具体实体时，记录里才会有对应的实体编号。照片回答不会修改物品、地形或灯。[角色记录接口](../Redflag-ScriptCore/Source/AI/NpcNotes.cs) · [原始答复](../output/validation/npc-live-camera/observations.tsv)
 
 「找画面中的物体」还会读取拍照时每个像素上的实体编号。比如墙前有一个红色立方体，立方体背后的墙也占着同一片屏幕区域。若只告诉模型两个外框的坐标，它曾经把墙选作答案。现在引擎会把同一物体的可见像素裁成一张特写，留下物体原有的颜色，把旁边物体的像素涂灰。模型选中一张特写后，还要单独看这张图，确认里面确实有想找的物体。画面复杂时每次最多发送八张特写，按画面中实际占据的像素数选取。照片太小、遮挡严重或物体未进入候选时都可能漏认。[特写与实体对应](../RedflagForge/src/NpcCamera.cpp) · [模型确认与物理查询](../Redflag/src/Redflag/AI/PhotoQuestion.cpp)
 
-拍到红色物体以后，队友可能在模型回答前搬走它。瓦特仍然可以说「刚才照片里有一块红色的东西」。这句话的依据是那张照片，拿取则要等瓦特伸手时，由场景检查物体还在不在、手够不够远、中间有没有挡板。模型把草丛看错也会留下原话，创作者可以回到照片核对。[相机测试与原图](../output/validation/npc-live-camera/README.md)
+拍到红色物体以后，队友可能在模型回答前搬走它。瓦力仍然可以说「刚才照片里有一块红色的东西」。这句话的依据是那张照片，拿取则要等瓦力伸手时，由场景检查物体还在不在、手够不够远、中间有没有挡板。模型把草丛看错也会留下原话，创作者可以回到照片核对。[相机测试与原图](../output/validation/npc-live-camera/README.md)
 
-队友也可以只提供大致地点。例如玩家说「前面像有一箱补给，也可能只是个空架子」。把玩家指的地方和原话交给角色，游戏可以完全没有那个箱子的实体编号。玩家请瓦特转告别人时，它能原地复述这条线索。要求过去看看时，它走向标记，从新位置拍照并回答。角色真的拿到东西时，背包数量才会改变。
+队友也可以只提供大致地点。例如玩家说「前面像有一箱补给，也可能只是个空架子」。把玩家指的地方和原话交给角色，游戏可以完全没有那个箱子的实体编号。玩家请瓦力转告别人时，它能原地复述这条线索。要求过去看看时，它走向标记，从新位置拍照并回答。角色真的拿到东西时，背包数量才会改变。
 
 ```csharp
 // Redflag-ScriptCore/Source/AI/NpcNotes.cs。在游戏脚本里，marker 是玩家放下的标记。
@@ -110,6 +126,6 @@ NpcNotes.ReportPlace(companion.Id, ref place, "前面像有一箱补给，也可
 Npc.Submit(companion.Id, "去我标记的地方重新看看。");
 ```
 
-照片能给出方向，单张照片里的箱子究竟有多远往往看不出来。瓦特的动作表里可以选择「到附近查看」。角色设置的 `SearchStep` 决定先沿这个方向走多少米，维修站使用 3 米。走到距标记 1 米时就停下观察，这个距离由 `SearchRadius` 决定。玩家直接给了标记时，就去标记附近。遇到走不过的障碍，瓦特会停在可到达的位置再看。玩家改令后，先前的看图回复不能重新启动旧动作。[角色设置](../RedflagForge/assets/ai/watt.npc.yaml) · [角色脚本接口](../Redflag-ScriptCore/Source/AI/NpcNotes.cs)
+照片能给出方向，单张照片里的箱子究竟有多远往往看不出来。瓦力的动作表里可以选择「到附近查看」。角色设置的 `SearchStep` 决定先沿这个方向走多少米，维修站使用 3 米。走到距标记 1 米时就停下观察，这个距离由 `SearchRadius` 决定。玩家直接给了标记时，就去标记附近。遇到走不过的障碍，瓦力会停在可到达的位置再看。玩家改令后，先前的看图回复不能重新启动旧动作。[角色设置](../RedflagForge/assets/ai/watt.npc.yaml) · [角色脚本接口](../Redflag-ScriptCore/Source/AI/NpcNotes.cs)
 
 角色定义中的 `ObserveWorld` 控制它能否收到作者配置的地貌等场景信息。`ObservePictures` 控制相机拍照和照片记录，可在「角色创作 → 角色 → 允许用角色相机拍照」修改。公开的 C++ 接口 `PhotoQuestion::Start` 接收宿主给的 PNG 和候选物体；`Update` 在游戏线程收取答复。Forge 自带的 `NpcCamera::Take` 会填写观察者、拍摄时间、眼睛位置、朝向和实体编号。默认眼睛位于角色原点上方 1.55 米、前方 0.28 米，垂直视角 65 度。体型不同的角色可在各自的 `.npc.yaml` 中配置，如 `Eyes: {Height: 0.65, Forward: 0.12, VerticalFov: 60}`。[照片数据](../Redflag/src/Redflag/AI/NpcPhoto.h) · [C++ 提问入口](../Redflag/src/Redflag/AI/PhotoQuestion.h)

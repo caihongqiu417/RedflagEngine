@@ -1,4 +1,5 @@
 #include "rfpch.h"
+#include "Redflag/Animation/Montage.h"
 #include "HandContact.h"
 #include "ColliderBounds.h"
 #include "TraversalRig.h"
@@ -46,7 +47,11 @@ namespace Redflag
 			if (clip==clips.end()) return {0,0,.45f};
 			std::vector<ModelAnimation::NodePose> pose;
 			std::vector<glm::mat4> bones;
-			animation->SamplePose(clip-clips.begin(),clip->Duration*(state->HasContact ? state->Contact : .5f),pose);
+			float sourceTime = clip->Duration * (state->HasContact ? state->Contact : .5f);
+			if (state->MontageAsset)
+				for (const AnimationMarker& mark : state->MontageAsset->Events)
+					if (mark.Name == "contact") sourceTime = mark.Start;
+			animation->SamplePose(clip-clips.begin(),sourceTime,pose);
 			animation->GetModelTransforms(pose,bones);
 			glm::mat4 finger;
 			if (!animation->GetNodeTransform(grip->Bone,bones,finger)) return {0,0,.45f};

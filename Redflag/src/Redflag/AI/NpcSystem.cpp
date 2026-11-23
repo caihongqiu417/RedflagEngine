@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "NpcSystem.h"
+#include "Redflag/Animation/MontageRuntime.h"
 #include "Redflag/Gameplay/HandContact.h"
 #include "EnvironmentSense.h"
 #include "Redflag/Gameplay/ColliderBounds.h"
@@ -87,6 +88,7 @@ namespace Redflag
 		if (text.empty() || !GetDefinition(actor)) return false;
 		NpcState& state = m_Actors[actor];
 		state.Started = true;
+		CancelTurn(state);
 		Stop(actor, state);
 		state.Instruction = text;
 		Record(state, "玩家", text);
@@ -99,11 +101,35 @@ namespace Redflag
 		const auto found = m_Actors.find(actor);
 		if (found == m_Actors.end()) return false;
 		NpcState& state = found->second;
-		if (!state.Request && state.Action.empty()) return false;
+		if (!state.Turn.Request && !state.Request && state.Action.empty()) return false;
 
+		CancelTurn(state);
 		Stop(actor, state);
 		state.Instruction.clear();
 		return true;
+	}
+
+	void NpcSystem::AddObservations(uint64_t actor, const NpcDefinition& role, const NpcState& state, DecisionRequest& request)
+	{
+		if (role.ObserveWorld) request.Observations = SenseEnvironment(m_Scene, actor);
+		state.Memory.AddTo(request);
+		Entity owner = m_Scene.GetEntityByUUID(actor);
+		if (!role.LeaderRelationship.empty())
+		{
+			Entity leader = m_Scene.GetEntityByUUID(owner.GetComponent<NpcComponent>().Leader);
+			if (leader)
+				request.Observations.push_back({"与队友" + leader.GetName() + "的约定", role.LeaderRelationship});
+		}
+		if (owner.HasComponent<InventoryComponent>())
+		{
+			std::string stock;
+			for (const auto& item : owner.GetComponent<InventoryComponent>().Items)
+				stock += item.first + " × " + std::to_string(item.second) + " ";
+			request.Observations.push_back({"inventory", stock.empty() ? "背包是空的" : stock});
+		}
+		if (role.Remember)
+			for (const auto& entry : state.Blackboard.Values)
+				request.Observations.push_back({entry.first, entry.second});
 	}
 
 	void NpcSystem::Ask(uint64_t actor, NpcState& state, const std::string& event, std::vector<DecisionImage> images, uint32_t selector)
@@ -151,33 +177,15 @@ namespace Redflag
 		const BehaviorNode* node = definition->Tree.Find(selector ? selector : definition->Tree.GetRoot());
 		if (node && !node->Question.empty())
 			request.Prompt += "\n" + node->Question;
-		request.Instructions = definition->Instructions;
+		request.Instructions = definition->Instructions + "\n你的名字是" + definition->Name + "。";
 		request.Model = definition->Model;
 		request.Images = std::move(images);
-		if (definition->ObserveWorld) request.Observations = SenseEnvironment(m_Scene, actor);
-		state.Memory.AddTo(request);
+		AddObservations(actor, *definition, state, request);
 		if (!event.empty()) request.Observations.push_back({"event", event});
-		Entity owner = m_Scene.GetEntityByUUID(actor);
-		if (!definition->LeaderRelationship.empty())
-		{
-			Entity leader = m_Scene.GetEntityByUUID(owner.GetComponent<NpcComponent>().Leader);
-			if (leader)
-				request.Observations.push_back({"与队友" + leader.GetName() + "的约定", definition->LeaderRelationship});
-		}
-		if (owner.HasComponent<InventoryComponent>())
-		{
-			std::string stock;
-			for (const auto& item : owner.GetComponent<InventoryComponent>().Items)
-				stock += item.first + " × " + std::to_string(item.second) + " ";
-			request.Observations.push_back({"inventory", stock.empty() ? "背包是空的" : stock});
-		}
-		if (definition->Remember)
-			for (const auto& entry : state.Blackboard.Values)
-				request.Observations.push_back({entry.first, entry.second});
 		for (const NpcCandidate& choice : state.Candidates)
 			request.Candidates.push_back({choice.ID, choice.Description});
 
-		state.Request = m_Client.Start(std::move(request));
+		state.Request = StartDecision(state, selector ? "子树行动选择" : "行动选择", std::move(request));
 		if (selector) Record(state, "子树提问", node->Name + " " + node->Question);
 		else Record(state, "提问", event.empty() ? state.Instruction : event);
 	}
@@ -190,18 +198,18 @@ namespace Redflag
 		state.Look = 0;
 		if (state.Watch.Request)
 		{
-			m_Client.Cancel(state.Watch.Request);
-			m_Cancelled.push_back(state.Watch.Request);
+			CancelDecision(state, state.Watch.Request);
 			state.Watch.Request = 0;
 		}
 		if (state.Request)
 		{
 			Record(state, "中止", "取消尚未回答的请求");
-			m_Client.Cancel(state.Request);
-			m_Cancelled.push_back(state.Request);
+			CancelDecision(state, state.Request);
 			state.Request = 0;
 		}
 		if (!state.Action.empty()) Record(state, "中止", state.Action, state.Goal.Target);
+		if (NpcDecisionTrace* trace = FindDecision(state, state.ActiveDecision)) trace->Outcome = "动作中止";
+		state.ActiveDecision = 0;
 		Ref<NpcScriptAction> script = std::move(state.Script);
 		const uint64_t target = state.Goal.Target;
 		state.Use = {};
@@ -215,8 +223,14 @@ namespace Redflag
 
 	void NpcSystem::Accept(uint64_t actor, NpcState& state, const DecisionResult& result)
 	{
+		const uint64_t request = state.Request;
 		state.Request = 0;
-		if (result.Status != DecisionStatus::Completed) { Record(state, "模型", result.Error); return; }
+		if (result.Status != DecisionStatus::Completed)
+		{
+			Record(state, "模型", result.Error);
+			if (!state.Turn.Request) state.Turn = {};
+			return;
+		}
 		const auto picked = std::find_if(state.Candidates.begin(), state.Candidates.end(),
 			[&](const NpcCandidate& candidate) { return candidate.ID == result.Choice; });
 		if (picked == state.Candidates.end()) { Record(state, "模型", "没有这个候选"); return; }
@@ -228,8 +242,14 @@ namespace Redflag
 			return c.Intent == picked->Intent && c.Target == picked->Target && c.Item == picked->Item && c.Note == picked->Note;
 		});
 		Record(state, "模型选择", picked->ID + " / " + picked->Description, picked->Target);
+		if (NpcDecisionTrace* trace = FindDecision(state, request))
+		{
+			trace->Intent = picked->Intent;
+			trace->Target = picked->Target;
+			if (valid == current.end()) trace->Outcome = "目标已经变化，重新选择";
+		}
 		if (valid == current.end()) { TargetLost(actor, state, *picked); return; }
-		Select(actor, state, *valid);
+		Select(actor, state, *valid, request);
 	}
 
 	// 作者写明的日常工作和紧急救助可以立即开始，玩家发出的自由指令仍由模型选择。
@@ -268,18 +288,38 @@ namespace Redflag
 		Ask(actor, state, event + "请从现有目标中重新选择。");
 	}
 
-	void NpcSystem::Select(uint64_t actor, NpcState& state, const NpcCandidate& choice)
+	void NpcSystem::Select(uint64_t actor, NpcState& state, const NpcCandidate& choice, uint64_t request)
 	{
 		GetDefinition(actor)->Tree.Advance(state.Blackboard, choice.Intent, state.Trace);
 		if (state.Trace.Waiting)
 		{
+			if (NpcDecisionTrace* trace = FindDecision(state, request)) trace->Outcome = "进入行为树的下一次选择";
 			Ask(actor, state, "已进入子树，请查看现有候选。", {}, state.Trace.Waiting);
 			return;
 		}
 		state.Goal = choice;
 		state.Action = state.Trace.Action;
+		state.ActiveDecision = request;
+		if (NpcDecisionTrace* trace = FindDecision(state, request))
+		{
+			trace->Action = state.Action;
+			trace->Outcome = state.Action.empty() ? "行为树没有接到动作" : "开始执行";
+		}
 		Record(state, "选择", choice.ID + " → " + state.Action, choice.Target);
 		if (state.Action.empty()) Record(state, "行为树", "这个候选还没有接到动作");
+		if (!state.Turn.Text.empty() && !state.Turn.Request)
+		{
+			if (state.Action.empty())
+				Reply(actor, state, "这件事现在做不到，请告诉队友。");
+			else
+			{
+				// 此刻才刚接令。完成后的台词由 Finish 在物品或场景状态真的改变后发出。
+				const auto& intents = GetDefinition(actor)->Intents;
+				const auto intent = std::find_if(intents.begin(), intents.end(), [&](const NpcIntent& entry) { return entry.Key == choice.Intent; });
+				if (intent != intents.end() && !intent->OnStart.empty()) Record(state, "接令", intent->OnStart, choice.Target, intent->OnStart);
+				state.Turn = {};
+			}
+		}
 	}
 
 	//========== 角色移动与世界回执 ==========
@@ -289,6 +329,7 @@ namespace Redflag
 		if (state.Stage == stage) return;
 		state.ContactPending = false;
 		state.Stage = stage;
+		if (NpcDecisionTrace* trace = FindDecision(state, state.ActiveDecision)) trace->Outcome = "正在执行 " + stage;
 		state.PhaseTime = 0.0f;
 		state.ActionEvents = {};
 		Record(state, "动作", stage, state.Goal.Target);
@@ -298,6 +339,18 @@ namespace Redflag
 		if (!definition || !owner) return;
 
 		const AnimationState* shot = definition->Controller.Find(stage);
+		if (!state.MontageSlot.empty()) {
+			if (MontagePlayer* previous = GetMontagePlayer(owner)) previous->Stop(state.MontageSlot);
+			state.MontageSlot.clear();
+		}
+		if (shot && shot->MontageAsset) {
+			MontagePlayer& montage = AddMontagePlayer(owner);
+			state.MontageCursor = montage.LastEvent();
+			if (PlayMontage(owner,shot->MontageAsset,"",stage,true))
+				state.MontageSlot = shot->MontageAsset->Slot;
+			else Record(state,"动画","无法播放 " + shot->Montage);
+			return;
+		}
 		if (shot && shot->Seconds > 0.f && (stage == "pickup" || stage == "give")) {
 			// 旧动作表用 Contact 表示剪辑已播过的比例。复用事件时间轴，在同一时刻实际交接物品。
 			AnimationState interaction = *shot;
@@ -310,16 +363,8 @@ namespace Redflag
 		const std::string& clip = shot ? shot->Clip : stage == "walk" ? definition->WalkClip : definition->IdleClip;
 		if (clip.empty()) return;
 		animation.MatchTravel = stage == "walk" || stage == "run";
-		if (shot)
-		{
-			animation.BlendSeconds = shot->Blend;
-			animation.Loop = shot->Loop;
-		}
-		if (animation.Clip != clip || (shot && !shot->Loop))
-		{
-			animation.Clip = clip;
-			animation.Time = 0.0f;
-		}
+		if (shot) animation.Loop = shot->Loop;
+		animation.PlayClip(clip, &definition->Controller, shot, shot && !shot->Loop);
 	}
 
 	bool NpcSystem::Face(uint64_t actor, glm::vec3 position, float seconds)
@@ -430,6 +475,8 @@ namespace Redflag
 			[&](const NpcIntent& item) { return item.Key == state.Goal.Intent; });
 		const std::string speech = success && intent != definition.Intents.end() ? intent->Reply : "";
 		Record(state, success ? "完成" : "失败", action, state.Goal.Target, speech);
+		if (NpcDecisionTrace* trace = FindDecision(state, state.ActiveDecision)) trace->Outcome = success ? "执行完成" : "执行失败";
+		state.ActiveDecision = 0;
 
 		state.Use = {};
 		state.Script.reset();
@@ -503,7 +550,7 @@ namespace Redflag
 		NpcState& state = found->second;
 		state.Look = 0;
 		const bool wasLooking = state.Action == "look";
-		Record(state, receivedImage ? "复看" : "观察未完成", observation, 0, observation);
+		Record(state, receivedImage ? "复看" : "观察未完成", observation, 0, receivedImage ? observation : "");
 		Finish(actor, state, receivedImage ? ActionResult::Completed : ActionResult::Unavailable);
 		if (receivedImage && !wasLooking) Ask(actor, state, observation);
 	}
@@ -621,16 +668,26 @@ namespace Redflag
 		const AnimationState* animation = definition.Controller.Find(stage);
 		const float duration = animation ? animation->Seconds : 0.0f;
 		state.PhaseTime += seconds;
-		state.ActionEvents.Advance(seconds);
 		bool contactDue = state.ContactPending || duration == 0.f;
-		AnimationNotice notice;
-		while (state.ActionEvents.Read(notice))
-			if (notice.Phase == NotifyPhase::Point && notice.Name == "contact") contactDue = true;
+		bool finished = state.PhaseTime >= duration;
+		if (animation && animation->MontageAsset) {
+			const MontagePlayer* montage = GetMontagePlayer(owner);
+			if (state.MontageSlot.empty() || !montage) { Finish(actor,state,ActionResult::Unavailable); return; }
+			MontageEvent event;
+			while (montage->Read(state.MontageCursor,event,state.MontageSlot))
+				if (event.Notice.State == stage && event.Notice.Phase == NotifyPhase::Point && event.Notice.Name == "contact") contactDue = true;
+			finished = !montage->IsPlaying(state.MontageSlot);
+		} else {
+			state.ActionEvents.Advance(seconds);
+			AnimationNotice notice;
+			while (state.ActionEvents.Read(notice))
+				if (notice.Phase == NotifyPhase::Point && notice.Name == "contact") contactDue = true;
+		}
 		if (!state.ContactMade && contactDue)
 		{
 			state.ContactPending = true;
 			if (hasSocket && !AtContact(m_Scene,actor)) {
-				if (state.PhaseTime >= duration) Finish(actor,state,ActionResult::OutOfReach);
+				if (finished) Finish(actor,state,ActionResult::OutOfReach);
 				return;
 			}
 			const ActionResult contact = pickingUp
@@ -645,7 +702,7 @@ namespace Redflag
 			state.ContactMade = true;
 			Record(state, "库存", pickingUp ? "物品已放入背包" : "物品已交到队友手中", state.Goal.Target);
 		}
-		if (state.PhaseTime >= duration) Finish(actor, state, ActionResult::Completed);
+		if (finished) Finish(actor,state,state.ContactMade ? ActionResult::Completed : ActionResult::Unavailable);
 	}
 
 	void NpcSystem::Update(float seconds)
@@ -658,6 +715,7 @@ namespace Redflag
 		{
 			Entity owner = m_Scene.GetEntityByUUID(it->first);
 			if (owner && owner.HasComponent<NpcComponent>()) { ++it; continue; }
+			CancelTurn(it->second);
 			Stop(it->first, it->second);
 			it = m_Actors.erase(it);
 		}
@@ -668,6 +726,7 @@ namespace Redflag
 			NpcState& state = m_Actors[id];
 			if (owner.HasComponent<HealthComponent>() && owner.GetComponent<HealthComponent>().Current <= 0)
 			{
+				if (!state.Turn.Text.empty()) CancelTurn(state);
 				if (state.Request || state.Watch.Request || !state.Action.empty()) Stop(id, state, false);
 				// 倒地会中断队友任务。已离开地面的队友继续沿原来的轨迹落地。
 				MoveCharacter(m_Scene, id, glm::vec3(0), CharacterRadius(owner), seconds);
@@ -697,6 +756,7 @@ namespace Redflag
 			const bool down = leader && leader.HasComponent<HealthComponent>() && leader.GetComponent<HealthComponent>().Current <= 0.0f;
 			if (!state.Started || (down && !state.LeaderDown))
 			{
+				if (down) CancelTurn(state);
 				Stop(id, state);
 				const NpcDefinition* definition = GetDefinition(id);
 				const std::string event = down ? "队友刚刚倒下了。" : "游戏开始，队友还没有说话。";
@@ -705,9 +765,10 @@ namespace Redflag
 				state.Started = true;
 			}
 			state.LeaderDown = down;
+			UpdateTurn(id, state);
 			if (state.Request)
 			{
-				if (const auto result = m_Client.Take(state.Request)) Accept(id, state, *result);
+				if (const auto result = TakeDecision(state, state.Request)) Accept(id, state, *result);
 			}
 			if (!state.Action.empty()) Execute(id, state, seconds);
 			if (!down && state.Started)

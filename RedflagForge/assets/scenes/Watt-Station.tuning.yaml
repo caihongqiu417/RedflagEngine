@@ -1,4 +1,4 @@
-# 模型测量使用角色自己的坐标（米）。场景里玩家按原尺寸显示，瓦特的缩放为 0.96。
+# 模型测量使用角色自己的坐标（米）。场景里玩家按原尺寸显示，瓦力的缩放为 0.96。
 notes:
   - entities: [1101, 1102]
     component: CapsuleCollider3DComponent
@@ -20,7 +20,7 @@ notes:
     component: ScriptComponent
     script: Sandbox.StationPlayer
     field: DownRadius
-    reason: 倒地动作结束时，从背甲最低处到身体最高处约 0.65759 米，取一半约为 0.329 米，据此把原半径定为 0.33 米。玩家和瓦特共用这组倒地参数。
+    reason: 倒地动作结束时，从背甲最低处到身体最高处约 0.65759 米，取一半约为 0.329 米，据此把原半径定为 0.33 米。玩家和瓦力共用这组倒地参数。
     evidence: [output/validation/packaged-watt/ground-contact/model.json, SandboxProject/Source/StationPlayer.cs]
   - entities: [1101]
     component: ScriptComponent

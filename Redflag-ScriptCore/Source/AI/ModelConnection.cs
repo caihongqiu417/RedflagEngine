@@ -14,8 +14,10 @@ namespace Redflag
     {
         private readonly HttpClient http;
 
-        public ModelConnection(ushort port = 8716)
+        public ModelConnection(ushort port = 0)
         {
+            if (port == 0 && (!ushort.TryParse(Environment.GetEnvironmentVariable("REDFLAG_DECISION_PORT"), out port) || port == 0))
+                port = 8716;
             var transport = new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false };
             http = new HttpClient(transport) {
                 BaseAddress = new Uri("http://127.0.0.1:" + port + "/v1/"),

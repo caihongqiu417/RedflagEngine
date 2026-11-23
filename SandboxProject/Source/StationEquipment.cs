@@ -8,14 +8,12 @@ namespace Sandbox
     {
         public bool Cannon { get; private set; } = true;
         public ulong Focus { get; private set; }
-        public float ShotTime { get; private set; }
         public float ChangeTime { get; private set; }
         private float cooldown;
 
         public string Update(Entity actor, TransformComponent camera, float seconds, bool canUse)
         {
             ChangeTime -= seconds;
-            ShotTime -= seconds;
             cooldown -= seconds;
             bool slot = Cannon;
             if (canUse && Input.IsKeyDown(KeyCode.D1)) Cannon = true;
@@ -40,7 +38,8 @@ namespace Sandbox
             if (!GameWorld.Socket(actor.Id,"hand.R",ref socket,out muzzle)) return null;
             Vector3 direction = (aim-muzzle).Normalized(), impact;
             ulong hit = GameWorld.Ray(actor.Id,ref muzzle,ref direction,(aim-muzzle).Length()+.08f,out impact);
-            ShotTime = .22f;
+            // 臂炮接管脊柱以上的骨骼。腿和角色的移动继续使用当前步态。
+            Animator.Play(actor.Id, "fire", true);
             GameWorld.Pulse(actor.Id,ref muzzle,ref impact);
             Playtest.Record(actor.Id,"pulse",hit.ToString());
             return hit != 0 && GameWorld.Damage(actor.Id,hit,25) ? "脉冲命中" : null;

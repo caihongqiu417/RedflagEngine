@@ -116,6 +116,45 @@ class Rig:
         return floor
 
 
+def align_standing_clips(doc, data, reference, clips, pelvis, movement_root):
+    """让原地动作围绕走路时的同一个落脚点播放，保留骨盆起伏和关键帧之间的运动。"""
+    rig = Rig(doc, data)
+    joint, root = rig.names[pelvis], rig.names[movement_root]
+
+    def pinned_pose(clip, times):
+        local = rig.pose(clip, times)
+        local[root]["translation"][:] = rig.nodes[root].get("translation", [0, 0, 0])
+        return rig.world(local)
+
+    # 一个完整步态的平均位置不会偏向某一只支撑脚。GLB 使用米，Y 是高度。
+    walking = rig.clip(reference)
+    end = max(rig.values(s["input"])[-1, 0] for s in walking["samplers"])
+    center = pinned_pose(walking, np.linspace(0, end, 60, endpoint=False))[joint][0].mean(axis=0)
+    binary = bytearray(data)
+    for name in clips:
+        clip = rig.clip(name)
+        channel = next(c for c in clip["channels"] if c["target"] == {"node": joint, "path": "translation"})
+        sampler = dict(clip["samplers"][channel["sampler"]])
+        times = rig.values(sampler["input"])[:, 0]
+        world = pinned_pose(clip, times)
+        distance = center - world[joint][0][0]
+        distance[1] = 0
+
+        # GLB 中骨盆的平移写在父骨骼自己的坐标系里。
+        _, rotation, scale = world[rig.parents[joint]]
+        local_distance = rotation.inv().apply(np.tile(distance, (len(times), 1))) / scale
+        values = (rig.values(sampler["output"]) + local_distance).astype("<f4")
+        view = len(doc["bufferViews"])
+        doc["bufferViews"].append(dict(buffer=0, byteOffset=len(binary), byteLength=values.nbytes))
+        binary.extend(values.tobytes())
+        sampler["output"] = len(doc["accessors"])
+        doc["accessors"].append(dict(bufferView=view, componentType=5126, count=len(values), type="VEC3",
+                                     min=values.min(axis=0).tolist(), max=values.max(axis=0).tolist()))
+        channel["sampler"] = len(clip["samplers"])
+        clip["samplers"].append(sampler)
+    return bytes(binary)
+
+
 def add_interactions(doc, data, gestures, floor_motion):
     dest = Rig(doc, data)
     idle = dest.pose(dest.clip("Idle-cycle"), [0])

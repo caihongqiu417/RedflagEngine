@@ -7,4 +7,5 @@ if not exist "%forge%" (
     pause
     exit /b 1
 )
-start "" "%forge%" --vulkan %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "..\scripts\Play-Station.ps1" -Editor %*
+exit /b %errorlevel%

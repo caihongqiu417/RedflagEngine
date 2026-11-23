@@ -1,4 +1,5 @@
 """从原始逐帧数据核对库存、生命、手与物体的距离。可另外将真实窗口截图按游戏时间剪成十章。"""
+from station_pose import visible_pose
 import argparse
 import bisect
 import gzip
@@ -82,7 +83,7 @@ def review(folder,package):
         contact=a.get("contact"); legacy=not any("contact" in r[ident] for r in records)
         p=np.array(j["f_middle.01.L"])
         if legacy:p=(p+j["hand.L"])*.5
-        row=dict(seq=fs[i]["seq"],clip=a["animation"]["clip"],clip_s=a["animation"]["time"],receiver_clip=b["animation"]["clip"])
+        row=dict(seq=fs[i]["seq"],clip=visible_pose(a)["clip"],clip_s=visible_pose(a)["time"],receiver_clip=visible_pose(b)["clip"])
         if contact:row["contact"]=contact
         row["hand_world"]=np.round(p,6).tolist()
         if surface:row["mesh_surface_m"]=round(surface.distance(p),5)
@@ -96,7 +97,7 @@ def review(folder,package):
     contact=[i for i,r in enumerate(records) if r[ident].get("contact")]
     clips=[];events=[];choices=[]
     for f,r in zip(fs,records):
-        clip=r[ident]["animation"]["clip"]
+        clip=visible_pose(r[ident])["clip"]
         if not clips or clips[-1]["clip"]!=clip:clips.append(dict(seq=f["seq"],seconds=f["seconds"],clip=clip))
         for e in f["events"]:
             if e["kind"]=="模型选择":choices.append(dict(seq=f["seq"],text=e["text"]))
@@ -109,12 +110,12 @@ def review(folder,package):
     last_touch=touches_before[-1] if touches_before else None
     # 修理与救援会在原地保持接触。用中间一帧看清双手，避免选到已经松手的第一张窗口图。
     steady=touches_before[len(touches_before)//2] if touches_before else None
-    active=next((i for i,r in enumerate(records) if r[ident]["animation"]["clip"]==CLIPS[action]),None)
-    later=next((i for i in range((tick or 0)+1,len(fs)) if records[i][ident]["animation"]["clip"] in ("Idle-cycle","walking_gun-cycle","walking_nogun-cycle")
+    active=next((i for i,r in enumerate(records) if visible_pose(r[ident])["clip"]==CLIPS[action]),None)
+    later=next((i for i in range((tick or 0)+1,len(fs)) if visible_pose(records[i][ident])["clip"] in ("Idle-cycle","walking_gun-cycle","walking_nogun-cycle")
                 and not records[i][ident].get("contact")),None) if tick is not None else None
     receiver_idle=None
     if action=="revive" and tick is not None:
-        receiver_idle=next((i for i in range(tick,len(fs)) if records[i][other]["animation"]["clip"]=="Idle-cycle"),None)
+        receiver_idle=next((i for i in range(tick,len(fs)) if visible_pose(records[i][other])["clip"]=="Idle-cycle"),None)
     contact_values=[r[ident]["contact"]["distance"] for r in records if r[ident].get("contact")]
     return dict(actor=t["actor"],action=action,trigger=t["trigger"],instruction=t["instruction"],archive_sha256=t["archive_sha256"],exe_sha256=t["exe_sha256"],
         camera=t.get("camera_view","side"),scene=t["scene"],frames=len(fs),window_frames=len(t["captures"]),changes=changes,

@@ -1,0 +1,8 @@
+Name: 用药
+Clip: Station-UseMedkit
+Slot: FullBody
+BlendIn: {Seconds: 0.14, Curve: [0, 1]}
+BlendOut: {Seconds: 0.14, Curve: [0, 1]}
+Sections: [{Name: Use, Start: 0, End: 2}]
+# 第 1 秒药盒到达胸口，再由游戏扣除医疗包并恢复生命。
+Events: [{Name: contact, At: 1}]

@@ -34,7 +34,16 @@ inline void CheckTraversal()
     heightmap.HeightScale=.75f;
     Entity actor=scene->CreateEntityWithUUID(1,"Walker");
     auto& position=actor.GetComponent<TransformComponent>().Translation;
+    box(83,{0,1,30},{.2f,2,2});
+    box(84,{2,1,30},{.2f,2,2});
     scene->OnSimulationStart();
+    // 球心在第一堵墙右侧，球面已经陷入一厘米。朝右离开时仍须命中第二堵墙。
+    const glm::vec3 touching(.39f,1,30);
+    Check(scene->SweepSphere(touching,{-1,0,0},.3f,.5f,1,true) == 0.f
+        && scene->SweepSphere(touching,{1,0,0},.3f,.5f,1,true) == .5f
+        && scene->SweepSphere(touching,{1,0,0},.3f,3.f,1,true) < 1.3f
+        && scene->SweepSphere(touching,{1,0,0},.3f,.5f,1) == 0.f,
+        "an overlapping character can leave the wall but cannot pass through either wall");
     auto reset=[&](int lane) {
         scene->GetRegistry().remove<TerrainTraversal>(static_cast<entt::entity>(actor));
         position={-.7f,.07f,4.f*lane};

@@ -60,24 +60,37 @@ namespace Redflag
 				layout.PlateColor = ReadColor(labels["Color"]);
 			layout.NameSize = labels["Font"].as<float>();
 		}
+		if (const YAML::Node chat = doc["Conversation"])
+		{
+			layout.Chat.Subtitles = chat["Subtitles"].as<bool>(true);
+			if (chat["Speaker"]) layout.Chat.Speaker = ReadColor(chat["Speaker"]);
+			if (chat["Text"]) layout.Chat.Text = ReadColor(chat["Text"]);
+			layout.Chat.Font = chat["Font"].as<float>(layout.Chat.Font);
+			layout.Chat.BottomMargin = chat["BottomMargin"].as<float>(layout.Chat.BottomMargin);
+			layout.Chat.ReadingRate = chat["ReadingRate"].as<float>(layout.Chat.ReadingRate);
+		}
+
 		return layout;
 	}
 
-	void GameHudView::Draw(Scene& scene, VulkanDraw& device, const glm::mat4& vp, ImVec2 corner, ImVec2 size)
+	const ConversationStyle& GameHudView::Draw(Scene& scene, VulkanDraw& device, const glm::mat4& vp, ImVec2 corner, ImVec2 size)
 	{
-		auto messages = scene.GetRegistry().view<GameHud,HudComponent>();
-		if (messages.begin() == messages.end()) return;
+		static const ConversationStyle defaultChat;
+		auto messages = scene.GetRegistry().view<HudComponent>();
+		if (messages.begin() == messages.end()) return defaultChat;
 		const entt::entity owner = *messages.begin();
-		const GameHud& hud = messages.get<GameHud>(owner);
+		static const GameHud defaultHud;
+		const GameHud* live = scene.GetRegistry().try_get<GameHud>(owner);
+		const GameHud& hud = live ? *live : defaultHud;
 		const std::string& path = messages.get<HudComponent>(owner).Layout;
-		if (path.empty()) return;
+		if (path.empty()) return defaultChat;
 		auto [it,fresh] = m_Layouts.try_emplace(path);
 		if (fresh) {
 			try { it->second = Load(device,std::filesystem::u8path(path)); }
 			catch (const std::exception& error) { RF_CORE_ERROR("HUD: {0} ({1})",error.what(),path); }
 		}
 		const Layout& layout = it->second;
-		if (layout.Elements.empty()) return;
+		if (layout.Elements.empty()) return layout.Chat;
 
 		ImDrawList* draw = ImGui::GetWindowDrawList();
 		const float scale = std::min(size.x/1920.f,size.y/1080.f);
@@ -125,7 +138,7 @@ namespace Redflag
 			image(element.Image, position, {position.x + width, position.y + scale * element.Size.y}, element.Color);
 		}
 
-		if (!layout.Bar.Image) { draw->PopClipRect(); return; }
+		if (!layout.Bar.Image) { draw->PopClipRect(); return layout.Chat; }
 
 		scene.GetRegistry().view<PulseTrace>().each([&](const PulseTrace& shot) {
 			if (shot.Until < std::chrono::steady_clock::now()) return;
@@ -159,5 +172,6 @@ namespace Redflag
 					ImGui::ColorConvertFloat4ToU32({label.Color.r,label.Color.g,label.Color.b,1}));
 			});
 		draw->PopClipRect();
+		return layout.Chat;
 	}
 }

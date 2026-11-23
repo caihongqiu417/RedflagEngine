@@ -1,0 +1,96 @@
+{
+  "before": {
+    "hips_backward_m": 0.23664306999999996,
+    "hips_horizontal_shift_m": 0.2800296660608395,
+    "root_advance_during_blend_m": 0.0045690500000001855,
+    "backward_travel_m": 6.24909401,
+    "moved_away_from_wall_m": 0.0,
+    "stop_sample_frames": [
+      38,
+      42
+    ],
+    "wall_sample_frames": [
+      115,
+      127
+    ],
+    "pulse_frames": [],
+    "fire_pose_frames": [],
+    "inputs": {
+      "forward": 16,
+      "stop": 33,
+      "backward": 49,
+      "stop-backward": 107,
+      "leave-boundary": 116,
+      "stop-again": 127
+    },
+    "source": {
+      "archive": "Redflag-Watt-Station-Dialog.zip",
+      "archive_sha256": "6f325b0da92d757718e3cec0ed5d885252833d6324e1bd515f5dabad22325556",
+      "exe_sha256": "d886b7582ba3ff44b7731f455468b00df243393118200accc32195ea8da7df09",
+      "replaced_native": false,
+      "gameplay_sha256": "b2ba071ba50a9415a48498467bcb14ebb6bcd5cea4aeef496c7f7ea5688ed051",
+      "scene_sha256": "780c09fe4ce005dfe5e81bfa8189240d34f0bc90ac05102014aecb8e78b138fe",
+      "render_size": "1280x720"
+    }
+  },
+  "after": {
+    "hips_backward_m": 0.0059454400000000796,
+    "hips_horizontal_shift_m": 0.008281820765218302,
+    "root_advance_during_blend_m": 0.00368309,
+    "backward_travel_m": 6.2614336,
+    "moved_away_from_wall_m": 1.3260478999999998,
+    "stop_sample_frames": [
+      39,
+      43
+    ],
+    "wall_sample_frames": [
+      114,
+      125
+    ],
+    "pulse_frames": [
+      23,
+      137
+    ],
+    "fire_pose_frames": [
+      23,
+      24,
+      25,
+      26,
+      137,
+      138,
+      139,
+      140
+    ],
+    "moving_fire_frames": [
+      23,
+      24,
+      25,
+      26
+    ],
+    "walking_during_shot_m": 0.6643791200000004,
+    "left_foot_height_change_m": 0.1810405255,
+    "right_hand_height_change_m": 0.08790564999999995,
+    "inputs": {
+      "aim-at-scene": 12,
+      "forward": 16,
+      "fire-while-walking": 22,
+      "release-trigger": 25,
+      "stop": 34,
+      "backward": 50,
+      "stop-backward": 106,
+      "leave-boundary": 115,
+      "stop-again": 125,
+      "fire": 136,
+      "lower-arm": 138
+    },
+    "source": {
+      "archive": "wali-montage-check.zip",
+      "archive_sha256": "092a9eda5a6a7fa6ad9dcc786121c8c3bb8b24a347844f9efc69c6b0ceab8138",
+      "exe_sha256": "feb587e288851abf4eedc19416a2b0ded31b597de8db601c64c9b22fe5c2a8c0",
+      "replaced_native": false,
+      "gameplay_sha256": "ba8f2b4f493061a877b9c9029a3c0a28e3dd81401ce6505d1f0772d46b9839fd",
+      "scene_sha256": "780c09fe4ce005dfe5e81bfa8189240d34f0bc90ac05102014aecb8e78b138fe",
+      "render_size": "1280x720"
+    }
+  }
+}

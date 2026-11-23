@@ -26,6 +26,14 @@ from check_forge_play import wait_for
 from profile_native_navigation import ROOT, prepare, save_view
 
 
+def landing_events(animator):
+    states = yaml.safe_load(animator.read_text(encoding="utf-8"))["States"]
+    landing = next(state for state in states if state["ID"] == "land")
+    if "Montage" in landing:
+        return yaml.safe_load((animator.parent / landing["Montage"]).read_bytes())["Events"]
+    return landing["Events"]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--exe",type=Path,default=ROOT/"bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe")
@@ -272,8 +280,7 @@ def main():
             completed = [r[2:] for r in notices if r[0]=="1992" and r[1]=="land"]
             cancelled = [r[2:] for r in notices if r[0]=="1993" and r[1]=="land"]
             animator = work/"assets/ai/watt.animator.yaml"
-            states = yaml.safe_load(animator.read_text(encoding="utf-8"))["States"]
-            events = next(state["Events"] for state in states if state["ID"]=="land")
+            events = landing_events(animator)
             end = next(event["End"] for event in events if event["Name"]=="Recovery")
             assert [(r[0],r[1]) for r in completed] == [("Recovery","Begin"),("KneeBend","Point"),("Recovery","End")], notices
             assert abs(float(completed[-1][2])-end) < 1e-6 and completed[-1][-1]=="False", notices
@@ -300,8 +307,7 @@ def main():
             target = ROOT/"output/validation/animation-events"
             target.mkdir(parents=True,exist_ok=True)
             animator = work/"assets/ai/watt.animator.yaml"
-            states = yaml.safe_load(animator.read_text(encoding="utf-8"))["States"]
-            events = next(state["Events"] for state in states if state["ID"]=="land")
+            events = landing_events(animator)
             recovery = next(event for event in events if event["Name"]=="Recovery")
             duration = float(rows[1][0])-float(rows[0][0])
             # C# 每帧观察一次，端点均有一帧的时间误差。

@@ -34,6 +34,7 @@ namespace Redflag
 			if (saved) log << '\"' << file << '\"'; else log << "null";
 			log << ",\"device_samples\":";
 			if (event.DeviceSamples >= 0) log << event.DeviceSamples; else log << "null";
+			if (event.GapMs > 0) log << ",\"gap_ms\":" << event.GapMs;
 			log << "}\n";
 		};
 	}

@@ -1,0 +1,27 @@
+PASS load shipping rig and clips
+PASS  load real upper-body montage
+PASS  play upper body over walk
+PASS resolve the actual spine descendants
+PASS sampled walk is preserved below the spine and shooting pose is visible above it
+PASS sampled walk is preserved below the spine and shooting pose is visible above it
+PASS start blend-out from current weight
+PASS blend-out interpolates the arm before returning to locomotion
+PASS completed fade releases the slot layer
+PASS play first section
+PASS window stays open across contiguous sections
+PASS jump to non-contiguous section
+PASS section jump closes old window and skips its later marks
+PASS section end without Next finishes
+PASS starting inside an open window emits Begin
+PASS interruption closes the active window
+PASS script and debugger can read notices independently
+PASS start motion with named warp window
+PASS sampled root motion converges over multiple steps
+PASS starting real scene montage
+warp lane 0 -> (2,0), yaw 0.4
+PASS unblocked character reaches the target in world space
+PASS yaw follows the named world target
+PASS starting real scene montage
+warp lane 2 -> (0.583333,2), yaw 0.4
+PASS solid wall stops the character before the warp target
+PASS yaw follows the named world target

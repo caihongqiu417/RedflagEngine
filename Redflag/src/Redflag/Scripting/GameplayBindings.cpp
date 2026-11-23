@@ -26,24 +26,96 @@ namespace Redflag
 			return text;
 		}
 
-        MonoString* ChooseBehavior(uint64_t id, MonoArray* conditions)
+        //========== 脚本的黑板与行为树 ==========
+
+        ActorBehavior* Behavior(uint64_t id)
         {
             Entity actor = World().GetEntityByUUID(id);
             if (!actor || !actor.HasComponent<BehaviorTreeComponent>()) return nullptr;
             auto& behavior = World().GetRegistry().get_or_emplace<ActorBehavior>(static_cast<entt::entity>(actor));
+            return &behavior;
+        }
+
+        bool OpenBehavior(uint64_t id, ActorBehavior& behavior, MonoArray* conditions)
+        {
+            Entity actor = World().GetEntityByUUID(id);
             if (!behavior.Open(actor.GetComponent<BehaviorTreeComponent>().File)) {
                 RF_CORE_ERROR("BehaviorTree: {0}", behavior.Error);
-                return nullptr;
+                return false;
             }
 
             auto& facts = behavior.Facts.Values;
-            facts.clear();
-            for (uintptr_t i = 0; i < mono_array_length(conditions); ++i) {
+            facts = behavior.SavedValues;
+            const uintptr_t count = conditions ? mono_array_length(conditions) : 0;
+            for (uintptr_t i = 0; i < count; ++i) {
                 MonoString* key = mono_array_get(conditions, MonoString*, i);
-                if (key) facts.emplace(Text(key), "true");
+                if (key) facts[Text(key)] = "true";
             }
-            behavior.Trace = behavior.Tree.Tick(behavior.Facts, "");
-            return mono_string_new(mono_domain_get(), behavior.Trace.Action.c_str());
+            return true;
+        }
+
+        MonoString* ChooseBehavior(uint64_t id, MonoArray* conditions)
+        {
+            ActorBehavior* behavior = Behavior(id);
+            if (!behavior || !OpenBehavior(id, *behavior, conditions)) return nullptr;
+            if (behavior->Tree.UsesTasks() && behavior->Tree.Find(behavior->Tree.GetRoot())->Kind != BehaviorKind::Action)
+                return nullptr;
+
+            behavior->Trace = behavior->Tree.Tick(behavior->Facts, "");
+            return mono_string_new(mono_domain_get(), behavior->Trace.Action.c_str());
+        }
+
+        void SetBehaviorValue(uint64_t id, MonoString* key, MonoString* value)
+        {
+            ActorBehavior* behavior = Behavior(id);
+            if (!behavior || !key) return;
+            if (value) behavior->SavedValues[Text(key)] = Text(value);
+            else behavior->SavedValues.erase(Text(key));
+        }
+
+        MonoString* GetBehaviorValue(uint64_t id, MonoString* key)
+        {
+            ActorBehavior* behavior = Behavior(id);
+            if (!behavior || !key) return nullptr;
+            const auto found = behavior->SavedValues.find(Text(key));
+            return found == behavior->SavedValues.end() ? nullptr : mono_string_new(mono_domain_get(), found->second.c_str());
+        }
+
+        MonoObject* InvokeTask(MonoObject* function, const BehaviorNode& node)
+        {
+            void* args[] = {mono_string_new(mono_domain_get(), node.Action.c_str())};
+            MonoObject* exception = nullptr;
+            MonoObject* result = mono_runtime_delegate_invoke(function, args, &exception);
+            if (exception) RF_CORE_ERROR("行为树动作 {}：{}", node.Action, mono_class_get_name(mono_object_get_class(exception)));
+            return exception ? nullptr : result;
+        }
+
+        void HaltBehavior(uint64_t id, MonoObject* abort)
+        {
+            Entity actor = World().GetEntityByUUID(id);
+            if (!actor || !actor.HasComponent<ActorBehavior>()) return;
+            ActorBehavior& behavior = actor.GetComponent<ActorBehavior>();
+            behavior.Tree.Halt(behavior.Run, [&](const BehaviorNode& node) { if (abort) InvokeTask(abort, node); });
+            behavior.Trace = behavior.Run.Trace;
+        }
+
+        BehaviorStatus TickBehavior(uint64_t id, MonoArray* conditions, MonoObject* tick, MonoObject* abort)
+        {
+            ActorBehavior* behavior = Behavior(id);
+            if (!behavior || !tick) return BehaviorStatus::Failure;
+            Entity actor = World().GetEntityByUUID(id);
+            if (behavior->File != actor.GetComponent<BehaviorTreeComponent>().File) HaltBehavior(id, abort);
+            if (!OpenBehavior(id, *behavior, conditions) || !behavior->Tree.UsesTasks()) return BehaviorStatus::Failure;
+
+            // 回调只在本帧借用。跨帧保存的是节点编号；下一帧用同一角色的脚本继续。
+            const BehaviorStatus result = behavior->Tree.Update(behavior->Facts, behavior->Run,
+                [&](const BehaviorNode& node) {
+                    MonoObject* answer = InvokeTask(tick, node);
+                    return answer ? *static_cast<BehaviorStatus*>(mono_object_unbox(answer)) : BehaviorStatus::Failure;
+                },
+                [&](const BehaviorNode& node) { if (abort) InvokeTask(abort, node); });
+            behavior->Trace = behavior->Run.Trace;
+            return result;
         }
 
 		// ---- 地面移动与动作片段 ----
@@ -101,18 +173,26 @@ namespace Redflag
 			const std::string clip = Text(name);
 			auto* animator = World().GetRegistry().try_get<ActorAnimator>(static_cast<entt::entity>(entity));
 			if (animator && animator->Clip != clip) animator->Timeline.Cancel();
-			if (animation.Clip != clip) {
-				if (animator && animation.Clip == animator->Clip) animation.Loop = true;
-				animation.Clip = clip;
-				animation.Time = 0.f;
-			}
+			if (animation.Clip != clip && animator && animation.Clip == animator->Clip) animation.Loop = true;
+			animation.PlayClip(clip, animator ? &animator->Controller : nullptr);
 			animation.MatchTravel = locomotion;
 			if (locomotion) animation.Loop = true;
-			animation.Playing = true;
 		}
 
 		void PlayClip(uint64_t actor, MonoString* name) { SelectClip(actor, name, false); }
 		void PlayLocomotion(uint64_t actor, MonoString* name) { SelectClip(actor, name, true); }
+
+		float ClipDuration(uint64_t id, MonoString* name)
+		{
+			Entity actor = World().GetEntityByUUID(id);
+			if (!actor || !actor.HasComponent<ModelAnimationComponent>()) return 0.f;
+			const Ref<ModelAnimation>& animation = actor.GetComponent<ModelAnimationComponent>().GetAnimation();
+			const std::string requested = Text(name);
+			if (animation)
+				for (const ModelAnimation::Clip& clip : animation->GetClips())
+					if (clip.Name == requested) return clip.Duration;
+			return 0.f;
+		}
 
 		void HoldPose(uint64_t actor, MonoString* name, float seconds)
 		{
@@ -298,6 +378,10 @@ namespace Redflag
 		mono_add_internal_call("Redflag.Hud::WriteMeter", (const void*)HudMeter);
 		RegisterAnimatorBindings();
 		mono_add_internal_call("Redflag.GameWorld::ChooseBehavior", (const void*)ChooseBehavior);
+		mono_add_internal_call("Redflag.GameWorld::TickBehavior", (const void*)TickBehavior);
+		mono_add_internal_call("Redflag.GameWorld::HaltBehavior", (const void*)HaltBehavior);
+		mono_add_internal_call("Redflag.GameWorld::SetBehaviorValue", (const void*)SetBehaviorValue);
+		mono_add_internal_call("Redflag.GameWorld::GetBehaviorValue", (const void*)GetBehaviorValue);
 		mono_add_internal_call("Redflag.GameWorld::Move", (const void*)Move);
 		mono_add_internal_call("Redflag.GameWorld::Traverse", (const void*)Traverse);
 		mono_add_internal_call("Redflag.GameWorld::TraverseWithCollider", (const void*)TraverseWithCollider);
@@ -306,6 +390,7 @@ namespace Redflag
 		mono_add_internal_call("Redflag.GameWorld::AddFootContact", (const void*)AddFootContact);
 		mono_add_internal_call("Redflag.GameWorld::SetMovementRoot", (const void*)SetMovementRoot);
 		mono_add_internal_call("Redflag.GameWorld::PlayClip", (const void*)PlayClip);
+		mono_add_internal_call("Redflag.GameWorld::ClipDuration", (const void*)ClipDuration);
 		mono_add_internal_call("Redflag.GameWorld::PlayLocomotion", (const void*)PlayLocomotion);
 		mono_add_internal_call("Redflag.GameWorld::Pose", (const void*)HoldPose);
 		mono_add_internal_call("Redflag.GameWorld::MaxHealth", (const void*)MaxHealth);

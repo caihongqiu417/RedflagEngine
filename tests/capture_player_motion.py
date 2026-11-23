@@ -46,7 +46,7 @@ def digest(path):
         return hashlib.file_digest(file, "sha256").hexdigest()
 
 
-def record(archive, output, render_size, native, profile):
+def record(archive, output, render_size, native, profile, walk_stop=False):
     output.mkdir(parents=True, exist_ok=False)
     pictures = output / "images"
     pictures.mkdir()
@@ -71,7 +71,14 @@ def record(archive, output, render_size, native, profile):
         journal = []
         sent = []
         actions = INPUTS
-        if profile:
+        if walk_stop:
+            actions = [(.2, "aim-at-scene", "move", (640,360)), (.5, "forward", "hold", "W"),
+                       (.95, "fire-while-walking", "hold", "MouseLeft"), (1.16, "release-trigger", "release", "MouseLeft"),
+                       (1.8, "stop", "release", "W"),
+                       (3., "backward", "hold", "S"), (6.9, "stop-backward", "release", "S"),
+                       (7.5, "leave-boundary", "hold", "W"), (8.2, "stop-again", "release", "W"),
+                       (9.0, "fire", "hold", "MouseLeft"), (9.18, "lower-arm", "release", "MouseLeft")]
+        elif profile:
             # 第二次 F 开始后再拖镜头。角色沿原方向伸拳，镜头转到侧面可以看到拳头伸出多远。
             actions = sorted(INPUTS + [
                 (2.28, "orbit-side", "hold", "MouseRight"), (2.56, "orbit-side", "move", (965,460)),
@@ -96,10 +103,10 @@ def record(archive, output, render_size, native, profile):
                 last = frame["seq"]
                 elapsed = frame["seconds"] - origin
                 ready = len(sent)<len(actions) and elapsed>=actions[len(sent)][0]
-                if ready and len(sent) in (2,3):
+                if ready and not walk_stop and len(sent) in (2,3):
                     # 低帧率下等游戏实际收到右键并读过两次鼠标位置，再拖动或松开。
                     ready = last-sent[-1]["requested_seq"]>=4
-                if ready and len(sent)==4:
+                if ready and not walk_stop and len(sent)==4:
                     eye=next(a["position"] for a in frame["actors"] if a["id"]=="1100")
                     ready=eye[2]>5.8 and eye[0]>-7.6
                     if not ready and elapsed>3:
@@ -145,10 +152,11 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--native", type=Path, help="只作附加骨骼诊断，以另一版原生程序运行包中的旧资产和旧脚本")
     parser.add_argument("--profile",action="store_true",help="第二次出拳时按住右键环视，额外拍一次侧面")
+    parser.add_argument("--walk-stop",action="store_true",help="保持出生镜头，前进、松手、长按后退，再从停下的位置向前走")
     parser.add_argument("--render-size", choices=["1920x1080", "1280x720"], default="1280x720")
     args = parser.parse_args()
     ctypes.windll.user32.SetProcessDPIAware()
-    record(args.archive.resolve(strict=True), args.output.resolve(), args.render_size, args.native, args.profile)
+    record(args.archive.resolve(strict=True), args.output.resolve(), args.render_size, args.native, args.profile, args.walk_stop)
 
 
 if __name__ == "__main__":

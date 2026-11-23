@@ -61,7 +61,7 @@ namespace StationTest
         {
             if (!Animator.Bind(Id, "assets/ai/watt.animator.yaml") || !Animator.Play(Id, "land"))
                 throw new System.InvalidOperationException("Cannot play the landing clip");
-            if (Interrupt) Animator.Play(Id, "idle");
+            if (Interrupt) Montage.Stop(Id, "FullBody");
         }
 
         void OnUpdate(float seconds)

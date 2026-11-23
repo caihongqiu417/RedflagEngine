@@ -376,10 +376,39 @@ namespace Redflag
 		return GetNodeTransform(name, m_Data->RestTransforms, result);
 	}
 
+	bool ModelAnimation::SubtreeMask(const std::vector<std::string>& roots, std::vector<size_t>& mask) const
+	{
+		std::vector<bool> included(m_Data->Nodes.size(), roots.empty());
+		for (const std::string& name : roots) {
+			const auto root = m_Data->NamedNodes.find(name);
+			if (root == m_Data->NamedNodes.end()) return false;
+			included[root->second] = true;
+		}
+		mask.clear();
+		for (size_t index : m_Data->Order) {
+			const int parent = m_Data->Nodes[index].Parent;
+			if (parent >= 0 && included[parent]) included[index] = true;
+			if (included[index]) mask.push_back(index);
+		}
+		return true;
+	}
+
 	void ModelAnimation::PinMovementRoot(std::vector<NodePose>& local, const std::string& node) const
 	{
 		const auto found = m_Data->NamedNodes.find(node);
 		if (found != m_Data->NamedNodes.end()) local[found->second].Position = m_Data->Rest[found->second].Position;
+	}
+
+	void ModelAnimation::SubtractRootMotion(std::vector<NodePose>& local, const std::string& node, glm::vec3 modelDelta) const
+	{
+		const size_t root = m_Data->NamedNodes.at(node);
+		const int parent = m_Data->Nodes[root].Parent;
+		if (parent >= 0) {
+			std::vector<glm::mat4> modelSpace;
+			GetModelTransforms(local,modelSpace);
+			modelDelta = glm::inverse(glm::mat3(modelSpace[parent])) * modelDelta;
+		}
+		local[root].Position -= modelDelta;
 	}
 
 	void ModelAnimation::GetModelTransforms(const std::vector<NodePose>& local, std::vector<glm::mat4>& world) const

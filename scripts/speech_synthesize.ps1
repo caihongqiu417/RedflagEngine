@@ -12,6 +12,13 @@ try {
     }
     $request = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String([Console]::In.ReadToEnd().Trim())) | ConvertFrom-Json
     if ($request.voice) { $synthesizer.SelectVoice($request.voice) }
+    elseif ($request.language) {
+        $voice = $synthesizer.GetInstalledVoices() | Where-Object {
+            $_.Enabled -and $_.VoiceInfo.Culture.Name -eq $request.language
+        } | Select-Object -First 1
+        if (!$voice) { throw "No installed speech voice for $($request.language)." }
+        $synthesizer.SelectVoice($voice.VoiceInfo.Name)
+    }
     $format = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(16000, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
     $synthesizer.SetOutputToAudioStream($stream, $format)
     $synthesizer.Speak($request.text)

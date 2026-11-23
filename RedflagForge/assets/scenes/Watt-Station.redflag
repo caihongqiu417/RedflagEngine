@@ -15,7 +15,7 @@ Entities:
         - {Name: Target, Type: Entity, Value: 1101}
   - Entity: 1101
     TagComponent: {Tag: 玩家}
-    HudComponent: {Layout: assets/ui/station/hud.yaml}
+    HudComponent: {Layout: assets/ui/station/hud.yaml, ConversationActor: 1102}
     TransformComponent: {Translation: [-6.9, -0.025, 1.4], Rotation: [0, 1.57, 0], Scale: [1, 1, 1]}
     ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.36, 0.45, 0.53, 1]}
     ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
@@ -51,7 +51,7 @@ Entities:
         - {Name: DownRadius, Type: Float, Value: 0.33}
         - {Name: DownCenter, Type: Vector3, Value: [-0.01, 0.33, -0.197]}
   - Entity: 1102
-    TagComponent: {Tag: 瓦特}
+    TagComponent: {Tag: 瓦力}
     TransformComponent: {Translation: [-5.2, -0.025, -0.6], Rotation: [0, -0.7, 0], Scale: [0.96, 0.96, 0.96]}
     ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.67, 0.39, 0.14, 1]}
     ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
@@ -70,7 +70,7 @@ Entities:
     RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
     BoxCollider3DComponent: {HalfSize: [0.9, 1.05, 1.1], Center: [0, 1.05, 0]}
     HealthComponent: {Current: 75, Maximum: 75, Team: fault}
-    BehaviorTreeComponent: {Tree: assets/ai/sentinel.tree.yaml}
+    BehaviorTreeComponent: {Tree: assets/ai/sentinel-patrol.tree.yaml}
     ScriptComponent:
       Class: Sandbox.StationGuard
       ScriptFields:

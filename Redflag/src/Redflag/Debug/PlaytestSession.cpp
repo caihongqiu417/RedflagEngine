@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "PlaytestSession.h"
+#include "Redflag/Animation/MontagePlayer.h"
 #include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Core/Application.h"
@@ -129,6 +130,12 @@ namespace Redflag
             }
             session->m_Frames.open(dir / "frames.jsonl", std::ios::binary | std::ios::app);
             if (!session->m_Frames) throw std::runtime_error("Cannot open playtest frames");
+            const char *trace = std::getenv("REDFLAG_TRACE_DIALOGUE");
+            if (trace && std::string(trace) == "1")
+            {
+                session->m_Dialogue.open(dir / "dialogue-trace.jsonl", std::ios::binary | std::ios::app);
+                if (!session->m_Dialogue) throw std::runtime_error("Cannot open playtest dialogue trace");
+            }
             session->SaveStatus("running");
             session->SaveOwner();
             session->Event(0, "play", "start");
@@ -365,6 +372,28 @@ namespace Redflag
         }
     }
 
+    void PlaytestSession::RecordDialogue(uint64_t actor, const NpcState &npc)
+    {
+        // Forge 的请求面板也读取 Decisions。模型答完或请求结束时才向文件写一行。
+        uint64_t &last = m_LastDialogue[actor];
+        for (const NpcDecisionTrace &request : npc.Decisions)
+        {
+            if (request.ID <= last || (request.Kind != "对话意图" && request.Kind != "角色答话")) continue;
+            if (request.Status == "等待回答") break;
+
+            YAML::Emitter out;
+            Json(out);
+            out << YAML::BeginMap << "generation" << m_Info.Generation << "seq" << m_Info.Seq
+                << "seconds" << m_Info.Seconds << "entity" << std::to_string(actor) << "id" << request.ID
+                << "kind" << request.Kind << "status" << request.Status << "choice" << request.Choice
+                << "outcome" << request.Outcome << "model_input" << request.ModelInput
+                << "model_output" << request.ModelOutput << YAML::EndMap;
+            m_Dialogue << out.c_str() << '\n';
+            m_Dialogue.flush();
+            last = request.ID;
+        }
+    }
+
     void PlaytestSession::RecordScene(Scene &scene)
     {
         SaveJobs();
@@ -400,7 +429,16 @@ namespace Redflag
                         const glm::vec3 point(model * joint[3]);
                         out << name << YAML::BeginSeq << point.x << point.y << point.z << YAML::EndSeq;
                     }
-                    out << YAML::EndMap << YAML::EndMap;
+                    out << YAML::EndMap;
+                    if (const MontagePlayer* montage = registry.try_get<MontagePlayer>(handle)) {
+                        out << "montages" << YAML::BeginSeq;
+                        for (const MontageLayerSample& layer : montage->Samples())
+                            out << YAML::BeginMap << "slot" << layer.Slot << "clip" << layer.Clip << "state" << layer.State
+                                << "section" << layer.Section << "time" << layer.Time << "weight" << layer.Weight
+                                << "fading" << layer.Fading << YAML::EndMap;
+                        out << YAML::EndSeq;
+                    }
+                    out << YAML::EndMap;
                 }
             }
             if (const auto* hand = registry.try_get<HandContact>(handle)) {
@@ -434,6 +472,7 @@ namespace Redflag
                 if (const NpcState *npc = scene.GetNpcs()->Inspect(id))
                 {
                     out << "action" << npc->Action << "stage" << npc->Stage;
+                    if (CapturesDialogue()) RecordDialogue(id, *npc);
                     uint64_t &last = m_NpcEvents[id];
                     for (const NpcEvent &event : npc->Events)
                         if (event.Sequence > last)

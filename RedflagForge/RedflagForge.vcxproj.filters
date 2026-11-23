@@ -31,7 +31,22 @@
     <ClInclude Include="src\UI\DevContextPanel.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="src\UI\GameConversation.h">
+      <Filter>UI</Filter>
+    </ClInclude>
     <ClInclude Include="src\UI\GameHudView.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\AnimationTransitionPanel.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\AnimationFields.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\AnimationMontagePanel.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\NpcDecisionView.h">
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="src\UI\JobTimeline.h">
@@ -51,6 +66,13 @@
     <ClCompile Include="src\BehaviorTreePanel.cpp" />
     <ClCompile Include="src\CompanionPanel.cpp" />
     <ClCompile Include="src\DecisionPanel.cpp" />
+    <ClCompile Include="src\AIServiceSettings.cpp" />
+    <ClCompile Include="src\UI\AnimationTransitionPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\AnimationMontagePanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ForgeLayer.cpp" />
     <ClCompile Include="src\LightingPreview.cpp" />
     <ClCompile Include="src\NpcAuthoringFiles.cpp" />
@@ -68,7 +90,13 @@
     <ClCompile Include="src\UI\DevContextPanel.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="src\UI\GameConversation.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
     <ClCompile Include="src\UI\GameHudView.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\NpcDecisionView.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\JobTimeline.cpp">

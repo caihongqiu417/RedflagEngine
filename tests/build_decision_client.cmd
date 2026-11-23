@@ -19,6 +19,6 @@ cl /nologo /std:c++17 /MDd /EHsc /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++17 /MDd /EHsc /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /DYAML_CPP_STATIC_DEFINE ^
  /I Redflag\src /I Redflag\src\Redflag /I Redflag\vendor\spdlog\include /I Redflag\vendor\fmt\include /I Redflag\vendor\yaml-cpp\include ^
- tests\SpeechPlaybackTests.cpp Redflag\src\Redflag\AI\SpeechPlayback.cpp bin-int\Tests\Decision\LocalService.obj /Fo:bin-int\Tests\Decision\ /Fe:bin-int\Tests\Decision\SpeechPlaybackTests.exe ^
+ tests\SpeechPlaybackTests.cpp Redflag\src\Redflag\AI\SpeechPlayback.cpp Redflag\src\Redflag\Core\Log.cpp bin-int\Tests\Decision\LocalService.obj /Fo:bin-int\Tests\Decision\ /Fe:bin-int\Tests\Decision\SpeechPlaybackTests.exe ^
  /link Redflag\vendor\yaml-cpp\bin\Debug-windows-x86_64\yaml-cpp\yaml-cpp.lib
 exit /b %errorlevel%

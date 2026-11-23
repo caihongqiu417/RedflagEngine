@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Redflag
@@ -6,12 +7,32 @@ namespace Redflag
     public enum TraversalMode { Ground, Slope, Step, Jump, Climb, Blocked }
     public enum TraversalInput { Walk, Jump, Automatic }
     public enum TraversalLimb { LeftFoot, RightFoot, LeftHand, RightHand }
+    public enum BehaviorStatus { Running, Success, Failure }
 
     public static class GameWorld
     {
         /// <summary>将当前成立的条件交给角色的行为树，返回第一个符合条件的动作名。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern string ChooseBehavior(ulong actor, string[] conditions);
+
+        /// <summary>推进这个角色的行为树。任务返回 Running 后，下一帧会接着执行同一节点。</summary>
+        /// <param name="conditions">本帧成立的黑板条件，空元素会被跳过。</param>
+        /// <param name="abort">条件变化、需要打断任务时，先调用旧动作的收尾代码，再开始新任务。</param>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern BehaviorStatus TickBehavior(ulong actor, string[] conditions,
+            Func<string, BehaviorStatus> tick, Action<string> abort);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void HaltBehavior(ulong actor, Action<string> abort);
+
+        /// <summary>保存这个角色的黑板值，下次推进树时生效。临时条件同名时只在该帧读作 true。</summary>
+        /// <param name="value">传 null 移除这个值。</param>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetBehaviorValue(ulong actor, string key, string value);
+
+        /// <returns>脚本保存的值；没有写过或已移除时为 null。</returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern string GetBehaviorValue(ulong actor, string key);
 
         // ---- 移动与动画 ----
 
@@ -47,6 +68,10 @@ namespace Redflag
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void PlayClip(ulong actor, string clip);
+
+        /// <returns>模型中这段动画的原片时长（秒）。模型或该片段尚不可用时返回零。</returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern float ClipDuration(ulong actor, string clip);
 
         /// <summary>按角色在地面上实际移动的距离播放步态。使用 SetMovementRoot 指定剪辑中记录步幅的骨骼。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]

@@ -1,0 +1,9 @@
+[18:09:36] REDFLAG : Speech playback: neural_tts_audio_too_long
+PASS first audio before releasing second block; WAV equals the 9600 device samples
+PASS cancelled stream released the synthesizer and the next line reached the device
+PASS partial stream failure ends playback and following voice recovers
+[18:09:37] REDFLAG : Speech playback: invalid_voice_wav
+PASS legacy whole WAV, invalid WAV recovery, offline voice byte-for-byte, 2400-sample replay
+PASS continuous 24→16 kHz samples equal whole WAV; non-stream provider keeps voice
+PASS 60 characters spoken exactly once in 4 parts
+PASS 205 characters spoken exactly once in 12 parts

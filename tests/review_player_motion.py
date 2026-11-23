@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import numpy as np
 from PIL import Image, ImageDraw
+from station_pose import visible_pose
 
 ACTOR = {"player": "1101", "watt": "1102"}
 
@@ -91,7 +92,7 @@ def review(take_dir, output, require_animation):
         note = dict(applied_seq=next(c["applied_seq"] for c in contacts if c["phase"]==name),
                     peak_visible_change_px=max(v["changed_px"] for v in count), changed=count)
         if all("animation" in actor for _,actor in sample):
-            observed = [a["animation"] for _,a in sample]
+            observed = [visible_pose(a) for _,a in sample]
             note["clips"] = list(dict.fromkeys(s["clip"] for s in observed))
             note["clip_samples"] = [dict(offset_s=ts-t, clip=s["clip"], clip_time=s["time"], yaw=s["yaw"])
                                     for (ts,_),s in zip(sample,observed)]

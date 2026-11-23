@@ -12,7 +12,7 @@
 
 ## 播放与生效
 
-玩家和瓦特共用 `ApproachContact`、`BeginContact`、`AtContact` 和 `EndContact`。第一步让角色走到合适的位置，第二步开始伸手。原片先带动肩和肘，接近触点时才逐步用逆向运动学微调手臂。递药时，交付者和接收者都要够到两人之间的交接点。该点随两人的实体位置变化，收件人走远后库存检查仍会失败。[C# 接口](../Redflag-ScriptCore/Source/Scene/GameWorld.cs) · [瓦特的动作执行](../Redflag/src/Redflag/AI/NpcSystem.cpp)
+玩家和瓦力共用 `ApproachContact`、`BeginContact`、`AtContact` 和 `EndContact`。第一步让角色走到合适的位置，第二步开始伸手。原片先带动肩和肘，接近触点时才逐步用逆向运动学微调手臂。递药时，交付者和接收者都要够到两人之间的交接点。该点随两人的实体位置变化，收件人走远后库存检查仍会失败。[C# 接口](../Redflag-ScriptCore/Source/Scene/GameWorld.cs) · [瓦力的动作执行](../Redflag/src/Redflag/AI/NpcSystem.cpp)
 
 动作通知表示片段已经播到可以交接的位置。`AtContact` 再用当前画面中手指的世界坐标量一次距离。场景还会复查目标实体、原有距离和遮挡，全部通过才转交物品或恢复生命。发生交接时，接收者拿到此前在交付者手中的同一个道具实体。松开 E 可中断维修和救援，下一次从头计时。尚未伸手的拾取可用方向键取消。没有配备动作挂点的旧宿主继续使用原来的物理交互接口。[动作和库存](../Redflag/src/Redflag/Gameplay/WorldActions.cpp)
 

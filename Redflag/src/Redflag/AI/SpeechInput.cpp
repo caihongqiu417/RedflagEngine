@@ -22,7 +22,7 @@ namespace Redflag
 		}
 	};
 
-	SpeechInput::SpeechInput(uint16_t port) : m_Session(std::make_shared<Session>()), m_Port(port) {}
+	SpeechInput::SpeechInput(uint16_t port) : m_Session(std::make_shared<Session>()), m_Port(port ? port : LocalService::SpeechPort()) {}
 
 	SpeechInput::~SpeechInput() { Reset(); }
 

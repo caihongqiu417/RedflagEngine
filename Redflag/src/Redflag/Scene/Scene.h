@@ -32,7 +32,7 @@ namespace Redflag {
 		void DestroyEntity(Entity entity);
 
 		//Start
-		void OnRuntimeStart(uint16_t decisionPort = 8716);
+		void OnRuntimeStart(uint16_t decisionPort = 0, bool traceDecisions = false);
 		void OnRuntimeStop();
 
 		/// <returns>Play 期间这局游戏的角色和动作记录。停止播放后返回空指针。</returns>
@@ -48,7 +48,8 @@ namespace Redflag {
 
 		// 查询最近一次物理步中的碰撞体；距离和半径均以米为单位。
 		std::optional<RayHit3D> Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, std::optional<uint64_t> ignore = {}) const;
-		float SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore) const;
+		float SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore,
+			bool allowSeparation = false) const;
 		std::vector<uint64_t> OverlapSphere(glm::vec3 center, float radius) const;
 		/// <returns>开始模拟后可读取各肢体的位置。移除组件或停止模拟后，指针失效。</returns>
 		const Ragdoll* GetRagdoll(entt::entity handle) const;

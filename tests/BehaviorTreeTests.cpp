@@ -99,11 +99,76 @@ static void CheckSentinelRules()
               << "raising ready above cooling persists after saving and reopening\n";
 }
 
+static void CheckRunningTasks()
+{
+    using Status = BehaviorStatus;
+    BehaviorTree tree;
+    const uint32_t root = tree.AddNode(BehaviorKind::Selector, "任务", {});
+    const uint32_t guard = tree.AddNode(BehaviorKind::Decorator, "设备需要检修", {});
+    const uint32_t work = tree.AddNode(BehaviorKind::Sequence, "检修", {});
+    const uint32_t approach = tree.AddNode(BehaviorKind::Action, "走近", {});
+    const uint32_t fix = tree.AddNode(BehaviorKind::Action, "修理", {});
+    const uint32_t walk = tree.AddNode(BehaviorKind::Action, "巡视", {});
+    tree.SetCondition(guard, "device", "damaged", false, BehaviorAbort::Both);
+    tree.SetAction(approach, "approach");
+    tree.SetAction(fix, "fix");
+    tree.SetAction(walk, "walk");
+    std::string error;
+    Check(tree.Connect(root,"work",guard,error) && tree.Connect(root,"walk",walk,error) &&
+          tree.Connect(guard,"",work,error) && tree.Connect(work,"first",approach,error) &&
+          tree.Connect(work,"second",fix,error), error);
+    const fs::path file = "tmp/behavior-tree/running.tree.yaml";
+    fs::create_directories(file.parent_path());
+    BehaviorTree saved;
+    Check(tree.Save(file,error) && saved.Load(file,error),error);
+    Check(saved.Find(guard)->Value == "damaged" && saved.Find(guard)->Abort == BehaviorAbort::Both, "decorator round trip");
+    BehaviorRun run;
+    BehaviorBlackboard board;
+    std::vector<std::string> calls;
+    auto cancel = [&](const BehaviorNode& n) { calls.push_back("stop " + n.Action); };
+    bool arrived = false, finished = false;
+    auto tick = [&](const BehaviorNode& n) {
+        calls.push_back(n.Action);
+        if (n.ID == approach && arrived) return Status::Success;
+        if (n.ID == fix && finished) return Status::Success;
+        return Status::Running;
+    };
+    auto step = [&] { return saved.Update(board,run,tick,cancel); };
+    Check(step() == Status::Running && run.Trace.Action == "walk", "fallback does not run");
+    board.Values["device"] = "damaged";
+    step();
+    Check(calls == std::vector<std::string>({"walk","stop walk","approach"}), "preempt before starting another task");
+    arrived = true;
+    step();
+    Check(run.Trace.Action == "fix" && run.Trace.Nodes == std::vector<uint32_t>({root,guard,work,fix}), "sequence did not advance");
+    calls.clear();
+    step();
+    Check(calls == std::vector<std::string>({"fix"}), "completed child repeated");
+    board.Values.erase("device");
+    step();
+    Check(calls == std::vector<std::string>({"fix","stop fix","walk"}) && run.Aborted == fix, "self abort cleanup");
+    saved.Halt(run,cancel);
+    saved.Halt(run,cancel);
+    Check(calls.back() == "stop walk" && calls.size() == 4 && run.Stack.empty(), "duplicate cancellation");
+
+    board.Values["device"] = "damaged";
+    finished = true;
+    Check(step() == Status::Success && run.Stack.empty(), "sequence does not finish");
+    calls.clear();
+    saved.Update(board,run,[&](const BehaviorNode& n) {
+        calls.push_back(n.Action);
+        return n.ID == approach ? Status::Failure : Status::Running;
+    },cancel);
+    Check(calls == std::vector<std::string>({"approach","walk"}), "failed child did not skip repair and try patrol");
+    std::cout << "PASS stateful sequence, selector fallback, blackboard decorators, abort cleanup and save/reopen\n";
+}
+
 int main()
 {
     try
     {
         CheckSentinelRules();
+        CheckRunningTasks();
         const fs::path source = "RedflagForge/assets/ai/watt.tree.yaml";
         const fs::path dir = "tmp/behavior-tree";
         fs::create_directories(dir);

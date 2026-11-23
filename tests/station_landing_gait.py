@@ -3,6 +3,7 @@ import hashlib
 import json
 from check_forge_play import wait_for
 from playtest import issue
+from station_pose import visible_pose
 
 
 def verify(session,process,frames,actor,output,exe):
@@ -10,7 +11,7 @@ def verify(session,process,frames,actor,output,exe):
         return actor(row,1101)
 
     def clip(row):
-        return player(row)["animation"]["clip"]
+        return visible_pose(player(row))["clip"]
 
     start=frames()[-1]
     issue(session,1,"tap",key="Space")

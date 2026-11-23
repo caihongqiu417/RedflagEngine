@@ -1,4 +1,4 @@
-"""通过正式 HTTP 合成接口核对瓦特的录音，并试一句台词表中没有的中文。"""
+"""通过正式 HTTP 合成接口核对瓦力的录音，并试一句台词表中没有的中文。"""
 import argparse
 import asyncio
 import hashlib
@@ -47,8 +47,11 @@ async def requests(runtime,delivery,output):
             assert sapi!=wav
             spoken=await read(prompt,voice)
             (output/"free-text.wav").write_bytes(spoken)
+            long_line = "你刚才跟我提过维修站的事情。走到厂房门口时，咱们可以停一停，先听听里面还有没有声音，再一起看看地上散落的零件都放在哪里。"
+            long_wav = await read(long_line, voice)
             return {"sapi_default":voices["default_voice"],"voices":voices["voices"],"offline_preview_sha256":hashlib.sha256(wav).hexdigest(),
                     "same_text_sapi_sha256":hashlib.sha256(sapi).hexdigest(),"free_text":prompt,
+                    "long_reply_samples": (len(long_wav)-44)//2,
                     "free_text_sha256":hashlib.sha256(spoken).hexdigest(),"free_text_samples":(len(spoken)-44)//2}
     finally:
         await runner.cleanup()
@@ -57,7 +60,7 @@ async def requests(runtime,delivery,output):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime",type=Path,required=True)
-    parser.add_argument("--delivery",type=Path,required=True)
+    parser.add_argument("--delivery",type=Path,help="指定 Delivery 时验证 Dylan，自带语音模式验证 Windows 中文声音。")
     parser.add_argument("--output",type=Path,default=ROOT/"output/validation/watt-voice")
     args=parser.parse_args()
     result=asyncio.run(requests(args.runtime,args.delivery,args.output))

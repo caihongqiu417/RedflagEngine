@@ -5,6 +5,7 @@
 #include"Redflag/Scene/Scene.h"
 #include"Redflag/Scene/Entity.h"
 #include"Redflag/Scripting/ScriptEngine.h"
+#include <functional>
 
 
 namespace Redflag {
@@ -26,6 +27,7 @@ namespace Redflag {
 
 
 		void SetSelectedEntity(Entity entity);
+		std::function<void(Entity)> DrawNpcTools;
 	private:
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);

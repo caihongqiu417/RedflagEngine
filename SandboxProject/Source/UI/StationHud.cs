@@ -7,15 +7,18 @@ namespace Sandbox
     {
         private readonly ulong player;
         private readonly Hud view;
+        private readonly string companionName, playControls;
         private string lastTitle, lastObjective, lastHint, lastControls, lastEquipment;
         private bool showingHelp;
         private bool finished;
         private int lastLife = -1, lastCompanion = -1, lastKits = -1;
         private float lastMaximum = -1;
 
-        public StationHud(ulong player)
+        public StationHud(ulong player, string companionName)
         {
             this.player = player;
+            this.companionName = companionName;
+            playControls = "F   近战     T   呼叫" + companionName + "     F1   操作帮助";
             view = new Hud(player);
         }
 
@@ -35,7 +38,7 @@ namespace Sandbox
             int kits = GameWorld.ItemCount(actor, "medkit");
             if (ally != lastCompanion || kits != lastKits)
             {
-                view.SetText("supplies", "瓦特  " + ally + "      医疗包  " + kits);
+                view.SetText("supplies", companionName + "  " + ally + "      医疗包  " + kits);
                 lastCompanion = ally;
                 lastKits = kits;
             }
@@ -55,11 +58,11 @@ namespace Sandbox
             bool showKeys = !done && Input.IsKeyDown(KeyCode.F1);
             if (showKeys != showingHelp)
             {
-                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1/2 换装    F 近战    E 交互\nH 为自己用药    G 给瓦特递药" : "");
+                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1/2 换装    F 近战    E 交互\nH 为自己用药    G 给队友递药" : "");
                 showingHelp = showKeys;
             }
 
-            string controls = done ? "R   重新开始" : "F   近战     T   呼叫瓦特     F1   操作帮助";
+            string controls = done ? "R   重新开始" : playControls;
             if (lastTitle == title && lastObjective == objective && lastHint == hint &&
                 lastControls == controls && finished == done) return;
 

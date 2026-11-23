@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Redflag/Gameplay/GameHud.h"
+#include "GameConversation.h"
 #include "Redflag/Renderer/Texture.h"
 #include <filesystem>
 #include <glm/mat4x4.hpp>
@@ -16,7 +17,7 @@ namespace Redflag
 	class GameHudView
 	{
 	public:
-		void Draw(Scene& scene, VulkanDraw& device, const glm::mat4& viewProjection, ImVec2 corner, ImVec2 size);
+		const ConversationStyle& Draw(Scene& scene, VulkanDraw& device, const glm::mat4& viewProjection, ImVec2 corner, ImVec2 size);
 
 	private:
 		struct Sprite
@@ -39,6 +40,7 @@ namespace Redflag
 		{
 			std::vector<Element> Elements;
 			Sprite Plate, Bar;
+			ConversationStyle Chat;
 			ImU32 PlateColor = IM_COL32_WHITE;
 			ImVec2 ShadowOffset{};
 			ImU32 ShadowColor = 0;

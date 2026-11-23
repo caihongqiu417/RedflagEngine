@@ -34,17 +34,18 @@ namespace Redflag
         return { .6f * point.x + .8f * point.z, -point.y };
     }
 
-    void DrawAnimationPose(const ModelAnimation& model, const AnimationState& saved, const AnimationState& draft,
+    void DrawAnimationPose(const ModelAnimation& model, const std::string& savedClip,
+                           const std::vector<AnimationMarker>& savedMarkers, const std::string& draftClip,
                            const AnimationMarker& marker, bool atEnd)
     {
         PoseSample poses[2];
-        const auto old = std::find_if(saved.Events.begin(), saved.Events.end(),
+        const auto old = std::find_if(savedMarkers.begin(), savedMarkers.end(),
             [&](const AnimationMarker& entry) { return entry.Name == marker.Name; });
-        if (old != saved.Events.end() && (!atEnd || old->End))
-            poses[0] = Sample(model, saved.Clip, atEnd ? *old->End : old->Start);
+        if (old != savedMarkers.end() && (!atEnd || old->End))
+            poses[0] = Sample(model, savedClip, atEnd ? *old->End : old->Start);
         else
-            poses[0].Error = "保存的动作表没有这个时刻";
-        poses[1] = Sample(model, draft.Clip, atEnd ? *marker.End : marker.Start);
+            poses[0].Error = "已保存的动作没有这个时刻";
+        poses[1] = Sample(model, draftClip, atEnd ? *marker.End : marker.Start);
 
         glm::vec2 low(FLT_MAX), high(-FLT_MAX);
         for (const PoseSample& pose : poses)

@@ -12,7 +12,13 @@ namespace Redflag
 		AnimationController Controller;
 		AnimationTimeline Timeline;
 		std::string Clip;
+		std::string MontageSlot;
+		uint64_t MontageCursor = 0;
+		bool LastWasMontage = false;
 
 		bool Play(Entity actor, const std::string& state, bool restart);
+		bool Read(Entity actor, AnimationNotice& notice);
+		bool IsPlaying(Entity actor) const;
+		bool IsOpen(Entity actor, const std::string& name) const;
 	};
 }

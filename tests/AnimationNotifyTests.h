@@ -4,6 +4,12 @@
 
 static void CheckAnimationEvents()
 {
+    AnimationTransition fade;
+    Check(fade.Weight(0.f) == 0.f && fade.Weight(.25f) == .15625f && fade.Weight(.5f) == .5f
+        && fade.Weight(.75f) == .84375f && fade.Weight(1.f) == 1.f, "default pose blend eases both ends");
+    fade.Control = {1.f/3.f, 2.f/3.f};
+    Check(std::abs(fade.Weight(.25f) - .25f) < .00001f, "editing the control points can produce a linear blend");
+
     AnimationState loop;
     loop.ID = "land";
     loop.Events = {{"recover", 0.f, .25f}, {"knee", .125f, {}}, {"finish", .5f, {}}};

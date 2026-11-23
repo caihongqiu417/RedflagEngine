@@ -12,6 +12,9 @@ if ($args.Count -gt 0) {
 if ($env:REDFLAG_BUNDLE_COMPANION -eq '1') {
     & "$PSScriptRoot\Start-NpcServices.ps1" -RequireAll
 }
+elseif ((Test-Path '.\Play-With-Companion.cmd') -and (Test-Path '.\CompanionRuntime\python\python.exe')) {
+    & "$PSScriptRoot\Start-NpcServices.ps1"
+}
 $manifest = Get-Content -LiteralPath 'asset-manifest.json' -Raw -Encoding UTF8 | ConvertFrom-Json
 & '.\RedflagForge.exe' --vulkan --play $manifest.scene @renderOptions
 exit $LASTEXITCODE

@@ -13,51 +13,59 @@
 \newcommand{\picturecaption}[1]{\par\noindent{\small\color{Muted}#1}\par}
 \begin{document}
 \bodytype
-\section*{和瓦特组队}
+\section*{和瓦力组队}
 
-双击游戏目录里的 \path{Play-With-Companion.cmd}。进入维修站后，你操控蓝灰色机器人，左前方的赭色机器人是你的队友瓦特。按 \button{T} 打开「队友通讯」，输入「给我留一个医疗包」，按回车发送。要用语音，在这个窗口里按住 \button{V} 说话，松开后发送。
+双击游戏目录里的 \path{Play-With-Companion.cmd}。进入维修站后，你操控蓝灰色机器人，左前方的赭色机器人是你的队友瓦力。按 \button{T}，输入「你叫什么名字？」，按回车。输入框会收起，你可以继续走动，听它回答。没听清时可以看画面下方的对白字幕。
 
 \begin{center}
-\includegraphics[width=\linewidth]{figures/yard.png}
+\includegraphics[width=\linewidth]{figures/wali-reply.jpg}
 \end{center}
-\picturecaption{维修站实机画面。左下角显示生命、装备与医疗包。按住 F1 查看键位，松开即可收起。}
+\picturecaption{维修站实机。玩家问「你叫什么名字？」后，赭色队友回答「我叫瓦力。」声音播放时，画面下方会出现说话者的名字和台词。}
 
-用 \button{WASD} 走动，按住 \button{Shift} 跑，按住 \button{Ctrl} 蹲下后仍能缓慢移动。轻按 \button{F}，机器人朝镜头所看的方向用左手出拳。等它收回手臂，再按一次可以接着打。右臂装有工具，用 \button{1} 选臂炮、\button{2} 选扫描器，\button{鼠标左键} 使用选中的工具。
+用 \button{WASD} 走动，按住 \button{Shift} 跑，按住 \button{Ctrl} 蹲下后仍能缓慢移动。轻按 \button{F}，机器人朝镜头所看的方向用左手出拳。等它收回手臂，再按一次可以接着打。右臂装有工具，用 \button{1} 选臂炮、\button{2} 选扫描器，\button{鼠标左键} 使用选中的工具。按住 W，点一下左键，注意它抬起右臂时，两只脚仍在迈步。
 
-对准工具箱旁的红色医疗包按 \button{E} 拾取。受伤时按 \button{H}，机器人把药盒放到胸前，一份最多恢复 50 点生命。走近瓦特按 \button{G} 可以把自己的一份药递给它。想从瓦特手里拿药，在队友通讯里说「送一份药给我」。瓦特自己受伤时，也可以请它用自己背包里的药。
+对准工具箱旁的红色医疗包按 \button{E} 拾取。受伤时按 \button{H}，机器人把药盒放到胸前，一份最多恢复 50 点生命。走近瓦力按 \button{G} 可以把自己的一份药递给它。想从瓦力手里拿药，在队友通讯里说「送一份药给我」。瓦力自己受伤时，也可以请它用自己背包里的药。
 
-维修站提供一个两人可以合作的目标。蓝色棚顶下面是应急发电机，可以请瓦特去修，也可以自己靠近后按住 E。供电恢复后，两人回到西侧闸口才能一起撤离。如果瓦特倒下，靠近它并按住 E 扶起它。
+维修站提供一个两人可以合作的目标。蓝色棚顶下面是应急发电机，可以请瓦力去修，也可以自己靠近后按住 E。供电恢复后，两人回到西侧闸口才能一起撤离。如果瓦力倒下，靠近它并按住 E 扶起它。
 
 \clearpage
 \input{yard}
 \clearpage
 \section*{在另一台电脑上启动}
 
-\begin{center}
-\includegraphics[width=\linewidth]{../../../output/validation/packaged-watt/radio.png}
-\end{center}
-\picturecaption{从试玩包启动，在游戏中按 T 打开的队友通讯。输入框在语音按钮下面，点击后可以直接打字；按 Enter 发送。}
+在 Windows 10 或 11 的 64 位电脑上，把游戏包和队友离线包解压到同一个目录。打开目录，应当能同时看见 \path{Play-With-Companion.cmd} 和 \path{CompanionRuntime} 文件夹。双击启动脚本，第一次要等模型读进内存，然后会打开游戏窗口。发布版附有运行库，显卡驱动需要支持 Vulkan 1.3。瓦力的常用台词随游戏提供，采用和 Delivery 二狗相同的 Dylan 音色。新回答优先由已配置的 Delivery 语音合成。单独使用便携包时，可用 Windows 安装的简体中文音色朗读。语音不可用，仍可以读字幕。
 
-在 Windows 10 或 11 的 64 位电脑上，把游戏包和队友离线包解压到同一个目录。打开目录，应当能同时看见 \path{Play-With-Companion.cmd} 和 \path{CompanionRuntime} 文件夹。双击启动脚本，第一次要等模型读进内存，然后会打开游戏窗口。发布版附有运行库，显卡驱动需要支持 Vulkan 1.3。瓦特的常用台词随游戏提供，采用和 Delivery 二狗相同的 Dylan 音色。角色创作面板也可以选择机器上安装的系统音色。
+如果想直接开口，按 \button{T} 后，用鼠标按住\button{按住说话}，说完再松开。程序会把识别到的文字交给瓦力。键盘输入则按回车发送；还在组织语言时可以按 \button{Esc} 收起，下次按 T 再接着写。
+
+\begin{center}
+\includegraphics[width=.88\linewidth]{figures/wali-input.jpg}
+\end{center}
+\picturecaption{按 T 后，光标已经在输入框内。右侧是麦克风按钮。图中保留了正式游戏窗口底部的原始像素。}
 
 游戏默认以 1920 × 1080 绘制。如果转动镜头时画面跟不上，退出后双击 \path{Play-720p.cmd}。场景改以 1280 × 720 绘制，窗口和界面文字仍保持原来的大小，队友通讯照常使用。
 
-队友离线包里有 Qwen3-VL-2B、中文语音识别模型和配套的 Python。想用自己的模型服务时，把 \path{REDFLAG_MODEL_ENDPOINT} 设为聊天请求地址，\path{REDFLAG_MODEL_NAME} 设为模型名称。支持图片的服务可以从 \path{scripts/Start-NpcServices.ps1} 传入 \texttt{-Vision}。
+队友离线包里有 Qwen3-VL-2B、中文语音识别模型和配套的 Python。想换成自己的服务，在 Forge 点\button{AI → 模型与语音设置…}，选择外部模型，填写聊天地址和模型名。这里也可以配置本机的 Delivery 语音。保存后，下次启动生效。
 
-游戏通过本机端口 8716 与模型通讯，通过 8717 识别和播放语音。服务已经就绪时，再次开局会直接复用。如果窗口报错，\path{tmp/npc-services} 保存了具体原因。要先看看画面、试试键鼠操作，可双击 \path{Play.cmd} 进入关卡。源码工作区的入口是 \path{Open-Watt-Station.cmd}。
+启动脚本会找到本机的模型和语音服务，把地址交给游戏。服务已经就绪时，再次开局会直接复用。如果窗口报错，\path{tmp/npc-services} 保存了具体原因。要先看看画面、试试键鼠操作，可双击 \path{Play.cmd} 进入关卡。源码工作区的入口是 \path{Open-Watt-Station.cmd}。
+
+\section*{在 Forge 查看瓦力的回答}
+
+在 Forge 打开维修站，按 \button{F6} 播放。点\button{主相机 Game}，在画面上按 \button{T} 问「你叫什么名字？」。听到回答后，在层级里选中瓦力。在属性面板的\button{AI 角色}里点\button{本局请求与动作}。打开\button{请求记录}，在列表里选「角色答话」。\button{模型}页里能对照「推理输入 JSON」和「模型生成的原文」，看到模型读到了哪些对话，怎样回答了这一句。
+
+回到游戏里请瓦力送药，再到请求列表选「子树行动选择」。展开\button{本次提供的选项}比较「送到手里」和「原地留药」。点\button{动作库}，可以看到「分享物资」对应的执行方法 \texttt{share}。要确认药到了谁的手里，看游戏左下角的医疗包数量。
 
 \clearpage
-\section*{给瓦特做一个角色副本}
+\section*{创建与修改角色}
 
-在队友窗口打开\button{角色创作}，选择 \texttt{watt.npc.yaml}。点\button{复制角色}，给新角色起名，再填一个新文件名，例如 \texttt{medic.npc.yaml}。副本有自己的角色定义、行为树及原角色引用的动作表。继续编辑前先看窗口顶部的资产名。
+在 Forge 顶部选\button{AI → 角色资产…}。点\button{新建角色…}，角色名称填「引路人」，资产文件填 \texttt{guide.npc.yaml}，再点\button{创建}。角色文件保存人设，旁边的 \texttt{guide.tree.yaml} 存它可以做的事。新建的引路人可以交谈，空闲时留在原地。点\button{行为树 → 打开行为树编辑器}，能看到「原地等候」这个动作。
 
 \begin{center}
-\includegraphics[width=.78\linewidth]{figures/role.png}
+\includegraphics[width=.79\linewidth,trim=10 200 710 27,clip]{../../../output/validation/forge-ai-tools/role-asset.png}
 \end{center}
-\picturecaption{角色创作面板。图由同一份 Forge 面板代码在界面测试中渲染，测试使用 Dear ImGui 默认配色。}
+\picturecaption{正式 Forge 窗口。引路人刚刚创建，当前的角色名、人设和模型设置都在「角色」页。}
 
-在\button{角色}页写性格和行动约定。音色留空会使用系统默认声音。点\button{读取可用音色}，从列表里选一个本机声音，到\button{试答与试听}听一句，再点\button{保存角色}。试答会把填写的台词和候选交给模型。进入游戏后，队友只能从当时场景允许的候选里选择。
+从\button{项目资产}也能打开已有角色。想改关卡里的某个角色，在层级选中它，从属性的\button{AI 角色 → 编辑角色资产}进入。在\button{角色}页写性格和行动约定。音色留空会使用系统默认声音。点\button{读取可用音色}，从列表里选一个本机声音，到\button{试答与试听}听一句，再点\button{保存角色}。试答会把填写的台词和候选交给模型。进入游戏后，队友只能从当时场景允许的候选里选择。
 
-\button{候选}页可以改写交给模型的动作说明。要把「留药」改成「立刻分享」，在行为树里将根节点的 \texttt{reserve} 拖到「分享物资」的左侧圆点，保存后试跑该候选。结果会显示从节点 1 到节点 5。\button{动画}页可以换这个游戏阶段播放的剪辑，并设定手在何时接触物品。只换声音时，行为树里的连线和动作表里的时间会保留。
+\button{候选}页可以改写交给模型的动作说明。要把「留药」改成「立刻分享」，在行为树里将根节点的 \texttt{reserve} 拖到「分享物资」的左侧圆点，保存后试跑该候选。结果会显示从节点 1 到节点 5。\button{动画}页可以换这个游戏阶段播放的剪辑。拾取或递物时手要在何时接触物品，写在这项动作引用的蒙太奇里，从\button{窗口 → 动画蒙太奇…}进入。只换声音时，行为树里的连线和动作里调好的时间会保留。
 \input{animation-events}
 \end{document}

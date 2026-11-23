@@ -1,0 +1,33 @@
+Root: 1
+NextID: 16
+Nodes:
+  - {ID: 1, Kind: Selector, Name: 巡检机, Position: [20, 270]}
+  - {ID: 2, Kind: Decorator, Name: 机身损坏, Key: damaged, Abort: Both, Position: [265, 10]}
+  - {ID: 3, Kind: Action, Name: 停机, Action: damaged, Position: [510, 10]}
+  - {ID: 4, Kind: Decorator, Name: 看见目标, Key: visible, Abort: Both, Position: [265, 135]}
+  - {ID: 5, Kind: Selector, Name: 接近与放电, Position: [510, 135]}
+  - {ID: 6, Kind: Decorator, Name: 目标距离较远, Key: outside_reach, Abort: Both, Position: [750, 10]}
+  - {ID: 7, Kind: Action, Name: 接近目标, Action: chase, Position: [1000, 10]}
+  - {ID: 8, Kind: Decorator, Name: 线圈正在冷却, Key: cooling, Abort: Both, Position: [750, 140]}
+  - {ID: 9, Kind: Action, Name: 等待冷却, Action: cool, Position: [1000, 140]}
+  - {ID: 10, Kind: Sequence, Name: 蓄能后放电, Position: [750, 270]}
+  - {ID: 11, Kind: Action, Name: 线圈蓄能, Action: charge, Position: [1000, 270]}
+  - {ID: 12, Kind: Action, Name: 释放脉冲, Action: discharge, Position: [1000, 385]}
+  - {ID: 13, Kind: Decorator, Name: 还记得目标位置, Key: last_seen, Abort: Both, Position: [265, 385]}
+  - {ID: 14, Kind: Action, Name: 前往最后出现的位置, Action: search, Position: [510, 385]}
+  - {ID: 15, Kind: Action, Name: 沿货场巡视, Action: patrol, Position: [265, 510]}
+Edges:
+  - {From: 1, Key: damaged, To: 2}
+  - {From: 2, To: 3}
+  - {From: 1, Key: visible, To: 4}
+  - {From: 4, To: 5}
+  - {From: 5, Key: approach, To: 6}
+  - {From: 6, To: 7}
+  - {From: 5, Key: cooldown, To: 8}
+  - {From: 8, To: 9}
+  - {From: 5, Key: pulse, To: 10}
+  - {From: 10, Key: charge, To: 11}
+  - {From: 10, Key: discharge, To: 12}
+  - {From: 1, Key: search, To: 13}
+  - {From: 13, To: 14}
+  - {From: 1, Key: patrol, To: 15}

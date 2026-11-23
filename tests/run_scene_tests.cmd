@@ -13,6 +13,10 @@ if errorlevel 1 exit /b 1
 if not exist "bin-int\Tests" mkdir "bin-int\Tests"
 set "RF_TEST_SOURCE=tests\SceneRenderTests.cpp"
 set "RF_TEST_NAME=SceneRenderTests"
+if "%~1"=="--animation-montage" (
+    set "RF_TEST_SOURCE=tests\AnimationMontageTests.cpp"
+    set "RF_TEST_NAME=AnimationMontageTests"
+)
 if "%~1"=="--dev-context-panel" (
     set "RF_TEST_SOURCE=tests\DevContextPanelTests.cpp"
     set "RF_TEST_NAME=DevContextPanelTests"

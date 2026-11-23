@@ -4,6 +4,25 @@
 
 namespace Redflag
 {
+	void ModelAnimationComponent::PlayClip(const std::string& clip, const AnimationController* controller,
+		const AnimationState* state, bool restart)
+	{
+		Playing = true;
+		if (!state && controller) state = controller->FindClip(clip);
+		const std::string next = state ? state->ID : "";
+		if (!restart && clip == Clip && next == m_Transition.To) return;
+
+		// 同一帧改令两次时，第一次请求的动作还没画出来，过渡仍从上次显示的姿势开始。
+		std::string previous = m_ChangePending ? m_Transition.From : m_Transition.To;
+		if (previous.empty() && controller)
+			if (const AnimationState* from = controller->FindClip(Clip)) previous = from->ID;
+		const AnimationTransition* edge = controller ? controller->FindTransition(previous, next) : nullptr;
+		m_Transition = edge ? *edge : AnimationTransition{previous, next, state ? state->Blend : BlendSeconds};
+		m_ChangePending = true;
+		Clip = clip;
+		Time = 0.f;
+	}
+
 	bool ModelAnimationComponent::GetNodeTransform(const std::string& name, glm::mat4& localToModel) const
 	{
 		return m_Animation && m_Animation->GetNodeTransform(name, m_NodeTransforms, localToModel);
@@ -32,7 +51,7 @@ namespace Redflag
 		}
 		Time = glm::clamp(Time, 0.f, active->Duration);
 		// 深度、颜色和拾取可能重复读取同一姿势。读取时保留上一步的过渡进度。
-		if (seconds == 0.f && Time == m_LastTime && Clip == m_LastClip) return;
+		if (!m_ChangePending && !poseChanged && seconds == 0.f && Time == m_LastTime && Clip == m_LastClip) return;
 		if (Playing && seconds > 0.f && active->Duration > 0.f)
 		{
 			float advance = seconds;
@@ -48,15 +67,19 @@ namespace Redflag
 			else m_StrideRoot.clear();
 			Time = Loop ? std::fmod(Time + advance, active->Duration) : std::min(Time + advance, active->Duration);
 		}
-		if (!Playing || seconds <= 0.f || BlendSeconds <= 0.f)
+		if (!m_ChangePending && Clip != m_LastClip)
+			m_Transition = AnimationTransition{{}, {}, BlendSeconds};
+		if (!Playing || m_Transition.Seconds <= 0.f)
 			m_Previous.clear();
-		else if (Clip != m_LastClip)
+		else if (m_ChangePending || Clip != m_LastClip)
 		{
 			// 中途又改动作时，从屏幕上刚刚看到的姿势开始，手和脚都会接着动。
 			m_Previous = m_Local;
 			m_BlendTime = 0.f;
 		}
-		if (Time == m_LastTime && Clip == m_LastClip && m_Previous.empty() && !poseChanged) return;
+		const bool changed = m_ChangePending;
+		m_ChangePending = false;
+		if (!changed && Time == m_LastTime && Clip == m_LastClip && m_Previous.empty() && !poseChanged) return;
 		m_LastTime = Time;
 		m_LastClip = Clip;
 
@@ -64,8 +87,8 @@ namespace Redflag
 		if (!m_Previous.empty())
 		{
 			m_BlendTime += seconds;
-			if (m_BlendTime < BlendSeconds)
-				ModelAnimation::BlendPose(m_Previous, m_BlendTime / BlendSeconds, m_Local);
+			if (m_BlendTime < m_Transition.Seconds)
+				ModelAnimation::BlendPose(m_Previous, m_Transition.Weight(m_BlendTime / m_Transition.Seconds), m_Local);
 			else
 				m_Previous.clear();
 		}

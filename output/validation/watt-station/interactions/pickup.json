@@ -1,18 +1,19 @@
 {
-  "exe_sha256": "5fa226a69ea33570d0ac11e11ec30dc80ba734c77349cd75a9ada6b607379c4e",
+  "exe_sha256": "d3a622b185a84869f5f8c548163c48a26cac1825fe023365aca12ee96ecb6271",
   "case": "pickup",
   "samples": [
     {
       "step": "ready",
       "frame": 6,
-      "seconds": 5.449365854263306,
+      "seconds": 1.245944857597351,
       "clip": "Idle-cycle",
-      "clip_time": 1.40439129,
+      "clip_time": 0.239944458,
+      "layers": [],
       "player_health": 40,
       "hand": [
-        -7.27173948,
-        0.916318059,
-        0.895211101
+        -7.02813339,
+        0.786221385,
+        1.02211821
       ],
       "kits": 1,
       "relay": 0,
@@ -23,15 +24,26 @@
     },
     {
       "step": "reach",
-      "frame": 11,
-      "seconds": 7.282774209976196,
+      "frame": 24,
+      "seconds": 2.4854668378829956,
       "clip": "Station-Pickup",
-      "clip_time": 0.246011734,
+      "clip_time": 0.0758297443,
+      "layers": [
+        {
+          "slot": "FullBody",
+          "clip": "Station-Pickup",
+          "state": "pickup",
+          "section": "Reach",
+          "time": 0.0758297443,
+          "weight": 0.562317193,
+          "fading": false
+        }
+      ],
       "player_health": 40,
       "hand": [
-        -5.353549,
-        0.738642931,
-        2.07551169
+        -5.41244411,
+        0.751599073,
+        2.08819866
       ],
       "kits": 1,
       "relay": 0,
@@ -41,16 +53,16 @@
         "action": "pickup",
         "target": "1112",
         "hand": [
-          -5.38315153,
-          0.55344373,
-          2.14132309
+          -5.46253777,
+          0.581862032,
+          2.18961501
         ],
         "goal": [
           -5.57999992,
           0.213,
           2.01999998
         ],
-        "distance": 0.411546499,
+        "distance": 0.422641456,
         "prop": "0",
         "passed": false,
         "released": false
@@ -59,15 +71,26 @@
     },
     {
       "step": "before contact",
-      "frame": 13,
-      "seconds": 8.061716318130493,
+      "frame": 34,
+      "seconds": 3.3439894914627075,
       "clip": "Station-Pickup",
-      "clip_time": 1.02495384,
+      "clip_time": 0.934352398,
+      "layers": [
+        {
+          "slot": "FullBody",
+          "clip": "Station-Pickup",
+          "state": "pickup",
+          "section": "Reach",
+          "time": 0.934352398,
+          "weight": 1,
+          "fading": false
+        }
+      ],
       "player_health": 40,
       "hand": [
-        -5.5822382,
-        0.265003443,
-        2.21048212
+        -5.59409142,
+        0.263727993,
+        2.20324898
       ],
       "kits": 1,
       "relay": 0,
@@ -77,16 +100,16 @@
         "action": "pickup",
         "target": "1112",
         "hand": [
-          -5.58416033,
-          0.212351993,
-          2.01883054
+          -5.58953476,
+          0.184406489,
+          2.02105784
         ],
         "goal": [
           -5.57999992,
           0.213,
           2.01999998
         ],
-        "distance": 0.00436995132,
+        "distance": 0.0301599242,
         "prop": "0",
         "passed": false,
         "released": false
@@ -95,15 +118,26 @@
     },
     {
       "step": "contact",
-      "frame": 15,
-      "seconds": 8.974055528640747,
+      "frame": 39,
+      "seconds": 3.826161026954651,
       "clip": "Station-Pickup",
-      "clip_time": 1.19999993,
+      "clip_time": 1.41652393,
+      "layers": [
+        {
+          "slot": "FullBody",
+          "clip": "Station-Pickup",
+          "state": "pickup",
+          "section": "Rise",
+          "time": 1.41652393,
+          "weight": 1,
+          "fading": false
+        }
+      ],
       "player_health": 40,
       "hand": [
-        -5.59560776,
-        0.227110699,
-        2.21764517
+        -5.48391294,
+        0.350711107,
+        2.12634444
       ],
       "kits": 2,
       "relay": 0,
@@ -113,30 +147,30 @@
         "action": "pickup",
         "target": "1112",
         "hand": [
-          -5.57999992,
-          0.213000059,
-          2.02000046
+          -5.5800004,
+          0.213000044,
+          2.01999998
         ],
         "goal": [
           -5.57999992,
           0.213,
           2.01999998
         ],
-        "distance": 4.8054801e-07,
-        "prop": "17500492589076048333",
+        "distance": 4.7892803e-07,
+        "prop": "18249468297224138498",
         "passed": true,
         "released": false,
         "commit_hand": [
-          -5.57999992,
-          0.213000059,
-          2.02000046
+          -5.5800004,
+          0.213000044,
+          2.01999998
         ],
         "commit_goal": [
           -5.57999992,
           0.213,
           2.01999998
         ],
-        "commit_distance": 4.8054801e-07
+        "commit_distance": 4.7892803e-07
       },
       "events": [
         {
@@ -148,34 +182,74 @@
     },
     {
       "step": "stand",
-      "frame": 19,
-      "seconds": 10.41894268989563,
+      "frame": 54,
+      "seconds": 5.127424836158752,
       "clip": "Idle-cycle",
-      "clip_time": 0.466828346,
+      "clip_time": 0.167529106,
+      "layers": [],
       "player_health": 40,
       "hand": [
-        -5.17151165,
-        0.890212715,
-        1.86645043
+        -5.40310144,
+        0.787338495,
+        1.99742234
       ],
       "kits": 2,
       "relay": 0,
       "watt": 100,
       "guard": 75,
-      "contact": null,
+      "contact": {
+        "action": "pickup",
+        "target": "1112",
+        "hand": [
+          -5.39159441,
+          0.618480682,
+          2.10163713
+        ],
+        "goal": [
+          -5.57999992,
+          0.213,
+          2.01999998
+        ],
+        "distance": 0.454506159,
+        "prop": "18249468297224138498",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -5.5800004,
+          0.213000044,
+          2.01999998
+        ],
+        "commit_goal": [
+          -5.57999992,
+          0.213,
+          2.01999998
+        ],
+        "commit_distance": 4.7892803e-07
+      },
       "events": []
     },
     {
       "step": "raise medkit",
-      "frame": 21,
-      "seconds": 11.136599779129028,
+      "frame": 55,
+      "seconds": 5.193667054176331,
       "clip": "Station-UseMedkit",
-      "clip_time": 0.324670792,
+      "clip_time": 0.066242218,
+      "layers": [
+        {
+          "slot": "FullBody",
+          "clip": "Station-UseMedkit",
+          "state": "heal",
+          "section": "Use",
+          "time": 0.066242218,
+          "weight": 0.4597767,
+          "fading": false
+        }
+      ],
       "player_health": 40,
       "hand": [
-        -5.80248404,
-        1.15682542,
-        2.2350471
+        -5.46046495,
+        0.771901548,
+        2.0451324
       ],
       "kits": 2,
       "relay": 0,
@@ -185,17 +259,17 @@
         "action": "heal",
         "target": "1101",
         "hand": [
-          -5.87813377,
-          1.0169791,
-          2.1157732
+          -5.48813152,
+          0.599675,
+          2.14041424
         ],
         "goal": [
-          -5.68181038,
-          1.33820677,
-          2.03868747
+          -5.92404366,
+          1.22464681,
+          2.16190147
         ],
-        "distance": 0.384281546,
-        "prop": "5942073794307380015",
+        "distance": 0.762280047,
+        "prop": "12083991819624228610",
         "passed": false,
         "released": false
       },
@@ -209,15 +283,26 @@
     },
     {
       "step": "heal",
-      "frame": 24,
-      "seconds": 12.205923318862915,
+      "frame": 67,
+      "seconds": 6.193297505378723,
       "clip": "Station-UseMedkit",
-      "clip_time": 1,
+      "clip_time": 1.06587267,
+      "layers": [
+        {
+          "slot": "FullBody",
+          "clip": "Station-UseMedkit",
+          "state": "heal",
+          "section": "Use",
+          "time": 1.06587267,
+          "weight": 1,
+          "fading": false
+        }
+      ],
       "player_health": 90,
       "hand": [
-        -6.02004242,
-        1.29220533,
-        2.16435599
+        -6.0200429,
+        1.18720531,
+        2.16435552
       ],
       "kits": 1,
       "relay": 0,
@@ -227,30 +312,30 @@
         "action": "heal",
         "target": "1101",
         "hand": [
-          -6.01320457,
-          1.27542782,
-          1.96642172
+          -6.01320505,
+          1.1704278,
+          1.96642113
         ],
         "goal": [
           -6.01320457,
-          1.2754277,
-          1.96642184
+          1.17042768,
+          1.96642125
         ],
-        "distance": 1.68587391e-07,
-        "prop": "5942073794307380015",
+        "distance": 5.05762159e-07,
+        "prop": "12083991819624228610",
         "passed": true,
         "released": false,
         "commit_hand": [
-          -6.01320457,
-          1.27542782,
-          1.96642172
+          -6.01320505,
+          1.1704278,
+          1.96642113
         ],
         "commit_goal": [
           -6.01320457,
-          1.2754277,
-          1.96642184
+          1.17042768,
+          1.96642125
         ],
-        "commit_distance": 1.68587391e-07
+        "commit_distance": 5.05762159e-07
       },
       "events": [
         {
@@ -262,21 +347,50 @@
     },
     {
       "step": "still holding H after stowing",
-      "frame": 28,
-      "seconds": 13.591307878494263,
+      "frame": 83,
+      "seconds": 7.30972158908844,
       "clip": "Idle-cycle",
-      "clip_time": 0.347213745,
+      "clip_time": 2.2879467,
+      "layers": [],
       "player_health": 90,
       "hand": [
-        -5.16907883,
-        0.890480816,
-        1.86965084
+        -5.39668941,
+        0.801027119,
+        1.99610579
       ],
       "kits": 1,
       "relay": 0,
       "watt": 100,
       "guard": 75,
-      "contact": null,
+      "contact": {
+        "action": "heal",
+        "target": "1101",
+        "hand": [
+          -5.38213158,
+          0.633180797,
+          2.10156512
+        ],
+        "goal": [
+          -6.01320457,
+          1.17042768,
+          1.96642125
+        ],
+        "distance": 0.839732826,
+        "prop": "12083991819624228610",
+        "passed": true,
+        "released": true,
+        "commit_hand": [
+          -6.01320505,
+          1.1704278,
+          1.96642113
+        ],
+        "commit_goal": [
+          -6.01320457,
+          1.17042768,
+          1.96642125
+        ],
+        "commit_distance": 5.05762159e-07
+      },
       "events": []
     }
   ]

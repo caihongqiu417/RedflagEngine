@@ -53,11 +53,20 @@ def speech(args, sdk, work):
         "--runtime",args.speech_runtime.resolve()],cwd=work,creationflags=subprocess.CREATE_NO_WINDOW)
     try:
         voices = ready(url+"/voices")
+        assert voices["bank_speech"] == 4
         data = post(url+"/synthesize",{"text":"帮我留一份医疗包，等我过来再给我。","voice":args.voice})
         assert data.startswith(b"RIFF")
         text = json.loads(post(url+"/transcribe",data,"audio/wav"))["text"]
         assert "医疗包" in text,text
-        return dict(voices=voices,voice_requested=args.voice,wav_bytes=len(data),text=text)
+        job = json.loads(post(url+"/streams", {"text":"你好。","voice":args.voice}))
+        size = 0
+        while True:
+            with urlopen(url+"/streams/"+job["id"], timeout=10) as reply:
+                if reply.status == 204: break
+                if reply.status == 200: size += len(reply.read())
+                else: assert reply.status == 202
+        assert size > 0 and size % 2 == 0
+        return dict(voices=voices,voice_requested=args.voice,wav_bytes=len(data),stream_samples=size//2,text=text)
     finally:
         service.terminate()
         service.wait(timeout=8)
@@ -74,6 +83,9 @@ def run(args):
         actual = {f.relative_to(sdk).as_posix():hashlib.sha256(f.read_bytes()).hexdigest()
                   for f in sdk.rglob("*") if f.is_file() and f.name!="manifest.json"}
         assert actual == wanted
+        if args.speech_only:
+            return dict(archive_sha256=hashlib.sha256(args.sdk.read_bytes()).hexdigest(),
+                        clean_extraction=True, manifest_matches=True, speech=speech(args,sdk,work))
         port = unused_port()
         gateway = subprocess.Popen([sys.executable,"-B",sdk/"scripts/decision_service.py","--port",str(port),
                     "--model",args.model,"--endpoint",args.endpoint,"--images"],cwd=work,creationflags=subprocess.CREATE_NO_WINDOW)
@@ -115,10 +127,12 @@ if __name__ == "__main__":
     p.add_argument("--endpoint",default="http://127.0.0.1:18157/v1/chat/completions")
     p.add_argument("--model",default="Qwen3-VL-2B-Instruct")
     p.add_argument("--speech-runtime",type=Path)
+    p.add_argument("--speech-only",action="store_true",help="仅检查独立语音宿主，可在不启动语言模型时运行")
     p.add_argument("--speech-python",default=sys.executable)
     p.add_argument("--voice",default="")
     p.add_argument("--out",type=Path,default=ROOT/"output/validation/runtime-ai/portable-sdk.json")
     args = p.parse_args()
+    if args.speech_only and not args.speech_runtime: p.error("--speech-only needs --speech-runtime")
     result = run(args)
     args.out.parent.mkdir(parents=True,exist_ok=True)
     args.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf8")

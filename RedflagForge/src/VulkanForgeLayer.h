@@ -12,6 +12,8 @@
 #include "UI/DevContextPanel.h"
 #include "ProjectPanel.h"
 #include "DecisionPanel.h"
+#include "UI/AnimationTransitionPanel.h"
+#include "UI/AnimationMontagePanel.h"
 #include "CompanionPanel.h"
 #include "NpcPhotoPanel.h"
 
@@ -55,6 +57,8 @@ namespace Redflag
 		Scope<LightingPreview> m_Lighting;
 		ProjectPanel m_Project;
 		DecisionPanel m_Decisions;
+		AnimationTransitionPanel m_Transitions;
+		AnimationMontagePanel m_Montages;
 		CompanionPanel m_Companions;
 		BehaviorTreePanel m_ActorTree;
 		NpcPhotoPanel m_Photos;

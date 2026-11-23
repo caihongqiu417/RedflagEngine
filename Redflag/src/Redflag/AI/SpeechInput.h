@@ -15,7 +15,7 @@ namespace Redflag
 	class SpeechInput
 	{
 	public:
-		explicit SpeechInput(uint16_t port = 8717);
+		explicit SpeechInput(uint16_t port = 0);
 		~SpeechInput();
 		SpeechInput(const SpeechInput&) = delete;
 		SpeechInput& operator=(const SpeechInput&) = delete;

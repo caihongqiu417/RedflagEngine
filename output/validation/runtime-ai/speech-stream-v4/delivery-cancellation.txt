@@ -1,0 +1,19 @@
+test_bounded_sender_propagates_cancel_while_queue_is_full (test_neural_audio_stream.NeuralAudioStreamTests.test_bounded_sender_propagates_cancel_while_queue_is_full) ... ok
+test_callback_failure_removes_hook_and_next_task_can_generate (test_neural_audio_stream.NeuralAudioStreamTests.test_callback_failure_removes_hook_and_next_task_can_generate) ... ok
+test_cancel_after_first_chunk_does_not_emit_tail_or_success (test_neural_audio_stream.NeuralAudioStreamTests.test_cancel_after_first_chunk_does_not_emit_tail_or_success) ... ok
+test_cancel_during_decode_does_not_send_late_audio (test_neural_audio_stream.NeuralAudioStreamTests.test_cancel_during_decode_does_not_send_late_audio) ... ok
+test_chunk_tail_and_reference_audio_are_emitted_once (test_neural_audio_stream.NeuralAudioStreamTests.test_chunk_tail_and_reference_audio_are_emitted_once) ... ok
+test_engine_preserves_identity_and_requires_eos_before_end (test_neural_audio_stream.NeuralAudioStreamTests.test_engine_preserves_identity_and_requires_eos_before_end) ... ok
+test_final_code_mismatch_does_not_report_success (test_neural_audio_stream.NeuralAudioStreamTests.test_final_code_mismatch_does_not_report_success) ... ok
+test_full_mode_does_not_install_hook_or_require_callback (test_neural_audio_stream.NeuralAudioStreamTests.test_full_mode_does_not_install_hook_or_require_callback) ... ok
+test_length_mismatch_and_audio_limit_do_not_report_success (test_neural_audio_stream.NeuralAudioStreamTests.test_length_mismatch_and_audio_limit_do_not_report_success) ... ok
+test_only_new_samples_cross_to_cpu_and_final_decode_is_skipped (test_neural_audio_stream.NeuralAudioStreamTests.test_only_new_samples_cross_to_cpu_and_final_decode_is_skipped) ... ok
+test_out_of_order_frames_and_frames_after_eos_are_rejected (test_neural_audio_stream.NeuralAudioStreamTests.test_out_of_order_frames_and_frames_after_eos_are_rejected) ... ok
+test_output_queue_does_not_block_generation_or_send_cancelled_pending_chunks (test_neural_audio_stream.NeuralAudioStreamTests.test_output_queue_does_not_block_generation_or_send_cancelled_pending_chunks) ... ok
+test_shutdown_and_timeout_stop_before_callback (test_neural_audio_stream.NeuralAudioStreamTests.test_shutdown_and_timeout_stop_before_callback) ... ok
+test_worker_only_accepts_explicit_supported_chunk_sizes (test_neural_audio_stream.NeuralAudioStreamTests.test_worker_only_accepts_explicit_supported_chunk_sizes) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.220s
+
+OK

@@ -65,7 +65,8 @@ namespace Redflag
 		std::vector<uint64_t> OverlapSphere(glm::vec3 center, float radius) const;
 
 		/// <summary>沿指定方向推动一个球，返回它的中心在碰到物体前能移动多少米。</summary>
-		float SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore) const;
+		float SweepSphere(glm::vec3 center, glm::vec3 direction, float radius, float distance, uint64_t ignore,
+			bool allowSeparation = false) const;
 	private:
 		friend class Ragdoll;
 		physx::PxScene& GetScene();

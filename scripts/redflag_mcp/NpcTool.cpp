@@ -1,4 +1,5 @@
 #include "Redflag/AI/NpcDefinition.h"
+#include "Redflag/Animation/Montage.h"
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 
@@ -39,6 +40,10 @@ static YAML::Node Inspect(const NpcDefinition& npc)
         YAML::Node row;
         row["ID"] = state.ID;
         row["Clip"] = state.Clip;
+        if (state.MontageAsset) {
+            row["Montage"] = state.Montage;
+            row["Slot"] = state.MontageAsset->Slot;
+        }
         row["Loop"] = state.Loop;
         row["Blend"] = state.Blend;
         row["Contact"] = state.Contact;
@@ -68,10 +73,21 @@ int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        if (argc != 3 || std::wstring(argv[1]) != L"inspect")
-            throw std::runtime_error("Usage: NpcTool inspect FILE");
-        NpcDefinition npc;
+        if (argc != 3) throw std::runtime_error("Usage: NpcTool inspect|validate-animator|validate-montage FILE");
         std::string error;
+        if (std::wstring(argv[1]) == L"validate-montage") {
+            AnimationMontage montage;
+            if (!montage.Load(argv[2],error)) throw std::runtime_error(error);
+            return 0;
+        }
+        if (std::wstring(argv[1]) == L"validate-animator")
+        {
+            AnimationController controller;
+            if (!controller.Load(argv[2], error)) throw std::runtime_error(error);
+            return 0;
+        }
+        if (std::wstring(argv[1]) != L"inspect") throw std::runtime_error("Unknown operation");
+        NpcDefinition npc;
         if (!npc.Load(argv[2], error))
             throw std::runtime_error(error);
 

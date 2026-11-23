@@ -644,7 +644,8 @@ namespace Redflag {
         }
         if (entity.HasComponent<HudComponent>())
             out << YAML::Key << "HudComponent" << YAML::Value << YAML::BeginMap
-                << YAML::Key << "Layout" << YAML::Value << entity.GetComponent<HudComponent>().Layout << YAML::EndMap;
+                << YAML::Key << "Layout" << YAML::Value << entity.GetComponent<HudComponent>().Layout
+                << YAML::Key << "ConversationActor" << YAML::Value << entity.GetComponent<HudComponent>().ConversationActor << YAML::EndMap;
 
         if (entity.HasComponent<InventoryComponent>())
         {
@@ -1003,7 +1004,11 @@ namespace Redflag {
                     health.Team = n["Team"].as<std::string>("");
                 }
                 if (const YAML::Node n = entity["HudComponent"])
-                    deserializedEntity.AddComponent<HudComponent>().Layout = n["Layout"].as<std::string>();
+                {
+                    auto& hud = deserializedEntity.AddComponent<HudComponent>();
+                    hud.Layout = n["Layout"].as<std::string>();
+                    hud.ConversationActor = n["ConversationActor"].as<uint64_t>(0);
+                }
                 if (const YAML::Node n = entity["InventoryComponent"])
                 {
                     auto& inventory = deserializedEntity.AddComponent<InventoryComponent>();

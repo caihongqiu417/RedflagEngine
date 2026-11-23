@@ -29,13 +29,14 @@ namespace Redflag
 			return encoded;
 		}
 
-		std::string RequestJSON(const DecisionRequest& request)
+		std::string RequestJSON(const DecisionRequest& request, bool trace, bool omitPixels = false)
 		{
 			YAML::Emitter out;
 			out.SetStringFormat(YAML::DoubleQuoted);
 			out << YAML::Flow << YAML::BeginMap << YAML::Key << "prompt" << YAML::Value << request.Prompt
 				<< YAML::Key << "instructions" << YAML::Value << request.Instructions
 				<< YAML::Key << "model" << YAML::Value << request.Model;
+			if (trace) out << YAML::Key << "trace_model" << YAML::Value << true;
 			auto entries = [&](const char* key, const auto& items) {
 				out << YAML::Key << key << YAML::Value << YAML::BeginSeq;
 				for (const auto& item : items)
@@ -45,11 +46,19 @@ namespace Redflag
 			};
 			entries("observations", request.Observations);
 			entries("candidates", request.Candidates);
+			if (!request.History.empty())
+			{
+				out << YAML::Key << "history" << YAML::Value << YAML::BeginSeq;
+				for (const DialogueLine& line : request.History)
+					out << YAML::BeginMap << YAML::Key << "role" << YAML::Value << line.Role
+						<< YAML::Key << "content" << YAML::Value << line.Content << YAML::EndMap;
+				out << YAML::EndSeq;
+			}
 			out << YAML::Key << "images" << YAML::Value << YAML::BeginSeq;
 			for (const DecisionImage& image : request.Images)
 				out << YAML::BeginMap << YAML::Key << "id" << YAML::Value << image.ID
 					<< YAML::Key << "mime" << YAML::Value << image.MimeType << YAML::Key << "data" << YAML::Value
-					<< EncodeImage(image.Bytes) << YAML::EndMap;
+					<< (omitPixels ? "[图片数据已省略，" + std::to_string(image.Bytes.size()) + " 字节]" : EncodeImage(image.Bytes)) << YAML::EndMap;
 			out << YAML::EndSeq << YAML::EndMap;
 			return out.c_str();
 		}
@@ -66,16 +75,18 @@ namespace Redflag
 		bool Cancelled = false;
 		std::optional<DecisionResult> Result;
 
-		void Run(uint16_t port, DecisionRequest query, bool freeText)
+		void Run(uint16_t port, DecisionRequest query, bool freeText, bool trace, std::string body)
 		{
 			DecisionResult result{ DecisionStatus::Cancelled };
+			std::string output, modelInput, modelOutput;
 			std::unique_ptr<LocalService> service;
 			std::wstring path;
 			try {
 				service = std::make_unique<LocalService>(port);
 
 				std::wstring route = freeText ? L"/v1/replies" : L"/v1/decisions";
-				std::string id = service->Send(L"POST", route, RequestJSON(query))["id"].as<std::string>();
+				if (body.empty()) body = RequestJSON(query, trace);
+				std::string id = service->Send(L"POST", route, body)["id"].as<std::string>();
 				if (id.size() != 32 || id.find_first_not_of("0123456789abcdef") != std::string::npos)
 					throw std::runtime_error("invalid_service_reply");
 				path = route + L"/" + std::wstring(id.begin(), id.end());
@@ -87,9 +98,24 @@ namespace Redflag
 					lock.unlock();
 					if (std::chrono::steady_clock::now() >= deadline) throw std::runtime_error("decision_timeout");
 
-					YAML::Node answer = service->Send(L"GET", path);
+					YAML::Node answer;
+					if (trace)
+					{
+						output = service->RequestJSON(L"GET", path);
+						answer = YAML::Load(output);
+					}
+					else answer = service->Send(L"GET", path);
 					std::string state = answer["status"].as<std::string>();
-					if (state == "pending") continue;
+					if (state == "pending")
+					{
+						output.clear();
+						continue;
+					}
+					if (YAML::Node model = answer["model_trace"])
+					{
+						modelInput = model["input"].as<std::string>("");
+						modelOutput = model["output"].as<std::string>("");
+					}
 					if (state == "completed" && freeText) {
 						result = { DecisionStatus::Completed, {}, {}, answer["text"].as<std::string>() };
 					} else if (state == "completed") {
@@ -112,31 +138,41 @@ namespace Redflag
 			}
 
 			std::lock_guard<std::mutex> lock(Mutex);
+			result.Output = std::move(output);
+			result.ModelInput = std::move(modelInput);
+			result.ModelOutput = std::move(modelOutput);
 			Result = Cancelled ? DecisionResult{ DecisionStatus::Cancelled } : std::move(result);
 		}
 	};
 
 	// ---- 游戏线程提交与取回 ----
-	DecisionClient::DecisionClient(uint16_t port) : m_Port(port) {}
+	DecisionClient::DecisionClient(uint16_t port) : m_Port(port ? port : LocalService::DecisionPort()) {}
 
 	DecisionClient::~DecisionClient() { Clear(); }
 
-	uint64_t DecisionClient::Start(DecisionRequest request)
+	uint64_t DecisionClient::Start(DecisionRequest request, std::string* debugInput)
 	{
-		return Begin(std::move(request), false);
+		return Begin(std::move(request), false, debugInput);
 	}
 
-	uint64_t DecisionClient::StartReply(DecisionRequest request)
+	uint64_t DecisionClient::StartReply(DecisionRequest request, std::string* debugInput)
 	{
-		return Begin(std::move(request), true);
+		return Begin(std::move(request), true, debugInput);
 	}
 
-	uint64_t DecisionClient::Begin(DecisionRequest request, bool freeText)
+	uint64_t DecisionClient::Begin(DecisionRequest request, bool freeText, std::string* debugInput)
 	{
 		const uint64_t id = m_NextID++;
 		std::unique_ptr<Job>& job = m_Jobs[id];
 		job = std::make_unique<Job>();
-		job->Worker = std::thread(&Job::Run, job.get(), m_Port, std::move(request), freeText);
+		std::string body;
+		if (debugInput)
+		{
+			// Forge 显示图像编号和原图大小。较大的像素内容只在后台编码一次。
+			*debugInput = RequestJSON(request, true, !request.Images.empty());
+			if (request.Images.empty()) body = *debugInput;
+		}
+		job->Worker = std::thread(&Job::Run, job.get(), m_Port, std::move(request), freeText, debugInput != nullptr, std::move(body));
 		return id;
 	}
 

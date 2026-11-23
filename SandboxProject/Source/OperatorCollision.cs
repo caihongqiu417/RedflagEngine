@@ -3,7 +3,7 @@ using Redflag;
 
 namespace Sandbox
 {
-    /* 玩家和瓦特用同一副骨架。站立尺寸从各自的场景组件读取，卧姿跟随身体倒下或撑起。 */
+    /* 玩家和队友用同一副骨架。站立尺寸从各自的场景组件读取，卧姿跟随身体倒下或撑起。 */
     class OperatorCollision
     {
         readonly Entity actor;

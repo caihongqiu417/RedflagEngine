@@ -1,7 +1,7 @@
 Root: 1
 NextID: 18
 Nodes:
-  - {ID: 1, Kind: ModelSelector, Name: 瓦特的选择, Position: [40, 210]}
+  - {ID: 1, Kind: ModelSelector, Name: 选择行动, Position: [40, 210]}
   - {ID: 2, Kind: Subtree, Name: 补给, Position: [310, 60]}
   - {ID: 3, Kind: ModelSelector, Name: 选择补给动作, Question: 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。, Position: [540, 60]}
   - {ID: 4, Kind: Action, Name: 收集物资, Action: gather, Position: [810, 30]}

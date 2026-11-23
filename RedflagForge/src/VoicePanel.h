@@ -11,11 +11,15 @@ namespace Redflag
 	public:
 		VoicePanel();
 		~VoicePanel();
-		void Draw(Scene& scene, uint64_t actor, const std::function<void(const std::string&)>& submit);
+		void DrawCapture();
+		void CancelRecording();
+		void DrawTools();
+		void UpdateInput(Scene& scene, uint64_t actor, const std::function<void(const std::string&)>& submit);
 		void Reset();
 		void Speak(uint64_t speaker, const std::string& text, const std::string& voice);
 		void StopPlayback() { m_Playback.Stop(); }
 		void UpdatePlayback() { m_Playback.Update(); }
+		const SpeechPlayback& Playback() const { return m_Playback; }
 
 	private:
 		struct Microphone;

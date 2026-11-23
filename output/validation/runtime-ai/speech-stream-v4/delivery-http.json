@@ -1,0 +1,192 @@
+{
+  "source": "D:\\Udev\\Delivery\\Saved\\AIResearch\\HttpSpeechProbe\\gpu-20261113\\Manifest.json",
+  "sha256": "8fcf491dea750b367de53124814d6b7a8857281b862374866488f8ba127dc601",
+  "samples": {
+    "whole": [
+      {
+        "case": "male_short_1",
+        "speaker": "Uncle_Fu",
+        "first": 3.9906574999913573,
+        "last": 3.9906574999913573,
+        "buffered_064": 3.9906574999913573,
+        "duration": 4.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_1",
+        "speaker": "Xiaofang_B",
+        "first": 1.1079133999883197,
+        "last": 1.1079133999883197,
+        "buffered_064": 1.1079133999883197,
+        "duration": 1.52,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_short_2",
+        "speaker": "Uncle_Fu",
+        "first": 2.2016365000017686,
+        "last": 2.2016365000017686,
+        "buffered_064": 2.2016365000017686,
+        "duration": 3.2,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_2",
+        "speaker": "Xiaofang_B",
+        "first": 1.9810392999934265,
+        "last": 1.9810392999934265,
+        "buffered_064": 1.9810392999934265,
+        "duration": 2.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_long",
+        "speaker": "Uncle_Fu",
+        "first": 4.556140099986806,
+        "last": 4.556140099986806,
+        "buffered_064": 4.556140099986806,
+        "duration": 6.4,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_long",
+        "speaker": "Xiaofang_B",
+        "first": 5.530433000007179,
+        "last": 5.530433000007179,
+        "buffered_064": 5.530433000007179,
+        "duration": 6.72,
+        "pcm_verified": true
+      }
+    ],
+    "4": [
+      {
+        "case": "male_short_1",
+        "speaker": "Uncle_Fu",
+        "first": 0.37834599999769125,
+        "last": 4.115471899989643,
+        "buffered_064": 0.6282031000009738,
+        "duration": 4.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_1",
+        "speaker": "Xiaofang_B",
+        "first": 0.3700341999938246,
+        "last": 1.3442997999954969,
+        "buffered_064": 0.6139712000003783,
+        "duration": 1.52,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_short_2",
+        "speaker": "Uncle_Fu",
+        "first": 0.3107182000094326,
+        "last": 2.605097499996191,
+        "buffered_064": 0.5445849000097951,
+        "duration": 3.2,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_2",
+        "speaker": "Xiaofang_B",
+        "first": 0.3894674000039231,
+        "last": 2.4173911999969278,
+        "buffered_064": 0.6389977000071667,
+        "duration": 2.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_long",
+        "speaker": "Uncle_Fu",
+        "first": 0.27710739999020007,
+        "last": 4.9704340000025695,
+        "buffered_064": 0.5046501000033459,
+        "duration": 6.4,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_long",
+        "speaker": "Xiaofang_B",
+        "first": 0.2954414999985602,
+        "last": 5.8439631999935955,
+        "buffered_064": 0.5370922000001883,
+        "duration": 6.72,
+        "pcm_verified": true
+      }
+    ],
+    "8": [
+      {
+        "case": "male_short_1",
+        "speaker": "Uncle_Fu",
+        "first": 0.47640030000184197,
+        "last": 3.5153692000021692,
+        "buffered_064": 0.47640030000184197,
+        "duration": 4.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_1",
+        "speaker": "Xiaofang_B",
+        "first": 0.5035063999966951,
+        "last": 1.2521126000065124,
+        "buffered_064": 0.5035063999966951,
+        "duration": 1.52,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_short_2",
+        "speaker": "Uncle_Fu",
+        "first": 0.5122730000002775,
+        "last": 2.287525199993979,
+        "buffered_064": 0.5122730000002775,
+        "duration": 3.2,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_short_2",
+        "speaker": "Xiaofang_B",
+        "first": 0.49267589999362826,
+        "last": 2.1502481999923475,
+        "buffered_064": 0.49267589999362826,
+        "duration": 2.88,
+        "pcm_verified": true
+      },
+      {
+        "case": "male_long",
+        "speaker": "Uncle_Fu",
+        "first": 0.5017596999969101,
+        "last": 4.574459800001932,
+        "buffered_064": 0.5017596999969101,
+        "duration": 6.4,
+        "pcm_verified": true
+      },
+      {
+        "case": "female_long",
+        "speaker": "Xiaofang_B",
+        "first": 0.5051549000054365,
+        "last": 5.644926700013457,
+        "buffered_064": 0.5051549000054365,
+        "duration": 6.72,
+        "pcm_verified": true
+      }
+    ]
+  },
+  "median_seconds": {
+    "whole": {
+      "first": 3.096146999996563,
+      "buffered_064": 3.096146999996563,
+      "last": 3.096146999996563
+    },
+    "4": {
+      "first": 0.3403762000016286,
+      "buffered_064": 0.5792780500050867,
+      "last": 3.360284699992917
+    },
+    "8": {
+      "first": 0.5026330499968026,
+      "buffered_064": 0.5026330499968026,
+      "last": 2.901447199998074
+    }
+  },
+  "notes": "Fixed replies; HTTP arrival at client. The game and its audio device were not part of this experiment."
+}

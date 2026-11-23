@@ -26,3 +26,12 @@ Elements:
   - {Text: status, Anchor: [0.5, 1], Position: [-110, -138], Font: 21}
   - {Sprite: reticle, Anchor: [0.5, 0.5], Position: [-10, -10], Size: [20, 20], DuringPlay: true}
 Nameplates: {HealthBar: bar, Font: 18}
+
+# 字幕居中，底边留出 174 像素给交互提示和输入。语音不可用时按每秒 7 字翻页。
+Conversation:
+  Subtitles: true
+  Speaker: [255, 218, 154, 255]
+  Text: [255, 252, 244, 255]
+  Font: 28
+  BottomMargin: 174
+  ReadingRate: 7

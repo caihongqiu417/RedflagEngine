@@ -10,6 +10,8 @@ namespace Redflag
 	{
 	public:
 		void Draw(const Ref<Scene>& scene);
+		void DrawSettingsMenu();
+		void DrawSettingsWindow();
 
 	private:
 		DecisionClient m_Client;
@@ -19,5 +21,8 @@ namespace Redflag
 		char m_Prompt[512] = "";
 		char m_Model[128] = "";
 		bool m_PickObject = false;
+		bool m_SettingsOpen = false, m_External = false, m_Vision = false;
+		char m_Endpoint[1024] = "", m_ServiceModel[128] = "", m_VoiceProject[1024] = "";
+		std::string m_ServiceMessage;
 	};
 }

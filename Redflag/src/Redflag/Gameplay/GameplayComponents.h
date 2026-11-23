@@ -10,6 +10,7 @@ namespace Redflag
 	struct HudComponent
 	{
 		std::string Layout;
+		uint64_t ConversationActor = 0; // 此界面的对话键呼叫的实体。
 	};
 
 	struct HealthComponent

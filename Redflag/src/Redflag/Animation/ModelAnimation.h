@@ -38,12 +38,15 @@ namespace Redflag
 		std::vector<std::pair<glm::vec3, glm::vec3>> SampleBones(size_t clip, float seconds) const;
 		/// <summary>将运动根留在模型的初始位置。角色本身由物理移动时，剪辑里的起跳高度不会再叠加一次。</summary>
 		void PinMovementRoot(std::vector<NodePose>& local, const std::string& node) const;
+		void SubtractRootMotion(std::vector<NodePose>& local, const std::string& node, glm::vec3 modelDelta) const;
 		/// <summary>在当前模型姿势中把脚踝或手腕移向目标。未指定或不属于同一肢体的关节不会修改姿势。</summary>
 		bool SolveLimb(std::vector<NodePose>& local, const std::vector<glm::mat4>& world,
 			const Limb& limb, glm::vec3 target, bool keepTipRotation = false) const;
 		std::vector<Part> BuildParts(const std::vector<NodePose>& local, std::vector<glm::mat4>& modelSpace) const;
 		bool GetNodeTransform(const std::string& name, const std::vector<glm::mat4>& modelSpace, glm::mat4& result) const;
 		bool GetRestTransform(const std::string& name, glm::mat4& result) const;
+		/// <summary>从每个指定的根骨向下收集骨骼。列表为空时选择整个模型，未知骨骼会使校验失败。</summary>
+		bool SubtreeMask(const std::vector<std::string>& roots, std::vector<size_t>& mask) const;
 
 	private:
 		struct Data;

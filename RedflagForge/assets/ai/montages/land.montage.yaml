@@ -1,0 +1,10 @@
+Name: 落地
+Clip: jump_5_hardlanding
+Slot: FullBody
+BlendIn: {Seconds: 0.1, Curve: [0, 1]}
+BlendOut: {Seconds: 0.12, Curve: [0, 1]}
+Sections: [{Name: Land, Start: 0, End: 0.41666667}]
+# 原片每秒 24 帧。第 2 帧骨盆最低，角色的落地缓冲持续到第 5 帧。
+Events:
+  - {Name: KneeBend, At: 0.08333333}
+  - {Name: Recovery, Start: 0, End: 0.20833333}

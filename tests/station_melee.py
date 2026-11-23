@@ -5,6 +5,7 @@ import math
 
 from check_forge_play import wait_for
 from playtest import issue
+from station_pose import visible_pose
 
 
 def arrange(scene, case):
@@ -76,7 +77,7 @@ def verify(case, session, process, exe, output):
     if case=="cancel": assert actor(rows[-1],1101)["health"]==0
     start = result[0][0]
     during = [actor(r,1101) for r in rows if start["seq"]<=r["seq"]<terminal["seq"]]
-    assert during and all(a["animation"]["clip"]=="Station-Punch" for a in during)
+    assert during and all(visible_pose(a)["clip"]=="Station-Punch" for a in during)
     x,z = during[0]["position"][::2]
     assert all(abs(a["position"][0]-x)<.001 and abs(a["position"][2]-z)<.001 for a in during)
     if case=="miss":

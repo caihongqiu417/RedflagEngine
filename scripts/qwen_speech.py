@@ -20,25 +20,53 @@ class QwenVoice:
         from neural_tts import QwenSpeechSynthesizer
         self.synth = QwenSpeechSynthesizer()
 
-    def speak(self, voice, text, cancel):
+    def prepare(self, cancel):
+        self.synth.prepare(cancel)
+
+    def profile(self, voice):
         profile, speaker = voice["Profile"], voice["Speaker"]
         identity = self.synth.identities[profile]
         if identity["speaker"] != speaker or identity["model_revision"] != voice["Revision"]:
             raise ValueError("本机模型的版本或说话人与音色文件不一致。")
-        pcm, rate = self.synth.synthesize(text, profile, "Calm", cancel)
-        if self.synth.voice_name != speaker:
-            raise ValueError("合成器返回了其他说话人的结果。")
+        return profile
 
-        # Qwen 输出 24 kHz。用带低通滤波的重采样器转换到游戏与 WebRTC 共用的 16 kHz。
-        frame = AudioFrame(format="s16", layout="mono", samples=len(pcm)//2)
-        frame.sample_rate = rate
-        frame.planes[0].update(pcm)
+    def speak(self, voice, text, cancel):
+        profile = self.profile(voice)
+        pcm, rate = self.synth.synthesize(text, profile, "Calm", cancel)
+        if self.synth.voice_name != voice["Speaker"]:
+            raise ValueError("合成器返回了其他说话人的结果。")
         convert = AudioResampler(format="s16", layout="mono", rate=16000)
-        blocks = convert.resample(frame) + convert.resample(None)
-        return b"".join(bytes(block.planes[0])[:block.samples*2] for block in blocks)
+        return resample(convert, pcm, rate) + resample(convert, None, rate)
+
+    def speak_stream(self, voice, text, cancel, emit):
+        profile = self.profile(voice)
+        self.synth.prepare(cancel)
+        if not getattr(self.synth, "supports_audio_stream", False):
+            emit(self.speak(voice, text, cancel))
+            return
+
+        # 一句话共用同一个滤波器，块与块之间保留重采样所需的少量相邻采样。
+        convert = AudioResampler(format="s16", layout="mono", rate=16000)
+        def receive(pcm):
+            block = resample(convert, pcm, 24000)
+            if block and not cancel.is_set(): emit(block)
+        self.synth.synthesize_stream(text, profile, "Calm", cancel, receive, chunk_frames=8)
+        if self.synth.voice_name != voice["Speaker"]:
+            raise ValueError("合成器返回了其他说话人的结果。")
+        tail = resample(convert, None, 24000)
+        if tail and not cancel.is_set(): emit(tail)
 
     def close(self):
         self.synth.close()
+
+
+def resample(convert, pcm, rate):
+    frame = None
+    if pcm is not None:
+        frame = AudioFrame(format="s16", layout="mono", samples=len(pcm)//2)
+        frame.sample_rate = rate
+        frame.planes[0].update(pcm)
+    return b"".join(bytes(block.planes[0])[:block.samples*2] for block in convert.resample(frame))
 
 
 def bake(project, bank, report):

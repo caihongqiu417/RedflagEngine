@@ -7,7 +7,7 @@
 
 namespace Redflag
 {
-	/* 双击文件夹浏览项目，双击场景或模型把路径交给编辑器。 */
+	/* 双击文件夹浏览项目，双击资产后由 Forge 打开对应的编辑工具。 */
 	class ProjectPanel
 	{
 	public:

@@ -1,0 +1,22 @@
+{
+  "archive_sha256": "f8e1bae712cf66f5bba1ed79f289f2568ea052489a61724d81d14b6df0ff5731",
+  "clean_extraction": true,
+  "manifest_matches": true,
+  "speech": {
+    "voices": {
+      "default_voice": "Microsoft Huihui Desktop",
+      "voices": [
+        "Microsoft Huihui Desktop",
+        "Microsoft Zira Desktop"
+      ],
+      "qwen_free_text_configured": false,
+      "bank_speech": 4,
+      "asset_root": "C:\\Users\\26349\\AppData\\Local\\Temp\\redflag-empty-project-m4_roxi2\\Redflag-AI-Runtime",
+      "qwen_project": ""
+    },
+    "voice_requested": "Microsoft Huihui Desktop",
+    "wav_bytes": 145804,
+    "stream_samples": 21840,
+    "text": "帮我留一份医疗包等我过来再给我"
+  }
+}

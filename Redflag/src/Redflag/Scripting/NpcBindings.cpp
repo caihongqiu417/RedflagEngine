@@ -16,16 +16,20 @@ namespace Redflag
 			return scene ? scene->GetNpcs() : nullptr;
 		}
 
-		bool Submit(uint64_t actor, MonoString* instruction)
+		bool Send(uint64_t actor, MonoString* message, bool conversation)
 		{
 			NpcSystem* actors = Actors();
-			if (!actors || !instruction) return false;
+			if (!actors || !message) return false;
 
-			char* text = mono_string_to_utf8(instruction);
-			const bool accepted = actors->Submit(actor, text);
+			char* text = mono_string_to_utf8(message);
+			const bool accepted = conversation ? actors->Say(actor, text) : actors->Submit(actor, text);
 			mono_free(text);
 			return accepted;
 		}
+
+		bool Say(uint64_t actor, MonoString* text) { return Send(actor, text, true); }
+
+		bool Submit(uint64_t actor, MonoString* instruction) { return Send(actor, instruction, false); }
 
 		bool Cancel(uint64_t actor)
 		{
@@ -53,6 +57,7 @@ namespace Redflag
 	void RegisterNpcCalls()
 	{
 		RegisterNpcMemoryCalls();
+		mono_add_internal_call("Redflag.Npc::Say", (const void*)Say);
 		mono_add_internal_call("Redflag.Npc::Submit", (const void*)Submit);
 		mono_add_internal_call("Redflag.Npc::Cancel", (const void*)Cancel);
 		mono_add_internal_call("Redflag.Npc::ReadEvent", (const void*)ReadEvent);
