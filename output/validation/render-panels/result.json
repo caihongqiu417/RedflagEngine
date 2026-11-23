@@ -1,0 +1,29 @@
+{
+  "scene": "Watt-Station.redflag 的临时副本",
+  "fixture_preview_width": 640,
+  "earlier_exe_sha256": "d7dc2d036c54fb5ee42e93c678937c731150c20ab0dee9dbd9493434ed45aacb",
+  "reopen_exe_sha256": "336ff44194d4082616f35bfe937abfb145d3567509d353d8e2082d7a64376aa9",
+  "final_build_sha256": "336ff44194d4082616f35bfe937abfb145d3567509d353d8e2082d7a64376aa9",
+  "values_before": {
+    "ShadowCascades": 0,
+    "AORadius": 0.65,
+    "FogDensity": 0.009,
+    "HistoryWeight": 0.9
+  },
+  "saved": {
+    "ShadowCascades": 2,
+    "AORadius": 0.850000024,
+    "FogDensity": 0.0179999992,
+    "HistoryWeight": 0.769999981
+  },
+  "reopened": {
+    "ShadowCascades": 2,
+    "AORadius": 0.85,
+    "FogDensity": 0.018,
+    "HistoryWeight": 0.77
+  },
+  "menu": {
+    "窗口": "阴影",
+    "实时效果": "体积雾"
+  }
+}
