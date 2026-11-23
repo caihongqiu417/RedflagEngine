@@ -54,6 +54,7 @@ namespace Redflag
 		ProjectPanel m_Project;
 		DecisionPanel m_Decisions;
 		CompanionPanel m_Companions;
+		BehaviorTreePanel m_ActorTree;
 		NpcPhotoPanel m_Photos;
 		VkDescriptorSet m_PanelTexture = VK_NULL_HANDLE;
 		EditorCamera m_Camera{ 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f };

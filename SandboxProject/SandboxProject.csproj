@@ -58,14 +58,16 @@
   <ItemGroup>
     <Compile Include="Source\ArcFloor.cs" />
     <Compile Include="Source\Chaser.cs" />
-    <Compile Include="Source\Player.cs" />
     <Compile Include="Source\OperatorSoles.cs" />
+    <Compile Include="Source\Player.cs" />
     <Compile Include="Source\StationEquipment.cs" />
-    <Compile Include="Source\StationInteraction.cs" />
-    <Compile Include="Source\StationMelee.cs" />
     <Compile Include="Source\StationGuard.cs" />
+    <Compile Include="Source\StationInteraction.cs" />
+    <Compile Include="Source\StationMedicine.cs" />
+    <Compile Include="Source\StationMelee.cs" />
     <Compile Include="Source\StationMotion.cs" />
     <Compile Include="Source\StationPlayer.cs" />
+    <Compile Include="Source\StationSelfCare.cs" />
     <Compile Include="Source\ThirdPersonCamera.cs" />
     <Compile Include="Source\UI\StationHud.cs" />
   </ItemGroup>

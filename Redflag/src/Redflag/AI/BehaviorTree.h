@@ -12,6 +12,7 @@ namespace Redflag
     enum class BehaviorKind
     {
         ModelSelector,
+        Priority,
         Subtree,
         Action
     };
@@ -63,6 +64,7 @@ namespace Redflag
         void RemoveNode(uint32_t id);
         bool Connect(uint32_t from, std::string key, uint32_t to, std::string& error);
         void Disconnect(uint32_t from, std::string key);
+        bool RaisePriority(uint32_t from, const std::string& key);
         bool SetRoot(uint32_t id);
         uint32_t GetRoot() const { return m_Root; }
 
@@ -76,7 +78,7 @@ namespace Redflag
 
       private:
         BehaviorNode* Edit(uint32_t id);
-        const BehaviorEdge* Branch(const BehaviorNode& node, const std::string& candidate) const;
+        const BehaviorEdge* Branch(const BehaviorNode& node, const std::string& candidate, const BehaviorBlackboard* facts = nullptr) const;
         bool Reaches(uint32_t from, uint32_t to) const;
         uint32_t m_Root = 0, m_NextID = 1;
         std::vector<BehaviorNode> m_Nodes;

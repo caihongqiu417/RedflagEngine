@@ -2,18 +2,30 @@ using Redflag;
 
 namespace Sandbox
 {
-    /* 电网开启时，地面上的蓝条升起。每次通电分别检查玩家和瓦特。 */
+    /* 断电时车道电缆间歇放电。修好发电机后，车道恢复通行，出口灯亮起。 */
     public class ArcFloor : Entity
     {
-        public Entity Player, Watt, Signal;
-        public float SignalIntensity = 8f;
-        private float elapsed = 2.5f;
-        private bool active;
+        public Entity Player, Watt, Signal, Relay, ExitLight;
+        // 在 Forge 的脚本属性中调整周期、通电时长（秒）及碰撞半径（米）。
+        public float SignalIntensity = 8f, Cycle = 4f, ActiveSeconds = 1f, StartPhase = 2.5f;
+        public float Radius = 2.1f, JumpClearance = .45f, Damage = 20f;
+        private float elapsed;
+        private bool active, powered;
+
+        void OnCreate() { elapsed = StartPhase; }
 
         void OnUpdate(float seconds)
         {
-            elapsed = (elapsed + seconds) % 4f;
-            bool on = elapsed < 1f;
+            if (powered) return;
+            if (Relay != null && GameWorld.Health(Relay.Id) >= GameWorld.MaxHealth(Relay.Id)) {
+                powered = true;
+                Signal.GetComponent<PointLightComponent>().Intensity = 0;
+                if (ExitLight != null) ExitLight.GetComponent<PointLightComponent>().Intensity = SignalIntensity;
+                Playtest.Record(Id, "lane_clear", "供电恢复，电缆停止放电");
+                return;
+            }
+            elapsed = (elapsed + seconds) % Cycle;
+            bool on = elapsed < ActiveSeconds;
             if (on == active) return;
             active = on;
             // 电网通电时点亮警示灯。灯架一直立在原处。
@@ -27,8 +39,8 @@ namespace Sandbox
         void Shock(Entity target)
         {
             float feet = target.GetComponent<TransformComponent>().Translation.Y;
-            if (feet < GetComponent<TransformComponent>().Translation.Y + .45f)
-                GameWorld.Hit(Id,target.Id,2.1f,20f);
+            if (feet < GetComponent<TransformComponent>().Translation.Y + JumpClearance)
+                GameWorld.Hit(Id,target.Id,Radius,Damage);
         }
     }
 }

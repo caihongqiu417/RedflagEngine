@@ -4,13 +4,21 @@
 
 ## 开始游戏
 
-用 **WASD** 移动，按住 **Shift** 跑，按住 **Ctrl** 蹲着走。按 **F** 用左手出拳，收拳后可以再按。**鼠标左键** 使用右臂选中的工具，**1** 选臂炮，**2** 选扫描器。对准可拾取物品按 **E**，机器人会先伸手，碰到物品时才把它放进背包。
+用 **WASD** 移动，按住 **Shift** 跑，按住 **Ctrl** 蹲着走。按 **F** 用左手出拳，收拳后可以再按。**鼠标左键** 使用右臂选中的工具，**1** 选臂炮，**2** 选扫描器。对准可拾取物品按 **E**，机器人会先伸手，够到医疗包才收进背包。受伤时按 **H**，左手把药盒举到胸前，一份药最多恢复 50 点生命。走近瓦特按 **G** 可以把自己的一份药递给它。想让受伤的瓦特自己用药，按 **T** 告诉它「用你背包里的药修复你自己」。
 
-交付目录为 `output/releases`。本机已经解压好，打开 `Watt-Station-Win64`，双击 `Play-With-Companion.cmd`。换一台电脑时，把 `Redflag-Watt-Station-Win64.zip` 与 `Redflag-CompanionRuntime-Win64.zip` 解压到同一个文件夹。启动脚本旁应当能看见 `CompanionRuntime`。需要 Windows x64、支持 Vulkan 1.3 的显卡驱动和足够的显存。要让瓦特用中文朗读，请在 Windows 安装中文音色。第一次启动时，程序需要把本地模型载入内存。[离线启动、看图和中文语音实测](../output/validation/packaged-companion/README.md)
+交付目录为 `output/releases`。本机已经解压好，打开 `Watt-Station-Win64`，双击 `Play-With-Companion.cmd`。换一台电脑时，把 `Redflag-Watt-Station-Win64.zip` 与 `Redflag-CompanionRuntime-Win64.zip` 解压到同一个文件夹。启动脚本旁应当能看见 `CompanionRuntime`。需要 Windows x64、支持 Vulkan 1.3 的显卡驱动和足够的显存。瓦特在递药、维修和救援后会用随包录好的 Dylan 台词回应。运行时另外生成新台词时，可以配置相同的 Qwen 音色服务。第一次启动时，程序需要把本地模型载入内存。[离线启动、看图和中文语音实测](../output/validation/packaged-companion/README.md)
 
 维修棚里的应急发电机还没通电。你可以过去按住 **E** 维修，也可以告诉瓦特「去东面的应急发电机，把它修好」，自己先去西侧闸口。要等机器供电、两人都到闸口，任务才会结算。按住 **F1** 查看键位，结束后按 **R** 重新开局。一次发布包验收记录了两人撤离，另一次交战记录了瓦特两次扶起玩家、最终任务失败和重新开局。[任务经过](../output/validation/packaged-watt/release-mission/mission.json) · [逐帧动作与输入](../output/validation/packaged-watt/release-mission/frames.jsonl)
 
 游戏默认 1920 × 1080。如果转动镜头时有明显迟滞，退出后双击 `Play-720p.cmd`，它会用 1280 × 720 绘制场景，保留原来的窗口、界面字号和队友通讯。在 RTX 5070 Ti Laptop 上固定出生机位，两种模式的帧时间中位数分别为 87.77 和 58.12 毫秒。720p 转动起来更快，目前两档都达不到稳定的 30 帧。[帧时间实测](../output/validation/packaged-watt/resolution.json)
+
+## 穿过货场
+
+出生点旁是补给区。向东能看见行车和远处的铁皮棚，发电机在棚下。中央车道比较短，但要留意间歇带电的地面和巡检机。绕到北侧，货柜可以挡住观察窗的视线。队友可以带着药随行，也可以先去维修。供电恢复后，电缆停止放电，西侧闸口亮灯。
+
+巡检机会记住维修员刚刚出现的位置，离开视野后只到那里查看。再次靠近时看机身的橙色蓄能光。完整的一轮需要 0.8 秒，途中目标躲开就要重新蓄能。在 Forge 层级中选择「故障巡检机」，可以看行为树正在走哪条分支，脚本属性可调感知距离、蓄能时间和脉冲伤害。图中每组连线从上往下读取，星号代表这组条件都不成立时采用的动作。[巡检机行为树](../RedflagForge/assets/ai/sentinel.tree.yaml) · [两条路线实机记录](../output/validation/station-encounter/routes/README.md)
+
+《三角洲行动》的 GDC 讲座简介介绍了用关卡工具和游戏数据复查设计。Team Jade 在「纪念碑」访谈里还讲了从城镇、沙丘到建筑内部的推进感。维修站沿用自己的货柜、设备与维修任务，用路线用时、巡检机反应和队友能否撤离来检查这次布局。[GDC 2025 讲座简介](https://gdcvault.com/play/1035407/Tencent-Games-Developer-Summit-Large) · [Team Jade 地图设计访谈](https://news.xbox.com/en-us/2025/11/19/making-of-delta-forces-newest-map-monument/)
 
 ## 修改队友
 

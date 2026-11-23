@@ -18,16 +18,18 @@
 双击游戏目录里的 \path{Play-With-Companion.cmd}。进入维修站后，你操控蓝灰色机器人，左前方的赭色机器人是你的队友瓦特。按 \button{T} 打开「队友通讯」，输入「给我留一个医疗包」，按回车发送。要用语音，在这个窗口里按住 \button{V} 说话，松开后发送。
 
 \begin{center}
-\includegraphics[width=\linewidth]{../../../output/validation/packaged-watt/yard-original.png}
+\includegraphics[width=\linewidth]{figures/yard.png}
 \end{center}
 \picturecaption{维修站实机画面。左下角显示生命、装备与医疗包。按住 F1 查看键位，松开即可收起。}
 
 用 \button{WASD} 走动，按住 \button{Shift} 跑，按住 \button{Ctrl} 蹲下后仍能缓慢移动。轻按 \button{F}，机器人朝镜头所看的方向用左手出拳。等它收回手臂，再按一次可以接着打。右臂装有工具，用 \button{1} 选臂炮、\button{2} 选扫描器，\button{鼠标左键} 使用选中的工具。
 
-看着瓦特试一次交接。「给我留一个」和「现在送过来」都提到了药，前一句约好了你去取，后一句需要它走过来。走动时看两人间的距离，交接时看左下角的医疗包数量。通讯窗口下方的\button{对局记录}能帮你分清楚它听到了哪句话、选了什么动作、最后有没有把药递到你手上。
+对准工具箱旁的红色医疗包按 \button{E} 拾取。受伤时按 \button{H}，机器人把药盒放到胸前，一份最多恢复 50 点生命。走近瓦特按 \button{G} 可以把自己的一份药递给它。想从瓦特手里拿药，在队友通讯里说「送一份药给我」。瓦特自己受伤时，也可以请它用自己背包里的药。
 
 维修站提供一个两人可以合作的目标。蓝色棚顶下面是应急发电机，可以请瓦特去修，也可以自己靠近后按住 E。供电恢复后，两人回到西侧闸口才能一起撤离。如果瓦特倒下，靠近它并按住 E 扶起它。
 
+\clearpage
+\input{yard}
 \clearpage
 \section*{在另一台电脑上启动}
 
@@ -36,7 +38,7 @@
 \end{center}
 \picturecaption{从试玩包启动，在游戏中按 T 打开的队友通讯。输入框在语音按钮下面，点击后可以直接打字；按 Enter 发送。}
 
-在 Windows 10 或 11 的 64 位电脑上，把游戏包和队友离线包解压到同一个目录。打开目录，应当能同时看见 \path{Play-With-Companion.cmd} 和 \path{CompanionRuntime} 文件夹。双击启动脚本，第一次要等模型读进内存，然后会打开游戏窗口。发布版附有运行库，显卡驱动需要支持 Vulkan 1.3。中文朗读使用 Windows 已安装的中文音色。
+在 Windows 10 或 11 的 64 位电脑上，把游戏包和队友离线包解压到同一个目录。打开目录，应当能同时看见 \path{Play-With-Companion.cmd} 和 \path{CompanionRuntime} 文件夹。双击启动脚本，第一次要等模型读进内存，然后会打开游戏窗口。发布版附有运行库，显卡驱动需要支持 Vulkan 1.3。瓦特的常用台词随游戏提供，采用和 Delivery 二狗相同的 Dylan 音色。角色创作面板也可以选择机器上安装的系统音色。
 
 游戏默认以 1920 × 1080 绘制。如果转动镜头时画面跟不上，退出后双击 \path{Play-720p.cmd}。场景改以 1280 × 720 绘制，窗口和界面文字仍保持原来的大小，队友通讯照常使用。
 

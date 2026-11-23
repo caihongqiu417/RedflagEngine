@@ -4,6 +4,7 @@
 #include "Redflag/AI/NpcSystem.h"
 #include "Redflag/Gameplay/TerrainTraversal.h"
 #include "Redflag/Gameplay/TraversalRig.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "Redflag/Animation/ActorAnimator.h"
 
 #include"Redflag/Renderer/SceneRenderer.h"
@@ -141,6 +142,8 @@ namespace Redflag {
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<ContactSocketsComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<BehaviorTreeComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<HealthComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<InventoryComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -200,6 +203,11 @@ namespace Redflag {
     void Scene::DestroyEntity(Entity entity)
     {
 		UUID entityID = entity.GetUUID();
+		if (entity.HasComponent<HandContact>()) {
+			EndContact(*this,entityID);
+			Entity prop = GetEntityByUUID(entity.GetComponent<HandContact>().Prop);
+			if (prop) DestroyEntity(prop);
+		}
 		ScriptEngine::OnDestroyEntity(*this, entityID);
         if (entity.HasComponent<ScriptComponent>()) entity.RemoveComponent<ScriptComponent>();
         if (entity.HasComponent<NativeScriptComponent>()) entity.RemoveComponent<NativeScriptComponent>();
@@ -350,11 +358,14 @@ namespace Redflag {
                 player.Seek(player.Time + ts.GetSeconds());
         });
 
+        PrepareContacts(*this,ts.GetSeconds());
         m_Registry.view<ModelRendererComponent, ModelAnimationComponent>().each([&](entt::entity handle, ModelRendererComponent& renderer, ModelAnimationComponent& player) {
             if (!renderer.ModelAsset && renderer.ModelID) renderer.ModelAsset = AssetManager::Load<Model>(renderer.ModelID);
             auto* rig = m_Registry.try_get<TraversalRig>(handle);
             const auto* motion = m_Registry.try_get<TerrainTraversal>(handle);
-            if (rig && motion) {
+            auto* hand = m_Registry.try_get<HandContact>(handle);
+            float timelineSeconds = ts.GetSeconds();
+            if (rig && (motion || hand)) {
                 Entity owner(handle,this);
                 const TransformComponent& transform = owner.GetComponent<TransformComponent>();
                 glm::vec3 delta = transform.Translation - rig->PreviousPosition.value_or(transform.Translation);
@@ -362,15 +373,23 @@ namespace Redflag {
                 delta.y = 0.f;
                 const glm::vec3 local = glm::inverse(glm::mat3(transform.GetTransform())) * delta;
                 const ModelAnimationComponent::GaitStep step{rig->MovementRoot, glm::length(glm::vec2(local.x, local.z))};
-                player.Update(renderer.ModelAsset, ts.GetSeconds(), [&](const ModelAnimation& animation, std::vector<ModelAnimation::NodePose>& pose) {
-                    AdjustTerrainPose(*this,owner.GetUUID(),transform,*rig,*motion,animation,pose);
-                }, &step);
+                float advance = ts.GetSeconds();
+                // 即使这一帧很慢，也让玩家先看到手碰到目标的姿势。通知仍按游戏时间发出。
+                if (hand && hand->Timed && !hand->Passed && !hand->Released) {
+                    advance = std::min(advance,std::max(0.f,hand->ReachAt-player.Time));
+                    if (player.Time < hand->ReachAt) timelineSeconds = advance;
+                }
+                if (!hand || !hand->ShowContact) player.Update(renderer.ModelAsset, advance, [&](const ModelAnimation& animation, std::vector<ModelAnimation::NodePose>& pose) {
+                    if (motion) AdjustTerrainPose(*this,owner.GetUUID(),transform,*rig,*motion,animation,pose);
+                    if (hand) AdjustHandPose(owner,*rig,*hand,animation,pose);
+                }, &step, hand != nullptr);
             } else player.Update(renderer.ModelAsset, ts.GetSeconds());
             if (auto* animator = m_Registry.try_get<ActorAnimator>(handle)) {
                 if (player.Clip != animator->Clip || !player.Playing) animator->Timeline.Cancel();
-                else animator->Timeline.Advance(ts.GetSeconds());
+                else animator->Timeline.Advance(timelineSeconds);
             }
         });
+        UpdateHandProps(*this,ts.GetSeconds());
     }
 
     // ---- 游戏脚本、动画与物理 ----
@@ -525,6 +544,8 @@ namespace Redflag {
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
+        CopyComponentIfExist<ContactSocketsComponent>(newEntity, entity);
+        CopyComponentIfExist<BehaviorTreeComponent>(newEntity, entity);
         CopyComponentIfExist<PickupComponent>(newEntity, entity);
         CopyComponentIfExist<HealthComponent>(newEntity, entity);
         CopyComponentIfExist<InventoryComponent>(newEntity, entity);

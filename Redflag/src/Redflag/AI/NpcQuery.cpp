@@ -59,6 +59,14 @@ namespace Redflag
 
 		for (const NpcIntent& intent : definition.Intents)
 		{
+			if (intent.Target == "injured_self")
+			{
+				if (!self.HasComponent<HealthComponent>() || ItemCount(self,intent.Item) <= 0) continue;
+				const auto& health = self.GetComponent<HealthComponent>();
+				if (health.Current > 0.f && health.Current < health.Maximum)
+					choices.push_back({intent.Key, intent.Key, intent.Description, intent.Item, actor, 0.f});
+				continue;
+			}
 			if (intent.Target == "self")
 			{
 				choices.push_back({intent.Key, intent.Key, intent.Description, {}, actor, 0.f});

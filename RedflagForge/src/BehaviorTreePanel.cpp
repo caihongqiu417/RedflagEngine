@@ -2,6 +2,7 @@
 #include "BehaviorTreePanel.h"
 #include "Redflag/Scripting/NpcScriptAction.h"
 #include <imgui.h>
+#include <sstream>
 
 namespace Redflag
 {
@@ -11,6 +12,8 @@ namespace Redflag
         {
         case BehaviorKind::ModelSelector:
             return "模型选择";
+        case BehaviorKind::Priority:
+            return "按条件顺序选择";
         case BehaviorKind::Subtree:
             return "子树";
         case BehaviorKind::Action:
@@ -30,9 +33,9 @@ namespace Redflag
     }
 
     void BehaviorTreePanel::Draw(BehaviorTree& tree, const std::filesystem::path& asset,
-                                 const BehaviorTrace* trace)
+                                 const BehaviorTrace* trace, const char* title)
     {
-        if (!ImGui::Begin("行为树"))
+        if (!ImGui::Begin(title))
         {
             ImGui::End();
             return;
@@ -54,7 +57,7 @@ namespace Redflag
             ImGui::OpenPopup("NodeMenu");
         if (ImGui::BeginPopup("NodeMenu"))
         {
-            for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Subtree, BehaviorKind::Action})
+            for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree, BehaviorKind::Action})
             {
                 if (ImGui::MenuItem(NodeLabel(kind)))
                 {
@@ -71,11 +74,13 @@ namespace Redflag
                 m_Pan = glm::vec2(32, 80) - root->Position;
         }
         ImGui::SetNextItemWidth(125);
-        ImGui::InputText("候选键", m_Key, sizeof(m_Key));
+        ImGui::InputText("候选或条件", m_Key, sizeof(m_Key));
         ImGui::SameLine();
         if (ImGui::Button("试跑"))
         {
             BehaviorBlackboard actor;
+            std::istringstream inputs(m_Key);
+            for (std::string fact; inputs >> fact;) actor.Values[fact] = "true";
             m_Preview = tree.Tick(actor, m_Key);
             m_ShowPreview = true;
             m_Message = m_Preview.Action.empty() ? "这个候选没有连到动作。" : "执行动作：" + m_Preview.Action;
@@ -152,7 +157,7 @@ namespace Redflag
         {
             ImVec2 p = location(node);
             float boxHeight =
-                node.Kind == BehaviorKind::ModelSelector ? port(node, "").y - p.y + row * .5f : header;
+                (node.Kind == BehaviorKind::ModelSelector || node.Kind == BehaviorKind::Priority) ? port(node, "").y - p.y + row * .5f : header;
             ImVec2 end{p.x + width, p.y + boxHeight}, input{p.x, p.y + header * .5f};
             bool visited =
                 trace && std::find(trace->Nodes.begin(), trace->Nodes.end(), node.ID) != trace->Nodes.end();
@@ -196,12 +201,12 @@ namespace Redflag
             };
             if (node.Kind == BehaviorKind::Subtree)
                 outputPort("", nullptr);
-            if (node.Kind == BehaviorKind::ModelSelector)
+            if (node.Kind == BehaviorKind::ModelSelector || node.Kind == BehaviorKind::Priority)
             {
                 for (const BehaviorEdge& edge : tree.GetEdges())
                     if (edge.From == node.ID)
                         outputPort(edge.Key, edge.Key.c_str());
-                outputPort("", "+ 候选键");
+                outputPort("", node.Kind == BehaviorKind::Priority ? "+ 条件" : "+ 候选键");
             }
             if (m_From && released &&
                 ImGui::IsMouseHoveringRect({input.x - 10, input.y - 10}, {input.x + 10, input.y + 10}))
@@ -263,6 +268,11 @@ namespace Redflag
                         tree.Find(edge.To)->Name.c_str());
             ImGui::SameLine();
             bool remove = ImGui::SmallButton("断开");
+            if (node->Kind == BehaviorKind::Priority && edge.Key != "*") {
+                ImGui::SameLine();
+                if (ImGui::SmallButton("优先检查") && tree.RaisePriority(node->ID, edge.Key))
+                    m_ShowPreview = false;
+            }
             ImGui::PopID();
             if (remove)
             {

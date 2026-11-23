@@ -124,11 +124,13 @@ class AssetBundle:
             elif field == "TerrainComponent":
                 for image in ("Heightmap", "BaseColorTexture"):
                     if value.get(image): self.add(self.root / value[image], name)
+            elif field == "BehaviorTreeComponent":
+                self.add(self.root / value["Tree"], name)
             elif field == "HudComponent" and value.get("Layout"):
                 self.add(self.root / value["Layout"], name)
             elif field == "SkeletonAnimationComponent" and value.get("Idle"):
                 self.add(scene.parent / value["Idle"], name)
-            elif field in ("Definition", *MAPS) and isinstance(value, str) and value:
+            elif field in ("Definition", "ItemModel", *MAPS) and isinstance(value, str) and value:
                 self.add(self.root / value, name)
             elif field in ("Environment", "File") and isinstance(value, str) and value:
                 self.add(scene.parent / value, name)

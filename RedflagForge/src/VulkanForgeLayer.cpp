@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "VulkanForgeLayer.h"
+#include "Redflag/AI/ActorBehavior.h"
 #include "CharacterInput.h"
 #include "EditorEnvironment.h"
 
@@ -441,6 +442,13 @@ namespace Redflag
 		ImGui::End();
 
 		m_Hierarchy.OnImguiRender("层级  Hierarchy", "属性  Inspector");
+        Entity actor = m_Hierarchy.GetSelectedEntity();
+        if (actor && actor.HasComponent<BehaviorTreeComponent>()) {
+            auto& behavior = m_Scene->GetRegistry().get_or_emplace<ActorBehavior>(static_cast<entt::entity>(actor));
+            if (behavior.Open(actor.GetComponent<BehaviorTreeComponent>().File))
+                m_ActorTree.Draw(behavior.Tree, std::filesystem::u8path(behavior.File), &behavior.Trace, "角色行为树");
+        }
+
 		if (ImGui::Begin("渲染设置  Lighting")) m_Lighting->DrawSettings(!m_EditScene, !m_GameView);
 		ImGui::End();
 		auto asset = m_Project.Draw();

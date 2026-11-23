@@ -7,7 +7,7 @@ namespace Redflag
     class BehaviorTreePanel
     {
       public:
-        void Draw(BehaviorTree& tree, const std::filesystem::path& asset, const BehaviorTrace* trace = nullptr);
+        void Draw(BehaviorTree& tree, const std::filesystem::path& asset, const BehaviorTrace* trace = nullptr, const char* title = "行为树");
 
       private:
         void Select(const BehaviorNode& node);

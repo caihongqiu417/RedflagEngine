@@ -55,7 +55,7 @@ namespace Sandbox
             bool showKeys = !done && Input.IsKeyDown(KeyCode.F1);
             if (showKeys != showingHelp)
             {
-                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1/2 换装    F 近战    H 治疗    E 交互" : "");
+                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1/2 换装    F 近战    E 交互\nH 为自己用药    G 给瓦特递药" : "");
                 showingHelp = showKeys;
             }
 

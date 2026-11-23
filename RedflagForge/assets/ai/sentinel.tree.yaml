@@ -1,0 +1,22 @@
+Root: 1
+NextID: 10
+Nodes:
+  - {ID: 1, Kind: Priority, Name: 当前任务, Position: [25, 170]}
+  - {ID: 2, Kind: Action, Name: 机身损坏, Action: damaged, Position: [335, 10]}
+  - {ID: 3, Kind: Priority, Name: 看见维修员, Position: [335, 110]}
+  - {ID: 4, Kind: Action, Name: 查看最后出现的位置, Action: search, Position: [335, 375]}
+  - {ID: 5, Kind: Action, Name: 沿货场巡视, Action: patrol, Position: [335, 490]}
+  - {ID: 6, Kind: Action, Name: 靠近目标, Action: chase, Position: [640, 10]}
+  - {ID: 7, Kind: Action, Name: 线圈冷却, Action: cool, Position: [640, 120]}
+  - {ID: 8, Kind: Action, Name: 释放脉冲, Action: discharge, Position: [640, 230]}
+  - {ID: 9, Kind: Action, Name: 亮灯蓄能, Action: charge, Position: [640, 340]}
+# 每组按书写顺序检查。星号连接所有条件都没有满足时的动作。
+Edges:
+  - {From: 1, Key: damaged, To: 2}
+  - {From: 1, Key: visible, To: 3}
+  - {From: 1, Key: last_seen, To: 4}
+  - {From: 1, Key: "*", To: 5}
+  - {From: 3, Key: outside_reach, To: 6}
+  - {From: 3, Key: cooling, To: 7}
+  - {From: 3, Key: ready, To: 8}
+  - {From: 3, Key: "*", To: 9}

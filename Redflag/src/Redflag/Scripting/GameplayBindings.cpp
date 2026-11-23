@@ -1,5 +1,7 @@
 #include "rfpch.h"
 #include "GameplayBindings.h"
+#include "Redflag/AI/ActorBehavior.h"
+#include "Redflag/Gameplay/HandContact.h"
 #include "AnimatorBindings.h"
 #include "Redflag/Animation/ActorAnimator.h"
 #include "Redflag/Gameplay/GameHud.h"
@@ -22,6 +24,26 @@ namespace Redflag
 			mono_free(utf8);
 			return text;
 		}
+
+        MonoString* ChooseBehavior(uint64_t id, MonoArray* conditions)
+        {
+            Entity actor = World().GetEntityByUUID(id);
+            if (!actor || !actor.HasComponent<BehaviorTreeComponent>()) return nullptr;
+            auto& behavior = World().GetRegistry().get_or_emplace<ActorBehavior>(static_cast<entt::entity>(actor));
+            if (!behavior.Open(actor.GetComponent<BehaviorTreeComponent>().File)) {
+                RF_CORE_ERROR("BehaviorTree: {0}", behavior.Error);
+                return nullptr;
+            }
+
+            auto& facts = behavior.Facts.Values;
+            facts.clear();
+            for (uintptr_t i = 0; i < mono_array_length(conditions); ++i) {
+                MonoString* key = mono_array_get(conditions, MonoString*, i);
+                if (key) facts.emplace(Text(key), "true");
+            }
+            behavior.Trace = behavior.Tree.Tick(behavior.Facts, "");
+            return mono_string_new(mono_domain_get(), behavior.Trace.Action.c_str());
+        }
 
 		// ---- 地面移动与动作片段 ----
 		bool Move(uint64_t actor, const glm::vec3* delta, float radius)
@@ -129,6 +151,8 @@ namespace Redflag
 			if (stock == items.end() || stock->second <= 0 || health.Current <= 0 || health.Current >= health.Maximum || amount <= 0) return false;
 			if (--stock->second == 0) items.erase(stock);
 			health.Current = std::min(health.Maximum, health.Current+amount);
+			const HandContact* contact = World().GetRegistry().try_get<HandContact>(entt::entity(entity));
+			if (contact && contact->Action == "heal") CommitContact(World(), actor);
 			return true;
 		}
 
@@ -136,6 +160,11 @@ namespace Redflag
 		{
 			return CanReach(World(),source,target,range) && ApplyDamage(World(),source,target,amount);
 		}
+
+		bool ApproachHand(uint64_t actor, uint64_t target, MonoString* action, float seconds) { return ApproachContact(World(),actor,target,Text(action),seconds); }
+		bool BeginHand(uint64_t actor, uint64_t target, MonoString* action) { return BeginContact(World(),actor,target,Text(action)); }
+		bool HandTouches(uint64_t actor) { return AtContact(World(),actor); }
+		void EndHand(uint64_t actor) { EndContact(World(),actor); }
 
 		bool CanCollect(uint64_t actor, uint64_t target, float range)
 		{
@@ -145,6 +174,11 @@ namespace Redflag
 		bool Collect(uint64_t actor, uint64_t target, float range)
 		{
 			return CollectItem(World(),actor,target,range) == ActionResult::Completed;
+		}
+
+		bool Give(uint64_t actor, uint64_t recipient, MonoString* item, int count, float range)
+		{
+			return GiveItem(World(),actor,recipient,Text(item),count,range) == ActionResult::Completed;
 		}
 
 		int Interact(uint64_t actor, uint64_t target, MonoString* action, float seconds, bool start)
@@ -242,6 +276,7 @@ namespace Redflag
 		mono_add_internal_call("Redflag.Hud::WriteText", (const void*)HudText);
 		mono_add_internal_call("Redflag.Hud::WriteMeter", (const void*)HudMeter);
 		RegisterAnimatorBindings();
+		mono_add_internal_call("Redflag.GameWorld::ChooseBehavior", (const void*)ChooseBehavior);
 		mono_add_internal_call("Redflag.GameWorld::Move", (const void*)Move);
 		mono_add_internal_call("Redflag.GameWorld::Traverse", (const void*)Traverse);
 		mono_add_internal_call("Redflag.GameWorld::CancelTraversal", (const void*)StopTraversal);
@@ -256,8 +291,13 @@ namespace Redflag
 		mono_add_internal_call("Redflag.GameWorld::ItemCount", (const void*)ItemCount);
 		mono_add_internal_call("Redflag.GameWorld::Heal", (const void*)Heal);
 		mono_add_internal_call("Redflag.GameWorld::Hit", (const void*)Hit);
+		mono_add_internal_call("Redflag.GameWorld::ApproachContact", (const void*)ApproachHand);
+		mono_add_internal_call("Redflag.GameWorld::BeginContact", (const void*)BeginHand);
+		mono_add_internal_call("Redflag.GameWorld::AtContact", (const void*)HandTouches);
+		mono_add_internal_call("Redflag.GameWorld::EndContact", (const void*)EndHand);
 		mono_add_internal_call("Redflag.GameWorld::CanCollect", (const void*)CanCollect);
 		mono_add_internal_call("Redflag.GameWorld::Collect", (const void*)Collect);
+		mono_add_internal_call("Redflag.GameWorld::Give", (const void*)Give);
 		mono_add_internal_call("Redflag.GameWorld::Interact", (const void*)Interact);
 		mono_add_internal_call("Redflag.GameWorld::Hud", (const void*)Hud);
 		mono_add_internal_call("Redflag.GameWorld::Label", (const void*)Label);

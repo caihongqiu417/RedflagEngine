@@ -24,8 +24,9 @@ namespace Sandbox
         private readonly StationEquipment equipment = new StationEquipment();
         private readonly StationMelee melee = new StationMelee();
         private readonly StationInteraction interaction = new StationInteraction();
+        private readonly StationMedicine medicine = new StationMedicine();
         private float downSeconds, noticeSeconds;
-        private bool usedKit, won, lost;
+        private bool healHeld, giveHeld, gettingUp, won, lost;
         private int rescues;
         private string notice = "";
         private StationHud hud;
@@ -59,17 +60,25 @@ namespace Sandbox
             if (won || lost) return;
             noticeSeconds -= seconds;
             bool punchPressed = melee.ReadPress();
+            bool heal = Input.IsKeyDown(KeyCode.H), give = Input.IsKeyDown(KeyCode.G);
+            bool healPressed = heal && !healHeld, givePressed = give && !giveHeld;
+            healHeld = heal;
+            giveHeld = give;
 
-            // 倒地后给瓦特留出十二秒救援。恢复生命时，移动和操作立即恢复。
+            // 倒地后有十二秒等队友来救。站起动作结束，玩家才重新接手移动。
             if (GameWorld.Health(Id) <= 0) {
                 if (melee.Active) melee.End(Id, true);
-                if (downSeconds == 0) Playtest.Record(Id, "player_down", "玩家倒地");
+                if (downSeconds == 0) {
+                    medicine.Cancel();
+                    gettingUp = false;
+                    Animator.Play(Id, "down", true);
+                    Playtest.Record(Id, "player_down", "玩家倒地");
+                }
                 hud.Team(Id, Watt.Id, equipment.Cannon, false, false);
                 interaction.Reset();
                 downSeconds += seconds;
                 lost = downSeconds >= 12f || rescues >= 2 || GameWorld.Health(Watt.Id) <= 0;
                 if (lost) Playtest.Record(Id, "mission_failed", "维修班组失去联系");
-                GameWorld.PlayClip(Id, "flinch_heavy");
                 Display(lost ? "任务失败" : "等待队友救援", lost ? "维修班组失去联系。" : "瓦特可以靠近并扶起你。",
                     "救援剩余 " + Math.Max(0, (int)Math.Ceiling(12f - downSeconds)) + " 秒");
                 return;
@@ -78,6 +87,7 @@ namespace Sandbox
             if (downSeconds > 0)
             {
                 ++rescues;
+                gettingUp = Animator.Play(Id, "getup", true);
                 Playtest.Record(Id, "player_revived", "玩家恢复行动");
             }
             downSeconds = 0;
@@ -85,25 +95,29 @@ namespace Sandbox
             AnimationEvent animationEvent;
             while (Animator.TryRead(Id, out animationEvent)) {
                 motion.OnNotice(animationEvent);
+                medicine.OnNotice(animationEvent);
                 string contact = interaction.Contact(Id, animationEvent);
                 if (contact != null) Notice(contact);
                 if (melee.Active && animationEvent.State=="punch" && animationEvent.Name=="Contact" && animationEvent.Phase==NotifyPhase.Point)
                     Notice(melee.Contact(Id, Guard.Id, pose));
             }
             if (melee.Active && !Animator.IsPlaying(Id)) melee.End(Id, false);
+            if (gettingUp && !Animator.IsPlaying(Id)) gettingUp = false;
             if (punchPressed && !melee.Active && !motion.Airborne && !motion.Landing && !Input.IsKeyDown(KeyCode.LeftControl)
-                && !interaction.Active && equipment.ChangeTime<=0 && equipment.ShotTime<=0)
+                && !gettingUp && !medicine.Active && !interaction.Active && equipment.ChangeTime<=0 && equipment.ShotTime<=0)
                 melee.Begin(Id, pose, camera.Rotation.Y);
 
-            string feedback = equipment.Update(this,camera,seconds,!melee.Active && !interaction.Active);
+            bool freeHands = !melee.Active && !interaction.Active && !gettingUp && !motion.Airborne && !motion.Landing;
+            HandleMedicine(healPressed, givePressed, freeHands, seconds);
+
+            string feedback = equipment.Update(this,camera,seconds,!melee.Active && !interaction.Active && !medicine.Active && !gettingUp);
             if (feedback != null) Notice(feedback);
-            feedback = interaction.Update(this, pose, !melee.Active && !motion.Airborne && !motion.Landing, seconds);
+            feedback = interaction.Update(this, pose, !melee.Active && !medicine.Active && !gettingUp && !motion.Airborne && !motion.Landing, seconds);
             if (feedback != null) Notice(feedback);
 
-            bool busy = melee.Active || interaction.Active;
+            bool busy = melee.Active || medicine.Active || interaction.Active || gettingUp;
             motion.Update(this,pose,camera.Rotation.Y,Input.IsMouseButtonDown(MouseButton.Left),MoveSpeed,seconds,busy);
             if (!busy) motion.Animate(Id,equipment);
-            UseMedkit(!busy);
 
             bool power = GameWorld.Health(Relay.Id) >= 100;
             bool atExit = power && Distance(Exit) <= ExitRadius;
@@ -130,11 +144,27 @@ namespace Sandbox
 
         // ---- 补给、救援与设备维修 ----
 
-        void UseMedkit(bool available)
+        void HandleMedicine(bool heal, bool give, bool available, float seconds)
         {
-            bool heal = Input.IsKeyDown(KeyCode.H);
-            if (available && heal && !usedKit) Notice(GameWorld.Heal(Id,"medkit",50) ? "已使用医疗包" : "当前无法使用医疗包");
-            usedKit = heal;
+            // 递药前允许玩家用方向键离开；开始伸手后由动作表决定交接时间。
+            if (medicine.Approaching && (give || Input.IsKeyDown(KeyCode.W) || Input.IsKeyDown(KeyCode.A)
+                || Input.IsKeyDown(KeyCode.S) || Input.IsKeyDown(KeyCode.D))) {
+                medicine.Cancel();
+                return;
+            }
+            string message = null;
+            if (available && !medicine.Active) {
+                if (heal) message = medicine.Start(Id, Id);
+                else if (give) message = Distance(Watt) <= 2f ? medicine.Start(Id, Watt.Id) : "靠近瓦特后按 G 递药";
+            }
+            Vector3 previous = pose.Translation;
+            if (message == null) message = medicine.Update(seconds);
+            if (medicine.Approaching) {
+                if ((pose.Translation - previous).LengthSquared() > 0)
+                    GameWorld.PlayLocomotion(Id, equipment.Cannon ? "walking_gun-cycle" : "walking_nogun-cycle");
+                else GameWorld.PlayClip(Id, "Idle-cycle");
+            }
+            if (message != null) Notice(message);
         }
 
         float Distance(Entity other) { return (pose.Translation - other.GetComponent<TransformComponent>().Translation).Length(); }

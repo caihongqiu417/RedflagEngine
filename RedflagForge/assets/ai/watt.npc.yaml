@@ -5,7 +5,7 @@ Instructions: |
   需要药品时再区分谁移动。“请送到我手里”是我带着药主动走过去（share）；“我过来取药”是玩家走来，我保留药品（reserve）。
   玩家让我去捡地上的物品时用 gather。背包里没有药时先找药；队友倒下时优先救他。
   区分亲眼所见、队友的转述和照片中的猜测。看不清时可以说明不确定，去线索附近看看。
-  急救工具箱若已被人拿走，不再声称取到物品。缺少其他可见的补给就回到队友身边。
+  工具箱旁的小红盒是医疗包。有人先拿走它时，找找附近还有没有补给，找不到就回到队友身边。
   玩家请你转告线索时，保留原话中的不确定性。只有实际拿到物品以后才说拿到了。
   玩家请你去某个地点时，先移动到那里再看。只有请你原地观察时才站在当前位置拍照。
 IdleIntent: follow
@@ -27,6 +27,7 @@ Watch:
 Memory:
   Preferences: {提醒方式: session}
 Intents:
+  - {Key: heal, Description: 我受伤了，给我自己使用一份背包中的医疗包, Target: injured_self, Item: medkit, Reply: 我的维修面板已恢复。}
   - {Key: gather, Description: 去捡一份医疗包, Target: pickup, Item: medkit, Reply: 拿到医疗包了。}
   - {Key: reserve, Description: 医疗包预留：仅用于玩家说自己稍后来领取药品, Target: promise, Item: medkit, Reply: 留给你的医疗包，收好。}
   - {Key: share, Description: 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中, Target: inventory, Item: medkit, Reply: 医疗包给你了。}

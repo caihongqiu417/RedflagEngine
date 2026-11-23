@@ -593,6 +593,31 @@ namespace Redflag {
             out << YAML::EndMap; 
         }
 
+        if (entity.HasComponent<BehaviorTreeComponent>())
+            out << YAML::Key << "BehaviorTreeComponent" << YAML::Value << YAML::BeginMap
+                << YAML::Key << "Tree" << YAML::Value << entity.GetComponent<BehaviorTreeComponent>().File << YAML::EndMap;
+
+        if (entity.HasComponent<ContactSocketsComponent>())
+        {
+            const auto& sockets = entity.GetComponent<ContactSocketsComponent>();
+            out << YAML::Key << "ContactSocketsComponent" << YAML::Value << YAML::BeginMap;
+            if (!sockets.ItemModel.empty()) {
+                out << YAML::Key << "ItemModel" << YAML::Value << sockets.ItemModel;
+            }
+            if (sockets.Points.count("grip")) {
+                out << YAML::Key << "GripTolerance" << YAML::Value << sockets.GripTolerance;
+                out << YAML::Key << "GiveDistance" << YAML::Value << sockets.GiveDistance;
+            }
+            out << YAML::Key << "Points" << YAML::Value << YAML::BeginMap;
+            for (const auto& [name,s] : sockets.Points) {
+                out << YAML::Key << name << YAML::Value << YAML::BeginMap;
+                if (!s.Bone.empty()) out << YAML::Key << "Bone" << YAML::Value << s.Bone;
+                out << YAML::Key << "Point" << YAML::Value << s.Point;
+                if (s.Stand != glm::vec3(0)) out << YAML::Key << "Stand" << YAML::Value << s.Stand;
+                out << YAML::EndMap;
+            }
+            out << YAML::EndMap << YAML::EndMap;
+        }
         if (entity.HasComponent<PickupComponent>())
         {
             const auto& pickup = entity.GetComponent<PickupComponent>();
@@ -938,6 +963,20 @@ namespace Redflag {
                     rb2d.FixedRotation = rbNode["Fixed Rotation"].as<bool>();
                 }
 
+                if (const YAML::Node n = entity["BehaviorTreeComponent"])
+                    deserializedEntity.AddComponent<BehaviorTreeComponent>().File = n["Tree"].as<std::string>();
+
+                if (const YAML::Node n = entity["ContactSocketsComponent"]) {
+                    auto& sockets = deserializedEntity.AddComponent<ContactSocketsComponent>();
+                    sockets.ItemModel = n["ItemModel"].as<std::string>("");
+                    sockets.GripTolerance = n["GripTolerance"].as<float>(sockets.GripTolerance);
+                    sockets.GiveDistance = n["GiveDistance"].as<float>(sockets.GiveDistance);
+                    for (const auto& entry : n["Points"]) {
+                        const YAML::Node s = entry.second;
+                        sockets.Points[entry.first.as<std::string>()] = {s["Bone"].as<std::string>(""),
+                            s["Point"].as<glm::vec3>(glm::vec3(0)),s["Stand"].as<glm::vec3>(glm::vec3(0))};
+                    }
+                }
                 if (const YAML::Node n = entity["PickupComponent"])
                 {
                     auto& pickup = deserializedEntity.AddComponent<PickupComponent>();

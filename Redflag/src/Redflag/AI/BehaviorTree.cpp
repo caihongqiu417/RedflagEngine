@@ -12,6 +12,8 @@ namespace Redflag
         {
         case BehaviorKind::ModelSelector:
             return "ModelSelector";
+        case BehaviorKind::Priority:
+            return "Priority";
         case BehaviorKind::Subtree:
             return "Subtree";
         case BehaviorKind::Action:
@@ -22,7 +24,7 @@ namespace Redflag
 
     static BehaviorKind ReadKind(const std::string& name)
     {
-        for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Subtree, BehaviorKind::Action})
+        for (BehaviorKind kind : {BehaviorKind::ModelSelector, BehaviorKind::Priority, BehaviorKind::Subtree, BehaviorKind::Action})
             if (name == KindName(kind))
                 return kind;
         throw std::runtime_error("未知的行为节点类型：" + name);
@@ -128,8 +130,8 @@ namespace Redflag
             error = "连线的两端都需要节点。";
         else if (source->Kind == BehaviorKind::Action)
             error = "动作是这次决策的终点。";
-        else if (source->Kind == BehaviorKind::ModelSelector && key.empty())
-            error = "请填写模型返回的候选键。";
+        else if ((source->Kind == BehaviorKind::ModelSelector || source->Kind == BehaviorKind::Priority) && key.empty())
+            error = "请填写连线的条件或候选键。";
         else if (source->Kind == BehaviorKind::Subtree && !key.empty())
             error = "子树只有一个入口，无须候选键。";
         else if (Reaches(to, from))
@@ -161,6 +163,23 @@ namespace Redflag
             m_Edges.end());
     }
 
+    bool BehaviorTree::RaisePriority(uint32_t from, const std::string& key)
+    {
+        const BehaviorNode* parent = Find(from);
+        if (!parent || parent->Kind != BehaviorKind::Priority || key == "*") return false;
+        BehaviorEdge* previous = nullptr;
+        for (BehaviorEdge& edge : m_Edges) {
+            if (edge.From != from || edge.Key == "*") continue;
+            if (edge.Key == key) {
+                if (!previous) return false;
+                std::swap(*previous, edge);
+                return true;
+            }
+            previous = &edge;
+        }
+        return false;
+    }
+
     bool BehaviorTree::Validate(std::string& error) const
     {
         if (!Find(m_Root))
@@ -185,14 +204,17 @@ namespace Redflag
 
     // ---- 角色的执行路径 ----
 
-    const BehaviorEdge* BehaviorTree::Branch(const BehaviorNode& node, const std::string& candidate) const
+    const BehaviorEdge* BehaviorTree::Branch(const BehaviorNode& node, const std::string& candidate, const BehaviorBlackboard* facts) const
     {
         const BehaviorEdge* fallback = nullptr;
         for (const BehaviorEdge& edge : m_Edges)
         {
             if (edge.From != node.ID) continue;
-            if (node.Kind == BehaviorKind::Subtree || edge.Key == candidate) return &edge;
+            // 优先选择从上往下读条件；多条同时满足时，只走最先的一条。
             if (edge.Key == "*") fallback = &edge;
+            else if (node.Kind == BehaviorKind::Priority) {
+                if (facts && facts->Values.count(edge.Key)) return &edge;
+            } else if (node.Kind == BehaviorKind::Subtree || edge.Key == candidate) return &edge;
         }
         return fallback;
     }
@@ -217,7 +239,7 @@ namespace Redflag
                 actor.LastAction = trace.Action;
                 break;
             }
-            const BehaviorEdge* next = Branch(*node, candidate);
+            const BehaviorEdge* next = Branch(*node, candidate, &actor);
             if (!next) break;
             trace.Edges.push_back(*next);
             node = Find(next->To);

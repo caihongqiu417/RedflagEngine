@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <glm/vec3.hpp>
 #include <string>
 
 namespace Redflag
@@ -20,6 +21,26 @@ namespace Redflag
 	struct InventoryComponent
 	{
 		std::map<std::string, int> Items;
+	};
+
+	/* Point 是模型或骨头局部坐标，单位为米。Stand 指定面对设备时双脚站在哪一侧。 */
+	struct ContactSocket
+	{
+		std::string Bone;
+		glm::vec3 Point{0}, Stand{0};
+	};
+
+	struct ContactSocketsComponent
+	{
+		std::map<std::string, ContactSocket> Points;
+		std::string ItemModel;
+        // 握持点与目标可以相差多少米；交接时两人的站位相隔多少米。
+        float GripTolerance = .04f, GiveDistance = .87f;
+	};
+
+	struct BehaviorTreeComponent
+	{
+		std::string File;
 	};
 
 	struct PickupComponent

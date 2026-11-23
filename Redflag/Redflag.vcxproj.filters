@@ -186,6 +186,9 @@
     <ClInclude Include="src\Redflag.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\AI\ActorBehavior.h">
+      <Filter>src\Redflag\AI</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\AI\BehaviorTree.h">
       <Filter>src\Redflag\AI</Filter>
     </ClInclude>
@@ -343,6 +346,9 @@
       <Filter>src\Redflag\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Gameplay\GameplayComponents.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\HandContact.h">
       <Filter>src\Redflag\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="src\Redflag\Gameplay\TerrainTraversal.h">
@@ -2017,6 +2023,9 @@
     </ClCompile>
     <ClCompile Include="src\Redflag\Debug\PlaytestSession.cpp">
       <Filter>src\Redflag\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Redflag\Gameplay\HandContact.cpp">
+      <Filter>src\Redflag\Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="src\Redflag\Gameplay\TerrainTraversal.cpp">
       <Filter>src\Redflag\Gameplay</Filter>

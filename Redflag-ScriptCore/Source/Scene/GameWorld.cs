@@ -9,6 +9,10 @@ namespace Redflag
 
     public static class GameWorld
     {
+        /// <summary>将当前成立的条件交给角色的行为树，返回第一个符合条件的动作名。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern string ChooseBehavior(ulong actor, string[] conditions);
+
         // ---- 移动与动画 ----
 
         /// <summary>沿地面移动，墙和箱子会挡住角色。</summary>
@@ -65,11 +69,28 @@ namespace Redflag
         public static extern bool Hit(ulong actor, ulong target, float range, float amount);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool ApproachContact(ulong actor, ulong target, string action, float seconds);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool BeginContact(ulong actor, ulong target, string action);
+
+        /// <summary>比较画面中手的握持点与目标。递物时，两个人的手都要够到交接位置。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool AtContact(ulong actor);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void EndContact(ulong actor);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool CanCollect(ulong actor, ulong target, float range);
 
         /// <summary>手碰到物品时再次查距离和库存，成功后把物品交给角色。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern bool Collect(ulong actor, ulong target, float range);
+
+        /// <summary>双方仍够得到对方且库存足够时，把指定数量的物品从交付者转入接收者的背包。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern bool Give(ulong actor, ulong recipient, string item, int count, float range);
 
         /// <summary>按下交互键时传 start=true 开始计时。按住时传本帧秒数，松手后下次从头开始。</summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
