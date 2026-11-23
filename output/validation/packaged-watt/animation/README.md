@@ -14,6 +14,8 @@
 
 右脚前三帧的运动可以在模型原始跑步剪辑里逐帧重现。左脚经过箱侧时出现另一种情况。第 75 帧，模型原片的左趾在踝前 0.07 米，实机到了踝后 0.13 米。第 76 帧原片也已经指向后方，但实际脚尖高 1.15 米，原片同一时刻只高 0.68 米。该帧以大腿、小腿和踝三个关节求得左膝弯曲 44.8 度，前后两帧分别为 115.5 和 106.1 度。第 77 帧脚尖高度又与原片一致。这三帧的异常抬高值得单独排查脚部对障碍物的处理。这里只量了踝到趾的长轴；鞋底绕这根轴的滚转需要再观察脚面的另一个点或脚骨旋转。[模型原片与引擎逐帧对照](after/authored-feet.json)
 
+红箱的碰撞轮廓宽 0.78 米、深 0.60 米。在每一帧的角色髋部放回原片的脚踝，再用箱子的旋转和位置检查脚踝是否在箱子上方。整段里只有第 74–76 帧的左踝落在这个轮廓内，对应的额外抬高分别为 0.293、0.416 和 0.472 米。其余样本的差值均小于 0.01 毫米。这项检查也能发现一次看似正确、实际恰好从箱子另一侧跑过的复测。
+
 ## 旧版的实际表现
 
 [旧包实机录像](before/game.mp4)从出生点开始。按住右键，把镜头移到蓝色玩家侧面，松开后连按两次 F。旧版里手仍垂在身边。随后按 D 向右走，保持 D 再按 Shift 加速，最后松开 D 改按 W。可以同时看玩家和左后方黄色瓦特的双脚。镜头的末尾还有一次原地跳跃和一次蹲伏。[旧包的拳部连拍](before/punch.jpg)与[行走、加速和转向](before/gait.jpg)都取自同一次游玩。
@@ -31,6 +33,10 @@
 ~~~powershell
 python tests/capture_player_motion.py output/releases/Redflag-Watt-Station-Win64.zip tmp/station-motion-take
 python tests/review_player_motion.py tmp/station-motion-take tmp/station-motion-review --require-animation
+python tests/check_player_feet.py tmp/station-motion-review --take tmp/station-motion-take
+python tests/compare_authored_feet.py output/releases/Redflag-Watt-Station-Win64.zip tmp/station-motion-review --verify-toolbox
 ~~~
+
+最后一条命令使用 SciPy 读取压缩包内同一份 glTF 模型，在游戏记录的剪辑时间重建脚部姿势。角色整段要留在地面，原片脚踝要经过箱子的轮廓。满足这两个条件后，才核对脚尖高度与原片的误差。测试允许相差 2 厘米，逐帧的实际差值保存在 authored-feet.json。
 
 加上 `--require-animation` 时，两次出拳都要有起手、接触检查和收拳记录，手还要相对髋部实际前伸并回收。行走和奔跑时，脚相对角色朝向应交替出现在另一只脚前面。脚尖接近地面的样本还保留了水平移动距离和采样间隔，便于另查滑步。3 厘米是本测试在平地上选取低位脚尖的高度范围。录旧包时省去这个开关即可检查位移和录像。主角是实体 1101，瓦特是 1102，原始状态按实体编号关联到同一帧。
