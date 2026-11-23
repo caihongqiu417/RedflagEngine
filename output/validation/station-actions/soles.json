@@ -1,0 +1,875 @@
+{
+  "model_sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+  "clips": {
+    "walking_gun-cycle": {
+      "L_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16247,
+            16093,
+            16242
+          ]
+        ],
+        "standing_up": [
+          -2.577424602332349e-06,
+          0.9999999999962168,
+          9.609526937936902e-07
+        ],
+        "min_y_m": -0.004630313400687823,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 139,
+            "max_tilt_deg": 53.12523097644078,
+            "max_axial_twist_deg": 9.155722279311192,
+            "inverted_samples": 0,
+            "worst_seconds": 0.9583333333333334,
+            "lowest_shoe_at_worst_m": 0.019163777030128466
+          },
+          "triangle_near_ground": {
+            "samples": 60,
+            "max_tilt_deg": 23.865225269969788,
+            "max_axial_twist_deg": 3.8770286654362565,
+            "inverted_samples": 0,
+            "worst_seconds": 0.0,
+            "lowest_shoe_at_worst_m": 0.003138071849595303
+          },
+          "swing": {
+            "samples": 12,
+            "max_tilt_deg": 23.25948409039895,
+            "max_axial_twist_deg": 3.818933944940113,
+            "inverted_samples": 0,
+            "worst_seconds": 1.0916666666666666,
+            "lowest_shoe_at_worst_m": 0.034512960732995715
+          }
+        }
+      },
+      "L_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16293,
+            16287,
+            16288
+          ]
+        ],
+        "standing_up": [
+          -2.404652213763595e-06,
+          0.9999999999970213,
+          4.1830523022466866e-07
+        ],
+        "min_y_m": -0.004630313400687823,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 139,
+            "max_tilt_deg": 53.12497147278856,
+            "max_axial_twist_deg": 9.155592115497257,
+            "inverted_samples": 0,
+            "worst_seconds": 0.9583333333333334,
+            "lowest_shoe_at_worst_m": 0.019163777030128466
+          },
+          "triangle_near_ground": {
+            "samples": 74,
+            "max_tilt_deg": 18.49345600173837,
+            "max_axial_twist_deg": 2.854684007567016,
+            "inverted_samples": 0,
+            "worst_seconds": 0.725,
+            "lowest_shoe_at_worst_m": 0.005803075908335729
+          },
+          "swing": {
+            "samples": 12,
+            "max_tilt_deg": 20.765566569977036,
+            "max_axial_twist_deg": 3.2815449382516704,
+            "inverted_samples": 0,
+            "worst_seconds": 1.1833333333333333,
+            "lowest_shoe_at_worst_m": 0.03716768612424337
+          }
+        }
+      },
+      "R_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8368,
+            8378,
+            8395
+          ]
+        ],
+        "standing_up": [
+          -0.02430720079387386,
+          0.9915493129860382,
+          0.1274328054563729
+        ],
+        "min_y_m": -0.010972421595821541,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 133,
+            "max_tilt_deg": 45.81828895519063,
+            "max_axial_twist_deg": 6.34329392067238,
+            "inverted_samples": 0,
+            "worst_seconds": 0.3333333333333333,
+            "lowest_shoe_at_worst_m": 0.0193228902370664
+          },
+          "triangle_near_ground": {
+            "samples": 54,
+            "max_tilt_deg": 22.725004404788457,
+            "max_axial_twist_deg": 3.6283952861245155,
+            "inverted_samples": 0,
+            "worst_seconds": 0.6916666666666667,
+            "lowest_shoe_at_worst_m": -0.010939031098576246
+          },
+          "swing": {
+            "samples": 18,
+            "max_tilt_deg": 26.32743738396018,
+            "max_axial_twist_deg": 4.184395035302941,
+            "inverted_samples": 0,
+            "worst_seconds": 0.575,
+            "lowest_shoe_at_worst_m": 0.035948214730698175
+          }
+        }
+      },
+      "R_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8675,
+            8670,
+            8671
+          ]
+        ],
+        "standing_up": [
+          2.7518153273932266e-05,
+          0.9999999921462223,
+          -0.00012227144695310007
+        ],
+        "min_y_m": -0.010972421595821541,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 133,
+            "max_tilt_deg": 53.13195381710157,
+            "max_axial_twist_deg": 6.029408646712369,
+            "inverted_samples": 0,
+            "worst_seconds": 0.3333333333333333,
+            "lowest_shoe_at_worst_m": 0.0193228902370664
+          },
+          "triangle_near_ground": {
+            "samples": 90,
+            "max_tilt_deg": 42.353086850839105,
+            "max_axial_twist_deg": 4.666238602873875,
+            "inverted_samples": 0,
+            "worst_seconds": 0.23333333333333334,
+            "lowest_shoe_at_worst_m": -0.00014939791393680894
+          },
+          "swing": {
+            "samples": 18,
+            "max_tilt_deg": 30.276032564047178,
+            "max_axial_twist_deg": 3.344407439342831,
+            "inverted_samples": 0,
+            "worst_seconds": 0.43333333333333335,
+            "lowest_shoe_at_worst_m": 0.03461754620664673
+          }
+        }
+      }
+    },
+    "walking_nogun-cycle": {
+      "L_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16247,
+            16093,
+            16242
+          ]
+        ],
+        "standing_up": [
+          -2.577424602332349e-06,
+          0.9999999999962168,
+          9.609526937936902e-07
+        ],
+        "min_y_m": -0.004631542858433833,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 139,
+            "max_tilt_deg": 53.1252309764282,
+            "max_axial_twist_deg": 9.15572227942917,
+            "inverted_samples": 0,
+            "worst_seconds": 0.9583333333333334,
+            "lowest_shoe_at_worst_m": 0.019163777012367558
+          },
+          "triangle_near_ground": {
+            "samples": 60,
+            "max_tilt_deg": 23.865225269969788,
+            "max_axial_twist_deg": 3.8770286654362565,
+            "inverted_samples": 0,
+            "worst_seconds": 0.0,
+            "lowest_shoe_at_worst_m": 0.003138071849595303
+          },
+          "swing": {
+            "samples": 12,
+            "max_tilt_deg": 23.259495864253346,
+            "max_axial_twist_deg": 3.818894557523862,
+            "inverted_samples": 0,
+            "worst_seconds": 1.0916666666666666,
+            "lowest_shoe_at_worst_m": 0.0345154204544392
+          }
+        }
+      },
+      "L_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16293,
+            16287,
+            16288
+          ]
+        ],
+        "standing_up": [
+          -2.404652213763595e-06,
+          0.9999999999970213,
+          4.1830523022466866e-07
+        ],
+        "min_y_m": -0.004631542858433833,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 139,
+            "max_tilt_deg": 53.12497147280582,
+            "max_axial_twist_deg": 9.15559211561694,
+            "inverted_samples": 0,
+            "worst_seconds": 0.9583333333333334,
+            "lowest_shoe_at_worst_m": 0.019163777012367558
+          },
+          "triangle_near_ground": {
+            "samples": 74,
+            "max_tilt_deg": 18.493455898778073,
+            "max_axial_twist_deg": 2.8546951942495298,
+            "inverted_samples": 0,
+            "worst_seconds": 0.725,
+            "lowest_shoe_at_worst_m": 0.005777528298082559
+          },
+          "swing": {
+            "samples": 12,
+            "max_tilt_deg": 20.76557522863672,
+            "max_axial_twist_deg": 3.2815801403847615,
+            "inverted_samples": 0,
+            "worst_seconds": 1.1833333333333333,
+            "lowest_shoe_at_worst_m": 0.037172370996107346
+          }
+        }
+      },
+      "R_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8368,
+            8378,
+            8395
+          ]
+        ],
+        "standing_up": [
+          -0.02430720079387386,
+          0.9915493129860382,
+          0.1274328054563729
+        ],
+        "min_y_m": -0.009558119119870867,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 133,
+            "max_tilt_deg": 45.818288954938915,
+            "max_axial_twist_deg": 6.3393721884480385,
+            "inverted_samples": 0,
+            "worst_seconds": 0.3333333333333333,
+            "lowest_shoe_at_worst_m": 0.01932289184335361
+          },
+          "triangle_near_ground": {
+            "samples": 54,
+            "max_tilt_deg": 22.72498700416213,
+            "max_axial_twist_deg": 3.6283857047408503,
+            "inverted_samples": 0,
+            "worst_seconds": 0.6916666666666667,
+            "lowest_shoe_at_worst_m": -0.009558119119870867
+          },
+          "swing": {
+            "samples": 18,
+            "max_tilt_deg": 26.32745016218165,
+            "max_axial_twist_deg": 4.183805218041215,
+            "inverted_samples": 0,
+            "worst_seconds": 0.575,
+            "lowest_shoe_at_worst_m": 0.03578715125666648
+          }
+        }
+      },
+      "R_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8675,
+            8670,
+            8671
+          ]
+        ],
+        "standing_up": [
+          2.7518153273932266e-05,
+          0.9999999921462223,
+          -0.00012227144695310007
+        ],
+        "min_y_m": -0.009558119119870867,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 133,
+            "max_tilt_deg": 53.131953816991704,
+            "max_axial_twist_deg": 6.029408637969453,
+            "inverted_samples": 0,
+            "worst_seconds": 0.3333333333333333,
+            "lowest_shoe_at_worst_m": 0.01932289184335361
+          },
+          "triangle_near_ground": {
+            "samples": 86,
+            "max_tilt_deg": 34.927596472098266,
+            "max_axial_twist_deg": 3.766725506841226,
+            "inverted_samples": 0,
+            "worst_seconds": 0.2,
+            "lowest_shoe_at_worst_m": 0.004112344402887772
+          },
+          "swing": {
+            "samples": 18,
+            "max_tilt_deg": 30.275950218012916,
+            "max_axial_twist_deg": 3.343574739821861,
+            "inverted_samples": 0,
+            "worst_seconds": 0.43333333333333335,
+            "lowest_shoe_at_worst_m": 0.03463378369436713
+          }
+        }
+      }
+    },
+    "running_gun-cycle": {
+      "L_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16247,
+            16093,
+            16242
+          ]
+        ],
+        "standing_up": [
+          -2.577424602332349e-06,
+          0.9999999999962168,
+          9.609526937936902e-07
+        ],
+        "min_y_m": -0.014559560388731928,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 29,
+            "max_tilt_deg": 45.271743762752216,
+            "max_axial_twist_deg": 7.673132707529447,
+            "inverted_samples": 0,
+            "worst_seconds": 0.4249999898672104,
+            "lowest_shoe_at_worst_m": 0.017684178421900874
+          },
+          "triangle_near_ground": {
+            "samples": 21,
+            "max_tilt_deg": 5.61991191629967,
+            "max_axial_twist_deg": 1.0776176500859265,
+            "inverted_samples": 0,
+            "worst_seconds": 0.19166666209697725,
+            "lowest_shoe_at_worst_m": 0.027935677261173297
+          },
+          "swing": {
+            "samples": 72,
+            "max_tilt_deg": 132.82367291551046,
+            "max_axial_twist_deg": 40.28535673410275,
+            "inverted_samples": 24,
+            "worst_seconds": 0.541666653752327,
+            "lowest_shoe_at_worst_m": 0.6545567103383991
+          }
+        }
+      },
+      "L_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16293,
+            16287,
+            16288
+          ]
+        ],
+        "standing_up": [
+          -2.404652213763595e-06,
+          0.9999999999970213,
+          4.1830523022466866e-07
+        ],
+        "min_y_m": -0.014559560388731928,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 29,
+            "max_tilt_deg": 31.03616128894542,
+            "max_axial_twist_deg": 5.005844411818629,
+            "inverted_samples": 0,
+            "worst_seconds": 0.4249999898672104,
+            "lowest_shoe_at_worst_m": 0.017684178421900874
+          },
+          "triangle_near_ground": {
+            "samples": 26,
+            "max_tilt_deg": 29.016337722650213,
+            "max_axial_twist_deg": 4.662235655254108,
+            "inverted_samples": 0,
+            "worst_seconds": 0.4166666567325592,
+            "lowest_shoe_at_worst_m": -0.01066982555805655
+          },
+          "swing": {
+            "samples": 72,
+            "max_tilt_deg": 132.82369141365004,
+            "max_axial_twist_deg": 40.28532201414578,
+            "inverted_samples": 20,
+            "worst_seconds": 0.541666653752327,
+            "lowest_shoe_at_worst_m": 0.6545567103383991
+          }
+        }
+      },
+      "R_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8368,
+            8378,
+            8395
+          ]
+        ],
+        "standing_up": [
+          -0.02430720079387386,
+          0.9915493129860382,
+          0.1274328054563729
+        ],
+        "min_y_m": -0.01723824595905859,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 34,
+            "max_tilt_deg": 54.962869502528285,
+            "max_axial_twist_deg": 8.23724544340456,
+            "inverted_samples": 0,
+            "worst_seconds": 0.04166666567325592,
+            "lowest_shoe_at_worst_m": 0.002339563792180725
+          },
+          "triangle_near_ground": {
+            "samples": 19,
+            "max_tilt_deg": 7.469457829701622,
+            "max_axial_twist_deg": 2.193257644938683,
+            "inverted_samples": 0,
+            "worst_seconds": 0.724999982714653,
+            "lowest_shoe_at_worst_m": -0.0023145212078108926
+          },
+          "swing": {
+            "samples": 67,
+            "max_tilt_deg": 125.4881570583906,
+            "max_axial_twist_deg": 23.767168386830946,
+            "inverted_samples": 21,
+            "worst_seconds": 0.12499999701976777,
+            "lowest_shoe_at_worst_m": 0.6543851216719967
+          }
+        }
+      },
+      "R_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8675,
+            8670,
+            8671
+          ]
+        ],
+        "standing_up": [
+          2.7518153273932266e-05,
+          0.9999999921462223,
+          -0.00012227144695310007
+        ],
+        "min_y_m": -0.01723824595905859,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 34,
+            "max_tilt_deg": 27.73024631379693,
+            "max_axial_twist_deg": 3.04365009370386,
+            "inverted_samples": 0,
+            "worst_seconds": 0.8333333134651184,
+            "lowest_shoe_at_worst_m": -0.0014530154107667281
+          },
+          "triangle_near_ground": {
+            "samples": 32,
+            "max_tilt_deg": 27.73024631379693,
+            "max_axial_twist_deg": 3.04365009370386,
+            "inverted_samples": 0,
+            "worst_seconds": 0.8333333134651184,
+            "lowest_shoe_at_worst_m": -0.0014530154107667281
+          },
+          "swing": {
+            "samples": 67,
+            "max_tilt_deg": 132.83080118142487,
+            "max_axial_twist_deg": 27.133749952378366,
+            "inverted_samples": 18,
+            "worst_seconds": 0.12499999701976777,
+            "lowest_shoe_at_worst_m": 0.6543851216719967
+          }
+        }
+      }
+    },
+    "running_nogun-cycle": {
+      "L_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16247,
+            16093,
+            16242
+          ]
+        ],
+        "standing_up": [
+          -2.577424602332349e-06,
+          0.9999999999962168,
+          9.609526937936902e-07
+        ],
+        "min_y_m": -0.00914729409093192,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 31,
+            "max_tilt_deg": 43.93809930726977,
+            "max_axial_twist_deg": 7.520130000514769,
+            "inverted_samples": 0,
+            "worst_seconds": 0.4249999898672104,
+            "lowest_shoe_at_worst_m": 0.026805502825957173
+          },
+          "triangle_near_ground": {
+            "samples": 23,
+            "max_tilt_deg": 11.333428197550512,
+            "max_axial_twist_deg": 1.7653872439747147,
+            "inverted_samples": 0,
+            "worst_seconds": 0.17499999582767486,
+            "lowest_shoe_at_worst_m": 0.023054479920042614
+          },
+          "swing": {
+            "samples": 70,
+            "max_tilt_deg": 132.82362962477367,
+            "max_axial_twist_deg": 40.28518373450845,
+            "inverted_samples": 20,
+            "worst_seconds": 0.541666653752327,
+            "lowest_shoe_at_worst_m": 0.654558364537454
+          }
+        }
+      },
+      "L_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16293,
+            16287,
+            16288
+          ]
+        ],
+        "standing_up": [
+          -2.404652213763595e-06,
+          0.9999999999970213,
+          4.1830523022466866e-07
+        ],
+        "min_y_m": -0.00914729409093192,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 31,
+            "max_tilt_deg": 29.70259338405843,
+            "max_axial_twist_deg": 4.876486992312493,
+            "inverted_samples": 0,
+            "worst_seconds": 0.4249999898672104,
+            "lowest_shoe_at_worst_m": 0.026805502825957173
+          },
+          "triangle_near_ground": {
+            "samples": 26,
+            "max_tilt_deg": 23.432865558690544,
+            "max_axial_twist_deg": 4.030208526479498,
+            "inverted_samples": 0,
+            "worst_seconds": 0.408333323597908,
+            "lowest_shoe_at_worst_m": -0.006966215622190151
+          },
+          "swing": {
+            "samples": 70,
+            "max_tilt_deg": 132.8236359214587,
+            "max_axial_twist_deg": 40.28500599546635,
+            "inverted_samples": 16,
+            "worst_seconds": 0.541666653752327,
+            "lowest_shoe_at_worst_m": 0.654558364537454
+          }
+        }
+      },
+      "R_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8368,
+            8378,
+            8395
+          ]
+        ],
+        "standing_up": [
+          -0.02430720079387386,
+          0.9915493129860382,
+          0.1274328054563729
+        ],
+        "min_y_m": -0.017892371055199283,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 36,
+            "max_tilt_deg": 64.40289296838581,
+            "max_axial_twist_deg": 9.515254057425608,
+            "inverted_samples": 0,
+            "worst_seconds": 0.04166666567325592,
+            "lowest_shoe_at_worst_m": -0.0005848054748488086
+          },
+          "triangle_near_ground": {
+            "samples": 21,
+            "max_tilt_deg": 13.063971833453472,
+            "max_axial_twist_deg": 2.01355792104809,
+            "inverted_samples": 0,
+            "worst_seconds": 0.6083333188295365,
+            "lowest_shoe_at_worst_m": 0.011518901652507546
+          },
+          "swing": {
+            "samples": 65,
+            "max_tilt_deg": 125.48811285056098,
+            "max_axial_twist_deg": 23.767549537842342,
+            "inverted_samples": 20,
+            "worst_seconds": 0.12499999701976777,
+            "lowest_shoe_at_worst_m": 0.6543833773388417
+          }
+        }
+      },
+      "R_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8675,
+            8670,
+            8671
+          ]
+        ],
+        "standing_up": [
+          2.7518153273932266e-05,
+          0.9999999921462223,
+          -0.00012227144695310007
+        ],
+        "min_y_m": -0.017892371055199283,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 36,
+            "max_tilt_deg": 29.676150780477105,
+            "max_axial_twist_deg": 3.296138054180915,
+            "inverted_samples": 0,
+            "worst_seconds": 0.04166666567325592,
+            "lowest_shoe_at_worst_m": -0.0005848054748488086
+          },
+          "triangle_near_ground": {
+            "samples": 33,
+            "max_tilt_deg": 29.676150780477105,
+            "max_axial_twist_deg": 3.296138054180915,
+            "inverted_samples": 0,
+            "worst_seconds": 0.04166666567325592,
+            "lowest_shoe_at_worst_m": -0.0005848054748488086
+          },
+          "swing": {
+            "samples": 65,
+            "max_tilt_deg": 132.830831235243,
+            "max_axial_twist_deg": 27.134294794303855,
+            "inverted_samples": 15,
+            "worst_seconds": 0.12499999701976777,
+            "lowest_shoe_at_worst_m": 0.6543833773388417
+          }
+        }
+      }
+    },
+    "Station-CrouchWalk": {
+      "L_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16247,
+            16093,
+            16242
+          ]
+        ],
+        "standing_up": [
+          -2.577424602332349e-06,
+          0.9999999999962168,
+          9.609526937936902e-07
+        ],
+        "min_y_m": -0.0004404277573860915,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 143,
+            "max_tilt_deg": 24.591786109234686,
+            "max_axial_twist_deg": 11.599748825878748,
+            "inverted_samples": 0,
+            "worst_seconds": 1.8333333333333333,
+            "lowest_shoe_at_worst_m": -1.5288685775716182e-07
+          },
+          "triangle_near_ground": {
+            "samples": 140,
+            "max_tilt_deg": 24.591786109234686,
+            "max_axial_twist_deg": 11.599748825878748,
+            "inverted_samples": 0,
+            "worst_seconds": 1.8333333333333333,
+            "lowest_shoe_at_worst_m": -1.5288685775716182e-07
+          },
+          "swing": {
+            "samples": 98,
+            "max_tilt_deg": 49.77584129108878,
+            "max_axial_twist_deg": 6.951923761583174,
+            "inverted_samples": 0,
+            "worst_seconds": 1.1,
+            "lowest_shoe_at_worst_m": 0.06097260096736227
+          }
+        }
+      },
+      "L_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            16293,
+            16287,
+            16288
+          ]
+        ],
+        "standing_up": [
+          -2.404652213763595e-06,
+          0.9999999999970213,
+          4.1830523022466866e-07
+        ],
+        "min_y_m": -0.0004404277573860915,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 143,
+            "max_tilt_deg": 24.591814340906446,
+            "max_axial_twist_deg": 11.599760688426528,
+            "inverted_samples": 0,
+            "worst_seconds": 1.8333333333333333,
+            "lowest_shoe_at_worst_m": -1.5288685775716182e-07
+          },
+          "triangle_near_ground": {
+            "samples": 91,
+            "max_tilt_deg": 8.826948838091166,
+            "max_axial_twist_deg": 7.847005014122999,
+            "inverted_samples": 0,
+            "worst_seconds": 1.9666666666666666,
+            "lowest_shoe_at_worst_m": -1.187832449345283e-07
+          },
+          "swing": {
+            "samples": 98,
+            "max_tilt_deg": 49.77580449794454,
+            "max_axial_twist_deg": 6.951921519096544,
+            "inverted_samples": 0,
+            "worst_seconds": 1.1,
+            "lowest_shoe_at_worst_m": 0.06097260096736227
+          }
+        }
+      },
+      "R_heel": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8368,
+            8378,
+            8395
+          ]
+        ],
+        "standing_up": [
+          -0.02430720079387386,
+          0.9915493129860382,
+          0.1274328054563729
+        ],
+        "min_y_m": -0.00036201659027268115,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 177,
+            "max_tilt_deg": 41.44950118144725,
+            "max_axial_twist_deg": 7.748763361346164,
+            "inverted_samples": 0,
+            "worst_seconds": 0.0,
+            "lowest_shoe_at_worst_m": 0.006930749814935392
+          },
+          "triangle_near_ground": {
+            "samples": 112,
+            "max_tilt_deg": 26.48973717159399,
+            "max_axial_twist_deg": 7.748763361346164,
+            "inverted_samples": 0,
+            "worst_seconds": 1.0416666666666667,
+            "lowest_shoe_at_worst_m": -0.00019796966071400357
+          },
+          "swing": {
+            "samples": 64,
+            "max_tilt_deg": 40.03880162043466,
+            "max_axial_twist_deg": 6.953179254167793,
+            "inverted_samples": 0,
+            "worst_seconds": 0.09166666666666666,
+            "lowest_shoe_at_worst_m": 0.03055042934960047
+          }
+        }
+      },
+      "R_forefoot": {
+        "triangle": [
+          "Robot_Body",
+          0,
+          [
+            8675,
+            8670,
+            8671
+          ]
+        ],
+        "standing_up": [
+          2.7518153273932266e-05,
+          0.9999999921462223,
+          -0.00012227144695310007
+        ],
+        "min_y_m": -0.00036201659027268115,
+        "phases": {
+          "shoe_near_ground": {
+            "samples": 177,
+            "max_tilt_deg": 41.44946698690589,
+            "max_axial_twist_deg": 6.944426230468991,
+            "inverted_samples": 0,
+            "worst_seconds": 0.0,
+            "lowest_shoe_at_worst_m": 0.006930749814935392
+          },
+          "triangle_near_ground": {
+            "samples": 84,
+            "max_tilt_deg": 40.46451501393372,
+            "max_axial_twist_deg": 6.9008107099472795,
+            "inverted_samples": 0,
+            "worst_seconds": 1.9666666666666666,
+            "lowest_shoe_at_worst_m": 0.0006782597109367561
+          },
+          "swing": {
+            "samples": 64,
+            "max_tilt_deg": 40.03978709368069,
+            "max_axial_twist_deg": 6.8449495282978035,
+            "inverted_samples": 0,
+            "worst_seconds": 0.09166666666666666,
+            "lowest_shoe_at_worst_m": 0.03055042934960047
+          }
+        }
+      }
+    }
+  }
+}

@@ -104,6 +104,10 @@ def main():
                 ModelRendererComponent=operator["ModelRendererComponent"], ModelAnimationComponent=operator["ModelAnimationComponent"],
                 ScriptComponent=dict(Class="StationTest.NotifyActor",ScriptFields=[dict(Name="Interrupt",Type="Bool",Value=interrupt)])))
     if args.npc_motion or args.recorded_speech:
+        if args.npc_motion and not args.recorded_speech:
+            # 测「先捡再给」时让瓦特空手起步；已有一份药时模型可能直接选择交付。
+            technician = next(row for row in scene["Entities"] if row["Entity"]==1102)
+            technician["InventoryComponent"]["Items"].pop("medkit",None)
         scene["Entities"].append(dict(Entity=1901,TagComponent=dict(Tag="动作测试"),
             TransformComponent=dict(Translation=[0,0,0],Rotation=[0,0,0],Scale=[1,1,1]),
             ScriptComponent=dict(Class="StationTest.MotionCapture",ScriptFields=[

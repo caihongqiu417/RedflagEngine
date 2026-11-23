@@ -1,0 +1,98 @@
+PASS load NPC and animator
+PASS load imported operator mesh and animation
+PASS feet take turns leading while movement root travels forward
+PASS pinned movement root stays on the actor
+walking_nogun-cycle period_s=1.25 stride_m=1.75 speed_m/s=1.4 left_minus_right_m=0.712875,-0.712896
+PASS feet take turns leading while movement root travels forward
+PASS pinned movement root stays on the actor
+running_nogun-cycle period_s=0.833333 stride_m=2.66667 speed_m/s=3.2 left_minus_right_m=0.459679,-0.350279
+PASS feet take turns leading while movement root travels forward
+PASS pinned movement root stays on the actor
+Station-CrouchWalk period_s=2 stride_m=1.45302 speed_m/s=0.726508 left_minus_right_m=0.529662,-0.602854
+PASS crouched pelvis is lower than standing
+PASS jab returns to its starting guard
+PASS shoulder, elbow and wrist extend forward on the source contact frame
+PASS skinned knuckle vertices travel with the punch
+Station-Punch contact_s=0.2 shoulder/elbow/wrist_z_m=0.134648,0.334257,0.704378 wrist_travel_z_m=0.551481 tracked_vertices=429 mean_vertex_travel_z_m=0.737435
+PASS lowest skinned vertex stays within 1 cm of flat ground
+Station-Punch sole_range_y_m=-0.00109888,2.3935e-07
+PASS lowest skinned vertex stays within 1 cm of flat ground
+Station-Crouch sole_range_y_m=-1.65775e-07,0.000153784
+PASS lowest skinned vertex stays within 1 cm of flat ground
+Station-CrouchWalk sole_range_y_m=-0.00043912,0.00334841
+PASS AIM-Center
+clip_check AIM-Center duration_s=0 observed_s=0 joint=hand.R travel_m=0.57846 nodes=151
+PASS Cannon_activation-noexp
+clip_check Cannon_activation-noexp duration_s=0.916667 observed_s=0.35 joint=hand.R travel_m=0.185177 nodes=151
+PASS Cannon_Charge
+clip_check Cannon_Charge duration_s=1.875 observed_s=0.22 joint=hand.R travel_m=0.321123 nodes=151
+PASS Cannon_Charge-cycle
+clip_check Cannon_Charge-cycle duration_s=0.416667 observed_s=0.416667 joint=hand.R travel_m=0.0162534 nodes=151
+PASS jump_1_up
+clip_check jump_1_up duration_s=0.25 observed_s=0.25 joint=foot.L travel_m=0.522133 nodes=151
+PASS jump_3_midair-cycle
+clip_check jump_3_midair-cycle duration_s=1.25 observed_s=1.25 joint=foot.L travel_m=0.0514683 nodes=151
+PASS jump_5_hardlanding
+clip_check jump_5_hardlanding duration_s=0.416667 observed_s=0.416667 joint=hips travel_m=0.171581 nodes=151
+PASS flinch_heavy
+clip_check flinch_heavy duration_s=0.416667 observed_s=0.416667 joint=head.001 travel_m=0.826665 nodes=151
+PASS Station-Pickup
+clip_check Station-Pickup duration_s=2.5 observed_s=2.5 joint=hand.L travel_m=0.77159 nodes=151
+PASS Station-Give
+clip_check Station-Give duration_s=2 observed_s=2 joint=hand.L travel_m=0.689876 nodes=151
+PASS pickup
+state_event pickup contact at_s=1.2
+PASS one inventory contact per reach
+PASS next idle state starts with its own clock
+PASS give
+state_event give contact at_s=0.733334
+PASS one inventory contact per reach
+PASS next idle state starts with its own clock
+PASS punch
+state_event punch Contact at_s=0.2
+PASS one melee contact per punch
+PASS next idle state starts with its own clock
+PASS land
+state_event land Recovery at_s=0
+state_event land KneeBend at_s=0.0833333
+state_event land Recovery at_s=0.208333
+PASS landing opens and closes recovery around the knee bend
+PASS next idle state starts with its own clock
+PASS repair
+PASS next idle state starts with its own clock
+PASS revive
+PASS next idle state starts with its own clock
+PASS load actual station guard
+PASS Idle-cycle
+clip_check Idle-cycle duration_s=12.5 observed_s=12.5 joint=Body travel_m=0.327411 nodes=69
+PASS Walk-cycle
+clip_check Walk-cycle duration_s=2.5 observed_s=2.5 joint=L-RearFoot travel_m=2 nodes=69
+PASS Cannon_Fire_Recoil
+clip_check Cannon_Fire_Recoil duration_s=0.625 observed_s=0.625 joint=CannonAnimRecoil travel_m=0.323485 nodes=69
+PASS Damage_heavy
+clip_check Damage_heavy duration_s=0.833333 observed_s=0.3 joint=Body travel_m=0.220827 nodes=69
+PASS Idle-cycle
+PASS walking_nogun-cycle
+PASS running_nogun-cycle
+PASS Idle-cycle
+PASS Station-Pickup
+PASS action and imported clip use the same seconds
+PASS inventory contact agrees with rendered hand
+PASS wrist reaches away from idle and withdraws
+PASS index fingertip stays above floor
+pickup contact = 36/75 frames, wrist XYZ (m) = 0.323669, 0.129457, 0.158509, travel = 0.77159 m, lowest index = 0.07094 m
+PASS Station-Give
+PASS action and imported clip use the same seconds
+PASS inventory contact agrees with rendered hand
+PASS wrist reaches away from idle and withdraws
+PASS index fingertip stays above floor
+give contact = 22/60 frames, wrist XYZ (m) = 0.293985, 1.21175, 0.319408, travel = 0.672958 m, lowest index = 0.569498 m
+PASS Station-Pickup
+PASS Cannon_Charge-cycle
+PASS AIM-Center
+PASS Cannon_Charge
+PASS Station-Punch
+PASS Cannon_activation-noexp
+PASS jump_1_up
+PASS Station-Pickup
+PASS jump_5_hardlanding

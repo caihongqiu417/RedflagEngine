@@ -24,7 +24,12 @@ inline void CheckWorldActions(void (*check)(bool, const char*))
     supply.AddComponent<PickupComponent>() = {"medkit", 2};
     supply.GetComponent<TransformComponent>().Translation.x = 1.0f;
     room.OnSimulationStart();
+    check(CheckPickup(room, 1, 3, .5f) == ActionResult::OutOfReach, "pickup cannot begin from beyond arm's reach");
+    check(CheckPickup(room, 1, 3, 2) == ActionResult::Completed && room.GetEntityByUUID(3)
+        && teammate.GetComponent<InventoryComponent>().Items.empty(), "starting the reach leaves the supply and inventory intact");
     check(CollectItem(room, 1, 3, 2) == ActionResult::Completed && !room.GetEntityByUUID(3), "physical pickup becomes inventory");
+    check(CollectItem(room, 1, 3, 2) == ActionResult::MissingTarget && teammate.GetComponent<InventoryComponent>().Items.at("medkit")==2,
+          "late animation contact cannot collect a target already taken");
     check(GiveItem(room, 1, 2, "medkit", 1, 2) == ActionResult::Completed, "teammates exchange one item");
     check(teammate.GetComponent<InventoryComponent>().Items.at("medkit") == 1 && player.GetComponent<InventoryComponent>().Items.at("medkit") == 1, "total stock conserved");
 

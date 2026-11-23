@@ -1,0 +1,12 @@
+PASS two actors start the same clip
+PASS a window starting at zero opens immediately
+PASS one long frame delivers every marker across two loops, including the last and first instants
+PASS one actor's progress and consumed events do not advance the other
+PASS cancellation closes an open window exactly once
+PASS switch to a non-looping state
+PASS preserve unread Begin
+PASS interrupt the previous state before starting the next
+PASS next state starts after interrupted End
+PASS natural End is delivered on the exact endpoint
+PASS completed clip holds its final pose and does not repeat notices
+PASS a marker beyond the actual model clip is rejected

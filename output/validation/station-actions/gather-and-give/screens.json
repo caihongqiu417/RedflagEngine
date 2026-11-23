@@ -1,0 +1,30 @@
+{
+  "walk": {
+    "event_seconds": 0.108,
+    "last_recorded_frame_seconds": 0.292
+  },
+  "pickup": {
+    "event_seconds": 2.825,
+    "last_recorded_frame_seconds": 3.015
+  },
+  "pickup-pose": {
+    "event_seconds": 2.825,
+    "last_recorded_frame_seconds": 3.84
+  },
+  "collected": {
+    "event_seconds": 5.478,
+    "last_recorded_frame_seconds": 5.774
+  },
+  "give": {
+    "event_seconds": 7.202,
+    "last_recorded_frame_seconds": 7.538
+  },
+  "give-pose": {
+    "event_seconds": 7.202,
+    "last_recorded_frame_seconds": 8.174
+  },
+  "delivered": {
+    "event_seconds": 8.042,
+    "last_recorded_frame_seconds": 8.492
+  }
+}

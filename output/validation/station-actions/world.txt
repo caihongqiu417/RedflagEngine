@@ -1,0 +1,42 @@
+PASS pickup cannot begin from beyond arm's reach
+PASS starting the reach leaves the supply and inventory intact
+PASS physical pickup becomes inventory
+PASS late animation contact cannot collect a target already taken
+PASS teammates exchange one item
+PASS total stock conserved
+PASS team prevents damage
+PASS trap damage downs player
+PASS start timed rescue
+PASS cancelled rescue has no effect
+PASS revive restores configured health once
+PASS completed effect cannot replay
+PASS repair uses same interaction
+PASS destroyed target cannot complete
+PASS crate within reach
+PASS crate beyond arm length
+PASS wall occludes crate
+PASS wall has no pickup permission
+PASS old photo of removed crate
+PASS only the marked crate is eligible for pickup after reopening
+PASS body type, density and local box dimensions survive YAML save/open
+PASS initial ray hits the scaled crate by its saved UUID
+PASS saved rotation turns the narrow collision box with the beam
+PASS PhysX writes the resting crate pose back to its scene transform
+PASS the saved editor scene keeps its original pose
+PASS kinematic platform follows its scene transform
+PASS removing the collider immediately clears its hit
+PASS new collider uses its authored dimensions
+PASS editing the shape removes its previous extent
+PASS destroyed entities disappear from queries
+PASS duplicating the crate keeps its pickup tag
+PASS the duplicated crate has its own physics body and UUID
+PASS stopping physics releases the queried world
+PASS 2D-only scenes still fall in Box2D, with no 3D hits
+PASS 2D bodies and both collider types added during simulation collide
+PASS duplicated 2D body has its own position and collision shape
+PASS removing one circle leaves its smaller box and the duplicate's circle intact
+PASS removing the floor box removes its support
+PASS re-added body and box collide again
+PASS destroying the floor leaves no ghost box
+PASS restarted 2D world uses the new starting pose
+PASS copying a running scene gives the second world independent 2D bodies

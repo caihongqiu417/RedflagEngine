@@ -1,6 +1,7 @@
 #pragma once
 #include "Redflag/AI/NpcDefinition.h"
 #include "Redflag/Animation/ModelAnimation.h"
+#include "StationActionClips.h"
 
 inline void CheckOperatorMotion(const Redflag::ModelAnimation& rig)
 {
@@ -113,6 +114,11 @@ inline void CheckNpcMotion()
     Check(static_cast<bool>(rig), "load imported operator mesh and animation");
     if (!rig) return;
     CheckOperatorMotion(*rig);
+    CheckStationActionClips(*rig, false);
+    CheckStationActionEvents(*rig, character.Controller);
+    const auto sentinel = ModelAnimation::Load("assets/game/station/crew/Sentinel.glb");
+    Check(bool(sentinel), "load actual station guard");
+    if (sentinel) CheckStationActionClips(*sentinel, true);
     for (const AnimationState& state : character.Controller.GetStates())
     {
         const auto& clips = rig->GetClips();
