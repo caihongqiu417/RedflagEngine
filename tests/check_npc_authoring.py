@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from mcp import ClientSession, StdioServerParameters, stdio_client
 
@@ -185,6 +186,68 @@ def check_transitions(work):
     print("PASS: animation transition insert/edit/delete, stale save, native validation, flow/block YAML, comments")
 
 
+def check_transition_review(work):
+    import animation_transitions as transitions
+    import forge_authoring
+
+    project = work / "tuning"
+    profile = project / "assets/ai/host.animator.yaml"
+    profile.parent.mkdir(parents=True)
+    profile.write_text("States: [{ID: 行走, Clip: Walk}, {ID: 待机, Clip: Idle, Blend: 0.375}]\n", encoding="utf8")
+    request = {"operation": "transition", "profile": str(profile), "from": "行走", "to": "待机"}
+    instant = {"Seconds": 0, "Control": [0, 1]}
+    curved = {"Seconds": .5, "Control": [.25, .75]}
+
+    def apply(before, after):
+        return forge_authoring.execute(dict(request, original=before, value=after))
+
+    def report(result):
+        return json.loads(Path(result["record"]).read_bytes())
+
+    first = report(apply(None, instant))
+    assert first["assessment"]["verdict"] == "met_checks" and first["measurement"]["samples"] == [{"seconds": 0, "weight": 1}]
+    assert apply(None, instant) == {"profile": str(profile)}
+    second = report(apply(instant, curved))
+    assert second["before"] == instant and second["after"] == curved
+    assert second["assessment"]["verdict"] == "met_checks" and second["measurement"]["samples"][1]["weight"] == .2265625
+    try:
+        apply(instant, None)
+        raise AssertionError("a stale draft should be rejected")
+    except transitions.ToolError:
+        assert len(list((project / "captures/changes/animation-transitions").glob("*.json"))) == 2
+
+    reset = report(apply(curved, None))
+    assert reset["assessment"]["verdict"] == "met_checks" and reset["after"] is None
+    assert reset["measurement"]["seconds"] == .375 and not reset["measurement"]["override"]
+
+    # 模拟取样工具退回错误的权重，确认磁盘已经应用，Forge 收到一条提示并能打开完整记录。
+    sample = transitions.sample
+    def wrong_weight(*args):
+        result = sample(*args)
+        result["samples"][1]["weight"] = 1
+        return result
+    with patch.object(transitions, "sample", wrong_weight):
+        result = apply(None, curved)
+    assert "warning" in result and "error" not in result
+    assert [issue["kind"] for issue in report(result)["assessment"]["findings"]] == ["transition_weight"]
+    assert transitions.inspect(profile)["transitions"][0]["Seconds"] == curved["Seconds"]
+
+    # 文本编辑器在原生校验期间改了正式资产。不能用校验过的临时文件盖掉这次手改。
+    previous = profile.read_bytes()
+    hand_edit = previous + b"# written by artist\n"
+    validate = transitions.validate
+    def edit_during_validation(candidate):
+        validate(candidate)
+        profile.write_bytes(hand_edit)
+    with patch.object(transitions, "validate", edit_during_validation):
+        try:
+            apply(curved, instant)
+            raise AssertionError("overwrote a concurrent hand edit")
+        except transitions.ToolError:
+            assert profile.read_bytes() == hand_edit
+    print("PASS: Forge apply, native transition weights, instant switch, inherited duration, retry, conflict and warning after save")
+
+
 async def check_montages(work):
     project = work / "station"
     assets = project / "assets/ai"
@@ -202,6 +265,28 @@ async def check_montages(work):
             result = await client.call_tool(tool, params)
             assert not result.is_error, result.content
             return result.structured_content
+
+        # Forge 和 MCP 在独立进程中从同一版本提交不同的值，不能后写入的一方悄悄覆盖先到的。
+        profile = assets / "watt.animator.yaml"
+        transition = dict(animator="ai/watt.animator.yaml", source="walk", target="idle")
+        saved = await call("inspect_animation_transitions", animator=transition["animator"])
+        old = next(row for row in saved["transitions"] if row["From"] == "walk" and row["To"] == "idle")
+        original = {"Seconds": old["Seconds"], "Control": old["Control"]}
+        forge_value = {"Seconds": .31, "Control": [.1, .6]}
+        mcp_value = {"Seconds": .42, "Control": [.2, .7]}
+        reply = work / "transition-request.json"
+        reply.write_text(json.dumps({"operation": "transition", "profile": str(profile), "from": "walk", "to": "idle",
+                                    "original": original, "value": forge_value}), encoding="utf8")
+        writer = await asyncio.create_subprocess_exec(sys.executable, str(MODULE / "forge_authoring.py"), str(reply))
+        result = await client.call_tool("set_animation_transition", dict(transition, original=original, value=mcp_value))
+        assert await writer.wait() == 0
+        forge = json.loads(reply.read_bytes())
+        assert ("error" in forge) != result.is_error
+        winner = mcp_value if "error" in forge else forge_value
+        reports = list((project / "captures/changes/animation-transitions").glob("*.json"))
+        assert len(reports) == 1 and json.loads(reports[0].read_bytes())["after"] == winner
+        readback = await call("inspect_animation_transitions", animator=transition["animator"])
+        assert dict(From="walk", To="idle", **winner) in readback["transitions"]
 
         role = await call("inspect_npc", npc="watt.npc.yaml")
         expected = {"fire","pickup","give","heal","punch","land"}
@@ -240,4 +325,5 @@ if __name__ == "__main__":
         asyncio.run(exercise(work))
         check_tables(work)
         check_transitions(work)
+        check_transition_review(work)
         asyncio.run(check_montages(work))

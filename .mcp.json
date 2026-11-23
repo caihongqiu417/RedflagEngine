@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "redflag": {
+      "type": "stdio",
+      "command": "git",
+      "args": ["-c", "alias.redflag-mcp=!python scripts/redflag_mcp/launch.py", "redflag-mcp"]
+    }
+  }
+}

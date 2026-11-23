@@ -13,12 +13,16 @@ from voice_bank import PROJECT, load_bank, recording
 
 
 def execute(request):
+    if request["operation"] == "exposure":
+        from render_settings import apply_exposure
+        return apply_exposure(Path(request["profile"]), request["original"], request["value"])
     profile = Path(request["profile"]).resolve()
     npc_assets.ASSETS = profile.parent
     cmd = request["operation"]
     if cmd == "transition":
-        from animation_transitions import save
-        save(profile, request["from"], request["to"], request["original"], request["value"])
+        import animation_transitions
+        check = animation_transitions.apply(profile, request["from"], request["to"], request["original"], request["value"])
+        return {"profile": str(profile), **check}
     elif cmd == "create":
         npc_assets.create(profile.name, request["name"])
     elif cmd == "save":

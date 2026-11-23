@@ -69,11 +69,51 @@ static YAML::Node Inspect(const NpcDefinition& npc)
     return result;
 }
 
+// ---- 动作过渡的回读与取样 ----
+
+static YAML::Node SampleTransition(const AnimationController& controller, const std::string& from, const std::string& to)
+{
+    const AnimationState* state = controller.Find(to);
+    if (!controller.Find(from) || !state)
+        throw std::runtime_error("动作表里找不到所选的起止状态。");
+
+    const AnimationTransition* saved = controller.FindTransition(from, to);
+    const AnimationTransition edge = saved ? *saved : AnimationTransition{from, to, state->Blend};
+    YAML::Node result;
+    result["override"] = saved != nullptr;
+    result["target_blend"] = state->Blend;
+    result["seconds"] = edge.Seconds;
+    result["control"].push_back(edge.Control.x);
+    result["control"].push_back(edge.Control.y);
+
+    // 与角色播放时一样，时长为零就直接使用新动作。其余曲线在起止和中间三个时刻取样。
+    const float fractions[] = {0.f, .25f, .5f, .75f, 1.f};
+    for (float t : fractions)
+    {
+        YAML::Node sample;
+        sample["seconds"] = t * edge.Seconds;
+        sample["weight"] = edge.Seconds == 0.f ? 1.f : edge.Weight(t);
+        result["samples"].push_back(sample);
+        if (edge.Seconds == 0.f) break;
+    }
+    return result;
+}
+
 int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        if (argc != 3) throw std::runtime_error("Usage: NpcTool inspect|validate-animator|validate-montage FILE");
+        if (argc == 5 && std::wstring(argv[1]) == L"sample-transition")
+        {
+            AnimationController controller;
+            std::string error;
+            if (!controller.Load(argv[2], error)) throw std::runtime_error(error);
+            const std::string from = std::filesystem::path(argv[3]).u8string();
+            const std::string to = std::filesystem::path(argv[4]).u8string();
+            std::cout << YAML::Dump(SampleTransition(controller, from, to)) << '\n';
+            return 0;
+        }
+        if (argc != 3) throw std::runtime_error("Usage: NpcTool inspect|validate-animator|validate-montage FILE or sample-transition FILE FROM TO");
         std::string error;
         if (std::wstring(argv[1]) == L"validate-montage") {
             AnimationMontage montage;

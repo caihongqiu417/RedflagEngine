@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "redflag": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}/scripts/redflag_mcp/launch.py"]
+    }
+  }
+}

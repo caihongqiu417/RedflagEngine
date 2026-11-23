@@ -97,6 +97,10 @@ def replace_value(text, node, current, value, shared):
 
 
 def insert_optional(text, parent, key, value):
+    if not parent.value:
+        # 空的 YAML 映射写作 {}，把新字段放在右括号前，保留文件其余空白和注释。
+        at = parent.end_mark.index - 1
+        return text[:at] + key + ": " + json.dumps(value, allow_nan=False) + text[at:]
     first = parent.value[0][0].start_mark
     newline = "\r\n" if "\r\n" in text else "\n"
     separator = ", " if parent.flow_style else newline + " " * first.column

@@ -65,12 +65,74 @@ def media_evidence(folder, media, rules, finding):
     return pictures,list(audio.values())
 
 
+def assess_exposure(readback, expected):
+    issues = []
+    if readback != expected:
+        issues.append({"kind": "exposure_value", "message": f"保存了 {expected:g} EV，回读到 {readback:g} EV。"})
+    return {"verdict": "findings" if issues else "met_checks", "findings": issues, "readback_ev": readback}
+
+
+def assess_transition(measured, value):
+    """用保存的两个控制点推算权重，与原生引擎取样对照。每项问题带回它发生的时刻。"""
+    issues = []
+    expected = value if value is not None else {"Seconds": measured["target_blend"], "Control": [0, 1]}
+    actual = [measured["seconds"], *measured["control"]]
+    settings = [expected["Seconds"], *expected["Control"]]
+    if measured["override"] != (value is not None) or len(actual) != len(settings) or not all(
+            math.isclose(x, y, rel_tol=1e-6) for x, y in zip(actual, settings)):
+        issues.append({"kind": "transition_settings", "message": "引擎读到的时间或控制点与这次应用的设置不一致。"})
+
+    # 默认曲线、手调曲线都量两端和中间三个时刻。时长为零时，第一帧已经完全切到新姿势。
+    duration, a, b = settings
+    fractions = (0, .25, .5, .75, 1) if duration else (0,)
+    if len(measured["samples"]) != len(fractions):
+        issues.append({"kind": "missing_samples", "message": "过渡权重的采样记录不完整。"})
+    for t, sample in zip(fractions, measured["samples"]):
+        seconds = duration * t
+        weight = 3*(1-t)**2*t*a + 3*(1-t)*t**2*b + t**3 if duration else 1
+        if not math.isclose(sample["seconds"], seconds, rel_tol=1e-6) or not math.isclose(
+                sample["weight"], weight, abs_tol=1e-6):
+            issues.append({"kind": "transition_weight", "seconds": seconds, "expected": weight, "actual": sample,
+                           "message": f"切换后 {seconds:.3f} 秒的权重与曲线不符。"})
+    return {"verdict": "findings" if issues else "met_checks", "findings": issues}
+
+
+def movement_keys(profile):
+    # 外部客户端只传按键。同一个键对应几个动作时，只有规划器自己的动作记录能分辨它选了哪一个。
+    choices = {}
+    for name, action in profile.get("actions", {}).items():
+        key = action["key"]
+        choices[key] = name if key not in choices else None
+    return {key: name for key, name in choices.items() if name in profile.get("checks", {}).get("movement", {})}
+
+
+def direct_movements(inputs, keys, decisions):
+    planned = {step.get("input") for step in decisions}
+    held = {}
+    for sample in inputs:
+        key = sample.get("key")
+        if sample.get("owner") != "agent" or key not in keys:
+            continue
+        seq = sample["seq"]
+        press = (sample["generation"], key)
+        if sample["op"] == "release":
+            if press in held:
+                yield {"choice": keys[key], "from": held.pop(press), "to": seq}
+        elif sample.get("id") not in planned:
+            # 游戏在处理成功后才把这次按键写入帧。比较按下前一帧与松开时的实际坐标。
+            if sample["op"] == "hold":
+                held.setdefault(press, seq - 1)
+            elif sample["op"] == "tap":
+                yield {"choice": keys[key], "from": seq - 1, "to": seq}
+
+
 def assess(folder, profile):
     rules = profile.get("checks", {})
     actor = str(profile["actor"])
     timings, events, inputs, issues = [], [], [], []
     first = last = prev_time = previous = None
     decisions = list(rows(folder / "decisions.jsonl"))
+    keys = movement_keys(profile)
     endpoints = {step[key] for step in decisions for key in ("from","to")}
     positions = {}
     observed = 0
@@ -85,14 +147,19 @@ def assess(folder, profile):
             first = seq
         if last is not None and (seq != last+1 or now < prev_time):
             finding("timeline_break", last, seq)
+        before = last
         last, prev_time = seq, now
         ms = frame["frame_ms"]
         if math.isfinite(ms) and ms >= 0:
             timings.append(ms)
         else:
             finding("invalid_frame_time", seq, seq)
-        for collection, key in ((events,"events"), (inputs,"inputs")):
-            collection.extend(dict(item, seq=seq, seconds=now) for item in frame[key])
+        events.extend(dict(item, seq=seq, seconds=now) for item in frame["events"])
+        inputs.extend(dict(item, seq=seq, seconds=now, generation=frame.get("generation", 1))
+                      for item in frame["inputs"])
+        movement_input = any(i.get("owner") == "agent" and i.get("key") in keys for i in frame["inputs"])
+        if movement_input and before == seq - 1 and previous is not None:
+            positions[before] = previous
 
         target = next((a for a in frame["actors"] if str(a["id"]) == actor), None)
         pos = target["position"] if target else None
@@ -101,7 +168,7 @@ def assess(folder, profile):
             pos = None
         if pos is not None:
             observed += 1
-            if seq in endpoints:
+            if seq in endpoints or movement_input:
                 positions[seq] = pos
             if previous is not None:
                 delta = math.dist(previous,pos)
@@ -110,9 +177,9 @@ def assess(folder, profile):
                     finding("position_jump", seq-1, seq, metres=delta)
         previous = pos
 
-    # 模型实际按下的动作与松开后的角色坐标配对。作者指定哪些动作原本应该产生位移。
+    # 同一个按键可能既有游戏回执又有模型决策，只计算一次。
     measured, redundant = [], []
-    for step in decisions:
+    for step in decisions + list(direct_movements(inputs, keys, decisions)):
         if step["choice"] not in rules.get("movement", {}):
             continue
         start, end = step["from"], step["to"]

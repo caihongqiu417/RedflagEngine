@@ -4,6 +4,10 @@ Redflag 是一个用 C++17 编写的 Windows 游戏引擎。用 RedflagForge 可
 
 想先玩一局，可以从《潮汐维修站》开始。你操控蓝灰色机器人，瓦力是身边的赭色队友。按 T 问问它叫什么，按回车听它回答。也可以请它送药，或在你留守闸口期间去修好发电机。[游戏启动与操作](docs/Watt-Station.md)
 
+## 用自己的 AI 操作引擎
+
+在克隆的仓库根目录运行 `python scripts/redflag_mcp/launch.py --setup`。安装完成后，从同一目录打开 Claude Code，在首次提示时启用项目的 `redflag`。现在可以直接说「打开一个场景，实际走几步，给我看走了多远和游戏画面」。Agent 可以查项目、改资产、编译、试玩，再把结果和原始记录交给你。运行游戏需要本机已构建的 Forge。[其他客户端、工具和试玩说明](scripts/redflag_mcp/README.md)
+
 ## 打开编辑器
 
 第一次编译请看[Windows 构建说明](docs/Build-Windows.md)，里面列出了 Visual Studio 组件、Vulkan SDK、Mono 和生成工程的命令。

@@ -39,8 +39,9 @@ def gltf(path: Path):
 
 
 class AssetBundle:
-    def __init__(self, project: Path):
+    def __init__(self, project: Path, *, assets_only=False):
         self.root = project.resolve()
+        self.assets_only = assets_only
         self.files = {}
 
     def model_paths(self, scene):
@@ -57,6 +58,8 @@ class AssetBundle:
 
     def add(self, path: Path, owner: str, name: str | None = None):
         path = path.resolve()
+        if self.assets_only and not path.is_relative_to(self.root / "assets"):
+            raise ValueError(f"{owner} 引用了当前项目 assets 以外的文件。")
         name = name or path.relative_to(self.root).as_posix()
         if not path.is_file():
             raise FileNotFoundError(f"{owner} 引用了缺失文件 {path}")
@@ -173,10 +176,11 @@ class AssetBundle:
         for file in executable.parent.glob("*.dll"):
             self.add(file, "player", file.name)
         for library in (self.root / "Resources/Scripts").glob("*.dll"):
-            self.add(library, "player")
+            self.add(library, "player", library.relative_to(self.root).as_posix())
         for folder in ("mono/lib", "mono/etc", "assets/shaders"):
             for file in (self.root / folder).rglob("*"):
-                if file.is_file(): self.add(file, "player")
+                if file.is_file():
+                    self.add(file, "player", file.relative_to(self.root).as_posix())
 
     def companion(self):
         from package_ai_sdk import SCRIPTS

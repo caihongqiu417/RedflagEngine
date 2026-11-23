@@ -1,8 +1,9 @@
 """读取项目场景，编辑角色资产，并用本地 Redflag 构建检查结果。"""
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from threading import Lock
 import json
+import base64
 import os
 import shutil
 import subprocess
@@ -10,7 +11,7 @@ import sys
 
 from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
-from mcp.types import ToolAnnotations
+from mcp.types import CallToolResult, ImageContent, TextContent, ToolAnnotations
 from ruamel.yaml import YAML
 import npc_assets
 import animation_transitions
@@ -22,6 +23,9 @@ import playtest_metrics
 import playtest_workflow
 import job_timeline
 import asset_changes
+import render_settings
+import project_build
+import agent_guide
 import component_fields
 import creation_reviews
 from project import ENGINE, PROJECT
@@ -35,7 +39,7 @@ import context_review
 FORGE = PROJECT
 SCENES = FORGE / "assets/scenes"
 EDITOR = ROOT / "bin/Debug-windows-x86_64/RedflagForge/RedflagForge.exe"
-app = MCPServer("redflag")
+app = MCPServer("redflag", instructions=agent_guide.INSTRUCTIONS)
 READ_ONLY = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
 SCENE_EDIT = Lock()
 SHARED_FORMATS = {".gltf", ".glb", ".obj", ".fbx", ".bin", ".ply", ".mtl", ".png", ".jpg",
@@ -90,6 +94,39 @@ def read_playtest(session: str, offset: int = 0, limit: int = 30) -> dict[str, o
     """查看当前操作权、最新状态与一段逐帧记录。把返回的 offset 用于下次增量读取。"""
     folder = playtest.run_folder(FORGE,session)
     return {**playtest.current(folder), **playtest.frames(folder,offset,limit)}
+
+
+@app.tool(annotations=READ_ONLY)
+def inspect_playtest_profile(profile: str) -> dict[str, object]:
+    """读取这个游戏设置的角色、可用操作和评测条件。文件名见 get_capabilities.playtest.profiles。"""
+    try:
+        return playtest_metrics.load_profile(FORGE, profile)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool(annotations=READ_ONLY)
+def read_playtest_image(session: str, seq: int | None = None) -> CallToolResult:
+    """直接返回实机 JPEG 和采集时的起止帧号。可选指定帧，取该帧或之前开始采集的最近一张。"""
+    try:
+        folder = playtest.run_folder(FORGE, session)
+    except ValueError as error:
+        raise ToolError(str(error)) from error
+    record = None
+    for row in playtest_metrics.rows(folder / "media.jsonl"):
+        if row.get("image") and (seq is None or row["seq"] <= seq):
+            record = row
+    if record is None:
+        return CallToolResult(content=[TextContent(type="text", text="这一段还没有采集到游戏画面。")])
+
+    path = (folder / record["image"]).resolve()
+    if path.parent != folder / "images" or path.suffix.lower() != ".jpg":
+        raise ToolError("图片记录指向了本局图片目录以外的文件或未知格式。")
+    info = {key: record[key] for key in ("seq", "seq_end", "source", "client_size") if key in record}
+    return CallToolResult(content=[
+        TextContent(type="text", text=json.dumps(info, ensure_ascii=False)),
+        ImageContent(type="image", mime_type="image/jpeg", data=base64.b64encode(path.read_bytes()).decode("ascii")),
+    ])
 
 
 @app.tool()
@@ -202,6 +239,57 @@ def scene_dependencies(scene: str, search: str = "", offset: int = 0, limit: int
             "entities":[e for e in entities if not search or query in json.dumps(e,ensure_ascii=False).casefold()]}
 
 
+def add_local_player(bundle):
+    files = [EDITOR, EDITOR.with_name("mono-2.0-sgen.dll"), EDITOR.with_name("shaderc_sharedd.dll"),
+             FORGE / "Resources/Scripts/Redflag-ScriptCore.dll", FORGE / "Resources/Scripts/Sandbox.dll",
+             FORGE / "mono/lib/mono/4.5/mscorlib.dll", FORGE / "mono/etc/mono/4.5/machine.config"]
+    for file in files:
+        if not file.is_file():
+            raise ValueError(f"本机试玩包缺少 {file}。请准备 Debug x64 Forge、项目的程序集和 Mono 运行库。")
+    if not any((FORGE / "assets/shaders").glob("*.glsl")):
+        raise ValueError("项目缺少 assets/shaders 下的引擎着色器。")
+    # 场景的引用已经逐项限定在 assets 中。接下来只从固定构建位置添加播放器和运行库。
+    bundle.assets_only = False
+    bundle.runtime(EDITOR)
+    # 测试项目常把 Mono 和着色器目录链接到引擎副本。沿用原文件名，只接受同一位置的引擎文件。
+    for name, (source, _) in bundle.files.items():
+        if name.startswith(("mono/", "assets/shaders/")):
+            if source not in (FORGE / name, ROOT / "RedflagForge" / name):
+                raise ValueError(f"{name} 链接到了其他位置。")
+        elif name.startswith(("assets/", "Resources/Scripts/")):
+            if source != FORGE / name:
+                raise ValueError(f"{name} 不是当前项目中的文件。")
+        elif source.is_relative_to(FORGE):
+            raise ValueError(f"试玩包不能包含这个项目文件：{name}")
+
+
+@app.tool()
+def package_scene(scene: str, include_runtime: bool = False) -> dict[str, object]:
+    """把一个已保存的场景及引用的资产打成 ZIP。include_runtime 会附上本机 Debug x64 播放器和本项目的程序集。"""
+    path = scene_file(scene)
+    packages = FORGE / "output/packages"
+    if packages.resolve() != packages:
+        raise ToolError("项目的 output/packages 目录指向了其他位置。")
+    try:
+        bundle = AssetBundle(FORGE, assets_only=True)
+        entry = bundle.scene(path)
+        if include_runtime:
+            add_local_player(bundle)
+        packages.mkdir(parents=True, exist_ok=True)
+        folder = Path(mkdtemp(prefix=path.stem + "-", dir=packages))
+        archive = folder / (path.stem + ".zip")
+        try:
+            manifest = bundle.write(archive, entry)
+        except Exception:
+            folder.rmdir()
+            raise
+        return {"kind": "local_player_debug" if include_runtime else "scene_assets",
+                "id": folder.name, "archive": str(archive), "scene": entry,
+                "manifest": "asset-manifest.json", "files": len(manifest["files"]), "bytes": archive.stat().st_size}
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
 def sidecar(scene: Path, suffix: str) -> Path:
     path = scene.with_name(scene.name + suffix)
     if path.is_symlink() or path.resolve().parent != SCENES:
@@ -238,19 +326,63 @@ def get_capabilities() -> dict[str, object]:
     """查看本机可用的检查工具、可编辑的资产和数据来源。"""
     return {"source": "saved project files", "project": FORGE.as_posix(), "scene_directory": "assets/scenes",
             "editor": EDITOR.relative_to(ROOT).as_posix(), "editor_exists": EDITOR.is_file(),
-            "live_editor": False, "can_edit": True,
+            "live_editor": False, "can_edit": True, "workflows": agent_guide.topics(),
             "dev_context": ["lookup_dev_context", "begin_dev_task", "review_dev_task", "comment_dev_task"],
             "playtest":{"tools":["begin_playtest","read_playtest","control_playtest","explore_playtest","evaluate_playtest",
-                                "comment_playtest","revise_playtest","iterate_playtest","read_job_timeline"],
+                                "comment_playtest","revise_playtest","iterate_playtest","read_job_timeline",
+                                "inspect_playtest_profile","read_playtest_image"],
                         "profiles": sorted(p.relative_to(FORGE/"assets/playtests").as_posix() for p in (FORGE/"assets/playtests").rglob("*.json")),
                         "human_control":"Forge / F6","native_events":"Redflag.Playtest.Record"},
             "environment": {"source": "saved scene", "tools": ["inspect_environment", "set_zone_description"]},
+            "render_settings": {"source": "saved scene", "tools": ["get_render_settings", "set_scene_exposure"]},
+            "packaging": {"tools": ["package_scene"], "kinds": ["scene_assets", "local_player_debug"],
+                          "output": "output/packages"},
             "component_fields": {"components": list(component_fields.component_types()), "scope": "saved_scene",
                                  "tools": ["inspect_scene_fields", "propose_asset_change", "apply_asset_change"]},
             "editable_assets": ["environment zone descriptions", "UI layouts", "UI images and source records"] +
                               (["NPC profile", "NPC behavior links", "NPC animation states"] if npc_assets.TOOL.is_file() else []),
             "npc_tool": npc_assets.TOOL.relative_to(ROOT).as_posix(), "npc_tool_exists": npc_assets.TOOL.is_file(),
+            "build": {"tools": ["build_project", "run_project_check", "read_build"], "projects": list(project_build.PROJECTS),
+                      "checks": list(project_build.CHECKS), "configuration": "Debug x64"},
             "check_backend": "Vulkan", "check_frames": 2}
+
+
+@app.tool(annotations=READ_ONLY)
+def get_workflow(topic: str) -> dict[str, object]:
+    """按 get_capabilities.workflows 中的主题找操作顺序。传其返回的 skill 名可读项目笔记。"""
+    try:
+        return agent_guide.read(topic)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+# 编译
+
+@app.tool()
+def build_project(project: str, wait_seconds: float = 0) -> dict[str, object]:
+    """改完源码后用 Debug x64 编译一个工程。超过 wait_seconds 秒仍在编译时返回 running，再用 read_build 查看。"""
+    try:
+        return project_build.start(ROOT, project, project_build.PROJECTS, wait_seconds)
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool(annotations=READ_ONLY)
+def read_build(project: str, wait_seconds: float = 0, run_id: str = "") -> dict[str, object]:
+    """读取构建或检查的退出码和日志摘要。project 填工程或检查名；run_id 留空取最近一次。"""
+    try:
+        return project_build.read(ROOT, project, wait_seconds, run_id)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+
+
+@app.tool()
+def run_project_check(check: str, wait_seconds: float = 0) -> dict[str, object]:
+    """运行 get_capabilities.build.checks 中的一项。用返回的名称和编号向 read_build 取完整结果。"""
+    try:
+        return project_build.start(ROOT, check, project_build.CHECKS, wait_seconds)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 # Forge 创作审查
@@ -427,8 +559,8 @@ def set_montage_event_time(montage: str, event: str, field: str, original: float
 def set_animation_transition(animator: str, source: str, target: str, original: dict | None, value: dict | None) -> dict[str, object]:
     """按起止状态保存一条过渡。original、value 均为 {Seconds, Control}；新建时 original 传 null，删除时 value 传 null。"""
     path = animation_transitions.asset(animator)
-    animation_transitions.save(path, source, target, original, value)
-    return animation_transitions.inspect(path)
+    check = animation_transitions.apply(path, source, target, original, value)
+    return {**animation_transitions.read_settings(path), **check}
 
 
 @app.tool(annotations=READ_ONLY)
@@ -514,6 +646,16 @@ def get_render_settings(scene: str) -> dict[str, object]:
     if not path.is_file():
         return {"scene": scene, "file": None, "settings": {}}
     return {"scene": scene, "file": path.name, "settings": read_yaml(path)}
+
+
+@app.tool()
+def set_scene_exposure(scene: str, original: float, value: float) -> dict[str, object]:
+    """按 EV 调整一份已保存的场景配置。original 是上次读到的曝光，旧配置省略该项时填 0。"""
+    path = sidecar(scene_file(scene), ".render.yaml")
+    try:
+        return render_settings.apply_exposure(path, original, value)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
 
 
 def copy_asset(source, destination):

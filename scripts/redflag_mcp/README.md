@@ -4,15 +4,27 @@
 
 假设昨天保存的中庭有天空，今天看到的窗口却是一片黑。先让 agent 查清它能看到哪份场景。Redflag MCP 读取这个仓库里的场景文件，也能另开一个隐藏的 Vulkan 编辑器验证场景能否启动。你正在编辑器里拖动的灯、还没保存的相机和手上选中的物体，仍由那个窗口持有。
 
-在仓库根目录用 PowerShell 运行下面的命令，给服务准备独立的 Python 环境。这里需要 Python 3.11 或更新版本，项目的 Vulkan 启动检查还需要生成过 Debug x64 的 RedflagForge。
+## 第一次连接
+
+在克隆的仓库根目录运行下面的命令。需要 Python 3.11 或更新版本。安装程序在当前克隆里准备依赖，随后真正连一次服务、列出工具并读取场景。
 
 ```powershell
-python -m venv bin-int/redflag-mcp
-.\bin-int\redflag-mcp\Scripts\python.exe -m pip install -r scripts/redflag_mcp/requirements.txt
-codex mcp get redflag
+python scripts/redflag_mcp/launch.py --setup
 ```
 
-用 Codex 打开这个受信任的项目，项目配置会从该虚拟环境启动服务。开一个能加载新配置的会话，试着说：“用 `$redflag-scene` 查一下 Sponza 中庭的天空和曝光，再确认这个场景能否打开。”其他支持 stdio 的 MCP 客户端也能使用：可执行文件选这个虚拟环境的 `python.exe`，参数填本仓库 `scripts/redflag_mcp/server.py` 的完整路径。[项目连接配置](../../.codex/config.toml) · [Codex 的 MCP 接入说明](https://developers.openai.com/codex/mcp/)
+**Claude Code** 从仓库根目录运行 `claude`。首次提示时允许项目的 `redflag`，在 `/mcp` 中查看连接。终端里的 `claude mcp get redflag` 可以区分“已经找到项目配置，等待同意”和“已经连接”。开启后，让它实际调用 `get_capabilities`，核对返回的游戏目录。[Claude Code 项目配置](../../.mcp.json) · [Claude Code 官方说明](https://code.claude.com/docs/en/mcp)
+
+**Cursor、VS Code 和 Codex** 用仓库根目录打开项目，启用项目自带的 Redflag MCP。**Claude Desktop 或其他支持本地 stdio MCP 的客户端**可以运行 `python scripts/redflag_mcp/connect.py`，把打印出的配置交给客户端。它使用当前克隆的完整路径，也适合从其他目录启动。为 Claude Desktop 自动合并配置可用 `python scripts/redflag_mcp/connect.py --install claude-desktop`，然后重启应用。若要编辑另一款游戏，生成配置时加 `--project "含有 assets 的游戏目录"`。[Cursor 配置](../../.cursor/mcp.json) · [VS Code 配置](../../.vscode/mcp.json) · [Codex 配置](../../.codex/config.toml) · [本地 MCP 客户端](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
+
+## 把一项任务交给 Agent
+
+例如告诉它「检查维修员走到阀门后能否打开它，把动作和结果给我」。连接时服务会告诉 Agent 从哪里开始。它先用 `get_capabilities` 找当前游戏提供的试玩配置，再用 `get_workflow("playtest")` 和 `inspect_playtest_profile` 读按键、角色和预期事件。这样换到另一款游戏，也会使用那款游戏的角色和操作。
+
+Agent 用 `begin_playtest` 开局，从 `read_playtest` 读角色位置，再用 `control_playtest` 操作。它可以用自己的模型查看 `read_playtest_image` 返回的游戏图片，决定下一步。画面附采集时的起止帧号，可以和按键回执、角色移动以及阀门打开事件对照。遇到问题，Agent 可以提出资产修改，再从同一场景开局比较。人接管操作后，Agent 应等人交还。若希望由引擎调用本机的模型连续试玩，则使用 `explore_playtest` 或 `iterate_playtest`，这两个入口还需要启动项目的模型服务。[试玩与回放](../../docs/Playtest-Harness.md)
+
+源码、场景、角色与动画、UI 图片、试玩、修改审查和打包都有对应的 `get_workflow` 主题。每次只取当前需要的一项。工具参数由客户端直接从服务读取，主题里列出的项目 skill 也可以按名字取全文。改 C++ 或 C# 时使用客户端已有的源码编辑能力，再用 `build_project` 编译。拿返回的 `run_id` 调用 `read_build` 读退出码和日志。同一克隆里的其他客户端也能按这个编号继续查看。`run_project_check` 可以构建 NPC 或资产索引工具，或执行服务列出的固定检查。[构建依赖和首次生成工程](../../docs/Build-Windows.md)
+
+如果客户端没列出 `redflag`，先检查它有没有读取项目配置。已经列出却连不上时，在本机运行 `python scripts/redflag_mcp/check_connection.py` 检查虚拟环境和连接。能够列出工具、读取场景，但无法开局时，再查看 `editor_exists` 和构建日志。远程聊天窗口需要客户端提供连接这台开发机的能力。本服务通过启动它的本机进程通信。
 
 | 工具 | 什么时候用 | 能看见什么 |
 | --- | --- | --- |
@@ -23,6 +35,7 @@ codex mcp get redflag
 | `inspect_environment(scene)` | 想知道维修棚用哪盏灯、采石坡引用哪张图 | 保存的地形与区域、位置、地貌与植被说明、关联灯的编号及配置 |
 | `set_zone_description(scene, entity, field, previous, text)` | 只把棚边植被改成旱草 | 按实体编号改一段文字。作者在此期间改过相同字段时，先读回新值 |
 | `get_render_settings(scene)` | 不确定同一场景是否打开镜面 IBL、用了哪条显示曲线 | 场景旁保存的渲染设置；没有写入的选项沿用引擎默认值 |
+| `set_scene_exposure(scene, original, value)` | 把当前场景的曝光从 −0.35 EV 调到 0 EV | 与 Forge 共用单字段保存。原值变化时提示冲突，实际写入后返回回读记录 |
 | `check_scene(scene)` | 改完后想知道这份场景能否被真正的引擎打开 | 独立 Vulkan 进程的两帧启动检查、退出状态与日志摘录 |
 
 比如场景配置里 `SkyVisible` 为真，启动也成功了，仍有人报告天空看不见。下一步可以用 `$redflag-frame-check` 在报告问题的机位截帧。材质图能告诉你视线是否被屋顶挡住；显示前的光照图则能帮你分辨，天空本来就是暗的，还是最后的显示设置让它变暗。随仓库的两份 skill 分别覆盖读配置和看实际画面。[场景检查 skill](../../.agents/skills/redflag-scene/SKILL.md) · [画面检查 skill](../../.agents/skills/redflag-frame-check/SKILL.md) · [中庭的实机对照](../../output/validation/atrium-sky/README.md)
@@ -30,6 +43,8 @@ codex mcp get redflag
 场景查询和启动检查都从硬盘读取。编辑器当前的选区、没有保存的场景和编辑历史由打开的窗口管理。[Redflag AI Native 设计](../../output/pdf/Redflag-AI-Native-Design.pdf)
 
 从仓库根目录运行 `bin-int\redflag-mcp\Scripts\python.exe tests/check_redflag_mcp.py` 可以复查整条连接。开发机上的一次实测从启动服务、列出工具进入场景检查，独立打开 Sponza 的两帧检查耗时约 19 秒。控制台返回了打开的场景路径和实际视口尺寸。这个时间包含准备工作目录和启动编辑器，游戏帧率需要单独测量。
+
+打包时，先用 `scene_dependencies` 看已保存场景实际引用了哪些素材，再调用 `package_scene`。默认返回场景资产 ZIP 的路径和包内清单；`include_runtime=True` 会带上本机 Debug x64 的 Forge、Mono、着色器和该游戏的 C# 程序集。这个包适合在具备对应运行环境的电脑上试玩。[打包与解包启动的验证](../../tests/check_client_connection.py)
 
 ## 角色、音色和行为树
 

@@ -75,7 +75,41 @@ def contract(project):
     assert {e["kind"] for e in report["findings"]}=={"late_transition","missing_channel"}
 
 
+def direct_input(project):
+    folder = project / "direct"
+    folder.mkdir()
+    profile = {"actor": "2", "actions": {"walk": {"key": "W"}},
+               "checks": {"movement": {"walk": .15}}}
+
+    def frame(seq, x, op="", id=0, owner="agent", generation=1):
+        sample = [{"op": op, "owner": owner, "key": "W", "id": id}] if op else []
+        append_event(folder / "frames.jsonl", dict(seq=seq, seconds=seq*.1, frame_ms=10, generation=generation,
+                     actors=[{"id":"2","position":[x,0,0]}], inputs=sample, events=[]))
+
+    frame(1, 0.)
+    frame(2, .1, "hold", 1)
+    frame(3, .5)
+    frame(4, .5, "release", 2)
+    assert assess(folder, profile)["measured_moves_m"] == [.5]
+
+    # 有规划器记录时不能把相同的按下命令再算一次。玩家接管后的移动也不能算给 Agent。
+    append_event(folder/"decisions.jsonl", {"choice":"walk", "input":1, "from":1, "to":4})
+    frame(5, .5, "hold", 3)
+    frame(6, 1.5, "release", owner="human", generation=2)
+    frame(7, 1.5, "release", 4, generation=3)
+    frame(8, 1.5, "tap", 5, generation=3)
+    report = assess(folder, profile)
+    assert report["measured_moves_m"] == [.5, 0.]
+    assert [f["kind"] for f in report["findings"]] == ["no_progress"]
+
+    # 两种动作使用同一个键时，原始按键无法确定动作名。
+    profile["actions"]["confirm"] = {"key":"W"}
+    (folder/"decisions.jsonl").unlink()
+    assert [f["kind"] for f in assess(folder, profile)["findings"]] == ["movement_not_observed"]
+
+
 if __name__=="__main__":
     with TemporaryDirectory() as work:
         contract(Path(work))
+        direct_input(Path(work))
     print("PASS cross-asset conflict, rollback, undo, concurrent input, human ownership, partial frame and timeline checks")
