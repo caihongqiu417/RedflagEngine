@@ -36,7 +36,7 @@ namespace Sandbox
             Vector3 start = pose.Translation;
             bool wasAirborne = Airborne;
             Vector3 delta = velocity * seconds;
-            traversal = GameWorld.Traverse(actor.Id,ref delta,.34f,seconds,request);
+            traversal = GameWorld.TraverseWithCollider(actor.Id, ref delta, seconds, request);
             Airborne = traversal == TraversalMode.Jump || traversal == TraversalMode.Climb;
             Vector3 moved = pose.Translation - start;
             verticalSpeed = seconds > 0 ? moved.Y / seconds : 0;
@@ -62,7 +62,7 @@ namespace Sandbox
             velocity = Vector3.Zero;
             Crouched = Walking = Running = landing = Recovering = false;
             Vector3 delta = Vector3.Zero;
-            traversal = GameWorld.Traverse(id, ref delta, .34f, seconds, TraversalInput.Walk);
+            traversal = GameWorld.TraverseWithCollider(id, ref delta, seconds, TraversalInput.Walk);
             Airborne = traversal == TraversalMode.Jump || traversal == TraversalMode.Climb;
         }
 

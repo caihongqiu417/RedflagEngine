@@ -26,6 +26,10 @@ namespace Redflag
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern TraversalMode Traverse(ulong actor, ref Vector3 delta, float radius, float seconds, TraversalInput input);
 
+        /// <summary>按角色碰撞体的实际半径检查墙面和平台边缘。在 Forge 调宽胶囊后，角色移动时也会给身体留出更大的空间。</summary>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern TraversalMode TraverseWithCollider(ulong actor, ref Vector3 delta, float seconds, TraversalInput input);
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void CancelTraversal(ulong actor);
 
