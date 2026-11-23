@@ -7,9 +7,39 @@
 
 using namespace Redflag;
 
+static bool OfflineVoice(const std::filesystem::path& folder)
+{
+    // 端口 1 没有语音服务。播放后比较设备收到的全部 WAV 字节，保留队友编号和停止时刻。
+    SpeechPlayback voice(1);
+    const YAML::Node npc=YAML::LoadFile("assets/ai/watt.npc.yaml");
+    voice.Speak("医疗包给你了。",npc["Voice"].as<std::string>(),ObserveGameSpeech(1102));
+    const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+    while (voice.FirstAudioMs()<0 && voice.Error().empty() && std::chrono::steady_clock::now()<end) {
+        voice.Update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    if (voice.FirstAudioMs()<0) { std::cerr<<voice.Error(); return false; }
+    voice.Stop();
+    std::ifstream events(folder/"media.jsonl");
+    std::vector<std::string> stages;
+    for (std::string line;std::getline(events,line);) {
+        const YAML::Node row=YAML::Load(line);
+        if (row["entity"].as<std::string>()!="1102") return false;
+        stages.push_back(row["event"].as<std::string>());
+        if (stages.back()=="submitted") {
+            std::ifstream sent(folder/row["file"].as<std::string>(),std::ios::binary);
+            std::ifstream original("assets/audio/watt/share.wav",std::ios::binary);
+            const std::string wav(std::istreambuf_iterator<char>(sent),{});
+            if (wav.empty() || wav!=std::string(std::istreambuf_iterator<char>(original),{})) return false;
+            std::cout<<"offline WAV matched asset, "<<(wav.size()-44)/2<<" samples\n";
+        }
+    }
+    return stages==std::vector<std::string>{"requested","submitted","first_voice","stopped"};
+}
+
 int main(int argc, char** argv)
 {
-    if (argc != 3) return 2;
+    if (argc!=3 && !(argc==4 && std::string(argv[3])=="--watt")) return 2;
     Log::Init();
     _wputenv_s(L"REDFLAG_PLAYTEST",L"");
     if (PlaytestSession::Open("sound-test") || ObserveGameSpeech(41)) return 1;
@@ -17,6 +47,7 @@ int main(int argc, char** argv)
     const std::filesystem::path folder = std::filesystem::u8path(argv[2]);
     _wputenv_s(L"REDFLAG_PLAYTEST",folder.c_str());
     std::unique_ptr<PlaytestSession> session = PlaytestSession::Open("sound-test");
+    if (argc==4) return OfflineVoice(folder) ? 0 : 1;
     SpeechPlayback voice;
     auto tick = [&](){
         session->BeginFrame(1.0/60);

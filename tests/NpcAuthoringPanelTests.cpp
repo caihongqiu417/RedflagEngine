@@ -4,6 +4,7 @@
 #include "Redflag/Animation/ModelAnimation.h"
 #include "imgui_internal.h"
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <thread>
 
@@ -26,8 +27,9 @@ int main(int argc, char** argv)
         const bool poseCapture = argc == 3 && std::string(argv[1]) == "--pose-image";
         const bool eventCapture = argc == 3 && std::string(argv[1]) == "--events-image";
         const bool candidateCapture = argc == 3 && std::string(argv[1]) == "--candidate-image";
-        if (argc > 2 && !poseCapture && !eventCapture && !candidateCapture)
-            throw std::runtime_error("Use [profile.png] or --events-image/--pose-image/--candidate-image output.png");
+        const bool voiceCapture = argc == 3 && std::string(argv[1]) == "--voice-image";
+        if (argc > 2 && !poseCapture && !eventCapture && !candidateCapture && !voiceCapture)
+            throw std::runtime_error("Use [profile.png] or --events-image/--pose-image/--candidate-image/--voice-image output.png");
         const fs::path data = "RedflagForge/assets/ai";
         const fs::path dir = fs::absolute("tmp/npc-authoring-panel");
         fs::create_directories(dir);
@@ -57,16 +59,24 @@ int main(int argc, char** argv)
             NpcIntent rescue{"revive", "扶起倒地的队友", "teammate"};
             NpcTeammateCheck current{{}, "目标尚未倒地，这项交互只在倒地时可用。"};
             std::string displayed;
+            const fs::path voiceLog = dir/"audition-ui.txt";
+            if (voiceCapture) fs::remove(voiceLog);
             auto frame = [&]() {
                 ImGui::NewFrame();
                 ImGui::SetNextWindowPos({0, 0});
                 ImGui::SetNextWindowSize(io.DisplaySize);
+                if (voiceCapture) ImGui::LogToFile(0,voiceLog.string().c_str());
                 bool changed = panel.Draw(role, nullptr, {}, {}, model.get(), [&] {
                     ImGui::LogToBuffer();
                     NpcAuthoringPanel::DrawTeammateCheck(rescue, current);
                     displayed = GImGui->LogBuffer.c_str();
                     ImGui::LogFinish();
                 });
+                if (voiceCapture) {
+                    ImGui::LogFinish();
+                    std::ifstream input(voiceLog);
+                    displayed.assign(std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>());
+                }
                 ImGui::Render();
                 return changed;
             };
@@ -77,6 +87,25 @@ int main(int argc, char** argv)
             ImGuiWindow* window = ImGui::FindWindowByName("角色创作");
             Check(window, "Missing authoring panel");
             ImGuiTabBar* bar = GImGui->TabBars.GetByKey(window->GetID("创作"));
+            if (voiceCapture) {
+                const ImGuiID testTab = ImHashStr("试答与试听",0,window->GetID("创作"));
+                ImGui::TabBarQueueFocus(bar,ImGui::TabBarFindTabByID(bar,testTab));
+                frame(); frame();
+                ImGui::ActivateItem(ImHashStr("试听",0,testTab));
+                frame();
+                for (int i=0;i<350 && displayed.find("正在试听。")==std::string::npos;++i) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    frame();
+                }
+                Check(displayed.find("正在试听。")!=std::string::npos,"The Forge audition did not start playback: "+displayed);
+                SavePanelCapture(argv[2]);
+                ImGui::ActivateItem(window->GetID("停止试听"));
+                frame(); frame();
+                Check(displayed.find("已停止试听。")!=std::string::npos,"The Forge audition did not stop");
+                std::cout<<"PASS: Forge auditioned the stock voice-bank line and stopped playback\n";
+                ImGui::DestroyContext();
+                return 0;
+            }
             auto checkCandidates = [&] {
                 Check(displayed.empty(), "Scene checks should run only while the candidate tab is visible");
                 const ImGuiID candidates = ImHashStr("候选", 0, window->GetID("创作"));

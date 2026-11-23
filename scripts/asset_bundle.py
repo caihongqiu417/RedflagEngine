@@ -93,6 +93,13 @@ class AssetBundle:
             for key in ("Tree", "Animator"):
                 if npc.get(key):
                     self.add(path.parent / npc[key], name)
+            if str(npc.get("Voice","")).endswith(".voice.json"):
+                self.add(self.root / npc["Voice"], name)
+        elif path.name.endswith(".voice.json"):
+            for wav in json.loads(path.read_bytes())["Lines"].values():
+                self.add(path.parent / wav, name)
+            if (path.parent / "README.md").is_file():
+                self.add(path.parent / "README.md", name)
         elif path.suffix.lower() in (".yaml", ".yml") and name.startswith("assets/ui/") and not name.endswith(".rfsource.yaml"):
             # 图集、图标和字体沿布局文件所在目录读取。
             for _, value in values(YAML(typ="safe").load(path.read_bytes())):

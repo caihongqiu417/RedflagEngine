@@ -3,6 +3,8 @@
 #include "LocalService.h"
 #include <mmsystem.h>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #pragma comment(lib, "winmm.lib")
 
 namespace Redflag
@@ -92,11 +94,25 @@ namespace Redflag
 		m_FirstAudioMs = -1;
 		m_Error.clear();
 		m_Jobs.push_back({ m_Line, std::async(std::launch::async, [port = m_Port, text, voice] {
+			const std::filesystem::path bank = std::filesystem::u8path(voice);
+			const bool usesBank = bank.extension() == ".json" && bank.stem().extension() == ".voice";
+			if (usesBank) {
+				// 随游戏发布的台词直接从音色文件读取，即使合成服务关闭也可以播放。
+				std::ifstream index(bank);
+				if (!index) throw std::runtime_error("找不到角色的音色文件。");
+				const YAML::Node line = YAML::Load(index)["Lines"][text];
+				if (line) {
+					std::ifstream wav(bank.parent_path()/std::filesystem::u8path(line.as<std::string>()),std::ios::binary);
+					if (!wav) throw std::runtime_error("找不到这句台词的 WAV。");
+					return std::string(std::istreambuf_iterator<char>(wav),std::istreambuf_iterator<char>());
+				}
+			}
 			YAML::Emitter out;
 			out.SetStringFormat(YAML::DoubleQuoted);
 			out << YAML::Flow << YAML::BeginMap << YAML::Key << "text" << YAML::Value << text
 				<< YAML::Key << "voice" << YAML::Value << voice << YAML::EndMap;
-			return LocalService(port, 17000).Download(L"/v1/speech/synthesize", out.c_str());
+			// 自由文本首次合成需要把模型载入显存。已录好的台词走上面的文件路径。
+			return LocalService(port, usesBank ? 90000 : 17000).Download(L"/v1/speech/synthesize", out.c_str());
 		}) });
 	}
 

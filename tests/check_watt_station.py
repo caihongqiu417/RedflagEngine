@@ -128,7 +128,7 @@ def main():
     shutil.copy2(str(source)+".render.yaml",str(sample)+".render.yaml")
     if args.animation_actors:
         Path(str(sample)+".render.yaml").write_text("Shading: Lit\nSamples: 1\nIndirect: Off\nTAA: false\n",encoding="utf8")
-    if args.melee or args.interaction or args.sentinel or args.watt_terrain:
+    if args.melee or args.interaction or args.sentinel or args.watt_terrain or args.recorded_speech:
         Path(str(sample)+".render.yaml").write_text("Shading: Base color\n",encoding="utf8")
     output = ROOT/"output/validation/watt-station"
     output.mkdir(parents=True,exist_ok=True)
@@ -137,7 +137,11 @@ def main():
     desktop = win32service.CreateDesktop(name,0,win32con.GENERIC_ALL,None)
     info = win32process.STARTUPINFO()
     info.lpDesktop = "WinSta0\\" + name
-    command = subprocess.list2cmdline([str(exe),"--play",str(sample)])
+    launch = [str(exe),"--play",str(sample)]
+    if args.recorded_speech:
+        # 语音测试仍走正式交付和播报；小画幅让测试机同时运行编辑器时也能跟上动作。
+        launch += ["--render-size","1280x720"]
+    command = subprocess.list2cmdline(launch)
     game_env = dict(os.environ,RF_VULKAN_VALIDATION="1")
     if args.recorded_speech: game_env["REDFLAG_PLAYTEST"] = str(work/"session")
     if args.melee or args.interaction or args.sentinel or args.watt_terrain or args.npc_motion:

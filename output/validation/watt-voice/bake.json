@@ -1,0 +1,73 @@
+{
+  "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+  "profile": "ergou",
+  "speaker": "Dylan",
+  "rate_hz": 16000,
+  "lines": [
+    {
+      "text": "我在这里等你。",
+      "file": "preview.wav",
+      "speaker": "Dylan",
+      "samples": 40960,
+      "sha256": "b6fb1e58401610322864e5250aba5b7639c59b009c6b48629fe17f8b33d7ca47",
+      "seconds": 34.414
+    },
+    {
+      "text": "我的维修面板已恢复。",
+      "file": "heal.wav",
+      "speaker": "Dylan",
+      "samples": 33280,
+      "sha256": "2c595c659df8b1da9ca2e3b80aeeb386fdaae1682c67860ae7d89abb5a568102",
+      "seconds": 0.799
+    },
+    {
+      "text": "拿到医疗包了。",
+      "file": "gather.wav",
+      "speaker": "Dylan",
+      "samples": 43520,
+      "sha256": "df2dad788efd01e8ee2d734682195bde405173fda9841c3f496d5b6afe27dcf2",
+      "seconds": 1.008
+    },
+    {
+      "text": "留给你的医疗包，收好。",
+      "file": "reserve.wav",
+      "speaker": "Dylan",
+      "samples": 37120,
+      "sha256": "0d37cc6953a54c001893a76e057a45e7889caaa4af8265820a7c1d6515af8880",
+      "seconds": 0.903
+    },
+    {
+      "text": "医疗包给你了。",
+      "file": "share.wav",
+      "speaker": "Dylan",
+      "samples": 25600,
+      "sha256": "00d37f8f7a78467254ed16cae25ba8609c0e124af5af58f3053db427762323bf",
+      "seconds": 0.661
+    },
+    {
+      "text": "好了，能站起来了。",
+      "file": "revive.wav",
+      "speaker": "Dylan",
+      "samples": 33280,
+      "sha256": "ab08a239cdf1e481cf62665a5529a1f93b4bf1ac2e880140a9ba5af4513af5c5",
+      "seconds": 0.806
+    },
+    {
+      "text": "修好了。",
+      "file": "repair.wav",
+      "speaker": "Dylan",
+      "samples": 24320,
+      "sha256": "09b35565244ca6f7b6280b31b245c85928991458be9e3603badc47cdfe57039f",
+      "seconds": 0.655
+    },
+    {
+      "text": "故障巡检机正在放电。",
+      "file": "warn.wav",
+      "speaker": "Dylan",
+      "samples": 38400,
+      "sha256": "9a768ddb42c654690a7f10cd0a9adb814dfb3305feaf12ffa9c486aa8ad9bec6",
+      "seconds": 0.941
+    }
+  ]
+}

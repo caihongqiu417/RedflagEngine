@@ -8,6 +8,7 @@ param(
     [string]$VisionProjector,
     [string]$SpeechRuntime = $env:REDFLAG_SPEECH_RUNTIME,
     [string]$SpeechPython = $env:REDFLAG_SPEECH_PYTHON,
+    [string]$QwenSpeechProject = $env:REDFLAG_QWEN_TTS_PROJECT,
     [int]$DecisionPort = 8716,
     [int]$SpeechPort = 8717,
     [int]$LlamaPort = 18157,
@@ -74,13 +75,19 @@ function Start-Decision {
 
 function Start-Speech {
     $health = "http://127.0.0.1:$SpeechPort/v1/speech/voices"
-    if (Read-Health $health) { Write-Host "speech ready ($health)"; return }
+    $status = Read-Health $health
+    if ($status) {
+        if ($QwenSpeechProject -and !$status.qwen_free_text_configured) { throw "The active speech service has no Qwen free-text voice. Restart that service with -QwenSpeechProject." }
+        Write-Host "speech ready ($health)"
+        return
+    }
     if (!$SpeechRuntime) {
         $SpeechRuntime = if (Test-Path "$portable/speech/DeliverySpeechRuntime.dll") { "$portable/speech" }
                          else { Join-Path ([IO.Path]::GetPathRoot($project)) 'Udev/Delivery/Saved/DeliverySpeech/runtime' }
     }
     if (!(Test-Path -LiteralPath $SpeechPython)) { throw 'Set -SpeechPython or install scripts/requirements-speech.txt in tmp/ai-media-venv.' }
     $speechArgs = @((Join-Path $PSScriptRoot 'speech_service.py'),'--runtime',$SpeechRuntime,'--port',"$SpeechPort")
+    if ($QwenSpeechProject) { $speechArgs += @('--qwen-project',$QwenSpeechProject) }
     Start-LocalProcess 'speech' $SpeechPython $speechArgs $health
 }
 

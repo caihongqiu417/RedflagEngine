@@ -7,6 +7,8 @@ from urllib.request import Request, urlopen
 from ruamel.yaml import YAML
 import npc_assets
 import npc_table
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from voice_bank import PROJECT, load_bank, recording
 
 
 def execute(request):
@@ -28,9 +30,15 @@ def execute(request):
         with urlopen("http://127.0.0.1:8717/v1/speech/voices", timeout=6) as response:
             return json.load(response)
     elif cmd == "speak":
+        root = next((directory.parent for directory in profile.parents if directory.name=="assets"),PROJECT)
+        bank = load_bank(request["voice"],root)
+        fixed = recording(bank,request["text"]) if bank else None
+        if fixed:
+            Path(request["audio"]).write_bytes(fixed.read_bytes())
+            return {"profile":str(profile)}
         data = json.dumps({"text": request["text"], "voice": request["voice"]}).encode()
         query = Request("http://127.0.0.1:8717/v1/speech/synthesize", data, {"Content-Type": "application/json"})
-        with urlopen(query, timeout=20) as response:
+        with urlopen(query, timeout=90 if bank else 20) as response:
             wave = response.read()
         if wave[:4] != b"RIFF" or wave[8:12] != b"WAVE":
             raise ValueError("语音服务未返回 WAV 音频。")

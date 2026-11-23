@@ -43,7 +43,13 @@ static void RewireInEditor(BehaviorTree& tree, const fs::path& file)
     // 在面板实际绘制的位置按住 gather 的右端，再松到“修理设施”的输入端。
     float font = ctx->FontSize, row = font + ctx->Style.ItemSpacing.y, header = 2 * row + 6;
     glm::vec2 origin{canvas->Pos.x, canvas->Pos.y};
-    glm::vec2 source = origin + tree.Find(1)->Position + glm::vec2(font * 9, header + row * .5f);
+    int gatherRow = 0;
+    for (const BehaviorEdge& edge : tree.GetEdges()) {
+        if (edge.From != 1) continue;
+        if (edge.Key == "gather") break;
+        ++gatherRow;
+    }
+    glm::vec2 source = origin + tree.Find(1)->Position + glm::vec2(font * 9, header + row * (gatherRow+.5f));
     glm::vec2 target = origin + tree.Find(9)->Position + glm::vec2(0, header * .5f);
     io.AddMousePosEvent(source.x, source.y);
     DrawPanel(panel, tree, file);

@@ -1,0 +1,217 @@
+{
+  "archive": "Redflag-Watt-Contact-03.zip",
+  "archive_sha256": "0c280c5e1312980f14b63e6bfa7a685b4dc6400491232bd91b7c9b7f4bb8b868",
+  "wavs_checked": 8,
+  "actions": {
+    "give": {
+      "file": "share.wav",
+      "sha256": "00d37f8f7a78467254ed16cae25ba8609c0e124af5af58f3053db427762323bf",
+      "events": [
+        {
+          "kind": "audio",
+          "event": "submitted",
+          "id": "62-1102-6",
+          "entity": "1102",
+          "seq": 63,
+          "seconds": 24.6568104029,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-62-1102-6.wav",
+          "device_samples": 0
+        },
+        {
+          "kind": "audio",
+          "event": "first_voice",
+          "id": "62-1102-6",
+          "entity": "1102",
+          "seq": 64,
+          "seconds": 26.3439766169,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-62-1102-6.wav",
+          "device_samples": 24436
+        },
+        {
+          "kind": "audio",
+          "event": "finished",
+          "id": "62-1102-6",
+          "entity": "1102",
+          "seq": 65,
+          "seconds": 27.8864933252,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-62-1102-6.wav",
+          "device_samples": 25600
+        }
+      ]
+    },
+    "pickup": {
+      "file": "gather.wav",
+      "sha256": "df2dad788efd01e8ee2d734682195bde405173fda9841c3f496d5b6afe27dcf2",
+      "events": [
+        {
+          "kind": "audio",
+          "event": "submitted",
+          "id": "79-1102-6",
+          "entity": "1102",
+          "seq": 80,
+          "seconds": 11.8969875574,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-79-1102-6.wav",
+          "device_samples": 0
+        },
+        {
+          "kind": "audio",
+          "event": "first_voice",
+          "id": "79-1102-6",
+          "entity": "1102",
+          "seq": 90,
+          "seconds": 12.908613801,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-79-1102-6.wav",
+          "device_samples": 13547
+        },
+        {
+          "kind": "audio",
+          "event": "finished",
+          "id": "79-1102-6",
+          "entity": "1102",
+          "seq": 115,
+          "seconds": 14.8471704721,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-79-1102-6.wav",
+          "device_samples": 43520
+        }
+      ]
+    },
+    "heal": {
+      "file": "heal.wav",
+      "sha256": "2c595c659df8b1da9ca2e3b80aeeb386fdaae1682c67860ae7d89abb5a568102",
+      "events": [
+        {
+          "kind": "audio",
+          "event": "submitted",
+          "id": "31-1102-6",
+          "entity": "1102",
+          "seq": 32,
+          "seconds": 10.6999408007,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-31-1102-6.wav",
+          "device_samples": 0
+        },
+        {
+          "kind": "audio",
+          "event": "first_voice",
+          "id": "31-1102-6",
+          "entity": "1102",
+          "seq": 37,
+          "seconds": 12.7405139208,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-31-1102-6.wav",
+          "device_samples": 4516
+        },
+        {
+          "kind": "audio",
+          "event": "finished",
+          "id": "31-1102-6",
+          "entity": "1102",
+          "seq": 76,
+          "seconds": 14.5770922899,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-31-1102-6.wav",
+          "device_samples": 33280
+        }
+      ]
+    },
+    "repair": {
+      "file": "repair.wav",
+      "sha256": "09b35565244ca6f7b6280b31b245c85928991458be9e3603badc47cdfe57039f",
+      "events": [
+        {
+          "kind": "audio",
+          "event": "submitted",
+          "id": "88-1102-6",
+          "entity": "1102",
+          "seq": 89,
+          "seconds": 9.65729343891,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-88-1102-6.wav",
+          "device_samples": 0
+        },
+        {
+          "kind": "audio",
+          "event": "first_voice",
+          "id": "88-1102-6",
+          "entity": "1102",
+          "seq": 96,
+          "seconds": 10.1536666155,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-88-1102-6.wav",
+          "device_samples": 6896
+        },
+        {
+          "kind": "audio",
+          "event": "finished",
+          "id": "88-1102-6",
+          "entity": "1102",
+          "seq": 113,
+          "seconds": 11.2869597673,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-88-1102-6.wav",
+          "device_samples": 24320
+        }
+      ]
+    },
+    "revive": {
+      "file": "revive.wav",
+      "sha256": "ab08a239cdf1e481cf62665a5529a1f93b4bf1ac2e880140a9ba5af4513af5c5",
+      "events": [
+        {
+          "kind": "audio",
+          "event": "submitted",
+          "id": "82-1102-2",
+          "entity": "1102",
+          "seq": 83,
+          "seconds": 7.83391809464,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-82-1102-2.wav",
+          "device_samples": 0
+        },
+        {
+          "kind": "audio",
+          "event": "first_voice",
+          "id": "82-1102-2",
+          "entity": "1102",
+          "seq": 88,
+          "seconds": 8.20080518723,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-82-1102-2.wav",
+          "device_samples": 4926
+        },
+        {
+          "kind": "audio",
+          "event": "finished",
+          "id": "82-1102-2",
+          "entity": "1102",
+          "seq": 116,
+          "seconds": 10.0175318718,
+          "generation": 1,
+          "rate_hz": 16000,
+          "file": "speech-82-1102-2.wav",
+          "device_samples": 33280
+        }
+      ]
+    }
+  }
+}

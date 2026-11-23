@@ -12,7 +12,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ("Start-NpcServices.ps1","decision_service.py","speech_runtime.py","speech_service.py",
-           "speech_synthesize.ps1","speech_room.html","speech_client.py","requirements-speech.txt")
+           "speech_synthesize.ps1","speech_room.html","speech_client.py","requirements-speech.txt","qwen_speech.py","voice_bank.py")
 
 
 def copy(source, target):

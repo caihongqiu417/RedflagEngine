@@ -9,6 +9,8 @@ from time import monotonic
 import wave
 from pathlib import Path
 import subprocess
+import os
+import threading
 from uuid import uuid4
 from collections import deque
 
@@ -17,10 +19,42 @@ from aiortc import AudioStreamTrack, RTCConfiguration, RTCPeerConnection, RTCSes
 from aiortc.mediastreams import MediaStreamError
 from av import AudioFrame, AudioResampler
 from speech_runtime import PlayerSpeech, Recognizer, read_wav
+from voice_bank import PROJECT, load_bank, recording, read_pcm
 
 
 # ---- 回复音轨与打断 ----
-async def synthesize(text, voice=""):
+class BankSpeech:
+    def __init__(self, project):
+        self.project = project
+        self.provider = None
+
+    async def generate(self, bank, text):
+        path = recording(bank,text)
+        if path:
+            return read_pcm(path)
+        if not self.project:
+            raise RuntimeError("qwen_voice_runtime_not_configured")
+        if len(text)>120:
+            raise ValueError("qwen_voice_limit_120_characters")
+        if not self.provider:
+            from qwen_speech import QwenVoice
+            self.provider = QwenVoice(self.project)
+        cancel = threading.Event()
+        try:
+            return await asyncio.to_thread(self.provider.speak,bank[1],text,cancel)
+        except asyncio.CancelledError:
+            cancel.set()
+            raise
+
+    def close(self):
+        if self.provider:
+            self.provider.close()
+
+
+async def synthesize(text, voice, banks):
+    bank = load_bank(voice)
+    if bank:
+        return await banks.generate(bank,text)
     cmd = Path(__file__).with_name("speech_synthesize.ps1")
     proc = await asyncio.create_subprocess_exec("powershell.exe","-NoLogo","-NoProfile","-NonInteractive",
             "-ExecutionPolicy","Bypass","-File",str(cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -37,9 +71,10 @@ async def synthesize(text, voice=""):
 
 
 class VoiceTrack(AudioStreamTrack):
-    def __init__(self, notify):
+    def __init__(self, notify, banks):
         super().__init__()
         self.notify = notify
+        self.banks = banks
         self.turn = None
         self.pending = None
         self.pcm = b""
@@ -59,11 +94,11 @@ class VoiceTrack(AudioStreamTrack):
 
     async def prepare(self, turn, text, voice):
         try:
-            pcm = await synthesize(text,voice)
+            pcm = await synthesize(text,voice,self.banks)
             if self.turn == turn:
                 self.pcm,self.offset = pcm,0
                 self.notify("audio_start",turn=turn)
-        except (RuntimeError, ValueError, TimeoutError):
+        except (RuntimeError, ValueError, OSError, TimeoutError):
             self.notify("error",turn=turn,reason="synthesis_failed")
 
     async def recv(self):
@@ -102,10 +137,11 @@ async def listen(track, recognizer, notify, player):
             await deliver(player.vad.finish())
 
 
-def application(recognizer):
+def application(recognizer,qwen_project=None):
     app = web.Application(client_max_size=1_000_000)
     peers = set()
     rooms = {}
+    banks = BankSpeech(qwen_project)
 
     # ---- 游戏角色与浏览器房间 ----
     async def new_room(req):
@@ -142,16 +178,19 @@ def application(recognizer):
         proc = await asyncio.create_subprocess_exec("powershell.exe","-NoProfile","-NonInteractive","-ExecutionPolicy",
                 "Bypass","-File",str(cmd),"-List",stdout=subprocess.PIPE,creationflags=subprocess.CREATE_NO_WINDOW)
         data, _ = await proc.communicate()
-        return web.json_response(json.loads(data.decode("utf-8-sig")))
+        available = json.loads(data.decode("utf-8-sig"))
+        available["voices"].extend(p.relative_to(PROJECT).as_posix() for p in sorted((PROJECT/"assets/audio").rglob("*.voice.json")))
+        available["qwen_free_text_configured"] = banks.project is not None
+        return web.json_response(available)
 
     async def audition(req):
         body = await req.json()
         if not isinstance(body.get("text"),str) or not 0 < len(body["text"]) <= 300:
             return web.json_response({"error":"invalid_speech"},status=400)
         try:
-            pcm = await synthesize(body["text"],body.get("voice",""))
-        except RuntimeError:
-            return web.json_response({"error":"synthesis_failed"},status=400)
+            pcm = await synthesize(body["text"],body.get("voice",""),banks)
+        except (RuntimeError, ValueError, OSError) as error:
+            return web.json_response({"error":str(error)},status=400)
         output = BytesIO()
         with wave.open(output,"wb") as result:
             result.setparams((1,2,16000,0,"NONE",""));result.writeframes(pcm)
@@ -175,7 +214,7 @@ def application(recognizer):
                 room["texts"].append(fields["text"])
             if channel and channel.readyState == "open":
                 channel.send(json.dumps(dict(type=kind,**fields),ensure_ascii=False))
-        speaker = VoiceTrack(notify)
+        speaker = VoiceTrack(notify,banks)
         player = PlayerSpeech()
         peer.addTrack(speaker)
 
@@ -227,6 +266,7 @@ def application(recognizer):
     async def cleanup(_):
         await asyncio.gather(*(peer.close() for peer in list(peers)))
         await asyncio.to_thread(recognizer.close)
+        await asyncio.to_thread(banks.close)
 
     async def room_lifetime(_):
         # 游戏每 200 ms 取一次新文字。进程异常退出满一分钟后，关闭仍挂在浏览器里的麦克风连接。
@@ -261,5 +301,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime",type=Path,required=True,help="含 DeliverySpeechRuntime.dll 与 models 的目录")
     parser.add_argument("--port",type=int,default=8717)
+    parser.add_argument("--qwen-project",type=Path,default=os.getenv("REDFLAG_QWEN_TTS_PROJECT"),
+                        help="可选的 Delivery Qwen CustomVoice 安装目录，用于自由文本")
     args = parser.parse_args()
-    web.run_app(application(Recognizer(args.runtime)),host="127.0.0.1",port=args.port)
+    web.run_app(application(Recognizer(args.runtime),args.qwen_project),host="127.0.0.1",port=args.port)

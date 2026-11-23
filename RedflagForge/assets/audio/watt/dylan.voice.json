@@ -1,0 +1,16 @@
+{
+  "Model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "Revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+  "Speaker": "Dylan",
+  "Profile": "ergou",
+  "Lines": {
+    "我在这里等你。": "preview.wav",
+    "我的维修面板已恢复。": "heal.wav",
+    "拿到医疗包了。": "gather.wav",
+    "留给你的医疗包，收好。": "reserve.wav",
+    "医疗包给你了。": "share.wav",
+    "好了，能站起来了。": "revive.wav",
+    "修好了。": "repair.wav",
+    "故障巡检机正在放电。": "warn.wav"
+  }
+}

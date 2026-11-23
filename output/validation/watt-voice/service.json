@@ -1,0 +1,13 @@
+{
+  "sapi_default": "Microsoft Huihui Desktop",
+  "voices": [
+    "Microsoft Huihui Desktop",
+    "Microsoft Zira Desktop",
+    "assets/audio/watt/dylan.voice.json"
+  ],
+  "offline_preview_sha256": "b6fb1e58401610322864e5250aba5b7639c59b009c6b48629fe17f8b33d7ca47",
+  "same_text_sapi_sha256": "a271738413bdc3cf0225a34f3fc0777c3f124456dea1f7d91eca89a3b66cce1a",
+  "free_text": "钢板已经固定，可以继续检查左侧的管线了。",
+  "free_text_sha256": "ae312c2c6809874325e0a076f450a9eb2ac65886cd3fe540c65e08dd25f80c40",
+  "free_text_samples": 75520
+}

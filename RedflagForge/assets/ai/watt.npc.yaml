@@ -11,7 +11,7 @@ Instructions: |
 IdleIntent: follow
 RescueIntent: revive
 MissingTargetIntent: follow
-Voice: ""
+Voice: assets/audio/watt/dylan.voice.json
 Tree: watt.tree.yaml
 Animator: watt.animator.yaml
 WalkClip: walking_nogun-cycle
