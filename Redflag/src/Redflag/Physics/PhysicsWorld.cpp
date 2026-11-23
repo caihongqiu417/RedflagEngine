@@ -116,24 +116,36 @@ namespace Redflag
 
 	void PhysicsWorld::AddBox(const BoxBody3D& box, std::optional<uint64_t> owner)
 	{
+		AddBody(box, owner);
+	}
+
+	void PhysicsWorld::AddBody(const PhysicsBody3D& body, std::optional<uint64_t> owner)
+	{
 		PxPhysics& physics = *m_World->Sdk->Physics;
-		PxTransform pose = Pose(box.Position, box.Rotation);
-		PxBoxGeometry shape(ToPx(box.HalfSize));
+		PxTransform pose = Pose(body.Position, body.Rotation);
+		PxTransform local(ToPx(body.Center));
+		PxGeometryHolder shape;
+		if (body.Shape == ColliderShape3D::Capsule) {
+			// PhysX 胶囊沿 X 轴，两端半球之间的直段长为总高减去直径。
+			shape.storeAny(PxCapsuleGeometry(body.HalfSize.x, body.HalfSize.y - body.HalfSize.x));
+			if (body.Axis == CapsuleAxis::Y) local.q = PxQuat(PxHalfPi, PxVec3(0,0,1));
+			if (body.Axis == CapsuleAxis::Z) local.q = PxQuat(-PxHalfPi, PxVec3(0,1,0));
+		} else shape.storeAny(PxBoxGeometry(ToPx(body.HalfSize)));
+
 		PxMaterial& material = *m_World->Material;
 		Owner<PxRigidActor> actor;
-		if (box.Type == BodyType3D::Static)
-			actor = Created(PxCreateStatic(physics, pose, shape, material, PxTransform(ToPx(box.Center))), "PxCreateStatic");
+		if (body.Type == BodyType3D::Static)
+			actor = Created(PxCreateStatic(physics, pose, shape.any(), material, local), "PxCreateStatic");
 		else
 		{
-			Owner<PxRigidDynamic> dynamic = Created(PxCreateDynamic(physics, pose, shape, material, box.Density,
-				PxTransform(ToPx(box.Center))), "PxCreateDynamic");
-			dynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, box.Type == BodyType3D::Kinematic);
+			Owner<PxRigidDynamic> dynamic = Created(PxCreateDynamic(physics, pose, shape.any(), material, body.Density, local), "PxCreateDynamic");
+			dynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, body.Type == BodyType3D::Kinematic);
 			actor = std::move(dynamic);
 		}
 
-		Body& body = m_World->Bodies.insert_or_assign(box.Entity, Body{ owner.value_or(box.Entity), std::move(actor) }).first->second;
-		body.Actor->userData = &body;
-		m_World->Scene->addActor(*body.Actor);
+		Body& stored = m_World->Bodies.insert_or_assign(body.Entity, Body{ owner.value_or(body.Entity), std::move(actor) }).first->second;
+		stored.Actor->userData = &stored;
+		m_World->Scene->addActor(*stored.Actor);
 	}
 
 	void PhysicsWorld::AddTerrain(uint64_t entity, const Terrain& data, glm::vec3 position, glm::quat rotation,

@@ -115,7 +115,7 @@ namespace Redflag {
 		std::unordered_map<entt::entity, Body2D> m_Bodies2D;
 		Scope<PhysicsWorld> m_Physics3D;
 		// 留下创建碰撞盒时的尺寸和类型，只重建被修改的刚体。
-		std::unordered_map<entt::entity, BoxBody3D> m_Boxes3D;
+		std::unordered_map<entt::entity, PhysicsBody3D> m_Bodies3D;
 		struct TerrainBody
 		{
 			uint64_t Entity;

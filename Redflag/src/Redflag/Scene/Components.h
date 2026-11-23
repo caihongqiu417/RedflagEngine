@@ -195,6 +195,33 @@ namespace Redflag {
 		glm::vec3 Center{0}; // 角色模型的原点常在脚底，身体碰撞盒的中心在它上方。
 	};
 
+	/* Height 沿模型的所选轴从一端量到另一端，包含两个半球。 */
+	struct CapsuleCollider3DComponent
+	{
+		float Radius = .35f, Height = 1.8f;
+		glm::vec3 Center{0};
+		CapsuleAxis Axis = CapsuleAxis::Y;
+
+		glm::vec3 GetLocalAxis() const
+		{
+			glm::vec3 direction(0);
+			direction[int(Axis)] = 1.f;
+			return direction;
+		}
+
+		float GetWorldRadius(glm::vec3 scale) const
+		{
+			scale[int(Axis)] = 0.f;
+			scale = glm::abs(scale);
+			return Radius * glm::max(scale.x, glm::max(scale.y, scale.z));
+		}
+
+		float GetWorldHeight(glm::vec3 scale) const
+		{
+			return glm::max(Height * glm::abs(scale[int(Axis)]), 2.f * GetWorldRadius(scale));
+		}
+	};
+
 	/* 带此标记的实体允许被拿起。碰撞范围由它的碰撞体决定。 */
 
 	/* 变换的位置是骨盆中心。运行时的七个碰撞盒和关节由场景持有。 */

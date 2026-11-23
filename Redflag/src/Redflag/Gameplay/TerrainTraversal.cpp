@@ -1,5 +1,6 @@
 #include "rfpch.h"
 #include "TerrainTraversal.h"
+#include "ColliderBounds.h"
 #include "Redflag/Scene/Entity.h"
 
 namespace Redflag
@@ -62,10 +63,11 @@ namespace Redflag
 			motion.Clock = 0.f;
 
 			// 检查整段起跳至落地的路线。每段最多占移动时间的十二分之一，能跟随抛物线弯曲。
+			const glm::vec3 originAboveFeet = Up * motion.Clearance;
 			glm::vec3 last = start;
 			for (int i = 1; i <= 12; ++i) {
 				glm::vec3 next = AlongPath(motion, float(i) / 12.f);
-				if (!BodyFits(scene, actor, last, next, radius, height)) return false;
+				if (!BodyFits(scene, actor, last - originAboveFeet, next - originAboveFeet, radius, height)) return false;
 				last = next;
 			}
 			return true;
@@ -76,10 +78,11 @@ namespace Redflag
 		{
 			motion.Clock = std::min(motion.Duration, motion.Clock + seconds);
 			const glm::vec3 next = AlongPath(motion, motion.Clock / motion.Duration);
-			const auto landing = Floor(scene, actor, motion.Landing, StepHeight, StepHeight + motion.Clearance);
+			const glm::vec3 originAboveFeet = Up * motion.Clearance;
+			const auto landing = Floor(scene, actor, motion.Landing - originAboveFeet, StepHeight, StepHeight);
 			if (!landing || landing->Normal.y < WalkableY ||
 				std::abs(landing->Position.y + motion.Clearance - motion.Landing.y) > .04f ||
-				!BodyFits(scene, actor, position, next, radius, height)) {
+				!BodyFits(scene, actor, position - originAboveFeet, next - originAboveFeet, radius, height)) {
 				CancelTraversal(scene, actor);
 				return motion.Mode = TraversalMode::Blocked;
 			}
@@ -107,14 +110,22 @@ namespace Redflag
 	// 线段若穿过设备的碰撞盒，比较沿左右边缘走的路，先去较近的拐角。
 	glm::vec3 NextBoxCorner(Entity target, glm::vec3 start, glm::vec3 finish, float radius)
 	{
-		if (!target.HasComponent<BoxCollider3DComponent>()) return finish;
-		const auto& tr = target.GetComponent<TransformComponent>();
-		const auto& box = target.GetComponent<BoxCollider3DComponent>();
-		const glm::mat4 model = tr.GetTransform(), inverse = glm::inverse(model);
-		auto local = [&](glm::vec3 p) { const glm::vec3 v(inverse * glm::vec4(p,1)); return glm::vec2(v.x-box.Center.x,v.z-box.Center.z); };
+		const float yaw = target.GetComponent<TransformComponent>().Rotation.y;
+		const glm::quat facing = glm::angleAxis(yaw, Up);
+		const auto bounds = GetColliderBounds(target, facing);
+		if (!bounds) return finish;
+
+		auto local = [&](glm::vec3 p) {
+			const glm::vec3 v = glm::conjugate(facing) * (p - bounds->Center);
+			return glm::vec2(v.x, v.z);
+		};
+		auto world = [&](glm::vec2 p) {
+			const glm::vec3 v = bounds->Center + facing * glm::vec3(p.x, 0, p.y);
+			return glm::vec3(v.x, start.y, v.z);
+		};
 		const glm::vec2 a = local(start), b = local(finish);
-		const glm::vec2 ext = glm::vec2(box.HalfSize.x,box.HalfSize.z) +
-			(radius+.035f)/glm::abs(glm::vec2(tr.Scale.x,tr.Scale.z));
+		// 扩出角色的半径，再留 3.5 厘米，经过边缘时鞋和障碍物有间隙。
+		const glm::vec2 ext = glm::vec2(bounds->HalfSize.x,bounds->HalfSize.z) + radius + .035f;
 		auto clear = [&](glm::vec2 p, glm::vec2 q) {
 			float first = 0.f, last = 1.f;
 			for (int i=0;i<2;++i) {
@@ -130,7 +141,7 @@ namespace Redflag
 			const int axis=ext.x-std::abs(a.x) < ext.y-std::abs(a.y) ? 0 : 1;
 			glm::vec2 edge=a;
 			edge[axis]=std::copysign(ext[axis]+.025f,a[axis]);
-			return model*glm::vec4(edge.x+box.Center.x,0,edge.y+box.Center.z,1);
+			return world(edge);
 		}
 		if (clear(a,b) || (std::abs(b.x)<ext.x && std::abs(b.y)<ext.y)) return finish;
 		const glm::vec2 corners[]={{-ext.x,-ext.y},{ext.x,-ext.y},{ext.x,ext.y},{-ext.x,ext.y}};
@@ -151,7 +162,7 @@ namespace Redflag
 				}
 			}
 		}
-		return model * glm::vec4(next.x+box.Center.x,0,next.y+box.Center.z,1);
+		return world(next);
 	}
 
 	TraversalMode MoveCharacter(Scene& scene, uint64_t actor, glm::vec3 delta, float radius, float seconds, TraversalInput input)
@@ -161,21 +172,23 @@ namespace Redflag
 		auto& motion = scene.GetRegistry().get_or_emplace<TerrainTraversal>(static_cast<entt::entity>(entity));
 		TransformComponent& transform = entity.GetComponent<TransformComponent>();
 		glm::vec3& position = transform.Translation;
-		const float height = entity.HasComponent<BoxCollider3DComponent>() ?
-			2.f * std::abs(transform.Scale.y) * entity.GetComponent<BoxCollider3DComponent>().HalfSize.y : 1.8f;
+		const auto body = GetColliderBounds(entity);
+		const float height = body ? 2.f * body->HalfSize.y : 1.8f;
+		// 从碰撞体的最低处找地面。角色原点既可以在脚底，也可以在身体中间。
+		if (body) motion.Clearance = body->HalfSize.y - (body->Center.y - position.y);
 		if (motion.InAir()) return Advance(scene, actor, motion, position, seconds, radius, height);
 
 		delta.y = 0.f;
 		const float distance = glm::length(delta);
-		const auto ground = Floor(scene, actor, position, StepHeight, StepHeight * 2.f + motion.Clearance);
+		const auto ground = Floor(scene, actor, position - Up * motion.Clearance, StepHeight, StepHeight * 2.f);
 		if (!ground) {
 			if (motion.HasSupport) return motion.Mode = TraversalMode::Blocked;
 			Slide(scene, actor, position, delta, radius);
 			return motion.Mode = TraversalMode::Ground;
 		}
 		if (!motion.HasSupport) {
-			// 保存模型原点离脚底的高度。旧场景的角色贴地时仍使用原来的摆放位置。
-			motion.Clearance = std::max(0.f, position.y - ground->Position.y);
+			// 没有身体碰撞盒的模型沿用场景中摆好的高度。
+			if (!body) motion.Clearance = std::max(0.f, position.y - ground->Position.y);
 			motion.HasSupport = true;
 		}
 		motion.SupportNormal = ground->Normal;
@@ -195,7 +208,7 @@ namespace Redflag
 		const bool lowStep = top && top->Normal.y >= WalkableY && top->Position.y - ground->Position.y <= StepHeight;
 		if (input != TraversalInput::Jump && (!wall || lowStep) && next && next->Normal.y >= WalkableY) {
 			glm::vec3 destination = next->Position + Up * motion.Clearance;
-			if (!BodyFits(scene, actor, position, destination, radius, height)) return motion.Mode = TraversalMode::Blocked;
+			if (!BodyFits(scene, actor, position - Up * motion.Clearance, next->Position, radius, height)) return motion.Mode = TraversalMode::Blocked;
 			const float rise = std::abs(next->Position.y - ground->Position.y);
 			position = destination;
 			motion.SupportNormal = next->Normal;
@@ -237,7 +250,7 @@ namespace Redflag
 		if (!motion || !motion->InAir()) return;
 		// 中止后回到这次起跳的落脚点。即使中途松开按钮，角色也不会停在半空。
 		auto& position = entity.GetComponent<TransformComponent>().Translation;
-		const auto support = Floor(scene, actor, motion->Start, StepHeight, ClimbHeight);
+		const auto support = Floor(scene, actor, motion->Start - Up * motion->Clearance, StepHeight, ClimbHeight);
 		if (support) position = support->Position + Up * motion->Clearance;
 		motion->Mode = TraversalMode::Ground;
 		motion->Clock = 0.f;

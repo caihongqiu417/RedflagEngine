@@ -1,6 +1,7 @@
 #include "rfpch.h"
 #include "GameplayBindings.h"
 #include "Redflag/AI/ActorBehavior.h"
+#include "Redflag/Gameplay/ColliderBounds.h"
 #include "Redflag/Gameplay/HandContact.h"
 #include "AnimatorBindings.h"
 #include "Redflag/Animation/ActorAnimator.h"
@@ -58,6 +59,13 @@ namespace Redflag
 		int Traverse(uint64_t actor, const glm::vec3* delta, float radius, float seconds, int input)
 		{
 			return int(MoveCharacter(World(), actor, *delta, radius, seconds, TraversalInput(input)));
+		}
+
+		int TraverseWithCollider(uint64_t actor, const glm::vec3* delta, float seconds, int input)
+		{
+			Entity entity = World().GetEntityByUUID(actor);
+			if (!entity) return int(TraversalMode::Blocked);
+			return Traverse(actor, delta, CharacterRadius(entity), seconds, input);
 		}
 
 		void StopTraversal(uint64_t actor) { CancelTraversal(World(), actor); }
@@ -234,10 +242,23 @@ namespace Redflag
 		void BodyHeight(uint64_t actor, float height)
 		{
 			Entity entity = World().GetEntityByUUID(actor);
-			if (!entity || !entity.HasComponent<BoxCollider3DComponent>() || height<=0) return;
-			auto& box = entity.GetComponent<BoxCollider3DComponent>();
-			const float scale = std::abs(entity.GetComponent<TransformComponent>().Scale.y);
-			if (scale > 0) box.Center.y = box.HalfSize.y = .5f*height/scale;
+			if (!entity || height <= 0.f) return;
+			const glm::vec3 scale = entity.GetComponent<TransformComponent>().Scale;
+			if (scale.y == 0.f) return;
+
+			// 蹲下时只降低顶部，脚底的位置与站立时相同。
+			if (entity.HasComponent<CapsuleCollider3DComponent>()) {
+				auto& capsule = entity.GetComponent<CapsuleCollider3DComponent>();
+				if (capsule.Axis != CapsuleAxis::Y) return;
+				const float previous = capsule.GetWorldHeight(scale);
+				capsule.Height = glm::max(height / std::abs(scale.y), 2.f * capsule.Radius);
+				capsule.Center.y += .5f * (capsule.GetWorldHeight(scale) - previous) / scale.y;
+			} else if (entity.HasComponent<BoxCollider3DComponent>()) {
+				auto& box = entity.GetComponent<BoxCollider3DComponent>();
+				const float previous = box.HalfSize.y;
+				box.HalfSize.y = .5f * height / std::abs(scale.y);
+				box.Center.y += std::copysign(1.f, scale.y) * (box.HalfSize.y - previous);
+			}
 		}
 
 		void Label(uint64_t actor, const glm::vec3* color, float height)
@@ -279,6 +300,7 @@ namespace Redflag
 		mono_add_internal_call("Redflag.GameWorld::ChooseBehavior", (const void*)ChooseBehavior);
 		mono_add_internal_call("Redflag.GameWorld::Move", (const void*)Move);
 		mono_add_internal_call("Redflag.GameWorld::Traverse", (const void*)Traverse);
+		mono_add_internal_call("Redflag.GameWorld::TraverseWithCollider", (const void*)TraverseWithCollider);
 		mono_add_internal_call("Redflag.GameWorld::CancelTraversal", (const void*)StopTraversal);
 		mono_add_internal_call("Redflag.GameWorld::SetTraversalLimb", (const void*)SetTraversalLimb);
 		mono_add_internal_call("Redflag.GameWorld::AddFootContact", (const void*)AddFootContact);

@@ -48,6 +48,7 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().connect<&Scene::RemoveFixture2D<CircleCollider2DComponent>>(*this);
         m_Registry.on_destroy<RigidBody3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
         m_Registry.on_destroy<BoxCollider3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
+        m_Registry.on_destroy<CapsuleCollider3DComponent>().connect<&Scene::RemovePhysicsBody>(*this);
         m_Registry.on_destroy<TerrainComponent>().connect<&Scene::RemoveTerrain>(*this);
         m_Registry.on_destroy<RagdollComponent>().connect<&Scene::RemoveRagdoll>(*this);
 	}
@@ -64,6 +65,7 @@ namespace Redflag {
         m_Registry.on_update<CircleCollider2DComponent>().disconnect(this);
         m_Registry.on_destroy<RigidBody3DComponent>().disconnect(this);
         m_Registry.on_destroy<BoxCollider3DComponent>().disconnect(this);
+        m_Registry.on_destroy<CapsuleCollider3DComponent>().disconnect(this);
         m_Registry.on_destroy<TerrainComponent>().disconnect(this);
         m_Registry.on_destroy<RagdollComponent>().disconnect(this);
 	}
@@ -142,6 +144,7 @@ namespace Redflag {
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<RigidBody3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<CapsuleCollider3DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<ContactSocketsComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BehaviorTreeComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<PickupComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
@@ -544,6 +547,7 @@ namespace Redflag {
         CopyComponentIfExist<BoxCollider2DComponent>(newEntity, entity);
         CopyComponentIfExist<RigidBody3DComponent>(newEntity, entity);
         CopyComponentIfExist<BoxCollider3DComponent>(newEntity, entity);
+        CopyComponentIfExist<CapsuleCollider3DComponent>(newEntity, entity);
         CopyComponentIfExist<ContactSocketsComponent>(newEntity, entity);
         CopyComponentIfExist<BehaviorTreeComponent>(newEntity, entity);
         CopyComponentIfExist<PickupComponent>(newEntity, entity);
@@ -635,13 +639,13 @@ namespace Redflag {
                     ragdoll->Relax();
             }
         });
-        for (const auto& [handle, box] : m_Boxes3D)
+        for (const auto& [handle, body] : m_Bodies3D)
         {
-            if (box.Type != BodyType3D::Dynamic)
+            if (body.Type != BodyType3D::Dynamic)
                 continue;
             TransformComponent& transform = m_Registry.get<TransformComponent>(handle);
             glm::quat rotation;
-            if (m_Physics3D->GetPose(box.Entity, transform.Translation, rotation))
+            if (m_Physics3D->GetPose(body.Entity, transform.Translation, rotation))
                 transform.Rotation = glm::eulerAngles(rotation);
         }
         for (const auto& [handle, ragdoll] : m_Ragdolls)
@@ -655,36 +659,46 @@ namespace Redflag {
 
     void Scene::SyncPhysics3D()
     {
-        auto boxes = m_Registry.view<IDComponent, TransformComponent, RigidBody3DComponent, BoxCollider3DComponent>();
-        for (entt::entity handle : boxes)
+        auto bodies = m_Registry.view<IDComponent, TransformComponent, RigidBody3DComponent>();
+        for (entt::entity handle : bodies)
         {
-            const auto& [id, transform, rigidBody, collider] = boxes.get(handle);
-            BoxBody3D box{ id.ID, rigidBody.Type, transform.Translation, glm::quat(transform.Rotation),
-                glm::abs(transform.Scale) * collider.HalfSize, rigidBody.Density, transform.Scale * collider.Center };
+            const auto& [id, transform, rigidBody] = bodies.get(handle);
+            PhysicsBody3D body{ id.ID, rigidBody.Type, transform.Translation, glm::quat(transform.Rotation), {}, rigidBody.Density };
+            if (const auto* capsule = m_Registry.try_get<CapsuleCollider3DComponent>(handle)) {
+                const float radius = capsule->GetWorldRadius(transform.Scale);
+                body.Shape = ColliderShape3D::Capsule;
+                body.Axis = capsule->Axis;
+                body.HalfSize = {radius, .5f * capsule->GetWorldHeight(transform.Scale), radius};
+                body.Center = transform.Scale * capsule->Center;
+            } else if (const auto* box = m_Registry.try_get<BoxCollider3DComponent>(handle)) {
+                body.HalfSize = glm::abs(transform.Scale) * box->HalfSize;
+                body.Center = transform.Scale * box->Center;
+            } else continue;
 
-            // 压扁到零厚度的盒子没有体积。恢复尺寸后，下次物理步会重新加入它。
-            if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))) ||
-                (box.Type != BodyType3D::Static && !(box.Density > 0.f)) ||
+            // 没有体积的形状不能放进 PhysX。恢复尺寸后，下次物理步会重新加入它。
+            if (!glm::all(glm::greaterThan(body.HalfSize, glm::vec3(0))) ||
+                (body.Type != BodyType3D::Static && !(body.Density > 0.f)) ||
                 m_Registry.any_of<RigidBody2DComponent, TerrainComponent>(handle))
             {
                 RemovePhysicsBody(handle);
                 continue;
             }
 
-            auto existing = m_Boxes3D.find(handle);
-            if (existing != m_Boxes3D.end())
+            auto existing = m_Bodies3D.find(handle);
+            if (existing != m_Bodies3D.end())
             {
-                BoxBody3D& old = existing->second;
-                // 动态箱子的位置由 PhysX 算。每帧按新位置重建它，会把下落速度清零。
-                const bool moved = box.Position != old.Position || box.Rotation != old.Rotation;
-                if (old.Type == box.Type && old.HalfSize == box.HalfSize && old.Center == box.Center && old.Density == box.Density &&
-                    !(box.Type == BodyType3D::Static && moved))
+                PhysicsBody3D& old = existing->second;
+                // 动态物体的位置由 PhysX 算。每帧按新位置重建它，会把下落速度清零。
+                const bool moved = body.Position != old.Position || body.Rotation != old.Rotation;
+                if (old.Shape == body.Shape && old.Axis == body.Axis && old.Type == body.Type &&
+                    old.HalfSize == body.HalfSize && old.Center == body.Center && old.Density == body.Density &&
+                    !(body.Type == BodyType3D::Static && moved))
                 {
-                    if (box.Type == BodyType3D::Kinematic && moved)
+                    if (body.Type == BodyType3D::Kinematic && moved)
                     {
-                        m_Physics3D->SetKinematicTarget(box.Entity, box.Position, box.Rotation);
-                        old.Position = box.Position;
-                        old.Rotation = box.Rotation;
+                        m_Physics3D->SetKinematicTarget(body.Entity, body.Position, body.Rotation);
+                        old.Position = body.Position;
+                        old.Rotation = body.Rotation;
                     }
                     continue;
                 }
@@ -693,8 +707,8 @@ namespace Redflag {
 
             if (!m_Physics3D)
                 m_Physics3D = CreateScope<PhysicsWorld>();
-            m_Physics3D->AddBox(box);
-            m_Boxes3D.emplace(handle, box);
+            m_Physics3D->AddBody(body);
+            m_Bodies3D.emplace(handle, body);
         }
 
         auto characters = m_Registry.view<IDComponent, TransformComponent, RagdollComponent>();
@@ -758,18 +772,18 @@ namespace Redflag {
 
     void Scene::RemovePhysicsBody(entt::entity handle)
     {
-        auto existing = m_Boxes3D.find(handle);
-        if (existing != m_Boxes3D.end())
+        auto existing = m_Bodies3D.find(handle);
+        if (existing != m_Bodies3D.end())
         {
             m_Physics3D->Remove(existing->second.Entity);
-            m_Boxes3D.erase(existing);
+            m_Bodies3D.erase(existing);
         }
     }
 
     void Scene::StopPhysics3D()
     {
         m_Ragdolls.clear();
-        m_Boxes3D.clear();
+        m_Bodies3D.clear();
         m_TerrainBodies.clear();
         m_Physics3D.reset();
     }

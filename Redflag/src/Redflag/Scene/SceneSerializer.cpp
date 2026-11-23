@@ -705,6 +705,17 @@ namespace Redflag {
             out << YAML::EndMap;
         }
 
+        if (entity.HasComponent<CapsuleCollider3DComponent>())
+        {
+            const auto& capsule = entity.GetComponent<CapsuleCollider3DComponent>();
+            out << YAML::Key << "CapsuleCollider3DComponent" << YAML::Value << YAML::BeginMap;
+            out << YAML::Key << "Radius" << YAML::Value << capsule.Radius;
+            out << YAML::Key << "Height" << YAML::Value << capsule.Height;
+            out << YAML::Key << "Axis" << YAML::Value << std::string(1, "XYZ"[int(capsule.Axis)]);
+            out << YAML::Key << "Center" << YAML::Value << capsule.Center;
+            out << YAML::EndMap;
+        }
+
         if (entity.HasComponent<BoxCollider2DComponent>())
         {
             out << YAML::Key << "BoxCollider2DComponent";
@@ -1066,6 +1077,22 @@ namespace Redflag {
                     box.Center = boxNode["Center"].as<glm::vec3>(glm::vec3(0));
                     if (!glm::all(glm::greaterThan(box.HalfSize, glm::vec3(0))))
                         throw std::runtime_error("3D collision box half sizes must be positive");
+                }
+
+                if (const YAML::Node node = entity["CapsuleCollider3DComponent"])
+                {
+                    if (entity["BoxCollider3DComponent"]) throw std::runtime_error("Choose one 3D collider per rigid body");
+                    auto& capsule = deserializedEntity.AddComponent<CapsuleCollider3DComponent>();
+                    capsule.Radius = node["Radius"].as<float>();
+                    capsule.Height = node["Height"].as<float>();
+                    capsule.Center = node["Center"].as<glm::vec3>(glm::vec3(0));
+                    const std::string axis = node["Axis"].as<std::string>("Y");
+                    if (axis == "X") capsule.Axis = CapsuleAxis::X;
+                    else if (axis == "Z") capsule.Axis = CapsuleAxis::Z;
+                    else if (axis != "Y") throw std::runtime_error("Capsule axis must be X, Y or Z");
+                    if (!(capsule.Radius > 0.f && capsule.Height >= 2.f * capsule.Radius) ||
+                        !std::isfinite(capsule.Height))
+                        throw std::runtime_error("Capsule needs a positive radius and a total height at least twice its radius");
                 }
 
                 //BoxCollider2DComponent

@@ -2,10 +2,12 @@
 
 #include "Redflag/Gameplay/TerrainTraversal.h"
 #include "TerrainFootTests.h"
+#include "GroundedColliderTests.h"
 
 inline void CheckTraversal()
 {
     using namespace Redflag;
+    CheckGroundedColliders();
     Ref<Scene> scene = CreateRef<Scene>();
     auto box = [&](uint64_t id, glm::vec3 p, glm::vec3 size) {
         Entity object = scene->CreateEntityWithUUID(id,"Platform");

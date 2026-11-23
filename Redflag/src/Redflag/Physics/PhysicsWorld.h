@@ -14,17 +14,23 @@ namespace Redflag
 {
 	class Terrain;
 	enum class BodyType3D { Static, Dynamic, Kinematic };
+	enum class ColliderShape3D { Box, Capsule };
+	enum class CapsuleAxis { X, Y, Z };
 
-	struct BoxBody3D
+	struct PhysicsBody3D
 	{
 		uint64_t Entity;
 		BodyType3D Type;
 		glm::vec3 Position;
 		glm::quat Rotation;
-		glm::vec3 HalfSize; // 从盒子中心到各面的距离，单位为米。
+		glm::vec3 HalfSize; // 半尺寸，以米计。胶囊取 {半径，总高的一半，半径}。
 		float Density = 1.0f; // 千克/立方米。质量还取决于盒子的体积。
-		glm::vec3 Center{0}; // 盒子中心相对于刚体原点的位置，单位为米。
+		glm::vec3 Center{0}; // 碰撞体中心相对于刚体原点的位置，单位为米。
+		ColliderShape3D Shape = ColliderShape3D::Box;
+		CapsuleAxis Axis = CapsuleAxis::Y;
 	};
+
+	using BoxBody3D = PhysicsBody3D; // 保留原有 AddBox 调用所用的类型。
 
 	struct RayHit3D
 	{
@@ -42,6 +48,7 @@ namespace Redflag
 
 		/// <param name="owner">几个碰撞盒属于同一角色时，射线和范围查询都返回角色的实体编号。</param>
 		void AddBox(const BoxBody3D& box, std::optional<uint64_t> owner = {});
+		void AddBody(const PhysicsBody3D& body, std::optional<uint64_t> owner = {});
 		void AddTerrain(uint64_t entity, const Terrain& data, glm::vec3 position, glm::quat rotation,
 			glm::vec3 scale, float cellSize, float heightScale);
 		void Remove(uint64_t entity);

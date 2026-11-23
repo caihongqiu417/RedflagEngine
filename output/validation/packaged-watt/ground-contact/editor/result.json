@@ -1,0 +1,26 @@
+{
+  "exe_sha256": "f05af229681ddcf74b8e927473be130a22e57262668b8cb98f980a8093ed36a4",
+  "renderer": "Vulkan",
+  "client_px": [
+    1618,
+    1004
+  ],
+  "fixture": "Operator.glb from the game, isolated camera and platform",
+  "ui_input": "Ctrl-click Radius; enter 0.46; Ctrl+S; quit; reopen in a new process",
+  "radius_before_m": 0.35,
+  "saved": {
+    "Radius": 0.460000008,
+    "Height": 1.84000003,
+    "Axis": "Y",
+    "Center": [
+      0,
+      0.920000017,
+      0
+    ]
+  },
+  "inspected_modes": [
+    "Selected",
+    "All",
+    "Hidden"
+  ]
+}
