@@ -8,7 +8,7 @@
 
 交付目录为 `output/releases`。本机已经解压好，打开 `Watt-Station-Win64`，双击 `Play-With-Companion.cmd`。换一台电脑时，把 `Redflag-Watt-Station-Win64.zip` 与 `Redflag-CompanionRuntime-Win64.zip` 解压到同一个文件夹。启动脚本旁应当能看见 `CompanionRuntime`。需要 Windows x64、支持 Vulkan 1.3 的显卡驱动和足够的显存。瓦特在递药、维修和救援后会用随包录好的 Dylan 台词回应。运行时另外生成新台词时，可以配置相同的 Qwen 音色服务。第一次启动时，程序需要把本地模型载入内存。[离线启动、看图和中文语音实测](../output/validation/packaged-companion/README.md)
 
-维修棚里的应急发电机还没通电。你可以过去按住 **E** 维修，也可以告诉瓦特「去东面的应急发电机，把它修好」，自己先去西侧闸口。要等机器供电、两人都到闸口，任务才会结算。按住 **F1** 查看键位，结束后按 **R** 重新开局。一次发布包验收记录了两人撤离，另一次交战记录了瓦特两次扶起玩家、最终任务失败和重新开局。[任务经过](../output/validation/packaged-watt/release-mission/mission.json) · [逐帧动作与输入](../output/validation/packaged-watt/release-mission/frames.jsonl)
+维修棚里的应急发电机还没通电。你可以过去按住 **E** 维修，也可以告诉瓦特「去东面的应急发电机，把它修好」，自己先去西侧闸口。等机器供电、两人都到闸口，任务才会结算。按住 **F1** 查看键位，结束后按 **R** 重新开局。新版货场记录了瓦特独自修好发电机、受伤返回并和玩家一起撤离的整局过程，也验证了任务失败后可以重新开始。[货场试玩记录](../output/validation/packaged-watt/freight-yard/README.md)
 
 游戏默认 1920 × 1080。如果转动镜头时有明显迟滞，退出后双击 `Play-720p.cmd`，它会用 1280 × 720 绘制场景，保留原来的窗口、界面字号和队友通讯。在 RTX 5070 Ti Laptop 上固定出生机位，两种模式的帧时间中位数分别为 87.77 和 58.12 毫秒。720p 转动起来更快，目前两档都达不到稳定的 30 帧。[帧时间实测](../output/validation/packaged-watt/resolution.json)
 
@@ -29,6 +29,8 @@
 瓦特没来扶人时，在 Forge 的「AI 队友 → 角色创作 → 候选」查看救援一项。玩家仍站着时，这里会显示「目标尚未倒地」。玩家倒地后再看，可以读到目标和距离。「最近一次提问的候选」保留发问时的那一刻，方便对照当时的决定和现在的局势。[Forge 实机界面](../output/validation/teammate-candidates/README.md)
 
 ## 验收记录
+
+玩家和瓦特各演示了拾取、递药、维修、扶人和给自己用药。看递药时，可以留意一只手伸出、另一只手接住、物品换手以及两人收手的先后。录像保留了瓦特的游戏语音；每一章都能对照生效那一帧的手部位置、库存或生命变化。[十段侧面实机与逐帧记录](../output/validation/packaged-watt/hand-actions/README.md)
 
 走路时，只看角色的位置很容易漏掉滑步。新版把画面、按键和骨骼位置一起记录，可以对着地面看蓝色机器人的靴底，也可以从侧面看左拳何时伸直、何时收回。逐项记录里列出了玩家、瓦特和巡检机各自动作的验证方式。[新旧实机录像](../output/validation/packaged-watt/animation/after-ik/compare.mp4) · [角色动作检查表](Station-Animation-Coverage.md)
 
