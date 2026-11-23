@@ -7,8 +7,12 @@ States:
   # 拾取时左腕在第 36 帧降到最低；递物时第 22 帧伸到最前。作者的两段动作均为每秒 30 帧。
   - {ID: pickup, Clip: Station-Pickup, Seconds: 2.5, Contact: 0.48, Loop: false, Blend: 0.14}
   - {ID: give, Clip: Station-Give, Seconds: 2.0, Contact: 0.366667, Loop: false, Blend: 0.14}
-  - {ID: revive, Clip: Station-Pickup, Loop: false, Blend: 0.2}
-  - {ID: repair, Clip: Cannon_Charge-cycle, Loop: true, Blend: 0.2}
+  # 左手将医疗包贴在胸甲上，保持片刻再放下。用药通知在整段动作的正中发出。
+  - {ID: heal, Clip: Station-UseMedkit, Seconds: 2.0, Contact: 0.5, Loop: false, Blend: 0.14}
+  - {ID: revive, Clip: Station-Revive, Seconds: 2.6, Loop: false, Blend: 0.16}
+  - {ID: repair, Clip: Station-Repair, Seconds: 2.6, Loop: true, Blend: 0.16}
+  - {ID: down, Clip: Station-Down, Seconds: 1.0, Loop: false, Blend: 0.12}
+  - {ID: getup, Clip: Station-GetUp, Loop: false, Blend: 0.12}
   - {ID: aim, Clip: AIM-Center, Loop: false, Blend: 0.12}
   - {ID: fire, Clip: Cannon_Charge, Loop: false, Blend: 0.08}
   # Quaternius Punch_Jab 每秒 30 帧，第 6 帧左拳伸到最前。

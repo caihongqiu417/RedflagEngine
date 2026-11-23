@@ -115,6 +115,7 @@ inline void CheckNpcMotion()
     if (!rig) return;
     CheckOperatorMotion(*rig);
     CheckStationActionClips(*rig, false);
+    CheckStationCare(*rig);
     CheckStationActionEvents(*rig, character.Controller);
     const auto sentinel = ModelAnimation::Load("assets/game/station/crew/Sentinel.glb");
     Check(bool(sentinel), "load actual station guard");

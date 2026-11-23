@@ -1,6 +1,6 @@
 {
   "source": "RedflagForge/assets/game/station/crew/Operator.glb",
-  "model_sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+  "model_sha256": "a8a6d29bad8984736a94aa16e9c3f6c116330dab281cac78929888ca4fde6c93",
   "mesh": "Robot_Body",
   "primitive": 0,
   "unit": "metres",
@@ -19,12 +19,12 @@
       {
         "bone": "toe.L",
         "xyz": [
-          -0.103435,
-          0.056209,
+          0.086669,
+          0.065435,
           -0.015396
         ],
-        "vertex": 16284,
-        "weight": 0.9627755284309387
+        "vertex": 16020,
+        "weight": 0.9743142127990723
       },
       {
         "bone": "foot.L",
@@ -49,11 +49,11 @@
       {
         "bone": "foot.L",
         "xyz": [
-          0.046225,
+          0.013112,
           -0.041481,
           0.199076
         ],
-        "vertex": 16093,
+        "vertex": 16276,
         "weight": 1.0
       },
       {
@@ -66,53 +66,7 @@
         "vertex": 16010,
         "weight": 1.0
       }
-    ],
-    "per_clip": {
-      "Idle-cycle": {
-        "error_min_mm": 7.423349597956985e-05,
-        "error_max_mm": 0.00017712832777760923
-      },
-      "walking_gun-cycle": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 4.427404403686523
-      },
-      "walking_nogun-cycle": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 4.427259922027588
-      },
-      "running_gun-cycle": {
-        "error_min_mm": -5.551115123125783e-14,
-        "error_max_mm": 6.48327112197876
-      },
-      "running_nogun-cycle": {
-        "error_min_mm": -5.551115123125783e-14,
-        "error_max_mm": 6.483270645141602
-      },
-      "Station-Crouch": {
-        "error_min_mm": 0.6471377015113831,
-        "error_max_mm": 0.647182822227478
-      },
-      "Station-CrouchWalk": {
-        "error_min_mm": -4.163336342344337e-14,
-        "error_max_mm": 2.9268667697906494
-      },
-      "jump_5_hardlanding": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 5.551115123125783e-14
-      },
-      "Station-Pickup": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 0.0
-      },
-      "Station-Punch": {
-        "error_min_mm": 0.18189549446105957,
-        "error_max_mm": 0.1890142261981964
-      },
-      "Station-Give": {
-        "error_min_mm": 7.025870581855997e-05,
-        "error_max_mm": 7.025870581855997e-05
-      }
-    }
+    ]
   },
   "R6": {
     "points": [
@@ -169,59 +123,13 @@
       {
         "bone": "toe.R",
         "xyz": [
-          -0.078221,
-          0.056123,
-          -0.015338
+          -0.05179,
+          0.10777,
+          -0.015117
         ],
-        "vertex": 8439,
-        "weight": 0.9627756476402283
+        "vertex": 8382,
+        "weight": 0.9974167346954346
       }
-    ],
-    "per_clip": {
-      "Idle-cycle": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 3.469446951953614e-15
-      },
-      "walking_gun-cycle": {
-        "error_min_mm": -0.23643773794174194,
-        "error_max_mm": 1.5823650360107422
-      },
-      "walking_nogun-cycle": {
-        "error_min_mm": -0.23645226657390594,
-        "error_max_mm": 1.5822402238845825
-      },
-      "running_gun-cycle": {
-        "error_min_mm": -0.24385294318199158,
-        "error_max_mm": 4.030145645141602
-      },
-      "running_nogun-cycle": {
-        "error_min_mm": -0.2441592514514923,
-        "error_max_mm": 2.5067331790924072
-      },
-      "Station-Crouch": {
-        "error_min_mm": 1.3877787807814457e-14,
-        "error_max_mm": 3.122502256758253e-14
-      },
-      "Station-CrouchWalk": {
-        "error_min_mm": 0.0,
-        "error_max_mm": 4.5726423263549805
-      },
-      "jump_5_hardlanding": {
-        "error_min_mm": -0.22497381269931793,
-        "error_max_mm": 2.8767964839935303
-      },
-      "Station-Pickup": {
-        "error_min_mm": 8.326672684688674e-14,
-        "error_max_mm": 1.249000902703301e-13
-      },
-      "Station-Punch": {
-        "error_min_mm": 1.5555156469345093,
-        "error_max_mm": 1.658941388130188
-      },
-      "Station-Give": {
-        "error_min_mm": 1.734723475976807e-15,
-        "error_max_mm": 1.734723475976807e-15
-      }
-    }
+    ]
   }
 }

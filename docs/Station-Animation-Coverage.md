@@ -13,9 +13,9 @@
 | 发射臂炮、使用扫描器 | 左键发射从右手位置出发的脉冲，播放 `Cannon_Charge` 的前 0.22 秒。切到扫描器后，左键沿相机方向查找物体，身体保留当时姿势。 | 实机里扫描得到巡检机 1103，生命值不变；切回臂炮后命中同一目标，生命从 75 降到 50。模型在开火这 0.22 秒内右腕移动了 0.321 米。[装备实机记录](../output/validation/watt-station/interactions/equipment.json) |
 | 起跳、滞空、落地 | 起跳与滞空分别播放 `jump_1_up`、`jump_3_midair-cycle`。落地剪辑的缓冲区间从 0 秒到 0.208 秒，骨盆在约 0.083 秒时屈膝。 | 越沟有正式窗口画面；落地有默认动作表的脚本通知，模型另测了三段骨骼。画面和事件来自不同跑次。[越沟与平台](../output/validation/terrain-traversal/README.md) · [落地通知](../output/validation/animation-events/default-notices.json) |
 | 攀爬 | 基础姿势复用 `Station-Pickup` 的弯腰动作，两只手在攀爬期间向平台边缘靠近。 | 独立地形场景在实际游戏窗口爬上 1.42 米高的平台。额外测了移动平台被撤走时取消攀爬。[地形实测与截图](../output/validation/terrain-traversal/README.md) |
-| 拾取、使用医疗包 | 对准可拿物品按 E，伸手到 1.20 秒时再查距离并改库存，收手后恢复待机。按 H 直接用药，当前版本没有专门的用药动作。 | 实机记录到触点前背包仍有 1 份药，触点后有 2 份，场景中的物品消失，收手后为待机。按 H 治疗从 40 到 90，持续按住只用一份。[玩家拾取与用药](../output/validation/watt-station/interactions/pickup.json) |
-| 维修、扶起瓦特 | 按住 E 维修时循环 `Cannon_Charge-cycle`；扶起时播放 `Station-Pickup`。两者复用已有表演。离开、松手或交互完成后，玩家恢复常规动作。 | 实机松开维修键后恢复待机，发电机仍未修好；重新按住完成维修，电力从 0 到 100。救援使瓦特的生命从 0 到 50。现有记录没有验证手掌与工具、队友身体的逐帧接触。[维修中断与完成](../output/validation/watt-station/interactions/repair.json) · [扶起瓦特](../output/validation/watt-station/interactions/revive.json) |
-| 受伤、倒地 | 普通扣血由游戏规则处理。生命降为零后，玩家脚本持续选择重受击剪辑 `flinch_heavy`，等待救援或失败。 | 实机有倒地打断近战与关卡失败记录。模型检查了整段 0.417 秒的重受击动作。普通扣血没有独立动作，现有证据也没有一段持续倒卧的专用剪辑。[中断回执](../output/validation/watt-station/melee/cancel.json) · [模型采样](../output/validation/station-actions/model.txt) |
+| 拾取、用药、递药 | 对准红色医疗包按 E 拾取。受伤后按 H，角色用左手把药盒举到胸前。走近瓦特按 G 递药，瓦特伸手接盒。 | 旧版按 H 就会从 40 回到 90，手仍停在原处；左腕曾移动也不能证明拿到了物品。现在拾取和用药同时检查动画时刻与手的位置，递药还要看接收方的手。[玩家用药和递药脚本](../SandboxProject/Source/StationMedicine.cs) |
+| 维修、救援 | 走近发电机或倒下的伙伴，按住 E。维修时机器人俯身碰机身上的开关；救人时伸向队友的手，队友恢复生命后起身。 | 松开 E 可以中断。接触点随目标移动，场景中可以编辑开关与手的位置。[玩家交互](../SandboxProject/Source/StationInteraction.cs) |
+| 受伤、倒地 | 生命降到零时播放倒地动作，停在倒下的姿势等救援。恢复生命后播起身，站稳后接回移动。 | 旧版曾用一段 0.417 秒的重受击动作代替倒地，近战中断测试当时也能通过。[旧版中断记录](../output/validation/watt-station/melee/cancel.json) |
 
 ## 瓦特与巡检机
 
@@ -23,8 +23,8 @@
 | --- | --- |
 | 瓦特跟随、待命 | 跟随时朝目标转身并播放 `walking_nogun-cycle`，进入距离范围或待命后回到 `Idle-cycle`。前往玩家送药和原地等玩家来取，实测瓦特的位移分别为 3.830 米和 0 米。[队友指令与位移](../output/validation/station-companion/README.md) |
 | 瓦特拾取、递物 | 靠近并转向后，`Station-Pickup` 的接触时刻为 1.20 秒，`Station-Give` 为 0.733 秒。实机让瓦特空手起步，左腕在两段中分别移动 0.675 米和 0.641 米；第 38 帧瓦特背包从 0 变 1，第 59 帧玩家从 1 变 2。若瓦特一开始已有药，模型也可能直接交付背包中的药。发行包另验了这个流程。[拾取姿势](../output/validation/station-actions/gather-and-give/pickup-pose.png) · [手腕与双方库存](../output/validation/station-actions/gather-and-give/pose.json) · [包内交付](../output/validation/packaged-watt/animation/delivery/delivery.png) |
-| 瓦特维修、扶起玩家 | 第一局由瓦特恢复供电，两人一起撤离。重新开局后，瓦特两次扶起被巡检机击倒的玩家。另在正式游戏程序的测试场景中，瓦特在救援阶段播放 `Station-Pickup`，9 个采样帧中左腕最大位移为 0.568 米；玩家生命从 0 到 50 后，瓦特恢复跟随。记录可以证明实际播放和恢复，仍未测手掌与身体表面相距多少。[通关记录](../output/validation/packaged-watt/animation/mission/mission.json) · [两次救援的逐帧记录](../output/validation/packaged-watt/animation/mission/frames.jsonl) · [救援手腕逐帧数据](../output/validation/station-actions/sentinel.json) |
-| 瓦特跳跃、攀爬及自身倒下 | 实机用两条独立地形路线触发瓦特自动跨 0.95 米沟和攀 1.42 米平台。阶段由走路变为跳跃或攀爬，再恢复行走、停住；领队继续走时，瓦特重新起步。越沟用 `jump_1_up`，攀爬复用弯腰动作并把手腕引向台边，落地直接接行走。瓦特自己倒下时停止执行命令，当前没有为它播放专门的倒卧剪辑。[跟随路线、关节数据与截图](../output/validation/terrain-traversal/watt-follow/README.md) |
+| 瓦特维修、扶起玩家 | 瓦特用维修剪辑操作发电机，用救援剪辑扶起队友。过去一局里它两次救起玩家，录像却没有拍清楚手。旧回放保留当时的任务状态，可与新的侧面录像对照。[旧版通关记录](../output/validation/packaged-watt/animation/mission/mission.json) |
+| 瓦特跳跃、攀爬及自身倒下 | 实机用两条独立地形路线触发瓦特自动跨 0.95 米沟和攀 1.42 米平台。阶段由走路变为跳跃或攀爬，再恢复行走、停住；领队继续走时，瓦特重新起步。越沟用 `jump_1_up`，攀爬复用弯腰动作并把手腕引向台边，落地直接接行走。瓦特自己倒下时停止执行命令，保持倒卧姿势，收到救援后再站起来。[跟随路线、关节数据与截图](../output/validation/terrain-traversal/watt-follow/README.md) |
 | 巡检机追赶、近身放电 | `Walk-cycle` 的根骨名为 `MASTER`，原片段在 2.5 秒里向前走 2 米。游戏移动实体后固定这条根骨，双脚仍然按步态运动。正式游戏程序一次连续追赶中，实体前进 2.670 米，跨过一个循环，8 个行走采样帧里根骨与实体的水平差均为 0；左后脚上下相差 0.435 米。近身后切到 `Cannon_Fire_Recoil`，玩家受到放电伤害。[实体与骨骼逐帧记录](../output/validation/station-actions/sentinel.json) |
 | 巡检机损坏 | 以上述近身放电为起点，由测试脚本把巡检机剩余生命扣完。正式巡检机脚本切换到 `Damage_heavy` 并停在 0.30 秒。接下来 9 个采样帧中生命为零，机身节点保持原位置。[损坏前后的逐帧记录](../output/validation/station-actions/sentinel.json) |
 
@@ -42,7 +42,7 @@
 
 走路有一刻前掌仍然压在地面，脚跟和踝骨却已经抬起来了。在 `walking_gun-cycle` 的 1.017 秒，机器人的左踝比静止时高 20.2 厘米，真实鞋底只比静止时高 1.08 厘米。若把踝骨抬高的 20.2 厘米当成整只靴子已经跨过的高度，前方即使有 20 厘米的台阶，游戏也会认为无需再抬脚。
 
-角色脚下的高度用每只靴子六个点就可以估算。点都取自实际模型，其中一部分随脚掌骨 `foot` 移动，另一部分随脚趾骨 `toe` 移动。选点时分别考虑后跟、外侧边缘及前掌随步态翻转时出现的最低点。以五段走跑、蹲行、弯腰和落地动作来选点，保留能够改进整套动作估计的顶点。最后用全模型 35 段剪辑的 7,636 个姿势复核。与完整蒙皮鞋底相比，相对静止姿势的抬高量最大误差为左靴 6.48 毫米、右靴 5.56 毫米。以上述踮脚帧为例，六点估计和整个靴底到毫米位都为 11 毫米。记录给出了源顶点编号和对应关节的局部坐标，便于换模型时重新选点。[角色接触点](../output/validation/station-actions/sole-contacts.json) · [逐个动作的误差](../output/validation/station-actions/sole-contact-check.json)
+角色脚下的高度用每只靴子六个点就可以估算。点都取自实际模型，其中一部分随脚掌骨 `foot` 移动，另一部分随脚趾骨 `toe` 移动。选点时分别考虑后跟、外侧边缘及前掌随步态翻转时出现的最低点。以五段走跑、蹲行、弯腰和落地动作来选点，保留能够改进整套动作估计的顶点。加入维修、扶人和起身等姿势后，重新选了左靴两个点和右靴一个点，用全部 40 段剪辑的 8,809 个姿势复核。与完整蒙皮鞋底相比，抬高量的最大误差为左靴 8.22 毫米、右靴 9.41 毫米。以上述踮脚帧为例，六点估计和整个靴底到毫米位都为 11 毫米。记录给出了源顶点编号和对应关节的局部坐标，便于换模型时重新选点。[角色接触点](../output/validation/station-actions/sole-contacts.json) · [逐个动作的误差](../output/validation/station-actions/sole-contact-check.json)
 
 ## 工具箱旁的脚步
 

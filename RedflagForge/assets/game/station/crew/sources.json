@@ -4,7 +4,7 @@
     "upstream": "player/model/player.glb",
     "commit": "a82f15448e9b015440d3bbdf5e10801b260c4e9f",
     "original_sha256": "16b783ec2e19245d034326d401796b9bd2635de75f4e38917854316abeee4f9c",
-    "sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+    "sha256": "a8a6d29bad8984736a94aa16e9c3f6c116330dab281cac78929888ca4fde6c93",
     "additional_motion": [
       {
         "author": "Quaternius",
@@ -50,6 +50,51 @@
         "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
         "original": "Crouch_Fwd_Loop",
         "imported": "Station-CrouchWalk"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "file": "UAL1_Standard.glb",
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+        "original": "Fixing_Kneeling",
+        "imported": "Station-Repair"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary2.html",
+        "file": "UAL2_Standard.glb",
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+        "original": "Consume",
+        "imported": "Station-UseMedkit"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary2.html",
+        "file": "UAL2_Standard.glb",
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+        "original": "Farm_PlantSeed",
+        "imported": "Station-Revive"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary2.html",
+        "file": "UAL2_Standard.glb",
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+        "original": "LayToIdle",
+        "imported": "Station-GetUp"
+      },
+      {
+        "author": "Quaternius",
+        "license": "CC0-1.0",
+        "source": "https://quaternius.com/packs/universalanimationlibrary2.html",
+        "file": "UAL2_Standard.glb",
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+        "original": "LayToIdle",
+        "imported": "Station-Down"
       }
     ]
   },

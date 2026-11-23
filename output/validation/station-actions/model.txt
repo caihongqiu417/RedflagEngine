@@ -40,12 +40,32 @@ PASS Station-Pickup
 clip_check Station-Pickup duration_s=2.5 observed_s=2.5 joint=hand.L travel_m=0.77159 nodes=151
 PASS Station-Give
 clip_check Station-Give duration_s=2 observed_s=2 joint=hand.L travel_m=0.689876 nodes=151
+PASS Station-UseMedkit
+clip_check Station-UseMedkit duration_s=2 observed_s=2 joint=f_middle.01.L travel_m=0.755954 nodes=151
+PASS Station-Repair
+clip_check Station-Repair duration_s=2.6 observed_s=2.6 joint=hips travel_m=0.364856 nodes=151
+PASS Station-Revive
+clip_check Station-Revive duration_s=2.6 observed_s=2.6 joint=f_middle.01.L travel_m=0.830439 nodes=151
+PASS Station-Down
+clip_check Station-Down duration_s=1 observed_s=1 joint=head.001 travel_m=1.62827 nodes=151
+PASS Station-GetUp
+clip_check Station-GetUp duration_s=1.53333 observed_s=1.53333 joint=head.001 travel_m=1.62827 nodes=151
+PASS chest contact is on the skinned mesh at the healing event
+PASS medkit back face stays on chest armor before and after the event
+PASS medkit lifts, stays pressed, then lowers into the starting hand pose
+medkit armor_gap_max_m=5.06213e-06 grip_height_m=0.627133,1.19555,0.627133
+PASS collapsed character begins rising from the same whole-body pose
+rescue head_ground_then_raised_m=0.261262,1.53482 max_pose_difference=2.6656e-07
 PASS pickup
 state_event pickup contact at_s=1.2
 PASS one inventory contact per reach
 PASS next idle state starts with its own clock
 PASS give
 state_event give contact at_s=0.733334
+PASS one inventory contact per reach
+PASS next idle state starts with its own clock
+PASS heal
+state_event heal contact at_s=1
 PASS one inventory contact per reach
 PASS next idle state starts with its own clock
 PASS punch
@@ -61,6 +81,10 @@ PASS next idle state starts with its own clock
 PASS repair
 PASS next idle state starts with its own clock
 PASS revive
+PASS next idle state starts with its own clock
+PASS down
+PASS next idle state starts with its own clock
+PASS getup
 PASS next idle state starts with its own clock
 PASS load actual station guard
 PASS Idle-cycle
@@ -87,8 +111,11 @@ PASS inventory contact agrees with rendered hand
 PASS wrist reaches away from idle and withdraws
 PASS index fingertip stays above floor
 give contact = 22/60 frames, wrist XYZ (m) = 0.293985, 1.21175, 0.319408, travel = 0.672958 m, lowest index = 0.569498 m
-PASS Station-Pickup
-PASS Cannon_Charge-cycle
+PASS Station-UseMedkit
+PASS Station-Revive
+PASS Station-Repair
+PASS Station-Down
+PASS Station-GetUp
 PASS AIM-Center
 PASS Cannon_Charge
 PASS Station-Punch

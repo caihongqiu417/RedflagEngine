@@ -10,6 +10,9 @@ from scipy.spatial.transform import Rotation, Slerp
 GESTURES = [("Interact", "Station-Give"), ("Punch_Jab", "Station-Punch"),
             ("Crouch_Idle_Loop", "Station-Crouch"), ("Crouch_Fwd_Loop", "Station-CrouchWalk")]
 
+CARE = [("Consume", "Station-UseMedkit"), ("Farm_PlantSeed", "Station-Revive"),
+        ("LayToIdle", "Station-GetUp"), ("LayToIdle", "Station-Down")]
+
 
 def read_glb(path):
     raw = path.read_bytes()
@@ -75,8 +78,8 @@ class Rig:
             world[i] = pos, rotation, scale
         return world
 
-    def shoe_vertices(self):
-        """按关节整理靴子的蒙皮顶点，保存它们在关节坐标中的位置和权重。"""
+    def skin_vertices(self, shoes_only):
+        """保存蒙皮顶点的关节坐标和权重。站着时只需测靴底，躺下时还要测背甲和手臂。"""
         vertices = []
         for node in self.nodes:
             if "skin" not in node:
@@ -89,7 +92,8 @@ class Rig:
                 attrs = primitive["attributes"]
                 weights = self.values(attrs["WEIGHTS_0"])
                 indices = self.values(attrs["JOINTS_0"])
-                keep = np.any(np.isin(joints[indices], shoes) & (weights > 0), axis=1)
+                keep = (np.any(np.isin(joints[indices], shoes) & (weights > 0), axis=1)
+                        if shoes_only else np.ones(len(weights), dtype=bool))
                 if not np.any(keep):
                     continue
                 indices, weights = indices[keep], weights[keep]
@@ -98,7 +102,7 @@ class Rig:
                 vertices.append((joints[indices], weights, bound))
         return vertices
 
-    def shoe_height(self, world, vertices):
+    def floor_height(self, world, vertices):
         # 只计算世界坐标 Y，和引擎对顶点使用的蒙皮矩阵、四个关节权重一致。
         frames = max(len(pos) for pos, rotation, scale in world.values())
         row = np.empty((frames, len(self.nodes), 4))
@@ -116,7 +120,8 @@ def add_interactions(doc, data, gestures, floor_motion):
     dest = Rig(doc, data)
     idle = dest.pose(dest.clip("Idle-cycle"), [0])
     rest = dest.world(idle)
-    shoes = dest.shoe_vertices()
+    shoes = dest.skin_vertices(shoes_only=True)
+    whole_body = dest.skin_vertices(shoes_only=False)
     # 目标骨架多出的活塞、前臂滑轨和指节沿用作者待机时的局部姿势，会随父骨骼运动。
     mapping = {"spine1": "spine_01", "spine2": "spine_02", "chest": "spine_03",
                "neck": "neck_01", "head.001": "Head"}
@@ -145,6 +150,8 @@ def add_interactions(doc, data, gestures, floor_motion):
 
     clips = [(floor_motion, "Farm_Harvest", "Station-Pickup")]
     clips.extend((gestures, original, name) for original, name in GESTURES)
+    clips.append((gestures, "Fixing_Kneeling", "Station-Repair"))
+    clips.extend((floor_motion, original, name) for original, name in CARE)
     for source_path, clip_name, robot_clip in clips:
         picking = robot_clip == "Station-Pickup"
         player_motion = robot_clip not in ("Station-Give", "Station-Pickup")
@@ -175,8 +182,11 @@ def add_interactions(doc, data, gestures, floor_motion):
         # 原动作以 30 Hz 采样。保留同一秒数和帧数，关键帧之间由引擎做球面插值。
         times = np.linspace(0, duration, round(float(duration) * 30) + 1)
         original_world = source.world(source.pose(original, times))
+        seconds = {"Station-UseMedkit": 2., "Station-Repair": 2.6, "Station-Revive": 2.6, "Station-Down": 1.}
+        if robot_clip in seconds:
+            times = np.linspace(0, seconds[robot_clip], len(times))
         def source_bone(name):
-            if not picking:
+            if not picking and robot_clip != "Station-Revive":
                 return original_world[source.names[name]][:2]
             # 源角色右手采集，机器人的右臂带装备。交换左右骨并沿角色正中面对称，改由左手低身取物。
             if name.endswith(("_r", "_l")):
@@ -250,7 +260,8 @@ def add_interactions(doc, data, gestures, floor_motion):
             delta = np.zeros((len(times), 3))
             if player_motion:
                 # 蹲行会翻滚脚掌，只看脚尖会让脚跟穿地。用实际靴底最低的顶点贴住地面。
-                delta[:, 1] = -dest.shoe_height(posed, shoes)
+                resting_on_body = robot_clip in ("Station-Down", "Station-GetUp", "Station-Repair", "Station-Revive")
+                delta[:, 1] = -dest.floor_height(posed, whole_body if resting_on_body else shoes)
             else:
                 # 拾取动作保留原来的脚尖接触高度，手指随后也相对于同一地面定位。
                 feet = [dest.names["toe.L"], dest.names["toe.R"]]
@@ -299,8 +310,12 @@ def add_interactions(doc, data, gestures, floor_motion):
                 turn.append(rotation.as_quat())
             parent = posed[dest.parents[hand]][1]
             result[hand]["rotation"] = (parent.inv() * Rotation.from_quat(turn) * hand_world).as_quat()
+        if robot_clip == "Station-UseMedkit":
+            from station_medkit_pose import fit_medkit
+            fit_medkit(dest, result, times)
+
         for i in dest.order:
             for path, values in result[i].items():
-                write(i, path, values)
+                write(i, path, values[::-1] if robot_clip == "Station-Down" else values)
         doc["animations"].append(output)
     return bytes(binary)
