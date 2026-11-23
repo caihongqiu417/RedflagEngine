@@ -6,6 +6,7 @@
 namespace Redflag
 {
 	class Scene;
+	class Entity;
 
 	enum class TraversalMode { Ground, Slope, Step, Jump, Climb, Blocked };
 	enum class TraversalInput { Walk, Jump, Automatic };
@@ -25,6 +26,9 @@ namespace Redflag
 	/// <param name="delta">本帧的水平位移，单位为米。跨过缺口后脚底应落在另一侧。</param>
 	TraversalMode MoveCharacter(Scene& scene, uint64_t actor, glm::vec3 delta, float radius, float seconds,
 		TraversalInput input = TraversalInput::Walk);
+
+	/// <summary>目标挡在路上时返回下一处可以绕行的箱角；可以直走时返回终点。</summary>
+	glm::vec3 NextBoxCorner(Entity obstacle, glm::vec3 start, glm::vec3 finish, float radius);
 
 	void CancelTraversal(Scene& scene, uint64_t actor);
 }

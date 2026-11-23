@@ -12,6 +12,9 @@ namespace Redflag
 {
 	namespace
 	{
+        // 原片收手约需四分之一秒。手臂、药盒的旋转和归位共用这段过渡。
+        constexpr float HandReleaseSeconds = .28f;
+
 		const ContactSocket* Socket(Entity entity, const std::string& name)
 		{
 			if (!entity || !entity.HasComponent<ContactSocketsComponent>()) return nullptr;
@@ -21,49 +24,6 @@ namespace Redflag
 		}
 
 		glm::vec3 Flat(glm::vec3 p) { p.y = 0.f; return p; }
-
-		// 线段若穿过设备的碰撞盒，比较沿左右边缘走的路，先去较近的拐角。
-		glm::vec3 AroundBox(Entity target, glm::vec3 start, glm::vec3 finish, float radius)
-		{
-			if (!target.HasComponent<BoxCollider3DComponent>()) return finish;
-			const auto& tr = target.GetComponent<TransformComponent>();
-			const auto& box = target.GetComponent<BoxCollider3DComponent>();
-			const glm::mat4 model = tr.GetTransform(), inverse = glm::inverse(model);
-			auto local = [&](glm::vec3 p) { const glm::vec3 v(inverse * glm::vec4(p,1)); return glm::vec2(v.x-box.Center.x,v.z-box.Center.z); };
-			const glm::vec2 a = local(start), b = local(finish);
-			const glm::vec2 ext = glm::vec2(box.HalfSize.x,box.HalfSize.z) +
-				(radius+.035f)/glm::abs(glm::vec2(tr.Scale.x,tr.Scale.z));
-			auto clear = [&](glm::vec2 p, glm::vec2 q) {
-				float first = 0.f, last = 1.f;
-				for (int i=0;i<2;++i) {
-					const float d = q[i]-p[i], edge = ext[i]-.005f;
-					if (std::abs(d)<.0001f) { if (std::abs(p[i])>=edge) return true; continue; }
-					const float t0=(-edge-p[i])/d, t1=(edge-p[i])/d;
-					first = std::max(first,std::min(t0,t1)); last = std::min(last,std::max(t0,t1));
-				}
-				return last<=first;
-			};
-			if (clear(a,b) || (std::abs(b.x)<ext.x && std::abs(b.y)<ext.y)) return finish;
-			const glm::vec2 corners[]={{-ext.x,-ext.y},{ext.x,-ext.y},{ext.x,ext.y},{-ext.x,ext.y}};
-			float shortest = std::numeric_limits<float>::max();
-			glm::vec2 next=b;
-			for (int i=0;i<4;++i) {
-				if (!clear(a,corners[i]) || glm::distance(a,corners[i])<.015f) continue;
-				for (int sign : {-1,1}) {
-					float length = glm::distance(a,corners[i]);
-					for (int k=0;k<4;++k) {
-						const int j=(i+sign*k+4)%4;
-						if (clear(corners[j],b)) {
-							length += glm::distance(corners[j],b);
-							if (length<shortest) {shortest=length; next=corners[i];}
-							break;
-						}
-						length += glm::distance(corners[j],corners[(j+sign+4)%4]);
-					}
-				}
-			}
-			return model * glm::vec4(next.x+box.Center.x,0,next.y+box.Center.z,1);
-		}
 
 		const AnimationState* ContactClip(Scene& scene, Entity owner, const std::string& action)
 		{
@@ -162,14 +122,14 @@ namespace Redflag
 			// 以队友身体为圆心，给两人的前臂各留一段可以弯曲的距离。
 			const glm::vec3 center = glm::vec3(objectModel[3]);
 			away = Flat(tr.Translation-center);
-			mark = center + (glm::length(away) > .001f ? glm::normalize(away) : glm::vec3(0,0,-1)) * .87f;
+			mark = center + (glm::length(away) > .001f ? glm::normalize(away) : glm::vec3(0,0,-1)) * owner.GetComponent<ContactSocketsComponent>().GiveDistance;
 		} else if (s && glm::length(Flat(s->Stand)) > .001f) {
 			mark = goal + glm::vec3(objectModel * glm::vec4(s->Stand,0));
 		}
 		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
 			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(tr.Scale.x) : .3f;
 		const glm::vec3 finalMark = mark;
-		if (s && glm::length(Flat(s->Stand))>.001f) mark = AroundBox(object,tr.Translation,mark,radius);
+		if (s && glm::length(Flat(s->Stand))>.001f) mark = NextBoxCorner(object,tr.Translation,mark,radius);
 		glm::vec3 offset = Flat(mark-tr.Translation);
 		const float remaining = glm::length(offset);
 		const glm::vec3 face = remaining > .12f ? offset : Flat(goal-tr.Translation);
@@ -229,10 +189,10 @@ namespace Redflag
 		Entity target = scene.GetEntityByUUID(hand.Target);
 		glm::vec3 goal, grip;
 		if (hand.Released || !target || !Goal(owner,target,hand.Action,goal) || !ReadContactSocket(owner,"grip",grip)) return false;
-		// 四厘米相当于医疗包半厚。比较的是屏幕上已经摆好的手，目标走开后本次通知不能交接。
-		constexpr float tolerance = .04f;
+		// 两个人各用自己的握持范围，只有双方都够到药盒才能交接。
+		const float tolerance = owner.GetComponent<ContactSocketsComponent>().GripTolerance;
 		if (glm::distance(grip,goal) > tolerance) return false;
-		if (hand.Action == "give" && (!ReadContactSocket(target,"grip",grip) || glm::distance(grip,goal)>tolerance)) return false;
+		if (hand.Action == "give" && (!ReadContactSocket(target,"grip",grip) || glm::distance(grip,goal)>target.GetComponent<ContactSocketsComponent>().GripTolerance)) return false;
 		return true;
 	}
 
@@ -283,7 +243,7 @@ namespace Redflag
 			const bool reach = !hand.Released && !hand.Passed;
 			// 让原片先带动肩肘。最后约半段伸手才逐渐对准接触点，接物后平滑交还原片。
 			hand.Weight = reach ? glm::smoothstep(.45f * hand.ReachAt,hand.ReachAt,hand.Age) :
-				std::max(0.f,hand.Weight - seconds/.28f);
+				std::max(0.f,hand.Weight - seconds/HandReleaseSeconds);
 		}
 	}
 
@@ -343,7 +303,7 @@ namespace Redflag
 					if ((hand.Action == "give" || hand.Action == "heal") && !hand.Released &&
 						ReadContactSocket(owner,"pouch",pouch)) grip = glm::mix(pouch,grip,glm::smoothstep(0.f,.24f,hand.Age));
 					if (hand.Released && ReadContactSocket(owner,"pouch",pouch)) {
-						hand.Stow = std::min(1.f,hand.Stow + seconds/.28f);
+						hand.Stow = std::min(1.f,hand.Stow + seconds/HandReleaseSeconds);
 						grip = glm::mix(grip,pouch,glm::smoothstep(0.f,1.f,hand.Stow));
 					}
 					auto& tr = prop.GetComponent<TransformComponent>();
@@ -359,7 +319,7 @@ namespace Redflag
 						if (hand.Released) {
 							const float angle = glm::angle(glm::inverse(rotation)*carrying);
 							const float remaining = std::min(angle,glm::two_pi<float>()-angle);
-							if (remaining>0.f) rotation=glm::slerp(rotation,carrying,std::min(1.f,glm::pi<float>()*seconds/(.28f*remaining)));
+							if (remaining>0.f) rotation=glm::slerp(rotation,carrying,std::min(1.f,glm::pi<float>()*seconds/(HandReleaseSeconds*remaining)));
 						}
 					}
 					tr.Rotation = glm::eulerAngles(rotation);

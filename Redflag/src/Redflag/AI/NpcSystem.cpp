@@ -184,6 +184,7 @@ namespace Redflag
 	void NpcSystem::Stop(uint64_t actor, NpcState& state)
 	{
 		CancelTraversal(m_Scene, actor);
+		state.WalkCorner.reset();
 		EndContact(m_Scene,actor);
 		state.Look = 0;
 		if (state.Watch.Request)
@@ -350,10 +351,54 @@ namespace Redflag
 		return false;
 	}
 
+	// 小平台和沟沿仍交给已有的跨越动作。挡在路上的角色和高箱体，从碰撞盒边缘绕过去。
+	static std::optional<glm::vec3> FollowCorner(Scene& scene, Entity actor, uint64_t leader,
+		glm::vec3 place, float radius)
+	{
+		const glm::vec3 start=actor.GetComponent<TransformComponent>().Translation;
+		glm::vec3 mark=place;
+		for (int turn=0; turn<2; ++turn) {
+			glm::vec3 offset=mark-start;
+			offset.y=0;
+			const float distance=glm::length(offset);
+			if (distance<.04f) break;
+			const glm::vec3 dir=offset/distance, side(-dir.z,0,dir.x);
+			Entity obstacle;
+			float nearest=std::min(distance,4.f);
+			for (float width : {0.f,-radius,radius}) {
+				const auto hit=scene.Raycast(start+glm::vec3(0,.8f,0)+width*side,dir,nearest,actor.GetUUID());
+				if (!hit || hit->Entity==leader) continue;
+				Entity other=scene.GetEntityByUUID(hit->Entity);
+				if (!other || !other.HasComponent<BoxCollider3DComponent>()) continue;
+				const auto& box=other.GetComponent<BoxCollider3DComponent>();
+				const auto& tr=other.GetComponent<TransformComponent>();
+				if (!other.HasComponent<HealthComponent>() && (box.Center.y+box.HalfSize.y)*std::abs(tr.Scale.y)+tr.Translation.y-start.y <= 1.65f)
+					continue;
+				nearest=hit->Distance;
+				obstacle=other;
+			}
+			if (!obstacle) break;
+			const glm::vec3 corner=NextBoxCorner(obstacle,start,mark,radius+.08f);
+			if (glm::distance(glm::vec2(corner.x,corner.z),glm::vec2(mark.x,mark.z))<.01f) break;
+			mark=corner;
+		}
+		if (mark==place) return {};
+		mark.y=start.y;
+		return mark;
+	}
+
 	void NpcSystem::WalkTo(uint64_t actor, NpcState& state, glm::vec3 place, float stopDistance, float seconds)
 	{
 		Entity owner = m_Scene.GetEntityByUUID(actor);
 		const TransformComponent& transform = owner.GetComponent<TransformComponent>();
+		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
+			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(transform.Scale.x) : .30f;
+		const bool follow = state.Action == "follow";
+		if (follow) {
+			if (state.WalkCorner && glm::distance(transform.Translation,*state.WalkCorner)<.07f) state.WalkCorner.reset();
+			if (!state.WalkCorner) state.WalkCorner=FollowCorner(m_Scene,owner,state.Goal.Target,place,radius);
+			if (state.WalkCorner) {place=*state.WalkCorner;stopDistance=0.f;}
+		}
 		glm::vec3 offset = place - transform.Translation;
 		offset.y = 0.0f;
 
@@ -364,10 +409,9 @@ namespace Redflag
 		const float step = std::min(remaining, GetDefinition(actor)->Speed * seconds);
 		Face(actor, place, seconds);
 		const glm::vec3 forward(std::sin(transform.Rotation.y), 0.0f, std::cos(transform.Rotation.y));
-		const float radius = owner.HasComponent<BoxCollider3DComponent>() ?
-			owner.GetComponent<BoxCollider3DComponent>().HalfSize.x * std::abs(transform.Scale.x) : .30f;
 		const glm::vec3 delta = direction * step * std::max(0.0f, glm::dot(forward, direction));
-		const TraversalMode mode = MoveCharacter(m_Scene, actor, delta, radius, seconds, TraversalInput::Automatic);
+		const TraversalMode mode = MoveCharacter(m_Scene, actor, delta, radius, seconds, state.WalkCorner ? TraversalInput::Walk : TraversalInput::Automatic);
+		if (mode==TraversalMode::Blocked || !follow) state.WalkCorner.reset();
 		Enter(actor, state, mode == TraversalMode::Jump ? "jump" : mode == TraversalMode::Climb ? "climb" :
 			mode == TraversalMode::Blocked ? "blocked" : "walk");
 	}
@@ -486,7 +530,11 @@ namespace Redflag
 		const NpcDefinition& definition = *GetDefinition(actor);
 		if (NpcScriptAction::Exists(state.Action))
 		{
-			if (!state.Script) state.Script = NpcScriptAction::Create(state.Action);
+			if (!state.Script) {
+				// 脚本接手时也记下阶段。用药收手后再次进入 idle，播放器才会切回待机。
+				Enter(actor, state, state.Action);
+				state.Script = NpcScriptAction::Create(state.Action);
+			}
 			// 脚本也可以发出新指令。它在 Tick 里改令后，旧返回值不能结束新动作。
 			Ref<NpcScriptAction> script = state.Script;
 			const ActionResult result = script ? script->Tick(actor, state.Goal.Target, seconds) : ActionResult::Unavailable;

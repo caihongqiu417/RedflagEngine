@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
     parser.add_argument("--melee", choices=("hit","miss","wall","cancel","movement"), help="验证维修站玩家的移动、镜头和近战")
     parser.add_argument("--interaction", choices=("pickup","repair","revive","equipment"), help="实际按 E、H 与装备键，检查动作和交互结果")
+    parser.add_argument("--sentinel-cover",action="store_true",help="在实际 PhysX 隔板前检查巡检机的蓄能、遮挡、搜索和巡逻")
     parser.add_argument("--sentinel", action="store_true", help="核对巡检机追赶玩家时的实体、根骨和脚步")
     parser.add_argument("--watt-terrain",choices=("gap","climb"),help="在测试平台观察瓦特自主跟随领队跨沟、攀台和恢复移动")
     parser.add_argument("--animation-actors", action="store_true", help="在双角色测试场景检查 C# 通知与动作打断")
@@ -46,6 +47,7 @@ def main():
     parser.add_argument("--show-help", action="store_true", help="截图时实际按住 F1")
     parser.add_argument("--name",default="third-person-pbr",help="开场截图的文件名，不含扩展名")
     args = parser.parse_args()
+    if args.sentinel_cover: args.sentinel = True
     exe = args.exe.resolve(strict=True)
     work = Path(tempfile.mkdtemp(prefix="station-",dir=ROOT/"tmp"))
     scripts = work/"Resources/Scripts"
@@ -64,7 +66,7 @@ def main():
     sources = sorted((ROOT/"SandboxProject/Source").rglob("*.cs"))
     subprocess.run([str(compiler),"/nologo","/target:library","/out:"+str(scripts/"Sandbox.dll"),
                     "/reference:"+str(core),*map(str,sources),str(ROOT/"tests/StationRecorder.cs"),
-                    str(ROOT/"tests/StationMotionCapture.cs"),str(ROOT/"tests/StationLatency.cs")],check=True)
+                    str(ROOT/"tests/SentinelCoverProbe.cs"),str(ROOT/"tests/StationMotionCapture.cs"),str(ROOT/"tests/StationLatency.cs")],check=True)
     source = ROOT/"RedflagForge/assets/scenes/Watt-Station.redflag"
     scene = yaml.safe_load(source.read_text(encoding="utf8"))
     if args.start_xz:
@@ -89,6 +91,9 @@ def main():
     if args.sentinel:
         from station_guard_gait import arrange
         arrange(scene)
+        if args.sentinel_cover:
+            from station_guard_cover import stage_cover
+            stage_cover(scene)
     if args.watt_terrain:
         from station_npc_traversal import arrange
         arrange(scene,args.watt_terrain)
@@ -181,9 +186,12 @@ def main():
             if args.watt_terrain:
                 from station_npc_traversal import verify
                 verify(args.watt_terrain,session,process,exe,ROOT/"output/validation/terrain-traversal/watt-follow",hwnd)
+            elif args.sentinel_cover:
+                from station_guard_cover import verify
+                verify(session,process,exe,ROOT/"output/validation/station-actions/sentinel-cover.json")
             elif args.sentinel:
                 from station_guard_gait import verify
-                verify(session,process,exe,ROOT/"output/validation/station-actions/sentinel.json")
+                verify(session,process,exe,ROOT/"output/validation/station-actions/sentinel-yard.json")
             elif args.melee:
                 from station_melee import verify
                 verify(args.melee, session, process, exe, output/"melee")

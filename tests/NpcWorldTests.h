@@ -81,6 +81,50 @@ inline void CheckStationWorkDistance(void (*check)(bool,const char*))
     room.OnSimulationStop();
 }
 
+inline void CheckStationFollowCorner(void (*check)(bool,const char*))
+{
+    using namespace Redflag;
+    Scene room;
+    auto box = [&](uint64_t id, glm::vec3 pos, glm::vec3 half) {
+        Entity e=room.CreateEntityWithUUID(id,"yard");
+        e.GetComponent<TransformComponent>().Translation=pos;
+        e.AddComponent<RigidBody3DComponent>();
+        e.AddComponent<BoxCollider3DComponent>().HalfSize=half;
+        return e;
+    };
+    box(1,{0,-.1f,0},{30,.1f,15});
+    Entity worker=box(41,{11.9523592f,.08f,2.28424978f},{.34f,.92f,.34f});
+    worker.GetComponent<BoxCollider3DComponent>().Center.y=.92f;
+    worker.GetComponent<RigidBody3DComponent>().Type=BodyType3D::Kinematic;
+    worker.AddComponent<NpcComponent>()={"assets/ai/watt.npc.yaml","",42};
+    worker.AddComponent<HealthComponent>().Team="crew";
+    Entity leader=room.CreateEntityWithUUID(42,"leader");
+    leader.GetComponent<TransformComponent>().Translation={-8.00030422f,.08f,-2.14938331f};
+    leader.AddComponent<HealthComponent>().Team="crew";
+    Entity blocker=box(43,{9.98933411f,.08f,1.63374543f},{.9f,1.05f,1.1f});
+    blocker.GetComponent<RigidBody3DComponent>().Type=BodyType3D::Kinematic;
+    blocker.GetComponent<BoxCollider3DComponent>().Center.y=1.05f;
+    blocker.GetComponent<TransformComponent>().Scale=glm::vec3(.86f);
+    blocker.AddComponent<HealthComponent>().Team="fault";
+    box(44,{12.2f,.08f,1.4f},{.6f,.75f,.38f}).AddComponent<HealthComponent>();
+    room.OnSimulationStart();
+    NpcSystem npc(room);
+    float top=.08f;
+    for (int frame=0;frame<1200;++frame) {
+        const auto& foot=worker.GetComponent<TransformComponent>().Translation;
+        const glm::vec3 watch=foot-blocker.GetComponent<TransformComponent>().Translation;
+        blocker.GetComponent<TransformComponent>().Rotation.y=std::atan2(watch.x,watch.z);
+        room.OnUpdatePhysics(1.f/60.f);
+        npc.Update(1.f/60.f);
+        top=std::max(top,foot.y);
+    }
+    const float distance=glm::distance(worker.GetComponent<TransformComponent>().Translation,
+                                      leader.GetComponent<TransformComponent>().Translation);
+    std::cout << "yard follow final distance " << distance << " m, maximum foot height " << top << " m\n";
+    check(distance<=npc.GetDefinition(41)->Reach && top<.10f,"worker walks around the turning sentinel and reaches the leader on the ground");
+    room.OnSimulationStop();
+}
+
 // 从正常决策客户端发出同一句指令，读取角色走过的动作和两个人的库存。
 inline bool CheckCompanionGame(uint16_t port, bool hasMedicine)
 {

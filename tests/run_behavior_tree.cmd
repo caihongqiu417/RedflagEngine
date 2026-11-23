@@ -17,6 +17,7 @@ cl /nologo /std:c++17 /EHsc /MDd /utf-8 /wd4828 /wd4005 /DRF_PLATFORM_WINDOWS /D
 if errorlevel 1 exit /b 1
 bin-int\Tests\Behavior\BehaviorTreeTests.exe
 if errorlevel 1 exit /b 1
+if /i "%~1"=="--rules" exit /b 0
 if not exist bin-int\redflag-mcp\Scripts\python.exe (
  echo Install scripts/redflag_mcp/requirements.txt in bin-int/redflag-mcp before running the authoring panel test.
  exit /b 1

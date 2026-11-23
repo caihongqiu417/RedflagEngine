@@ -10,9 +10,12 @@ def arrange(scene):
     from station_melee import arrange as trim_scene
     guard = next(row for row in scene["Entities"] if row["Entity"] == 1103)
     watt = next(row for row in scene["Entities"] if row["Entity"] == 1102)
+    # 正式脚本读取巡逻点和警示灯，测试场景也保留这两个真实引用。
+    extra = [e for e in scene["Entities"] if e["Entity"] in (1930,1931)]
     script = guard["ScriptComponent"]
     npc = watt["NpcComponent"]
     trim_scene(scene, "movement")
+    scene["Entities"].extend(extra)
     guard["ScriptComponent"] = script
     guard["TransformComponent"]["Translation"] = [-2.0, .08, 1.4]
     watt["NpcComponent"] = npc
@@ -63,13 +66,16 @@ def verify(session, process, exe, output):
     assert any(row["clip"] == "Cannon_Fire_Recoil" for row in rows)
     assert len(broken) >= 3 and all(row["guard_health"]==0 and abs(row["time"]-.3)<.001 for row in broken)
     assert max(math.dist(row["body"],broken[0]["body"]) for row in broken)<.001
-    assert all(row["watt_clip"] == "Station-Pickup" for row in rescue)
+    assert all(row["watt_clip"] == "Station-Revive" for row in rescue)
     reach = max(math.dist(row["wrist"],rescue[0]["wrist"]) for row in rescue)
     assert reach > .3, reach
     result = dict(exe_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(), walk_samples=len(walk),
                   travel_m=travel, gait_wraps=wraps, max_root_horizontal_error_m=root_error,
                   foot_vertical_range_m=foot_height, broken_frames=len(broken), rescue_samples=len(rescue),
-                  rescue_wrist_travel_m=reach, final_clip=rows[-1]["clip"], frames=rows)
+                  rescue_wrist_travel_m=reach, final_clip=rows[-1]["clip"])
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2)+"\n", encoding="utf8")
+    # 每行保留一个完整骨骼样本，按 seq 可直接找回那一帧。
+    summary = json.dumps(result, indent=2)[:-2]
+    frames = ",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows)
+    output.write_text(summary + ',\n  "frames": [\n' + frames + "\n  ]\n}\n", encoding="utf8")
     print(f"PASS guard moved {travel:.3f} m, root error {root_error:.6f} m, left foot lifted {foot_height:.3f} m")

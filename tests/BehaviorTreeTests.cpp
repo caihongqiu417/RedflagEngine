@@ -62,10 +62,48 @@ static void RewireInEditor(BehaviorTree& tree, const fs::path& file)
     ImGui::DestroyContext(ctx);
 }
 
+static void CheckSentinelRules()
+{
+    BehaviorTree tree;
+    std::string error;
+    Check(tree.Load("RedflagForge/assets/ai/sentinel.tree.yaml",error),error);
+    const char* facts[] = {"damaged", "visible", "outside_reach", "cooling", "ready", "last_seen"};
+    for (int mask = 0; mask < 64; ++mask) {
+        BehaviorBlackboard input;
+        for (int bit = 0; bit < 6; ++bit)
+            if (mask & (1 << bit)) input.Values[facts[bit]] = "true";
+        const char* expected = "patrol";
+        if (mask & 1) expected = "damaged";
+        else if (mask & 2) {
+            if (mask & 4) expected = "chase";
+            else if (mask & 8) expected = "cool";
+            else if (mask & 16) expected = "discharge";
+            else expected = "charge";
+        } else if (mask & 32) expected = "search";
+        Check(tree.Tick(input, "").Action == expected, "incorrect priority for mask " + std::to_string(mask));
+        Check(tree.Tick(input, "damaged").Action == expected, "unrelated model choice overrides the physical facts");
+    }
+
+    // 两条条件同时成立时，调整边的顺序应该改变执行结果，并随行为树文件一起保存。
+    BehaviorBlackboard actor;
+    actor.Values = {{"visible", "true"}, {"cooling", "true"}, {"ready", "true"}};
+    Check(tree.Tick(actor, "").Action == "cool", "original cooling branch has priority");
+    Check(tree.RaisePriority(3, "ready"), "could not move ready above cooling");
+    Check(tree.Tick(actor, "").Action == "discharge", "raised ready branch did not win");
+    const fs::path copy = "tmp/behavior-tree/sentinel-priority.tree.yaml";
+    fs::create_directories(copy.parent_path());
+    BehaviorTree reopened;
+    Check(tree.Save(copy, error) && reopened.Load(copy, error), error);
+    Check(reopened.Tick(actor, "").Action == "discharge", "saved and reopened branch order changed");
+    std::cout << "PASS sentinel priority for 64 combinations and unrelated model text; "
+              << "raising ready above cooling persists after saving and reopening\n";
+}
+
 int main()
 {
     try
     {
+        CheckSentinelRules();
         const fs::path source = "RedflagForge/assets/ai/watt.tree.yaml";
         const fs::path dir = "tmp/behavior-tree";
         fs::create_directories(dir);

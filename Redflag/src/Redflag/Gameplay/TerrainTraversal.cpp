@@ -104,6 +104,56 @@ namespace Redflag
 		}
 	}
 
+	// 线段若穿过设备的碰撞盒，比较沿左右边缘走的路，先去较近的拐角。
+	glm::vec3 NextBoxCorner(Entity target, glm::vec3 start, glm::vec3 finish, float radius)
+	{
+		if (!target.HasComponent<BoxCollider3DComponent>()) return finish;
+		const auto& tr = target.GetComponent<TransformComponent>();
+		const auto& box = target.GetComponent<BoxCollider3DComponent>();
+		const glm::mat4 model = tr.GetTransform(), inverse = glm::inverse(model);
+		auto local = [&](glm::vec3 p) { const glm::vec3 v(inverse * glm::vec4(p,1)); return glm::vec2(v.x-box.Center.x,v.z-box.Center.z); };
+		const glm::vec2 a = local(start), b = local(finish);
+		const glm::vec2 ext = glm::vec2(box.HalfSize.x,box.HalfSize.z) +
+			(radius+.035f)/glm::abs(glm::vec2(tr.Scale.x,tr.Scale.z));
+		auto clear = [&](glm::vec2 p, glm::vec2 q) {
+			float first = 0.f, last = 1.f;
+			for (int i=0;i<2;++i) {
+				const float d = q[i]-p[i], edge = ext[i]-.005f;
+				if (std::abs(d)<.0001f) { if (std::abs(p[i])>=edge) return true; continue; }
+				const float t0=(-edge-p[i])/d, t1=(edge-p[i])/d;
+				first = std::max(first,std::min(t0,t1)); last = std::min(last,std::max(t0,t1));
+			}
+			return last<=first;
+		};
+		// 两个角色挤在一起时，中心可能已经落进扩大的外框。先朝最近的边离开。
+		if (std::abs(a.x)<ext.x-.005f && std::abs(a.y)<ext.y-.005f) {
+			const int axis=ext.x-std::abs(a.x) < ext.y-std::abs(a.y) ? 0 : 1;
+			glm::vec2 edge=a;
+			edge[axis]=std::copysign(ext[axis]+.025f,a[axis]);
+			return model*glm::vec4(edge.x+box.Center.x,0,edge.y+box.Center.z,1);
+		}
+		if (clear(a,b) || (std::abs(b.x)<ext.x && std::abs(b.y)<ext.y)) return finish;
+		const glm::vec2 corners[]={{-ext.x,-ext.y},{ext.x,-ext.y},{ext.x,ext.y},{-ext.x,ext.y}};
+		float shortest = std::numeric_limits<float>::max();
+		glm::vec2 next=b;
+		for (int i=0;i<4;++i) {
+			if (!clear(a,corners[i]) || glm::distance(a,corners[i])<.015f) continue;
+			for (int sign : {-1,1}) {
+				float length = glm::distance(a,corners[i]);
+				for (int k=0;k<4;++k) {
+					const int j=(i+sign*k+4)%4;
+					if (clear(corners[j],b)) {
+						length += glm::distance(corners[j],b);
+						if (length<shortest) {shortest=length; next=corners[i];}
+						break;
+					}
+					length += glm::distance(corners[j],corners[(j+sign+4)%4]);
+				}
+			}
+		}
+		return model * glm::vec4(next.x+box.Center.x,0,next.y+box.Center.z,1);
+	}
+
 	TraversalMode MoveCharacter(Scene& scene, uint64_t actor, glm::vec3 delta, float radius, float seconds, TraversalInput input)
 	{
 		Entity entity = scene.GetEntityByUUID(actor);

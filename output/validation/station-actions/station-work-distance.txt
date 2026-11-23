@@ -1,3 +1,5 @@
 Debug x64, tests/run_scene_tests.cmd --station-reach
 PASS the recorded starting point is just outside the two-metre work range
 PASS worker crosses the range boundary and completes two seconds of repair
+yard follow final distance 1.99 m, maximum foot height 0.08 m
+PASS worker walks around the turning sentinel and reaches the leader on the ground
