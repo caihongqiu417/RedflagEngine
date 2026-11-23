@@ -348,6 +348,9 @@
     <ClInclude Include="src\Redflag\Gameplay\GameplayComponents.h">
       <Filter>src\Redflag\Gameplay</Filter>
     </ClInclude>
+    <ClInclude Include="src\Redflag\Gameplay\ColliderBounds.h">
+      <Filter>src\Redflag\Gameplay</Filter>
+    </ClInclude>
     <ClInclude Include="src\Redflag\Gameplay\HandContact.h">
       <Filter>src\Redflag\Gameplay</Filter>
     </ClInclude>

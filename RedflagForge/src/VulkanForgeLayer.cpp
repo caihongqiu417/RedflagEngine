@@ -2,6 +2,7 @@
 #include "VulkanForgeLayer.h"
 #include "Redflag/AI/ActorBehavior.h"
 #include "CharacterInput.h"
+#include "ColliderGizmos.h"
 #include "EditorEnvironment.h"
 
 #include "Redflag/Assets/AssetManager.h"
@@ -505,6 +506,28 @@ namespace Redflag
 				Math::DecomposeTransform(world, transform.Translation, transform.Rotation, transform.Scale);
 			handled = ImGuizmo::IsUsing() || ImGuizmo::IsOver();
 		}
+		if (m_ColliderView != 0)
+		{
+			ImDrawList* draw = ImGui::GetWindowDrawList();
+			draw->PushClipRect(corner, { corner.x + size.x, corner.y + size.y }, true);
+			const glm::mat4 vp = projection * view;
+			auto pixel = [&](glm::vec4 p) {
+				return ImVec2(corner.x + (.5f + .5f * p.x / p.w) * size.x,
+					corner.y + (.5f - .5f * p.y / p.w) * size.y);
+			};
+			DrawColliderGizmos(*m_Scene, selected, m_ColliderView == 2,
+				[&](glm::vec3 from, glm::vec3 to, bool active) {
+					glm::vec4 a = vp * glm::vec4(from, 1), b = vp * glm::vec4(to, 1);
+					// 大地面的边可能穿过相机。先裁掉近裁面后的部分，再换成窗口坐标。
+					const float da = a.z + a.w, db = b.z + b.w;
+					if (da < 0 && db < 0) return;
+					if (da < 0) a = glm::mix(a, b, da / (da - db));
+					else if (db < 0) b = glm::mix(b, a, db / (db - da));
+					draw->AddLine(pixel(a), pixel(b), active ? IM_COL32(255,204,68,255) : IM_COL32(87,219,175,185),
+						active ? 2.f : 1.f);
+				});
+			draw->PopClipRect();
+		}
 		if (!m_ShowLights) return handled;
 
 		// 灯本身没有可点选的网格。在编辑视图用一个圆标出灯的位置，主相机画面不画这些标记。
@@ -579,6 +602,11 @@ namespace Redflag
 			{
 				ImGui::SameLine();
 				ImGui::Checkbox("灯标记", &m_ShowLights);
+				ImGui::SameLine();
+				const char* colliders[] = { "隐藏", "选中", "全部" };
+				ImGui::SetNextItemWidth(ImGui::GetFontSize() * 4.8f);
+				ImGui::Combo("碰撞体", &m_ColliderView, colliders, IM_ARRAYSIZE(colliders));
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("黄色是当前选中的碰撞体。尺寸和中心可在属性面板调整。");
 			}
 			Entity selected = m_Hierarchy.GetSelectedEntity();
 			ImGui::TextDisabled("%s  /  %s", m_GameView ? "场景主相机" : "编辑相机",

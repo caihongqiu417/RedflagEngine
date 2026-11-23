@@ -1149,10 +1149,13 @@ namespace Redflag {
                 AddComponentItem<RagdollComponent>(entity, "物理角色（双腿）");
             if (!entity.HasComponent<RigidBody2DComponent>() && !entity.HasComponent<RagdollComponent>() && AddComponentItem<RigidBody3DComponent>(entity, "3D 刚体"))
             {
-                if (!entity.HasComponent<BoxCollider3DComponent>())
+                if (!entity.HasComponent<BoxCollider3DComponent>() && !entity.HasComponent<CapsuleCollider3DComponent>())
                     entity.AddComponent<BoxCollider3DComponent>();
             }
-            AddComponentItem<BoxCollider3DComponent>(entity, "3D 盒形碰撞体");
+            if (!entity.HasComponent<CapsuleCollider3DComponent>())
+                AddComponentItem<BoxCollider3DComponent>(entity, "3D 盒形碰撞体");
+            if (!entity.HasComponent<BoxCollider3DComponent>())
+                AddComponentItem<CapsuleCollider3DComponent>(entity, "3D 胶囊碰撞体");
             AddComponentItem<PickupComponent>(entity, "可拿取");
             AddComponentItem<HealthComponent>(entity, "生命与耐久");
             AddComponentItem<NpcComponent>(entity, "AI 角色");
@@ -1651,7 +1654,7 @@ namespace Redflag {
                 }
             });
 
-        DrawComponent<BoxCollider3DComponent>("3D 盒形碰撞体", entity, [](BoxCollider3DComponent& box)
+        DrawComponent<BoxCollider3DComponent>("3D 盒形碰撞体", entity, [&](BoxCollider3DComponent& box)
             {
                 glm::vec3 size = box.HalfSize * 2.f;
                 ImGui::DragFloat3("中心偏移（米）", glm::value_ptr(box.Center), .02f);
@@ -1660,6 +1663,41 @@ namespace Redflag {
                     box.HalfSize = size * .5f;
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("三个数分别沿本地 X、Y、Z 轴。模拟时还会乘以物体的缩放。");
+                if (ImGui::Button("改为胶囊"))
+                {
+                    auto& capsule = entity.AddComponent<CapsuleCollider3DComponent>();
+                    capsule.Center = box.Center;
+                    capsule.Radius = std::min(box.HalfSize.x, box.HalfSize.z);
+                    capsule.Height = 2.f * std::max(box.HalfSize.y, capsule.Radius);
+                    entity.RemoveComponent<BoxCollider3DComponent>();
+                }
+            });
+
+        DrawComponent<CapsuleCollider3DComponent>("3D 胶囊碰撞体", entity, [&](CapsuleCollider3DComponent& capsule)
+            {
+                ImGui::DragFloat3("中心偏移（米）", glm::value_ptr(capsule.Center), .01f);
+                int axis = int(capsule.Axis);
+                const char* axes[] = { "X", "Y", "Z" };
+                if (ImGui::Combo("长轴", &axis, axes, IM_ARRAYSIZE(axes)))
+                    capsule.Axis = static_cast<CapsuleAxis>(axis);
+
+                float radius = capsule.Radius, height = capsule.Height;
+                if (ImGui::DragFloat("半径（米）", &radius, .01f) && radius > 0.f)
+                {
+                    capsule.Radius = radius;
+                    capsule.Height = std::max(capsule.Height, 2.f * radius);
+                }
+                if (ImGui::DragFloat("总长（米）", &height, .01f))
+                    capsule.Height = std::max(height, 2.f * capsule.Radius);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("总长从一个圆头量到另一个圆头，最短等于直径。");
+                if (ImGui::Button("改为盒形"))
+                {
+                    auto& box = entity.AddComponent<BoxCollider3DComponent>();
+                    box.Center = capsule.Center;
+                    box.HalfSize = glm::vec3(capsule.Radius);
+                    box.HalfSize[axis] = .5f * capsule.Height;
+                    entity.RemoveComponent<CapsuleCollider3DComponent>();
+                }
             });
 
         // Rigidbody2D 组件

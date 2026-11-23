@@ -85,5 +85,6 @@ namespace Redflag
 		bool m_Navigating = false;
 		int m_TransformTool = 0;
 		bool m_ShowLights = true;
+		int m_ColliderView = 1; // 0 隐藏，1 只画选中对象，2 画整个场景。
 	};
 }

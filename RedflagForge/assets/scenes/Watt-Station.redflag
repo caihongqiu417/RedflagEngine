@@ -16,11 +16,11 @@ Entities:
   - Entity: 1101
     TagComponent: {Tag: 玩家}
     HudComponent: {Layout: assets/ui/station/hud.yaml}
-    TransformComponent: {Translation: [-6.9, 0.08, 1.4], Rotation: [0, 1.57, 0], Scale: [1, 1, 1]}
+    TransformComponent: {Translation: [-6.9, -0.025, 1.4], Rotation: [0, 1.57, 0], Scale: [1, 1, 1]}
     ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.36, 0.45, 0.53, 1]}
     ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
     RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
-    BoxCollider3DComponent: {HalfSize: [0.35, 0.92, 0.35], Center: [0, 0.92, 0]}
+    CapsuleCollider3DComponent: {Radius: 0.35, Height: 1.84, Center: [0, 0.92, 0], Axis: Y}
     HealthComponent: {Current: 100, Maximum: 100, Team: crew}
     ContactSocketsComponent: &OperatorSockets
       ItemModel: assets/game/station/crew/Medkit.glb
@@ -45,13 +45,18 @@ Entities:
         - {Name: ExitRadius, Type: Float, Value: 1.6}
         - {Name: TeamExitRadius, Type: Float, Value: 3.5}
         - {Name: Supply, Type: Entity, Value: 1112}
+        # 蹲行时头顶约在 1.33 米；倒地后背甲着地，头到靴底沿模型 Z 轴约 1.83 米。
+        - {Name: CrouchHeight, Type: Float, Value: 1.33}
+        - {Name: DownLength, Type: Float, Value: 1.83}
+        - {Name: DownRadius, Type: Float, Value: 0.33}
+        - {Name: DownCenter, Type: Vector3, Value: [-0.01, 0.33, -0.197]}
   - Entity: 1102
     TagComponent: {Tag: 瓦特}
-    TransformComponent: {Translation: [-5.2, 0.08, -0.6], Rotation: [0, -0.7, 0], Scale: [0.96, 0.96, 0.96]}
+    TransformComponent: {Translation: [-5.2, -0.025, -0.6], Rotation: [0, -0.7, 0], Scale: [0.96, 0.96, 0.96]}
     ModelRendererComponent: {FilePath: assets/game/station/crew/Operator.glb, Color: [0.67, 0.39, 0.14, 1]}
     ModelAnimationComponent: {Clip: Idle-cycle, Playing: true}
     RigidBody3DComponent: {BodyType: Kinematic, Density: 1}
-    BoxCollider3DComponent: {HalfSize: [0.35, 0.92, 0.35], Center: [0, 0.92, 0]}
+    CapsuleCollider3DComponent: {Radius: 0.35, Height: 1.84, Center: [0, 0.92, 0], Axis: Y}
     HealthComponent: {Current: 100, Maximum: 100, Team: crew}
     InventoryComponent: {Items: {medkit: 1}}
     ContactSocketsComponent: *OperatorSockets
@@ -135,10 +140,11 @@ Entities:
     TransformComponent: {Translation: [0, 0, 0], Rotation: [0, 0, 0], Scale: [1.12, 1, 1]}
     ModelRendererComponent: {FilePath: assets/game/station/yard/Road.gltf, Color: [1, 1, 1, 1]}
   - Entity: 1121
-    TagComponent: {Tag: 甲板地面}
-    TransformComponent: {Translation: [3.5, -0.14, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
+    TagComponent: {Tag: 砂石路基}
+    # 上表面与下方砂石模型的平面同高。车辙只比砂石高 3 毫米。
+    TransformComponent: {Translation: [9, -0.525, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
     RigidBody3DComponent: {BodyType: Static, Density: 1}
-    BoxCollider3DComponent: {HalfSize: [13.5, 0.15, 8.5]}
+    BoxCollider3DComponent: {HalfSize: [50, 0.5, 50]}
   - Entity: 1122
     TagComponent: {Tag: 北侧护栏}
     TransformComponent: {Translation: [3.5, 0.4, -8.4], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
@@ -275,11 +281,6 @@ Entities:
     TagComponent: {Tag: 车辙}
     TransformComponent: {Translation: [0, -0.022, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
     ModelRendererComponent: {FilePath: assets/game/station/salvage/tracks/Tracks.gltf, Color: [1, 1, 1, 1]}
-  - Entity: 1229
-    TagComponent: {Tag: 场外砂石路基}
-    TransformComponent: {Translation: [9, -0.525, 0], Rotation: [0, 0, 0], Scale: [1, 1, 1]}
-    RigidBody3DComponent: {BodyType: Static, Density: 1}
-    BoxCollider3DComponent: {HalfSize: [50, 0.5, 50]}
   - Entity: 1223
     TagComponent: {Tag: 维修棚工作灯}
     TransformComponent: {Translation: [12.38, 2.12, 1.15], Rotation: [0, 0, 0], Scale: [1, 1, 1]}

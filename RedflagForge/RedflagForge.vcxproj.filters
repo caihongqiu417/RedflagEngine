@@ -9,6 +9,7 @@
     <ClInclude Include="src\AnimationPoseView.h" />
     <ClInclude Include="src\BehaviorTreePanel.h" />
     <ClInclude Include="src\CharacterInput.h" />
+    <ClInclude Include="src\ColliderGizmos.h" />
     <ClInclude Include="src\CompanionPanel.h" />
     <ClInclude Include="src\DecisionPanel.h" />
     <ClInclude Include="src\EditorEnvironment.h" />

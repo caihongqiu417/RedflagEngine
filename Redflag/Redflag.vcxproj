@@ -255,6 +255,7 @@ IF EXIST ..\RedflagForge\mono\ (xcopy /Q /E /Y /I ..\RedflagForge\mono ..\bin\Di
     <ClInclude Include="src\Redflag\Events\MouseEvent.h" />
     <ClInclude Include="src\Redflag\Gameplay\GameHud.h" />
     <ClInclude Include="src\Redflag\Gameplay\GameplayComponents.h" />
+    <ClInclude Include="src\Redflag\Gameplay\ColliderBounds.h" />
     <ClInclude Include="src\Redflag\Gameplay\HandContact.h" />
     <ClInclude Include="src\Redflag\Gameplay\TerrainTraversal.h" />
     <ClInclude Include="src\Redflag\Gameplay\TraversalRig.h" />

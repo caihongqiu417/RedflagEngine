@@ -3,6 +3,7 @@
 #include"Redflag.h"
 #include "ForgeLayer.h"
 #include "CharacterInput.h"
+#include "ColliderGizmos.h"
 #include "EditorEnvironment.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
@@ -289,6 +290,10 @@ namespace Redflag {
                 }
 
                 // 碰撞体可视化：绿色线框，选中时高亮为黄色
+                DrawColliderGizmos(*m_ActiveScene, m_SceneHierachyPanel.GetSelectedEntity(), m_ShowPhysicsColliders,
+                    [](glm::vec3 a, glm::vec3 b, bool selected) {
+                        Renderer2D::DrawLine(a, b, selected ? glm::vec4(1.f,.8f,.27f,1.f) : glm::vec4(.34f,.86f,.69f,.8f));
+                    });
                 if (m_ShowPhysicsColliders)
                 {
                     Entity sel = m_SceneHierachyPanel.GetSelectedEntity();
