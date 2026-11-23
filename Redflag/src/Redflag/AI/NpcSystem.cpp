@@ -395,7 +395,11 @@ namespace Redflag
 		const float radius = CharacterRadius(owner);
 		const bool follow = state.Action == "follow";
 		if (follow) {
-			if (state.WalkCorner && glm::distance(transform.Translation,*state.WalkCorner)<.07f) state.WalkCorner.reset();
+			if (state.WalkCorner) {
+				// 拐角只决定往哪边走，实际高度由地面决定。两者可能相差一个台阶。
+				const glm::vec3 remaining = *state.WalkCorner - transform.Translation;
+				if (glm::length(glm::vec2(remaining.x, remaining.z)) < .07f) state.WalkCorner.reset();
+			}
 			if (!state.WalkCorner) state.WalkCorner=FollowCorner(m_Scene,owner,state.Goal.Target,place,radius);
 			if (state.WalkCorner) {place=*state.WalkCorner;stopDistance=0.f;}
 		}
