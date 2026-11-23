@@ -1,0 +1,162 @@
+{
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "case": "equipment",
+  "samples": [
+    {
+      "step": "ready",
+      "frame": 6,
+      "seconds": 0.8256905674934387,
+      "clip": "Idle-cycle",
+      "clip_time": 0.137404799,
+      "player_health": 100,
+      "hand": [
+        -7.25555086,
+        0.893438697,
+        0.874473691
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "equip scanner",
+      "frame": 9,
+      "seconds": 0.9355812668800354,
+      "clip": "Cannon_activation-noexp",
+      "clip_time": 0.0320231915,
+      "player_health": 100,
+      "hand": [
+        -7.25537634,
+        0.892270505,
+        0.876208365
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "scanner ready",
+      "frame": 20,
+      "seconds": 1.289027750492096,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0312440395,
+      "player_health": 100,
+      "hand": [
+        -7.25610113,
+        0.891473949,
+        0.879452646
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "scan",
+      "frame": 25,
+      "seconds": 1.4600711464881897,
+      "clip": "Idle-cycle",
+      "clip_time": 0.202287436,
+      "player_health": 100,
+      "hand": [
+        -7.25534821,
+        0.891643882,
+        0.876821756
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": [
+        {
+          "entity": "1101",
+          "kind": "scan",
+          "text": "1103"
+        }
+      ]
+    },
+    {
+      "step": "equip cannon",
+      "frame": 29,
+      "seconds": 1.5973711609840393,
+      "clip": "Cannon_activation-noexp",
+      "clip_time": 0.0376894474,
+      "player_health": 100,
+      "hand": [
+        -7.25580311,
+        0.891739607,
+        0.878204107
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "cannon ready",
+      "frame": 40,
+      "seconds": 1.9665902256965637,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0314478874,
+      "player_health": 100,
+      "hand": [
+        -7.25644445,
+        0.891389549,
+        0.880101264
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "aim",
+      "frame": 43,
+      "seconds": 2.068564236164093,
+      "clip": "AIM-Center",
+      "clip_time": 0,
+      "player_health": 100,
+      "hand": [
+        -7.25639391,
+        0.893627405,
+        0.875921845
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "pulse",
+      "frame": 48,
+      "seconds": 2.2313461899757385,
+      "clip": "Cannon_Charge",
+      "clip_time": 0.0360610485,
+      "player_health": 100,
+      "hand": [
+        -7.25670242,
+        0.896835029,
+        0.872011304
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 50,
+      "events": [
+        {
+          "entity": "1101",
+          "kind": "pulse",
+          "text": "1103"
+        }
+      ]
+    }
+  ]
+}

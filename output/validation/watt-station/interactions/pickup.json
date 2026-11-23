@@ -1,0 +1,138 @@
+{
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "case": "pickup",
+  "samples": [
+    {
+      "step": "ready",
+      "frame": 6,
+      "seconds": 1.0449318885803223,
+      "clip": "Idle-cycle",
+      "clip_time": 0.193826795,
+      "player_health": 40,
+      "hand": [
+        -7.25522518,
+        0.891810834,
+        0.876446426
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "reach",
+      "frame": 8,
+      "seconds": 1.1355175971984863,
+      "clip": "Station-Pickup",
+      "clip_time": 0.0519514084,
+      "player_health": 40,
+      "hand": [
+        -6.96041298,
+        0.872568548,
+        0.808733225
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "before contact",
+      "frame": 25,
+      "seconds": 1.936000108718872,
+      "clip": "Station-Pickup",
+      "clip_time": 0.85243392,
+      "player_health": 40,
+      "hand": [
+        -6.62957716,
+        0.279260993,
+        1.18943334
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "contact",
+      "frame": 32,
+      "seconds": 2.332472562789917,
+      "clip": "Station-Pickup",
+      "clip_time": 1.24890637,
+      "player_health": 40,
+      "hand": [
+        -6.60400867,
+        0.229933307,
+        1.18124712
+      ],
+      "kits": 2,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": [
+        {
+          "entity": "1101",
+          "kind": "pickup_contact",
+          "text": "1112"
+        }
+      ]
+    },
+    {
+      "step": "stand",
+      "frame": 68,
+      "seconds": 3.652939796447754,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0379710197,
+      "player_health": 40,
+      "hand": [
+        -6.92702198,
+        0.86425209,
+        0.836723089
+      ],
+      "kits": 2,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "heal",
+      "frame": 71,
+      "seconds": 3.7605628967285156,
+      "clip": "Idle-cycle",
+      "clip_time": 0.14559412,
+      "player_health": 90,
+      "hand": [
+        -6.99896622,
+        0.893134356,
+        0.773557544
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "holding H",
+      "frame": 82,
+      "seconds": 4.142982006072998,
+      "clip": "Idle-cycle",
+      "clip_time": 0.528013229,
+      "player_health": 90,
+      "hand": [
+        -7.00654125,
+        0.890180588,
+        0.783045769
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    }
+  ]
+}

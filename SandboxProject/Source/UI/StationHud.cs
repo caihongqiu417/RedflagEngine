@@ -55,11 +55,11 @@ namespace Sandbox
             bool showKeys = !done && Input.IsKeyDown(KeyCode.F1);
             if (showKeys != showingHelp)
             {
-                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1 / 2 装备    H 医疗包    E 交互" : "");
+                view.SetText("help", showKeys ? "WASD 移动    Shift 奔跑    Ctrl 蹲伏\n空格 跳跃    右键 环视    左键 使用\n1/2 换装    F 近战    H 治疗    E 交互" : "");
                 showingHelp = showKeys;
             }
 
-            string controls = done ? "R   重新开始" : "T   呼叫瓦特     F1   操作帮助";
+            string controls = done ? "R   重新开始" : "F   近战     T   呼叫瓦特     F1   操作帮助";
             if (lastTitle == title && lastObjective == objective && lastHint == hint &&
                 lastControls == controls && finished == done) return;
 

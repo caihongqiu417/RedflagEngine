@@ -16,12 +16,14 @@ namespace Sandbox
         public bool Running => motion.Running;
         public bool LandingRecovery => motion.Recovering;
         public bool Cannon => equipment.Cannon;
+        public bool Punching => melee.Active;
         public ulong Focus => equipment.Focus;
 
         private TransformComponent pose, camera;
         private readonly StationMotion motion = new StationMotion();
         private readonly StationEquipment equipment = new StationEquipment();
-        private ulong usingTarget;
+        private readonly StationMelee melee = new StationMelee();
+        private readonly StationInteraction interaction = new StationInteraction();
         private float downSeconds, noticeSeconds;
         private bool usedKit, won, lost;
         private int rescues;
@@ -55,12 +57,14 @@ namespace Sandbox
         {
             if (won || lost) return;
             noticeSeconds -= seconds;
+            bool punchPressed = melee.ReadPress();
 
             // 倒地后给瓦特留出十二秒救援。恢复生命时，移动和操作立即恢复。
             if (GameWorld.Health(Id) <= 0) {
+                if (melee.Active) melee.End(Id, true);
                 if (downSeconds == 0) Playtest.Record(Id, "player_down", "玩家倒地");
                 hud.Team(Id, Watt.Id, equipment.Cannon, false, false);
-                usingTarget = 0;
+                interaction.Reset();
                 downSeconds += seconds;
                 lost = downSeconds >= 12f || rescues >= 2 || GameWorld.Health(Watt.Id) <= 0;
                 if (lost) Playtest.Record(Id, "mission_failed", "维修班组失去联系");
@@ -76,11 +80,29 @@ namespace Sandbox
                 Playtest.Record(Id, "player_revived", "玩家恢复行动");
             }
             downSeconds = 0;
-            string feedback = equipment.Update(this,camera,seconds);
+
+            AnimationEvent animationEvent;
+            while (Animator.TryRead(Id, out animationEvent)) {
+                motion.OnNotice(animationEvent);
+                string contact = interaction.Contact(Id, animationEvent);
+                if (contact != null) Notice(contact);
+                if (melee.Active && animationEvent.State=="punch" && animationEvent.Name=="Contact" && animationEvent.Phase==NotifyPhase.Point)
+                    Notice(melee.Contact(Id, Guard.Id, pose));
+            }
+            if (melee.Active && !Animator.IsPlaying(Id)) melee.End(Id, false);
+            if (punchPressed && !melee.Active && !motion.Airborne && !motion.Landing && !Input.IsKeyDown(KeyCode.LeftControl)
+                && !interaction.Active && equipment.ChangeTime<=0 && equipment.ShotTime<=0)
+                melee.Begin(Id, pose, camera.Rotation.Y);
+
+            string feedback = equipment.Update(this,camera,seconds,!melee.Active && !interaction.Active);
             if (feedback != null) Notice(feedback);
-            motion.Update(this,pose,camera.Rotation.Y,Input.IsMouseButtonDown(MouseButton.Left),MoveSpeed,seconds);
-            motion.Animate(Id,equipment);
-            UseItems(seconds);
+            feedback = interaction.Update(this, pose, !melee.Active && !motion.Airborne && !motion.Landing, seconds);
+            if (feedback != null) Notice(feedback);
+
+            bool busy = melee.Active || interaction.Active;
+            motion.Update(this,pose,camera.Rotation.Y,Input.IsMouseButtonDown(MouseButton.Left),MoveSpeed,seconds,busy);
+            if (!busy) motion.Animate(Id,equipment);
+            UseMedkit(!busy);
 
             bool power = GameWorld.Health(Relay.Id) >= 100;
             bool atExit = power && Distance(Exit) <= ExitRadius;
@@ -107,23 +129,11 @@ namespace Sandbox
 
         // ---- 补给、救援与设备维修 ----
 
-        void UseItems(float seconds)
+        void UseMedkit(bool available)
         {
             bool heal = Input.IsKeyDown(KeyCode.H);
-            if (heal && !usedKit) Notice(GameWorld.Heal(Id,"medkit",50) ? "已使用医疗包" : "当前无法使用医疗包");
+            if (available && heal && !usedKit) Notice(GameWorld.Heal(Id,"medkit",50) ? "已使用医疗包" : "当前无法使用医疗包");
             usedKit = heal;
-            if (!Input.IsKeyDown(KeyCode.E)) { usingTarget = 0; return; }
-
-            if (equipment.Focus != 0 && GameWorld.Collect(Id,equipment.Focus,1.7f)) {
-                Notice("已拾取医疗包");
-                return;
-            }
-            bool rescue = GameWorld.Health(Watt.Id) <= 0 && Distance(Watt) < 2f;
-            Entity target = rescue ? Watt : Relay;
-            InteractionResult result = GameWorld.Interact(Id, target.Id, rescue ? "revive" : "repair", seconds, usingTarget != target.Id);
-            usingTarget = result == InteractionResult.Running ? target.Id : 0;
-            if (result == InteractionResult.Completed) Notice(rescue ? "瓦特已恢复行动" : "供电已恢复");
-            if (result == InteractionResult.Running) Notice(rescue ? "正在扶起瓦特" : "正在维修");
         }
 
         float Distance(Entity other) { return (pose.Translation - other.GetComponent<TransformComponent>().Translation).Length(); }

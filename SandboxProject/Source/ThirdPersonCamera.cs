@@ -41,10 +41,10 @@ namespace Sandbox
             float follow = 1f - (float)Math.Exp(-12f*seconds);
             StationPlayer player = Target.As<StationPlayer>();
             float eye = player != null && player.Crouched ? Height-.34f : Height;
-            Vector3 right = new Vector3((float)Math.Cos(yaw),0,-(float)Math.Sin(yaw));
-            focus += (actor.Translation + new Vector3(0,eye,0) + right*.62f - focus)*follow;
             yaw += (desiredYaw-yaw)*follow;
             pitch += (desiredPitch-pitch)*follow;
+            Vector3 right = new Vector3((float)Math.Cos(yaw),0,-(float)Math.Sin(yaw));
+            focus += (actor.Translation + new Vector3(0,eye,0) + right*.62f - focus)*follow;
             Position(seconds);
         }
 

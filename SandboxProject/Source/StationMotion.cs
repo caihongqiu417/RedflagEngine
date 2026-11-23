@@ -10,15 +10,17 @@ namespace Sandbox
         public bool Running { get; private set; }
         public bool Walking { get; private set; }
         public bool Recovering { get; private set; }
+        public bool Landing => landing;
         private Vector3 velocity;
         private float verticalSpeed;
         private bool landing;
         private TraversalMode traversal;
         private bool jumpWasDown;
 
-        public void Update(Entity actor, TransformComponent pose, float yaw, bool aiming, float walkSpeed, float seconds)
+        public void Update(Entity actor, TransformComponent pose, float yaw, bool aiming, float walkSpeed,
+            float seconds, bool busy)
         {
-            bool crouch = Input.IsKeyDown(KeyCode.LeftControl) && !Airborne;
+            bool crouch = !busy && Input.IsKeyDown(KeyCode.LeftControl) && !Airborne;
             if (crouch != Crouched) {
                 Crouched = crouch;
                 GameWorld.BodyHeight(actor.Id,crouch ? 1.40f : 1.84f);
@@ -29,25 +31,27 @@ namespace Sandbox
             Running = !Crouched && Input.IsKeyDown(KeyCode.LeftShift) && direction.LengthSquared() > 0;
             float speed = Crouched ? 1.1f : Running ? 5.4f : walkSpeed;
             velocity += (direction*speed-velocity)*(1f-(float)Math.Exp(-9f*seconds));
-            Walking = velocity.LengthSquared()>.012f;
+            if (busy) velocity = Vector3.Zero;
             bool jump = Input.IsKeyDown(KeyCode.Space);
-            TraversalInput request = jump && !jumpWasDown && !Crouched ? TraversalInput.Jump : TraversalInput.Walk;
+            TraversalInput request = jump && !jumpWasDown && !Crouched && !busy ? TraversalInput.Jump : TraversalInput.Walk;
             jumpWasDown = jump;
-            float height = pose.Translation.Y;
+
+            Vector3 start = pose.Translation;
             bool wasAirborne = Airborne;
             Vector3 delta = velocity * seconds;
             traversal = GameWorld.Traverse(actor.Id,ref delta,.34f,seconds,request);
             Airborne = traversal == TraversalMode.Jump || traversal == TraversalMode.Climb;
-            verticalSpeed = seconds > 0 ? (pose.Translation.Y - height) / seconds : 0;
+            Vector3 moved = pose.Translation - start;
+            verticalSpeed = seconds > 0 ? moved.Y / seconds : 0;
+            moved.Y = 0;
+            // 按住前进贴墙时，碰撞可能拦下整步。角色按实际走出的距离选择动作。
+            Walking = moved.Length() > .05f*seconds;
+            Running = Running && Walking;
             if (wasAirborne && !Airborne) landing=Animator.Play(actor.Id,"land",true);
             else if (landing && !Animator.IsPlaying(actor.Id)) landing=false;
 
-            AnimationEvent notice;
-            while (Animator.TryRead(actor.Id,out notice))
-                if (notice.State=="land" && notice.Name=="Recovery") Recovering=notice.Phase==NotifyPhase.Begin;
-
-            if (Walking || aiming) {
-                Vector3 facing = aiming ? forward : velocity;
+            if (!busy && (Walking || aiming)) {
+                Vector3 facing = aiming ? forward : moved;
                 float rotation = pose.Rotation.Y;
                 float angle = (float)Math.Atan2(facing.X,facing.Z)-rotation;
                 float turn = (float)Math.Atan2(Math.Sin(angle),Math.Cos(angle));
@@ -55,21 +59,27 @@ namespace Sandbox
             }
         }
 
+        public void OnNotice(AnimationEvent notice)
+        {
+            if (notice.State=="land" && notice.Name=="Recovery") Recovering=notice.Phase==NotifyPhase.Begin;
+        }
+
         public void Animate(ulong id, StationEquipment equipment)
         {
-            if (Crouched) {
-                // 落地片段的第 2 帧（24 帧/秒）屈膝最深，站点用它作掩体后的蹲姿。
-                GameWorld.Pose(id,"jump_5_hardlanding",2f/24f);
-                return;
-            }
             string clip;
             if (traversal == TraversalMode.Climb) clip="Station-Pickup";
             else if (Airborne) clip=verticalSpeed>2.2f ? "jump_1_up" : "jump_3_midair-cycle";
             else if (landing) return; // 已由动作表播放落地片段，等剪辑结束再切回行走。
-            else if (equipment.ChangeTime>0) clip="Cannon_activation-noexp";
-            else if (equipment.ShotTime>0) clip="Cannon_Charge";
-            else if (Running) clip=equipment.Cannon ? "running_gun-cycle" : "running_nogun-cycle";
-            else if (Walking) clip=equipment.Cannon ? "walking_gun-cycle" : "walking_nogun-cycle";
+            else if (!Crouched && equipment.ChangeTime>0) clip="Cannon_activation-noexp";
+            else if (!Crouched && equipment.ShotTime>0) clip="Cannon_Charge";
+            else if (Walking) {
+                if (Crouched) clip="Station-CrouchWalk";
+                else if (Running) clip=equipment.Cannon ? "running_gun-cycle" : "running_nogun-cycle";
+                else clip=equipment.Cannon ? "walking_gun-cycle" : "walking_nogun-cycle";
+                GameWorld.PlayLocomotion(id,clip);
+                return;
+            }
+            else if (Crouched) clip="Station-Crouch";
             else clip=Input.IsMouseButtonDown(MouseButton.Right) && equipment.Cannon ? "AIM-Center" : "Idle-cycle";
             GameWorld.PlayClip(id,clip);
         }

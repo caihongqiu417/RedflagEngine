@@ -1,0 +1,114 @@
+{
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "case": "repair",
+  "samples": [
+    {
+      "step": "ready",
+      "frame": 6,
+      "seconds": 0.8266467452049255,
+      "clip": "Idle-cycle",
+      "clip_time": 0.125461936,
+      "player_health": 100,
+      "hand": [
+        -7.25565052,
+        0.893884242,
+        0.874028742
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "start",
+      "frame": 8,
+      "seconds": 0.8963211178779602,
+      "clip": "Cannon_Charge-cycle",
+      "clip_time": 0.0343546867,
+      "player_health": 100,
+      "hand": [
+        -7.25591373,
+        0.893164814,
+        0.875070691
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "partial",
+      "frame": 28,
+      "seconds": 1.5740663409233093,
+      "clip": "Cannon_Charge-cycle",
+      "clip_time": 0.295433253,
+      "player_health": 100,
+      "hand": [
+        -7.25586367,
+        0.89077431,
+        0.87961185
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "released",
+      "frame": 31,
+      "seconds": 1.668965756893158,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0324046612,
+      "player_health": 100,
+      "hand": [
+        -7.25654078,
+        0.891385376,
+        0.879949927
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "restart",
+      "frame": 33,
+      "seconds": 1.7453352808952332,
+      "clip": "Cannon_Charge-cycle",
+      "clip_time": 0.0367493629,
+      "player_health": 100,
+      "hand": [
+        -7.25658321,
+        0.892872512,
+        0.877182782
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "completed",
+      "frame": 95,
+      "seconds": 3.778343141078949,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0362586975,
+      "player_health": 100,
+      "hand": [
+        -7.2566328,
+        0.891456008,
+        0.879995704
+      ],
+      "kits": 1,
+      "relay": 100,
+      "watt": 100,
+      "guard": 75,
+      "events": []
+    }
+  ]
+}

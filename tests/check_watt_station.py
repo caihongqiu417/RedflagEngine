@@ -35,6 +35,8 @@ def main():
     parser.add_argument("--recorded-speech",type=Path,help="把本局的队友回执和中断证据另存在这个目录")
     parser.add_argument("--trials",type=int,default=20)
     parser.add_argument("--landing", action="store_true", help="在正式关卡按一次空格，记录落地时间区间")
+    parser.add_argument("--melee", choices=("hit","miss","wall","cancel","movement"), help="验证维修站玩家的移动、镜头和近战")
+    parser.add_argument("--interaction", choices=("pickup","repair","revive","equipment"), help="实际按 E、H 与装备键，检查动作和交互结果")
     parser.add_argument("--animation-actors", action="store_true", help="在双角色测试场景检查 C# 通知与动作打断")
     parser.add_argument("--animator", type=Path, help="把另存的动作表用于本次落地测试")
     parser.add_argument("--orbit-yaw",type=float,help="在运行副本中指定第三人称环视起始角度（度）")
@@ -76,6 +78,12 @@ def main():
             dict(Name=name,Type="Entity",Value=value) for name,value in [("Player",1101),("Guard",1103),("Relay",1110),("Camera",1100)]])))
     if args.landing:
         scene["Entities"][-1]["ScriptComponent"]["ScriptFields"].append(dict(Name="RecordLanding",Type="Bool",Value=True))
+    if args.melee or args.interaction:
+        from station_melee import arrange
+        arrange(scene, args.melee or "movement")
+        if args.interaction:
+            from station_interactions import place_targets
+            place_targets(scene, args.interaction)
     if args.animation_actors:
         operator = next(row for row in scene["Entities"] if row["Entity"]==1101)
         camera = next(row for row in scene["Entities"] if row["Entity"]==1100)
@@ -108,6 +116,8 @@ def main():
     shutil.copy2(str(source)+".render.yaml",str(sample)+".render.yaml")
     if args.animation_actors:
         Path(str(sample)+".render.yaml").write_text("Shading: Lit\nSamples: 1\nIndirect: Off\nTAA: false\n",encoding="utf8")
+    if args.melee or args.interaction:
+        Path(str(sample)+".render.yaml").write_text("Shading: Base color\n",encoding="utf8")
     output = ROOT/"output/validation/watt-station"
     output.mkdir(parents=True,exist_ok=True)
     name = "WattStation"+str(os.getpid())
@@ -118,6 +128,11 @@ def main():
     command = subprocess.list2cmdline([str(exe),"--play",str(sample)])
     game_env = dict(os.environ,RF_VULKAN_VALIDATION="1")
     if args.recorded_speech: game_env["REDFLAG_PLAYTEST"] = str(work/"session")
+    if args.melee or args.interaction:
+        session = work/"session"
+        session.mkdir()
+        (session/"session.json").write_text(json.dumps({"pose_nodes":["hand.L","foot.L","foot.R"]}),encoding="utf8")
+        game_env["REDFLAG_PLAYTEST"] = str(session)
     process, thread, pid, _ = win32process.CreateProcess(None, command, None, None, False, win32con.CREATE_NO_WINDOW,
                                     game_env,str(work),info)
     thread.Close()
@@ -144,6 +159,17 @@ def main():
     try:
         hwnd = wait_for(window,process)
         win32gui.PostMessage(hwnd,win32con.WM_SETFOCUS,0,0)
+        if args.melee or args.interaction:
+            win32gui.SetWindowPos(hwnd,None,0,0,840,540,win32con.SWP_NOMOVE|win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE)
+            if args.melee:
+                from station_melee import verify
+                verify(args.melee, session, process, exe, output/"melee")
+            else:
+                from station_interactions import verify
+                verify(args.interaction,session,process,exe,output/"interactions")
+            win32gui.PostMessage(hwnd,win32con.WM_CLOSE,0,0)
+            assert win32event.WaitForSingleObject(process,25000)==win32con.WAIT_OBJECT_0 and win32process.GetExitCodeProcess(process)==0
+            return
         if args.latency:
             # 两个游戏在相同的 640 × 360 客户区绘制，各自保留正式地图、渲染器和游戏时钟。
             left,top,wx,wy=win32gui.GetWindowRect(hwnd)

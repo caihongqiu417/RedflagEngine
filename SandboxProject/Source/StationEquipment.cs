@@ -12,25 +12,28 @@ namespace Sandbox
         public float ChangeTime { get; private set; }
         private float cooldown;
 
-        public string Update(Entity actor, TransformComponent camera, float seconds)
+        public string Update(Entity actor, TransformComponent camera, float seconds, bool canUse)
         {
-            bool slot = Cannon;
-            if (Input.IsKeyDown(KeyCode.D1)) Cannon = true;
-            if (Input.IsKeyDown(KeyCode.D2)) Cannon = false;
-            if (slot != Cannon) ChangeTime = .35f;
             ChangeTime -= seconds;
             ShotTime -= seconds;
             cooldown -= seconds;
+            bool slot = Cannon;
+            if (canUse && Input.IsKeyDown(KeyCode.D1)) Cannon = true;
+            if (canUse && Input.IsKeyDown(KeyCode.D2)) Cannon = false;
+            if (slot != Cannon) ChangeTime = .35f;
 
             Vector3 eye = camera.Translation, r = camera.Rotation;
             float level = (float)Math.Cos(r.X);
             Vector3 forward = new Vector3(-(float)Math.Sin(r.Y)*level,(float)Math.Sin(r.X),-(float)Math.Cos(r.Y)*level);
             Vector3 aim;
             Focus = GameWorld.Ray(actor.Id,ref eye,ref forward,35,out aim);
-            if (!Input.IsMouseButtonDown(MouseButton.Left) || cooldown > 0) return null;
+            if (!canUse || ChangeTime > 0 || !Input.IsMouseButtonDown(MouseButton.Left) || cooldown > 0) return null;
             cooldown = .48f;
 
-            if (!Cannon) return Focus == 0 ? "扫描范围内没有物体" : "扫描到 " + GameWorld.Name(Focus);
+            if (!Cannon) {
+                Playtest.Record(actor.Id,"scan",Focus.ToString());
+                return Focus == 0 ? "扫描范围内没有物体" : "扫描到 " + GameWorld.Name(Focus);
+            }
             Vector3 muzzle;
             // Godot 样例在右手节点正上方 0.4 米设了 ShootFrom，枪口随作者的动作一起移动。
             Vector3 socket = new Vector3(0,.4f,0);
@@ -39,6 +42,7 @@ namespace Sandbox
             ulong hit = GameWorld.Ray(actor.Id,ref muzzle,ref direction,(aim-muzzle).Length()+.08f,out impact);
             ShotTime = .22f;
             GameWorld.Pulse(actor.Id,ref muzzle,ref impact);
+            Playtest.Record(actor.Id,"pulse",hit.ToString());
             return hit != 0 && GameWorld.Damage(actor.Id,hit,25) ? "脉冲命中" : null;
         }
     }

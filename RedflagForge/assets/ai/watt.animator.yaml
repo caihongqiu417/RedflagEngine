@@ -11,6 +11,8 @@ States:
   - {ID: repair, Clip: Cannon_Charge-cycle, Loop: true, Blend: 0.2}
   - {ID: aim, Clip: AIM-Center, Loop: false, Blend: 0.12}
   - {ID: fire, Clip: Cannon_Charge, Loop: false, Blend: 0.08}
+  # Quaternius Punch_Jab 每秒 30 帧，第 6 帧左拳伸到最前。
+  - {ID: punch, Clip: Station-Punch, Loop: false, Blend: 0.055, Events: [{Name: Contact, Start: 0.2}]}
   - {ID: equip, Clip: Cannon_activation-noexp, Loop: false, Blend: 0.12}
   - {ID: jump, Clip: jump_1_up, Loop: false, Blend: 0.1}
   - {ID: climb, Clip: Station-Pickup, Loop: false, Blend: 0.12}

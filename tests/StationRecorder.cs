@@ -9,6 +9,7 @@ namespace StationTest
     {
         public Entity Player, Guard, Relay, Camera;
         public bool RecordLanding;
+        public bool InterruptPunch;
         private float time, lastTime = -1;
         private bool lastRecovery;
 
@@ -16,6 +17,10 @@ namespace StationTest
         {
             time += seconds;
             Sandbox.StationPlayer player = Player.As<Sandbox.StationPlayer>();
+            if (InterruptPunch && player.Punching) {
+                InterruptPunch = false;
+                GameWorld.Damage(Guard.Id, Player.Id, 100);
+            }
             if (RecordLanding && player.LandingRecovery != lastRecovery)
             {
                 lastRecovery = player.LandingRecovery;

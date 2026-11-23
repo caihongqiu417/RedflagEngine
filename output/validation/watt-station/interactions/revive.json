@@ -1,0 +1,60 @@
+{
+  "exe_sha256": "896ed0440004339192974c50ceea0fc26536f74f9b45bf93f4c796f43a7bfd97",
+  "case": "revive",
+  "samples": [
+    {
+      "step": "ready",
+      "frame": 6,
+      "seconds": 0.846542477607727,
+      "clip": "Idle-cycle",
+      "clip_time": 0.120459914,
+      "player_health": 100,
+      "hand": [
+        -7.25570345,
+        0.894095004,
+        0.87385416
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 0,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "start",
+      "frame": 8,
+      "seconds": 0.9077484607696533,
+      "clip": "Station-Pickup",
+      "clip_time": 0.0316756964,
+      "player_health": 100,
+      "hand": [
+        -7.23582363,
+        0.884647012,
+        0.880950391
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 0,
+      "guard": 75,
+      "events": []
+    },
+    {
+      "step": "completed",
+      "frame": 58,
+      "seconds": 2.9118621349334717,
+      "clip": "Idle-cycle",
+      "clip_time": 0.0472328663,
+      "player_health": 100,
+      "hand": [
+        -6.9824481,
+        0.829676449,
+        0.896719456
+      ],
+      "kits": 1,
+      "relay": 0,
+      "watt": 50,
+      "guard": 75,
+      "events": []
+    }
+  ]
+}
