@@ -122,10 +122,13 @@ def review(take_dir, output, require_animation):
         for kind in (walk, run, watt):
             lo, hi = kind["feet_forward_separation_m"]
             assert lo < -.04 and hi > .04, kind
-        for hit in punches:
-            assert any("punch" in clip.lower() for clip in hit["clips"]) and hit["clip_samples"][-1]["clip"]=="Idle-cycle", hit
+        for (phase,hit) in zip(("punch","punch-repeat"),punches):
+            last = hit["clip_samples"][-1]
+            # 慢帧可能让松拳和 D 开始移动落在同一帧，此时应直接恢复行走。
+            resumed = "walking_gun-cycle" if times[phase]+last["offset_s"] >= times["walk"] else "Idle-cycle"
+            assert any("punch" in clip.lower() for clip in hit["clips"]) and last["clip"]==resumed, hit
             arm = max(hit["arms"].values(), key=lambda a: a["peak_forward_m"])
-            # 待机本身会抬腕。要求收回 80% 的前伸量，最后回到待机剪辑。
+            # 待机本身会抬腕。要求收回 80% 的前伸量，最后恢复当前输入对应的动作。
             assert arm["peak_forward_m"] > .12 and arm["retract_from_peak_m"] > .8 * arm["peak_forward_m"], arm
         for name in ("punch", "punch-repeat"):
             t = times[name]

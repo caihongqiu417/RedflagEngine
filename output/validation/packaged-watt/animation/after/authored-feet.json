@@ -1,0 +1,554 @@
+{
+  "archive_sha256": "b6332574a23e6158c62121540282719f3f40c70e6f81796ea3e4de945d30c896",
+  "model": "assets/game/station/crew/Operator.glb",
+  "glb_sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+  "actor": 1101,
+  "frames": [
+    {
+      "seq": 62,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.127969041,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.029686187708018563,
+          "game_toe_y_m": 0.0296862128,
+          "difference_y_m": 2.509198143707536e-08,
+          "authored_forward_m": 0.17983606508828626,
+          "game_forward_m": 0.17983584773450081
+        },
+        "R": {
+          "authored_toe_y_m": 0.053255970298892175,
+          "game_toe_y_m": 0.0532559608,
+          "difference_y_m": -9.498892172832285e-09,
+          "authored_forward_m": 0.049059945162215984,
+          "game_forward_m": 0.049059870055636
+        }
+      }
+    },
+    {
+      "seq": 63,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.365025997,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.011031589205180853,
+          "game_toe_y_m": 0.011031433999999993,
+          "difference_y_m": -1.5520518086009627e-07,
+          "authored_forward_m": 0.16723363447408723,
+          "game_forward_m": 0.1672334086718178
+        },
+        "R": {
+          "authored_toe_y_m": 0.13029366311323243,
+          "game_toe_y_m": 0.13029493379999998,
+          "difference_y_m": 1.2706867675571498e-06,
+          "authored_forward_m": 0.023658164291641026,
+          "game_forward_m": 0.023658110779266047
+        }
+      }
+    },
+    {
+      "seq": 64,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.637138963,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.013802772063735397,
+          "game_toe_y_m": 0.013802826399999996,
+          "difference_y_m": 5.433626459883101e-08,
+          "authored_forward_m": 0.062115577119560283,
+          "game_forward_m": 0.062115191529161125
+        },
+        "R": {
+          "authored_toe_y_m": 0.12754436161480448,
+          "game_toe_y_m": 0.12754467179999998,
+          "difference_y_m": 3.1018519550118917e-07,
+          "authored_forward_m": 0.2047206224512641,
+          "game_forward_m": 0.20471968128141455
+        }
+      }
+    },
+    {
+      "seq": 65,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.891510248,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.12629723920677227,
+          "game_toe_y_m": 0.1262975778,
+          "difference_y_m": 3.3859322773333034e-07,
+          "authored_forward_m": 0.017533635432344985,
+          "game_forward_m": 0.017533214321645587
+        },
+        "R": {
+          "authored_toe_y_m": 0.01029963796327829,
+          "game_toe_y_m": 0.010299533599999994,
+          "difference_y_m": -1.0436327829710379e-07,
+          "authored_forward_m": 0.17132701165589803,
+          "game_forward_m": 0.17132648652466695
+        }
+      }
+    },
+    {
+      "seq": 66,
+      "clip": "walking_gun-cycle",
+      "clip_time": 1.1518718,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.10485122164450142,
+          "game_toe_y_m": 0.10485289979999998,
+          "difference_y_m": 1.6781554985634273e-06,
+          "authored_forward_m": 0.17899233251157476,
+          "game_forward_m": 0.17899165953229035
+        },
+        "R": {
+          "authored_toe_y_m": 0.010477731543171914,
+          "game_toe_y_m": 0.010477975,
+          "difference_y_m": 2.4345682808624147e-07,
+          "authored_forward_m": 0.1004386982359089,
+          "game_forward_m": 0.1004381015579352
+        }
+      }
+    },
+    {
+      "seq": 67,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.201041102,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.01184881052265438,
+          "game_toe_y_m": 0.0118489564,
+          "difference_y_m": 1.458773456197715e-07,
+          "authored_forward_m": 0.17274957564758558,
+          "game_forward_m": 0.1727486312382989
+        },
+        "R": {
+          "authored_toe_y_m": 0.08467155150672429,
+          "game_toe_y_m": 0.08467134879999999,
+          "difference_y_m": -2.0270672429489878e-07,
+          "authored_forward_m": 0.031152684341794037,
+          "game_forward_m": 0.031152989685911545
+        }
+      }
+    },
+    {
+      "seq": 68,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.488919318,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.0107886529682642,
+          "game_toe_y_m": 0.010788440699999999,
+          "difference_y_m": -2.1226826420195355e-07,
+          "authored_forward_m": 0.12744337202142897,
+          "game_forward_m": 0.12744291835818367
+        },
+        "R": {
+          "authored_toe_y_m": 0.12243834921368255,
+          "game_toe_y_m": 0.12244029379999999,
+          "difference_y_m": 1.9445863174427647e-06,
+          "authored_forward_m": 0.15288132361762252,
+          "game_forward_m": 0.15288064423234174
+        }
+      }
+    },
+    {
+      "seq": 69,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.751628757,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.06754328045271518,
+          "game_toe_y_m": 0.0675431048,
+          "difference_y_m": -1.7565271517860914e-07,
+          "authored_forward_m": 0.034580454694719154,
+          "game_forward_m": 0.03458054172026048
+        },
+        "R": {
+          "authored_toe_y_m": 0.027475824251207065,
+          "game_toe_y_m": 0.027476057799999995,
+          "difference_y_m": 2.3354879293002728e-07,
+          "authored_forward_m": 0.18031071178547453,
+          "game_forward_m": 0.18031051008023163
+        }
+      }
+    },
+    {
+      "seq": 70,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.0311716739,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.18616622912805897,
+          "game_toe_y_m": 0.18617163579999998,
+          "difference_y_m": 5.4066719410161834e-06,
+          "authored_forward_m": 0.1825795903985138,
+          "game_forward_m": 0.1825752486489933
+        },
+        "R": {
+          "authored_toe_y_m": 0.05061730817839996,
+          "game_toe_y_m": 0.050617336799999996,
+          "difference_y_m": 2.8621600034473005e-08,
+          "authored_forward_m": 0.004860647957559694,
+          "game_forward_m": 0.004860475828883782
+        }
+      }
+    },
+    {
+      "seq": 71,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.0968107581,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.22518111581754438,
+          "game_toe_y_m": 0.2251823398,
+          "difference_y_m": 1.2239824556115053e-06,
+          "authored_forward_m": 0.2086401090849782,
+          "game_forward_m": 0.20863635195567937
+        },
+        "R": {
+          "authored_toe_y_m": 0.5290706799487861,
+          "game_toe_y_m": 0.5290704817999999,
+          "difference_y_m": -1.9814878615687093e-07,
+          "authored_forward_m": -0.17067719324965652,
+          "game_forward_m": -0.17067736950812873
+        }
+      }
+    },
+    {
+      "seq": 72,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.121808216,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.2246916978879305,
+          "game_toe_y_m": 0.2246913168,
+          "difference_y_m": -3.8108793048996503e-07,
+          "authored_forward_m": 0.21080037778706262,
+          "game_forward_m": 0.21079735983561465
+        },
+        "R": {
+          "authored_toe_y_m": 0.7328654888883503,
+          "game_toe_y_m": 0.7328646038,
+          "difference_y_m": -8.850883503885854e-07,
+          "authored_forward_m": -0.1850898185890522,
+          "game_forward_m": -0.18508988016073125
+        }
+      }
+    },
+    {
+      "seq": 73,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.215814143,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.02837708561303036,
+          "game_toe_y_m": 0.028376765799999995,
+          "difference_y_m": -3.198130303638802e-07,
+          "authored_forward_m": 0.17618637486731203,
+          "game_forward_m": 0.1761849926642899
+        },
+        "R": {
+          "authored_toe_y_m": 0.555689667838468,
+          "game_toe_y_m": 0.5556908697999999,
+          "difference_y_m": 1.201961531971385e-06,
+          "authored_forward_m": -0.14277623323167254,
+          "game_forward_m": -0.14277631105076988
+        }
+      }
+    },
+    {
+      "seq": 74,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.31285122,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.010071015901240654,
+          "game_toe_y_m": 0.30262468779999996,
+          "difference_y_m": 0.2925536718987593,
+          "authored_forward_m": 0.17112608527953443,
+          "game_forward_m": 0.04840644307306822
+        },
+        "R": {
+          "authored_toe_y_m": 0.2237978567713297,
+          "game_toe_y_m": 0.2237960548,
+          "difference_y_m": -1.8019713297068307e-06,
+          "authored_forward_m": 0.01820953269341785,
+          "game_forward_m": 0.018208653680124833
+        }
+      }
+    },
+    {
+      "seq": 75,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.414617717,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.05854370051090996,
+          "game_toe_y_m": 0.4747846578,
+          "difference_y_m": 0.41624095728909005,
+          "authored_forward_m": 0.06994462506871879,
+          "game_forward_m": -0.12913316110696757
+        },
+        "R": {
+          "authored_toe_y_m": 0.15379155461573962,
+          "game_toe_y_m": 0.1537966728,
+          "difference_y_m": 5.1181842603831296e-06,
+          "authored_forward_m": 0.15551379447788727,
+          "game_forward_m": 0.1555103069105292
+        }
+      }
+    },
+    {
+      "seq": 76,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.520240307,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.6780755277289348,
+          "game_toe_y_m": 1.1504283418,
+          "difference_y_m": 0.47235281407106533,
+          "authored_forward_m": -0.17812729651567505,
+          "game_forward_m": -0.19163651445255378
+        },
+        "R": {
+          "authored_toe_y_m": 0.22896692228456178,
+          "game_toe_y_m": 0.22896803879999997,
+          "difference_y_m": 1.116515438187582e-06,
+          "authored_forward_m": 0.21011630153049277,
+          "game_forward_m": 0.2101127972635251
+        }
+      }
+    },
+    {
+      "seq": 77,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.631828666,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.5787585156631062,
+          "game_toe_y_m": 0.5787595957999999,
+          "difference_y_m": 1.0801368937052302e-06,
+          "authored_forward_m": -0.1610504586599335,
+          "game_forward_m": -0.16105065329084367
+        },
+        "R": {
+          "authored_toe_y_m": 0.029103135534628913,
+          "game_toe_y_m": 0.029102906799999995,
+          "difference_y_m": -2.28734628918148e-07,
+          "authored_forward_m": 0.17517422122023385,
+          "game_forward_m": 0.1751730102814107
+        }
+      }
+    },
+    {
+      "seq": 78,
+      "clip": "walking_gun-cycle",
+      "clip_time": 0.144292265,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.022505842058540698,
+          "game_toe_y_m": 0.02250606579999999,
+          "difference_y_m": 2.2374145929038303e-07,
+          "authored_forward_m": 0.17727630198370048,
+          "game_forward_m": 0.17727568065849486
+        },
+        "R": {
+          "authored_toe_y_m": 0.06005889467180603,
+          "game_toe_y_m": 0.060058682799999985,
+          "difference_y_m": -2.1187180604398392e-07,
+          "authored_forward_m": 0.04506420241467801,
+          "game_forward_m": 0.04506425763515381
+        }
+      }
+    },
+    {
+      "seq": 79,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.0521885157,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.19677908188536458,
+          "game_toe_y_m": 0.19678388579999997,
+          "difference_y_m": 4.80391463539287e-06,
+          "authored_forward_m": 0.19304159638585994,
+          "game_forward_m": 0.1930371169757106
+        },
+        "R": {
+          "authored_toe_y_m": 0.13385850407859154,
+          "game_toe_y_m": 0.13385879979999998,
+          "difference_y_m": 2.9572140844424943e-07,
+          "authored_forward_m": -0.05850383702592521,
+          "game_forward_m": -0.058503785684247966
+        }
+      }
+    },
+    {
+      "seq": 80,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.130234301,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.21324233670249454,
+          "game_toe_y_m": 0.2132417108,
+          "difference_y_m": -6.259024945276526e-07,
+          "authored_forward_m": 0.21034323167051283,
+          "game_forward_m": 0.2103403150768391
+        },
+        "R": {
+          "authored_toe_y_m": 0.7522605452062989,
+          "game_toe_y_m": 0.7522594187999999,
+          "difference_y_m": -1.1264062990123946e-06,
+          "authored_forward_m": -0.18576696413855348,
+          "game_forward_m": -0.18576657991659098
+        }
+      }
+    },
+    {
+      "seq": 81,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.215805382,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.02838301721672433,
+          "game_toe_y_m": 0.028383150799999993,
+          "difference_y_m": 1.3358327566326267e-07,
+          "authored_forward_m": 0.17618675728004818,
+          "game_forward_m": 0.1761852418018349
+        },
+        "R": {
+          "authored_toe_y_m": 0.55572718723689,
+          "game_toe_y_m": 0.5557284208,
+          "difference_y_m": 1.2335631099924527e-06,
+          "authored_forward_m": -0.1427881035976501,
+          "game_forward_m": -0.14278823330486098
+        }
+      }
+    },
+    {
+      "seq": 82,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.306611061,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.010080060986514733,
+          "game_toe_y_m": 0.010080836699999998,
+          "difference_y_m": 7.757134852653946e-07,
+          "authored_forward_m": 0.17151871529621587,
+          "game_forward_m": 0.17151742723657176
+        },
+        "R": {
+          "authored_toe_y_m": 0.23823965745196418,
+          "game_toe_y_m": 0.23823790279999998,
+          "difference_y_m": -1.754651964197551e-06,
+          "authored_forward_m": 0.009478153835748904,
+          "game_forward_m": 0.009477480741474347
+        }
+      }
+    },
+    {
+      "seq": 83,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.407803744,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.047042070898756866,
+          "game_toe_y_m": 0.047042011800000005,
+          "difference_y_m": -5.909875686049837e-08,
+          "authored_forward_m": 0.08485863537765681,
+          "game_forward_m": 0.08485834762698344
+        },
+        "R": {
+          "authored_toe_y_m": 0.14724923418559677,
+          "game_toe_y_m": 0.1472533788,
+          "difference_y_m": 4.144614403234215e-06,
+          "authored_forward_m": 0.14699892412832605,
+          "game_forward_m": 0.14699579798443144
+        }
+      }
+    },
+    {
+      "seq": 84,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.515400052,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.6604198685020699,
+          "game_toe_y_m": 0.6604195088,
+          "difference_y_m": -3.597020699075415e-07,
+          "authored_forward_m": -0.17578085961657042,
+          "game_forward_m": -0.17578078382579496
+        },
+        "R": {
+          "authored_toe_y_m": 0.2303433695104762,
+          "game_toe_y_m": 0.2303446378,
+          "difference_y_m": 1.268289523792543e-06,
+          "authored_forward_m": 0.20987715798595774,
+          "game_forward_m": 0.2098732947479067
+        }
+      }
+    },
+    {
+      "seq": 85,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.618381739,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.6211332324350675,
+          "game_toe_y_m": 0.6211343257999999,
+          "difference_y_m": 1.0933649324806893e-06,
+          "authored_forward_m": -0.1704932924963376,
+          "game_forward_m": -0.17049323076345682
+        },
+        "R": {
+          "authored_toe_y_m": 0.04797708851452222,
+          "game_toe_y_m": 0.0479767468,
+          "difference_y_m": -3.4171452222009346e-07,
+          "authored_forward_m": 0.1801908961132801,
+          "game_forward_m": 0.18018958063417798
+        }
+      }
+    },
+    {
+      "seq": 86,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.717359066,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.2533856986924006,
+          "game_toe_y_m": 0.2533840988,
+          "difference_y_m": -1.5998924005611315e-06,
+          "authored_forward_m": -0.01829361956955955,
+          "game_forward_m": -0.01829411782171735
+        },
+        "R": {
+          "authored_toe_y_m": 0.011115765858693269,
+          "game_toe_y_m": 0.01111719759999999,
+          "difference_y_m": 1.4317413067205242e-06,
+          "authored_forward_m": 0.16937022638864718,
+          "game_forward_m": 0.1693685936537315
+        }
+      }
+    },
+    {
+      "seq": 87,
+      "clip": "running_gun-cycle",
+      "clip_time": 0.818837762,
+      "feet": {
+        "L": {
+          "authored_toe_y_m": 0.16245145391085603,
+          "game_toe_y_m": 0.1624552008,
+          "difference_y_m": 3.7468891439795815e-06,
+          "authored_forward_m": 0.1587593417010602,
+          "game_forward_m": 0.15875619086317702
+        },
+        "R": {
+          "authored_toe_y_m": 0.05557000312951954,
+          "game_toe_y_m": 0.05556973779999999,
+          "difference_y_m": -2.653295195498284e-07,
+          "authored_forward_m": 0.08742362049177155,
+          "game_forward_m": 0.08742333657522275
+        }
+      }
+    }
+  ]
+}
