@@ -1,0 +1,112 @@
+[
+  {
+    "title": "玩家 · 拾起医疗包",
+    "capture": "player-pickup",
+    "start": 0.0,
+    "end": 5.125,
+    "original_seconds": [
+      4.166,
+      9.274
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 递给队友",
+    "capture": "player-give",
+    "start": 5.125,
+    "end": 8.75,
+    "original_seconds": [
+      4.246,
+      7.846
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 修理发电机",
+    "capture": "player-repair",
+    "start": 8.75,
+    "end": 14.0,
+    "original_seconds": [
+      4.103,
+      9.342
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 扶起队友",
+    "capture": "player-revive",
+    "start": 14.0,
+    "end": 19.208,
+    "original_seconds": [
+      3.605,
+      8.813
+    ],
+    "voices": []
+  },
+  {
+    "title": "玩家 · 使用医疗包",
+    "capture": "player-heal",
+    "start": 19.208,
+    "end": 22.083,
+    "original_seconds": [
+      4.308,
+      7.147
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 拾起医疗包",
+    "capture": "watt-pickup",
+    "start": 22.083,
+    "end": 22.125,
+    "original_seconds": [
+      10.799,
+      10.329
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 递给队友",
+    "capture": "watt-give",
+    "start": 22.125,
+    "end": 25.583,
+    "original_seconds": [
+      6.259,
+      9.69
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 修理发电机",
+    "capture": "watt-repair",
+    "start": 25.583,
+    "end": 30.208,
+    "original_seconds": [
+      5.234,
+      9.829
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 扶起队友",
+    "capture": "watt-revive",
+    "start": 30.208,
+    "end": 34.458,
+    "original_seconds": [
+      3.91,
+      8.119
+    ],
+    "voices": []
+  },
+  {
+    "title": "瓦特 · 使用医疗包",
+    "capture": "watt-heal",
+    "start": 34.458,
+    "end": 38.083,
+    "original_seconds": [
+      5.105,
+      8.705
+    ],
+    "voices": []
+  }
+]

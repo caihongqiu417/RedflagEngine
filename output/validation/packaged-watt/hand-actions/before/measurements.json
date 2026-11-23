@@ -1,0 +1,2894 @@
+[
+  {
+    "actor": "player",
+    "action": "pickup",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "TransformComponent": {
+            "Translation": [
+              -11.46,
+              2.62,
+              1.4
+            ],
+            "Rotation": [
+              -0.68,
+              -1.5707963,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              2.02
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 61,
+    "window_frames": 59,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          true
+        ]
+      },
+      {
+        "seq": 39,
+        "state": [
+          2,
+          false
+        ]
+      }
+    ],
+    "event_seq": 39,
+    "recovery_seq": 41,
+    "begin_seq": 23,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 39,
+        "entity": "1101",
+        "kind": "pickup_contact",
+        "text": "1112"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 7.152557373046875e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.395100831985474,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 23,
+        "seconds": 5.589570760726929,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 41,
+        "seconds": 8.623833417892456,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 45,
+        "seconds": 8.907338857650757,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 57,
+        "seconds": 9.801549673080444,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 37,
+        "clip": "Station-Pickup",
+        "clip_s": 1.18379974,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.103785,
+          0.202759,
+          1.196003
+        ],
+        "mesh_surface_m": 0.81829
+      },
+      {
+        "seq": 38,
+        "clip": "Station-Pickup",
+        "clip_s": 1.25853252,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.077189,
+          0.217415,
+          1.226324
+        ],
+        "mesh_surface_m": 0.77599
+      },
+      {
+        "seq": 39,
+        "clip": "Station-Pickup",
+        "clip_s": 1.33358574,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -3.916816,
+          0.318403,
+          1.290033
+        ],
+        "mesh_surface_m": 0.60001
+      },
+      {
+        "seq": 40,
+        "clip": "Station-Pickup",
+        "clip_s": 2.5,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.200064,
+          0.774061,
+          0.878398
+        ],
+        "mesh_surface_m": 1.08504
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "give",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 86,
+    "window_frames": 84,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          1
+        ]
+      }
+    ],
+    "event_seq": null,
+    "recovery_seq": null,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 4.76837158203125e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.474272727966309,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 25,
+        "seconds": 5.764612674713135,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": []
+  },
+  {
+    "actor": "player",
+    "action": "repair",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1110": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              0,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 78,
+    "window_frames": 76,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 46,
+        "state": [
+          100
+        ]
+      }
+    ],
+    "event_seq": 46,
+    "recovery_seq": 47,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 8.344650268554688e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.367901682853699,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 22,
+        "seconds": 5.523181319236755,
+        "clip": "Cannon_Charge-cycle"
+      },
+      {
+        "seq": 46,
+        "seconds": 7.592280745506287,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 72,
+        "seconds": 9.6859210729599,
+        "clip": "walking_gun-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 44,
+        "clip": "Cannon_Charge-cycle",
+        "clip_s": 0.326708198,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.704027,
+          0.807138,
+          0.847814
+        ],
+        "mesh_surface_m": 1.13975
+      },
+      {
+        "seq": 45,
+        "clip": "Cannon_Charge-cycle",
+        "clip_s": 0.415814757,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.705314,
+          0.807115,
+          0.849631
+        ],
+        "mesh_surface_m": 1.14046
+      },
+      {
+        "seq": 46,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0760421753,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.705419,
+          0.808474,
+          0.846351
+        ],
+        "mesh_surface_m": 1.14173
+      },
+      {
+        "seq": 47,
+        "clip": "Idle-cycle",
+        "clip_s": 0.155632019,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.70471,
+          0.80787,
+          0.845455
+        ],
+        "mesh_surface_m": 1.14119
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "revive",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          },
+          "HealthComponent": {
+            "Current": 0,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 93,
+    "window_frames": 90,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 54,
+        "state": [
+          50
+        ]
+      }
+    ],
+    "event_seq": 54,
+    "recovery_seq": 55,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 54,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 54,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 54,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 8.344650268554688e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 3.8153237104415894,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 25,
+        "seconds": 4.998954653739929,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 54,
+        "seconds": 7.063331961631775,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 81,
+        "seconds": 9.197741866111755,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 92,
+        "seconds": 10.115413069725037,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 52,
+        "clip": "Station-Pickup",
+        "clip_s": 1.97772837,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.314555,
+          0.727738,
+          0.926347
+        ],
+        "hand_to_hand_m": 1.71499
+      },
+      {
+        "seq": 53,
+        "clip": "Station-Pickup",
+        "clip_s": 2.05537224,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.399197,
+          0.734089,
+          0.911833
+        ],
+        "hand_to_hand_m": 1.79373
+      },
+      {
+        "seq": 54,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0790967941,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.502955,
+          0.753939,
+          0.865394
+        ],
+        "hand_to_hand_m": 1.90549
+      },
+      {
+        "seq": 55,
+        "clip": "Idle-cycle",
+        "clip_s": 0.159508705,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.614599,
+          0.786372,
+          0.845119
+        ],
+        "hand_to_hand_m": 2.01035
+      }
+    ]
+  },
+  {
+    "actor": "player",
+    "action": "heal",
+    "trigger": "player keyboard",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "HealthComponent": {
+            "Current": 40,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 60,
+    "window_frames": 58,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          40
+        ]
+      },
+      {
+        "seq": 18,
+        "state": [
+          0,
+          90
+        ]
+      }
+    ],
+    "event_seq": 18,
+    "recovery_seq": 19,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 1.3113021850585938e-06,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 8,
+        "seconds": 4.574826121330261,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 19,
+        "seconds": 5.4842013120651245,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 45,
+        "seconds": 7.545869708061218,
+        "clip": "walking_gun-cycle"
+      },
+      {
+        "seq": 57,
+        "seconds": 8.499042391777039,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 16,
+        "clip": "walking_gun-cycle",
+        "clip_s": 1.08484519,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.505302,
+          0.777179,
+          1.098623
+        ],
+        "finger_to_chest_joint_m": 0.58214
+      },
+      {
+        "seq": 17,
+        "clip": "walking_gun-cycle",
+        "clip_s": 1.09425449,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.508464,
+          0.779632,
+          1.098938
+        ],
+        "finger_to_chest_joint_m": 0.58576
+      },
+      {
+        "seq": 18,
+        "clip": "walking_gun-cycle",
+        "clip_s": 1.09882462,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.510036,
+          0.780904,
+          1.099402
+        ],
+        "finger_to_chest_joint_m": 0.58747
+      },
+      {
+        "seq": 19,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0867872238,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.585149,
+          0.785119,
+          0.969992
+        ],
+        "finger_to_chest_joint_m": 0.59547
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "pickup",
+    "trigger": "game T chat",
+    "instruction": "请去捡地上的医疗包，收进你自己背包。",
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              2.02
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 77,
+    "window_frames": 74,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          true
+        ]
+      },
+      {
+        "seq": 57,
+        "state": [
+          2,
+          false
+        ]
+      }
+    ],
+    "event_seq": 57,
+    "recovery_seq": 58,
+    "begin_seq": 37,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请去捡地上的医疗包，收进你自己背包。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请去捡地上的医疗包，收进你自己背包。"
+      },
+      {
+        "seq": 26,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "gather / 去捡一份医疗包 / 急救工具箱"
+      },
+      {
+        "seq": 26,
+        "entity": "1102",
+        "kind": "子树提问",
+        "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "gather / 去捡一份医疗包 / 急救工具箱"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "gather → gather"
+      },
+      {
+        "seq": 29,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 37,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "pickup"
+      },
+      {
+        "seq": 57,
+        "entity": "1102",
+        "kind": "库存",
+        "text": "物品已放入背包"
+      },
+      {
+        "seq": 58,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "gather"
+      },
+      {
+        "seq": 58,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 58,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "物品已经放进背包。请继续处理队友先前的要求。"
+      },
+      {
+        "seq": 61,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 61,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 61,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 61,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 64,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 64,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 64,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 64,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 67,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 67,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 67,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 67,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 71,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 71,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 71,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 71,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      },
+      {
+        "seq": 74,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 74,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "look → look"
+      },
+      {
+        "seq": 74,
+        "entity": "1102",
+        "kind": "失败",
+        "text": "look"
+      },
+      {
+        "seq": 74,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "上次动作没有完成，请根据现状重新选择。"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 26,
+        "text": "gather / 去捡一份医疗包 / 急救工具箱"
+      },
+      {
+        "seq": 29,
+        "text": "gather / 去捡一份医疗包 / 急救工具箱"
+      },
+      {
+        "seq": 61,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 64,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 67,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 71,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      },
+      {
+        "seq": 74,
+        "text": "look / 停在当前地点拍照，只有队友要求原地查看时才用"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 5.960464477539062e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 29,
+        "seconds": 6.267956376075745,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 37,
+        "seconds": 6.860797047615051,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 58,
+        "seconds": 9.679372429847717,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 55,
+        "clip": "Station-Pickup",
+        "clip_s": 1.09599257,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.115609,
+          0.203688,
+          1.465506
+        ],
+        "mesh_surface_m": 1.57815
+      },
+      {
+        "seq": 56,
+        "clip": "Station-Pickup",
+        "clip_s": 1.14875174,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.114417,
+          0.199245,
+          1.444175
+        ],
+        "mesh_surface_m": 1.58314
+      },
+      {
+        "seq": 57,
+        "clip": "Station-Pickup",
+        "clip_s": 1.20405817,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.110957,
+          0.197619,
+          1.430208
+        ],
+        "mesh_surface_m": 1.58396
+      },
+      {
+        "seq": 58,
+        "clip": "Idle-cycle",
+        "clip_s": 1.67393875,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.447757,
+          0.80729,
+          1.109097
+        ],
+        "mesh_surface_m": 2.00385
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "give",
+    "trigger": "game T chat",
+    "instruction": "请把你背包里的一份医疗包亲手送到我手上。",
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 89,
+    "window_frames": 86,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          1
+        ]
+      },
+      {
+        "seq": 46,
+        "state": [
+          0,
+          2
+        ]
+      }
+    ],
+    "event_seq": 46,
+    "recovery_seq": 63,
+    "begin_seq": 37,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请把你背包里的一份医疗包亲手送到我手上。"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "子树提问",
+        "text": "选择补给动作 按玩家原话决定谁移动：让我送来时我带药过去；玩家说自己来拿时我留在原地；让我去捡才拿地上的物品。"
+      },
+      {
+        "seq": 30,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 30,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "share → share"
+      },
+      {
+        "seq": 30,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 37,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "give"
+      },
+      {
+        "seq": 46,
+        "entity": "1102",
+        "kind": "库存",
+        "text": "物品已交到队友手中"
+      },
+      {
+        "seq": 63,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "share"
+      },
+      {
+        "seq": 63,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 63,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 63,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 27,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      },
+      {
+        "seq": 30,
+        "text": "share / 医疗包配送：瓦特走向玩家，把自己背包的药送到他手中 / 玩家"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 4.76837158203125e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 30,
+        "seconds": 6.528778076171875,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 37,
+        "seconds": 7.077184200286865,
+        "clip": "Station-Give"
+      },
+      {
+        "seq": 63,
+        "seconds": 9.039909839630127,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 44,
+        "clip": "Station-Give",
+        "clip_s": 0.624834061,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.873828,
+          1.317596,
+          1.126957
+        ],
+        "hand_to_hand_m": 2.17261
+      },
+      {
+        "seq": 45,
+        "clip": "Station-Give",
+        "clip_s": 0.707505226,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.856829,
+          1.268687,
+          1.147101
+        ],
+        "hand_to_hand_m": 2.13994
+      },
+      {
+        "seq": 46,
+        "clip": "Station-Give",
+        "clip_s": 0.785628319,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.8566,
+          1.253745,
+          1.155872
+        ],
+        "hand_to_hand_m": 2.13439
+      },
+      {
+        "seq": 47,
+        "clip": "Station-Give",
+        "clip_s": 0.858737946,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -4.859157,
+          1.280756,
+          1.137373
+        ],
+        "hand_to_hand_m": 2.1501
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "repair",
+    "trigger": "game T chat",
+    "instruction": "请去修好旁边的应急发电机。",
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1110": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              0,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 121,
+    "window_frames": 119,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 69,
+        "state": [
+          100
+        ]
+      }
+    ],
+    "event_seq": 69,
+    "recovery_seq": 70,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "请去修好旁边的应急发电机。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "请去修好旁边的应急发电机。"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "repair → repair"
+      },
+      {
+        "seq": 27,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 37,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "repair"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "repair"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 69,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 27,
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 5.960464477539062e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 27,
+        "seconds": 5.504006505012512,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 37,
+        "seconds": 6.124064564704895,
+        "clip": "Cannon_Charge-cycle"
+      },
+      {
+        "seq": 69,
+        "seconds": 8.078691601753235,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 67,
+        "clip": "Cannon_Charge-cycle",
+        "clip_s": 0.234762073,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.55037,
+          0.778289,
+          0.868237
+        ],
+        "mesh_surface_m": 1.94697
+      },
+      {
+        "seq": 68,
+        "clip": "Cannon_Charge-cycle",
+        "clip_s": 0.296563029,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.550462,
+          0.7781,
+          0.869333
+        ],
+        "mesh_surface_m": 1.94688
+      },
+      {
+        "seq": 69,
+        "clip": "Idle-cycle",
+        "clip_s": 0.06346035,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.551032,
+          0.779606,
+          0.867172
+        ],
+        "mesh_surface_m": 1.94797
+      },
+      {
+        "seq": 70,
+        "clip": "Idle-cycle",
+        "clip_s": 0.132680893,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.551112,
+          0.77943,
+          0.866633
+        ],
+        "mesh_surface_m": 1.9481
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "revive",
+    "trigger": "NPC RescueIntent",
+    "instruction": null,
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -3.25,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          "HealthComponent": {
+            "Current": 0,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 103,
+    "window_frames": 96,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          0
+        ]
+      },
+      {
+        "seq": 47,
+        "state": [
+          50
+        ]
+      }
+    ],
+    "event_seq": 47,
+    "recovery_seq": 48,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1101",
+        "kind": "player_down",
+        "text": "玩家倒地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "队友刚刚倒下了。 扶起倒地的队友 / 玩家"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "revive → revive"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 3,
+        "entity": "1101",
+        "kind": "player_down",
+        "text": "玩家倒地"
+      },
+      {
+        "seq": 13,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "revive"
+      },
+      {
+        "seq": 47,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "revive"
+      },
+      {
+        "seq": 47,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 47,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 47,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 48,
+        "entity": "1101",
+        "kind": "player_revived",
+        "text": "玩家恢复行动"
+      }
+    ],
+    "choices": [],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 7.152557373046875e-07,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 2,
+        "seconds": 3.7133235931396484,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 13,
+        "seconds": 4.410311222076416,
+        "clip": "Station-Pickup"
+      },
+      {
+        "seq": 47,
+        "seconds": 6.369088649749756,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": [
+      {
+        "seq": 45,
+        "clip": "Station-Pickup",
+        "clip_s": 1.90864944,
+        "receiver_clip": "flinch_heavy",
+        "hand_world": [
+          -5.135635,
+          0.679417,
+          0.96249
+        ],
+        "hand_to_hand_m": 1.39648
+      },
+      {
+        "seq": 46,
+        "clip": "Station-Pickup",
+        "clip_s": 1.9604187,
+        "receiver_clip": "flinch_heavy",
+        "hand_world": [
+          -5.190153,
+          0.698252,
+          0.94929
+        ],
+        "hand_to_hand_m": 1.46113
+      },
+      {
+        "seq": 47,
+        "clip": "Idle-cycle",
+        "clip_s": 0.0548419952,
+        "receiver_clip": "flinch_heavy",
+        "hand_world": [
+          -5.290203,
+          0.713903,
+          0.891715
+        ],
+        "hand_to_hand_m": 1.60513
+      },
+      {
+        "seq": 48,
+        "clip": "Idle-cycle",
+        "clip_s": 0.110876083,
+        "receiver_clip": "Idle-cycle",
+        "hand_world": [
+          -5.405092,
+          0.738521,
+          0.859924
+        ],
+        "hand_to_hand_m": 2.06032
+      }
+    ]
+  },
+  {
+    "actor": "watt",
+    "action": "heal",
+    "trigger": "game T chat",
+    "instruction": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。",
+    "archive_sha256": "f1c18d0820a3296bf48c877a1fa2fc60a0efdd7e822a30aa0ee1da5e76bb54b5",
+    "exe_sha256": "9791867da95a5b1cef87a2dbe37705800ea43971ac251e0ce4fa9e806a3f94c0",
+    "camera": "side",
+    "scene": {
+      "entities": {
+        "1100": {
+          "CameraComponent": {
+            "Camera": {
+              "ProjectionType": 0,
+              "PerspectiveFov": 0.98,
+              "PerspectiveNear": 0.08,
+              "PerspectiveFar": 175,
+              "OrthographicSize": 13.3,
+              "OrthographicNear": 0.1,
+              "OrthographicFar": 85
+            },
+            "Primary": false,
+            "FixedAspectRatio": false
+          }
+        },
+        "1101": {
+          "TransformComponent": {
+            "Translation": [
+              -5.5,
+              0.08,
+              -1.05
+            ],
+            "Rotation": [
+              0,
+              -1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "1102": {
+          "TransformComponent": {
+            "Translation": [
+              -6.9,
+              0.08,
+              1.4
+            ],
+            "Rotation": [
+              0,
+              1.5707963267948966,
+              0
+            ],
+            "Scale": [
+              0.96,
+              0.96,
+              0.96
+            ]
+          },
+          "HealthComponent": {
+            "Current": 40,
+            "Maximum": 100,
+            "Team": "crew"
+          }
+        },
+        "1112": {
+          "TransformComponent": {
+            "Translation": [
+              -2.5,
+              0.08,
+              4.0
+            ],
+            "Rotation": [
+              0,
+              -0.24,
+              0
+            ],
+            "Scale": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "spectator": {
+        "Entity": 1999991,
+        "TagComponent": {
+          "Tag": "侧面验证镜头"
+        },
+        "CameraComponent": {
+          "Camera": {
+            "ProjectionType": 0,
+            "PerspectiveFov": 0.8,
+            "PerspectiveNear": 0.08,
+            "PerspectiveFar": 175,
+            "OrthographicSize": 13.3,
+            "OrthographicNear": 0.1,
+            "OrthographicFar": 85
+          },
+          "Primary": true,
+          "FixedAspectRatio": false
+        },
+        "TransformComponent": {
+          "Translation": [
+            -4.49,
+            1.52,
+            -2.75
+          ],
+          "Rotation": [
+            -0.13,
+            3.141592653589793,
+            0
+          ],
+          "Scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "frames": 273,
+    "window_frames": 259,
+    "changes": [
+      {
+        "seq": 1,
+        "state": [
+          1,
+          40
+        ]
+      }
+    ],
+    "event_seq": null,
+    "recovery_seq": null,
+    "begin_seq": null,
+    "contact_seq": [],
+    "first_touch": null,
+    "last_touch_before_commit": null,
+    "closest_logged_goal_m": null,
+    "events": [
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "游戏开始，队友还没有说话。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 2,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "中止",
+        "text": "wait"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "玩家",
+        "text": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。"
+      },
+      {
+        "seq": 23,
+        "entity": "1102",
+        "kind": "提问",
+        "text": "你受伤了。用你自己背包里的医疗包治疗你自己，不要交给我。"
+      },
+      {
+        "seq": 25,
+        "entity": "1102",
+        "kind": "模型选择",
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      },
+      {
+        "seq": 25,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "repair → repair"
+      },
+      {
+        "seq": 25,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "walk"
+      },
+      {
+        "seq": 92,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "repair"
+      },
+      {
+        "seq": 124,
+        "entity": "1102",
+        "kind": "完成",
+        "text": "repair"
+      },
+      {
+        "seq": 124,
+        "entity": "1102",
+        "kind": "动作",
+        "text": "idle"
+      },
+      {
+        "seq": 124,
+        "entity": "1102",
+        "kind": "队伍约定",
+        "text": "先前的工作已完成。 停在当前位置等待，队友离开时也留在原地"
+      },
+      {
+        "seq": 124,
+        "entity": "1102",
+        "kind": "选择",
+        "text": "wait → wait"
+      }
+    ],
+    "choices": [
+      {
+        "seq": 25,
+        "text": "repair / 去修复损坏的设备 / 应急发电机"
+      }
+    ],
+    "clips": [
+      {
+        "seq": 1,
+        "seconds": 1.6689300537109375e-06,
+        "clip": "Idle-cycle"
+      },
+      {
+        "seq": 25,
+        "seconds": 5.3745973110198975,
+        "clip": "walking_nogun-cycle"
+      },
+      {
+        "seq": 92,
+        "seconds": 9.640567541122437,
+        "clip": "Cannon_Charge-cycle"
+      },
+      {
+        "seq": 124,
+        "seconds": 11.637290716171265,
+        "clip": "Idle-cycle"
+      }
+    ],
+    "measurements": []
+  }
+]
