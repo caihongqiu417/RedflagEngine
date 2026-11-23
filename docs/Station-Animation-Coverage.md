@@ -40,6 +40,18 @@
 
 逐帧使用每秒 120 个样点。Godot 原模型与导入后的 Operator 在徒手、持炮走跑四段的结果逐项相同。这里测的是原剪辑在平地上的姿势；角色跑到工具箱等场景物件旁，地形 IK 还会调整膝、踝，最终显示的脚尖高度可能不同。仅凭原剪辑的 0.655 米不能解释实机中更高的脚尖位置。[实际鞋底三角形和分项数据](../output/validation/station-actions/soles.json) · [Godot 原件对照](../output/validation/station-actions/soles-godot.json) · [检测程序](../tests/check_station_soles.py)
 
+走路有一刻前掌仍然压在地面，脚跟和踝骨却已经抬起来了。在 `walking_gun-cycle` 的 1.017 秒，机器人的左踝比静止时高 20.2 厘米，真实鞋底只比静止时高 1.08 厘米。若把踝骨抬高的 20.2 厘米当成整只靴子已经跨过的高度，前方即使有 20 厘米的台阶，游戏也会认为无需再抬脚。
+
+角色脚下的高度用每只靴子六个点就可以估算。点都取自实际模型，其中一部分随脚掌骨 `foot` 移动，另一部分随脚趾骨 `toe` 移动。选点时分别考虑后跟、外侧边缘及前掌随步态翻转时出现的最低点。以五段走跑、蹲行、弯腰和落地动作来选点，保留能够改进整套动作估计的顶点。最后用全模型 35 段剪辑的 7,636 个姿势复核。与完整蒙皮鞋底相比，相对静止姿势的抬高量最大误差为左靴 6.48 毫米、右靴 5.56 毫米。以上述踮脚帧为例，六点估计和整个靴底到毫米位都为 11 毫米。记录给出了源顶点编号和对应关节的局部坐标，便于换模型时重新选点。[角色接触点](../output/validation/station-actions/sole-contacts.json) · [逐个动作的误差](../output/validation/station-actions/sole-contact-check.json)
+
+## 工具箱旁的脚步
+
+上一轮只检查了角色能否走到目标、动画是否切到行走，以及任务有没有完成。这些记录能证明玩家按 W 后位置变了，却看不出靴底有没有滑过地面。旧版甚至没有给玩家绑定出拳；手腕在其他动作中会转动，现有检查也能通过。现在检查走路时同时记录脚踝、脚尖和地面。检查出拳则从实际按 F 开始，跟踪肩、肘和拳头，最后核对接触时目标有没有扣血。
+
+跑过红色工具箱时，左脚看起来抬得特别高。我们把人物位置从骨骼坐标中减去，再在原模型的同一时刻量一次。两边都在跑，也都应该抬脚，但其中一帧原动作的脚尖仅高 0.68 米，游戏里却到了 1.15 米。连续三帧的左踝恰好经过箱体上方，另一只脚仍与原动作吻合。[出问题的实机连拍](../output/validation/packaged-watt/animation/after/feet.jpg) · [逐帧对照](../output/validation/packaged-watt/animation/after/authored-feet.json)
+
+引擎在脚下向下发出一条射线，查找可以踩的表面。箱子高 54 厘米，旧代码从地面以上 38 厘米处发出射线。起点已经在箱内，PhysX 返回的命中距离为零。把这个起点当作地面会再次抬起膝盖，还会连带改变靴子的朝向。引擎现在忽略这种命中。遇见真正的台阶时，再用随鞋一起运动的接触点判断鞋底还差多高。这样脚跟抬起、前掌仍贴地时，前掌也能参与计算。[地形与脚掌的实现](../Redflag/src/Redflag/Gameplay/TraversalRig.cpp)
+
 ## 复查
 
 模型检查以约 30 Hz 取出维修员的 151 个节点和巡检机的 69 个节点，检查变换矩阵中的每个数都是有限值。再逐项测量表演中应当移动的部位，例如手腕、骨盆或炮身。只使用剪辑前段的动作按照游戏实际使用的秒数取样。站立与单帧瞄准都可以保持完全静止，检查这两种姿势时直接比较同一只手的位置。时间轴另外验证拾取、交付、出拳和落地的通知，以及维修循环、救援结束后能重新进入待机。[模型与状态验证](../tests/StationActionClips.h) · [真实测量输出](../output/validation/station-actions/model.txt)
@@ -55,4 +67,5 @@ tests\run_scene_tests.cmd --animation-events
 tests\run_scene_tests.cmd --traversal
 python tests/check_watt_station.py --sentinel
 tmp\retarget-env\Scripts\python tests/check_station_soles.py
+tmp\retarget-env\Scripts\python tests/check_station_contacts.py
 ```

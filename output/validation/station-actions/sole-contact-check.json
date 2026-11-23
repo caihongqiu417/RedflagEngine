@@ -1,0 +1,512 @@
+{
+  "model_sha256": "4901b2b9417c65c2e1d13badb21af250a1fbe3b2bf4d92c3f39c93a7cfdcd9e0",
+  "rate_hz": 120,
+  "clips": {
+    "AIM-Center": {
+      "L": {
+        "samples": 1,
+        "max_height_error_mm": 0.000109431018455175,
+        "max_lift_error_mm": 5.722799645280219e-05,
+        "p95_lift_error_mm": 5.722799645280219e-05
+      },
+      "R": {
+        "samples": 1,
+        "max_height_error_mm": 0.00020668366472811894,
+        "max_lift_error_mm": 3.9342140656373203e-10,
+        "p95_lift_error_mm": 3.9342140656373203e-10
+      }
+    },
+    "AIM-Down": {
+      "L": {
+        "samples": 1,
+        "max_height_error_mm": 0.000109431018455175,
+        "max_lift_error_mm": 5.722799645280219e-05,
+        "p95_lift_error_mm": 5.722799645280219e-05
+      },
+      "R": {
+        "samples": 1,
+        "max_height_error_mm": 0.00020668366472811894,
+        "max_lift_error_mm": 3.9342140656373203e-10,
+        "p95_lift_error_mm": 3.9342140656373203e-10
+      }
+    },
+    "AIM-Up": {
+      "L": {
+        "samples": 1,
+        "max_height_error_mm": 0.000109431018455175,
+        "max_lift_error_mm": 5.722799645280219e-05,
+        "p95_lift_error_mm": 5.722799645280219e-05
+      },
+      "R": {
+        "samples": 1,
+        "max_height_error_mm": 0.00020668366472811894,
+        "max_lift_error_mm": 3.9342140656373203e-10,
+        "p95_lift_error_mm": 3.9342140656373203e-10
+      }
+    },
+    "Cannon_activation-noexp": {
+      "L": {
+        "samples": 111,
+        "max_height_error_mm": 0.00011754145086417811,
+        "max_lift_error_mm": 6.53384288618053e-05,
+        "p95_lift_error_mm": 6.343724647667193e-05
+      },
+      "R": {
+        "samples": 111,
+        "max_height_error_mm": 0.00020668380093687155,
+        "max_lift_error_mm": 6.37932415226139e-10,
+        "p95_lift_error_mm": 5.336729322347189e-10
+      }
+    },
+    "Cannon_Charge": {
+      "L": {
+        "samples": 226,
+        "max_height_error_mm": 0.00011754145300135743,
+        "max_lift_error_mm": 6.533843099898462e-05,
+        "p95_lift_error_mm": 6.242612684420612e-05
+      },
+      "R": {
+        "samples": 226,
+        "max_height_error_mm": 0.00020668394663456158,
+        "max_lift_error_mm": 6.37930680502663e-10,
+        "p95_lift_error_mm": 4.84976642178836e-10
+      }
+    },
+    "Cannon_Charge-cycle": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 0.00011606269012531811,
+        "max_lift_error_mm": 6.38596681229453e-05,
+        "p95_lift_error_mm": 6.253634613623271e-05
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 0.00020668378058856518,
+        "max_lift_error_mm": 5.295243410419204e-10,
+        "p95_lift_error_mm": 4.861423763546924e-10
+      }
+    },
+    "eyes-cycle": {
+      "L": {
+        "samples": 601,
+        "max_height_error_mm": 0.00011754145712306041,
+        "max_lift_error_mm": 6.53384351206876e-05,
+        "p95_lift_error_mm": 6.111418487941833e-05
+      },
+      "R": {
+        "samples": 601,
+        "max_height_error_mm": 0.00020668394663456158,
+        "max_lift_error_mm": 6.379740485895624e-10,
+        "p95_lift_error_mm": 4.908521505919694e-10
+      }
+    },
+    "flinch1": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 0.00018988159558586126,
+        "max_lift_error_mm": 0.00013767857358348845,
+        "p95_lift_error_mm": 0.00013766521755886885
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 0.00020668416735036832,
+        "max_lift_error_mm": 1.0668965710891598e-09,
+        "p95_lift_error_mm": 1.0337633526980028e-09
+      }
+    },
+    "flinch1.001": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 0.00018988159558586126,
+        "max_lift_error_mm": 0.00013767857358348845,
+        "p95_lift_error_mm": 0.00013766521755886885
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 0.00020668416735036832,
+        "max_lift_error_mm": 1.0668965710891598e-09,
+        "p95_lift_error_mm": 1.0337633526980028e-09
+      }
+    },
+    "flinch2": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 0.0001952550063022418,
+        "max_lift_error_mm": 0.0002474580283046146,
+        "p95_lift_error_mm": 0.0001376973278316429
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 0.0002066842634540489,
+        "max_lift_error_mm": 1.0132311656363413e-09,
+        "p95_lift_error_mm": 1.0132034100607257e-09
+      }
+    },
+    "flinch_heavy": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 8.083289502157365e-05,
+        "max_lift_error_mm": 2.8629873019200835e-05,
+        "p95_lift_error_mm": 2.8339896758315664e-05
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 2.8769721675769517,
+        "max_lift_error_mm": 2.8771788516351013,
+        "p95_lift_error_mm": 2.8500800840360108
+      }
+    },
+    "Idle-cycle": {
+      "L": {
+        "samples": 1801,
+        "max_height_error_mm": 0.00011754146801712384,
+        "max_lift_error_mm": 6.533844601475103e-05,
+        "p95_lift_error_mm": 6.0924866887579476e-05
+      },
+      "R": {
+        "samples": 1801,
+        "max_height_error_mm": 0.00020668394663456158,
+        "max_lift_error_mm": 6.379740485895624e-10,
+        "p95_lift_error_mm": 4.847320461687232e-10
+      }
+    },
+    "Idlecombat-cycle": {
+      "L": {
+        "samples": 401,
+        "max_height_error_mm": 0.0013535671664634784,
+        "max_lift_error_mm": 0.0014057701884658512,
+        "p95_lift_error_mm": 0.0012964117855759297
+      },
+      "R": {
+        "samples": 401,
+        "max_height_error_mm": 0.0002066850086227326,
+        "max_lift_error_mm": 1.5084643603668901e-09,
+        "p95_lift_error_mm": 1.3394008124834045e-09
+      }
+    },
+    "Idlecombatrest-cycle": {
+      "L": {
+        "samples": 1201,
+        "max_height_error_mm": 0.0013535696995674133,
+        "max_lift_error_mm": 0.0014057727215697861,
+        "p95_lift_error_mm": 0.0012963239771736162
+      },
+      "R": {
+        "samples": 1201,
+        "max_height_error_mm": 0.00020668500862533468,
+        "max_lift_error_mm": 1.5084643603668901e-09,
+        "p95_lift_error_mm": 1.3668085760421e-09
+      }
+    },
+    "jump_1_up": {
+      "L": {
+        "samples": 31,
+        "max_height_error_mm": 6.482915037243631,
+        "max_lift_error_mm": 6.482967240265647,
+        "p95_lift_error_mm": 4.552764059924514
+      },
+      "R": {
+        "samples": 31,
+        "max_height_error_mm": 0.00018064061187671177,
+        "max_lift_error_mm": 0.000138976730790219,
+        "p95_lift_error_mm": 0.00013641720639917532
+      }
+    },
+    "jump_2_upwards-cycle": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 2.9972735487993063e-05,
+        "max_lift_error_mm": 2.223562375891497e-05,
+        "p95_lift_error_mm": 2.223486388064355e-05
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 6.639700143862282e-05,
+        "max_lift_error_mm": 0.00014028735370597012,
+        "p95_lift_error_mm": 0.00014028734591359227
+      }
+    },
+    "jump_3_midair-cycle": {
+      "L": {
+        "samples": 151,
+        "max_height_error_mm": 3.9887353975309736e-05,
+        "max_lift_error_mm": 9.209037599156034e-05,
+        "p95_lift_error_mm": 9.208990903175618e-05
+      },
+      "R": {
+        "samples": 151,
+        "max_height_error_mm": 3.629228438606358e-05,
+        "max_lift_error_mm": 0.00017039403313323653,
+        "p95_lift_error_mm": 0.0001703932928434626
+      }
+    },
+    "jump_4_falling-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 1.533884677606956e-05,
+        "max_lift_error_mm": 3.687213572661774e-05,
+        "p95_lift_error_mm": 3.6871579706110325e-05
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 0.00039504113713562106,
+        "max_lift_error_mm": 0.000188357078989565,
+        "p95_lift_error_mm": 0.000188346743187906
+      }
+    },
+    "jump_5_hardlanding": {
+      "L": {
+        "samples": 51,
+        "max_height_error_mm": 8.08330037453675e-05,
+        "max_lift_error_mm": 2.8629981742994692e-05,
+        "p95_lift_error_mm": 2.826957384589185e-05
+      },
+      "R": {
+        "samples": 51,
+        "max_height_error_mm": 2.876972167576941,
+        "max_lift_error_mm": 2.8771788516350907,
+        "p95_lift_error_mm": 2.843410851173944
+      }
+    },
+    "lean_left-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 0.00011235165477824216,
+        "max_lift_error_mm": 6.014863277586935e-05,
+        "p95_lift_error_mm": 6.014863277586935e-05
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 0.00020668323123806953,
+        "max_lift_error_mm": 8.269149254225283e-10,
+        "p95_lift_error_mm": 8.269149254225283e-10
+      }
+    },
+    "lean_right-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 2.851968482209255e-05,
+        "max_lift_error_mm": 2.368333718028026e-05,
+        "p95_lift_error_mm": 2.368333718028026e-05
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 0.00020668355552727613,
+        "max_lift_error_mm": 5.02625718823424e-10,
+        "p95_lift_error_mm": 5.02625718823424e-10
+      }
+    },
+    "running_aiming": {
+      "L": {
+        "samples": 301,
+        "max_height_error_mm": 6.001234553310919,
+        "max_lift_error_mm": 6.001286756332935,
+        "p95_lift_error_mm": 0.3792476130484723
+      },
+      "R": {
+        "samples": 301,
+        "max_height_error_mm": 3.745346452168341,
+        "max_lift_error_mm": 3.745553136226487,
+        "p95_lift_error_mm": 0.22497774088507672
+      }
+    },
+    "running_gun-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 6.483481478097353,
+        "max_lift_error_mm": 6.4835336811193685,
+        "p95_lift_error_mm": 0.5848140344232311
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 4.030109687711891,
+        "max_lift_error_mm": 4.030316371770038,
+        "p95_lift_error_mm": 0.2409773639625995
+      }
+    },
+    "running_nogun-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 6.4834812727384,
+        "max_lift_error_mm": 6.483533475760417,
+        "p95_lift_error_mm": 0.4143444716956657
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 2.5066905557024066,
+        "max_lift_error_mm": 2.5068972397605527,
+        "p95_lift_error_mm": 0.24145637380532148
+      }
+    },
+    "strafe_back-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 0.9188515258178459,
+        "max_lift_error_mm": 0.9189037288398483,
+        "p95_lift_error_mm": 0.8568755143775709
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 0.24988610803837116,
+        "max_lift_error_mm": 0.2500927920965207,
+        "p95_lift_error_mm": 0.0643259930281602
+      }
+    },
+    "strafe_front-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 0.9352194783848484,
+        "max_lift_error_mm": 0.9352716814068508,
+        "p95_lift_error_mm": 0.6482905021900319
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 0.7322418586730786,
+        "max_lift_error_mm": 0.7324485427312264,
+        "p95_lift_error_mm": 0.5787041680207858
+      }
+    },
+    "strafe_left-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 0.03681138228464609,
+        "max_lift_error_mm": 0.03686358530664846,
+        "p95_lift_error_mm": 0.02576045895994264
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 2.4540563817321566,
+        "max_lift_error_mm": 2.454263065790306,
+        "p95_lift_error_mm": 2.0187625055579517
+      }
+    },
+    "strafe_right-cycle": {
+      "L": {
+        "samples": 101,
+        "max_height_error_mm": 0.030861971767950913,
+        "max_lift_error_mm": 0.030914174789953286,
+        "p95_lift_error_mm": 0.017913040289765925
+      },
+      "R": {
+        "samples": 101,
+        "max_height_error_mm": 5.559721523729727,
+        "max_lift_error_mm": 5.559928207787877,
+        "p95_lift_error_mm": 5.04972567924428
+      }
+    },
+    "walking_gun-cycle": {
+      "L": {
+        "samples": 151,
+        "max_height_error_mm": 4.427611096347609,
+        "max_lift_error_mm": 4.427663299369611,
+        "p95_lift_error_mm": 1.004688392508623
+      },
+      "R": {
+        "samples": 151,
+        "max_height_error_mm": 1.5825498616602318,
+        "max_lift_error_mm": 1.5827565457183779,
+        "p95_lift_error_mm": 0.71286565020283
+      }
+    },
+    "walking_nogun-cycle": {
+      "L": {
+        "samples": 151,
+        "max_height_error_mm": 4.42746625787395,
+        "max_lift_error_mm": 4.427518460895952,
+        "p95_lift_error_mm": 1.0042176479935878
+      },
+      "R": {
+        "samples": 151,
+        "max_height_error_mm": 1.5824250465730216,
+        "max_lift_error_mm": 1.5826317306311677,
+        "p95_lift_error_mm": 0.7128606975160527
+      }
+    },
+    "Station-Pickup": {
+      "L": {
+        "samples": 301,
+        "max_height_error_mm": 0.00028425981615787244,
+        "max_lift_error_mm": 0.00023205679415549962,
+        "p95_lift_error_mm": 0.0002319278078477538
+      },
+      "R": {
+        "samples": 301,
+        "max_height_error_mm": 0.000455106632255009,
+        "max_lift_error_mm": 0.0002484225741054835,
+        "p95_lift_error_mm": 0.0002483480202979116
+      }
+    },
+    "Station-Give": {
+      "L": {
+        "samples": 241,
+        "max_height_error_mm": 5.220302201240168e-05,
+        "max_lift_error_mm": 1.0028870095490916e-14,
+        "p95_lift_error_mm": 1.0028870095490916e-14
+      },
+      "R": {
+        "samples": 241,
+        "max_height_error_mm": 0.0002066837410420741,
+        "max_lift_error_mm": 3.1710745140856034e-10,
+        "p95_lift_error_mm": 3.1710745140856034e-10
+      }
+    },
+    "Station-Punch": {
+      "L": {
+        "samples": 105,
+        "max_height_error_mm": 0.18918686350112568,
+        "max_lift_error_mm": 0.18923906652312805,
+        "p95_lift_error_mm": 0.18729693732792707
+      },
+      "R": {
+        "samples": 105,
+        "max_height_error_mm": 1.659089024015431,
+        "max_lift_error_mm": 1.6592957080735806,
+        "p95_lift_error_mm": 1.5587267093831798
+      }
+    },
+    "Station-Crouch": {
+      "L": {
+        "samples": 353,
+        "max_height_error_mm": 0.647358421381139,
+        "max_lift_error_mm": 0.6474106244031413,
+        "p95_lift_error_mm": 0.6473975479781929
+      },
+      "R": {
+        "samples": 353,
+        "max_height_error_mm": 0.00014785115915599834,
+        "max_lift_error_mm": 7.440171650996419e-05,
+        "p95_lift_error_mm": 7.427484339066204e-05
+      }
+    },
+    "Station-CrouchWalk": {
+      "L": {
+        "samples": 241,
+        "max_height_error_mm": 2.9266708009934583,
+        "max_lift_error_mm": 2.926723004015461,
+        "p95_lift_error_mm": 1.7977550391518466
+      },
+      "R": {
+        "samples": 241,
+        "max_height_error_mm": 4.572796714850503,
+        "max_lift_error_mm": 4.573003398908652,
+        "p95_lift_error_mm": 3.073320081805945
+      }
+    }
+  },
+  "tiptoe": {
+    "L": {
+      "seconds": 1.0166666666666666,
+      "full_sole_y_m": 0.011124481989331277,
+      "six_points_y_m": 0.011124418819451016,
+      "full_lift_m": 0.010802780443385106,
+      "six_points_lift_m": 0.010802769476526848
+    },
+    "R": {
+      "seconds": 0.325,
+      "full_sole_y_m": 0.017581312038111654,
+      "six_points_y_m": 0.017581190238035657,
+      "full_lift_m": 0.019302232373800896,
+      "six_points_lift_m": 0.01930231725778305
+    }
+  }
+}
